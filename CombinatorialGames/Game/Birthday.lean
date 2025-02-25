@@ -22,7 +22,7 @@ other hand, the birthday of a game more closely matches Conway's original descri
 # Main declarations
 
 - `PGame.birthday`: The birthday of a pre-game.
-- `SetTheory.Game.birthday`: The birthday of a game.
+- `Game.birthday`: The birthday of a game.
 
 # Todo
 
