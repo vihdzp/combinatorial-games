@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson
 -/
 import CombinatorialGames.Game.Basic
+import CombinatorialGames.Game.Specific
 import Mathlib.Tactic.NthRewrite
 
 /-!
