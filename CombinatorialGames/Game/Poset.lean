@@ -22,9 +22,9 @@ poset game on `(Fin m → Fin n) \ {⊥}`.
 
 ## Main results
 
-* `impartial_posetPos`: poset games are impartial
-* `poset_fuzzy_zero`: any poset game with a top element is won by the second player, shown via a
-  strategy stealing argument
+* `PGame.impartial_posetPos`: poset games are impartial
+* `PGame.poset_fuzzy_zero`: any poset game with a top element is won by the second player, shown via
+  a strategy stealing argument
 -/
 
 variable {α : Type*} [Preorder α]
