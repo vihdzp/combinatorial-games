@@ -1,0 +1,14 @@
+-- Imports all other modules in the library.
+import CombinatorialGames.Game.Basic
+import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Domineering
+import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Nim
+import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.PGame
+import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.State
+
+import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Dyadic
+import CombinatorialGames.Surreal.Multiplication
