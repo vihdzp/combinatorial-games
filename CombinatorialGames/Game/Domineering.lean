@@ -19,8 +19,6 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
-namespace SetTheory
-
 namespace PGame
 
 namespace Domineering
@@ -176,5 +174,3 @@ instance shortL : Short domineering.L := by dsimp [domineering.L]; infer_instanc
 --   (4,0), (4,1), (4,2), (4,3), (4,4)
 --   ].toFinset) ≈ 0)
 end PGame
-
-end SetTheory

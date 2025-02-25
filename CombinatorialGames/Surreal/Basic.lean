@@ -30,7 +30,7 @@ Surreal numbers inherit the relations `≤` and `<` from games (`Surreal.instLE`
 
 In this file, we show that the surreals form a linear ordered commutative group.
 
-In `Mathlib.SetTheory.Surreal.Multiplication`, we define multiplication and show that the
+In `CombinatorialGames.Surreal.Multiplication`, we define multiplication and show that the
 surreals form a linear ordered commutative ring.
 
 One can also map all the ordinals into the surreals!
@@ -48,8 +48,6 @@ One can also map all the ordinals into the surreals!
 
 
 universe u
-
-namespace SetTheory
 
 open scoped PGame
 
@@ -257,9 +255,7 @@ theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
 
 end PGame
 
-end SetTheory
-
-open SetTheory PGame
+open PGame
 
 /-- The type of surreal numbers. These are the numeric pre-games quotiented
 by the equivalence relation `x ≈ y ↔ x ≤ y ∧ y ≤ x`. In the quotient,
