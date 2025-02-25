@@ -3,8 +3,8 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.SetTheory.Game.Ordinal
-import Mathlib.SetTheory.Surreal.Basic
+import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Surreal.Basic
 
 /-!
 # Surreals as games
