@@ -21,9 +21,9 @@ individual grundy values.
 
 The pen-and-paper definition of nim defines the possible moves of `nim o` to be `Set.Iio o`.
 However, this definition does not work for us because it would make the type of nim
-`Ordinal.{u} → SetTheory.PGame.{u + 1}`, which would make it impossible for us to state the
+`Ordinal.{u} → PGame.{u + 1}`, which would make it impossible for us to state the
 Sprague-Grundy theorem, since that requires the type of `nim` to be
-`Ordinal.{u} → SetTheory.PGame.{u}`. For this reason, we instead use `o.toType` for the possible
+`Ordinal.{u} → PGame.{u}`. For this reason, we instead use `o.toType` for the possible
 moves. We expose `toLeftMovesNim` and `toRightMovesNim` to conveniently convert an ordinal less than
 `o` into a left or right move of `nim o`, and vice versa.
 -/
@@ -32,8 +32,6 @@ moves. We expose `toLeftMovesNim` and `toRightMovesNim` to conveniently convert 
 noncomputable section
 
 universe u
-
-namespace SetTheory
 
 open scoped PGame
 open Ordinal Nimber
@@ -375,5 +373,3 @@ theorem grundyValue_add (G H : PGame) [G.Impartial] [H.Impartial] :
   exact add_congr (equiv_nim_grundyValue G) (equiv_nim_grundyValue H)
 
 end PGame
-
-end SetTheory

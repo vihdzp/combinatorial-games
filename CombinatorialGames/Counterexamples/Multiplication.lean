@@ -17,11 +17,9 @@ is colloquially known as `star`, so we use the name `star'` for the second. We p
 `star ≈ star'` and `star * star ≈ star`, but `star' * star ≉ star`.
 -/
 
-namespace Counterexample
-
 namespace PGame
 
-open SetTheory PGame
+open PGame
 
 /-- The game `{-1, 0 | 0, 1}`, which is equivalent but not identical to `*`. -/
 def star' : PGame := ofLists [0, -1] [0, 1]
@@ -76,5 +74,3 @@ theorem mul_not_lift : ∃ x₁ x₂ y : PGame, x₁ ≈ x₂ ∧ ¬ x₁ * y �
   ⟨_, _, _, ⟨star'_equiv_star, fun h ↦ (PGame.Equiv.trans h star_sq).ge.not_gf star'_mul_star_lf⟩⟩
 
 end PGame
-
-end Counterexample

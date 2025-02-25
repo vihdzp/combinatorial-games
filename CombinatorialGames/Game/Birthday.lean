@@ -21,7 +21,7 @@ other hand, the birthday of a game more closely matches Conway's original descri
 
 # Main declarations
 
-- `SetTheory.PGame.birthday`: The birthday of a pre-game.
+- `PGame.birthday`: The birthday of a pre-game.
 - `SetTheory.Game.birthday`: The birthday of a game.
 
 # Todo
@@ -32,8 +32,6 @@ other hand, the birthday of a game more closely matches Conway's original descri
 universe u
 
 open Ordinal
-
-namespace SetTheory
 
 open scoped NaturalOps PGame
 
@@ -304,5 +302,3 @@ theorem small_setOf_birthday_lt (o : Ordinal) : Small.{u} {x : Game.{u} // birth
     simpa using lt_limit ho
 
 end Game
-
-end SetTheory

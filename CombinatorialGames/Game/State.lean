@@ -22,15 +22,13 @@ See `SetTheory/Game/Domineering` for an example using this construction.
 -/
 
 universe u
-
-namespace SetTheory
 namespace PGame
 
-/-- `SetTheory.PGame.State S` describes how to interpret `s : S` as a state of a combinatorial game.
-Use `SetTheory.PGame.ofState s` or `SetTheory.Game.ofState s` to construct the game.
+/-- `PGame.State S` describes how to interpret `s : S` as a state of a combinatorial game.
+Use `PGame.ofState s` or `SetTheory.Game.ofState s` to construct the game.
 
-`SetTheory.PGame.State.l : S → Finset S` and `SetTheory.PGame.State.r : S → Finset S` describe
-the states reachable by a move by Left or Right. `SetTheory.PGame.State.turnBound : S → ℕ`
+`PGame.State.l : S → Finset S` and `PGame.State.r : S → Finset S` describe
+the states reachable by a move by Left or Right. `PGame.State.turnBound : S → ℕ`
 gives an upper bound on the number of possible turns remaining from this state.
 -/
 class State (S : Type u) where
@@ -226,5 +224,3 @@ def ofState {S : Type u} [PGame.State S] (s : S) : Game :=
   ⟦PGame.ofState s⟧
 
 end Game
-
-end SetTheory

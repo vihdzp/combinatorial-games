@@ -31,8 +31,6 @@ rational numbers to construct an ordered field embedding of ℝ into `Surreal`.
 
 universe u
 
-namespace SetTheory
-
 namespace PGame
 
 /-- For a natural number `n`, the pre-game `powHalf (n + 1)` is recursively defined as
@@ -143,11 +141,9 @@ theorem half_add_half_equiv_one : powHalf 1 + powHalf 1 ≈ 1 :=
 
 end PGame
 
-end SetTheory
-
 namespace Surreal
 
-open SetTheory PGame
+open PGame
 
 /-- Powers of the surreal number `half`. -/
 def powHalf (n : ℕ) : Surreal :=

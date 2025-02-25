@@ -64,7 +64,7 @@ The whole proof features a clear separation into lemmas of different roles:
 
 universe u
 
-open SetTheory Game PGame WellFounded
+open Game PGame WellFounded
 
 namespace Surreal.Multiplication
 
@@ -160,7 +160,7 @@ def Args.toMultiset : Args → Multiset PGame
   | (Args.P24 x₁ x₂ y) => {x₁, x₂, y}
 
 /-- A list of arguments is numeric if all the arguments are. -/
-def Args.Numeric (a : Args) := ∀ x ∈ a.toMultiset, SetTheory.PGame.Numeric x
+def Args.Numeric (a : Args) := ∀ x ∈ a.toMultiset, PGame.Numeric x
 
 lemma Args.numeric_P1 {x y} : (Args.P1 x y).Numeric ↔ x.Numeric ∧ y.Numeric := by
   simp [Args.Numeric, Args.toMultiset]
@@ -447,7 +447,7 @@ theorem main (a : Args) : a.Numeric → P124 a := by
 
 end Surreal.Multiplication
 
-namespace SetTheory.PGame
+namespace PGame
 open Surreal.Multiplication
 
 variable {x x₁ x₂ y y₁ y₂ : PGame.{u}}
@@ -497,11 +497,11 @@ theorem Numeric.mul_pos (hx₁ : x₁.Numeric) (hx₂ : x₂.Numeric) (hp₁ : 0
   simp_rw [P3, quot_zero_mul, quot_mul_zero, add_lt_add_iff_left] at this
   exact this
 
-end SetTheory.PGame
+end PGame
 
 namespace Surreal
 
-open SetTheory.PGame.Equiv
+open PGame.Equiv
 
 noncomputable instance : LinearOrderedCommRing Surreal where
   __ := Surreal.orderedAddCommGroup
