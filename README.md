@@ -11,8 +11,17 @@ Examples of combinatorial games include [Tic-Tac-Toe](https://en.wikipedia.org/w
 
 ## What's in scope?
 
-There are broadly four things this repository aims to achieve:
+There are broadly four things this repository aims to formalize:
 
-- Formalize the theory of general combinatorial games, 
+- The theory of [general combinatorial games](https://github.com/users/vihdzp/projects/3) (temperature, dominated positions, reversible positions, etc.)
+- The theory of [specific combinatorial games](https://github.com/users/vihdzp/projects/7) (poset games, Hackenbush, tic-tac-toe, etc.)
+- The theory of [nimbers](https://github.com/users/vihdzp/projects/8) (prove their algebraic completeness, prove the simplicity theorems)
+- The theory of [surreal numbers](https://github.com/users/vihdzp/projects/9) (set up their field structure, prove their representations as Hahn series)
+
+## References
 
 Our development of combinatorial game theory is based largely on Conway (2001), supplemented by various other more modern resources.
+
+* Conway, J. H. - On numbers and games (2001)
+* Dierk Schleicher and Michael Stoll - [An Introduction to Conway's Games and Numbers](https://arxiv.org/abs/math/0410026) (2005)
+* Siegel, A. N. - Combinatorial game theory (2013)
