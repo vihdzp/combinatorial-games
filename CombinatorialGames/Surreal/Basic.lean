@@ -49,8 +49,6 @@ One can also map all the ordinals into the surreals!
 
 universe u
 
-namespace SetTheory
-
 open scoped PGame
 
 namespace PGame
@@ -257,9 +255,7 @@ theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
 
 end PGame
 
-end SetTheory
-
-open SetTheory PGame
+open PGame
 
 /-- The type of surreal numbers. These are the numeric pre-games quotiented
 by the equivalence relation `x ≈ y ↔ x ≤ y ∧ y ≤ x`. In the quotient,
