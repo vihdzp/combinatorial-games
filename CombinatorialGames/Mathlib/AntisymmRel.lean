@@ -5,8 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import Mathlib.Order.Antisymmetrization
 
-variable {α : Type*}
+variable {α : Type*} {a b : α} {r : α → α → Prop}
 
-theorem AntisymmRel.of_eq {a b : α} {r : α → α → Prop} [IsRefl α r] (h : a = b) :
-    AntisymmRel r a b :=
-  h ▸ AntisymmRel.rfl
+theorem AntisymmRel.of_eq [IsRefl α r] (h : a = b) : AntisymmRel r a b :=
+  h ▸ .rfl
