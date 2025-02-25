@@ -60,10 +60,6 @@ theorem star_fuzzy_zero : star ‖ 0 :=
 @[simp]
 theorem neg_star : -star = star := by simp [star]
 
-@[simp]
-protected theorem zero_lt_one : (0 : PGame) < 1 :=
-  lt_of_le_of_lf (zero_le_of_isEmpty_rightMoves 1) (zero_lf_le.2 ⟨default, le_rfl⟩)
-
 /-! ### Up and down -/
 
 /-- The pre-game `up` -/
@@ -130,12 +126,5 @@ theorem neg_up : -up = down := by simp [up, down]
 theorem star_fuzzy_down : star ‖ down := by
   rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
   exact star_fuzzy_up
-
-instance : ZeroLEOneClass PGame :=
-  ⟨PGame.zero_lt_one.le⟩
-
-@[simp]
-theorem zero_lf_one : (0 : PGame) ⧏ 1 :=
-  PGame.zero_lt_one.lf
 
 end PGame

@@ -1538,6 +1538,17 @@ instance : NatCast PGame :=
 protected theorem nat_succ (n : ℕ) : ((n + 1 : ℕ) : PGame) = n + 1 :=
   rfl
 
+@[simp]
+protected theorem zero_lt_one : (0 : PGame) < 1 :=
+  lt_of_le_of_lf (zero_le_of_isEmpty_rightMoves 1) (zero_lf_le.2 ⟨default, le_rfl⟩)
+
+instance : ZeroLEOneClass PGame :=
+  ⟨PGame.zero_lt_one.le⟩
+
+@[simp]
+theorem zero_lf_one : (0 : PGame) ⧏ 1 :=
+  PGame.zero_lt_one.lf
+
 instance isEmpty_leftMoves_add (x y : PGame.{u}) [IsEmpty x.LeftMoves] [IsEmpty y.LeftMoves] :
     IsEmpty (x + y).LeftMoves := by
   cases x
