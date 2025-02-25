@@ -49,8 +49,6 @@ One can also map all the ordinals into the surreals!
 
 universe u
 
-namespace SetTheory
-
 open scoped PGame
 
 namespace PGame
@@ -256,8 +254,6 @@ theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
   simpa using fun i => IH _ (Ordinal.toLeftMovesToPGame_symm_lt i)
 
 end PGame
-
-end SetTheory
 
 open SetTheory PGame
 

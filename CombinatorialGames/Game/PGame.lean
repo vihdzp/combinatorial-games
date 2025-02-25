@@ -17,27 +17,27 @@ operations descend to "games", defined via the equivalence relation `p ≈ q ↔
 
 The surreal numbers will be built as a quotient of a subtype of pregames.
 
-A pregame (`SetTheory.PGame` below) is axiomatised via an inductive type, whose sole constructor
+A pregame (`PGame` below) is axiomatised via an inductive type, whose sole constructor
 takes two types (thought of as indexing the possible moves for the players Left and Right), and a
-pair of functions out of these types to `SetTheory.PGame` (thought of as describing the resulting
+pair of functions out of these types to `PGame` (thought of as describing the resulting
 game after making a move).
 
 We may denote a game as $\{L | R\}$, where $L$ and $R$ stand for the collections of left and right
 moves. This notation is not currently used in Mathlib.
 
 Combinatorial games themselves, as a quotient of pregames, are constructed in
-`Mathlib.SetTheory.Game.Basic`.
+`CombinatorialGames.Game.Basic`.
 
 ## Conway induction
 
 By construction, the induction principle for pregames is exactly "Conway induction". That is, to
-prove some predicate `SetTheory.PGame → Prop` holds for all pregames, it suffices to prove
+prove some predicate `PGame → Prop` holds for all pregames, it suffices to prove
 that for every pregame `g`, if the predicate holds for every game resulting from making a move,
 then it also holds for `g`.
 
 While it is often convenient to work "by induction" on pregames, in some situations this becomes
-awkward, so we also define accessor functions `SetTheory.PGame.LeftMoves`,
-`SetTheory.PGame.RightMoves`, `SetTheory.PGame.moveLeft` and `SetTheory.PGame.moveRight`.
+awkward, so we also define accessor functions `PGame.LeftMoves`,
+`PGame.RightMoves`, `PGame.moveLeft` and `PGame.moveRight`.
 There is a relation `PGame.Subsequent p q`, saying that
 `p` can be reached by playing some non-empty sequence of moves starting from `q`, an instance
 `WellFounded Subsequent`, and a local tactic `pgame_wf_tac` which is helpful for discharging proof
@@ -60,7 +60,7 @@ Statements like `zero_le_lf`, `zero_lf_le`, etc. unfold these definitions. The t
 The theorems `zero_le`, `zero_lf`, etc. also take into account that `0` has no moves.
 
 Later, games will be defined as the quotient by the `≈` relation; that is to say, the
-`Antisymmetrization` of `SetTheory.PGame`.
+`Antisymmetrization` of `PGame`.
 
 ## Algebraic structures
 
@@ -97,8 +97,6 @@ An interested reader may like to formalise some of the material from
 * [Andreas Blass, *A game semantics for linear logic*][MR1167694]
 * [André Joyal, *Remarques sur la théorie des jeux à deux personnes*][joyal1997]
 -/
-
-namespace SetTheory
 
 open Function Relation
 
@@ -2201,7 +2199,5 @@ theorem zero_lf_one : (0 : PGame) ⧏ 1 :=
   PGame.zero_lt_one.lf
 
 end PGame
-
-end SetTheory
 
 set_option linter.style.longFile 2300
