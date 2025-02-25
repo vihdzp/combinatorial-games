@@ -6,6 +6,7 @@ import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Game.Nim
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
+import CombinatorialGames.Game.Poset
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.State
 import CombinatorialGames.Nimber.Basic
