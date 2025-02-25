@@ -10,7 +10,7 @@ import Mathlib.Tactic.Abel
 /-!
 # Combinatorial games.
 
-In this file we construct an instance `OrderedAddCommGroup SetTheory.Game`.
+In this file we construct an instance `OrderedAddCommGroup Game`.
 
 ## Multiplication on pre-games
 

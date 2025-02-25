@@ -17,12 +17,12 @@ other hand, the birthday of a game is the smallest birthday among all pre-games 
 
 The birthday of a pre-game can be understood as representing the depth of its game tree. On the
 other hand, the birthday of a game more closely matches Conway's original description. The lemma
-`SetTheory.Game.birthday_eq_pGameBirthday` links both definitions together.
+`Game.birthday_eq_pGameBirthday` links both definitions together.
 
 # Main declarations
 
 - `PGame.birthday`: The birthday of a pre-game.
-- `SetTheory.Game.birthday`: The birthday of a game.
+- `Game.birthday`: The birthday of a game.
 
 # Todo
 
