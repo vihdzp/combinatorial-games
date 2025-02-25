@@ -985,7 +985,7 @@ theorem inv_eq_of_equiv_zero {x : PGame} (h : x ≈ 0) : x⁻¹ = 0 := by classi
 
 @[simp]
 theorem inv_zero : (0 : PGame)⁻¹ = 0 :=
-  inv_eq_of_equiv_zero antisymmRel_rfl
+  inv_eq_of_equiv_zero .rfl
 
 theorem inv_eq_of_pos {x : PGame} (h : 0 < x) : x⁻¹ = inv' x := by
   classical exact (if_neg h.lf.not_equiv').trans (if_pos h)
