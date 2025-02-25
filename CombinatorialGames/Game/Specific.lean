@@ -3,9 +3,20 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.PGame
+import CombinatorialGames.Game.PGame
+
+/-!
+# Specific games
+
+This file defines some basic combinatorial games, like `star = {0 | 0}`, `up = {0 | *}`, and
+`down = {* | 0}`.
+-/
+
+universe u
 
 namespace PGame
+
+/-! ### Star -/
 
 /-- The pre-game `star`, which is fuzzy with zero. -/
 def star : PGame.{u} :=
@@ -52,6 +63,8 @@ theorem neg_star : -star = star := by simp [star]
 @[simp]
 protected theorem zero_lt_one : (0 : PGame) < 1 :=
   lt_of_le_of_lf (zero_le_of_isEmpty_rightMoves 1) (zero_lf_le.2 ⟨default, le_rfl⟩)
+
+/-! ### Up and down -/
 
 /-- The pre-game `up` -/
 def up : PGame.{u} :=
