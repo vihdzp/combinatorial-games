@@ -10,7 +10,7 @@ import Mathlib.Tactic.Abel
 /-!
 # Combinatorial games.
 
-In this file we construct an instance `OrderedAddCommGroup SetTheory.Game`.
+In this file we construct an instance `OrderedAddCommGroup Game`.
 
 ## Multiplication on pre-games
 
@@ -22,8 +22,6 @@ the abelian group structure on games allows us to simplify many proofs for pre-g
 
 -- Porting note: many definitions here are noncomputable as the compiler does not support PGame.rec
 noncomputable section
-
-namespace SetTheory
 
 open Function PGame
 
@@ -1007,5 +1005,3 @@ theorem inv_one_equiv : (1⁻¹ : PGame) ≈ 1 :=
   inv_one.equiv
 
 end PGame
-
-end SetTheory
