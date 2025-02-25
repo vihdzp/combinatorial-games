@@ -255,7 +255,7 @@ theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
 
 end PGame
 
-open SetTheory PGame
+open PGame
 
 /-- The type of surreal numbers. These are the numeric pre-games quotiented
 by the equivalence relation `x ≈ y ↔ x ≤ y ∧ y ≤ x`. In the quotient,

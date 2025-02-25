@@ -143,7 +143,7 @@ end PGame
 
 namespace Surreal
 
-open SetTheory PGame
+open PGame
 
 /-- Powers of the surreal number `half`. -/
 def powHalf (n : ℕ) : Surreal :=

@@ -23,7 +23,7 @@ The map to surreals is defined in `Ordinal.toSurreal`.
 
 universe u
 
-open SetTheory PGame
+open PGame
 
 open scoped NaturalOps PGame
 

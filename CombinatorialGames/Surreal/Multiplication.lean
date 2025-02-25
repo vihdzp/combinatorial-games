@@ -64,7 +64,7 @@ The whole proof features a clear separation into lemmas of different roles:
 
 universe u
 
-open SetTheory Game PGame WellFounded
+open Game PGame WellFounded
 
 namespace Surreal.Multiplication
 
