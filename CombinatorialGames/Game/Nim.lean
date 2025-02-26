@@ -68,6 +68,7 @@ noncomputable def toRightMovesNim {o : Ordinal} : Set.Iio o ≃ (nim o).RightMov
 theorem toLeftMovesNim_symm_lt {o : Ordinal} (i : (nim o).LeftMoves) :
     toLeftMovesNim.symm i < o :=
   (toLeftMovesNim.symm i).prop
+
 @[simp]
 theorem toRightMovesNim_symm_lt {o : Ordinal} (i : (nim o).RightMoves) :
     toRightMovesNim.symm i < o :=
@@ -76,6 +77,7 @@ theorem toRightMovesNim_symm_lt {o : Ordinal} (i : (nim o).RightMoves) :
 @[simp]
 theorem moveLeft_nim {o : Ordinal} (i) : (nim o).moveLeft i = nim (toLeftMovesNim.symm i).val :=
   (congr_heq (moveLeft_nim_hEq o).symm (cast_heq _ i)).symm
+
 @[simp]
 theorem moveRight_nim {o : Ordinal} (i) : (nim o).moveRight i = nim (toRightMovesNim.symm i).val :=
   (congr_heq (moveRight_nim_hEq o).symm (cast_heq _ i)).symm
@@ -83,6 +85,7 @@ theorem moveRight_nim {o : Ordinal} (i) : (nim o).moveRight i = nim (toRightMove
 theorem moveLeft_toLeftMovesNim {o : Ordinal} (i) :
     (nim o).moveLeft (toLeftMovesNim i) = nim i := by
   simp
+
 theorem moveRight_toRightMovesNim {o : Ordinal} (i) :
     (nim o).moveRight (toRightMovesNim i) = nim i := by
   simp
