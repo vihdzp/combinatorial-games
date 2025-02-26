@@ -255,15 +255,10 @@ def negMulRelabelling (x y : PGame.{u}) : -x * y ≡r -(x * y) :=
   | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
       refine ⟨Equiv.sumComm _ _, Equiv.sumComm _ _, ?_, ?_⟩ <;>
       rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-      · dsimp
-        apply ((negAddRelabelling _ _).trans _).symm
+      · apply ((negAddRelabelling _ _).trans _).symm
         apply ((negAddRelabelling _ _).trans (Relabelling.addCongr _ _)).subCongr
-        -- Porting note: we used to just do `<;> exact (negMulRelabelling _ _).symm` from here.
         · exact (negMulRelabelling _ _).symm
         · exact (negMulRelabelling _ _).symm
-        -- Porting note: not sure what has gone wrong here.
-        -- The goal is hideous here, and the `exact` doesn't work,
-        -- but if we just `change` it to look like the mathlib3 goal then we're fine!?
         change -(mk xl xr xL xR * _) ≡r _
         exact (negMulRelabelling _ _).symm
   termination_by (x, y)
@@ -275,19 +270,15 @@ def mulNegRelabelling (x y : PGame) : x * -y ≡r -(x * y) :=
 /-- `x * 1` has the same moves as `x`. -/
 def mulOneRelabelling : ∀ x : PGame.{u}, x * 1 ≡r x
   | ⟨xl, xr, xL, xR⟩ => by
-    -- Porting note: the next four lines were just `unfold has_one.one,`
-    show _ * One.one ≡r _
-    unfold One.one
-    unfold instOnePGame
     change mk _ _ _ _ * mk _ _ _ _ ≡r _
     refine ⟨(Equiv.sumEmpty _ _).trans (Equiv.prodPUnit _),
       (Equiv.emptySum _ _).trans (Equiv.prodPUnit _), ?_, ?_⟩ <;>
-    (try rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)) <;>
-    { dsimp
+    · rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)
+      dsimp
       apply (Relabelling.subCongr (Relabelling.refl _) (mulZeroRelabelling _)).trans
       rw [sub_zero_eq_add_zero]
       exact (addZeroRelabelling _).trans <|
-        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _) }
+        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _)
 
 /-- `1 * x` has the same moves as `x`. -/
 def oneMulRelabelling (x : PGame) : 1 * x ≡r x :=
@@ -299,22 +290,22 @@ def inv'Zero : inv' 0 ≡r 1 := by
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩
   · apply Equiv.equivPUnit (InvTy _ _ _)
   · apply Equiv.equivPEmpty (InvTy _ _ _)
-  · -- Porting note: had to add `rfl`, because `simp` only uses the built-in `rfl`.
-    simp; rfl
+  · simp
+    rfl
   · dsimp
     infer_instance
 
 /-- `inv' 1` has exactly the same moves as `1`. -/
 def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
-  change (mk _ _ _ _) ≡r 1
+  change Relabelling (mk _ _ _ _) 1
   have : IsEmpty { _i : PUnit.{u + 1} // (0 : PGame.{u}) < 0 } := by
     rw [lt_self_iff_false]
     infer_instance
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩ <;> dsimp
   · apply Equiv.equivPUnit
   · apply Equiv.equivOfIsEmpty
-  · -- Porting note: had to add `rfl`, because `simp` only uses the built-in `rfl`.
-    simp; rfl
+  · simp
+    rfl
   · infer_instance
 
 /-- `1⁻¹` has exactly the same moves as `1`. -/
