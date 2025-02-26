@@ -8,7 +8,7 @@ import CombinatorialGames.Game.PGame
 import Mathlib.Tactic.Abel
 
 /-!
-# Combinatorial games.
+# Combinatorial games
 
 In this file we construct an instance `OrderedAddCommGroup Game`.
 
@@ -20,14 +20,9 @@ imply `x * z ≈ y * z`. Hence, multiplication is not a well-defined operation o
 the abelian group structure on games allows us to simplify many proofs for pre-games.
 -/
 
--- Porting note: many definitions here are noncomputable as the compiler does not support PGame.rec
-noncomputable section
-
 open Function PGame
 
 universe u
-
--- Porting note: moved the setoid instance to PGame.lean
 
 /-- The type of combinatorial games. In ZFC, a combinatorial game is constructed from
   two sets of combinatorial games that have been constructed at an earlier
@@ -42,7 +37,6 @@ abbrev Game :=
 
 namespace Game
 
--- Porting note (https://github.com/leanprover-community/mathlib4/issues/11445): added this definition
 /-- Negation of games. -/
 instance : Neg Game where
   neg := Quot.map Neg.neg <| fun _ _ => (neg_equiv_neg_iff).2
@@ -103,7 +97,6 @@ If `x ‖ 0`, then the first player can always win `x`. -/
 def Fuzzy : Game → Game → Prop :=
   Quotient.lift₂ PGame.Fuzzy fun _ _ _ _ hx hy => propext (fuzzy_congr hx hy)
 
--- Porting note: had to replace ⧏ with LF, otherwise cannot differentiate with the operator on PGame
 instance : IsTrichotomous Game LF :=
   ⟨by
     rintro ⟨x⟩ ⟨y⟩
@@ -118,9 +111,7 @@ end Game
 
 namespace PGame
 
--- Porting note: In a lot of places, I had to add explicitly that the quotient element was a Game.
--- In Lean4, quotients don't have the setoid as an instance argument,
--- but as an explicit argument, see https://leanprover.zulipchat.com/#narrow/stream/113489-new-members/topic/confusion.20between.20equivalence.20and.20instance.20setoid/near/360822354
+-- TODO: use `Game.mk` instead of setoid notation
 theorem le_iff_game_le {x y : PGame} : x ≤ y ↔ (⟦x⟧ : Game) ≤ ⟦y⟧ :=
   Iff.rfl
 
@@ -444,15 +435,10 @@ def negMulRelabelling (x y : PGame.{u}) : -x * y ≡r -(x * y) :=
   | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
       refine ⟨Equiv.sumComm _ _, Equiv.sumComm _ _, ?_, ?_⟩ <;>
       rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-      · dsimp
-        apply ((negAddRelabelling _ _).trans _).symm
+      · apply ((negAddRelabelling _ _).trans _).symm
         apply ((negAddRelabelling _ _).trans (Relabelling.addCongr _ _)).subCongr
-        -- Porting note: we used to just do `<;> exact (negMulRelabelling _ _).symm` from here.
         · exact (negMulRelabelling _ _).symm
         · exact (negMulRelabelling _ _).symm
-        -- Porting note: not sure what has gone wrong here.
-        -- The goal is hideous here, and the `exact` doesn't work,
-        -- but if we just `change` it to look like the mathlib3 goal then we're fine!?
         change -(mk xl xr xL xR * _) ≡r _
         exact (negMulRelabelling _ _).symm
   termination_by (x, y)
@@ -488,8 +474,7 @@ theorem quot_mul_neg (x y : PGame) : ⟦x * -y⟧ = (-⟦x * y⟧ : Game) :=
 theorem quot_neg_mul_neg (x y : PGame) : ⟦-x * -y⟧ = (⟦x * y⟧ : Game) := by simp
 
 @[simp]
-theorem quot_left_distrib (x y z : PGame) : (⟦x * (y + z)⟧ : Game) = ⟦x * y⟧ + ⟦x * z⟧ :=
-  match x, y, z with
+theorem quot_left_distrib : ∀ x y z : PGame, (⟦x * (y + z)⟧ : Game) = ⟦x * y⟧ + ⟦x * z⟧
   | mk xl xr xL xR, mk yl yr yL yR, mk zl zr zL zR => by
     let x := mk xl xr xL xR
     let y := mk yl yr yL yR
@@ -497,92 +482,48 @@ theorem quot_left_distrib (x y z : PGame) : (⟦x * (y + z)⟧ : Game) = ⟦x * 
     refine quot_eq_of_mk'_quot_eq ?_ ?_ ?_ ?_
     · fconstructor
       · rintro (⟨_, _ | _⟩ | ⟨_, _ | _⟩) <;>
-          -- Porting note: we've increased `maxDepth` here from `5` to `6`.
-          -- Likely this sort of off-by-one error is just a change in the implementation
-          -- of `solve_by_elim`.
-          solve_by_elim (config := { maxDepth := 6 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 6) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, _⟩ | ⟨_, _⟩) <;>
-          solve_by_elim (config := { maxDepth := 6 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 6) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨_, _ | _⟩ | ⟨_, _ | _⟩) <;> rfl
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, _⟩ | ⟨_, _⟩) <;> rfl
     · fconstructor
       · rintro (⟨_, _ | _⟩ | ⟨_, _ | _⟩) <;>
-          solve_by_elim (config := { maxDepth := 6 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 6) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, _⟩ | ⟨_, _⟩) <;>
-          solve_by_elim (config := { maxDepth := 6 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 6) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨_, _ | _⟩ | ⟨_, _ | _⟩) <;> rfl
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, _⟩ | ⟨_, _⟩) <;> rfl
-    -- Porting note: explicitly wrote out arguments to each recursive
-    -- quot_left_distrib reference below, because otherwise the decreasing_by block
-    -- failed. Previously, each branch ended with: `simp [quot_left_distrib]; abel`
-    -- See https://github.com/leanprover/lean4/issues/2288
-    · rintro (⟨i, j | k⟩ | ⟨i, j | k⟩)
-      · change
-          ⟦xL i * (y + z) + x * (yL j + z) - xL i * (yL j + z)⟧ =
-            ⟦xL i * y + x * yL j - xL i * yL j + x * z⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_left_distrib (xL i) (yL j) (mk zl zr zL zR)]
-        abel
-      · change
-          ⟦xL i * (y + z) + x * (y + zL k) - xL i * (y + zL k)⟧ =
-            ⟦x * y + (xL i * z + x * zL k - xL i * zL k)⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (zL k)]
-        abel
-      · change
-          ⟦xR i * (y + z) + x * (yR j + z) - xR i * (yR j + z)⟧ =
-            ⟦xR i * y + x * yR j - xR i * yR j + x * z⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_left_distrib (xR i) (yR j) (mk zl zr zL zR)]
-        abel
-      · change
-          ⟦xR i * (y + z) + x * (y + zR k) - xR i * (y + zR k)⟧ =
-            ⟦x * y + (xR i * z + x * zR k - xR i * zR k)⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (zR k)]
-        abel
-    · rintro (⟨i, j | k⟩ | ⟨i, j | k⟩)
-      · change
-          ⟦xL i * (y + z) + x * (yR j + z) - xL i * (yR j + z)⟧ =
-            ⟦xL i * y + x * yR j - xL i * yR j + x * z⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_left_distrib (xL i) (yR j) (mk zl zr zL zR)]
-        abel
-      · change
-          ⟦xL i * (y + z) + x * (y + zR k) - xL i * (y + zR k)⟧ =
-            ⟦x * y + (xL i * z + x * zR k - xL i * zR k)⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_left_distrib (xL i) (mk yl yr yL yR) (zR k)]
-        abel
-      · change
-          ⟦xR i * (y + z) + x * (yL j + z) - xR i * (yL j + z)⟧ =
-            ⟦xR i * y + x * yL j - xR i * yL j + x * z⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_left_distrib (xR i) (yL j) (mk zl zr zL zR)]
-        abel
-      · change
-          ⟦xR i * (y + z) + x * (y + zL k) - xR i * (y + zL k)⟧ =
-            ⟦x * y + (xR i * z + x * zL k - xR i * zL k)⟧
-        simp only [quot_sub, quot_add]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_left_distrib (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_left_distrib (xR i) (mk yl yr yL yR) (zL k)]
-        abel
-  termination_by (x, y, z)
+    all_goals rintro (⟨i, j | k⟩ | ⟨i, j | k⟩)
+    on_goal 1 =>
+      change ⟦xL i * (y + z) + x * (yL j + z) - xL i * (yL j + z)⟧ =
+        ⟦xL i * y + x * yL j - xL i * yL j + x * z⟧
+    on_goal 2 =>
+      change ⟦xL i * (y + z) + x * (y + zL k) - xL i * (y + zL k)⟧ =
+        ⟦x * y + (xL i * z + x * zL k - xL i * zL k)⟧
+    on_goal 3 =>
+      change ⟦xR i * (y + z) + x * (yR j + z) - xR i * (yR j + z)⟧ =
+        ⟦xR i * y + x * yR j - xR i * yR j + x * z⟧
+    on_goal 4 =>
+      change ⟦xR i * (y + z) + x * (y + zR k) - xR i * (y + zR k)⟧ =
+        ⟦x * y + (xR i * z + x * zR k - xR i * zR k)⟧
+    on_goal 5 =>
+      change ⟦xL i * (y + z) + x * (yR j + z) - xL i * (yR j + z)⟧ =
+        ⟦xL i * y + x * yR j - xL i * yR j + x * z⟧
+    on_goal 6 =>
+      change ⟦xL i * (y + z) + x * (y + zR k) - xL i * (y + zR k)⟧ =
+        ⟦x * y + (xL i * z + x * zR k - xL i * zR k)⟧
+    on_goal 7 =>
+      change ⟦xR i * (y + z) + x * (yL j + z) - xR i * (yL j + z)⟧ =
+        ⟦xR i * y + x * yL j - xR i * yL j + x * z⟧
+    on_goal 8 =>
+      change ⟦xR i * (y + z) + x * (y + zL k) - xR i * (y + zL k)⟧ =
+        ⟦x * y + (xR i * z + x * zL k - xR i * zL k)⟧
+    all_goals
+      simp only [quot_sub, quot_add]
+      repeat rw [quot_left_distrib]
+      abel
+termination_by x y z => (x, y, z)
 
 /-- `x * (y + z)` is equivalent to `x * y + x * z`. -/
 theorem left_distrib_equiv (x y z : PGame) : x * (y + z) ≈ x * y + x * z :=
@@ -609,19 +550,15 @@ theorem quot_right_distrib_sub (x y z : PGame) : (⟦(y - z) * x⟧ : Game) = �
 /-- `x * 1` has the same moves as `x`. -/
 def mulOneRelabelling : ∀ x : PGame.{u}, x * 1 ≡r x
   | ⟨xl, xr, xL, xR⟩ => by
-    -- Porting note: the next four lines were just `unfold has_one.one,`
-    show _ * One.one ≡r _
-    unfold One.one
-    unfold instOnePGame
     change mk _ _ _ _ * mk _ _ _ _ ≡r _
     refine ⟨(Equiv.sumEmpty _ _).trans (Equiv.prodPUnit _),
       (Equiv.emptySum _ _).trans (Equiv.prodPUnit _), ?_, ?_⟩ <;>
-    (try rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)) <;>
-    { dsimp
+    · rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)
+      dsimp
       apply (Relabelling.subCongr (Relabelling.refl _) (mulZeroRelabelling _)).trans
       rw [sub_zero_eq_add_zero]
       exact (addZeroRelabelling _).trans <|
-        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _) }
+        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _)
 
 /-- `1 * x` has the same moves as `x`. -/
 protected lemma one_mul : ∀ (x : PGame), 1 * x ≡ x
@@ -655,8 +592,7 @@ theorem quot_one_mul (x : PGame) : (⟦1 * x⟧ : Game) = ⟦x⟧ :=
 theorem one_mul_equiv (x : PGame) : 1 * x ≈ x :=
   Quotient.exact <| quot_one_mul x
 
-theorem quot_mul_assoc (x y z : PGame) : (⟦x * y * z⟧ : Game) = ⟦x * (y * z)⟧ :=
-  match x, y, z with
+theorem quot_mul_assoc : ∀ x y z : PGame, (⟦x * y * z⟧ : Game) = ⟦x * (y * z)⟧
   | mk xl xr xL xR, mk yl yr yL yR, mk zl zr zL zR => by
     let x := mk xl xr xL xR
     let y := mk yl yr yL yR
@@ -664,146 +600,73 @@ theorem quot_mul_assoc (x y z : PGame) : (⟦x * y * z⟧ : Game) = ⟦x * (y * 
     refine quot_eq_of_mk'_quot_eq ?_ ?_ ?_ ?_
     · fconstructor
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩, _⟩ | ⟨⟨_, _⟩ | ⟨_, _⟩, _⟩) <;>
-          -- Porting note: as above, increased the `maxDepth` here by 1.
-          solve_by_elim (config := { maxDepth := 8 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 8) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩) <;>
-          solve_by_elim (config := { maxDepth := 8 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 8) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩, _⟩ | ⟨⟨_, _⟩ | ⟨_, _⟩, _⟩) <;> rfl
       · rintro (⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩) <;> rfl
     · fconstructor
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩, _⟩ | ⟨⟨_, _⟩ | ⟨_, _⟩, _⟩) <;>
-          solve_by_elim (config := { maxDepth := 8 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 8) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩) <;>
-          solve_by_elim (config := { maxDepth := 8 }) [Sum.inl, Sum.inr, Prod.mk]
+          solve_by_elim (maxDepth := 8) [Sum.inl, Sum.inr, Prod.mk]
       · rintro (⟨⟨_, _⟩ | ⟨_, _⟩, _⟩ | ⟨⟨_, _⟩ | ⟨_, _⟩, _⟩) <;> rfl
       · rintro (⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩ | ⟨_, ⟨_, _⟩ | ⟨_, _⟩⟩) <;> rfl
-    -- Porting note: explicitly wrote out arguments to each recursive
-    -- quot_mul_assoc reference below, because otherwise the decreasing_by block
-    -- failed. Each branch previously ended with: `simp [quot_mul_assoc]; abel`
-    -- See https://github.com/leanprover/lean4/issues/2288
-    · rintro (⟨⟨i, j⟩ | ⟨i, j⟩, k⟩ | ⟨⟨i, j⟩ | ⟨i, j⟩, k⟩)
-      · change
-          ⟦(xL i * y + x * yL j - xL i * yL j) * z + x * y * zL k -
-                (xL i * y + x * yL j - xL i * yL j) * zL k⟧ =
-            ⟦xL i * (y * z) + x * (yL j * z + y * zL k - yL j * zL k) -
-                xL i * (yL j * z + y * zL k - yL j * zL k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xL i) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (zL k)]
-        rw [quot_mul_assoc (xL i) (yL j) (zL k)]
-        abel
-      · change
-          ⟦(xR i * y + x * yR j - xR i * yR j) * z + x * y * zL k -
-                (xR i * y + x * yR j - xR i * yR j) * zL k⟧ =
-            ⟦xR i * (y * z) + x * (yR j * z + y * zL k - yR j * zL k) -
-                xR i * (yR j * z + y * zL k - yR j * zL k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xR i) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (zL k)]
-        rw [quot_mul_assoc (xR i) (yR j) (zL k)]
-        abel
-      · change
-          ⟦(xL i * y + x * yR j - xL i * yR j) * z + x * y * zR k -
-                (xL i * y + x * yR j - xL i * yR j) * zR k⟧ =
-            ⟦xL i * (y * z) + x * (yR j * z + y * zR k - yR j * zR k) -
-                xL i * (yR j * z + y * zR k - yR j * zR k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xL i) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (zR k)]
-        rw [quot_mul_assoc (xL i) (yR j) (zR k)]
-        abel
-      · change
-          ⟦(xR i * y + x * yL j - xR i * yL j) * z + x * y * zR k -
-                (xR i * y + x * yL j - xR i * yL j) * zR k⟧ =
-            ⟦xR i * (y * z) + x * (yL j * z + y * zR k - yL j * zR k) -
-                xR i * (yL j * z + y * zR k - yL j * zR k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xR i) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (zR k)]
-        rw [quot_mul_assoc (xR i) (yL j) (zR k)]
-        abel
-    · rintro (⟨⟨i, j⟩ | ⟨i, j⟩, k⟩ | ⟨⟨i, j⟩ | ⟨i, j⟩, k⟩)
-      · change
-          ⟦(xL i * y + x * yL j - xL i * yL j) * z + x * y * zR k -
-                (xL i * y + x * yL j - xL i * yL j) * zR k⟧ =
-            ⟦xL i * (y * z) + x * (yL j * z + y * zR k - yL j * zR k) -
-                xL i * (yL j * z + y * zR k - yL j * zR k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xL i) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (zR k)]
-        rw [quot_mul_assoc (xL i) (yL j) (zR k)]
-        abel
-      · change
-          ⟦(xR i * y + x * yR j - xR i * yR j) * z + x * y * zR k -
-                (xR i * y + x * yR j - xR i * yR j) * zR k⟧ =
-            ⟦xR i * (y * z) + x * (yR j * z + y * zR k - yR j * zR k) -
-                xR i * (yR j * z + y * zR k - yR j * zR k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xR i) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (zR k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (zR k)]
-        rw [quot_mul_assoc (xR i) (yR j) (zR k)]
-        abel
-      · change
-          ⟦(xL i * y + x * yR j - xL i * yR j) * z + x * y * zL k -
-                (xL i * y + x * yR j - xL i * yR j) * zL k⟧ =
-            ⟦xL i * (y * z) + x * (yR j * z + y * zL k - yR j * zL k) -
-                xL i * (yR j * z + y * zL k - yR j * zL k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xL i) (yR j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (xL i) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yR j) (zL k)]
-        rw [quot_mul_assoc (xL i) (yR j) (zL k)]
-        abel
-      · change
-          ⟦(xR i * y + x * yL j - xR i * yL j) * z + x * y * zL k -
-                (xR i * y + x * yL j - xR i * yL j) * zL k⟧ =
-            ⟦xR i * (y * z) + x * (yL j * z + y * zL k - yL j * zL k) -
-                xR i * (yL j * z + y * zL k - yL j * zL k)⟧
-        simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
-                   quot_left_distrib_sub, quot_left_distrib]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (xR i) (yL j) (mk zl zr zL zR)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (xR i) (mk yl yr yL yR) (zL k)]
-        rw [quot_mul_assoc (mk xl xr xL xR) (yL j) (zL k)]
-        rw [quot_mul_assoc (xR i) (yL j) (zL k)]
-        abel
-  termination_by (x, y, z)
+    all_goals rintro (⟨⟨i, j⟩ | ⟨i, j⟩, k⟩ | ⟨⟨i, j⟩ | ⟨i, j⟩, k⟩)
+    on_goal 1 =>
+      change
+        ⟦(xL i * y + x * yL j - xL i * yL j) * z + x * y * zL k -
+          (xL i * y + x * yL j - xL i * yL j) * zL k⟧ =
+        ⟦xL i * (y * z) + x * (yL j * z + y * zL k - yL j * zL k) -
+          xL i * (yL j * z + y * zL k - yL j * zL k)⟧
+    on_goal 2 =>
+      change
+        ⟦(xR i * y + x * yR j - xR i * yR j) * z + x * y * zL k -
+          (xR i * y + x * yR j - xR i * yR j) * zL k⟧ =
+        ⟦xR i * (y * z) + x * (yR j * z + y * zL k - yR j * zL k) -
+          xR i * (yR j * z + y * zL k - yR j * zL k)⟧
+    on_goal 3 =>
+      change
+        ⟦(xL i * y + x * yR j - xL i * yR j) * z + x * y * zR k -
+          (xL i * y + x * yR j - xL i * yR j) * zR k⟧ =
+        ⟦xL i * (y * z) + x * (yR j * z + y * zR k - yR j * zR k) -
+          xL i * (yR j * z + y * zR k - yR j * zR k)⟧
+    on_goal 4 =>
+      change
+        ⟦(xR i * y + x * yL j - xR i * yL j) * z + x * y * zR k -
+          (xR i * y + x * yL j - xR i * yL j) * zR k⟧ =
+        ⟦xR i * (y * z) + x * (yL j * z + y * zR k - yL j * zR k) -
+          xR i * (yL j * z + y * zR k - yL j * zR k)⟧
+    on_goal 5 =>
+      change
+        ⟦(xL i * y + x * yL j - xL i * yL j) * z + x * y * zR k -
+          (xL i * y + x * yL j - xL i * yL j) * zR k⟧ =
+        ⟦xL i * (y * z) + x * (yL j * z + y * zR k - yL j * zR k) -
+          xL i * (yL j * z + y * zR k - yL j * zR k)⟧
+    on_goal 6 =>
+      change
+        ⟦(xR i * y + x * yR j - xR i * yR j) * z + x * y * zR k -
+          (xR i * y + x * yR j - xR i * yR j) * zR k⟧ =
+        ⟦xR i * (y * z) + x * (yR j * z + y * zR k - yR j * zR k) -
+          xR i * (yR j * z + y * zR k - yR j * zR k)⟧
+    on_goal 7 =>
+      change
+        ⟦(xL i * y + x * yR j - xL i * yR j) * z + x * y * zL k -
+          (xL i * y + x * yR j - xL i * yR j) * zL k⟧ =
+        ⟦xL i * (y * z) + x * (yR j * z + y * zL k - yR j * zL k) -
+          xL i * (yR j * z + y * zL k - yR j * zL k)⟧
+    on_goal 8 =>
+      change
+        ⟦(xR i * y + x * yL j - xR i * yL j) * z + x * y * zL k -
+          (xR i * y + x * yL j - xR i * yL j) * zL k⟧ =
+        ⟦xR i * (y * z) + x * (yL j * z + y * zL k - yL j * zL k) -
+          xR i * (yL j * z + y * zL k - yL j * zL k)⟧
+    all_goals
+      simp only [quot_sub, quot_add, quot_right_distrib_sub, quot_right_distrib,
+        quot_left_distrib_sub, quot_left_distrib]
+      repeat rw [quot_mul_assoc]
+      abel
+termination_by x y z => (x, y, z)
 
 /-- `x * y * z` is equivalent to `x * (y * z)`. -/
 theorem mul_assoc_equiv (x y z : PGame) : x * y * z ≈ x * (y * z) :=
@@ -939,10 +802,8 @@ def inv'Zero : inv' 0 ≡r 1 := by
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩
   · apply Equiv.equivPUnit (InvTy _ _ _)
   · apply Equiv.equivPEmpty (InvTy _ _ _)
-  · -- Porting note: we added `rfl` after the `simp`
-    -- (because `simp` now uses `rfl` only at reducible transparency)
-    -- Can we improve the simp set so it is not needed?
-    simp; rfl
+  · simp
+    rfl
   · dsimp
     infer_instance
 
@@ -965,8 +826,8 @@ def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩ <;> dsimp
   · apply Equiv.equivPUnit
   · apply Equiv.equivOfIsEmpty
-  · -- Porting note: had to add `rfl`, because `simp` only uses the built-in `rfl`.
-    simp; rfl
+  · simp
+    rfl
   · infer_instance
 
 theorem inv'_one_equiv : inv' 1 ≈ 1 :=
