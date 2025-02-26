@@ -92,6 +92,57 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := y.moveRight) i)
     exact ⟨j, mk_eq_mk.1 hj⟩
 
+-- TODO: docstring
+def IsOption (x y : IGame) : Prop :=
+  x ∈ y.leftMoves ∪ y.rightMoves
+
+theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := Or.inl
+theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := Or.inr
+
+-- TODO: is there some more general theorem about well-founded relations on quotients
+-- that we could use here?
+theorem isOption_wf : WellFounded IsOption := by
+  suffices ∀ x, Acc IsOption (mk x) from ⟨ind this⟩
+  intro x
+  induction x using PGame.moveRecOn with
+  | IH x hl hr =>
+    constructor
+    rintro ⟨y⟩ (h | h) <;>
+    obtain ⟨_, ⟨i, rfl⟩, (hi : _ = Quot.mk _ _)⟩ := h
+    exacts [hi ▸ hl i, hi ▸ hr i]
+
+instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
+
+/-- **Conway recursion**: build data for a game by recursively building it on its
+left and right sets.
+
+See `ofSetsRecOn` for an alternate form. -/
+@[elab_as_elim]
+noncomputable def moveRecOn {P : IGame → Sort*} (x)
+    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) : P x :=
+  isOption_wf.recursion x fun x IH ↦
+    H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
+
+@[simp]
+theorem moveRecOn_eq {P : IGame → Sort*} (x)
+    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
+    moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
+  isOption_wf.fix_eq _ _
+
+-- TODO: docstring
+def Subsequent : IGame → IGame → Prop :=
+  Relation.TransGen IsOption
+
+theorem Subsequent.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subsequent x y :=
+  Relation.TransGen.single (.of_mem_leftMoves h)
+
+theorem Subsequent.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subsequent x y :=
+  Relation.TransGen.single (.of_mem_rightMoves h)
+
+instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
+instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
+
 /-- Construct an `IGame` from its left and right sets. -/
 noncomputable def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
@@ -108,5 +159,37 @@ theorem rightMoves_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     (ofSets s t).rightMoves = t := by
   ext y
   simp [ofSets, range_comp, Equiv.range_eq_univ]
+
+@[simp]
+theorem ofSets_leftMoves_rightMoves (x : IGame) : ofSets x.leftMoves x.rightMoves = x := by
+  ext <;> simp
+
+/-- **Conway recursion**: build data for a game by recursively building it on its
+left and right sets.
+
+See `moveRecOn` for an alternate form. -/
+@[elab_as_elim]
+noncomputable def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
+    (H : Π (s t : Set _) [Small.{u} s] [Small.{u} t],
+      (Π x ∈ s, P x) → (Π x ∈ t, P x) → P (ofSets s t)) : P x :=
+  cast (by simp) <| moveRecOn (P := fun x ↦ P (ofSets x.leftMoves x.rightMoves)) x fun x IHl IHr ↦
+    H _ _ (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
+
+@[simp]
+theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u} s] [Small.{u} t]
+    (H : Π (s t : Set _) [Small.{u} s] [Small.{u} t],
+      (Π x ∈ s, P x) → (Π x ∈ t, P x) → P (ofSets s t)) :
+    ofSetsRecOn (ofSets s t) H =
+      H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
+  rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
+  congr
+  any_goals simp
+  all_goals
+    refine Function.hfunext rfl fun x _ h ↦ ?_
+    cases h
+    refine Function.hfunext ?_ fun _ _ _ ↦ ?_
+    · simp
+    · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
+
 
 end IGame
