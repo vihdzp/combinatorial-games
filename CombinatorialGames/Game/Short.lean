@@ -7,7 +7,7 @@ Authors: Kim Morrison
 import Mathlib.Data.Fintype.Basic
 import Mathlib.SetTheory.Cardinal.Cofinality
 import CombinatorialGames.Game.Birthday
-import Mathlib.SetTheory.Game.Relabelling
+import CombinatorialGames.Game.Relabelling
 
 /-!
 # Short games
