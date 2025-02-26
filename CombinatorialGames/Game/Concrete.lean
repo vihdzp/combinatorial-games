@@ -79,6 +79,7 @@ Even though these types are the same (not definitionally so), this is the prefer
 between them. -/
 def toLeftMovesPGame {a : α} : {b // b ≺ₗ a} ≃ (toPGame a).LeftMoves :=
   Equiv.cast (leftMoves_toPGame a).symm
+
 /-- Turns a right-subsequent position for `a` into a right move for `toPGame a` and vice versa.
 
 Even though these types are the same (not definitionally so), this is the preferred way to convert
