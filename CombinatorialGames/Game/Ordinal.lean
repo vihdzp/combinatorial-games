@@ -18,9 +18,8 @@ The map to surreals is defined in `Ordinal.toSurreal`.
 # Main declarations
 
 - `Ordinal.toPGame`: The canonical map between ordinals and pre-games.
-- `Ordinal.toPGameEmbedding`: The order embedding version of the previous map.
+- `Ordinal.toGame`: The canonical map between ordinals and games.
 -/
-
 
 universe u
 
@@ -29,6 +28,8 @@ open PGame
 open scoped NaturalOps PGame
 
 namespace Ordinal
+
+/-! ### `Ordinal` to `PGame` -/
 
 /-- Converts an ordinal into the corresponding pre-game. -/
 noncomputable def toPGame (o : Ordinal.{u}) : PGame.{u} :=
@@ -156,6 +157,8 @@ noncomputable def toPGameEmbedding : Ordinal.{u} ↪o PGame.{u} where
   toFun := Ordinal.toPGame
   inj' := toPGame_injective
   map_rel_iff' := @toPGame_le_iff
+
+/-! ### `Ordinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
 noncomputable def toGame : Ordinal.{u} ↪o Game.{u} where

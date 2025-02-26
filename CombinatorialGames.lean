@@ -15,3 +15,4 @@ import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Ordinal
