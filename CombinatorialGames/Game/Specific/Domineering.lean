@@ -6,6 +6,7 @@ Authors: Kim Morrison, Violeta Hernández Palacios
 import CombinatorialGames.Game.Concrete
 import Mathlib.Algebra.Group.Units.Equiv
 import Mathlib.Algebra.Order.Group.Nat
+import Mathlib.Data.Finset.Sort
 
 /-!
 # Domineering as a combinatorial game.
@@ -36,6 +37,8 @@ def Domineering := Finset (ℤ × ℤ) deriving DecidableEq
   ofDomineering (toDomineering s) = s := rfl
 
 namespace Domineering
+
+unsafe instance : Repr Domineering := Finset.instRepr
 
 /-- Left can play anywhere that a square and the square below it are open. -/
 def left (b : Domineering) : Finset (ℤ × ℤ) :=
