@@ -200,7 +200,7 @@ theorem toPGame_nadd (a b : Ordinal) : (a ♯ b).toPGame ≈ a.toPGame + b.toPGa
   · induction i using leftMovesAddRecOn
     all_goals
       rename_i i
-      let wf := toLeftMovesToPGame_symm_lt i
+      have wf := toLeftMovesToPGame_symm_lt i
       simp only [add_moveLeft_inl, add_moveLeft_inr]
       rw [toPGame_moveLeft', ← lf_congr_left (toPGame_nadd _ _), toPGame_lf_iff]
     · exact nadd_lt_nadd_right wf _
