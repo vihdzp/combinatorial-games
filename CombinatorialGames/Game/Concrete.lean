@@ -112,12 +112,6 @@ theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
     (toRightMovesPGame.symm i).1 ≺ᵣ a :=
   (toRightMovesPGame.symm i).prop
 
--- TODO: PR to Mathlib
-theorem heq_subtype {α : Type*} {p q : α → Prop} {a : Subtype p} {b : Subtype q} (h : p = q)
-    (he : HEq a b) : a.1 = b.1 := by
-  subst h
-  simpa [Subtype.eq_iff] using he
-
 theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
   rw [toPGame, neg_def]
   congr
@@ -126,8 +120,8 @@ theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGa
     apply Function.hfunext (by rw [h])
     simp_rw [heq_eq_eq, Subtype.forall, h]
     intro a ha b hb he
-    have : a = b := heq_subtype (by rw [h]) he
-    subst this
+    rw [Subtype.heq_iff_coe_eq (fun _ ↦ by rw [h])] at he
+    subst he
     have := subrelation_subsequentR hb
     apply neg_toPGame h
 termination_by isWellFounded_subsequent.wf.wrap a
