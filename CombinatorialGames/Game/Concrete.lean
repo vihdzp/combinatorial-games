@@ -30,8 +30,8 @@ class ConcreteGame (α : Type*) where
 namespace ConcreteGame
 variable [ConcreteGame α]
 
-scoped infix:50 " ≺ₗ " => subsequentL
-scoped infix:50 " ≺ᵣ " => subsequentR
+local infix:50 " ≺ₗ " => subsequentL
+local infix:50 " ≺ᵣ " => subsequentR
 attribute [instance] isWellFounded_subsequent
 
 theorem subrelation_subsequentL :
