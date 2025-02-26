@@ -23,9 +23,9 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
-* `PGame.impartial_posetPos`: poset games are impartial
-* `PGame.poset_fuzzy_zero`: any poset game with a top element is won by the second player, shown via
-  a strategy stealing argument
+* `PGame.Poset.impartial_toPGame`: poset games are impartial
+* `PGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second player,
+  shown via a strategy stealing argument
 -/
 
 variable {α : Type*} [Preorder α]
@@ -118,7 +118,7 @@ instance : ConcreteGame (Poset α) := .ofImpartial rel
 protected theorem neg_toPGame (a : Poset α) : -toPGame a = toPGame a :=
   neg_toPGame rfl a
 
-instance (a : Poset α) : Impartial (toPGame a) :=
+protected instance impartial_toPGame (a : Poset α) : Impartial (toPGame a) :=
   impartial_toPGame rfl a
 
 /-- The starting position in a poset game. -/
