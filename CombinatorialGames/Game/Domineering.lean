@@ -19,8 +19,6 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
-namespace SetTheory
-
 namespace PGame
 
 namespace Domineering
@@ -38,8 +36,6 @@ def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
   (Equiv.addRight (1 : ℤ)).prodCongr (Equiv.refl ℤ)
 
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
--- Porting note: reducibility cannot be `local`. For now there are no dependents of this file so
--- being globally reducible is fine.
 abbrev Board :=
   Finset (ℤ × ℤ)
 
@@ -176,5 +172,3 @@ instance shortL : Short domineering.L := by dsimp [domineering.L]; infer_instanc
 --   (4,0), (4,1), (4,2), (4,3), (4,4)
 --   ].toFinset) ≈ 0)
 end PGame
-
-end SetTheory

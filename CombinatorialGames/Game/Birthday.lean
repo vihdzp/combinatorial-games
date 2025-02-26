@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import Mathlib.Algebra.Order.Group.OrderIso
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Special
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -17,12 +18,12 @@ other hand, the birthday of a game is the smallest birthday among all pre-games 
 
 The birthday of a pre-game can be understood as representing the depth of its game tree. On the
 other hand, the birthday of a game more closely matches Conway's original description. The lemma
-`SetTheory.Game.birthday_eq_pGameBirthday` links both definitions together.
+`Game.birthday_eq_pGameBirthday` links both definitions together.
 
 # Main declarations
 
-- `SetTheory.PGame.birthday`: The birthday of a pre-game.
-- `SetTheory.Game.birthday`: The birthday of a game.
+- `PGame.birthday`: The birthday of a pre-game.
+- `Game.birthday`: The birthday of a game.
 
 # Todo
 
@@ -32,8 +33,6 @@ other hand, the birthday of a game more closely matches Conway's original descri
 universe u
 
 open Ordinal
-
-namespace SetTheory
 
 open scoped NaturalOps PGame
 
@@ -286,7 +285,7 @@ theorem small_setOf_birthday_lt (o : Ordinal) : Small.{u} {x : Game.{u} // birth
       rintro x rfl
       obtain ⟨y, rfl, hy'⟩ := birthday_eq_pGameBirthday x
       refine ⟨⟨{z | ∃ i, ⟦y.moveLeft i⟧ = z.1}, {z | ∃ i, ⟦y.moveRight i⟧ = z.1}⟩, ?_⟩
-      apply PGame.game_eq <| PGame.Equiv.of_exists _ _ _ _ <;> intro i
+      apply PGame.game_eq <| PGame.equiv_of_exists _ _ _ _ <;> intro i
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
         exact ⟨j, by simp [PGame.equiv_iff_game_eq, hj]⟩
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
@@ -304,5 +303,3 @@ theorem small_setOf_birthday_lt (o : Ordinal) : Small.{u} {x : Game.{u} // birth
     simpa using lt_limit ho
 
 end Game
-
-end SetTheory

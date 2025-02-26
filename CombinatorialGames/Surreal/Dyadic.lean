@@ -31,8 +31,6 @@ rational numbers to construct an ordered field embedding of ℝ into `Surreal`.
 
 universe u
 
-namespace SetTheory
-
 namespace PGame
 
 /-- For a natural number `n`, the pre-game `powHalf (n + 1)` is recursively defined as
@@ -106,7 +104,7 @@ theorem zero_le_powHalf (n : ℕ) : 0 ≤ powHalf n :=
 
 theorem add_powHalf_succ_self_eq_powHalf (n) : powHalf (n + 1) + powHalf (n + 1) ≈ powHalf n := by
   induction' n using Nat.strong_induction_on with n hn
-  constructor <;> rw [le_iff_forall_lf] <;> constructor
+  constructor <;> dsimp <;> rw [le_iff_forall_lf] <;> constructor
   · rintro (⟨⟨⟩⟩ | ⟨⟨⟩⟩) <;> apply lf_of_lt
     · calc
         0 + powHalf n.succ ≈ powHalf n.succ := zero_add_equiv _
@@ -127,15 +125,15 @@ theorem add_powHalf_succ_self_eq_powHalf (n) : powHalf (n + 1) + powHalf (n + 1)
   · simp only [powHalf_moveLeft, forall_const]
     apply lf_of_lt
     calc
-      0 ≈ 0 + 0 := Equiv.symm (add_zero_equiv 0)
+      0 ≈ 0 + 0 := (add_zero_equiv 0).symm
       _ ≤ powHalf n.succ + 0 := add_le_add_right (zero_le_powHalf _) _
       _ < powHalf n.succ + powHalf n.succ := add_lt_add_left (powHalf_pos _) _
   · rintro (⟨⟨⟩⟩ | ⟨⟨⟩⟩) <;> apply lf_of_lt
     · calc
-        powHalf n ≈ powHalf n + 0 := Equiv.symm (add_zero_equiv _)
+        powHalf n ≈ powHalf n + 0 := (add_zero_equiv _).symm
         _ < powHalf n + powHalf n.succ := add_lt_add_left (powHalf_pos _) _
     · calc
-        powHalf n ≈ 0 + powHalf n := Equiv.symm (zero_add_equiv _)
+        powHalf n ≈ 0 + powHalf n := (zero_add_equiv _).symm
         _ < powHalf n.succ + powHalf n := add_lt_add_right (powHalf_pos _) _
 
 theorem half_add_half_equiv_one : powHalf 1 + powHalf 1 ≈ 1 :=
@@ -143,11 +141,9 @@ theorem half_add_half_equiv_one : powHalf 1 + powHalf 1 ≈ 1 :=
 
 end PGame
 
-end SetTheory
-
 namespace Surreal
 
-open SetTheory PGame
+open PGame
 
 /-- Powers of the surreal number `half`. -/
 def powHalf (n : ℕ) : Surreal :=

@@ -64,7 +64,7 @@ The whole proof features a clear separation into lemmas of different roles:
 
 universe u
 
-open SetTheory Game PGame WellFounded
+open Game PGame WellFounded
 
 namespace Surreal.Multiplication
 
@@ -160,7 +160,7 @@ def Args.toMultiset : Args → Multiset PGame
   | (Args.P24 x₁ x₂ y) => {x₁, x₂, y}
 
 /-- A list of arguments is numeric if all the arguments are. -/
-def Args.Numeric (a : Args) := ∀ x ∈ a.toMultiset, SetTheory.PGame.Numeric x
+def Args.Numeric (a : Args) := ∀ x ∈ a.toMultiset, PGame.Numeric x
 
 lemma Args.numeric_P1 {x y} : (Args.P1 x y).Numeric ↔ x.Numeric ∧ y.Numeric := by
   simp [Args.Numeric, Args.toMultiset]
@@ -341,7 +341,7 @@ lemma mulOption_lt_mul_of_equiv (hn : x₁.Numeric) (h : IH24 x₁ x₂ y) (he :
   convert sub_lt_iff_lt_add'.2 ((((@h _).1 <| IsOption.moveLeft i).2 _).1 j) using 1
   · rw [← ((@h _).2.2 <| IsOption.moveLeft j).1 he]
     rfl
-  · rw [← lt_congr_right he]
+  · rw [← he.lt_congr_right]
     apply hn.moveLeft_lt
 
 /-- P2 follows from specialized induction hypotheses (one half of the equality). -/
@@ -401,7 +401,7 @@ lemma ih3_of_ih (h24 : IH24 x₁ x₂ y) (h4 : IH4 x₁ x₂ y) (hl : MulOptions
 
 lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ (x₂.moveLeft i) x₂ y₁ y₂) (hl : x₁ ≤ x₂.moveLeft i) :
     P3 x₁ x₂ y₁ y₂ := by
-  obtain (hl|he) := lt_or_equiv_of_le hl
+  obtain (hl|he) := le_iff_lt_or_antisymmRel.1 hl
   · exact (h.2.2.2 hl).trans h.2.2.1
   · rw [P3, h.1 he, h.2.1 he]
     exact h.2.2.1
@@ -447,7 +447,7 @@ theorem main (a : Args) : a.Numeric → P124 a := by
 
 end Surreal.Multiplication
 
-namespace SetTheory.PGame
+namespace PGame
 open Surreal.Multiplication
 
 variable {x x₁ x₂ y y₁ y₂ : PGame.{u}}
@@ -497,11 +497,11 @@ theorem Numeric.mul_pos (hx₁ : x₁.Numeric) (hx₂ : x₂.Numeric) (hp₁ : 0
   simp_rw [P3, quot_zero_mul, quot_mul_zero, add_lt_add_iff_left] at this
   exact this
 
-end SetTheory.PGame
+end PGame
 
 namespace Surreal
 
-open SetTheory.PGame.Equiv
+open PGame.Equiv
 
 noncomputable instance : LinearOrderedCommRing Surreal where
   __ := Surreal.orderedAddCommGroup
@@ -514,8 +514,8 @@ noncomputable instance : LinearOrderedCommRing Surreal where
   left_distrib := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; exact Quotient.sound (left_distrib_equiv _ _ _)
   right_distrib := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; exact Quotient.sound (right_distrib_equiv _ _ _)
   mul_comm := by rintro ⟨_⟩ ⟨_⟩; exact Quotient.sound (mul_comm_equiv _ _)
-  le := lift₂ (fun x y _ _ ↦ x ≤ y) (fun _ _ _ _ hx hy ↦ propext <| le_congr hx hy)
-  lt := lift₂ (fun x y _ _ ↦ x < y) (fun _ _ _ _ hx hy ↦ propext <| lt_congr hx hy)
+  le := lift₂ (fun x y _ _ ↦ x ≤ y) (fun _ _ _ _ hx hy ↦ propext <| hx.le_congr hy)
+  lt := lift₂ (fun x y _ _ ↦ x < y) (fun _ _ _ _ hx hy ↦ propext <| hx.lt_congr hy)
   le_refl := by rintro ⟨_⟩; apply @le_rfl PGame
   le_trans := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; apply @le_trans PGame
   lt_iff_le_not_le := by rintro ⟨_⟩ ⟨_⟩; exact lt_iff_le_not_le
