@@ -114,6 +114,7 @@ instance : IsWellFounded (Poset α) rel := isWellFounded_posetRel
 instance : WellFoundedRelation (Poset α) := ⟨rel, isWellFounded_posetRel.wf⟩
 instance : ConcreteGame (Poset α) := .ofImpartial rel
 
+@[simp]
 protected theorem neg_toPGame (a : Poset α) : -toPGame a = toPGame a :=
   neg_toPGame rfl a
 

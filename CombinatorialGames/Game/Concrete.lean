@@ -134,7 +134,7 @@ termination_by isWellFounded_subsequent.wf.wrap a
 theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
     Impartial (toPGame a) := by
   rw [impartial_def, neg_toPGame h]
-  refine ⟨equiv_rfl, fun i ↦ ?_, fun i ↦ ?_⟩
+  refine ⟨.rfl, fun i ↦ ?_, fun i ↦ ?_⟩
   · rw [moveLeft_toPGame]
     have := subrelation_subsequentL <| toLeftMovesPGame_symm_prop i
     exact impartial_toPGame h _
