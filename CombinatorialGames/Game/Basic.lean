@@ -364,20 +364,6 @@ protected lemma mul_comm (x y : PGame) : x * y ≡ y * x :=
         (PGame.add_comm _ _)).sub (PGame.mul_comm _ _))
   termination_by (x, y)
 
-/-- `x * y` and `y * x` have the same moves. -/
-def mulCommRelabelling (x y : PGame.{u}) : x * y ≡r y * x :=
-  match x, y with
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
-    refine ⟨Equiv.sumCongr (Equiv.prodComm _ _) (Equiv.prodComm _ _),
-      (Equiv.sumComm _ _).trans (Equiv.sumCongr (Equiv.prodComm _ _) (Equiv.prodComm _ _)), ?_, ?_⟩
-      <;>
-    rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-    { dsimp
-      exact ((addCommRelabelling _ _).trans <|
-        (mulCommRelabelling _ _).addCongr (mulCommRelabelling _ _)).subCongr
-        (mulCommRelabelling _ _) }
-  termination_by (x, y)
-
 theorem quot_mul_comm (x y : PGame.{u}) : (⟦x * y⟧ : Game) = ⟦y * x⟧ :=
   game_eq (x.mul_comm y).equiv
 
@@ -402,10 +388,6 @@ instance isEmpty_rightMoves_mul (x y : PGame.{u})
 /-- `x * 0` has exactly the same moves as `0`. -/
 protected lemma mul_zero (x : PGame) : x * 0 ≡ 0 := identical_zero _
 
-/-- `x * 0` has exactly the same moves as `0`. -/
-def mulZeroRelabelling (x : PGame) : x * 0 ≡r 0 :=
-  Relabelling.isEmpty _
-
 /-- `x * 0` is equivalent to `0`. -/
 theorem mul_zero_equiv (x : PGame) : x * 0 ≈ 0 :=
   x.mul_zero.equiv
@@ -417,10 +399,6 @@ theorem quot_mul_zero (x : PGame) : (⟦x * 0⟧ : Game) = 0 :=
 /-- `0 * x` has exactly the same moves as `0`. -/
 protected lemma zero_mul (x : PGame) : 0 * x ≡ 0 := identical_zero _
 
-/-- `0 * x` has exactly the same moves as `0`. -/
-def zeroMulRelabelling (x : PGame) : 0 * x ≡r 0 :=
-  Relabelling.isEmpty _
-
 /-- `0 * x` is equivalent to `0`. -/
 theorem zero_mul_equiv (x : PGame) : 0 * x ≈ 0 :=
   x.zero_mul.equiv
@@ -428,20 +406,6 @@ theorem zero_mul_equiv (x : PGame) : 0 * x ≈ 0 :=
 @[simp]
 theorem quot_zero_mul (x : PGame) : (⟦0 * x⟧ : Game) = 0 :=
   game_eq x.zero_mul_equiv
-
-/-- `-x * y` and `-(x * y)` have the same moves. -/
-def negMulRelabelling (x y : PGame.{u}) : -x * y ≡r -(x * y) :=
-  match x, y with
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
-      refine ⟨Equiv.sumComm _ _, Equiv.sumComm _ _, ?_, ?_⟩ <;>
-      rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-      · apply ((negAddRelabelling _ _).trans _).symm
-        apply ((negAddRelabelling _ _).trans (Relabelling.addCongr _ _)).subCongr
-        · exact (negMulRelabelling _ _).symm
-        · exact (negMulRelabelling _ _).symm
-        change -(mk xl xr xL xR * _) ≡r _
-        exact (negMulRelabelling _ _).symm
-  termination_by (x, y)
 
 /-- `x * -y` and `-(x * y)` have the same moves. -/
 @[simp]
@@ -463,10 +427,6 @@ lemma neg_mul (x y : PGame) : -x * y ≡ -(x * y) :=
 @[simp]
 theorem quot_neg_mul (x y : PGame) : (⟦-x * y⟧ : Game) = -⟦x * y⟧ :=
   game_eq (x.neg_mul y).equiv
-
-/-- `x * -y` and `-(x * y)` have the same moves. -/
-def mulNegRelabelling (x y : PGame) : x * -y ≡r -(x * y) :=
-  (mulCommRelabelling x _).trans <| (negMulRelabelling _ x).trans (mulCommRelabelling y x).negCongr
 
 theorem quot_mul_neg (x y : PGame) : ⟦x * -y⟧ = (-⟦x * y⟧ : Game) :=
   game_eq (by rw [mul_neg])
@@ -547,19 +507,6 @@ theorem quot_right_distrib_sub (x y z : PGame) : (⟦(y - z) * x⟧ : Game) = �
   change (⟦(y + -z) * x⟧ : Game) = ⟦y * x⟧ + -⟦z * x⟧
   rw [quot_right_distrib, quot_neg_mul]
 
-/-- `x * 1` has the same moves as `x`. -/
-def mulOneRelabelling : ∀ x : PGame.{u}, x * 1 ≡r x
-  | ⟨xl, xr, xL, xR⟩ => by
-    change mk _ _ _ _ * mk _ _ _ _ ≡r _
-    refine ⟨(Equiv.sumEmpty _ _).trans (Equiv.prodPUnit _),
-      (Equiv.emptySum _ _).trans (Equiv.prodPUnit _), ?_, ?_⟩ <;>
-    · rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)
-      dsimp
-      apply (Relabelling.subCongr (Relabelling.refl _) (mulZeroRelabelling _)).trans
-      rw [sub_zero_eq_add_zero]
-      exact (addZeroRelabelling _).trans <|
-        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _)
-
 /-- `1 * x` has the same moves as `x`. -/
 protected lemma one_mul : ∀ (x : PGame), 1 * x ≡ x
   | ⟨xl, xr, xL, xR⟩ => by
@@ -579,10 +526,6 @@ theorem quot_mul_one (x : PGame) : (⟦x * 1⟧ : Game) = ⟦x⟧ :=
 /-- `x * 1` is equivalent to `x`. -/
 theorem mul_one_equiv (x : PGame) : x * 1 ≈ x :=
   Quotient.exact <| quot_mul_one x
-
-/-- `1 * x` has the same moves as `x`. -/
-def oneMulRelabelling (x : PGame) : 1 * x ≡r x :=
-  (mulCommRelabelling 1 x).trans <| mulOneRelabelling x
 
 @[simp]
 theorem quot_one_mul (x : PGame) : (⟦1 * x⟧ : Game) = ⟦x⟧ :=
@@ -797,18 +740,14 @@ theorem zero_lf_inv' : ∀ x : PGame, 0 ⧏ inv' x
     rfl
 
 /-- `inv' 0` has exactly the same moves as `1`. -/
-def inv'Zero : inv' 0 ≡r 1 := by
-  change mk _ _ _ _ ≡r 1
-  refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩
-  · apply Equiv.equivPUnit (InvTy _ _ _)
-  · apply Equiv.equivPEmpty (InvTy _ _ _)
-  · simp
-    rfl
-  · dsimp
-    infer_instance
+def inv'zero : inv' 0 ≡ 1 := by
+  rw [Identical.ext_iff]
+  constructor
+  · simp [memₗ_def, inv', isEmpty_subtype]
+  · simp [memᵣ_def, inv', isEmpty_subtype]
 
 theorem inv'_zero_equiv : inv' 0 ≈ 1 :=
-  inv'Zero.equiv
+  inv'zero.equiv
 
 /-- `inv' 1` has exactly the same moves as `1`. -/
 lemma inv'_one : inv' 1 ≡ 1 := by
@@ -816,19 +755,6 @@ lemma inv'_one : inv' 1 ≡ 1 := by
   constructor
   · simp [memₗ_def, inv', isEmpty_subtype]
   · simp [memᵣ_def, inv', isEmpty_subtype]
-
-/-- `inv' 1` has exactly the same moves as `1`. -/
-def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
-  change Relabelling (mk _ _ _ _) 1
-  have : IsEmpty { _i : PUnit.{u + 1} // (0 : PGame.{u}) < 0 } := by
-    rw [lt_self_iff_false]
-    infer_instance
-  refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩ <;> dsimp
-  · apply Equiv.equivPUnit
-  · apply Equiv.equivOfIsEmpty
-  · simp
-    rfl
-  · infer_instance
 
 theorem inv'_one_equiv : inv' 1 ≈ 1 :=
   inv'_one.equiv
@@ -856,11 +782,6 @@ theorem inv_eq_of_lf_zero {x : PGame} (h : x ⧏ 0) : x⁻¹ = -inv' (-x) := by
 lemma inv_one : 1⁻¹ ≡ 1 := by
   rw [inv_eq_of_pos PGame.zero_lt_one]
   exact inv'_one
-
-/-- `1⁻¹` has exactly the same moves as `1`. -/
-def invOne : 1⁻¹ ≡r 1 := by
-  rw [inv_eq_of_pos PGame.zero_lt_one]
-  exact inv'One
 
 theorem inv_one_equiv : (1⁻¹ : PGame) ≈ 1 :=
   inv_one.equiv
