@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison
 -/
 import Mathlib.Algebra.Order.Hom.Monoid
-import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Basic
 
 /-!
 # Surreal numbers
@@ -24,7 +24,7 @@ besides!) but we do not yet have a complete development.
 ## Order properties
 
 Surreal numbers inherit the relations `≤` and `<` from games (`Surreal.instLE` and
-`Surreal.instLT`), and these relations satisfy the axioms of a partial order.
+`Surreal.instLT`), and these relations satisfy the axioms of a linear order.
 
 ## Algebraic operations
 
@@ -98,7 +98,7 @@ theorem numeric_rec {C : PGame → Prop}
 theorem Relabelling.numeric_imp {x y : PGame} (r : x ≡r y) (ox : Numeric x) : Numeric y := by
   induction' x using PGame.moveRecOn with x IHl IHr generalizing y
   apply Numeric.mk (fun i j => ?_) (fun i => ?_) fun j => ?_
-  · rw [← lt_congr (r.moveLeftSymm i).equiv (r.moveRightSymm j).equiv]
+  · rw [← (r.moveLeftSymm i).equiv.lt_congr (r.moveRightSymm j).equiv]
     apply ox.left_lt_right
   · exact IHl _ (r.moveLeftSymm i) (ox.moveLeft _)
   · exact IHr _ (r.moveRightSymm j) (ox.moveRight _)
@@ -247,12 +247,6 @@ theorem numeric_nat : ∀ n : ℕ, Numeric n
   | 0 => numeric_zero
   | n + 1 => (numeric_nat n).add numeric_one
 
-/-- Ordinal games are numeric. -/
-theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
-  induction' o using Ordinal.induction with o IH
-  apply numeric_of_isEmpty_rightMoves
-  simpa using fun i => IH _ (Ordinal.toLeftMovesToPGame_symm_lt i)
-
 end PGame
 
 open PGame
@@ -284,20 +278,20 @@ lemma mk_eq_zero {x : PGame.{u}} {hx} : mk x hx = 0 ↔ x ≈ 0 := Quotient.eq
 
 /-- Lift an equivalence-respecting function on pre-games to surreals. -/
 def lift {α} (f : ∀ x, Numeric x → α)
-    (H : ∀ {x y} (hx : Numeric x) (hy : Numeric y), x.Equiv y → f x hx = f y hy) : Surreal → α :=
+    (H : ∀ {x y} (hx : Numeric x) (hy : Numeric y), x ≈ y → f x hx = f y hy) : Surreal → α :=
   Quotient.lift (fun x : { x // Numeric x } => f x.1 x.2) fun x y => H x.2 y.2
 
 /-- Lift a binary equivalence-respecting function on pre-games to surreals. -/
 def lift₂ {α} (f : ∀ x y, Numeric x → Numeric y → α)
     (H :
       ∀ {x₁ y₁ x₂ y₂} (ox₁ : Numeric x₁) (oy₁ : Numeric y₁) (ox₂ : Numeric x₂) (oy₂ : Numeric y₂),
-        x₁.Equiv x₂ → y₁.Equiv y₂ → f x₁ y₁ ox₁ oy₁ = f x₂ y₂ ox₂ oy₂) :
+        x₁ ≈ x₂ → y₁ ≈ y₂ → f x₁ y₁ ox₁ oy₁ = f x₂ y₂ ox₂ oy₂) :
     Surreal → Surreal → α :=
-  lift (fun x ox => lift (fun y oy => f x y ox oy) fun _ _ => H _ _ _ _ equiv_rfl)
-    fun _ _ h => funext <| Quotient.ind fun _ => H _ _ _ _ h equiv_rfl
+  lift (fun x ox => lift (fun y oy => f x y ox oy) fun _ _ => H _ _ _ _ .rfl)
+    fun _ _ h => funext <| Quotient.ind fun _ => H _ _ _ _ h .rfl
 
 instance instLE : LE Surreal :=
-  ⟨lift₂ (fun x y _ _ => x ≤ y) fun _ _ _ _ hx hy => propext (le_congr hx hy)⟩
+  ⟨lift₂ (fun x y _ _ => x ≤ y) fun _ _ _ _ hx hy => propext (hx.le_congr hy)⟩
 
 @[simp]
 lemma mk_le_mk {x y : PGame.{u}} {hx hy} : mk x hx ≤ mk y hy ↔ x ≤ y := Iff.rfl
@@ -305,7 +299,7 @@ lemma mk_le_mk {x y : PGame.{u}} {hx hy} : mk x hx ≤ mk y hy ↔ x ≤ y := If
 lemma zero_le_mk {x : PGame.{u}} {hx} : 0 ≤ mk x hx ↔ 0 ≤ x := Iff.rfl
 
 instance instLT : LT Surreal :=
-  ⟨lift₂ (fun x y _ _ => x < y) fun _ _ _ _ hx hy => propext (lt_congr hx hy)⟩
+  ⟨lift₂ (fun x y _ _ => x < y) fun _ _ _ _ hx hy => propext (hx.lt_congr hy)⟩
 
 lemma mk_lt_mk {x y : PGame.{u}} {hx hy} : mk x hx < mk y hy ↔ x < y := Iff.rfl
 
@@ -431,13 +425,3 @@ lemma bddBelow_of_small (s : Set Surreal.{u}) [Small.{u} s] : BddBelow s := by
 end Surreal
 
 open Surreal
-
-namespace Ordinal
-
-/-- Converts an ordinal into the corresponding surreal. -/
-noncomputable def toSurreal : Ordinal ↪o Surreal where
-  toFun o := mk _ (numeric_toPGame o)
-  inj' a b h := toPGame_equiv_iff.1 (by apply Quotient.exact h) -- Porting note: Added `by apply`
-  map_rel_iff' := @toPGame_le_iff
-
-end Ordinal

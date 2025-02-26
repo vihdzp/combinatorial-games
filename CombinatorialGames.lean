@@ -6,12 +6,15 @@ import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
 import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.State
+import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Ordinal
