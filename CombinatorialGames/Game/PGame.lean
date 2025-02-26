@@ -995,6 +995,23 @@ theorem lt_or_equiv_or_gf (x y : PGame) : x < y ∨ (x ≈ y) ∨ y ⧏ x := by
   rw [lf_iff_lt_or_fuzzy, Fuzzy.swap_iff]
   exact lt_or_equiv_or_gt_or_fuzzy x y
 
+theorem Equiv.of_exists {x y : PGame}
+    (hl₁ : ∀ i, ∃ j, x.moveLeft i ≈ y.moveLeft j) (hr₁ : ∀ i, ∃ j, x.moveRight i ≈ y.moveRight j)
+    (hl₂ : ∀ j, ∃ i, x.moveLeft i ≈ y.moveLeft j) (hr₂ : ∀ j, ∃ i, x.moveRight i ≈ y.moveRight j) :
+    x ≈ y := by
+  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i
+  · obtain ⟨j, hj⟩ := hl₁ i
+    exact Or.inl ⟨j, hj.le⟩
+  · obtain ⟨j, hj⟩ := hr₂ i
+    exact Or.inr ⟨j, hj.le⟩
+  · obtain ⟨j, hj⟩ := hl₂ i
+    exact Or.inl ⟨j, hj.ge⟩
+  · obtain ⟨j, hj⟩ := hr₁ i
+    exact Or.inr ⟨j, hj.ge⟩
+
+theorem Equiv.isEmpty (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : x ≈ 0 := by
+  apply Equiv.of_exists <;> exact isEmptyElim
+
 /-! ### Negation -/
 
 
