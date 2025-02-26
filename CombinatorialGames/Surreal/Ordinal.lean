@@ -16,7 +16,7 @@ We define the canonical map `Ordinal → Surreal` in terms of the map `Ordinal.t
 - `Ordinal.toSurreal`: The canonical map between ordinals and surreal numbers.
 -/
 
-open Surreal SetTheory PGame
+open Surreal PGame
 
 namespace Ordinal
 
