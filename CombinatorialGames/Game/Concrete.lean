@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.PGame
+import CombinatorialGames.Game.Impartial
 
 /-!
 # Combinatorial games from a type of states
@@ -12,6 +12,8 @@ A "concrete" game is a type of states endowed with well-founded subsequence rela
 left and right players. This is often a more convenient representation for a game, which can then be
 used to define a `PGame` or any of the other combinatorial game types.
 -/
+
+open PGame
 
 variable {α : Type*}
 
@@ -99,5 +101,46 @@ theorem moveLeft_toPGame_toLeftMovesPGame {a : α} (i) :
 theorem moveRight_toPGame_toRightMovesPGame {a : α} (i) :
     (toPGame a).moveRight (toRightMovesPGame i) = toPGame i.1 :=
   by simp
+
+@[simp]
+theorem toLeftMovesPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
+    (toLeftMovesPGame.symm i).1 ≺ₗ a :=
+  (toLeftMovesPGame.symm i).prop
+@[simp]
+theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
+    (toRightMovesPGame.symm i).1 ≺ᵣ a :=
+  (toRightMovesPGame.symm i).prop
+
+-- TODO: PR to Mathlib
+theorem heq_subtype {α : Type*} {p q : α → Prop} {a : Subtype p} {b : Subtype q} (h : p = q)
+    (he : HEq a b) : a.1 = b.1 := by
+  subst h
+  simpa [Subtype.eq_iff] using he
+
+theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
+  rw [toPGame, neg_def]
+  congr
+  all_goals try (ext; rw [h])
+  all_goals
+    apply Function.hfunext (by rw [h])
+    simp_rw [heq_eq_eq, Subtype.forall, h]
+    intro a ha b hb he
+    have : a = b := heq_subtype (by rw [h]) he
+    subst this
+    have := subrelation_subsequentR hb
+    apply neg_toPGame h
+termination_by isWellFounded_subsequent.wf.wrap a
+
+theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
+    Impartial (toPGame a) := by
+  rw [impartial_def, neg_toPGame h]
+  refine ⟨equiv_rfl, fun i ↦ ?_, fun i ↦ ?_⟩
+  · rw [moveLeft_toPGame]
+    have := subrelation_subsequentL <| toLeftMovesPGame_symm_prop i
+    exact impartial_toPGame h _
+  · rw [moveRight_toPGame]
+    have := subrelation_subsequentR <| toRightMovesPGame_symm_prop i
+    exact impartial_toPGame h _
+termination_by isWellFounded_subsequent.wf.wrap a
 
 end ConcreteGame
