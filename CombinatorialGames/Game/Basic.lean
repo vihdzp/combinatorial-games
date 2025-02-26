@@ -3,8 +3,8 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
 -/
-import Mathlib.Algebra.Order.Group.Defs
 import CombinatorialGames.Game.PGame
+import Mathlib.Algebra.Order.Group.Defs
 import Mathlib.Tactic.Abel
 
 /-!

@@ -11,7 +11,6 @@ import CombinatorialGames.Game.Short
 We provide a simple mechanism for constructing combinatorial (pre-)games, by describing
 "the state of the board", and providing an upper bound on the number of turns remaining.
 
-
 ## Implementation notes
 
 We're very careful to produce a computable definition, so small games can be evaluated

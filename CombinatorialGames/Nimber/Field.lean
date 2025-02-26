@@ -3,8 +3,8 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.Algebra.CharP.Two
 import CombinatorialGames.Nimber.Basic
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
 
 /-!

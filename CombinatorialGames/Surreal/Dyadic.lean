@@ -3,13 +3,13 @@ Copyright (c) 2021 Apurva Nakade. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Apurva Nakade
 -/
+import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Algebra.Algebra.Defs
 import Mathlib.Algebra.Order.Group.Basic
 import Mathlib.Algebra.Ring.Regular
 import Mathlib.GroupTheory.MonoidLocalization.Away
 import Mathlib.RingTheory.Localization.Defs
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Tactic.Linarith
 
 /-!
