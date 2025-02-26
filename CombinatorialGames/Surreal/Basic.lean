@@ -105,7 +105,7 @@ theorem Identical.numeric_imp {x y : PGame} (r : x ≡ y) (ox : Numeric x) : Num
   · obtain ⟨r, hr⟩ := r.moveRight_symm j
     exact IHr _ hr (ox.moveRight _)
 
-/-- Identity preserve being numeric. -/
+/-- Identities preserve being numeric. -/
 theorem Identical.numeric_congr {x y : PGame} (r : x ≡ y) : Numeric x ↔ Numeric y :=
   ⟨r.numeric_imp, r.symm.numeric_imp⟩
 
