@@ -8,6 +8,7 @@ import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.State
+import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic

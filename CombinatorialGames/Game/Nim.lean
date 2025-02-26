@@ -187,7 +187,7 @@ theorem neg_nim (o : Ordinal) : -nim o = nim o := by
 instance impartial_nim (o : Ordinal) : Impartial (nim o) := by
   induction' o using Ordinal.induction with o IH
   rw [impartial_def, neg_nim]
-  refine ⟨equiv_rfl, fun i => ?_, fun i => ?_⟩ <;> simpa using IH _ (typein_lt_self _)
+  refine ⟨.rfl, fun i => ?_, fun i => ?_⟩ <;> simpa using IH _ (typein_lt_self _)
 
 theorem nim_fuzzy_zero_of_ne_zero {o : Ordinal} (ho : o ≠ 0) : nim o ‖ 0 := by
   rw [Impartial.fuzzy_zero_iff_lf, lf_zero_le]
@@ -269,40 +269,39 @@ theorem equiv_nim_grundyValue (G : PGame.{u}) [G.Impartial] :
   intro x
   apply leftMoves_add_cases x <;>
   intro i
-  · rw [add_moveLeft_inl,
-      ← fuzzy_congr_left (add_congr_left (Equiv.symm (equiv_nim_grundyValue _))),
+  · rw [add_moveLeft_inl, ← fuzzy_congr_left (add_congr_left (equiv_nim_grundyValue _).symm),
       nim_add_fuzzy_zero_iff]
     exact grundyValue_ne_moveLeft i
   · rw [add_moveLeft_inr, ← Impartial.exists_left_move_equiv_iff_fuzzy_zero]
     obtain ⟨j, hj⟩ := exists_grundyValue_moveLeft_of_lt <| toLeftMovesNim_symm_lt i
     use toLeftMovesAdd (Sum.inl j)
     rw [add_moveLeft_inl, moveLeft_nim]
-    exact Equiv.trans (add_congr_left (equiv_nim_grundyValue _)) (hj ▸ Impartial.add_self _)
+    exact (add_congr_left (equiv_nim_grundyValue _)).trans (hj ▸ Impartial.add_self _)
 termination_by G
 
 theorem grundyValue_eq_iff_equiv_nim {G : PGame} [G.Impartial] {o : Nimber} :
     grundyValue G = o ↔ G ≈ nim (toOrdinal o) :=
   ⟨by rintro rfl; exact equiv_nim_grundyValue G,
-   by intro h; rw [← nim_equiv_iff_eq]; exact Equiv.trans (Equiv.symm (equiv_nim_grundyValue G)) h⟩
+   by intro h; rw [← nim_equiv_iff_eq]; exact (equiv_nim_grundyValue G).symm.trans h⟩
 
 @[simp]
 theorem nim_grundyValue (o : Ordinal.{u}) : grundyValue (nim o) = ∗o :=
-  grundyValue_eq_iff_equiv_nim.2 PGame.equiv_rfl
+  grundyValue_eq_iff_equiv_nim.2 .rfl
 
 theorem grundyValue_eq_iff_equiv (G H : PGame) [G.Impartial] [H.Impartial] :
     grundyValue G = grundyValue H ↔ (G ≈ H) :=
-  grundyValue_eq_iff_equiv_nim.trans (equiv_congr_left.1 (equiv_nim_grundyValue H) _).symm
+  grundyValue_eq_iff_equiv_nim.trans (equiv_nim_grundyValue H).antisymmRel_congr_right.symm
 
 @[simp]
 theorem grundyValue_zero : grundyValue 0 = 0 :=
-  grundyValue_eq_iff_equiv_nim.2 (Equiv.symm nim_zero_equiv)
+  grundyValue_eq_iff_equiv_nim.2 nim_zero_equiv.symm
 
 theorem grundyValue_iff_equiv_zero (G : PGame) [G.Impartial] : grundyValue G = 0 ↔ G ≈ 0 := by
   rw [← grundyValue_eq_iff_equiv, grundyValue_zero]
 
 @[simp]
 theorem grundyValue_star : grundyValue star = 1 :=
-  grundyValue_eq_iff_equiv_nim.2 (Equiv.symm nim_one_equiv)
+  grundyValue_eq_iff_equiv_nim.2 nim_one_equiv.symm
 
 @[simp]
 theorem grundyValue_neg (G : PGame) [G.Impartial] : grundyValue (-G) = grundyValue G := by

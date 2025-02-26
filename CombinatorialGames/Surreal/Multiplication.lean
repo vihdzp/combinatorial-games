@@ -341,7 +341,7 @@ lemma mulOption_lt_mul_of_equiv (hn : x₁.Numeric) (h : IH24 x₁ x₂ y) (he :
   convert sub_lt_iff_lt_add'.2 ((((@h _).1 <| IsOption.moveLeft i).2 _).1 j) using 1
   · rw [← ((@h _).2.2 <| IsOption.moveLeft j).1 he]
     rfl
-  · rw [← lt_congr_right he]
+  · rw [← he.lt_congr_right]
     apply hn.moveLeft_lt
 
 /-- P2 follows from specialized induction hypotheses (one half of the equality). -/
@@ -401,7 +401,7 @@ lemma ih3_of_ih (h24 : IH24 x₁ x₂ y) (h4 : IH4 x₁ x₂ y) (hl : MulOptions
 
 lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ (x₂.moveLeft i) x₂ y₁ y₂) (hl : x₁ ≤ x₂.moveLeft i) :
     P3 x₁ x₂ y₁ y₂ := by
-  obtain (hl|he) := lt_or_equiv_of_le hl
+  obtain (hl|he) := le_iff_lt_or_antisymmRel.1 hl
   · exact (h.2.2.2 hl).trans h.2.2.1
   · rw [P3, h.1 he, h.2.1 he]
     exact h.2.2.1
@@ -514,8 +514,8 @@ noncomputable instance : LinearOrderedCommRing Surreal where
   left_distrib := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; exact Quotient.sound (left_distrib_equiv _ _ _)
   right_distrib := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; exact Quotient.sound (right_distrib_equiv _ _ _)
   mul_comm := by rintro ⟨_⟩ ⟨_⟩; exact Quotient.sound (mul_comm_equiv _ _)
-  le := lift₂ (fun x y _ _ ↦ x ≤ y) (fun _ _ _ _ hx hy ↦ propext <| le_congr hx hy)
-  lt := lift₂ (fun x y _ _ ↦ x < y) (fun _ _ _ _ hx hy ↦ propext <| lt_congr hx hy)
+  le := lift₂ (fun x y _ _ ↦ x ≤ y) (fun _ _ _ _ hx hy ↦ propext <| hx.le_congr hy)
+  lt := lift₂ (fun x y _ _ ↦ x < y) (fun _ _ _ _ hx hy ↦ propext <| hx.lt_congr hy)
   le_refl := by rintro ⟨_⟩; apply @le_rfl PGame
   le_trans := by rintro ⟨_⟩ ⟨_⟩ ⟨_⟩; apply @le_trans PGame
   lt_iff_le_not_le := by rintro ⟨_⟩ ⟨_⟩; exact lt_iff_le_not_le

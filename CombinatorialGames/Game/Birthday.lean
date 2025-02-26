@@ -284,7 +284,7 @@ theorem small_setOf_birthday_lt (o : Ordinal) : Small.{u} {x : Game.{u} // birth
       rintro x rfl
       obtain ⟨y, rfl, hy'⟩ := birthday_eq_pGameBirthday x
       refine ⟨⟨{z | ∃ i, ⟦y.moveLeft i⟧ = z.1}, {z | ∃ i, ⟦y.moveRight i⟧ = z.1}⟩, ?_⟩
-      apply PGame.game_eq <| PGame.Equiv.of_exists _ _ _ _ <;> intro i
+      apply PGame.game_eq <| PGame.equiv_of_exists _ _ _ _ <;> intro i
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
         exact ⟨j, by simp [PGame.equiv_iff_game_eq, hj]⟩
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2

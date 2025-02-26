@@ -98,7 +98,7 @@ theorem numeric_rec {C : PGame → Prop}
 theorem Relabelling.numeric_imp {x y : PGame} (r : x ≡r y) (ox : Numeric x) : Numeric y := by
   induction' x using PGame.moveRecOn with x IHl IHr generalizing y
   apply Numeric.mk (fun i j => ?_) (fun i => ?_) fun j => ?_
-  · rw [← lt_congr (r.moveLeftSymm i).equiv (r.moveRightSymm j).equiv]
+  · rw [← (r.moveLeftSymm i).equiv.lt_congr (r.moveRightSymm j).equiv]
     apply ox.left_lt_right
   · exact IHl _ (r.moveLeftSymm i) (ox.moveLeft _)
   · exact IHr _ (r.moveRightSymm j) (ox.moveRight _)
@@ -284,20 +284,20 @@ lemma mk_eq_zero {x : PGame.{u}} {hx} : mk x hx = 0 ↔ x ≈ 0 := Quotient.eq
 
 /-- Lift an equivalence-respecting function on pre-games to surreals. -/
 def lift {α} (f : ∀ x, Numeric x → α)
-    (H : ∀ {x y} (hx : Numeric x) (hy : Numeric y), x.Equiv y → f x hx = f y hy) : Surreal → α :=
+    (H : ∀ {x y} (hx : Numeric x) (hy : Numeric y), x ≈ y → f x hx = f y hy) : Surreal → α :=
   Quotient.lift (fun x : { x // Numeric x } => f x.1 x.2) fun x y => H x.2 y.2
 
 /-- Lift a binary equivalence-respecting function on pre-games to surreals. -/
 def lift₂ {α} (f : ∀ x y, Numeric x → Numeric y → α)
     (H :
       ∀ {x₁ y₁ x₂ y₂} (ox₁ : Numeric x₁) (oy₁ : Numeric y₁) (ox₂ : Numeric x₂) (oy₂ : Numeric y₂),
-        x₁.Equiv x₂ → y₁.Equiv y₂ → f x₁ y₁ ox₁ oy₁ = f x₂ y₂ ox₂ oy₂) :
+        x₁ ≈ x₂ → y₁ ≈ y₂ → f x₁ y₁ ox₁ oy₁ = f x₂ y₂ ox₂ oy₂) :
     Surreal → Surreal → α :=
-  lift (fun x ox => lift (fun y oy => f x y ox oy) fun _ _ => H _ _ _ _ equiv_rfl)
-    fun _ _ h => funext <| Quotient.ind fun _ => H _ _ _ _ h equiv_rfl
+  lift (fun x ox => lift (fun y oy => f x y ox oy) fun _ _ => H _ _ _ _ .rfl)
+    fun _ _ h => funext <| Quotient.ind fun _ => H _ _ _ _ h .rfl
 
 instance instLE : LE Surreal :=
-  ⟨lift₂ (fun x y _ _ => x ≤ y) fun _ _ _ _ hx hy => propext (le_congr hx hy)⟩
+  ⟨lift₂ (fun x y _ _ => x ≤ y) fun _ _ _ _ hx hy => propext (hx.le_congr hy)⟩
 
 @[simp]
 lemma mk_le_mk {x y : PGame.{u}} {hx hy} : mk x hx ≤ mk y hy ↔ x ≤ y := Iff.rfl
@@ -305,7 +305,7 @@ lemma mk_le_mk {x y : PGame.{u}} {hx hy} : mk x hx ≤ mk y hy ↔ x ≤ y := If
 lemma zero_le_mk {x : PGame.{u}} {hx} : 0 ≤ mk x hx ↔ 0 ≤ x := Iff.rfl
 
 instance instLT : LT Surreal :=
-  ⟨lift₂ (fun x y _ _ => x < y) fun _ _ _ _ hx hy => propext (lt_congr hx hy)⟩
+  ⟨lift₂ (fun x y _ _ => x < y) fun _ _ _ _ hx hy => propext (hx.lt_congr hy)⟩
 
 lemma mk_lt_mk {x y : PGame.{u}} {hx hy} : mk x hx < mk y hy ↔ x < y := Iff.rfl
 
