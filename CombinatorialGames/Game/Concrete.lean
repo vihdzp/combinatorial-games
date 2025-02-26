@@ -58,11 +58,11 @@ def toPGame (a : α) : PGame :=
     (fun b ↦ have := subrelation_subsequentR b.2; toPGame b)
 termination_by isWellFounded_subsequent.wf.wrap a
 
-/-- Use `toLeftMovesPGame` to cast between these two types. -/
+/-- Use `toLeftMovesToPGame` to cast between these two types. -/
 theorem leftMoves_toPGame (a : α) : (toPGame a).LeftMoves = {b // b ≺ₗ a} := by
   rw [toPGame]; rfl
 
-/-- Use `toRightMovesPGame` to cast between these two types. -/
+/-- Use `toRightMovesToPGame` to cast between these two types. -/
 theorem rightMoves_toPGame (a : α) : (toPGame a).RightMoves = {b // b ≺ᵣ a} := by
   rw [toPGame]; rfl
 
@@ -78,43 +78,43 @@ theorem moveRight_toPGame_hEq (a : α) :
 
 Even though these types are the same (not definitionally so), this is the preferred way to convert
 between them. -/
-def toLeftMovesPGame {a : α} : {b // b ≺ₗ a} ≃ (toPGame a).LeftMoves :=
+def toLeftMovesToPGame {a : α} : {b // b ≺ₗ a} ≃ (toPGame a).LeftMoves :=
   Equiv.cast (leftMoves_toPGame a).symm
 
 /-- Turns a right-subsequent position for `a` into a right move for `toPGame a` and vice versa.
 
 Even though these types are the same (not definitionally so), this is the preferred way to convert
 between them. -/
-def toRightMovesPGame {a : α} : {b // b ≺ᵣ a} ≃ (toPGame a).RightMoves :=
+def toRightMovesToPGame {a : α} : {b // b ≺ᵣ a} ≃ (toPGame a).RightMoves :=
   Equiv.cast (rightMoves_toPGame a).symm
 
 @[simp]
 theorem moveLeft_toPGame {a : α} (i) :
-    (toPGame a).moveLeft i = toPGame (toLeftMovesPGame.symm i).1 :=
+    (toPGame a).moveLeft i = toPGame (toLeftMovesToPGame.symm i).1 :=
   (congr_heq (moveLeft_toPGame_hEq a).symm (cast_heq _ i)).symm
 
 @[simp]
 theorem moveRight_toPGame {a : α} (i) :
-    (toPGame a).moveRight i = toPGame (toRightMovesPGame.symm i).1 :=
+    (toPGame a).moveRight i = toPGame (toRightMovesToPGame.symm i).1 :=
   (congr_heq (moveRight_toPGame_hEq a).symm (cast_heq _ i)).symm
 
-theorem moveLeft_toPGame_toLeftMovesPGame {a : α} (i) :
-    (toPGame a).moveLeft (toLeftMovesPGame i) = toPGame i.1 :=
+theorem moveLeft_toPGame_toLeftMovesToPGame {a : α} (i) :
+    (toPGame a).moveLeft (toLeftMovesToPGame i) = toPGame i.1 :=
   by simp
 
-theorem moveRight_toPGame_toRightMovesPGame {a : α} (i) :
-    (toPGame a).moveRight (toRightMovesPGame i) = toPGame i.1 :=
+theorem moveRight_toPGame_toRightMovesToPGame {a : α} (i) :
+    (toPGame a).moveRight (toRightMovesToPGame i) = toPGame i.1 :=
   by simp
 
 @[simp]
-theorem toLeftMovesPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
-    (toLeftMovesPGame.symm i).1 ≺ₗ a :=
-  (toLeftMovesPGame.symm i).prop
+theorem toLeftMovesToPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
+    (toLeftMovesToPGame.symm i).1 ≺ₗ a :=
+  (toLeftMovesToPGame.symm i).prop
 
 @[simp]
-theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
-    (toRightMovesPGame.symm i).1 ≺ᵣ a :=
-  (toRightMovesPGame.symm i).prop
+theorem toRightMovesToPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
+    (toRightMovesToPGame.symm i).1 ≺ᵣ a :=
+  (toRightMovesToPGame.symm i).prop
 
 theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
   rw [toPGame, neg_def]
@@ -135,10 +135,10 @@ theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
   rw [impartial_def, neg_toPGame h]
   refine ⟨.rfl, fun i ↦ ?_, fun i ↦ ?_⟩
   · rw [moveLeft_toPGame]
-    have := subrelation_subsequentL <| toLeftMovesPGame_symm_prop i
+    have := subrelation_subsequentL <| toLeftMovesToPGame_symm_prop i
     exact impartial_toPGame h _
   · rw [moveRight_toPGame]
-    have := subrelation_subsequentR <| toRightMovesPGame_symm_prop i
+    have := subrelation_subsequentR <| toRightMovesToPGame_symm_prop i
     exact impartial_toPGame h _
 termination_by isWellFounded_subsequent.wf.wrap a
 
