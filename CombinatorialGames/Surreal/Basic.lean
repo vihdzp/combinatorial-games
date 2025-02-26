@@ -235,7 +235,7 @@ theorem add : ∀ {x y : PGame} (_ : Numeric x) (_ : Numeric y), Numeric (x + y)
       · rintro (jx | jy)
         · apply (ox.moveRight jx).add oy
         · apply ox.add (oy.moveRight jy)⟩
-termination_by x y => (x, y) -- Porting note: Added `termination_by`
+termination_by x y => (x, y)
 
 theorem sub {x y : PGame} (ox : Numeric x) (oy : Numeric y) : Numeric (x - y) :=
   ox.add oy.neg
@@ -273,6 +273,7 @@ instance : Inhabited Surreal :=
   ⟨0⟩
 
 lemma mk_eq_mk {x y : PGame.{u}} {hx hy} : mk x hx = mk y hy ↔ x ≈ y := Quotient.eq
+alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 lemma mk_eq_zero {x : PGame.{u}} {hx} : mk x hx = 0 ↔ x ≈ 0 := Quotient.eq
 
