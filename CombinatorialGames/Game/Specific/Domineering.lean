@@ -25,9 +25,6 @@ namespace PGame
 
 open Function
 
-private theorem pred_fst_ne (m : ℤ × ℤ) : (m.1 - 1, m.2) ≠ m := by aesop
-private theorem pred_snd_ne (m : ℤ × ℤ) : (m.1, m.2 - 1) ≠ m := by aesop
-
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
 def Domineering := Finset (ℤ × ℤ) deriving DecidableEq
 @[match_pattern] def toDomineering : Finset (ℤ × ℤ) ≃ Domineering := Equiv.refl _
@@ -98,12 +95,12 @@ instance : DecidableRel relRight := fun _ _ ↦ inferInstanceAs (Decidable (∃ 
 theorem card_of_mem_left {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
     2 ≤ (ofDomineering b).card := by
   apply le_of_eq_of_le _ <| Finset.card_mono (subset_of_mem_left h)
-  rw [Finset.card_pair (pred_snd_ne m).symm]
+  rw [Finset.card_pair (ne_of_apply_ne Prod.snd (pred_ne_self _).symm)]
 
 theorem card_of_mem_right {b : Domineering} {m : ℤ × ℤ} (h : m ∈ right b) :
     2 ≤ (ofDomineering b).card := by
   apply le_of_eq_of_le _ <| Finset.card_mono (subset_of_mem_right h)
-  rw [Finset.card_pair (pred_fst_ne m).symm]
+  rw [Finset.card_pair (ne_of_apply_ne Prod.fst (pred_ne_self _).symm)]
 
 theorem moveLeft_card {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
     (ofDomineering (moveLeft b m)).card + 2 = (ofDomineering b).card := by
