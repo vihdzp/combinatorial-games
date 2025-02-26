@@ -24,7 +24,7 @@ namespace Ordinal
 theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
   induction' o using Ordinal.induction with o IH
   apply numeric_of_isEmpty_rightMoves
-  simpa using fun i => IH _ (Ordinal.toLeftMovesToPGame_symm_lt i)
+  simpa using fun i ↦ IH _ (Ordinal.toLeftMovesToPGame_symm_lt i)
 
 /-- Converts an ordinal into the corresponding surreal. -/
 noncomputable def toSurreal : Ordinal ↪o Surreal where
