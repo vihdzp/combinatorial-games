@@ -7,7 +7,7 @@ import CombinatorialGames.Game.Nim
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
 import CombinatorialGames.Game.Short
-import CombinatorialGames.Game.Specific
+import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.State
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field

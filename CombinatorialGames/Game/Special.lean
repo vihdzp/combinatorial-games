@@ -6,10 +6,13 @@ Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 import CombinatorialGames.Game.PGame
 
 /-!
-# Specific games
+# Special games
 
-This file defines some basic combinatorial games, like `star = {0 | 0}`, `up = {0 | *}`, and
-`down = {* | 0}`.
+This file defines some simple yet notable combinatorial games:
+
+* `star = {0 | 0}`
+* `up = {0 | star}`
+* `down = {star | 0}`.
 -/
 
 universe u
