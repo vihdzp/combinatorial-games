@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import Mathlib.Algebra.Order.Group.OrderIso
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Special
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!

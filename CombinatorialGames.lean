@@ -7,6 +7,7 @@ import CombinatorialGames.Game.Nim
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
 import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.State
 import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Nimber.Basic
