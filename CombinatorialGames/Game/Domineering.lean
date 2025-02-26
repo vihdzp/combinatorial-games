@@ -36,8 +36,6 @@ def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
   (Equiv.addRight (1 : ℤ)).prodCongr (Equiv.refl ℤ)
 
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
--- Porting note: reducibility cannot be `local`. For now there are no dependents of this file so
--- being globally reducible is fine.
 abbrev Board :=
   Finset (ℤ × ℤ)
 

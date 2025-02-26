@@ -37,11 +37,6 @@ noncomputable def toPGame (o : Ordinal.{u}) : PGame.{u} :=
 termination_by o
 decreasing_by exact ((enumIsoToType o).symm x).prop
 
-@[deprecated "No deprecation message was provided." (since := "2024-09-22")]
-theorem toPGame_def (o : Ordinal) : o.toPGame =
-    ⟨o.toType, PEmpty, fun x => ((enumIsoToType o).symm x).val.toPGame, PEmpty.elim⟩ := by
-  rw [toPGame]
-
 @[simp]
 theorem toPGame_leftMoves (o : Ordinal) : o.toPGame.LeftMoves = o.toType := by
   rw [toPGame, LeftMoves]
@@ -138,9 +133,7 @@ theorem toPGame_lt_iff {a b : Ordinal} : a.toPGame < b.toPGame ↔ a < b :=
 
 @[simp]
 theorem toPGame_equiv_iff {a b : Ordinal} : (a.toPGame ≈ b.toPGame) ↔ a = b := by
-  -- Porting note: was `rw [PGame.Equiv]`
-  change _ ≤_ ∧ _ ≤ _ ↔ _
-  rw [le_antisymm_iff, toPGame_le_iff, toPGame_le_iff]
+  rw [equiv_def, AntisymmRel, le_antisymm_iff, toPGame_le_iff, toPGame_le_iff]
 
 theorem toPGame_injective : Function.Injective Ordinal.toPGame := fun _ _ h ↦
   toPGame_equiv_iff.1 (.of_eq h)
@@ -148,8 +141,6 @@ theorem toPGame_injective : Function.Injective Ordinal.toPGame := fun _ _ h ↦
 @[simp]
 theorem toPGame_inj {a b : Ordinal} : a.toPGame = b.toPGame ↔ a = b :=
   toPGame_injective.eq_iff
-
-@[deprecated (since := "2024-12-29")] alias toPGame_eq_iff := toPGame_inj
 
 /-- The order embedding version of `toPGame`. -/
 @[simps]
@@ -169,9 +160,6 @@ noncomputable def toGame : Ordinal.{u} ↪o Game.{u} where
 @[simp]
 theorem mk_toPGame (o : Ordinal) : ⟦o.toPGame⟧ = o.toGame :=
   rfl
-
-@[deprecated toGame (since := "2024-11-23")]
-alias toGameEmbedding := toGame
 
 @[simp]
 theorem toGame_zero : toGame 0 = 0 :=
@@ -196,8 +184,6 @@ theorem toGame_lt_iff {a b : Ordinal} : a.toGame < b.toGame ↔ a < b :=
 
 theorem toGame_inj {a b : Ordinal} : a.toGame = b.toGame ↔ a = b :=
   toGame.inj
-
-@[deprecated (since := "2024-12-29")] alias toGame_eq_iff := toGame_inj
 
 /-- The natural addition of ordinals corresponds to their sum as games. -/
 theorem toPGame_nadd (a b : Ordinal) : (a ♯ b).toPGame ≈ a.toPGame + b.toPGame := by
