@@ -3,11 +3,10 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-
-import Mathlib.Data.Fintype.Basic
-import Mathlib.SetTheory.Cardinal.Cofinality
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Relabelling
+import Mathlib.Data.Fintype.Basic
+import Mathlib.SetTheory.Cardinal.Cofinality
 
 /-!
 # Short games

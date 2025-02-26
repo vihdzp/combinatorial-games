@@ -3,8 +3,8 @@ Copyright (c) 2024 Theodore Hwa. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios, Junyan Xu, Theodore Hwa
 -/
-import Mathlib.Logic.Hydra
 import CombinatorialGames.Surreal.Basic
+import Mathlib.Logic.Hydra
 
 /-!
 ### Surreal multiplication
