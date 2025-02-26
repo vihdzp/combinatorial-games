@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Multiplication
 
 /-!
 # Surreals as games
@@ -17,6 +17,7 @@ We define the canonical map `Ordinal → Surreal` in terms of the map `Ordinal.t
 -/
 
 open PGame Surreal
+open scoped NaturalOps PGame
 
 namespace Ordinal
 
