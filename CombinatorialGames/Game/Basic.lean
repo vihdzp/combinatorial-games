@@ -39,11 +39,11 @@ namespace Game
 
 /-- Negation of games. -/
 instance : Neg Game where
-  neg := Quot.map Neg.neg <| fun _ _ => (neg_equiv_neg_iff).2
+  neg := Quot.map Neg.neg fun _ _ ↦ (neg_equiv_neg_iff).2
 
 instance : Zero Game where zero := ⟦0⟧
 instance : Add Game where
-  add := Quotient.map₂ HAdd.hAdd <| fun _ _ hx _ _ hy => PGame.add_congr hx hy
+  add := Quotient.map₂ HAdd.hAdd fun _ _ hx _ _ hy ↦ PGame.add_congr hx hy
 
 instance instAddCommGroupWithOneGame : AddCommGroupWithOne Game where
   zero := ⟦0⟧
@@ -57,7 +57,7 @@ instance instAddCommGroupWithOneGame : AddCommGroupWithOne Game where
   add_assoc := by
     rintro ⟨x⟩ ⟨y⟩ ⟨z⟩
     exact Quot.sound add_assoc_equiv
-  neg_add_cancel := Quotient.ind <| fun x => Quot.sound (neg_add_cancel_equiv x)
+  neg_add_cancel := Quotient.ind fun x ↦ Quot.sound (neg_add_cancel_equiv x)
   add_comm := by
     rintro ⟨x⟩ ⟨y⟩
     exact Quot.sound add_comm_equiv
@@ -77,7 +77,7 @@ instance instPartialOrderGame : PartialOrder Game :=
 
 If `0 ⧏ x` (less or fuzzy with), then Left can win `x` as the first player. -/
 def LF : Game → Game → Prop :=
-  Quotient.lift₂ PGame.LF fun _ _ _ _ hx hy => propext (lf_congr hx hy)
+  Quotient.lift₂ PGame.LF fun _ _ _ _ hx hy ↦ propext (lf_congr hx hy)
 
 /-- On `Game`, simp-normal inequalities should use as few negations as possible. -/
 @[simp]
@@ -95,7 +95,7 @@ theorem not_lf : ∀ {x y : Game}, ¬Game.LF x y ↔ y ≤ x := by
 
 If `x ‖ 0`, then the first player can always win `x`. -/
 def Fuzzy : Game → Game → Prop :=
-  Quotient.lift₂ PGame.Fuzzy fun _ _ _ _ hx hy => propext (fuzzy_congr hx hy)
+  Quotient.lift₂ PGame.Fuzzy fun _ _ _ _ hx hy ↦ propext (fuzzy_congr hx hy)
 
 instance : IsTrichotomous Game LF :=
   ⟨by
@@ -210,8 +210,8 @@ theorem quot_natCast : ∀ n : ℕ, ⟦(n : PGame)⟧ = (n : Game)
 theorem quot_eq_of_mk'_quot_eq {x y : PGame} (L : x.LeftMoves ≃ y.LeftMoves)
     (R : x.RightMoves ≃ y.RightMoves) (hl : ∀ i, (⟦x.moveLeft i⟧ : Game) = ⟦y.moveLeft (L i)⟧)
     (hr : ∀ j, (⟦x.moveRight j⟧ : Game) = ⟦y.moveRight (R j)⟧) : (⟦x⟧ : Game) = ⟦y⟧ :=
-  game_eq (equiv_of_equiv L R (fun _ => equiv_iff_game_eq.2 (hl _))
-    (fun _ => equiv_iff_game_eq.2 (hr _)))
+  game_eq (equiv_of_equiv L R (fun _ ↦ equiv_iff_game_eq.2 (hl _))
+    (fun _ ↦ equiv_iff_game_eq.2 (hr _)))
 
 /-! Multiplicative operations can be defined at the level of pre-games,
 but to prove their properties we need to use the abelian group structure of games.
@@ -221,7 +221,7 @@ Hence we define them here. -/
 /-- The product of `x = {xL | xR}` and `y = {yL | yR}` is
 `{xL*y + x*yL - xL*yL, xR*y + x*yR - xR*yR | xL*y + x*yR - xL*yR, xR*y + x*yL - xR*yL}`. -/
 instance : Mul PGame.{u} :=
-  ⟨fun x y => by
+  ⟨fun x y ↦ by
     induction x generalizing y with | mk xl xr _ _ IHxl IHxr => _
     induction y with | mk yl yr yL yR IHyl IHyr => _
     have y := mk yl yr yL yR
@@ -364,20 +364,6 @@ protected lemma mul_comm (x y : PGame) : x * y ≡ y * x :=
         (PGame.add_comm _ _)).sub (PGame.mul_comm _ _))
   termination_by (x, y)
 
-/-- `x * y` and `y * x` have the same moves. -/
-def mulCommRelabelling (x y : PGame.{u}) : x * y ≡r y * x :=
-  match x, y with
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
-    refine ⟨Equiv.sumCongr (Equiv.prodComm _ _) (Equiv.prodComm _ _),
-      (Equiv.sumComm _ _).trans (Equiv.sumCongr (Equiv.prodComm _ _) (Equiv.prodComm _ _)), ?_, ?_⟩
-      <;>
-    rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-    { dsimp
-      exact ((addCommRelabelling _ _).trans <|
-        (mulCommRelabelling _ _).addCongr (mulCommRelabelling _ _)).subCongr
-        (mulCommRelabelling _ _) }
-  termination_by (x, y)
-
 theorem quot_mul_comm (x y : PGame.{u}) : (⟦x * y⟧ : Game) = ⟦y * x⟧ :=
   game_eq (x.mul_comm y).equiv
 
@@ -402,10 +388,6 @@ instance isEmpty_rightMoves_mul (x y : PGame.{u})
 /-- `x * 0` has exactly the same moves as `0`. -/
 protected lemma mul_zero (x : PGame) : x * 0 ≡ 0 := identical_zero _
 
-/-- `x * 0` has exactly the same moves as `0`. -/
-def mulZeroRelabelling (x : PGame) : x * 0 ≡r 0 :=
-  Relabelling.isEmpty _
-
 /-- `x * 0` is equivalent to `0`. -/
 theorem mul_zero_equiv (x : PGame) : x * 0 ≈ 0 :=
   x.mul_zero.equiv
@@ -417,10 +399,6 @@ theorem quot_mul_zero (x : PGame) : (⟦x * 0⟧ : Game) = 0 :=
 /-- `0 * x` has exactly the same moves as `0`. -/
 protected lemma zero_mul (x : PGame) : 0 * x ≡ 0 := identical_zero _
 
-/-- `0 * x` has exactly the same moves as `0`. -/
-def zeroMulRelabelling (x : PGame) : 0 * x ≡r 0 :=
-  Relabelling.isEmpty _
-
 /-- `0 * x` is equivalent to `0`. -/
 theorem zero_mul_equiv (x : PGame) : 0 * x ≈ 0 :=
   x.zero_mul.equiv
@@ -428,20 +406,6 @@ theorem zero_mul_equiv (x : PGame) : 0 * x ≈ 0 :=
 @[simp]
 theorem quot_zero_mul (x : PGame) : (⟦0 * x⟧ : Game) = 0 :=
   game_eq x.zero_mul_equiv
-
-/-- `-x * y` and `-(x * y)` have the same moves. -/
-def negMulRelabelling (x y : PGame.{u}) : -x * y ≡r -(x * y) :=
-  match x, y with
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
-      refine ⟨Equiv.sumComm _ _, Equiv.sumComm _ _, ?_, ?_⟩ <;>
-      rintro (⟨i, j⟩ | ⟨i, j⟩) <;>
-      · apply ((negAddRelabelling _ _).trans _).symm
-        apply ((negAddRelabelling _ _).trans (Relabelling.addCongr _ _)).subCongr
-        · exact (negMulRelabelling _ _).symm
-        · exact (negMulRelabelling _ _).symm
-        change -(mk xl xr xL xR * _) ≡r _
-        exact (negMulRelabelling _ _).symm
-  termination_by (x, y)
 
 /-- `x * -y` and `-(x * y)` have the same moves. -/
 @[simp]
@@ -463,10 +427,6 @@ lemma neg_mul (x y : PGame) : -x * y ≡ -(x * y) :=
 @[simp]
 theorem quot_neg_mul (x y : PGame) : (⟦-x * y⟧ : Game) = -⟦x * y⟧ :=
   game_eq (x.neg_mul y).equiv
-
-/-- `x * -y` and `-(x * y)` have the same moves. -/
-def mulNegRelabelling (x y : PGame) : x * -y ≡r -(x * y) :=
-  (mulCommRelabelling x _).trans <| (negMulRelabelling _ x).trans (mulCommRelabelling y x).negCongr
 
 theorem quot_mul_neg (x y : PGame) : ⟦x * -y⟧ = (-⟦x * y⟧ : Game) :=
   game_eq (by rw [mul_neg])
@@ -547,19 +507,6 @@ theorem quot_right_distrib_sub (x y z : PGame) : (⟦(y - z) * x⟧ : Game) = �
   change (⟦(y + -z) * x⟧ : Game) = ⟦y * x⟧ + -⟦z * x⟧
   rw [quot_right_distrib, quot_neg_mul]
 
-/-- `x * 1` has the same moves as `x`. -/
-def mulOneRelabelling : ∀ x : PGame.{u}, x * 1 ≡r x
-  | ⟨xl, xr, xL, xR⟩ => by
-    change mk _ _ _ _ * mk _ _ _ _ ≡r _
-    refine ⟨(Equiv.sumEmpty _ _).trans (Equiv.prodPUnit _),
-      (Equiv.emptySum _ _).trans (Equiv.prodPUnit _), ?_, ?_⟩ <;>
-    · rintro (⟨i, ⟨⟩⟩ | ⟨i, ⟨⟩⟩)
-      dsimp
-      apply (Relabelling.subCongr (Relabelling.refl _) (mulZeroRelabelling _)).trans
-      rw [sub_zero_eq_add_zero]
-      exact (addZeroRelabelling _).trans <|
-        (((mulOneRelabelling _).addCongr (mulZeroRelabelling _)).trans <| addZeroRelabelling _)
-
 /-- `1 * x` has the same moves as `x`. -/
 protected lemma one_mul : ∀ (x : PGame), 1 * x ≡ x
   | ⟨xl, xr, xL, xR⟩ => by
@@ -579,10 +526,6 @@ theorem quot_mul_one (x : PGame) : (⟦x * 1⟧ : Game) = ⟦x⟧ :=
 /-- `x * 1` is equivalent to `x`. -/
 theorem mul_one_equiv (x : PGame) : x * 1 ≈ x :=
   Quotient.exact <| quot_mul_one x
-
-/-- `1 * x` has the same moves as `x`. -/
-def oneMulRelabelling (x : PGame) : 1 * x ≡r x :=
-  (mulCommRelabelling 1 x).trans <| mulOneRelabelling x
 
 @[simp]
 theorem quot_one_mul (x : PGame) : (⟦1 * x⟧ : Game) = ⟦x⟧ :=
@@ -684,11 +627,7 @@ lemma mulOption_neg_neg {x} (y) {i j} :
 
 /-- The left options of `x * y` agree with that of `y * x` up to equivalence. -/
 lemma mulOption_symm (x y) {i j} : ⟦mulOption x y i j⟧ = (⟦mulOption y x j i⟧ : Game) := by
-  dsimp only [mulOption, quot_sub, quot_add]
-  rw [add_comm]
-  congr 1
-  on_goal 1 => congr 1
-  all_goals rw [quot_mul_comm]
+  simp [mulOption, add_comm, quot_mul_comm]
 
 /-- The left options of `x * y` of the second kind are the left options of `(-x) * (-y)` of the
   first kind, up to equivalence. -/
@@ -706,11 +645,8 @@ lemma leftMoves_mul_iff {x y : PGame} (P : Game → Prop) :
     · exact h.1 i j
     convert h.2 i j using 1
   all_goals
-    dsimp only [mk_mul_moveLeft_inr, quot_sub, quot_add, neg_def, mulOption, moveLeft_mk]
-    rw [← neg_def, ← neg_def]
-    congr 1
-    on_goal 1 => congr 1
-    all_goals rw [quot_neg_mul_neg]
+    dsimp [mulOption]
+    simp [← neg_def, quot_neg_mul_neg]
 
 /-- The right options of `x * y` are the left options of `x * (-y)` and of `(-x) * y` of the first
   kind, up to equivalence. -/
@@ -785,8 +721,8 @@ definition, the sets and elements are inductively generated. -/
 def inv' : PGame → PGame
   | ⟨l, r, L, R⟩ =>
     let l' := { i // 0 < L i }
-    let L' : l' → PGame := fun i => L i.1
-    let IHl' : l' → PGame := fun i => inv' (L i.1)
+    let L' : l' → PGame := fun i ↦ L i.1
+    let IHl' : l' → PGame := fun i ↦ inv' (L i.1)
     let IHr i := inv' (R i)
     let x := mk l r L R
     ⟨InvTy l' r false, InvTy l' r true, invVal L' R IHl' IHr x, invVal L' R IHl' IHr x⟩
@@ -797,18 +733,14 @@ theorem zero_lf_inv' : ∀ x : PGame, 0 ⧏ inv' x
     rfl
 
 /-- `inv' 0` has exactly the same moves as `1`. -/
-def inv'Zero : inv' 0 ≡r 1 := by
-  change mk _ _ _ _ ≡r 1
-  refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩
-  · apply Equiv.equivPUnit (InvTy _ _ _)
-  · apply Equiv.equivPEmpty (InvTy _ _ _)
-  · simp
-    rfl
-  · dsimp
-    infer_instance
+theorem inv'_zero : inv' 0 ≡ 1 := by
+  rw [Identical.ext_iff]
+  constructor
+  · simp [memₗ_def, inv', isEmpty_subtype]
+  · simp [memᵣ_def, inv', isEmpty_subtype]
 
 theorem inv'_zero_equiv : inv' 0 ≈ 1 :=
-  inv'Zero.equiv
+  inv'_zero.equiv
 
 /-- `inv' 1` has exactly the same moves as `1`. -/
 lemma inv'_one : inv' 1 ≡ 1 := by
@@ -817,28 +749,15 @@ lemma inv'_one : inv' 1 ≡ 1 := by
   · simp [memₗ_def, inv', isEmpty_subtype]
   · simp [memᵣ_def, inv', isEmpty_subtype]
 
-/-- `inv' 1` has exactly the same moves as `1`. -/
-def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
-  change Relabelling (mk _ _ _ _) 1
-  have : IsEmpty { _i : PUnit.{u + 1} // (0 : PGame.{u}) < 0 } := by
-    rw [lt_self_iff_false]
-    infer_instance
-  refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩ <;> dsimp
-  · apply Equiv.equivPUnit
-  · apply Equiv.equivOfIsEmpty
-  · simp
-    rfl
-  · infer_instance
-
 theorem inv'_one_equiv : inv' 1 ≈ 1 :=
   inv'_one.equiv
 
 /-- The inverse of a pre-game in terms of the inverse on positive pre-games. -/
 noncomputable instance : Inv PGame :=
-  ⟨by classical exact fun x => if x ≈ 0 then 0 else if 0 < x then inv' x else -inv' (-x)⟩
+  ⟨by classical exact fun x ↦ if x ≈ 0 then 0 else if 0 < x then inv' x else -inv' (-x)⟩
 
 noncomputable instance : Div PGame :=
-  ⟨fun x y => x * y⁻¹⟩
+  ⟨fun x y ↦ x * y⁻¹⟩
 
 theorem inv_eq_of_equiv_zero {x : PGame} (h : x ≈ 0) : x⁻¹ = 0 := by classical exact if_pos h
 
@@ -856,11 +775,6 @@ theorem inv_eq_of_lf_zero {x : PGame} (h : x ⧏ 0) : x⁻¹ = -inv' (-x) := by
 lemma inv_one : 1⁻¹ ≡ 1 := by
   rw [inv_eq_of_pos PGame.zero_lt_one]
   exact inv'_one
-
-/-- `1⁻¹` has exactly the same moves as `1`. -/
-def invOne : 1⁻¹ ≡r 1 := by
-  rw [inv_eq_of_pos PGame.zero_lt_one]
-  exact inv'One
 
 theorem inv_one_equiv : (1⁻¹ : PGame) ≈ 1 :=
   inv_one.equiv

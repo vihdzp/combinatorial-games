@@ -43,12 +43,12 @@ birthdays of its left and right games. It may be thought as the "step" in which 
 constructed. -/
 noncomputable def birthday : PGame.{u} → Ordinal.{u}
   | ⟨_, _, xL, xR⟩ =>
-    max (lsub.{u, u} fun i => birthday (xL i)) (lsub.{u, u} fun i => birthday (xR i))
+    max (lsub.{u, u} fun i ↦ birthday (xL i)) (lsub.{u, u} fun i ↦ birthday (xR i))
 
 theorem birthday_def (x : PGame) :
     birthday x =
-      max (lsub.{u, u} fun i => birthday (x.moveLeft i))
-        (lsub.{u, u} fun i => birthday (x.moveRight i)) := by
+      max (lsub.{u, u} fun i ↦ birthday (x.moveLeft i))
+        (lsub.{u, u} fun i ↦ birthday (x.moveRight i)) := by
   cases x; rw [birthday]; rfl
 
 theorem birthday_moveLeft_lt {x : PGame} (i : x.LeftMoves) :
@@ -75,7 +75,7 @@ theorem lt_birthday_iff {x : PGame} {o : Ordinal} :
     · exact hi.trans_lt (birthday_moveLeft_lt i)
     · exact hi.trans_lt (birthday_moveRight_lt i)
 
-theorem Relabelling.birthday_congr : ∀ {x y : PGame.{u}}, x ≡r y → birthday x = birthday y
+theorem Identical.birthday_congr : ∀ {x y : PGame.{u}}, x ≡ y → birthday x = birthday y
   | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩, r => by
     unfold birthday
     congr 1
@@ -83,10 +83,10 @@ theorem Relabelling.birthday_congr : ∀ {x y : PGame.{u}}, x ≡r y → birthda
       apply lsub_eq_of_range_eq.{u, u, u}
       ext i; constructor
     all_goals rintro ⟨j, rfl⟩
-    · exact ⟨_, (r.moveLeft j).birthday_congr.symm⟩
-    · exact ⟨_, (r.moveLeftSymm j).birthday_congr⟩
-    · exact ⟨_, (r.moveRight j).birthday_congr.symm⟩
-    · exact ⟨_, (r.moveRightSymm j).birthday_congr⟩
+    · exact (r.moveLeft j).imp (fun _ hi ↦ hi.birthday_congr.symm)
+    · exact (r.moveLeft_symm j).imp (fun _ hi ↦ hi.birthday_congr)
+    · exact (r.moveRight j).imp (fun _ hi ↦ hi.birthday_congr.symm)
+    · exact (r.moveRight_symm j).imp (fun _ hi ↦ hi.birthday_congr)
 
 @[simp]
 theorem birthday_eq_zero {x : PGame} :
@@ -120,7 +120,7 @@ theorem birthday_ordinalToPGame (o : Ordinal) : o.toPGame.birthday = o := by
 theorem le_birthday : ∀ x : PGame, x ≤ x.birthday.toPGame
   | ⟨xl, _, xL, _⟩ =>
     le_def.2
-      ⟨fun i =>
+      ⟨fun i ↦
         Or.inl ⟨toLeftMovesToPGame ⟨_, birthday_moveLeft_lt i⟩, by simp [le_birthday (xL i)]⟩,
         isEmptyElim⟩
 
@@ -196,7 +196,7 @@ theorem birthday_eq_zero {x : Game} : birthday x = 0 ↔ x = 0 := by
     let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
     rw [← hy₁]
     rw [h, PGame.birthday_eq_zero] at hy₂
-    exact PGame.game_eq (@PGame.Equiv.isEmpty _ hy₂.1 hy₂.2)
+    exact PGame.game_eq (@PGame.equiv_zero_of_isEmpty _ hy₂.1 hy₂.2)
   · rintro rfl
     exact birthday_zero
 

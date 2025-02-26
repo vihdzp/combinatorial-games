@@ -7,6 +7,7 @@ Authors: Kim Morrison
 import Mathlib.Data.Fintype.Basic
 import Mathlib.SetTheory.Cardinal.Cofinality
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Relabelling
 
 /-!
 # Short games
@@ -17,6 +18,10 @@ In particular, this means there is a finite set of moves at every point.
 We prove that the order relations `≤` and `<`, and the equivalence relation `≈`, are decidable on
 short games, although unfortunately in practice `decide` doesn't seem to be able to
 prove anything using these instances.
+
+TODO: This is not the real "short game". It is only defined for `PGame`.
+The real "short game" will be defined once `IGame` (`Game` over the `Identical` setoid)
+is added.
 -/
 
 -- Porting note: The local instances `moveLeftShort'` and `fintypeLeft` (and resp. `Right`)
@@ -48,7 +53,7 @@ instance subsingleton_short (x : PGame) : Subsingleton (Short x) := by
 attribute [-instance] subsingleton_short in
 theorem subsingleton_short_example : ∀ x : PGame, Subsingleton (Short x)
   | mk xl xr xL xR =>
-    ⟨fun a b => by
+    ⟨fun a b ↦ by
       cases a; cases b
       congr!
       · funext x
@@ -136,7 +141,7 @@ theorem short_birthday (x : PGame.{u}) : [Short x] → x.birthday < Ordinal.omeg
       rw [← Cardinal.ord_aleph0]
       refine
         Cardinal.lsub_lt_ord_of_isRegular.{u, u} Cardinal.isRegular_aleph0
-          (Cardinal.lt_aleph0_of_finite _) fun i => ?_
+          (Cardinal.lt_aleph0_of_finite _) fun i ↦ ?_
       rw [Cardinal.ord_aleph0]
     · apply ihl
     · apply ihr
@@ -151,7 +156,7 @@ instance short0 : Short 0 :=
   Short.ofIsEmpty
 
 instance short1 : Short 1 :=
-  Short.mk (fun i => by cases i; infer_instance) fun j => by cases j
+  Short.mk (fun i ↦ by cases i; infer_instance) fun j ↦ by cases j
 
 /-- Evidence that every `PGame` in a list is `Short`. -/
 class inductive ListShort : List PGame.{u} → Type (u + 1)
@@ -185,12 +190,12 @@ def shortOfRelabelling : ∀ {x y : PGame.{u}}, Relabelling x y → Short x → 
     haveI := Fintype.ofEquiv _ R
     exact
       Short.mk'
-        (fun i => by rw [← L.right_inv i]; apply shortOfRelabelling (rL (L.symm i)) inferInstance)
-        fun j => by simpa using shortOfRelabelling (rR (R.symm j)) inferInstance
+        (fun i ↦ by rw [← L.right_inv i]; apply shortOfRelabelling (rL (L.symm i)) inferInstance)
+        fun j ↦ by simpa using shortOfRelabelling (rR (R.symm j)) inferInstance
 
 instance shortNeg : ∀ (x : PGame.{u}) [Short x], Short (-x)
   | mk xl xr xL xR, _ => by
-    exact Short.mk (fun i => shortNeg _) fun i => shortNeg _
+    exact Short.mk (fun i ↦ shortNeg _) fun i ↦ shortNeg _
 
 instance shortAdd : ∀ (x y : PGame.{u}) [Short x] [Short y], Short (x + y)
   | mk xl xr xL xR, mk yl yr yL yR, _, _ => by
