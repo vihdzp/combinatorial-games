@@ -3,7 +3,7 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-import CombinatorialGames.Game.State
+import CombinatorialGames.Game.Concrete
 
 /-!
 # Domineering as a combinatorial game.
@@ -20,17 +20,16 @@ disjoint parts of the chessboard give sums of games.
 -/
 
 namespace PGame
-
 namespace Domineering
 
 open Function
 
-/-- The equivalence `(x, y) ↦ (x, y+1)`. -/
+/-- The equivalence `(x, y) ↦ (x, y + 1)`. -/
 @[simps!]
 def shiftUp : ℤ × ℤ ≃ ℤ × ℤ :=
   (Equiv.refl ℤ).prodCongr (Equiv.addRight (1 : ℤ))
 
-/-- The equivalence `(x, y) ↦ (x+1, y)`. -/
+/-- The equivalence `(x, y) ↦ (x + 1, y)`. -/
 @[simps!]
 def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
   (Equiv.addRight (1 : ℤ)).prodCongr (Equiv.refl ℤ)
@@ -38,8 +37,9 @@ def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
 -- Porting note: reducibility cannot be `local`. For now there are no dependents of this file so
 -- being globally reducible is fine.
-abbrev Board :=
-  Finset (ℤ × ℤ)
+def Board := Finset (ℤ × ℤ)
+@[match_pattern] def toFinset : Board ≃ Finset (ℤ × ℤ) := Equiv.refl _
+@[match_pattern] def ofFinset : Finset (ℤ × ℤ) ≃ Board := Equiv.refl _
 
 /-- Left can play anywhere that a square and the square below it are open. -/
 def left (b : Board) : Finset (ℤ × ℤ) :=
@@ -49,6 +49,7 @@ def left (b : Board) : Finset (ℤ × ℤ) :=
 def right (b : Board) : Finset (ℤ × ℤ) :=
   b ∩ b.map shiftRight
 
+#exit
 theorem mem_left {b : Board} (x : ℤ × ℤ) : x ∈ left b ↔ x ∈ b ∧ (x.1, x.2 - 1) ∈ b :=
   Finset.mem_inter.trans (and_congr Iff.rfl Finset.mem_map_equiv)
 
@@ -173,4 +174,5 @@ instance shortL : Short domineering.L := by dsimp [domineering.L]; infer_instanc
 --   (3,0), (3,1), (3,2), (3,3), (3,4),
 --   (4,0), (4,1), (4,2), (4,3), (4,4)
 --   ].toFinset) ≈ 0)
+
 end PGame

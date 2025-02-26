@@ -93,8 +93,8 @@ variable [WellQuasiOrderedLE α]
 
 /-- The set of states in a poset game. This is a type alias for `Set α`. -/
 def Poset (α : Type*) [Preorder α] [WellQuasiOrderedLE α] := Set α
-def toPoset : Set α ≃ Poset α := Equiv.refl _
-def ofPoset : Poset α ≃ Set α := Equiv.refl _
+@[match_pattern] def toPoset : Set α ≃ Poset α := Equiv.refl _
+@[match_pattern] def ofPoset : Poset α ≃ Set α := Equiv.refl _
 
 @[simp] theorem toPoset_ofPoset (a : Poset α) : toPoset (ofPoset a) = a := rfl
 @[simp] theorem ofPoset_toPoset (a : Set α) : ofPoset (toPoset a) = a := rfl
