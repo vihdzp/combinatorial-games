@@ -119,7 +119,7 @@ theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
 theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
   rw [toPGame, neg_def]
   congr
-  all_goals try (ext; rw [h])
+  any_goals ext; rw [h]
   all_goals
     apply Function.hfunext (by rw [h])
     simp_rw [heq_eq_eq, Subtype.forall, h]
