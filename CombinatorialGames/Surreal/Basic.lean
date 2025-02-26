@@ -200,7 +200,6 @@ theorem insertLeft_numeric {x x' : PGame} (x_num : x.Numeric) (x'_num : x'.Numer
     · simpa using x_num.moveLeft _
   · simpa using fun _ ↦ x_num.moveRight _
 
-#exit
 /-- Inserting a larger numeric right option into a numeric game results in a numeric game. -/
 theorem insertRight_numeric {x x' : PGame} (x_num : x.Numeric) (x'_num : x'.Numeric)
     (h : x ≤ x') : (insertRight x x').Numeric := by
