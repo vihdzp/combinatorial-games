@@ -121,13 +121,17 @@ protected theorem neg_toPGame (a : Poset α) : -toPGame a = toPGame a :=
 instance (a : Poset α) : Impartial (toPGame a) :=
   impartial_toPGame rfl a
 
+/-- The starting position in a poset game. -/
+def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
+  toPoset Set.univ
+
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
 
 /-- Any poset game on a poset with a top element is won by the first player. This is proven by
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
-    toPGame (toPoset (@univ α)) ‖ 0 := by
+    toPGame (univ α) ‖ 0 := by
   apply Impartial.fuzzy_zero_of_forall_exists_moveLeft _
     (toLeftMovesPGame ⟨_, top_compl_posetRel_univ⟩)
   rw [moveLeft_toPGame_toLeftMovesPGame]
