@@ -144,7 +144,7 @@ def tiny : PGame :=
 def miny : PGame :=
   ⟨PUnit, PUnit, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ x, fun _ ↦ 0⟩, fun _ ↦ 0⟩
 
-theorem tiny_neg_miny : miny x = -tiny x := by
+theorem miny_eq_neg_tiny : miny x = -tiny x := by
   rw [miny, tiny]
   simp
 
