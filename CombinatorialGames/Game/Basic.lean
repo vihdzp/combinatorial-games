@@ -39,11 +39,11 @@ namespace Game
 
 /-- Negation of games. -/
 instance : Neg Game where
-  neg := Quot.map Neg.neg <| fun _ _ => (neg_equiv_neg_iff).2
+  neg := Quot.map Neg.neg fun _ _ ↦ (neg_equiv_neg_iff).2
 
 instance : Zero Game where zero := ⟦0⟧
 instance : Add Game where
-  add := Quotient.map₂ HAdd.hAdd <| fun _ _ hx _ _ hy => PGame.add_congr hx hy
+  add := Quotient.map₂ HAdd.hAdd fun _ _ hx _ _ hy ↦ PGame.add_congr hx hy
 
 instance instAddCommGroupWithOneGame : AddCommGroupWithOne Game where
   zero := ⟦0⟧
@@ -57,7 +57,7 @@ instance instAddCommGroupWithOneGame : AddCommGroupWithOne Game where
   add_assoc := by
     rintro ⟨x⟩ ⟨y⟩ ⟨z⟩
     exact Quot.sound add_assoc_equiv
-  neg_add_cancel := Quotient.ind <| fun x => Quot.sound (neg_add_cancel_equiv x)
+  neg_add_cancel := Quotient.ind fun x ↦ Quot.sound (neg_add_cancel_equiv x)
   add_comm := by
     rintro ⟨x⟩ ⟨y⟩
     exact Quot.sound add_comm_equiv
@@ -77,7 +77,7 @@ instance instPartialOrderGame : PartialOrder Game :=
 
 If `0 ⧏ x` (less or fuzzy with), then Left can win `x` as the first player. -/
 def LF : Game → Game → Prop :=
-  Quotient.lift₂ PGame.LF fun _ _ _ _ hx hy => propext (lf_congr hx hy)
+  Quotient.lift₂ PGame.LF fun _ _ _ _ hx hy ↦ propext (lf_congr hx hy)
 
 /-- On `Game`, simp-normal inequalities should use as few negations as possible. -/
 @[simp]
@@ -95,7 +95,7 @@ theorem not_lf : ∀ {x y : Game}, ¬Game.LF x y ↔ y ≤ x := by
 
 If `x ‖ 0`, then the first player can always win `x`. -/
 def Fuzzy : Game → Game → Prop :=
-  Quotient.lift₂ PGame.Fuzzy fun _ _ _ _ hx hy => propext (fuzzy_congr hx hy)
+  Quotient.lift₂ PGame.Fuzzy fun _ _ _ _ hx hy ↦ propext (fuzzy_congr hx hy)
 
 instance : IsTrichotomous Game LF :=
   ⟨by
@@ -210,8 +210,8 @@ theorem quot_natCast : ∀ n : ℕ, ⟦(n : PGame)⟧ = (n : Game)
 theorem quot_eq_of_mk'_quot_eq {x y : PGame} (L : x.LeftMoves ≃ y.LeftMoves)
     (R : x.RightMoves ≃ y.RightMoves) (hl : ∀ i, (⟦x.moveLeft i⟧ : Game) = ⟦y.moveLeft (L i)⟧)
     (hr : ∀ j, (⟦x.moveRight j⟧ : Game) = ⟦y.moveRight (R j)⟧) : (⟦x⟧ : Game) = ⟦y⟧ :=
-  game_eq (equiv_of_equiv L R (fun _ => equiv_iff_game_eq.2 (hl _))
-    (fun _ => equiv_iff_game_eq.2 (hr _)))
+  game_eq (equiv_of_equiv L R (fun _ ↦ equiv_iff_game_eq.2 (hl _))
+    (fun _ ↦ equiv_iff_game_eq.2 (hr _)))
 
 /-! Multiplicative operations can be defined at the level of pre-games,
 but to prove their properties we need to use the abelian group structure of games.
@@ -221,7 +221,7 @@ Hence we define them here. -/
 /-- The product of `x = {xL | xR}` and `y = {yL | yR}` is
 `{xL*y + x*yL - xL*yL, xR*y + x*yR - xR*yR | xL*y + x*yR - xL*yR, xR*y + x*yL - xR*yL}`. -/
 instance : Mul PGame.{u} :=
-  ⟨fun x y => by
+  ⟨fun x y ↦ by
     induction x generalizing y with | mk xl xr _ _ IHxl IHxr => _
     induction y with | mk yl yr yL yR IHyl IHyr => _
     have y := mk yl yr yL yR
@@ -627,11 +627,7 @@ lemma mulOption_neg_neg {x} (y) {i j} :
 
 /-- The left options of `x * y` agree with that of `y * x` up to equivalence. -/
 lemma mulOption_symm (x y) {i j} : ⟦mulOption x y i j⟧ = (⟦mulOption y x j i⟧ : Game) := by
-  dsimp only [mulOption, quot_sub, quot_add]
-  rw [add_comm]
-  congr 1
-  on_goal 1 => congr 1
-  all_goals rw [quot_mul_comm]
+  simp [mulOption, add_comm, quot_mul_comm]
 
 /-- The left options of `x * y` of the second kind are the left options of `(-x) * (-y)` of the
   first kind, up to equivalence. -/
@@ -649,11 +645,8 @@ lemma leftMoves_mul_iff {x y : PGame} (P : Game → Prop) :
     · exact h.1 i j
     convert h.2 i j using 1
   all_goals
-    dsimp only [mk_mul_moveLeft_inr, quot_sub, quot_add, neg_def, mulOption, moveLeft_mk]
-    rw [← neg_def, ← neg_def]
-    congr 1
-    on_goal 1 => congr 1
-    all_goals rw [quot_neg_mul_neg]
+    dsimp [mulOption]
+    simp [← neg_def, quot_neg_mul_neg]
 
 /-- The right options of `x * y` are the left options of `x * (-y)` and of `(-x) * y` of the first
   kind, up to equivalence. -/
@@ -728,8 +721,8 @@ definition, the sets and elements are inductively generated. -/
 def inv' : PGame → PGame
   | ⟨l, r, L, R⟩ =>
     let l' := { i // 0 < L i }
-    let L' : l' → PGame := fun i => L i.1
-    let IHl' : l' → PGame := fun i => inv' (L i.1)
+    let L' : l' → PGame := fun i ↦ L i.1
+    let IHl' : l' → PGame := fun i ↦ inv' (L i.1)
     let IHr i := inv' (R i)
     let x := mk l r L R
     ⟨InvTy l' r false, InvTy l' r true, invVal L' R IHl' IHr x, invVal L' R IHl' IHr x⟩
@@ -761,10 +754,10 @@ theorem inv'_one_equiv : inv' 1 ≈ 1 :=
 
 /-- The inverse of a pre-game in terms of the inverse on positive pre-games. -/
 noncomputable instance : Inv PGame :=
-  ⟨by classical exact fun x => if x ≈ 0 then 0 else if 0 < x then inv' x else -inv' (-x)⟩
+  ⟨by classical exact fun x ↦ if x ≈ 0 then 0 else if 0 < x then inv' x else -inv' (-x)⟩
 
 noncomputable instance : Div PGame :=
-  ⟨fun x y => x * y⁻¹⟩
+  ⟨fun x y ↦ x * y⁻¹⟩
 
 theorem inv_eq_of_equiv_zero {x : PGame} (h : x ≈ 0) : x⁻¹ = 0 := by classical exact if_pos h
 

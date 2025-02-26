@@ -244,7 +244,7 @@ lemma mulOption_lt_of_lt (hy : y.Numeric) (ihxy : IH1 x y) (ihyx : IH1 y x) (i j
 
 lemma mulOption_lt (hx : x.Numeric) (hy : y.Numeric) (ihxy : IH1 x y) (ihyx : IH1 y x) (i j k l) :
     (⟦mulOption x y i k⟧ : Game) < -⟦mulOption x (-y) j l⟧ := by
-  obtain (h|h|h) := lt_or_equiv_or_gt (hx.moveLeft i) (hx.moveLeft j)
+  obtain (h | h | h) := lt_or_equiv_or_gt (hx.moveLeft i) (hx.moveLeft j)
   · exact mulOption_lt_of_lt hy ihxy ihyx i j k l h
   · have ml := @IsOption.moveLeft
     exact mulOption_lt_iff_P1.2 (P1_of_eq h (P24_of_ih ihxy i j).1
