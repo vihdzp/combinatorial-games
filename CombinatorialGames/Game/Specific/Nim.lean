@@ -46,8 +46,15 @@ noncomputable def nim (o : Ordinal.{u}) : PGame.{u} :=
 termination_by o
 decreasing_by all_goals exact ((enumIsoToType o).symm x).prop
 
-theorem leftMoves_nim (o : Ordinal) : (nim o).LeftMoves = o.toType := by rw [nim]; rfl
-theorem rightMoves_nim (o : Ordinal) : (nim o).RightMoves = o.toType := by rw [nim]; rfl
+/-- Use `toLeftMovesNim` to cast between these two types. -/
+@[simp]
+theorem leftMoves_nim (o : Ordinal) : (nim o).LeftMoves = o.toType := by
+  rw [nim]; rfl
+
+/-- Use `toRightMovesNim` to cast between these two types. -/
+@[simp]
+theorem rightMoves_nim (o : Ordinal) : (nim o).RightMoves = o.toType := by
+  rw [nim]; rfl
 
 theorem moveLeft_nim_hEq (o : Ordinal) :
     HEq (nim o).moveLeft fun i : o.toType ↦ nim ((enumIsoToType o).symm i) := by

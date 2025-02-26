@@ -132,21 +132,10 @@ def moveLeft : ∀ g : PGame, LeftMoves g → PGame
 def moveRight : ∀ g : PGame, RightMoves g → PGame
   | mk _ _r _ R => R
 
-@[simp]
-theorem leftMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).LeftMoves = xl :=
-  rfl
-
-@[simp]
-theorem moveLeft_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveLeft = xL :=
-  rfl
-
-@[simp]
-theorem rightMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).RightMoves = xr :=
-  rfl
-
-@[simp]
-theorem moveRight_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveRight = xR :=
-  rfl
+@[simp] theorem leftMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).LeftMoves = xl := rfl
+@[simp] theorem moveLeft_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveLeft = xL := rfl
+@[simp] theorem rightMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).RightMoves = xr := rfl
+@[simp] theorem moveRight_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveRight = xR := rfl
 
 lemma ext {x y : PGame} (hl : x.LeftMoves = y.LeftMoves) (hr : x.RightMoves = y.RightMoves)
     (hL : ∀ i j, HEq i j → x.moveLeft i = y.moveLeft j)
@@ -162,41 +151,33 @@ lemma ext {x y : PGame} (hl : x.LeftMoves = y.LeftMoves) (hr : x.RightMoves = y.
 /-- Construct a pre-game from list of pre-games describing the available moves for Left and Right.
 -/
 def ofLists (L R : List PGame.{u}) : PGame.{u} :=
-  mk (ULift (Fin L.length)) (ULift (Fin R.length)) (fun i ↦ L[i.down.1]) fun j ↦ R[j.down.1]
+  mk (ULift (Fin L.length)) (ULift (Fin R.length)) (fun i ↦ L[i.down.1]) (fun j ↦ R[j.down.1])
 
+/-- Use `toOfListsLeftMoves` to cast between these two types. -/
+@[simp]
 theorem leftMoves_ofLists (L R : List PGame) : (ofLists L R).LeftMoves = ULift (Fin L.length) :=
   rfl
 
+/-- Use `toOfListsRightMoves` to cast between these two types. -/
+@[simp]
 theorem rightMoves_ofLists (L R : List PGame) : (ofLists L R).RightMoves = ULift (Fin R.length) :=
   rfl
 
-/-- Converts a number into a left move for `ofLists`.
-
-This is just an abbreviation for `Equiv.ulift.symm` -/
-abbrev toOfListsLeftMoves {L R : List PGame} : Fin L.length ≃ (ofLists L R).LeftMoves :=
-  Equiv.ulift.symm
-
-/-- Converts a number into a right move for `ofLists`.
-
-This is just an abbreviation for `Equiv.ulift.symm` -/
-abbrev toOfListsRightMoves {L R : List PGame} : Fin R.length ≃ (ofLists L R).RightMoves :=
-  Equiv.ulift.symm
-
 @[simp]
-theorem ofLists_moveLeft' {L R : List PGame} (i : (ofLists L R).LeftMoves) :
+theorem ofLists_moveLeft {L R : List PGame} (i : (ofLists L R).LeftMoves) :
     (ofLists L R).moveLeft i = L[i.down.val] :=
   rfl
 
-theorem ofLists_moveLeft {L R : List PGame} (i : Fin L.length) :
+theorem ofLists_moveLeft_up {L R : List PGame} (i : Fin L.length) :
     (ofLists L R).moveLeft (ULift.up i) = L[i] :=
   rfl
 
 @[simp]
-theorem ofLists_moveRight' {L R : List PGame} (i : (ofLists L R).RightMoves) :
+theorem ofLists_moveRight {L R : List PGame} (i : (ofLists L R).RightMoves) :
     (ofLists L R).moveRight i = R[i.down.val] :=
   rfl
 
-theorem ofLists_moveRight {L R : List PGame} (i : Fin R.length) :
+theorem ofLists_moveRight_up {L R : List PGame} (i : Fin R.length) :
     (ofLists L R).moveRight (ULift.up i) = R[i] :=
   rfl
 
@@ -1058,10 +1039,12 @@ theorem isOption_neg_neg {x y : PGame} : IsOption (-x) (-y) ↔ IsOption x y := 
   rw [isOption_neg, neg_neg]
 
 /-- Use `toLeftMovesNeg` to cast between these two types. -/
+@[simp]
 theorem leftMoves_neg : ∀ x : PGame, (-x).LeftMoves = x.RightMoves
   | ⟨_, _, _, _⟩ => rfl
 
 /-- Use `toRightMovesNeg` to cast between these two types. -/
+@[simp]
 theorem rightMoves_neg : ∀ x : PGame, (-x).RightMoves = x.LeftMoves
   | ⟨_, _, _, _⟩ => rfl
 

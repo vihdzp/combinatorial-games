@@ -59,10 +59,12 @@ def toPGame (a : α) : PGame :=
 termination_by isWellFounded_subsequent.wf.wrap a
 
 /-- Use `toLeftMovesPGame` to cast between these two types. -/
+@[simp]
 theorem leftMoves_toPGame (a : α) : (toPGame a).LeftMoves = {b // b ≺ₗ a} := by
   rw [toPGame]; rfl
 
 /-- Use `toRightMovesPGame` to cast between these two types. -/
+@[simp]
 theorem rightMoves_toPGame (a : α) : (toPGame a).RightMoves = {b // b ≺ᵣ a} := by
   rw [toPGame]; rfl
 

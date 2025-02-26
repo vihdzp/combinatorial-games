@@ -217,7 +217,6 @@ theorem quot_eq_of_mk'_quot_eq {x y : PGame} (L : x.LeftMoves ≃ y.LeftMoves)
 but to prove their properties we need to use the abelian group structure of games.
 Hence we define them here. -/
 
-
 /-- The product of `x = {xL | xR}` and `y = {yL | yR}` is
 `{xL*y + x*yL - xL*yL, xR*y + x*yR - xR*yR | xL*y + x*yR - xL*yR, xR*y + x*yL - xR*yL}`. -/
 instance : Mul PGame.{u} :=
@@ -231,14 +230,16 @@ instance : Mul PGame.{u} :=
     · exact IHxl i y + IHyr j - IHxl i (yR j)
     · exact IHxr i y + IHyl j - IHxr i (yL j)⟩
 
+/-- Use `toLeftMovesMul` to cast between these two types. -/
+@[simp]
 theorem leftMoves_mul :
-    ∀ x y : PGame.{u},
-      (x * y).LeftMoves = (x.LeftMoves × y.LeftMoves ⊕ x.RightMoves × y.RightMoves)
+    ∀ x y : PGame, (x * y).LeftMoves = (x.LeftMoves × y.LeftMoves ⊕ x.RightMoves × y.RightMoves)
   | ⟨_, _, _, _⟩, ⟨_, _, _, _⟩ => rfl
 
+/-- Use `toRightMovesMul` to cast between these two types. -/
+@[simp]
 theorem rightMoves_mul :
-    ∀ x y : PGame.{u},
-      (x * y).RightMoves = (x.LeftMoves × y.RightMoves ⊕ x.RightMoves × y.LeftMoves)
+    ∀ x y : PGame, (x * y).RightMoves = (x.LeftMoves × y.RightMoves ⊕ x.RightMoves × y.LeftMoves)
   | ⟨_, _, _, _⟩, ⟨_, _, _, _⟩ => rfl
 
 /-- Turns two left or right moves for `x` and `y` into a left move for `x * y` and vice versa.

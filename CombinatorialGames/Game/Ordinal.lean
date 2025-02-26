@@ -37,10 +37,12 @@ noncomputable def toPGame (o : Ordinal.{u}) : PGame.{u} :=
 termination_by o
 decreasing_by exact ((enumIsoToType o).symm x).prop
 
+/-- Use `toLeftMovesToPGame` to cast between these two types. -/
 @[simp]
 theorem toPGame_leftMoves (o : Ordinal) : o.toPGame.LeftMoves = o.toType := by
   rw [toPGame, LeftMoves]
 
+/-- Use `toRightMovesToPGame` to cast between these two types. -/
 @[simp]
 theorem toPGame_rightMoves (o : Ordinal) : o.toPGame.RightMoves = PEmpty := by
   rw [toPGame, RightMoves]
