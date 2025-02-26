@@ -1150,7 +1150,7 @@ lemma memᵣ_neg_iff : ∀ {x y : PGame},
   | mk _ _ _ _, mk _ _ _ _ =>
     ⟨fun ⟨_i, hi⟩ ↦ ⟨_, ⟨_, refl _⟩, hi⟩, fun ⟨_, ⟨i, hi⟩, h⟩ ↦ ⟨i, h.trans hi.neg⟩⟩
 
-private theorem neg_le_lf_neg_iff : ∀ {x y : PGame.{u}}, (-y ≤ -x ↔ x ≤ y) ∧ (-y ⧏ -x ↔ x ⧏ y)
+private theorem neg_le_lf_neg_iff : ∀ {x y : PGame}, (-y ≤ -x ↔ x ≤ y) ∧ (-y ⧏ -x ↔ x ⧏ y)
   | mk xl xr xL xR, mk yl yr yL yR => by
     simp_rw [neg_def, mk_le_mk, mk_lf_mk, ← neg_def]
     constructor
@@ -1425,11 +1425,11 @@ protected lemma zero_add (x : PGame) : 0 + x ≡ x :=
   (PGame.add_comm _ _).trans x.add_zero
 
 /-- `x + 0` is equivalent to `x`. -/
-theorem add_zero_equiv (x : PGame.{u}) : x + 0 ≈ x :=
+theorem add_zero_equiv (x : PGame) : x + 0 ≈ x :=
   x.add_zero.equiv
 
 /-- `0 + x` is equivalent to `x`. -/
-theorem zero_add_equiv (x : PGame.{u}) : 0 + x ≈ x :=
+theorem zero_add_equiv (x : PGame) : 0 + x ≈ x :=
   x.zero_add.equiv
 
 /-- `-(x + y)` has exactly the same moves as `-x + -y`. -/
