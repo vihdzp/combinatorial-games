@@ -19,7 +19,7 @@ quasi-ordered (well-founded with no infinite antichains) is both sufficient and 
 guarantee a finite game.
 
 This setup generalizes other well-known games within CGT, most notably Chomp, which is simply the
-poset game on `(Fin m → Fin n) \ {⊥}`.
+poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
@@ -132,7 +132,7 @@ def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toPGame (univ α) ‖ 0 := by
-  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft _
+  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
     (toLeftMovesPGame ⟨_, top_compl_posetRel_univ⟩)
   rw [moveLeft_toPGame_toLeftMovesPGame]
   refine fun i ↦ ⟨toLeftMovesPGame ⟨_, posetRel_univ_of_posetRel_top_compl
