@@ -13,8 +13,6 @@ nature of games as defined in Lean. This isn't used in the literature, and is th
 scheduled for deprecation.
 -/
 
-noncomputable section
-
 open Function PGame
 
 universe u
@@ -22,7 +20,6 @@ universe u
 namespace PGame
 
 /-! ### Relabellings -/
-
 
 /-- `Relabelling x y` says that `x` and `y` are really the same game, just dressed up differently.
 Specifically, there is a bijection between the moves for Left in `x` and in `y`, and similarly
@@ -309,7 +306,7 @@ def inv'Zero : inv' 0 ≡r 1 := by
 
 /-- `inv' 1` has exactly the same moves as `1`. -/
 def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
-  change Relabelling (mk _ _ _ _) 1
+  change (mk _ _ _ _) ≡r 1
   have : IsEmpty { _i : PUnit.{u + 1} // (0 : PGame.{u}) < 0 } := by
     rw [lt_self_iff_false]
     infer_instance
@@ -326,5 +323,3 @@ def invOne : 1⁻¹ ≡r 1 := by
   exact inv'One
 
 end PGame
-
-end
