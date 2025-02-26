@@ -22,7 +22,7 @@ open scoped PGame
 namespace PGame
 
 private def ImpartialAux (G : PGame) : Prop :=
-  (G ≈ -G) ∧ (∀ i, ImpartialAux (G.moveLeft i)) ∧ ∀ j, ImpartialAux (G.moveRight j)
+  G ≈ -G ∧ (∀ i, ImpartialAux (G.moveLeft i)) ∧ ∀ j, ImpartialAux (G.moveRight j)
 termination_by G
 
 /-- An impartial game is one that's equivalent to its negative, such that each left and right move
@@ -178,44 +178,6 @@ theorem fuzzy_zero_iff_exists_leftMoves_equiv : G ‖ 0 ↔ ∃ i, G.moveLeft i 
 theorem fuzzy_zero_iff_exists_rightMoves_equiv : G ‖ 0 ↔ ∃ j, G.moveRight j ≈ 0 := by
   simpa using lf_zero_le (x := G)
 
-section deprecated
-
-variable (G)
-
-@[deprecated le_zero_iff_equiv (since := "2025-01-26")]
-theorem equiv_zero_iff_le : (G ≈ 0) ↔ G ≤ 0 :=
-  le_zero_iff_equiv.symm
-
-@[deprecated lf_zero_iff_fuzzy (since := "2025-01-26")]
-theorem fuzzy_zero_iff_lf : G ‖ 0 ↔ G ⧏ 0 :=
-  ⟨And.left, fun h => ⟨h, lf_zero_iff.1 h⟩⟩
-
-@[deprecated zero_le_iff_equiv (since := "2025-01-26")]
-theorem equiv_zero_iff_ge : (G ≈ 0) ↔ 0 ≤ G :=
-  ⟨And.right, fun h => ⟨le_zero_iff.2 h, h⟩⟩
-
-@[deprecated zero_lf_iff_fuzzy (since := "2025-01-26")]
-theorem fuzzy_zero_iff_gf : G ‖ 0 ↔ 0 ⧏ G :=
-  ⟨And.right, fun h => ⟨lf_zero_iff.2 h, h⟩⟩
-
-@[deprecated equiv_zero_iff_forall_leftMoves_fuzzy (since := "2025-01-26")]
-theorem forall_leftMoves_fuzzy_iff_equiv_zero : (∀ i, G.moveLeft i ‖ 0) ↔ G ≈ 0 :=
-  equiv_zero_iff_forall_leftMoves_fuzzy.symm
-
-@[deprecated equiv_zero_iff_forall_rightMoves_fuzzy (since := "2025-01-26")]
-theorem forall_rightMoves_fuzzy_iff_equiv_zero : (∀ j, G.moveRight j ‖ 0) ↔ G ≈ 0 :=
-  equiv_zero_iff_forall_rightMoves_fuzzy.symm
-
-@[deprecated fuzzy_zero_iff_exists_leftMoves_equiv (since := "2025-01-26")]
-theorem exists_left_move_equiv_iff_fuzzy_zero : (∃ i, G.moveLeft i ≈ 0) ↔ G ‖ 0 :=
-  fuzzy_zero_iff_exists_leftMoves_equiv.symm
-
-@[deprecated fuzzy_zero_iff_exists_rightMoves_equiv (since := "2025-01-26")]
-theorem exists_right_move_equiv_iff_fuzzy_zero : (∃ j, G.moveRight j ≈ 0) ↔ G ‖ 0 :=
-  fuzzy_zero_iff_exists_rightMoves_equiv.symm
-
-end deprecated
-
 /-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
 have also been reached in the first turn, then `G` is won by the first player.
 
@@ -224,8 +186,8 @@ This version of the theorem is stated exclusively in terms of left moves; see
 theorem fuzzy_zero_of_forall_exists_moveLeft (i : G.LeftMoves)
     (H : ∀ j, ∃ k, (G.moveLeft i).moveLeft j ≈ G.moveLeft k) : G ‖ 0 := by
   apply (equiv_or_fuzzy_zero _).resolve_left fun hG ↦ ?_
-  rw [← forall_leftMoves_fuzzy_iff_equiv_zero] at hG
-  obtain ⟨j, hj⟩ := (exists_left_move_equiv_iff_fuzzy_zero _).2 (hG i)
+  rw [equiv_zero_iff_forall_leftMoves_fuzzy] at hG
+  obtain ⟨j, hj⟩ := fuzzy_zero_iff_exists_leftMoves_equiv.1 (hG i)
   obtain ⟨k, hk⟩ := H j
   exact (hG k).not_equiv (hk.symm.trans hj)
 
@@ -237,10 +199,9 @@ This version of the theorem is stated exclusively in terms of right moves; see
 theorem fuzzy_zero_of_forall_exists_moveRight (i : G.RightMoves)
     (H : ∀ j, ∃ k, (G.moveRight i).moveRight j ≈ G.moveRight k) : G ‖ 0 := by
   rw [← neg_fuzzy_zero_iff]
-  apply fuzzy_zero_of_forall_exists_moveLeft (-G) (toLeftMovesNeg i)
+  apply fuzzy_zero_of_forall_exists_moveLeft (toLeftMovesNeg i)
   rw [moveLeft_neg_toLeftMovesNeg]
   simpa
 
 end Impartial
-
 end PGame
