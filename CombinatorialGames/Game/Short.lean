@@ -73,7 +73,6 @@ decreasing_by all_goals {
 def Short.mk' {x : PGame} [Fintype x.LeftMoves] [Fintype x.RightMoves]
     (sL : ∀ i : x.LeftMoves, Short (x.moveLeft i))
     (sR : ∀ j : x.RightMoves, Short (x.moveRight j)) : Short x := by
-  -- Porting note: Old proof relied on `unfreezingI`, which doesn't exist in Lean 4.
   convert Short.mk sL sR
   cases x
   dsimp
@@ -127,7 +126,6 @@ def moveRightShort' {xl xr} (xL xR) [S : Short (mk xl xr xL xR)] (j : xr) : Shor
 attribute [local instance] moveRightShort'
 
 theorem short_birthday (x : PGame.{u}) : [Short x] → x.birthday < Ordinal.omega0 := by
-  -- Porting note: Again `induction` is used instead of `pgame_wf_tac`
   induction x with
   | mk xl xr xL xR ihl ihr =>
     intro hs
