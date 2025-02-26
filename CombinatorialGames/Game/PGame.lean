@@ -1959,4 +1959,4 @@ theorem insertRight_insertLeft {x x' x'' : PGame} :
 
 end PGame
 
-set_option linter.style.longFile 2200
+set_option linter.style.longFile 2100
