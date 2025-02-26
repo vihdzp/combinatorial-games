@@ -32,48 +32,50 @@ variable {α : Type*} [Preorder α]
 
 open Set
 
+section Set
+
 /-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
 some `a ∈ t`.
 
 In a WQO, this relation is well-founded. -/
-def posetMove (s t : Set α) : Prop :=
+def posetRel (s t : Set α) : Prop :=
   ∃ a ∈ t, s = t \ Ici a
 
 @[inherit_doc]
-local infixl:50 " ≺ " => posetMove
+local infixl:50 " ≺ " => posetRel
 
-theorem subrelation_posetMove : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
+theorem subrelation_posetRel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
   rintro x y ⟨a, ha, rfl⟩
   refine ⟨diff_subset, not_subset.2 ⟨a, ha, ?_⟩⟩
   simp
 
-theorem not_posetMove_empty (s : Set α) : ¬ s ≺ ∅ := by
-  simp [posetMove]
+theorem not_posetRel_empty (s : Set α) : ¬ s ≺ ∅ := by
+  simp [posetRel]
 
-theorem posetMove_irrefl (s : Set α) : ¬ s ≺ s :=
-  fun h ↦ ssubset_irrefl s <| subrelation_posetMove h
+theorem posetRel_irrefl (s : Set α) : ¬ s ≺ s :=
+  fun h ↦ ssubset_irrefl s <| subrelation_posetRel h
 
 instance : IsIrrefl (Set α) (· ≺ ·) where
-  irrefl := posetMove_irrefl
+  irrefl := posetRel_irrefl
 
-theorem top_compl_posetMove_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
+theorem top_compl_posetRel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
   use ⊤
   simp [Ici, compl_eq_univ_diff]
 
-theorem posetMove_univ_of_posetMove_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {s : Set α}
+theorem posetRel_univ_of_posetRel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {s : Set α}
     (h : s ≺ {⊤}ᶜ) : s ≺ univ := by
   obtain ⟨a, _, rfl⟩ := h
   use a, mem_univ _
   rw [compl_eq_univ_diff, diff_diff, union_eq_right.2]
   simp
 
-theorem wellFounded_posetMove [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
+theorem wellFounded_posetRel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
   rw [WellFounded.wellFounded_iff_no_descending_seq]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
   have hf' := hf -- Is there a way to make `choose` not delete my hypothesis?
   choose g hg using hf
   obtain ⟨m, n, h, h'⟩ := wellQuasiOrdered_le g
-  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_posetMove (hf' n)
+  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_posetRel (hf' n)
   have : g n ∈ f (m + 1) := by
     obtain rfl | h := h.nat_succ_le.eq_or_lt
     · exact (hg _).1
@@ -81,110 +83,56 @@ theorem wellFounded_posetMove [WellQuasiOrderedLE α] : @WellFounded (Set α) (�
   rw [(hg m).2, mem_diff] at this
   exact this.2 h'
 
-instance [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
-  ⟨wellFounded_posetMove⟩
+instance isWellFounded_posetRel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
+  ⟨wellFounded_posetRel⟩
+
+end Set
 
 namespace PGame
-
 variable [WellQuasiOrderedLE α]
 
-/-- A position in the poset game. A valid move in the poset game is to change set `t` to set `s`,
-whenever `s = t \ Ici a` for some `a ∈ t`.
+/-- The set of states in a poset game. This is a type alias for `Set α`. -/
+def Poset (α : Type*) [Preorder α] [WellQuasiOrderedLE α] := Set α
+def toPoset : Set α ≃ Poset α := Equiv.refl _
+def ofPoset : Poset α ≃ Set α := Equiv.refl _
 
-See also `posetMove`. -/
-def posetPos [WellQuasiOrderedLE α] (t : Set α) : PGame :=
-  PGame.mk {s // s ≺ t} {s // s ≺ t} (fun x ↦ posetPos x.1) (fun x ↦ posetPos x.1)
-termination_by wellFounded_posetMove.wrap t
-decreasing_by all_goals exact x.2
+@[simp] theorem toPoset_ofPoset (a : Poset α) : toPoset (ofPoset a) = a := rfl
+@[simp] theorem ofPoset_toPoset (a : Set α) : ofPoset (toPoset a) = a := rfl
 
-/-- The poset game, played on `α`. -/
-@[reducible]
-def poset (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : PGame :=
-  posetPos (@univ α)
+namespace Poset
+open ConcreteGame
 
-/-- Use `toLeftMovesPoset` to cast between these two types. -/
-theorem leftMoves_posetPos (t : Set α) : (posetPos t).LeftMoves = {s // s ≺ t} := by
-  rw [posetPos]; rfl
+/-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
+some `a ∈ t`. -/
+def rel (a b : Poset α) : Prop :=
+  posetRel (ofPoset a) (ofPoset b)
 
-/-- Use `toRightMovesPoset` to cast between these two types. -/
-theorem rightMoves_posetPos (t : Set α) : (posetPos t).RightMoves = {s // s ≺ t} := by
-  rw [posetPos]; rfl
+@[inherit_doc]
+local infixl:50 " ≺ " => rel
 
-theorem moveLeft_poset_heq {t : Set α} :
-    HEq (posetPos t).moveLeft fun i : {s // s ≺ t} ↦ posetPos i.1 := by
-  rw [posetPos]; rfl
+instance : IsWellFounded (Poset α) rel := isWellFounded_posetRel
+instance : WellFoundedRelation (Poset α) := ⟨rel, isWellFounded_posetRel.wf⟩
+instance : ConcreteGame (Poset α) := .ofImpartial rel
 
-theorem moveRight_poset_heq {t : Set α} :
-    HEq (posetPos t).moveRight fun i : {s // s ≺ t} ↦ posetPos i.1 := by
-  rw [posetPos]; rfl
+protected theorem neg_toPGame (a : Poset α) : -toPGame a = toPGame a :=
+  neg_toPGame rfl a
 
-/-- Turns a set into a left move for a poset game and viceversa. -/
-def toLeftMovesPoset {t : Set α} : {s // s ≺ t} ≃ (posetPos t).LeftMoves :=
-  Equiv.cast (leftMoves_posetPos t).symm
-
-/-- Turns a set into a left move for a poset game and viceversa. -/
-def toRightMovesPoset {t : Set α} : {s // s ≺ t} ≃ (posetPos t).RightMoves :=
-  Equiv.cast (rightMoves_posetPos t).symm
-
-@[simp]
-theorem toLeftMovesPoset_symm_prop {t : Set α} (i : (posetPos t).LeftMoves) :
-    toLeftMovesPoset.symm i ≺ t :=
-  (toLeftMovesPoset.symm i).prop
-
-@[simp]
-theorem toRightMovesPoset_symm_prop {t : Set α} (i : (posetPos t).RightMoves) :
-    toRightMovesPoset.symm i ≺ t :=
-  (toRightMovesPoset.symm i).prop
-
-@[simp]
-theorem moveLeft_posetPos {t : Set α} (i) :
-    (posetPos t).moveLeft i = posetPos (toLeftMovesPoset.symm i).1 := by
-  apply congr_heq moveLeft_poset_heq (cast_heq _ _).symm
-
-@[simp]
-theorem moveRight_posetPos {t : Set α} (i) :
-    (posetPos t).moveRight i = posetPos (toRightMovesPoset.symm i).1 := by
-  apply congr_heq moveRight_poset_heq (cast_heq _ _).symm
-
-theorem moveLeft_toLeftMovesPoset {t : Set α} (s) :
-    (posetPos t).moveLeft (toLeftMovesPoset s) = posetPos s.1 := by
-  simp
-
-theorem moveRight_toRightMovesPoset {t : Set α} (s) :
-    (posetPos t).moveRight (toRightMovesPoset s) = posetPos s.1 := by
-  simp
-
-@[simp]
-theorem neg_posetPos (s : Set α) : -posetPos s = posetPos s := by
-  rw [posetPos, neg_def]
-  congr <;> ext x <;> rw [neg_posetPos]
-termination_by wellFounded_posetMove.wrap s
-decreasing_by all_goals exact x.2
-
-instance impartial_posetPos (s : Set α) : Impartial (posetPos s) := by
-  rw [impartial_def, neg_posetPos]
-  refine ⟨equiv_rfl, fun i ↦ ?_, fun i ↦ ?_⟩
-  · rw [moveLeft_posetPos]
-    exact impartial_posetPos _
-  · rw [moveRight_posetPos]
-    exact impartial_posetPos _
-termination_by wellFounded_posetMove.wrap s
-decreasing_by
-· exact toLeftMovesPoset_symm_prop _
-· exact toRightMovesPoset_symm_prop _
+instance (a : Poset α) : Impartial (toPGame a) :=
+  impartial_toPGame rfl a
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
 
 /-- Any poset game on a poset with a top element is won by the first player. This is proven by
 a strategy stealing argument with `{⊤}ᶜ`. -/
-theorem poset_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
-    poset α ‖ 0 := by
+theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
+    toPGame (toPoset (@univ α)) ‖ 0 := by
   apply Impartial.fuzzy_zero_of_forall_exists_moveLeft _
-    (toLeftMovesPoset ⟨_, top_compl_posetMove_univ⟩)
-  rw [moveLeft_toLeftMovesPoset]
-  refine fun i ↦ ⟨toLeftMovesPoset ⟨_, posetMove_univ_of_posetMove_top_compl
-    (toLeftMovesPoset_symm_prop i)⟩, ?_⟩
+    (toLeftMovesPGame ⟨_, top_compl_posetRel_univ⟩)
+  rw [moveLeft_toPGame_toLeftMovesPGame]
+  refine fun i ↦ ⟨toLeftMovesPGame ⟨_, posetRel_univ_of_posetRel_top_compl
+    (toLeftMovesPGame_symm_prop i)⟩, ?_⟩
   simp
 
+end Poset
 end PGame
