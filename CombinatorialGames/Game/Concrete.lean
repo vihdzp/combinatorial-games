@@ -37,14 +37,13 @@ attribute [instance] isWellFounded_subsequent
 theorem subrelation_subsequentL :
     Subrelation subsequentL fun a b : α ↦ subsequentL a b ∨ subsequentR a b :=
   Or.inl
+
 theorem subrelation_subsequentR :
     Subrelation subsequentR fun a b : α ↦ subsequentL a b ∨ subsequentR a b :=
   Or.inr
 
-instance [ConcreteGame α] : IsWellFounded α subsequentL :=
-  subrelation_subsequentL.isWellFounded
-instance [ConcreteGame α] : IsWellFounded α subsequentR :=
-  subrelation_subsequentR.isWellFounded
+instance [ConcreteGame α] : IsWellFounded α subsequentL := subrelation_subsequentL.isWellFounded
+instance [ConcreteGame α] : IsWellFounded α subsequentR := subrelation_subsequentR.isWellFounded
 
 /-- Defines a concrete game from a single relation, to be used for both players. -/
 def ofImpartial (r : α → α → Prop) [h : IsWellFounded α r] : ConcreteGame α where
@@ -62,6 +61,7 @@ termination_by isWellFounded_subsequent.wf.wrap a
 /-- Use `toLeftMovesPGame` to cast between these two types. -/
 theorem leftMoves_toPGame (a : α) : (toPGame a).LeftMoves = {b // b ≺ₗ a} := by
   rw [toPGame]; rfl
+
 /-- Use `toRightMovesPGame` to cast between these two types. -/
 theorem rightMoves_toPGame (a : α) : (toPGame a).RightMoves = {b // b ≺ᵣ a} := by
   rw [toPGame]; rfl
@@ -69,6 +69,7 @@ theorem rightMoves_toPGame (a : α) : (toPGame a).RightMoves = {b // b ≺ᵣ a}
 theorem moveLeft_toPGame_hEq (a : α) :
     HEq (toPGame a).moveLeft fun i : {b // b ≺ₗ a} => toPGame i.1 := by
   rw [toPGame]; rfl
+
 theorem moveRight_toPGame_hEq (a : α) :
     HEq (toPGame a).moveRight fun i : {b // b ≺ᵣ a} => toPGame i.1 := by
   rw [toPGame]; rfl
@@ -91,6 +92,7 @@ def toRightMovesPGame {a : α} : {b // b ≺ᵣ a} ≃ (toPGame a).RightMoves :=
 theorem moveLeft_toPGame {a : α} (i) :
     (toPGame a).moveLeft i = toPGame (toLeftMovesPGame.symm i).1 :=
   (congr_heq (moveLeft_toPGame_hEq a).symm (cast_heq _ i)).symm
+
 @[simp]
 theorem moveRight_toPGame {a : α} (i) :
     (toPGame a).moveRight i = toPGame (toRightMovesPGame.symm i).1 :=
@@ -99,6 +101,7 @@ theorem moveRight_toPGame {a : α} (i) :
 theorem moveLeft_toPGame_toLeftMovesPGame {a : α} (i) :
     (toPGame a).moveLeft (toLeftMovesPGame i) = toPGame i.1 :=
   by simp
+
 theorem moveRight_toPGame_toRightMovesPGame {a : α} (i) :
     (toPGame a).moveRight (toRightMovesPGame i) = toPGame i.1 :=
   by simp
@@ -107,6 +110,7 @@ theorem moveRight_toPGame_toRightMovesPGame {a : α} (i) :
 theorem toLeftMovesPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
     (toLeftMovesPGame.symm i).1 ≺ₗ a :=
   (toLeftMovesPGame.symm i).prop
+
 @[simp]
 theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
     (toRightMovesPGame.symm i).1 ≺ᵣ a :=
