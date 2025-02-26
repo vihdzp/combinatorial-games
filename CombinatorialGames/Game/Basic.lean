@@ -802,7 +802,8 @@ def inv'Zero : inv' 0 ≡r 1 := by
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩
   · apply Equiv.equivPUnit (InvTy _ _ _)
   · apply Equiv.equivPEmpty (InvTy _ _ _)
-  · simpa using Relabelling.refl _
+  · simp
+    rfl
   · dsimp
     infer_instance
 
@@ -825,7 +826,8 @@ def inv'One : inv' 1 ≡r (1 : PGame.{u}) := by
   refine ⟨?_, ?_, fun i => ?_, IsEmpty.elim ?_⟩ <;> dsimp
   · apply Equiv.equivPUnit
   · apply Equiv.equivOfIsEmpty
-  · simpa using Relabelling.refl _
+  · simp
+    rfl
   · infer_instance
 
 theorem inv'_one_equiv : inv' 1 ≈ 1 :=
