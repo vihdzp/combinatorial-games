@@ -77,6 +77,7 @@ def moveRight (b : Domineering) (m : ℤ × ℤ) : Domineering :=
 theorem moveLeft_subset (b : Domineering) (m : ℤ × ℤ) :
     ofDomineering (b.moveLeft m) ⊆ ofDomineering b :=
   (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
+
 theorem moveRight_subset (b : Domineering) (m : ℤ × ℤ) :
     ofDomineering (b.moveRight m) ⊆ ofDomineering b :=
   (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
