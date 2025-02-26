@@ -5,6 +5,7 @@ Authors: Kim Morrison, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Concrete
 import Mathlib.Algebra.Group.Units.Equiv
+import Mathlib.Algebra.Order.Group.Nat
 
 /-!
 # Domineering as a combinatorial game.
@@ -21,175 +22,134 @@ disjoint parts of the chessboard give sums of games.
 -/
 
 namespace PGame
-namespace Domineering
 
 open Function
 
-/-- The equivalence `(x, y) ↦ (x, y + 1)`. -/
-@[simps!]
-def shiftUp : ℤ × ℤ ≃ ℤ × ℤ :=
-  (Equiv.refl ℤ).prodCongr (Equiv.addRight (1 : ℤ))
-
-/-- The equivalence `(x, y) ↦ (x + 1, y)`. -/
-@[simps!]
-def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
-  (Equiv.addRight (1 : ℤ)).prodCongr (Equiv.refl ℤ)
+private theorem pred_fst_ne (m : ℤ × ℤ) : (m.1 - 1, m.2) ≠ m := by aesop
+private theorem pred_snd_ne (m : ℤ × ℤ) : (m.1, m.2 - 1) ≠ m := by aesop
 
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
--- Porting note: reducibility cannot be `local`. For now there are no dependents of this file so
--- being globally reducible is fine.
-def Board := Finset (ℤ × ℤ)
-@[match_pattern] def toBoard : Finset (ℤ × ℤ) ≃ Board := Equiv.refl _
-@[match_pattern] def ofBoard : Board ≃ Finset (ℤ × ℤ) := Equiv.refl _
+def Domineering := Finset (ℤ × ℤ) deriving DecidableEq
+@[match_pattern] def toDomineering : Finset (ℤ × ℤ) ≃ Domineering := Equiv.refl _
+@[match_pattern] def ofDomineering : Domineering ≃ Finset (ℤ × ℤ) := Equiv.refl _
 
-@[simp] theorem toBoard_ofBoard (a : Board) : toBoard (ofBoard a) = a := rfl
-@[simp] theorem ofBoard_toBoard (a : Finset (ℤ × ℤ)) : ofBoard (toBoard a) = a := rfl
+@[simp] theorem toDomineering_ofDomineering (a : Domineering) :
+  toDomineering (ofDomineering a) = a := rfl
+@[simp] theorem ofDomineering_toDomineering (s : Finset (ℤ × ℤ)) :
+  ofDomineering (toDomineering s) = s := rfl
 
-namespace Board
+namespace Domineering
 
 /-- Left can play anywhere that a square and the square below it are open. -/
-def left (b : Board) : Finset (ℤ × ℤ) :=
-  ofBoard b ∩ (ofBoard b).map shiftUp
+def left (b : Domineering) : Finset (ℤ × ℤ) :=
+  ofDomineering b ∩ (ofDomineering b).map ((Equiv.refl ℤ).prodCongr (Equiv.addRight (1 : ℤ)))
 
 /-- Right can play anywhere that a square and the square to the left are open. -/
-def right (b : Board) : Finset (ℤ × ℤ) :=
-  ofBoard b ∩ (ofBoard b).map shiftRight
+def right (b : Domineering) : Finset (ℤ × ℤ) :=
+  ofDomineering b ∩ (ofDomineering b).map ((Equiv.addRight (1 : ℤ)).prodCongr (Equiv.refl ℤ))
 
-theorem mem_left {b : Board} (x : ℤ × ℤ) :
-    x ∈ left b ↔ x ∈ ofBoard b ∧ (x.1, x.2 - 1) ∈ ofBoard b :=
+@[aesop simp]
+theorem mem_left {b : Domineering} {m : ℤ × ℤ} :
+    m ∈ left b ↔ m ∈ ofDomineering b ∧ (m.1, m.2 - 1) ∈ ofDomineering b :=
   Finset.mem_inter.trans (and_congr Iff.rfl Finset.mem_map_equiv)
 
-theorem mem_right {b : Board} (x : ℤ × ℤ) :
-    x ∈ right b ↔ x ∈ ofBoard b ∧ (x.1 - 1, x.2) ∈ ofBoard b :=
+@[aesop simp]
+theorem mem_right {b : Domineering} {m : ℤ × ℤ} :
+    m ∈ right b ↔ m ∈ ofDomineering b ∧ (m.1 - 1, m.2) ∈ ofDomineering b :=
   Finset.mem_inter.trans (and_congr Iff.rfl Finset.mem_map_equiv)
 
-/-- After Left moves, two vertically adjacent squares are removed from the board. -/
-def moveLeft (b : Board) (m : ℤ × ℤ) : Board :=
-  toBoard <| ((ofBoard b).erase m).erase (m.1, m.2 - 1)
+theorem subset_of_mem_left {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
+    {m, (m.1, m.2 - 1)} ⊆ ofDomineering b := fun _ ↦ by
+  aesop
 
-/-- After Left moves, two horizontally adjacent squares are removed from the board. -/
-def moveRight (b : Board) (m : ℤ × ℤ) : Board :=
-  toBoard <| ((ofBoard b).erase m).erase (m.1 - 1, m.2)
+theorem subset_of_mem_right {b : Domineering} {m : ℤ × ℤ} (h : m ∈ right b) :
+    {m, (m.1 - 1, m.2)} ⊆ ofDomineering b := fun _ ↦ by
+  aesop
 
-/-- Left can move from `b` to `a` when there exists some `m` with `a = b.moveLeft m`. -/
-def relLeft (a b : Board) : Prop :=
-  ∃ m, a = b.moveLeft m
+/-- After Left moves, two vertically adjacent squares are removed from the Domineering. -/
+def moveLeft (b : Domineering) (m : ℤ × ℤ) : Domineering :=
+  toDomineering <| ((ofDomineering b).erase m).erase (m.1, m.2 - 1)
 
-/-- Right can move from `b` to `a` when there exists some `m` with `a = b.moveRight m`. -/
-def relRight (a b : Board) : Prop :=
-  ∃ m, a = b.moveRight m
+/-- After Left moves, two horizontally adjacent squares are removed from the Domineering. -/
+def moveRight (b : Domineering) (m : ℤ × ℤ) : Domineering :=
+  toDomineering <| ((ofDomineering b).erase m).erase (m.1 - 1, m.2)
 
-#exit
+theorem moveLeft_subset (b : Domineering) (m : ℤ × ℤ) :
+    ofDomineering (b.moveLeft m) ⊆ ofDomineering b :=
+  (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
+theorem moveRight_subset (b : Domineering) (m : ℤ × ℤ) :
+    ofDomineering (b.moveRight m) ⊆ ofDomineering b :=
+  (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
 
-theorem fst_pred_mem_erase_of_mem_right {b : Board} {m : ℤ × ℤ} (h : m ∈ right b) :
-    (m.1 - 1, m.2) ∈ b.erase m := by
-  rw [mem_right] at h
-  apply Finset.mem_erase_of_ne_of_mem _ h.2
-  exact ne_of_apply_ne Prod.fst (pred_ne_self m.1)
+/-- Left can move from `b` to `a` when there exists some `m ∈ left b` with `a = b.moveLeft m`. -/
+def relLeft (a b : Domineering) : Prop :=
+  ∃ m ∈ left b, a = b.moveLeft m
 
-theorem snd_pred_mem_erase_of_mem_left {b : Board} {m : ℤ × ℤ} (h : m ∈ left b) :
-    (m.1, m.2 - 1) ∈ b.erase m := by
-  rw [mem_left] at h
-  apply Finset.mem_erase_of_ne_of_mem _ h.2
-  exact ne_of_apply_ne Prod.snd (pred_ne_self m.2)
+/-- Right can move from `b` to `a` when there exists some `m ∈ right b` with `a = b.moveRight m`. -/
+def relRight (a b : Domineering) : Prop :=
+  ∃ m ∈ right b, a = b.moveRight m
 
-theorem card_of_mem_left {b : Board} {m : ℤ × ℤ} (h : m ∈ left b) : 2 ≤ Finset.card b := by
-  have w₁ : m ∈ b := (Finset.mem_inter.1 h).1
-  have w₂ : (m.1, m.2 - 1) ∈ b.erase m := snd_pred_mem_erase_of_mem_left h
-  have i₁ := Finset.card_erase_lt_of_mem w₁
-  have i₂ := Nat.lt_of_le_of_lt (Nat.zero_le _) (Finset.card_erase_lt_of_mem w₂)
-  exact Nat.lt_of_le_of_lt i₂ i₁
+@[inherit_doc] local infixl:50 " ≺ₗ " => relLeft
+@[inherit_doc] local infixr:50 " ≺ᵣ " => relRight
 
-theorem card_of_mem_right {b : Board} {m : ℤ × ℤ} (h : m ∈ right b) : 2 ≤ Finset.card b := by
-  have w₁ : m ∈ b := (Finset.mem_inter.1 h).1
-  have w₂ := fst_pred_mem_erase_of_mem_right h
-  have i₁ := Finset.card_erase_lt_of_mem w₁
-  have i₂ := Nat.lt_of_le_of_lt (Nat.zero_le _) (Finset.card_erase_lt_of_mem w₂)
-  exact Nat.lt_of_le_of_lt i₂ i₁
+instance : DecidableRel relLeft := fun _ _ ↦ inferInstanceAs (Decidable (∃ _, _))
+instance : DecidableRel relRight := fun _ _ ↦ inferInstanceAs (Decidable (∃ _, _))
 
-theorem moveLeft_card {b : Board} {m : ℤ × ℤ} (h : m ∈ left b) :
-    Finset.card (moveLeft b m) + 2 = Finset.card b := by
-  dsimp only [moveLeft]
-  rw [Finset.card_erase_of_mem (snd_pred_mem_erase_of_mem_left h)]
-  rw [Finset.card_erase_of_mem (Finset.mem_of_mem_inter_left h)]
-  exact tsub_add_cancel_of_le (card_of_mem_left h)
+theorem card_of_mem_left {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
+    2 ≤ (ofDomineering b).card := by
+  apply le_of_eq_of_le _ <| Finset.card_mono (subset_of_mem_left h)
+  rw [Finset.card_pair (pred_snd_ne m).symm]
 
-theorem moveRight_card {b : Board} {m : ℤ × ℤ} (h : m ∈ right b) :
-    Finset.card (moveRight b m) + 2 = Finset.card b := by
-  dsimp only [moveRight]
-  rw [Finset.card_erase_of_mem (fst_pred_mem_erase_of_mem_right h)]
-  rw [Finset.card_erase_of_mem (Finset.mem_of_mem_inter_left h)]
-  exact tsub_add_cancel_of_le (card_of_mem_right h)
+theorem card_of_mem_right {b : Domineering} {m : ℤ × ℤ} (h : m ∈ right b) :
+    2 ≤ (ofDomineering b).card := by
+  apply le_of_eq_of_le _ <| Finset.card_mono (subset_of_mem_right h)
+  rw [Finset.card_pair (pred_fst_ne m).symm]
 
-theorem moveLeft_smaller {b : Board} {m : ℤ × ℤ} (h : m ∈ left b) :
-    Finset.card (moveLeft b m) / 2 < Finset.card b / 2 := by simp [← moveLeft_card h, lt_add_one]
+theorem moveLeft_card {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
+    (ofDomineering (moveLeft b m)).card + 2 = (ofDomineering b).card := by
+  have := tsub_add_cancel_of_le (card_of_mem_left h)
+  rw [moveLeft]
+  aesop
 
-theorem moveRight_smaller {b : Board} {m : ℤ × ℤ} (h : m ∈ right b) :
-    Finset.card (moveRight b m) / 2 < Finset.card b / 2 := by simp [← moveRight_card h, lt_add_one]
+theorem moveRight_card {b : Domineering} {m : ℤ × ℤ} (h : m ∈ right b) :
+    (ofDomineering (moveRight b m)).card + 2 = Finset.card b := by
+  have := tsub_add_cancel_of_le (card_of_mem_right h)
+  rw [moveRight]
+  aesop
 
-/-- The instance describing allowed moves on a Domineering board. -/
-instance state : State Board where
-  turnBound s := s.card / 2
-  l s := (left s).image (moveLeft s)
-  r s := (right s).image (moveRight s)
-  left_bound m := by
-    simp only [Finset.mem_image, Prod.exists] at m
-    rcases m with ⟨_, _, ⟨h, rfl⟩⟩
-    exact moveLeft_smaller h
-  right_bound m := by
-    simp only [Finset.mem_image, Prod.exists] at m
-    rcases m with ⟨_, _, ⟨h, rfl⟩⟩
-    exact moveRight_smaller h
+theorem card_of_relLeft {a b : Domineering} (h : a ≺ₗ b) :
+    (ofDomineering a).card + 2 = (ofDomineering b).card := by
+  obtain ⟨m, hm, rfl⟩ := h
+  exact moveLeft_card hm
+
+theorem card_of_relRight {a b : Domineering} (h : a ≺ᵣ b) :
+    (ofDomineering a).card + 2 = (ofDomineering b).card := by
+  obtain ⟨m, hm, rfl⟩ := h
+  exact moveRight_card hm
+
+theorem subrelation_relLeft :
+    Subrelation relLeft (InvImage (· < ·) fun b ↦ (ofDomineering b).card) := by
+  intro a b h
+  rw [InvImage, ← card_of_relLeft h, lt_add_iff_pos_right]
+  exact Nat.succ_pos _
+
+theorem subrelation_relRight :
+    Subrelation relRight (InvImage (· < ·) fun b ↦ (ofDomineering b).card) := by
+  intro a b h
+  rw [InvImage, ← card_of_relRight h, lt_add_iff_pos_right]
+  exact Nat.succ_pos _
+
+instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
+instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
+
+instance : ConcreteGame Domineering where
+  subsequentL := relLeft
+  subsequentR := relRight
+  isWellFounded_subsequent := by
+    apply @Subrelation.isWellFounded (r := InvImage (· < ·) fun b ↦ (ofDomineering b).card)
+    rintro a b (h | h)
+    · exact subrelation_relLeft h
+    · exact subrelation_relRight h
 
 end Domineering
-
-/-- Construct a pre-game from a Domineering board. -/
-def domineering (b : Domineering.Board) : PGame :=
-  PGame.ofState b
-
-/-- All games of Domineering are short, because each move removes two squares. -/
-instance shortDomineering (b : Domineering.Board) : Short (domineering b) := by
-  dsimp only [domineering]
-  infer_instance
-
-/-- The Domineering board with two squares arranged vertically, in which Left has the only move. -/
-def domineering.one :=
-  domineering [(0, 0), (0, 1)].toFinset
-
-/-- The `L` shaped Domineering board, in which Left is exactly half a move ahead. -/
-def domineering.L :=
-  domineering [(0, 2), (0, 1), (0, 0), (1, 0)].toFinset
-
-instance shortOne : Short domineering.one := by dsimp [domineering.one]; infer_instance
-
-instance shortL : Short domineering.L := by dsimp [domineering.L]; infer_instance
-
--- The VM can play small games successfully:
--- #eval decide (domineering.one ≈ 1)
--- #eval decide (domineering.L + domineering.L ≈ 1)
--- The following no longer works since Lean 3.29, since definitions by well-founded
--- recursion no longer reduce definitionally.
--- We can check that `Decidable` instances reduce as expected,
--- and so our implementation of domineering is computable.
--- run_cmd tactic.whnf `(by apply_instance : Decidable (domineering.one ≤ 1)) >>= tactic.trace
--- dec_trivial can handle most of the dictionary of small games described in [conway2001]
--- example : domineering.one ≈ 1 := by decide
--- example : domineering.L + domineering.L ≈ 1 := by decide
--- example : domineering.L ≈ PGame.ofLists [0] [1] := by decide
--- example : (domineering ([(0,0), (0,1), (0,2), (0,3)].toFinset) ≈ 2) := by decide
--- example : (domineering ([(0,0), (0,1), (1,0), (1,1)].toFinset) ≈ PGame.ofLists [1] [-1]) :=
---   by decide
--- The 3x3 grid is doable, but takes a minute...
--- example :
---   (domineering ([(0,0), (0,1), (0,2), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2)].toFinset) ≈
---     PGame.ofLists [1] [-1]) := by decide
--- The 5x5 grid is actually 0, but brute-forcing this is too challenging even for the VM.
--- #eval decide (domineering ([
---   (0,0), (0,1), (0,2), (0,3), (0,4),
---   (1,0), (1,1), (1,2), (1,3), (1,4),
---   (2,0), (2,1), (2,2), (2,3), (2,4),
---   (3,0), (3,1), (3,2), (3,3), (3,4),
---   (4,0), (4,1), (4,2), (4,3), (4,4)
---   ].toFinset) ≈ 0)
-
 end PGame
