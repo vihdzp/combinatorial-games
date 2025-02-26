@@ -740,14 +740,14 @@ theorem zero_lf_inv' : ∀ x : PGame, 0 ⧏ inv' x
     rfl
 
 /-- `inv' 0` has exactly the same moves as `1`. -/
-def inv'zero : inv' 0 ≡ 1 := by
+theorem inv'_zero : inv' 0 ≡ 1 := by
   rw [Identical.ext_iff]
   constructor
   · simp [memₗ_def, inv', isEmpty_subtype]
   · simp [memᵣ_def, inv', isEmpty_subtype]
 
 theorem inv'_zero_equiv : inv' 0 ≈ 1 :=
-  inv'zero.equiv
+  inv'_zero.equiv
 
 /-- `inv' 1` has exactly the same moves as `1`. -/
 lemma inv'_one : inv' 1 ≡ 1 := by

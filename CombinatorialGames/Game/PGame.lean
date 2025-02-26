@@ -904,6 +904,9 @@ theorem equiv_of_equiv {x y : PGame} (L : x.LeftMoves ≃ y.LeftMoves)
   exacts [⟨_, hl i⟩, ⟨_, hr i⟩,
     ⟨_, by simpa using hl (L.symm i)⟩, ⟨_, by simpa using hr (R.symm i)⟩]
 
+theorem equiv_zero_of_isEmpty (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : x ≈ 0 := by
+  apply equiv_of_exists <;> exact isEmptyElim
+
 /-- The fuzzy, confused, or incomparable relation on pre-games.
 
 If `x ‖ 0`, then the first player can always win `x`. -/
@@ -994,23 +997,6 @@ theorem lt_or_equiv_or_gt_or_fuzzy (x y : PGame) : x < y ∨ (x ≈ y) ∨ y < x
 theorem lt_or_equiv_or_gf (x y : PGame) : x < y ∨ (x ≈ y) ∨ y ⧏ x := by
   rw [lf_iff_lt_or_fuzzy, Fuzzy.swap_iff]
   exact lt_or_equiv_or_gt_or_fuzzy x y
-
-theorem Equiv.of_exists {x y : PGame}
-    (hl₁ : ∀ i, ∃ j, x.moveLeft i ≈ y.moveLeft j) (hr₁ : ∀ i, ∃ j, x.moveRight i ≈ y.moveRight j)
-    (hl₂ : ∀ j, ∃ i, x.moveLeft i ≈ y.moveLeft j) (hr₂ : ∀ j, ∃ i, x.moveRight i ≈ y.moveRight j) :
-    x ≈ y := by
-  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i
-  · obtain ⟨j, hj⟩ := hl₁ i
-    exact Or.inl ⟨j, hj.le⟩
-  · obtain ⟨j, hj⟩ := hr₂ i
-    exact Or.inr ⟨j, hj.le⟩
-  · obtain ⟨j, hj⟩ := hl₂ i
-    exact Or.inl ⟨j, hj.ge⟩
-  · obtain ⟨j, hj⟩ := hr₁ i
-    exact Or.inr ⟨j, hj.ge⟩
-
-theorem Equiv.isEmpty (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : x ≈ 0 := by
-  apply Equiv.of_exists <;> exact isEmptyElim
 
 /-! ### Negation -/
 
@@ -1474,9 +1460,6 @@ lemma identical_zero_iff : ∀ (x : PGame),
 /-- Any game without left or right moves is identical to 0. -/
 lemma identical_zero (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : x ≡ 0 :=
   x.identical_zero_iff.mpr ⟨by infer_instance, by infer_instance⟩
-
-theorem equiv_zero (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : x ≈ 0 :=
-  (identical_zero x).equiv
 
 protected lemma add_eq_zero : ∀ {x y : PGame}, x + y ≡ 0 ↔ x ≡ 0 ∧ y ≡ 0
   | mk xl xr xL xR, mk yl yr yL yR => by

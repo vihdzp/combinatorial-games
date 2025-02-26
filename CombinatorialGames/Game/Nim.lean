@@ -114,8 +114,8 @@ instance isEmpty_nim_zero_rightMoves : IsEmpty (nim 0).RightMoves := by
 lemma nim_zero : nim 0 ≡ 0 :=
   identical_zero _
 
-theorem nim_zero_equiv : nim 0 ≈ 0 :=
-  equiv_zero _
+lemma nim_zero_equiv : nim 0 ≈ 0 :=
+  equiv_zero_of_isEmpty _
 
 noncomputable instance uniqueNimOneLeftMoves : Unique (nim 1).LeftMoves :=
   (Equiv.cast <| leftMoves_nim 1).unique
@@ -153,7 +153,7 @@ lemma nim_one : nim 1 ≡ star := by
   · simpa [memₗ_def, Unique.exists_iff] using nim_zero.congr_right
   · simpa [memᵣ_def, Unique.exists_iff] using nim_zero.congr_right
 
-theorem nim_one_equiv : nim 1 ≈ star :=
+lemma nim_one_equiv : nim 1 ≈ star :=
   nim_one.equiv
 
 @[simp]
@@ -173,7 +173,7 @@ theorem neg_nim (o : Ordinal) : -nim o = nim o := by
 instance impartial_nim (o : Ordinal) : Impartial (nim o) := by
   induction' o using Ordinal.induction with o IH
   rw [impartial_def, neg_nim]
-  refine ⟨refl _, fun i => ?_, fun i => ?_⟩ <;> simpa using IH _ (typein_lt_self _)
+  refine ⟨.rfl, fun i => ?_, fun i => ?_⟩ <;> simpa using IH _ (typein_lt_self _)
 
 theorem nim_fuzzy_zero_of_ne_zero {o : Ordinal} (ho : o ≠ 0) : nim o ‖ 0 := by
   rw [Impartial.fuzzy_zero_iff_exists_leftMoves_equiv]

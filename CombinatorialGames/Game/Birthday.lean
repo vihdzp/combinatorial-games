@@ -196,7 +196,7 @@ theorem birthday_eq_zero {x : Game} : birthday x = 0 ↔ x = 0 := by
     let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
     rw [← hy₁]
     rw [h, PGame.birthday_eq_zero] at hy₂
-    exact PGame.game_eq (@PGame.Equiv.isEmpty _ hy₂.1 hy₂.2)
+    exact PGame.game_eq (@PGame.equiv_zero_of_isEmpty _ hy₂.1 hy₂.2)
   · rintro rfl
     exact birthday_zero
 
