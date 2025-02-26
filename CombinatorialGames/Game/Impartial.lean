@@ -16,7 +16,6 @@ no matter what moves are played. This allows for games such as poker-nim to be c
 impartial.
 -/
 
-
 universe u
 
 open scoped PGame
@@ -199,7 +198,7 @@ theorem fuzzy_zero_of_forall_exists_moveLeft (i : G.LeftMoves)
   rw [← forall_leftMoves_fuzzy_iff_equiv_zero] at hG
   obtain ⟨j, hj⟩ := (exists_left_move_equiv_iff_fuzzy_zero _).2 (hG i)
   obtain ⟨k, hk⟩ := H j
-  exact (hG k).not_equiv ((Equiv.trans (Equiv.symm hk)) hj)
+  exact (hG k).not_equiv (hk.symm.trans hj)
 
 /-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
 have also been reached in the first turn, then `G` is won by the first player.
