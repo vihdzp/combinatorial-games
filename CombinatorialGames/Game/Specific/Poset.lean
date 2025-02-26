@@ -3,9 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.Order.WellQuasiOrder
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Impartial
+import Mathlib.Order.WellQuasiOrder
 
 /-!
 # Poset games
