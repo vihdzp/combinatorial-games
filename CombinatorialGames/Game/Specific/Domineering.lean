@@ -109,7 +109,7 @@ theorem moveLeft_card {b : Domineering} {m : ℤ × ℤ} (h : m ∈ left b) :
   aesop
 
 theorem moveRight_card {b : Domineering} {m : ℤ × ℤ} (h : m ∈ right b) :
-    (ofDomineering (moveRight b m)).card + 2 = Finset.card b := by
+    (ofDomineering (moveRight b m)).card + 2 = (ofDomineering b).card := by
   have := tsub_add_cancel_of_le (card_of_mem_right h)
   rw [moveRight]
   aesop
