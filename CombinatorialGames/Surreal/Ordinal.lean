@@ -48,14 +48,9 @@ theorem toSurreal_one : toSurreal 1 = 1 :=
 theorem toSurreal_injective : Function.Injective toSurreal :=
   toSurreal.injective
 
-theorem toSurreal_le_iff {a b : Ordinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b :=
-  toPGame_le_iff
-
-theorem toSurreal_lt_iff {a b : Ordinal} : a.toSurreal < b.toSurreal ↔ a < b :=
-  toPGame_lt_iff
-
-theorem toSurreal_inj {a b : Ordinal} : a.toSurreal = b.toSurreal ↔ a = b :=
-  toSurreal.inj
+theorem toSurreal_le_iff {a b : Ordinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b := by simp
+theorem toSurreal_lt_iff {a b : Ordinal} : a.toSurreal < b.toSurreal ↔ a < b := by simp
+theorem toSurreal_inj {a b : Ordinal} : a.toSurreal = b.toSurreal ↔ a = b := by simp
 
 theorem toSurreal_nadd (a b : Ordinal) : (a ♯ b).toSurreal = a.toSurreal + b.toSurreal :=
   mk_eq (toPGame_nadd a b)
