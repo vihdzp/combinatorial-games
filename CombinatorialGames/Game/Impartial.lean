@@ -71,16 +71,17 @@ instance moveRight_impartial {G : PGame} [h : G.Impartial] (j : G.RightMoves) :
     (G.moveRight j).Impartial :=
   (impartial_def.1 h).2.2 j
 
-theorem impartial_congr {G H : PGame} (e : G ≡r H) [G.Impartial] : H.Impartial :=
+theorem impartial_congr {G H : PGame} (e : G ≡ H) [G.Impartial] : H.Impartial :=
   impartial_def.2
     ⟨e.symm.equiv.trans ((neg_equiv_self G).trans (neg_equiv_neg_iff.2 e.equiv)),
-      fun i ↦ impartial_congr (e.moveLeftSymm i), fun j ↦ impartial_congr (e.moveRightSymm j)⟩
-termination_by G
+      fun i ↦ (e.moveLeft_symm i).elim fun _ ↦ (impartial_congr ·),
+      fun j ↦ (e.moveRight_symm j).elim fun _ ↦ (impartial_congr ·)⟩
+termination_by (G, H)
 
 instance impartial_add (G H : PGame) [G.Impartial] [H.Impartial] : (G + H).Impartial := by
   rw [impartial_def]
   refine ⟨(add_congr (neg_equiv_self G) (neg_equiv_self _)).trans
-      (negAddRelabelling _ _).equiv.symm, fun k ↦ ?_, fun k ↦ ?_⟩
+      (of_eq (G.neg_add H).symm), fun k ↦ ?_, fun k ↦ ?_⟩
   · apply leftMoves_add_cases k
     all_goals
       intro i; simp only [add_moveLeft_inl, add_moveLeft_inr]
