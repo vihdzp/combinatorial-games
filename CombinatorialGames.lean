@@ -1,13 +1,14 @@
 import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Domineering
+import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Impartial
-import CombinatorialGames.Game.Nim
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
-import CombinatorialGames.Game.Poset
 import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Specific.Domineering
+import CombinatorialGames.Game.Specific.Nim
+import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.State
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
