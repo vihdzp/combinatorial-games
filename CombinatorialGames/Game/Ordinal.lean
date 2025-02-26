@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
+import CombinatorialGames.Mathlib.AntisymmRel
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -17,9 +18,8 @@ The map to surreals is defined in `Ordinal.toSurreal`.
 # Main declarations
 
 - `Ordinal.toPGame`: The canonical map between ordinals and pre-games.
-- `Ordinal.toPGameEmbedding`: The order embedding version of the previous map.
+- `Ordinal.toGame`: The canonical map between ordinals and games.
 -/
-
 
 universe u
 
@@ -28,6 +28,8 @@ open PGame
 open scoped NaturalOps PGame
 
 namespace Ordinal
+
+/-! ### `Ordinal` to `PGame` -/
 
 /-- Converts an ordinal into the corresponding pre-game. -/
 noncomputable def toPGame (o : Ordinal.{u}) : PGame.{u} :=
@@ -140,8 +142,8 @@ theorem toPGame_equiv_iff {a b : Ordinal} : (a.toPGame ≈ b.toPGame) ↔ a = b 
   change _ ≤_ ∧ _ ≤ _ ↔ _
   rw [le_antisymm_iff, toPGame_le_iff, toPGame_le_iff]
 
-theorem toPGame_injective : Function.Injective Ordinal.toPGame := fun _ _ h =>
-  toPGame_equiv_iff.1 <| equiv_of_eq h
+theorem toPGame_injective : Function.Injective Ordinal.toPGame := fun _ _ h ↦
+  toPGame_equiv_iff.1 (.of_eq h)
 
 @[simp]
 theorem toPGame_inj {a b : Ordinal} : a.toPGame = b.toPGame ↔ a = b :=
@@ -155,6 +157,8 @@ noncomputable def toPGameEmbedding : Ordinal.{u} ↪o PGame.{u} where
   toFun := Ordinal.toPGame
   inj' := toPGame_injective
   map_rel_iff' := @toPGame_le_iff
+
+/-! ### `Ordinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
 noncomputable def toGame : Ordinal.{u} ↪o Game.{u} where
@@ -200,7 +204,7 @@ theorem toPGame_nadd (a b : Ordinal) : (a ♯ b).toPGame ≈ a.toPGame + b.toPGa
   refine ⟨le_of_forall_lf (fun i => ?_) isEmptyElim, le_of_forall_lf (fun i => ?_) isEmptyElim⟩
   · rw [toPGame_moveLeft']
     rcases lt_nadd_iff.1 (toLeftMovesToPGame_symm_lt i) with (⟨c, hc, hc'⟩ | ⟨c, hc, hc'⟩) <;>
-    rw [← toPGame_le_iff, le_congr_right (toPGame_nadd _ _)] at hc' <;>
+    rw [← toPGame_le_iff, (toPGame_nadd _ _).le_congr_right] at hc' <;>
     apply lf_of_le_of_lf hc'
     · apply add_lf_add_right
       rwa [toPGame_lf_iff]

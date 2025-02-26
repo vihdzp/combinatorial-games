@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
+import CombinatorialGames.Game.Special
 import Mathlib.Tactic.FinCases
 
 /-!
@@ -38,7 +39,7 @@ theorem star'_equiv_star : star' ≈ star := by
       · exact (neg_lt_zero_iff.2 PGame.zero_lt_one).trans_lf zero_lf_star
     · exact fun _ => lf_zero_le.2 ⟨⟨0, Nat.zero_lt_two⟩, le_rfl⟩
   constructor
-  case' right => rw [← neg_le_neg_iff, neg_star, neg_star']
+  case' right => dsimp; rw [← neg_le_neg_iff, neg_star, neg_star']
   assumption'
 
 /-- The equation `** = *` is an identity, though not a relabelling. -/
@@ -57,8 +58,9 @@ theorem star_sq : star * star ≈ star := by
       exact isEmptyElim j
   constructor
   case' right =>
-    rw [← neg_le_neg_iff];
-    apply (neg_mul _ _).symm.equiv.1.trans;
+    dsimp
+    rw [← neg_le_neg_iff]
+    apply (neg_mul _ _).symm.equiv.1.trans
     rw [neg_star]
   assumption'
 
@@ -71,6 +73,6 @@ theorem star'_mul_star_lf : star' * star ⧏ star := by
 
 /-- Pre-game multiplication cannot be lifted to games. -/
 theorem mul_not_lift : ∃ x₁ x₂ y : PGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
-  ⟨_, _, _, ⟨star'_equiv_star, fun h ↦ (PGame.Equiv.trans h star_sq).ge.not_gf star'_mul_star_lf⟩⟩
+  ⟨_, _, _, ⟨star'_equiv_star, fun h ↦ (h.trans star_sq).ge.not_gf star'_mul_star_lf⟩⟩
 
 end PGame
