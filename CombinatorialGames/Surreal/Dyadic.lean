@@ -14,20 +14,22 @@ import Mathlib.Tactic.Linarith
 
 /-!
 # Dyadic numbers
+
 Dyadic numbers are obtained by localizing ℤ away from 2. They are the initial object in the category
 of rings with no 2-torsion.
 
 ## Dyadic surreal numbers
+
 We construct dyadic surreal numbers using the canonical map from ℤ[2 ^ {-1}] to surreals.
 As we currently do not have a ring structure on `Surreal` we construct this map explicitly. Once we
 have the ring structure, this map can be constructed directly by sending `2 ^ {-1}` to `half`.
 
 ## Embeddings
+
 The above construction gives us an abelian group embedding of ℤ into `Surreal`. The goal is to
 extend this to an embedding of dyadic rationals into `Surreal` and use Cauchy sequences of dyadic
 rational numbers to construct an ordered field embedding of ℝ into `Surreal`.
 -/
-
 
 universe u
 
@@ -39,7 +41,7 @@ namespace PGame
 `powHalf (n + 1) + powHalf (n + 1) ≈ powHalf n`. -/
 def powHalf : ℕ → PGame
   | 0 => 1
-  | n + 1 => ⟨PUnit, PUnit, 0, fun _ => powHalf n⟩
+  | n + 1 => ⟨PUnit, PUnit, 0, fun _ ↦ powHalf n⟩
 
 @[simp]
 theorem powHalf_zero : powHalf 0 = 1 :=
@@ -80,7 +82,7 @@ theorem numeric_powHalf (n) : (powHalf n).Numeric := by
   | succ n hn =>
     constructor
     · simpa using hn.moveLeft_lt default
-    · exact ⟨fun _ => numeric_zero, fun _ => hn⟩
+    · exact ⟨fun _ ↦ numeric_zero, fun _ ↦ hn⟩
 
 theorem powHalf_succ_lt_powHalf (n : ℕ) : powHalf (n + 1) < powHalf n :=
   (numeric_powHalf (n + 1)).lt_moveRight default
@@ -197,7 +199,7 @@ theorem dyadic_aux {m₁ m₂ : ℤ} {y₁ y₂ : ℕ} (h₂ : m₁ * 2 ^ y₁ =
 /-- The additive monoid morphism `dyadicMap` sends ⟦⟨m, 2^n⟩⟧ to m • half ^ n. -/
 noncomputable def dyadicMap : Localization.Away (2 : ℤ) →+ Surreal where
   toFun x :=
-    (Localization.liftOn x fun x y => x * powHalf (Submonoid.log y)) <| by
+    (Localization.liftOn x fun x y ↦ x * powHalf (Submonoid.log y)) <| by
       intro m₁ m₂ n₁ n₂ h₁
       obtain ⟨⟨n₃, y₃, hn₃⟩, h₂⟩ := Localization.r_iff_exists.mp h₁
       simp only [Subtype.coe_mk, mul_eq_mul_left_iff] at h₂
