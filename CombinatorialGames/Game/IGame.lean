@@ -127,7 +127,7 @@ noncomputable def moveRecOn {P : IGame → Sort*} (x)
 theorem moveRecOn_eq {P : IGame → Sort*} (x)
     (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
     moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
-  isOption_wf.fix_eq _ _
+  isOption_wf.fix_eq ..
 
 -- TODO: docstring
 def Subsequent : IGame → IGame → Prop :=
@@ -138,6 +138,10 @@ theorem Subsequent.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subs
 
 theorem Subsequent.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subsequent x y :=
   Relation.TransGen.single (.of_mem_rightMoves h)
+
+theorem Subsequent.trans {x y z : IGame} (h₁ : Subsequent x y) (h₂ : Subsequent y z) :
+    Subsequent x z :=
+  Relation.TransGen.trans h₁ h₂
 
 instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
@@ -151,14 +155,12 @@ noncomputable def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGa
 @[simp]
 theorem leftMoves_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     (ofSets s t).leftMoves = s := by
-  ext y
-  simp [ofSets, range_comp, Equiv.range_eq_univ]
+  ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
 theorem rightMoves_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     (ofSets s t).rightMoves = t := by
-  ext y
-  simp [ofSets, range_comp, Equiv.range_eq_univ]
+  ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
 theorem ofSets_leftMoves_rightMoves (x : IGame) : ofSets x.leftMoves x.rightMoves = x := by
