@@ -48,11 +48,11 @@ theorem star_sq : star * star ≈ star := by
     rw [le_iff_forall_lf]
     constructor <;>
     intro i
-    · apply leftMoves_mul_cases i <;>
-      intro _ _
-      case' hl => rw [mul_moveLeft_inl]
-      case' hr => rw [mul_moveLeft_inr]
-      all_goals rw [lf_iff_game_lf]; simpa using zero_lf_star
+    · induction i using leftMovesMulRecOn <;>
+      all_goals
+        simp only [mul_moveLeft_inl, mul_moveLeft_inr]
+        rw [lf_iff_game_lf]
+        simpa using zero_lf_star
     · refine lf_zero.2 ⟨toRightMovesMul (Sum.inl default), ?_⟩
       rintro (j | j) <;> -- Instance can't be inferred otherwise.
       exact isEmptyElim j

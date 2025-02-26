@@ -19,7 +19,7 @@ individual grundy values.
 
 ## Implementation details
 
-The pen-and-paper definition of nim defines the possible moves of `nim o` to be `Set.Iio o`.
+The pen-and-paper definition of nim defines the possible moves of `nim o` to be `Iio o`.
 However, this definition does not work for us because it would make the type of nim
 `Ordinal.{u} → PGame.{u + 1}`, which would make it impossible for us to state the
 Sprague-Grundy theorem, since that requires the type of `nim` to be
@@ -33,7 +33,7 @@ noncomputable section
 universe u
 
 open scoped PGame
-open Ordinal Nimber
+open Nimber Ordinal Set
 
 namespace PGame
 
@@ -58,11 +58,11 @@ theorem moveRight_nim_hEq (o : Ordinal) :
   rw [nim]; rfl
 
 /-- Turns an ordinal less than `o` into a left move for `nim o` and vice versa. -/
-noncomputable def toLeftMovesNim {o : Ordinal} : Set.Iio o ≃ (nim o).LeftMoves :=
+noncomputable def toLeftMovesNim {o : Ordinal} : Iio o ≃ (nim o).LeftMoves :=
   (enumIsoToType o).toEquiv.trans (Equiv.cast (leftMoves_nim o).symm)
 
 /-- Turns an ordinal less than `o` into a right move for `nim o` and vice versa. -/
-noncomputable def toRightMovesNim {o : Ordinal} : Set.Iio o ≃ (nim o).RightMoves :=
+noncomputable def toRightMovesNim {o : Ordinal} : Iio o ≃ (nim o).RightMoves :=
   (enumIsoToType o).toEquiv.trans (Equiv.cast (rightMoves_nim o).symm)
 
 @[simp]
@@ -91,17 +91,31 @@ theorem moveRight_toRightMovesNim {o : Ordinal} (i) :
     (nim o).moveRight (toRightMovesNim i) = nim i := by
   simp
 
-/-- A recursion principle for left moves of a nim game. -/
+/-- A recursion principle for `(nim o).LeftMoves`. -/
 @[elab_as_elim]
-def leftMovesNimRecOn {o : Ordinal} {P : (nim o).LeftMoves → Sort*} (i : (nim o).LeftMoves)
-    (H : ∀ a (H : a < o), P <| toLeftMovesNim ⟨a, H⟩) : P i := by
-  rw [← toLeftMovesNim.apply_symm_apply i]; apply H
+def leftMovesNimRecOn {o : Ordinal} {P : (nim o).LeftMoves → Sort*} (i)
+    (H : Π a (H : a < o), P (toLeftMovesNim ⟨a, H⟩)) : P i :=
+  cast (by simp) <| H _ (toLeftMovesNim_symm_lt i)
 
-/-- A recursion principle for right moves of a nim game. -/
+/-- A recursion principle for `(nim o).RightMoves`. -/
 @[elab_as_elim]
-def rightMovesNimRecOn {o : Ordinal} {P : (nim o).RightMoves → Sort*} (i : (nim o).RightMoves)
-    (H : ∀ a (H : a < o), P <| toRightMovesNim ⟨a, H⟩) : P i := by
-  rw [← toRightMovesNim.apply_symm_apply i]; apply H
+def rightMovesNimRecOn {o : Ordinal} {P : (nim o).RightMoves → Sort*} (i)
+    (H : Π a (h : a < o), P (toRightMovesNim ⟨a, h⟩)) : P i :=
+  cast (by simp) <| H _ (toRightMovesNim_symm_lt i)
+
+@[simp]
+theorem leftMovesNimRecOn_toLeftMovesNim {o : Ordinal} {P : (nim o).LeftMoves → Sort*}
+    (i : Iio o) (H : Π a (h : a < o), P (toLeftMovesNim ⟨a, h⟩)) :
+    leftMovesNimRecOn (toLeftMovesNim i) H = H i.1 i.2 := by
+  rw [leftMovesNimRecOn, cast_eq_iff_heq]
+  congr <;> simp
+
+@[simp]
+theorem rightMovesNimRecOn_toRightMovesNim {o : Ordinal} {P : (nim o).RightMoves → Sort*}
+    (i : Iio o) (H : Π a (h : a < o), P (toRightMovesNim ⟨a, h⟩)) :
+    rightMovesNimRecOn (toRightMovesNim i) H = H i.1 i.2 := by
+  rw [rightMovesNimRecOn, cast_eq_iff_heq]
+  congr <;> simp
 
 instance isEmpty_nim_zero_leftMoves : IsEmpty (nim 0).LeftMoves := by
   rw [nim]
@@ -126,22 +140,22 @@ noncomputable instance uniqueNimOneRightMoves : Unique (nim 1).RightMoves :=
 
 @[simp]
 theorem default_nim_one_leftMoves_eq :
-    (default : (nim 1).LeftMoves) = @toLeftMovesNim 1 ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ :=
+    (default : (nim 1).LeftMoves) = @toLeftMovesNim 1 ⟨0, mem_Iio.mpr zero_lt_one⟩ :=
   rfl
 
 @[simp]
 theorem default_nim_one_rightMoves_eq :
-    (default : (nim 1).RightMoves) = @toRightMovesNim 1 ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ :=
+    (default : (nim 1).RightMoves) = @toRightMovesNim 1 ⟨0, mem_Iio.mpr zero_lt_one⟩ :=
   rfl
 
 @[simp]
 theorem toLeftMovesNim_one_symm (i) :
-    (@toLeftMovesNim 1).symm i = ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ := by
+    (@toLeftMovesNim 1).symm i = ⟨0, mem_Iio.mpr zero_lt_one⟩ := by
   simp [eq_iff_true_of_subsingleton]
 
 @[simp]
 theorem toRightMovesNim_one_symm (i) :
-    (@toRightMovesNim 1).symm i = ⟨0, Set.mem_Iio.mpr zero_lt_one⟩ := by
+    (@toRightMovesNim 1).symm i = ⟨0, mem_Iio.mpr zero_lt_one⟩ := by
   simp [eq_iff_true_of_subsingleton]
 
 theorem nim_one_moveLeft (x) : (nim 1).moveLeft x = nim 0 := by simp
@@ -211,23 +225,23 @@ This function takes a value in `Nimber`. This is a type synonym for the ordinals
 ordering, but addition in `Nimber` is such that it corresponds to the grundy value of the addition
 of games. See that file for more information on nimbers and their arithmetic. -/
 noncomputable def grundyValue (G : PGame.{u}) : Nimber.{u} :=
-  sInf (Set.range fun i ↦ grundyValue (G.moveLeft i))ᶜ
+  sInf (range fun i ↦ grundyValue (G.moveLeft i))ᶜ
 termination_by G
 
 theorem grundyValue_eq_sInf_moveLeft (G : PGame) :
-    grundyValue G = sInf (Set.range (grundyValue ∘ G.moveLeft))ᶜ := by
+    grundyValue G = sInf (range (grundyValue ∘ G.moveLeft))ᶜ := by
   rw [grundyValue]; rfl
 
 theorem grundyValue_ne_moveLeft {G : PGame} (i : G.LeftMoves) :
     grundyValue (G.moveLeft i) ≠ grundyValue G := by
   conv_rhs => rw [grundyValue_eq_sInf_moveLeft]
   have := csInf_mem (nonempty_of_not_bddAbove <|
-    Nimber.not_bddAbove_compl_of_small (Set.range fun i ↦ grundyValue (G.moveLeft i)))
-  rw [Set.mem_compl_iff, Set.mem_range, not_exists] at this
+    Nimber.not_bddAbove_compl_of_small (range fun i ↦ grundyValue (G.moveLeft i)))
+  rw [mem_compl_iff, mem_range, not_exists] at this
   exact this _
 
 theorem le_grundyValue_of_Iio_subset_moveLeft {G : PGame} {o : Nimber}
-    (h : Set.Iio o ⊆ Set.range (grundyValue ∘ G.moveLeft)) : o ≤ grundyValue G := by
+    (h : Iio o ⊆ range (grundyValue ∘ G.moveLeft)) : o ≤ grundyValue G := by
   by_contra! ho
   obtain ⟨i, hi⟩ := h ho
   exact grundyValue_ne_moveLeft i hi
@@ -249,8 +263,7 @@ theorem equiv_nim_grundyValue (G : PGame.{u}) [G.Impartial] :
     G ≈ nim (toOrdinal (grundyValue G)) := by
   rw [Impartial.equiv_iff_add_equiv_zero, Impartial.equiv_zero_iff_forall_leftMoves_fuzzy]
   intro x
-  apply leftMoves_add_cases x <;>
-  intro i
+  induction x using leftMovesAddRecOn <;> rename_i i
   · rw [add_moveLeft_inl, ← fuzzy_congr_left (add_congr_left (equiv_nim_grundyValue _).symm),
       nim_add_fuzzy_zero_iff]
     exact grundyValue_ne_moveLeft i
@@ -290,7 +303,7 @@ theorem grundyValue_neg (G : PGame) [G.Impartial] : grundyValue (-G) = grundyVal
   rw [grundyValue_eq_iff_equiv_nim, neg_equiv_iff, neg_nim, ← grundyValue_eq_iff_equiv_nim]
 
 theorem grundyValue_eq_sInf_moveRight (G : PGame) [G.Impartial] :
-    grundyValue G = sInf (Set.range (grundyValue ∘ G.moveRight))ᶜ := by
+    grundyValue G = sInf (range (grundyValue ∘ G.moveRight))ᶜ := by
   obtain ⟨l, r, L, R⟩ := G
   rw [← grundyValue_neg, grundyValue_eq_sInf_moveLeft]
   iterate 3 apply congr_arg
@@ -302,7 +315,7 @@ theorem grundyValue_ne_moveRight {G : PGame} [G.Impartial] (i : G.RightMoves) :
   convert grundyValue_ne_moveLeft (toLeftMovesNeg i) using 1 <;> simp
 
 theorem le_grundyValue_of_Iio_subset_moveRight {G : PGame} [G.Impartial] {o : Nimber}
-    (h : Set.Iio o ⊆ Set.range (grundyValue ∘ G.moveRight)) : o ≤ grundyValue G := by
+    (h : Iio o ⊆ range (grundyValue ∘ G.moveRight)) : o ≤ grundyValue G := by
   by_contra! ho
   obtain ⟨i, hi⟩ := h ho
   exact grundyValue_ne_moveRight i hi
@@ -322,10 +335,9 @@ theorem grundyValue_le_of_forall_moveRight {G : PGame} [G.Impartial] {o : Nimber
 /-- The Grundy value of the sum of two nim games equals their nimber addition. -/
 theorem grundyValue_nim_add_nim (x y : Ordinal) : grundyValue (nim x + nim y) = ∗x + ∗y := by
   apply (grundyValue_le_of_forall_moveLeft _).antisymm (le_grundyValue_of_Iio_subset_moveLeft _)
-  · intro i
-    apply leftMoves_add_cases i <;> intro j <;> have := (toLeftMovesNim_symm_lt j).ne
-    · simpa [grundyValue_nim_add_nim (toLeftMovesNim.symm j) y]
-    · simpa [grundyValue_nim_add_nim x (toLeftMovesNim.symm j)]
+  · refine (leftMovesAddRecOn · ?_ ?_) <;> intro i <;> have := (toLeftMovesNim_symm_lt i).ne
+    · simpa [grundyValue_nim_add_nim (toLeftMovesNim.symm i) y]
+    · simpa [grundyValue_nim_add_nim x (toLeftMovesNim.symm i)]
   · intro k hk
     obtain h | h := Nimber.lt_add_cases hk
     · let a := toOrdinal (k + ∗y)

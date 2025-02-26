@@ -89,6 +89,16 @@ def toRightMovesPGame {a : α} : {b // b ≺ᵣ a} ≃ (toPGame a).RightMoves :=
   Equiv.cast (rightMoves_toPGame a).symm
 
 @[simp]
+theorem toLeftMovesPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
+    (toLeftMovesPGame.symm i).1 ≺ₗ a :=
+  (toLeftMovesPGame.symm i).prop
+
+@[simp]
+theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
+    (toRightMovesPGame.symm i).1 ≺ᵣ a :=
+  (toRightMovesPGame.symm i).prop
+
+@[simp]
 theorem moveLeft_toPGame {a : α} (i) :
     (toPGame a).moveLeft i = toPGame (toLeftMovesPGame.symm i).1 :=
   (congr_heq (moveLeft_toPGame_hEq a).symm (cast_heq _ i)).symm
@@ -106,15 +116,31 @@ theorem moveRight_toPGame_toRightMovesPGame {a : α} (i) :
     (toPGame a).moveRight (toRightMovesPGame i) = toPGame i.1 :=
   by simp
 
-@[simp]
-theorem toLeftMovesPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
-    (toLeftMovesPGame.symm i).1 ≺ₗ a :=
-  (toLeftMovesPGame.symm i).prop
+-- A recursion principle for `(toPGame a).LeftMoves`. -/
+@[elab_as_elim]
+def leftMovesPGameRecOn {a : α} {P : (toPGame a).LeftMoves → Sort*} (i)
+    (H : Π i, P (toLeftMovesPGame i)) : P i :=
+  cast (by simp) <| H (toLeftMovesPGame.symm i)
+
+-- A recursion principle for `(toPGame a).RightMoves`. -/
+@[elab_as_elim]
+def rightMovesPGameRecOn {a : α} {P : (toPGame a).RightMoves → Sort*} (i)
+    (H : Π i, P (toRightMovesPGame i)) : P i :=
+  cast (by simp) <| H (toRightMovesPGame.symm i)
 
 @[simp]
-theorem toRightMovesPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
-    (toRightMovesPGame.symm i).1 ≺ᵣ a :=
-  (toRightMovesPGame.symm i).prop
+theorem leftMovesPGameRecOn_toLeftMovesPGame {a : α} {P : (toPGame a).LeftMoves → Sort*} (i)
+    (H : Π i, P (toLeftMovesPGame i)) : leftMovesPGameRecOn (toLeftMovesPGame i) H = H i := by
+  rw [leftMovesPGameRecOn, cast_eq_iff_heq]
+  congr
+  exact Equiv.apply_symm_apply ..
+
+@[simp]
+theorem rightMovesPGameRecOn_toRightMovesPGame {a : α} {P : (toPGame a).RightMoves → Sort*} (i)
+    (H : Π i, P (toRightMovesPGame i)) : rightMovesPGameRecOn (toRightMovesPGame i) H = H i := by
+  rw [rightMovesPGameRecOn, cast_eq_iff_heq]
+  congr
+  exact Equiv.apply_symm_apply ..
 
 theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
   rw [toPGame, neg_def]

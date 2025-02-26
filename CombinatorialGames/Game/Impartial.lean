@@ -82,13 +82,13 @@ instance impartial_add (G H : PGame) [G.Impartial] [H.Impartial] : (G + H).Impar
   rw [impartial_def]
   refine ⟨(add_congr (neg_equiv_self G) (neg_equiv_self _)).trans
       (of_eq (G.neg_add H).symm), fun k ↦ ?_, fun k ↦ ?_⟩
-  · apply leftMoves_add_cases k
+  · induction k using leftMovesAddRecOn
     all_goals
-      intro i; simp only [add_moveLeft_inl, add_moveLeft_inr]
+      simp only [add_moveLeft_inl, add_moveLeft_inr]
       apply impartial_add
-  · apply rightMoves_add_cases k
+  · induction k using rightMovesAddRecOn
     all_goals
-      intro i; simp only [add_moveRight_inl, add_moveRight_inr]
+      simp only [add_moveRight_inl, add_moveRight_inr]
       apply impartial_add
 termination_by (G, H)
 

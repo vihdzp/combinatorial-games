@@ -197,12 +197,12 @@ theorem toPGame_nadd (a b : Ordinal) : (a ♯ b).toPGame ≈ a.toPGame + b.toPGa
       rwa [toPGame_lf_iff]
     · apply add_lf_add_left
       rwa [toPGame_lf_iff]
-  · apply leftMoves_add_cases i <;>
-    intro i <;>
-    let wf := toLeftMovesToPGame_symm_lt i <;>
-    (try rw [add_moveLeft_inl]) <;>
-    (try rw [add_moveLeft_inr]) <;>
-    rw [toPGame_moveLeft', ← lf_congr_left (toPGame_nadd _ _), toPGame_lf_iff]
+  · induction i using leftMovesAddRecOn
+    all_goals
+      rename_i i
+      let wf := toLeftMovesToPGame_symm_lt i
+      simp only [add_moveLeft_inl, add_moveLeft_inr]
+      rw [toPGame_moveLeft', ← lf_congr_left (toPGame_nadd _ _), toPGame_lf_iff]
     · exact nadd_lt_nadd_right wf _
     · exact nadd_lt_nadd_left wf _
 termination_by (a, b)
@@ -223,8 +223,7 @@ theorem toPGame_nmul (a b : Ordinal) : (a ⨳ b).toPGame ≈ a.toPGame * b.toPGa
       quot_sub, quot_add]
     repeat rw [← game_eq (toPGame_nmul _ _)]
     rfl
-  · apply leftMoves_mul_cases i _ isEmptyElim
-    intro i j
+  · refine leftMovesMulRecOn i (fun i j ↦ ?_) isEmptyElim
     rw [mul_moveLeft_inl, toPGame_moveLeft', toPGame_moveLeft', lf_iff_game_lf,
       quot_sub, quot_add, ← Game.not_le, le_sub_iff_add_le]
     repeat rw [← game_eq (toPGame_nmul _ _)]

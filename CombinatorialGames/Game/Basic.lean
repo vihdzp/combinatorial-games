@@ -337,21 +337,49 @@ theorem neg_mk_mul_moveRight_inr {xl xr yl yr} {xL xR yL yR} {i j} :
       -(xR i * mk yl yr yL yR + mk xl xr xL xR * yR j - xR i * yR j) :=
   rfl
 
-theorem leftMoves_mul_cases {x y : PGame} (k) {P : (x * y).LeftMoves → Prop}
-    (hl : ∀ ix iy, P <| toLeftMovesMul (Sum.inl ⟨ix, iy⟩))
-    (hr : ∀ jx jy, P <| toLeftMovesMul (Sum.inr ⟨jx, jy⟩)) : P k := by
-  rw [← toLeftMovesMul.apply_symm_apply k]
-  rcases toLeftMovesMul.symm k with (⟨ix, iy⟩ | ⟨jx, jy⟩)
-  · apply hl
-  · apply hr
+/-- A recursor for `(x * y).LeftMoves`. -/
+@[elab_as_elim]
+def leftMovesMulRecOn {x y : PGame} (i) {P : (x * y).LeftMoves → Sort*}
+    (inl : Π ix iy, P (toLeftMovesMul (Sum.inl (ix, iy))))
+    (inr : Π jx jy, P (toLeftMovesMul (Sum.inr (jx, jy)))) : P i :=
+  cast (by simp) <| (toLeftMovesMul.symm i).casesOn (motive := fun x ↦ P (toLeftMovesMul x))
+    (fun x ↦ inl x.1 x.2) (fun x ↦ inr x.1 x.2)
 
-theorem rightMoves_mul_cases {x y : PGame} (k) {P : (x * y).RightMoves → Prop}
-    (hl : ∀ ix jy, P <| toRightMovesMul (Sum.inl ⟨ix, jy⟩))
-    (hr : ∀ jx iy, P <| toRightMovesMul (Sum.inr ⟨jx, iy⟩)) : P k := by
-  rw [← toRightMovesMul.apply_symm_apply k]
-  rcases toRightMovesMul.symm k with (⟨ix, iy⟩ | ⟨jx, jy⟩)
-  · apply hl
-  · apply hr
+/-- A recursor for `(x * y).RightMoves`. -/
+@[elab_as_elim]
+def rightMovesMulRecOn {x y : PGame} (i) {P : (x * y).RightMoves → Sort*}
+    (inl : Π ix jy, P (toRightMovesMul (Sum.inl (ix, jy))))
+    (inr : Π jx iy, P (toRightMovesMul (Sum.inr (jx, iy)))) : P i :=
+  cast (by simp) <| (toRightMovesMul.symm i).casesOn (motive := fun x ↦ P (toRightMovesMul x))
+    (fun x ↦ inl x.1 x.2) (fun x ↦ inr x.1 x.2)
+
+@[simp]
+theorem leftMovesMulRecOn_toLeftMovesMul_inl {x y : PGame} (i j) {P : (x * y).LeftMoves → Sort*}
+    (inl : Π ix jy, P (toLeftMovesMul (Sum.inl (ix, jy))))
+    (inr : Π jx iy, P (toLeftMovesMul (Sum.inr (jx, iy)))) :
+    leftMovesMulRecOn (toLeftMovesMul (Sum.inl (i, j))) inl inr = inl i j := by
+  rw [leftMovesMulRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem leftMovesMulRecOn_toLeftMovesMul_inr {x y : PGame} (i j) {P : (x * y).LeftMoves → Sort*}
+    (inl : Π ix jy, P (toLeftMovesMul (Sum.inl (ix, jy))))
+    (inr : Π jx iy, P (toLeftMovesMul (Sum.inr (jx, iy)))) :
+    leftMovesMulRecOn (toLeftMovesMul (Sum.inr (i, j))) inl inr = inr i j := by
+  rw [leftMovesMulRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem rightMovesMulRecOn_toLeftMovesMul_inl {x y : PGame} (i j) {P : (x * y).RightMoves → Sort*}
+    (inl : Π ix jy, P (toRightMovesMul (Sum.inl (ix, jy))))
+    (inr : Π jx iy, P (toRightMovesMul (Sum.inr (jx, iy)))) :
+    rightMovesMulRecOn (toRightMovesMul (Sum.inl (i, j))) inl inr = inl i j := by
+  rw [rightMovesMulRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem rightMovesMulRecOn_toLeftMovesMul_inr {x y : PGame} (i j) {P : (x * y).RightMoves → Sort*}
+    (inl : Π ix jy, P (toRightMovesMul (Sum.inl (ix, jy))))
+    (inr : Π jx iy, P (toRightMovesMul (Sum.inr (jx, iy)))) :
+    rightMovesMulRecOn (toRightMovesMul (Sum.inr (i, j))) inl inr = inr i j := by
+  rw [rightMovesMulRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
 
 /-- `x * y` and `y * x` have the same moves. -/
 protected lemma mul_comm (x y : PGame) : x * y ≡ y * x :=

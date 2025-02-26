@@ -1086,7 +1086,8 @@ theorem moveLeft_neg {x : PGame} (i) :
   rfl
 
 theorem moveLeft_neg_toLeftMovesNeg {x : PGame} (i) :
-    (-x).moveLeft (toLeftMovesNeg i) = -x.moveRight i := by simp
+    (-x).moveLeft (toLeftMovesNeg i) = -x.moveRight i := by
+  simp
 
 @[simp]
 theorem moveRight_neg {x : PGame} (i) :
@@ -1095,7 +1096,8 @@ theorem moveRight_neg {x : PGame} (i) :
   rfl
 
 theorem moveRight_neg_toRightMovesNeg {x : PGame} (i) :
-    (-x).moveRight (toRightMovesNeg i) = -x.moveLeft i := by simp
+    (-x).moveRight (toRightMovesNeg i) = -x.moveLeft i := by
+  simp
 
 @[simp]
 theorem forall_leftMoves_neg {x : PGame} {p : (-x).LeftMoves → Prop} :
@@ -1117,17 +1119,27 @@ theorem exists_rightMoves_neg {x : PGame} {p : (-x).RightMoves → Prop} :
     (∃ i : (-x).RightMoves, p i) ↔ (∃ i : x.LeftMoves, p (toRightMovesNeg i)) :=
   toRightMovesNeg.exists_congr_right.symm
 
-theorem leftMoves_neg_cases {x : PGame} (k) {P : (-x).LeftMoves → Prop}
-    (h : ∀ i, P <| toLeftMovesNeg i) :
-    P k := by
-  rw [← toLeftMovesNeg.apply_symm_apply k]
-  exact h _
+/-- A recursor for `(-x).LeftMoves`. -/
+@[elab_as_elim]
+def leftMovesNegRecOn {x : PGame} (i) {P : (-x).LeftMoves → Sort*}
+    (H : Π i, P (toLeftMovesNeg i)) : P i :=
+  cast (by simp) <| H (toLeftMovesNeg.symm i)
 
-theorem rightMoves_neg_cases {x : PGame} (k) {P : (-x).RightMoves → Prop}
-    (h : ∀ i, P <| toRightMovesNeg i) :
-    P k := by
-  rw [← toRightMovesNeg.apply_symm_apply k]
-  exact h _
+/-- A recursor for `(-x).RightMoves`. -/
+@[elab_as_elim]
+def rightMovesNegRecOn {x : PGame} (i) {P : (-x).RightMoves → Sort*}
+    (H : Π i, P (toRightMovesNeg i)) : P i :=
+  cast (by simp) <| H (toRightMovesNeg.symm i)
+
+@[simp]
+theorem leftMovesNegRecOn_toLeftMovesNeg {x : PGame} (i) {P : (-x).LeftMoves → Sort*}
+    (H : Π i, P (toLeftMovesNeg i)) : leftMovesNegRecOn (toLeftMovesNeg i) H = H i := by
+  rw [leftMovesNegRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem rightMovesNegRecOn_toRightMovesNeg {x : PGame} (i) {P : (-x).RightMoves → Sort*}
+    (H : Π i, P (toRightMovesNeg i)) : rightMovesNegRecOn (toRightMovesNeg i) H = H i := by
+  rw [rightMovesNegRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
 
 /-- If `x` has the same moves as `y`, then `-x` has the sames moves as `-y`. -/
 lemma Identical.neg : ∀ {x₁ x₂ : PGame}, x₁ ≡ x₂ → -x₁ ≡ -x₂
@@ -1368,23 +1380,45 @@ theorem add_moveRight_inr (x : PGame) {y : PGame} (i) :
   cases y
   rfl
 
-/-- Case on possible left moves of `x + y`. -/
-theorem leftMoves_add_cases {x y : PGame} (k) {P : (x + y).LeftMoves → Prop}
-    (hl : ∀ i, P <| toLeftMovesAdd (Sum.inl i)) (hr : ∀ i, P <| toLeftMovesAdd (Sum.inr i)) :
-    P k := by
-  rw [← toLeftMovesAdd.apply_symm_apply k]
-  rcases toLeftMovesAdd.symm k with i | i
-  · exact hl i
-  · exact hr i
+/-- A recursor for `(x + y).LeftMoves`. -/
+@[elab_as_elim]
+def leftMovesAddRecOn {x y : PGame} (i) {P : (x + y).LeftMoves → Sort*}
+    (inl : Π i, P (toLeftMovesAdd (Sum.inl i))) (inr : Π i, P (toLeftMovesAdd (Sum.inr i))) :
+    P i :=
+  cast (by simp) <|
+    (toLeftMovesAdd.symm i).casesOn (motive := fun x ↦ P (toLeftMovesAdd x)) inl inr
 
-/-- Case on possible right moves of `x + y`. -/
-theorem rightMoves_add_cases {x y : PGame} (k) {P : (x + y).RightMoves → Prop}
-    (hl : ∀ j, P <| toRightMovesAdd (Sum.inl j)) (hr : ∀ j, P <| toRightMovesAdd (Sum.inr j)) :
-    P k := by
-  rw [← toRightMovesAdd.apply_symm_apply k]
-  rcases toRightMovesAdd.symm k with i | i
-  · exact hl i
-  · exact hr i
+/-- A recursor for `(x + y).RightMoves`. -/
+@[elab_as_elim]
+def rightMovesAddRecOn {x y : PGame} (i) {P : (x + y).RightMoves → Sort*}
+    (inl : Π j, P (toRightMovesAdd (Sum.inl j))) (inr : Π j, P (toRightMovesAdd (Sum.inr j))) :
+    P i :=
+  cast (by simp) <|
+    (toRightMovesAdd.symm i).casesOn (motive := fun x ↦ P (toRightMovesAdd x)) inl inr
+
+@[simp]
+theorem leftMovesAddRecOn_toLeftMovesAdd_inl {x y : PGame} (i) {P : (x + y).LeftMoves → Sort*}
+    (inl : Π j, P (toLeftMovesAdd (Sum.inl j))) (inr : Π j, P (toLeftMovesAdd (Sum.inr j))) :
+    leftMovesAddRecOn (toLeftMovesAdd (Sum.inl i)) inl inr = inl i := by
+  rw [leftMovesAddRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem leftMovesAddRecOn_toLeftMovesAdd_inr {x y : PGame} (i) {P : (x + y).LeftMoves → Sort*}
+    (inl : Π j, P (toLeftMovesAdd (Sum.inl j))) (inr : Π j, P (toLeftMovesAdd (Sum.inr j))) :
+    leftMovesAddRecOn (toLeftMovesAdd (Sum.inr i)) inl inr = inr i := by
+  rw [leftMovesAddRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem rightMovesAddRecOn_toRightMovesAdd_inl {x y : PGame} (i) {P : (x + y).RightMoves → Sort*}
+    (inl : Π j, P (toRightMovesAdd (Sum.inl j))) (inr : Π j, P (toRightMovesAdd (Sum.inr j))) :
+    rightMovesAddRecOn (toRightMovesAdd (Sum.inl i)) inl inr = inl i := by
+  rw [rightMovesAddRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
+
+@[simp]
+theorem rightMovesAddRecOn_toRightMovesAdd_inr {x y : PGame} (i) {P : (x + y).RightMoves → Sort*}
+    (inl : Π j, P (toRightMovesAdd (Sum.inl j))) (inr : Π j, P (toRightMovesAdd (Sum.inr j))) :
+    rightMovesAddRecOn (toRightMovesAdd (Sum.inr i)) inl inr = inr i := by
+  rw [rightMovesAddRecOn, cast_eq_iff_heq, Equiv.symm_apply_apply]
 
 instance isEmpty_nat_rightMoves : ∀ n : ℕ, IsEmpty (RightMoves n)
   | 0 => inferInstanceAs (IsEmpty PEmpty)
