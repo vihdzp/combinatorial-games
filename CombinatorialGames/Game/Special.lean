@@ -23,7 +23,7 @@ namespace PGame
 
 /-- The pre-game `star`, which is fuzzy with zero. -/
 def star : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ => 0, fun _ => 0⟩
+  ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ 0⟩
 
 @[simp]
 theorem star_leftMoves : star.LeftMoves = PUnit :=
@@ -67,7 +67,7 @@ theorem neg_star : -star = star := by simp [star]
 
 /-- The pre-game `up` -/
 def up : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ => 0, fun _ => star⟩
+  ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ star⟩
 
 @[simp]
 theorem up_leftMoves : up.LeftMoves = PUnit :=
@@ -97,7 +97,7 @@ theorem star_fuzzy_up : star ‖ up := by
 
 /-- The pre-game `down` -/
 def down : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ => star, fun _ => 0⟩
+  ⟨PUnit, PUnit, fun _ ↦ star, fun _ ↦ 0⟩
 
 @[simp]
 theorem down_leftMoves : down.LeftMoves = PUnit :=
