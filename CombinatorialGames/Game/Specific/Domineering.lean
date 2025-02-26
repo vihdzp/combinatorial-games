@@ -1,9 +1,10 @@
 /-
 Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Kim Morrison
+Authors: Kim Morrison, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Concrete
+import Mathlib.Algebra.Group.Units.Equiv
 
 /-!
 # Domineering as a combinatorial game.
@@ -38,31 +39,47 @@ def shiftRight : ℤ × ℤ ≃ ℤ × ℤ :=
 -- Porting note: reducibility cannot be `local`. For now there are no dependents of this file so
 -- being globally reducible is fine.
 def Board := Finset (ℤ × ℤ)
-@[match_pattern] def toFinset : Board ≃ Finset (ℤ × ℤ) := Equiv.refl _
-@[match_pattern] def ofFinset : Finset (ℤ × ℤ) ≃ Board := Equiv.refl _
+@[match_pattern] def toBoard : Finset (ℤ × ℤ) ≃ Board := Equiv.refl _
+@[match_pattern] def ofBoard : Board ≃ Finset (ℤ × ℤ) := Equiv.refl _
+
+@[simp] theorem toBoard_ofBoard (a : Board) : toBoard (ofBoard a) = a := rfl
+@[simp] theorem ofBoard_toBoard (a : Finset (ℤ × ℤ)) : ofBoard (toBoard a) = a := rfl
+
+namespace Board
 
 /-- Left can play anywhere that a square and the square below it are open. -/
 def left (b : Board) : Finset (ℤ × ℤ) :=
-  b ∩ b.map shiftUp
+  ofBoard b ∩ (ofBoard b).map shiftUp
 
 /-- Right can play anywhere that a square and the square to the left are open. -/
 def right (b : Board) : Finset (ℤ × ℤ) :=
-  b ∩ b.map shiftRight
+  ofBoard b ∩ (ofBoard b).map shiftRight
 
-#exit
-theorem mem_left {b : Board} (x : ℤ × ℤ) : x ∈ left b ↔ x ∈ b ∧ (x.1, x.2 - 1) ∈ b :=
+theorem mem_left {b : Board} (x : ℤ × ℤ) :
+    x ∈ left b ↔ x ∈ ofBoard b ∧ (x.1, x.2 - 1) ∈ ofBoard b :=
   Finset.mem_inter.trans (and_congr Iff.rfl Finset.mem_map_equiv)
 
-theorem mem_right {b : Board} (x : ℤ × ℤ) : x ∈ right b ↔ x ∈ b ∧ (x.1 - 1, x.2) ∈ b :=
+theorem mem_right {b : Board} (x : ℤ × ℤ) :
+    x ∈ right b ↔ x ∈ ofBoard b ∧ (x.1 - 1, x.2) ∈ ofBoard b :=
   Finset.mem_inter.trans (and_congr Iff.rfl Finset.mem_map_equiv)
 
 /-- After Left moves, two vertically adjacent squares are removed from the board. -/
 def moveLeft (b : Board) (m : ℤ × ℤ) : Board :=
-  (b.erase m).erase (m.1, m.2 - 1)
+  toBoard <| ((ofBoard b).erase m).erase (m.1, m.2 - 1)
 
 /-- After Left moves, two horizontally adjacent squares are removed from the board. -/
 def moveRight (b : Board) (m : ℤ × ℤ) : Board :=
-  (b.erase m).erase (m.1 - 1, m.2)
+  toBoard <| ((ofBoard b).erase m).erase (m.1 - 1, m.2)
+
+/-- Left can move from `b` to `a` when there exists some `m` with `a = b.moveLeft m`. -/
+def relLeft (a b : Board) : Prop :=
+  ∃ m, a = b.moveLeft m
+
+/-- Right can move from `b` to `a` when there exists some `m` with `a = b.moveRight m`. -/
+def relRight (a b : Board) : Prop :=
+  ∃ m, a = b.moveRight m
+
+#exit
 
 theorem fst_pred_mem_erase_of_mem_right {b : Board} {m : ℤ × ℤ} (h : m ∈ right b) :
     (m.1 - 1, m.2) ∈ b.erase m := by
