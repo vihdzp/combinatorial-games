@@ -3,8 +3,10 @@ import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Option
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
+import CombinatorialGames.Game.Relabelling
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
