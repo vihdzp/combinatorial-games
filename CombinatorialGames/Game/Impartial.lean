@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson
 -/
 import CombinatorialGames.Game.Basic
+import CombinatorialGames.Game.Special
 import Mathlib.Tactic.NthRewrite
 
 /-!
@@ -14,7 +15,6 @@ Our definition differs slightly by saying that the game is always equivalent to 
 no matter what moves are played. This allows for games such as poker-nim to be classified as
 impartial.
 -/
-
 
 universe u
 
@@ -60,7 +60,7 @@ theorem neg_equiv_self (G : PGame) [h : G.Impartial] : G ≈ -G :=
 
 @[simp]
 theorem mk'_neg_equiv_self (G : PGame) [G.Impartial] : -(⟦G⟧ : Game) = ⟦G⟧ :=
-  game_eq (Equiv.symm (neg_equiv_self G))
+  game_eq (neg_equiv_self G).symm
 
 instance moveLeft_impartial {G : PGame} [h : G.Impartial] (i : G.LeftMoves) :
     (G.moveLeft i).Impartial :=
@@ -72,14 +72,14 @@ instance moveRight_impartial {G : PGame} [h : G.Impartial] (j : G.RightMoves) :
 
 theorem impartial_congr {G H : PGame} (e : G ≡r H) [G.Impartial] : H.Impartial :=
   impartial_def.2
-    ⟨Equiv.trans e.symm.equiv (Equiv.trans (neg_equiv_self G) (neg_equiv_neg_iff.2 e.equiv)),
+    ⟨e.symm.equiv.trans ((neg_equiv_self G).trans (neg_equiv_neg_iff.2 e.equiv)),
       fun i => impartial_congr (e.moveLeftSymm i), fun j => impartial_congr (e.moveRightSymm j)⟩
 termination_by G
 
 instance impartial_add (G H : PGame) [G.Impartial] [H.Impartial] : (G + H).Impartial := by
   rw [impartial_def]
-  refine ⟨Equiv.trans (add_congr (neg_equiv_self G) (neg_equiv_self _))
-      (Equiv.symm (negAddRelabelling _ _).equiv), fun k => ?_, fun k => ?_⟩
+  refine ⟨(add_congr (neg_equiv_self G) (neg_equiv_self _)).trans
+      (negAddRelabelling _ _).equiv.symm, fun k => ?_, fun k => ?_⟩
   · apply leftMoves_add_cases k
     all_goals
       intro i; simp only [add_moveLeft_inl, add_moveLeft_inr]
@@ -94,7 +94,7 @@ instance impartial_neg (G : PGame) [G.Impartial] : (-G).Impartial := by
   rw [impartial_def]
   refine ⟨?_, fun i => ?_, fun i => ?_⟩
   · rw [neg_neg]
-    exact Equiv.symm (neg_equiv_self G)
+    exact (neg_equiv_self G).symm
   · rw [moveLeft_neg]
     exact impartial_neg _
   · rw [moveRight_neg]
@@ -105,7 +105,7 @@ variable (G : PGame) [Impartial G]
 
 theorem nonpos : ¬0 < G := by
   apply (lt_asymm · ?_)
-  rwa [← neg_lt_neg_iff, neg_zero, ← lt_congr_right (neg_equiv_self G)]
+  rwa [← neg_lt_neg_iff, neg_zero, ← (neg_equiv_self G).lt_congr_right]
 
 theorem nonneg : ¬G < 0 := by
   simpa using nonpos (-G)
@@ -127,7 +127,7 @@ theorem not_fuzzy_zero_iff : ¬ G ‖ 0 ↔ G ≈ 0 :=
   ⟨(equiv_or_fuzzy_zero G).resolve_right, Equiv.not_fuzzy⟩
 
 theorem add_self : G + G ≈ 0 :=
-  Equiv.trans (add_congr_left (neg_equiv_self G)) (neg_add_cancel_equiv G)
+  (add_congr_left (neg_equiv_self G)).trans (neg_add_cancel_equiv G)
 
 @[simp]
 theorem mk'_add_self : (⟦G⟧ : Game) + ⟦G⟧ = 0 :=
@@ -144,7 +144,7 @@ theorem equiv_iff_add_equiv_zero' (H : PGame) : G ≈ H ↔ G + H ≈ 0 := by
     Eq.comm, quot_zero]
 
 theorem le_zero_iff {G : PGame} [G.Impartial] : G ≤ 0 ↔ 0 ≤ G := by
-  rw [← zero_le_neg_iff, le_congr_right (neg_equiv_self G)]
+  rw [← zero_le_neg_iff, (neg_equiv_self G).le_congr_right]
 
 theorem lf_zero_iff {G : PGame} [G.Impartial] : G ⧏ 0 ↔ 0 ⧏ G := by
   rw [← zero_lf_neg_iff, lf_congr_right (neg_equiv_self G)]
@@ -186,6 +186,31 @@ theorem exists_right_move_equiv_iff_fuzzy_zero : (∃ j, G.moveRight j ≈ 0) �
   rw [fuzzy_zero_iff_lf G, lf_zero_le] at hn
   obtain ⟨i, hi⟩ := hn
   exact ⟨i, (equiv_zero_iff_le _).2 hi⟩
+
+/-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
+have also been reached in the first turn, then `G` is won by the first player.
+
+This version of the theorem is stated exclusively in terms of left moves; see
+`fuzzy_zero_of_forall_exists_moveRight` for a version stated with right moves. -/
+theorem fuzzy_zero_of_forall_exists_moveLeft (i : G.LeftMoves)
+    (H : ∀ j, ∃ k, (G.moveLeft i).moveLeft j ≈ G.moveLeft k) : G ‖ 0 := by
+  apply (equiv_or_fuzzy_zero _).resolve_left fun hG ↦ ?_
+  rw [← forall_leftMoves_fuzzy_iff_equiv_zero] at hG
+  obtain ⟨j, hj⟩ := (exists_left_move_equiv_iff_fuzzy_zero _).2 (hG i)
+  obtain ⟨k, hk⟩ := H j
+  exact (hG k).not_equiv (hk.symm.trans hj)
+
+/-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
+have also been reached in the first turn, then `G` is won by the first player.
+
+This version of the theorem is stated exclusively in terms of right moves; see
+`fuzzy_zero_of_forall_exists_moveLeft` for a version stated with left moves. -/
+theorem fuzzy_zero_of_forall_exists_moveRight (i : G.RightMoves)
+    (H : ∀ j, ∃ k, (G.moveRight i).moveRight j ≈ G.moveRight k) : G ‖ 0 := by
+  rw [← neg_fuzzy_zero_iff]
+  apply fuzzy_zero_of_forall_exists_moveLeft (-G) (toLeftMovesNeg i)
+  rw [moveLeft_neg_toLeftMovesNeg]
+  simpa
 
 end Impartial
 
