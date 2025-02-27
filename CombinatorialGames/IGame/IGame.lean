@@ -10,6 +10,8 @@ import Mathlib.Logic.Small.Set
 
 universe u
 
+-- This is a false positive due to the provisional duplicated IGame/IGame file path.
+set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
@@ -37,12 +39,8 @@ theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
   Quotient.ind H x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : IGame) : PGame :=
-  Quotient.out x
-
-@[simp]
-theorem out_eq (x : IGame) : mk x.out = x :=
-  Quotient.out_eq x
+def out (x : IGame) : PGame := Quotient.out x
+@[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
 
 -- TODO: docstring
 def lift {α : Sort*} (f : PGame → α) (hf : ∀ x y, x ≡ y → f x = f y) : IGame → α :=
