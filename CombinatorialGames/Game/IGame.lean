@@ -400,7 +400,7 @@ theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := 
   rw [isOption_neg, neg_neg]
 
 @[simp]
-theorem neg_le_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
+protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
   refine Sym2.GameAdd.induction (C := fun x y ↦ -x ≤ -y ↔ y ≤ x) isOption_wf (fun x y IH ↦ ?_) x y
   dsimp at *
@@ -410,6 +410,34 @@ theorem neg_le_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_leftMoves hz))]
   · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_rightMoves hz))]
+
+protected theorem neg_le {x y : IGame} : -x ≤ y ↔ -y ≤ x := by
+  simpa using @IGame.neg_le_neg_iff x (-y)
+protected theorem le_neg {x y : IGame} : x ≤ -y ↔ y ≤ -x := by
+  simpa using @IGame.neg_le_neg_iff (-x) y
+
+@[simp]
+protected theorem neg_lt_neg_iff {x y : IGame} : -x < -y ↔ y < x := by
+  rw [lt_iff_le_not_le, IGame.neg_le_neg_iff, IGame.neg_le_neg_iff, lt_iff_le_not_le]
+
+protected theorem neg_lt {x y : IGame} : -x < y ↔ -y < x := by
+  simpa using @IGame.neg_lt_neg_iff x (-y)
+protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
+  simpa using @IGame.neg_lt_neg_iff (-x) y
+
+@[simp]
+protected theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
+  simp [AntisymmRel, and_comm]
+
+@[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
+@[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
+@[simp] theorem neg_lt_zero {x : IGame} : -x < 0 ↔ 0 < x := by simpa using @IGame.neg_lt x 0
+@[simp] theorem zero_lt_neg {x : IGame} : 0 < -x ↔ x < 0 := by simpa using @IGame.lt_neg 0 x
+
+@[simp] theorem neg_equiv_zero {x : IGame} : -x ≈ 0 ↔ x ≈ 0 := by
+  simpa using @IGame.neg_equiv_neg_iff x 0
+@[simp] theorem zero_equiv_neg {x : IGame} : 0 ≈ -x ↔ 0 ≈ x := by
+  simpa using @IGame.neg_equiv_neg_iff 0 x
 
 end IGame
 end
