@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.PGame
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
+import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
 
 universe u
@@ -153,6 +154,10 @@ instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen
 instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
 instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
 
+macro "igame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim
+    [Subsequent.of_mem_leftMoves, Subsequent.of_mem_rightMoves, Subsequent.trans] )
+
 /-- Construct an `IGame` from its left and right sets.
 
 This is given notation `{s | t}ᴳ`, where the superscript G is to disambiguate
@@ -287,7 +292,43 @@ theorem lf_def {x y : IGame} : x ⧏ y ↔
   rw [lf_iff_exists_le]
   congr! <;> rw [le_iff_forall_lf]
 
--- TODO: preorder instance
+theorem lf_of_le_of_mem_leftMoves {x y z : IGame} (h : x ≤ y) (h' : z ∈ x.leftMoves) : z ⧏ y :=
+  (le_iff_forall_lf.1 h).1 z h'
+
+theorem lf_of_le_of_mem_rightMoves {x y z : IGame} (h : x ≤ y) (h' : z ∈ y.rightMoves) : x ⧏ z :=
+  (le_iff_forall_lf.1 h).2 z h'
+
+alias _root_.LE.le.lf_of_mem_leftMoves := lf_of_le_of_mem_leftMoves
+alias _root_.LE.le.lf_of_mem_rightMoves := lf_of_le_of_mem_rightMoves
+
+theorem lf_of_mem_leftMoves_of_lf {x y z : IGame} (h : z ∈ y.leftMoves) (h' : x ≤ z) : x ⧏ y :=
+  lf_iff_exists_le.2 <| Or.inl ⟨z, h, h'⟩
+
+theorem lf_of_mem_rightMoves_of_lf {x y z : IGame} (h : z ∈ x.rightMoves) (h' : z ≤ y) : x ⧏ y :=
+  lf_iff_exists_le.2 <| Or.inr ⟨z, h, h'⟩
+
+private theorem le_rfl' {x : IGame} : x ≤ x := by
+  rw [le_iff_forall_lf]
+  constructor <;> intro y hy
+  exacts [lf_of_mem_leftMoves_of_lf hy le_rfl', lf_of_mem_rightMoves_of_lf hy le_rfl']
+termination_by x
+decreasing_by igame_wf
+
+private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z := by
+  rw [le_iff_forall_lf]
+  constructor <;> intro a ha h₃
+  exacts [h₁.lf_of_mem_leftMoves ha (le_trans' h₂ h₃), h₂.lf_of_mem_rightMoves ha (le_trans' h₃ h₁)]
+termination_by isOption_wf.cutExpand.wrap {x, y, z}
+decreasing_by
+  on_goal 1 => convert (Relation.cutExpand_add_left {y, z}).2 <|
+    Relation.cutExpand_singleton_singleton (IsOption.of_mem_leftMoves ha)
+  on_goal 2 => convert (Relation.cutExpand_add_right {x, y}).2 <|
+    Relation.cutExpand_singleton_singleton (IsOption.of_mem_rightMoves ha)
+  all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
+
+instance : Preorder IGame where
+  le_refl _ := le_rfl'
+  le_trans x y z := le_trans'
 
 -- We use `equiv` in theorem names for convenience.
 @[inherit_doc AntisymmRel] infix:50 " ≈ " => AntisymmRel (· ≤ ·)
@@ -312,16 +353,15 @@ theorem equiv_of_exists {x y : IGame}
 
 /-! ### Negation -/
 
+instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
+  rw [← Set.image_neg_eq_neg]
+  infer_instance
+
 /-- The negative of a game `-{s | t}ᴳ = {-t | -s}ᴳ`. -/
 instance : Neg IGame where
   neg x := ofSetsRecOn x fun s t _ _ IHl IHr ↦
     {range fun x : t ↦ IHr _ x.2 | range fun x : s ↦ IHl _ x.2}ᴳ
 
-instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
-  rw [← Set.image_neg_eq_neg]
-  infer_instance
-
--- We can't write this using `-s` and `-t` since we don't know these sets are small yet!
 private theorem neg_ofSets' (s t : Set _) [Small s] [Small t] :
     -{s | t}ᴳ = {Neg.neg '' t | Neg.neg '' s}ᴳ := by
   simp_rw [image_eq_range]
