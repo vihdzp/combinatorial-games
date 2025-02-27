@@ -156,7 +156,8 @@ instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubseque
 
 macro "igame_wf" : tactic =>
   `(tactic| all_goals solve_by_elim
-    [Subsequent.of_mem_leftMoves, Subsequent.of_mem_rightMoves, Subsequent.trans] )
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    Subsequent.of_mem_leftMoves, Subsequent.of_mem_rightMoves, Subsequent.trans, Subtype.prop] )
 
 /-- Construct an `IGame` from its left and right sets.
 
@@ -351,21 +352,32 @@ theorem equiv_of_exists {x y : IGame}
 -- TODO: define the comparability relation `CompRel r a b = r a b ∨ r b a`, port it to Mathlib,
 -- use it to define notation `x ‖ y = ¬ CompRel (· ≤ ·) x y`.
 
+instance : ZeroLEOneClass IGame where
+  zero_le_one := by rw [zero_le]; simp
+
+theorem zero_lt_one : (0 : IGame) < 1 :=
+  lt_of_le_not_le zero_le_one (by rw [le_zero]; simp)
+
 /-! ### Negation -/
 
 instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
   rw [← Set.image_neg_eq_neg]
   infer_instance
 
-/-- The negative of a game `-{s | t}ᴳ = {-t | -s}ᴳ`. -/
+private def neg' (x : IGame) : IGame :=
+  {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴳ
+termination_by x
+decreasing_by igame_wf
+
+/-- The negative of a game is defined by `-{s | t}ᴳ = {-t | -s}ᴳ`. -/
 instance : Neg IGame where
-  neg x := ofSetsRecOn x fun s t _ _ IHl IHr ↦
-    {range fun x : t ↦ IHr _ x.2 | range fun x : s ↦ IHl _ x.2}ᴳ
+  neg := neg'
 
 private theorem neg_ofSets' (s t : Set _) [Small s] [Small t] :
     -{s | t}ᴳ = {Neg.neg '' t | Neg.neg '' s}ᴳ := by
-  simp_rw [image_eq_range]
-  exact ofSetsRecOn_ofSets ..
+  change neg' _ = _
+  rw [neg']
+  simp [Neg.neg, Set.ext_iff]
 
 instance : InvolutiveNeg IGame where
   neg_neg x := by
@@ -384,13 +396,11 @@ theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴳ := by
 
 @[simp]
 theorem leftMoves_neg (x : IGame) : (-x).leftMoves = -x.rightMoves := by
-  refine ofSetsRecOn x ?_
-  simp
+  refine ofSetsRecOn x ?_; simp
 
 @[simp]
 theorem rightMoves_neg (x : IGame) : (-x).rightMoves = -x.leftMoves := by
-  refine ofSetsRecOn x ?_
-  simp
+  refine ofSetsRecOn x ?_; simp
 
 theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
   simp [IsOption, union_comm]
@@ -438,6 +448,74 @@ protected theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simpa using @IGame.neg_equiv_neg_iff x 0
 @[simp] theorem zero_equiv_neg {x : IGame} : 0 ≈ -x ↔ 0 ≈ x := by
   simpa using @IGame.neg_equiv_neg_iff 0 x
+
+/-! ### Addition and subtraction -/
+
+private def add' (x y : IGame) : IGame :=
+  {(range fun z : x.leftMoves ↦ add' z y) ∪ (range fun z : y.leftMoves ↦ add' x z) |
+    (range fun z : x.rightMoves ↦ add' z y) ∪ (range fun z : y.rightMoves ↦ add' x z)}ᴳ
+termination_by (x, y)
+decreasing_by igame_wf
+
+/-- The sum of `x = {s₁ | t₁}ᴳ` and `y = {s₂ | t₂}ᴳ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴳ`. -/
+instance : Add IGame where
+  add := add'
+
+theorem ofSets_add_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
+    {s₁ | t₁}ᴳ + {s₂ | t₂}ᴳ =
+      {(· + {s₂ | t₂}ᴳ) '' s₁ ∪ ({s₁ | t₁}ᴳ + ·) '' s₂ |
+        (· + {s₂ | t₂}ᴳ) '' t₁ ∪ ({s₁ | t₁}ᴳ + ·) '' t₂}ᴳ := by
+  change add' _ _ = _
+  rw [add']
+  simp [HAdd.hAdd, Add.add, Set.ext_iff]
+
+theorem add_eq (x y : IGame) : x + y =
+    {(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
+      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴳ := by
+  rw [← ofSets_leftMoves_rightMoves x, ← ofSets_leftMoves_rightMoves y, ofSets_add_ofSets]
+  simp
+
+@[simp]
+theorem leftMoves_add (x y : IGame) :
+    (x + y).leftMoves = (· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves := by
+  rw [add_eq]; simp
+
+@[simp]
+theorem rightMoves_add (x y : IGame) :
+    (x + y).rightMoves = (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves := by
+  rw [add_eq]; simp
+
+instance : AddZeroClass IGame := by
+  constructor <;>
+  · intro x
+    induction x using ofSetsRecOn with | H s t IHl IHr =>
+    rw [add_eq]
+    aesop
+
+private theorem add_comm' (x y : IGame) : x + y = y + x := by
+  ext <;>
+    · simp only [leftMoves_add, rightMoves_add, mem_union, mem_image, or_comm]
+      congr! 3 <;>
+      · refine and_congr_right_iff.2 fun h ↦ ?_
+        rw [add_comm']
+termination_by (x, y)
+decreasing_by igame_wf
+
+private theorem add_assoc' (x y z : IGame) : x + y + z = x + (y + z) := by
+  apply ext <;>
+  · simp only [leftMoves_add, rightMoves_add, image_union, image_image, union_assoc]
+    refine congrArg₂ _ ?_ (congrArg₂ _ ?_ ?_) <;>
+    · ext
+      congr! 2
+      rw [add_assoc']
+termination_by (x, y, z)
+decreasing_by igame_wf
+
+instance : AddCommMonoid IGame where
+  add_comm := add_comm'
+  add_assoc := add_assoc'
+  nsmul := nsmulRec
+  __ : AddZeroClass IGame := inferInstance
 
 end IGame
 end
