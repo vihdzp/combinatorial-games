@@ -152,14 +152,16 @@ instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen
 instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
 instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
 
-/-- Construct an `IGame` from its left and right sets. -/
+/-- Construct an `IGame` from its left and right sets.
+
+This is given notation `{s | t}ᴳ`, where the superscript G is to disambiguate
+from set builder notation. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
 -- TODO: can a macro expert verify this makes sense?
-/-- Enables notation `{s | t}ᴳ` for `ofSets s t`. -/
-macro "{" s:term " | " t:term "}ᴳ" : term => `(ofSets $s $t)
+@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴳ" : term => `(ofSets $s $t)
 
 @[simp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ.leftMoves = s := by
@@ -240,6 +242,66 @@ theorem le_iff_forall_lf {x y : IGame} :
 theorem lf_iff_exists_le {x y : IGame} :
     x ⧏ y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
   simpa [not_and_or, -not_and] using le_iff_forall_lf.not
+
+/-- The definition of `0 ≤ x` on pre-games, in terms of `0 ⧏`. -/
+theorem zero_le {x : IGame} : 0 ≤ x ↔ ∀ y ∈ x.rightMoves, 0 ⧏ y := by
+  rw [le_iff_forall_lf]; simp
+
+/-- The definition of `x ≤ 0` on pre-games, in terms of `⧏ 0`. -/
+theorem le_zero {x : IGame} : x ≤ 0 ↔ ∀ y ∈ x.leftMoves, y ⧏ 0 := by
+  rw [le_iff_forall_lf]; simp
+
+/-- The definition of `0 ⧏ x` on pre-games, in terms of `0 ≤`. -/
+theorem zero_lf {x : IGame} : 0 ⧏ x ↔ ∃ y ∈ x.leftMoves, 0 ≤ y := by
+  rw [lf_iff_exists_le]; simp
+
+/-- The definition of `x ⧏ 0` on pre-games, in terms of `≤ 0`. -/
+theorem lf_zero {x : IGame} : x ⧏ 0 ↔ ∃ y ∈ x.rightMoves, y ≤ 0 := by
+  rw [lf_iff_exists_le]; simp
+
+/-- The definition of `x ≤ y` on pre-games, in terms of `≤` two moves later.
+
+Note that it's often more convenient to use `le_iff_forall_lf`, which only unfolds the definition by
+one step. -/
+theorem le_def {x y : IGame} : x ≤ y ↔
+    (∀ a ∈ x.leftMoves,  (∃ b ∈ y.leftMoves, a ≤ b) ∨ (∃ b ∈ a.rightMoves, b ≤ y)) ∧
+    (∀ a ∈ y.rightMoves, (∃ b ∈ a.leftMoves, x ≤ b) ∨ (∃ b ∈ x.rightMoves, b ≤ a)) := by
+  rw [le_iff_forall_lf]
+  simp [lf_iff_exists_le]
+
+/-- The definition of `x ⧏ y` on pre-games, in terms of `⧏` two moves later.
+
+Note that it's often more convenient to use `lf_iff_exists_le`, which only unfolds the definition by
+one step. -/
+theorem lf_def {x y : IGame} : x ⧏ y ↔
+    (∃ a ∈ y.leftMoves,  (∀ b ∈ x.leftMoves, b ⧏ a) ∧ (∀ b ∈ a.rightMoves, x ⧏ b)) ∨
+    (∃ a ∈ x.rightMoves, (∀ b ∈ a.leftMoves, b ⧏ y) ∧ (∀ b ∈ y.rightMoves, a ⧏ b)) := by
+  rw [lf_iff_exists_le]
+  apply or_congr <;> apply exists_congr fun a ↦ ?_ <;> rw [le_iff_forall_lf]
+
+@[inherit_doc AntisymmRel] infix:50 " ≈ " => AntisymmRel (· ≤ ·)
+
+theorem equiv_of_exists {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
+    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
+    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
+  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i hi
+  · obtain ⟨j, hj, hj'⟩ := hl₁ i hi
+    exact Or.inl ⟨j, hj, hj'.le⟩
+  · obtain ⟨j, hj, hj'⟩ := hr₂ i hi
+    exact Or.inr ⟨j, hj, hj'.le⟩
+  · obtain ⟨j, hj, hj'⟩ := hl₂ i hi
+    exact Or.inl ⟨j, hj, hj'.ge⟩
+  · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
+    exact Or.inr ⟨j, hj, hj'.ge⟩
+
+-- TODO: define the comparability relation `CompRel r a b = r a b ∨ r b a`, port it to Mathlib,
+-- use it to define notation `x ‖ y = ¬ CompRel (· ≤ ·) x y`.
+
+/-! ### Negation -/
+
+
 
 end IGame
 end
