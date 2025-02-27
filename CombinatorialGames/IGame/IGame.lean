@@ -226,6 +226,8 @@ instance : Inhabited IGame := ⟨0⟩
 /-- The game `1 = {{0} | ∅}ᴵ`. -/
 instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
+theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
+
 @[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
 
