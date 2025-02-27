@@ -149,7 +149,7 @@ theorem miny_eq_neg_tiny : miny x = -tiny x := by
   simp
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted gt_tiny (x : PGame) (hx : 0 < x) : ∃ n : ℕ, tiny n < x
+proof_wanted exists_tiny_lt_of_pos (x : PGame) (hx : 0 < x) : ∃ n : ℕ, tiny n < x
 
 end TinyMiny
 
