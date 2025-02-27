@@ -8,6 +8,9 @@ import Mathlib.Logic.Small.Set
 
 universe u
 
+-- All computation should be done through `IGame.Short`.
+noncomputable section
+
 open PGame Set
 
 /-- Games up to identity.
@@ -18,7 +21,9 @@ def IGame : Type (u + 1) :=
 
 namespace IGame
 
--- TODO: docstring
+/-! ### Game moves -/
+
+/-- The quotient map from `PGame` into `IGame`. -/
 def mk (x : PGame) : IGame := Quotient.mk _ x
 theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
 
@@ -29,8 +34,8 @@ alias _root_.PGame.Identical.mk_eq := mk_eq
 theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
   Quotient.ind H x
 
--- TODO: docstring
-noncomputable def out (x : IGame) : PGame :=
+/-- Choose an element of the equivalence class using the axiom of choice. -/
+def out (x : IGame) : PGame :=
   Quotient.out x
 
 @[simp]
@@ -92,7 +97,7 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := y.moveRight) i)
     exact ⟨j, mk_eq_mk.1 hj⟩
 
--- TODO: docstring
+/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 def IsOption (x y : IGame) : Prop :=
   x ∈ y.leftMoves ∪ y.rightMoves
 
@@ -118,7 +123,7 @@ left and right sets.
 
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
-noncomputable def moveRecOn {P : IGame → Sort*} (x)
+def moveRecOn {P : IGame → Sort*} (x)
     (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) : P x :=
   isOption_wf.recursion x fun x IH ↦
     H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
@@ -148,18 +153,20 @@ instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relat
 instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
 
 /-- Construct an `IGame` from its left and right sets. -/
-noncomputable def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
+def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
+-- TODO: can a macro expert verify this makes sense?
+/-- Enables notation `{s | t}ᴳ` for `ofSets s t`. -/
+macro "{" s:term " | " t:term "}ᴳ" : term => `(ofSets $s $t)
+
 @[simp]
-theorem leftMoves_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
-    (ofSets s t).leftMoves = s := by
+theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ.leftMoves = s := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
-theorem rightMoves_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
-    (ofSets s t).rightMoves = t := by
+theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ.rightMoves = t := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
@@ -171,18 +178,15 @@ left and right sets.
 
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
-noncomputable def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
-    (H : Π (s t : Set _) [Small.{u} s] [Small.{u} t],
-      (Π x ∈ s, P x) → (Π x ∈ t, P x) → P (ofSets s t)) : P x :=
-  cast (by simp) <| moveRecOn (P := fun x ↦ P (ofSets x.leftMoves x.rightMoves)) x fun x IHl IHr ↦
+def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
+    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴳ) : P x :=
+  cast (by simp) <| moveRecOn (P := fun x ↦ P {x.leftMoves | x.rightMoves}ᴳ) x fun x IHl IHr ↦
     H _ _ (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
 
 @[simp]
 theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (H : Π (s t : Set _) [Small.{u} s] [Small.{u} t],
-      (Π x ∈ s, P x) → (Π x ∈ t, P x) → P (ofSets s t)) :
-    ofSetsRecOn (ofSets s t) H =
-      H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
+    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴳ) :
+    ofSetsRecOn {s | t}ᴳ H = H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   congr
   any_goals simp
@@ -193,5 +197,49 @@ theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u
     · simp
     · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
 
+/-! ### Basic games -/
+
+/-- The game `0 = {∅ | ∅}ᴳ`. -/
+instance : Zero IGame := ⟨{∅ | ∅}ᴳ⟩
+
+@[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
+@[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+
+instance : Inhabited IGame := ⟨0⟩
+
+/-- The game `1 = {{0} | ∅}ᴳ`. -/
+instance : One IGame := ⟨{{0} | ∅}ᴳ⟩
+
+@[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
+
+/-! ### Order relations -/
+
+/-- The less or equal relation on games.
+
+If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`.
+See `PGame.le_iff_sub_nonneg`. -/
+instance : LE IGame where
+  le := Sym2.GameAdd.fix isOption_wf fun x y le ↦
+    (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
+    (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
+
+-- TODO: can a macro expert verify this makes sense?
+/-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
+
+If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`.
+See `PGame.lf_iff_sub_zero_lf`. -/
+macro_rules | `($x ⧏ $y) => `(¬$y ≤ $x)
+
+/-- Definition of `x ≤ y` on pre-games, in terms of `⧏`. -/
+theorem le_iff_forall_lf {x y : IGame} :
+    x ≤ y ↔ (∀ z ∈ x.leftMoves, z ⧏ y) ∧ (∀ z ∈ y.rightMoves, x ⧏ z) :=
+  propext_iff.1 <| Sym2.GameAdd.fix_eq ..
+
+/-- Definition of `x ⧏ y` on pre-games, in terms of `≤`. -/
+theorem lf_iff_exists_le {x y : IGame} :
+    x ⧏ y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
+  simpa [not_and_or, -not_and] using le_iff_forall_lf.not
 
 end IGame
+end
