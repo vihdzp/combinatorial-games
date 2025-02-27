@@ -154,6 +154,8 @@ instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen
 instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
 instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
 
+/-- Discharges proof obligations of the form `⊢ Subsequent ..` arising in termination proofs
+of definitions using well-founded recursion on `IGame`. -/
 macro "igame_wf" : tactic =>
   `(tactic| all_goals solve_by_elim
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
@@ -315,16 +317,23 @@ private theorem le_rfl' {x : IGame} : x ≤ x := by
 termination_by x
 decreasing_by igame_wf
 
+-- TODO: add these convenience theorems to Mathlib
+theorem _root_.Relation.cutExpand_add_single {α : Type*} {r : α → α → Prop} {a' a : α}
+    (s : Multiset α) (h : r a' a) : Relation.CutExpand r (s + {a'}) (s + {a}) :=
+  (Relation.cutExpand_add_left s).2 <| Relation.cutExpand_singleton_singleton h
+
+theorem _root_.Relation.cutExpand_single_add {α : Type*} {r : α → α → Prop} {a' a : α}
+    (h : r a' a) (s : Multiset α) : Relation.CutExpand r ({a'} +  s) ({a} + s) :=
+  (Relation.cutExpand_add_right s).2 <| Relation.cutExpand_singleton_singleton h
+
 private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z := by
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
   exacts [h₁.lf_of_mem_leftMoves ha (le_trans' h₂ h₃), h₂.lf_of_mem_rightMoves ha (le_trans' h₃ h₁)]
 termination_by isOption_wf.cutExpand.wrap {x, y, z}
 decreasing_by
-  on_goal 1 => convert (Relation.cutExpand_add_left {y, z}).2 <|
-    Relation.cutExpand_singleton_singleton (IsOption.of_mem_leftMoves ha)
-  on_goal 2 => convert (Relation.cutExpand_add_right {x, y}).2 <|
-    Relation.cutExpand_singleton_singleton (IsOption.of_mem_rightMoves ha)
+  on_goal 1 => convert (Relation.cutExpand_add_single {y, z} (IsOption.of_mem_leftMoves ha))
+  on_goal 2 => convert (Relation.cutExpand_single_add (IsOption.of_mem_rightMoves ha) {x, y})
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
 instance : Preorder IGame where
@@ -334,6 +343,7 @@ instance : Preorder IGame where
 -- We use `equiv` in theorem names for convenience.
 @[inherit_doc AntisymmRel] infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 
+-- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
@@ -461,18 +471,18 @@ decreasing_by igame_wf
 instance : Add IGame where
   add := add'
 
-theorem ofSets_add_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
-    {s₁ | t₁}ᴳ + {s₂ | t₂}ᴳ =
-      {(· + {s₂ | t₂}ᴳ) '' s₁ ∪ ({s₁ | t₁}ᴳ + ·) '' s₂ |
-        (· + {s₂ | t₂}ᴳ) '' t₁ ∪ ({s₁ | t₁}ᴳ + ·) '' t₂}ᴳ := by
+theorem add_eq (x y : IGame) : x + y =
+    {(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
+      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴳ := by
   change add' _ _ = _
   rw [add']
   simp [HAdd.hAdd, Add.add, Set.ext_iff]
 
-theorem add_eq (x y : IGame) : x + y =
-    {(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
-      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴳ := by
-  rw [← ofSets_leftMoves_rightMoves x, ← ofSets_leftMoves_rightMoves y, ofSets_add_ofSets]
+theorem ofSets_add_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
+    {s₁ | t₁}ᴳ + {s₂ | t₂}ᴳ =
+      {(· + {s₂ | t₂}ᴳ) '' s₁ ∪ ({s₁ | t₁}ᴳ + ·) '' s₂ |
+        (· + {s₂ | t₂}ᴳ) '' t₁ ∪ ({s₁ | t₁}ᴳ + ·) '' t₂}ᴳ := by
+  rw [add_eq]
   simp
 
 @[simp]
@@ -494,10 +504,10 @@ instance : AddZeroClass IGame := by
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext <;>
-    · simp only [leftMoves_add, rightMoves_add, mem_union, mem_image, or_comm]
-      congr! 3 <;>
-      · refine and_congr_right_iff.2 fun h ↦ ?_
-        rw [add_comm']
+  · simp only [leftMoves_add, rightMoves_add, mem_union, mem_image, or_comm]
+    congr! 3 <;>
+    · refine and_congr_right_iff.2 fun h ↦ ?_
+      rw [add_comm']
 termination_by (x, y)
 decreasing_by igame_wf
 

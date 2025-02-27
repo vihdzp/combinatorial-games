@@ -2,7 +2,6 @@ import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Concrete
-import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.PGame
@@ -13,6 +12,7 @@ import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.State
+import CombinatorialGames.IGame.IGame
 import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
