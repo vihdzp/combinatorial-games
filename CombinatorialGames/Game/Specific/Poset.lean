@@ -133,10 +133,10 @@ a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toPGame (univ α) ‖ 0 := by
   apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (toLeftMovesPGame ⟨_, top_compl_posetRel_univ⟩)
-  rw [moveLeft_toPGame_toLeftMovesPGame]
-  refine fun i ↦ ⟨toLeftMovesPGame ⟨_, posetRel_univ_of_posetRel_top_compl
-    (toLeftMovesPGame_symm_prop i)⟩, ?_⟩
+    (toLeftMovesToPGame ⟨_, top_compl_posetRel_univ⟩)
+  rw [moveLeft_toPGame_toLeftMovesToPGame]
+  refine fun i ↦ ⟨toLeftMovesToPGame ⟨_, posetRel_univ_of_posetRel_top_compl
+    (toLeftMovesToPGame_symm_prop i)⟩, ?_⟩
   simp
 
 end Poset
