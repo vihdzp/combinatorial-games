@@ -233,8 +233,7 @@ instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
 /-- The less or equal relation on games.
 
-If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`.
-See `PGame.le_iff_sub_nonneg`. -/
+If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 instance : LE IGame where
   le := Sym2.GameAdd.fix isOption_wf fun x y le ↦
     (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
@@ -243,8 +242,7 @@ instance : LE IGame where
 -- TODO: can a macro expert verify this makes sense?
 /-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
-If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`.
-See `PGame.lf_iff_sub_zero_lf`. -/
+If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
 macro_rules | `($x ⧏ $y) => `(¬$y ≤ $x)
 
 /-- Definition of `x ≤ y` on pre-games, in terms of `⧏`. -/
