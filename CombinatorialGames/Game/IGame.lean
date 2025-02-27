@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.PGame
+import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Small.Set
 
 universe u
@@ -11,7 +12,7 @@ universe u
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
-open PGame Set
+open PGame Set Pointwise
 
 /-- Games up to identity.
 
@@ -101,8 +102,8 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
 def IsOption (x y : IGame) : Prop :=
   x ∈ y.leftMoves ∪ y.rightMoves
 
-theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := Or.inl
-theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := Or.inr
+theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := .inl
+theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := .inr
 
 -- TODO: is there some more general theorem about well-founded relations on quotients
 -- that we could use here?
@@ -175,6 +176,11 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ
 theorem ofSets_leftMoves_rightMoves (x : IGame) : ofSets x.leftMoves x.rightMoves = x := by
   ext <;> simp
 
+@[simp]
+theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
+    ofSets s₁ t₁ = ofSets s₂ t₂ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+  simp [IGame.ext_iff]
+
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets.
 
@@ -203,6 +209,8 @@ theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u
 
 /-- The game `0 = {∅ | ∅}ᴳ`. -/
 instance : Zero IGame := ⟨{∅ | ∅}ᴳ⟩
+
+theorem zero_def : 0 = {∅ | ∅}ᴳ := rfl
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
@@ -267,7 +275,7 @@ theorem le_def {x y : IGame} : x ≤ y ↔
     (∀ a ∈ x.leftMoves,  (∃ b ∈ y.leftMoves, a ≤ b) ∨ (∃ b ∈ a.rightMoves, b ≤ y)) ∧
     (∀ a ∈ y.rightMoves, (∃ b ∈ a.leftMoves, x ≤ b) ∨ (∃ b ∈ x.rightMoves, b ≤ a)) := by
   rw [le_iff_forall_lf]
-  simp [lf_iff_exists_le]
+  congr! 2 <;> rw [lf_iff_exists_le]
 
 /-- The definition of `x ⧏ y` on pre-games, in terms of `⧏` two moves later.
 
@@ -277,8 +285,11 @@ theorem lf_def {x y : IGame} : x ⧏ y ↔
     (∃ a ∈ y.leftMoves,  (∀ b ∈ x.leftMoves, b ⧏ a) ∧ (∀ b ∈ a.rightMoves, x ⧏ b)) ∨
     (∃ a ∈ x.rightMoves, (∀ b ∈ a.leftMoves, b ⧏ y) ∧ (∀ b ∈ y.rightMoves, a ⧏ b)) := by
   rw [lf_iff_exists_le]
-  apply or_congr <;> apply exists_congr fun a ↦ ?_ <;> rw [le_iff_forall_lf]
+  congr! <;> rw [le_iff_forall_lf]
 
+-- TODO: preorder instance
+
+-- We use `equiv` in theorem names for convenience.
 @[inherit_doc AntisymmRel] infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 
 theorem equiv_of_exists {x y : IGame}
@@ -301,7 +312,64 @@ theorem equiv_of_exists {x y : IGame}
 
 /-! ### Negation -/
 
+/-- The negative of a game `-{s | t}ᴳ = {-t | -s}ᴳ`. -/
+instance : Neg IGame where
+  neg x := ofSetsRecOn x fun s t _ _ IHl IHr ↦
+    {range fun x : t ↦ IHr _ x.2 | range fun x : s ↦ IHl _ x.2}ᴳ
 
+instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
+  rw [← Set.image_neg_eq_neg]
+  infer_instance
+
+-- We can't write this using `-s` and `-t` since we don't know these sets are small yet!
+private theorem neg_ofSets' (s t : Set _) [Small s] [Small t] :
+    -{s | t}ᴳ = {Neg.neg '' t | Neg.neg '' s}ᴳ := by
+  simp_rw [image_eq_range]
+  exact ofSetsRecOn_ofSets ..
+
+instance : InvolutiveNeg IGame where
+  neg_neg x := by
+    refine ofSetsRecOn x ?_
+    aesop (add simp [neg_ofSets'])
+
+@[simp]
+theorem neg_ofSets (s t : Set _) [Small s] [Small t] : -{s | t}ᴳ = {-t | -s}ᴳ := by
+  simp_rw [neg_ofSets', Set.image_neg_eq_neg]
+
+instance : NegZeroClass IGame where
+  neg_zero := by simp [zero_def]
+
+theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴳ := by
+  rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
+
+@[simp]
+theorem leftMoves_neg (x : IGame) : (-x).leftMoves = -x.rightMoves := by
+  refine ofSetsRecOn x ?_
+  simp
+
+@[simp]
+theorem rightMoves_neg (x : IGame) : (-x).rightMoves = -x.leftMoves := by
+  refine ofSetsRecOn x ?_
+  simp
+
+theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
+  simp [IsOption, union_comm]
+
+@[simp]
+theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := by
+  rw [isOption_neg, neg_neg]
+
+@[simp]
+theorem neg_le_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
+  -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
+  refine Sym2.GameAdd.induction (C := fun x y ↦ -x ≤ -y ↔ y ≤ x) isOption_wf (fun x y IH ↦ ?_) x y
+  dsimp at *
+  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, ← (Equiv.neg IGame).forall_congr_right]
+  nth_rewrite 2 [← (Equiv.neg IGame).forall_congr_right]
+  simp only [rightMoves_neg, Equiv.neg_apply, mem_neg, neg_neg, leftMoves_neg]
+  congr! 3 with z hz z hz
+  · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_leftMoves hz))]
+  · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_rightMoves hz))]
 
 end IGame
 end
