@@ -161,21 +161,21 @@ macro "igame_wf" : tactic =>
 
 /-- Construct an `IGame` from its left and right sets.
 
-This is given notation `{s | t}ᴳ`, where the superscript G is to disambiguate
-from set builder notation. -/
+This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate
+from set builder notation, and from the analogous constructor on `Game`. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
 -- TODO: can a macro expert verify this makes sense?
-@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴳ" : term => `(ofSets $s $t)
+@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴵ" : term => `(ofSets $s $t)
 
 @[simp]
-theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ.leftMoves = s := by
+theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
-theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴳ.rightMoves = t := by
+theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
@@ -193,14 +193,14 @@ left and right sets.
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
 def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴳ) : P x :=
-  cast (by simp) <| moveRecOn (P := fun x ↦ P {x.leftMoves | x.rightMoves}ᴳ) x fun x IHl IHr ↦
+    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) : P x :=
+  cast (by simp) <| moveRecOn (P := fun x ↦ P {x.leftMoves | x.rightMoves}ᴵ) x fun x IHl IHr ↦
     H _ _ (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
 
 @[simp]
 theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴳ) :
-    ofSetsRecOn {s | t}ᴳ H = H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
+    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) :
+    ofSetsRecOn {s | t}ᴵ H = H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   congr
   any_goals simp
@@ -213,18 +213,18 @@ theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u
 
 /-! ### Basic games -/
 
-/-- The game `0 = {∅ | ∅}ᴳ`. -/
-instance : Zero IGame := ⟨{∅ | ∅}ᴳ⟩
+/-- The game `0 = {∅ | ∅}ᴵ`. -/
+instance : Zero IGame := ⟨{∅ | ∅}ᴵ⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴳ := rfl
+theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
 
 instance : Inhabited IGame := ⟨0⟩
 
-/-- The game `1 = {{0} | ∅}ᴳ`. -/
-instance : One IGame := ⟨{{0} | ∅}ᴳ⟩
+/-- The game `1 = {{0} | ∅}ᴵ`. -/
+instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
 @[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
@@ -373,16 +373,16 @@ instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} 
   infer_instance
 
 private def neg' (x : IGame) : IGame :=
-  {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴳ
+  {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
 termination_by x
 decreasing_by igame_wf
 
-/-- The negative of a game is defined by `-{s | t}ᴳ = {-t | -s}ᴳ`. -/
+/-- The negative of a game is defined by `-{s | t}ᴵ = {-t | -s}ᴵ`. -/
 instance : Neg IGame where
   neg := neg'
 
 private theorem neg_ofSets' (s t : Set _) [Small s] [Small t] :
-    -{s | t}ᴳ = {Neg.neg '' t | Neg.neg '' s}ᴳ := by
+    -{s | t}ᴵ = {Neg.neg '' t | Neg.neg '' s}ᴵ := by
   change neg' _ = _
   rw [neg']
   simp [Neg.neg, Set.ext_iff]
@@ -393,13 +393,13 @@ instance : InvolutiveNeg IGame where
     aesop (add simp [neg_ofSets'])
 
 @[simp]
-theorem neg_ofSets (s t : Set _) [Small s] [Small t] : -{s | t}ᴳ = {-t | -s}ᴳ := by
+theorem neg_ofSets (s t : Set _) [Small s] [Small t] : -{s | t}ᴵ = {-t | -s}ᴵ := by
   simp_rw [neg_ofSets', Set.image_neg_eq_neg]
 
 instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def]
 
-theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴳ := by
+theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴵ := by
   rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
 
 @[simp]
@@ -461,25 +461,25 @@ protected theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
 
 private def add' (x y : IGame) : IGame :=
   {(range fun z : x.leftMoves ↦ add' z y) ∪ (range fun z : y.leftMoves ↦ add' x z) |
-    (range fun z : x.rightMoves ↦ add' z y) ∪ (range fun z : y.rightMoves ↦ add' x z)}ᴳ
+    (range fun z : x.rightMoves ↦ add' z y) ∪ (range fun z : y.rightMoves ↦ add' x z)}ᴵ
 termination_by (x, y)
 decreasing_by igame_wf
 
-/-- The sum of `x = {s₁ | t₁}ᴳ` and `y = {s₂ | t₂}ᴳ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴳ`. -/
+/-- The sum of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴵ`. -/
 instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
     {(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
-      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴳ := by
+      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴵ := by
   change add' _ _ = _
   rw [add']
   simp [HAdd.hAdd, Add.add, Set.ext_iff]
 
 theorem ofSets_add_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
-    {s₁ | t₁}ᴳ + {s₂ | t₂}ᴳ =
-      {(· + {s₂ | t₂}ᴳ) '' s₁ ∪ ({s₁ | t₁}ᴳ + ·) '' s₂ |
-        (· + {s₂ | t₂}ᴳ) '' t₁ ∪ ({s₁ | t₁}ᴳ + ·) '' t₂}ᴳ := by
+    {s₁ | t₁}ᴵ + {s₂ | t₂}ᴵ =
+      {(· + {s₂ | t₂}ᴵ) '' s₁ ∪ ({s₁ | t₁}ᴵ + ·) '' s₂ |
+        (· + {s₂ | t₂}ᴵ) '' t₁ ∪ ({s₁ | t₁}ᴵ + ·) '' t₂}ᴵ := by
   rw [add_eq]
   simp
 
