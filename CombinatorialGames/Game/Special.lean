@@ -144,9 +144,13 @@ def tiny : PGame :=
 def miny : PGame :=
   ⟨PUnit, PUnit, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ x, fun _ ↦ 0⟩, fun _ ↦ 0⟩
 
-theorem miny_eq_neg_tiny : miny x = -tiny x := by
-  rw [miny, tiny]
-  simp
+@[simp]
+theorem neg_tiny : -tiny x = miny x := by
+  simp [miny, tiny]
+
+@[simp]
+theorem neg_miny : -miny x = tiny x := by
+  simp [miny, tiny]
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
 proof_wanted exists_tiny_lt_of_pos (x : PGame) (hx : 0 < x) : ∃ n : ℕ, tiny n < x
