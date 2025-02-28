@@ -98,8 +98,8 @@ theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
 
 @[semireducible]
 private def decidableLE' {x y : SGame} : Decidable (x.toIGame ≤ y.toIGame) :=
-  let _ (m) : Decidable (toIGame y ≤ toIGame (x.moveLeft m)) := decidableLE'
-  let _ (n) : Decidable (toIGame (y.moveRight n) ≤ toIGame x) := decidableLE'
+  letI (m) : Decidable (toIGame y ≤ toIGame (x.moveLeft m)) := decidableLE'
+  letI (n) : Decidable (toIGame (y.moveRight n) ≤ toIGame x) := decidableLE'
   decidable_of_iff' _ toIGame_le_iff
 termination_by isOption_wf.sym2_gameAdd.wrap s(x, y)
 decreasing_by
