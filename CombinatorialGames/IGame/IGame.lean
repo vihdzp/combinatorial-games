@@ -19,17 +19,15 @@ open PGame Set Pointwise
 
 /-- Games up to identity.
 
-`IGame` uses the set-theoretic notion of equality on Games,
-compared to `PGame`'s 'type-theoretic' notion of equality.
+`IGame` uses the set-theoretic notion of equality on games, compared to `PGame`'s 'type-theoretic'
+notion of equality.
 
-This is not the same equivalence as used broadly in combinatorial game theory literature,
-as a game like {0,1|0} is not _identical_ to {1|0}, despite being equivalent.
-However, many theorems can be proven over the 'identical' equivalence relation,
-and the literature may occasionally specifically use the 'identical' equivalence
-relation for this reason. 
+This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
+like {0, 1 | 0} is not *identical* to {1 | 0}, despite being equivalent. However, many theorems can
+be proven over the 'identical' equivalence relation, and the literature may occasionally
+specifically use the 'identical' equivalence relation for this reason.
 
-For game equivalence from literature, see `Game.Basic`.
--/
+For the more common game equivalence from literature, see `Game.Basic`. -/
 def IGame : Type (u + 1) :=
   Quotient identicalSetoid
 
@@ -52,16 +50,9 @@ theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
 def out (x : IGame) : PGame := Quotient.out x
 @[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
 
-/--
-`Quotient.lift` for `IGame`: if f : PGame → α respects the identical equivalence relation ≡, then f
-lifts IGame to α
--/
-def lift {α : Sort*} (f : PGame → α) (hf : ∀ x y, x ≡ y → f x = f y) : IGame → α :=
-  Quotient.lift f hf
-
 /-- The set of left moves of the game. -/
 def leftMoves : IGame → Set IGame := by
-  refine lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ ?_
+  refine Quotient.lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ ?_
   ext z
   simp_rw [mem_image, mem_range, exists_exists_eq_and]
   constructor <;> rintro ⟨i, rfl⟩
@@ -72,7 +63,7 @@ def leftMoves : IGame → Set IGame := by
 
 /-- The set of right moves of the game. -/
 def rightMoves : IGame → Set IGame := by
-  refine lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ ?_
+  refine Quotient.lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ ?_
   ext z
   simp_rw [mem_image, mem_range, exists_exists_eq_and]
   constructor <;> rintro ⟨i, rfl⟩
@@ -147,30 +138,30 @@ theorem moveRecOn_eq {P : IGame → Sort*} (x)
     moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
   isOption_wf.fix_eq ..
 
--- TODO: docstring
-def Subsequent : IGame → IGame → Prop :=
+/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+def Subposition : IGame → IGame → Prop :=
   Relation.TransGen IsOption
 
-theorem Subsequent.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subsequent x y :=
+theorem Subposition.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subposition x y :=
   Relation.TransGen.single (.of_mem_leftMoves h)
 
-theorem Subsequent.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subsequent x y :=
+theorem Subposition.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subposition x y :=
   Relation.TransGen.single (.of_mem_rightMoves h)
 
-theorem Subsequent.trans {x y z : IGame} (h₁ : Subsequent x y) (h₂ : Subsequent y z) :
-    Subsequent x z :=
+theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
+    Subposition x z :=
   Relation.TransGen.trans h₁ h₂
 
-instance : IsTrans _ Subsequent := inferInstanceAs (IsTrans _ (Relation.TransGen _))
-instance : IsWellFounded _ Subsequent := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
-instance : WellFoundedRelation IGame := ⟨Subsequent, instIsWellFoundedSubsequent.wf⟩
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
+instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
 
-/-- Discharges proof obligations of the form `⊢ Subsequent ..` arising in termination proofs
+/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
 macro "igame_wf" : tactic =>
   `(tactic| all_goals solve_by_elim
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
-    Subsequent.of_mem_leftMoves, Subsequent.of_mem_rightMoves, Subsequent.trans, Subtype.prop] )
+    Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
 
 /-- Construct an `IGame` from its left and right sets.
 
