@@ -74,6 +74,7 @@ theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
   rw [IGame.le_iff_forall_lf]
   simp
 
+@[semireducible]
 private def decidableLE' {x y : SGame} : Decidable (x.toIGame ≤ y.toIGame) :=
   let _ (n) : Decidable (toIGame y ≤ toIGame (x.moveLeft n)) := decidableLE'
   let _ (n) : Decidable (toIGame (y.moveRight n) ≤ toIGame x) := decidableLE'
@@ -149,7 +150,7 @@ instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
 instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
 
-example : 0 < 1 := by decide
+example : (0 : IGame.{0}) < 1 := by decide
 
 end Short
 end IGame
