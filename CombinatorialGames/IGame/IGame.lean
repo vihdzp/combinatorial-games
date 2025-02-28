@@ -159,7 +159,7 @@ instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposi
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
 macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim
+  `(tactic| all_goals solve_by_elim (maxDepth := 8)
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
 
@@ -301,25 +301,22 @@ theorem lf_def {x y : IGame} : x ⧏ y ↔
   rw [lf_iff_exists_le]
   congr! <;> rw [le_iff_forall_lf]
 
-theorem lf_of_le_of_mem_leftMoves {x y z : IGame} (h : x ≤ y) (h' : z ∈ x.leftMoves) : z ⧏ y :=
+theorem leftMove_lf_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ x.leftMoves) : z ⧏ y :=
   (le_iff_forall_lf.1 h).1 z h'
 
-theorem lf_of_le_of_mem_rightMoves {x y z : IGame} (h : x ≤ y) (h' : z ∈ y.rightMoves) : x ⧏ z :=
+theorem lf_rightMove_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ y.rightMoves) : x ⧏ z :=
   (le_iff_forall_lf.1 h).2 z h'
 
-alias _root_.LE.le.lf_of_mem_leftMoves := lf_of_le_of_mem_leftMoves
-alias _root_.LE.le.lf_of_mem_rightMoves := lf_of_le_of_mem_rightMoves
+theorem lf_of_le_leftMove {x y z : IGame} (h : x ≤ z) (h' : z ∈ y.leftMoves) : x ⧏ y :=
+  lf_iff_exists_le.2 <| Or.inl ⟨z, h', h⟩
 
-theorem lf_of_mem_leftMoves_of_lf {x y z : IGame} (h : z ∈ y.leftMoves) (h' : x ≤ z) : x ⧏ y :=
-  lf_iff_exists_le.2 <| Or.inl ⟨z, h, h'⟩
-
-theorem lf_of_mem_rightMoves_of_lf {x y z : IGame} (h : z ∈ x.rightMoves) (h' : z ≤ y) : x ⧏ y :=
-  lf_iff_exists_le.2 <| Or.inr ⟨z, h, h'⟩
+theorem lf_of_rightMove_le {x y z : IGame} (h : z ≤ y) (h' : z ∈ x.rightMoves) : x ⧏ y :=
+  lf_iff_exists_le.2 <| Or.inr ⟨z, h', h⟩
 
 private theorem le_rfl' {x : IGame} : x ≤ x := by
   rw [le_iff_forall_lf]
   constructor <;> intro y hy
-  exacts [lf_of_mem_leftMoves_of_lf hy le_rfl', lf_of_mem_rightMoves_of_lf hy le_rfl']
+  exacts [lf_of_le_leftMove le_rfl' hy, lf_of_rightMove_le le_rfl' hy]
 termination_by x
 decreasing_by igame_wf
 
@@ -335,7 +332,7 @@ theorem _root_.Relation.cutExpand_single_add {α : Type*} {r : α → α → Pro
 private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z := by
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
-  exacts [h₁.lf_of_mem_leftMoves ha (le_trans' h₂ h₃), h₂.lf_of_mem_rightMoves ha (le_trans' h₃ h₁)]
+  exacts [leftMove_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_rightMove_of_le h₂ ha (le_trans' h₃ h₁)]
 termination_by isOption_wf.cutExpand.wrap {x, y, z}
 decreasing_by
   on_goal 1 => convert (Relation.cutExpand_add_single {y, z} (IsOption.of_mem_leftMoves ha))
@@ -452,8 +449,10 @@ protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
   simpa using @IGame.neg_lt_neg_iff (-x) y
 
 @[simp]
-protected theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
+theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
+
+alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
@@ -501,12 +500,32 @@ theorem rightMoves_add (x y : IGame) :
     (x + y).rightMoves = (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves := by
   rw [add_eq]; simp
 
+theorem add_left_mem_leftMoves_add {x y : IGame} (h : x ∈ y.leftMoves) (z : IGame) :
+    z + x ∈ (z + y).leftMoves := by
+  rw [leftMoves_add]; right; use x
+
+theorem add_right_mem_leftMoves_add {x y : IGame} (h : x ∈ y.leftMoves) (z : IGame) :
+    x + z ∈ (y + z).leftMoves := by
+  rw [leftMoves_add]; left; use x
+
+theorem add_left_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z : IGame) :
+    z + x ∈ (z + y).rightMoves := by
+  rw [rightMoves_add]; right; use x
+
+theorem add_right_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z : IGame) :
+    x + z ∈ (y + z).rightMoves := by
+  rw [rightMoves_add]; left; use x
+
 instance : AddZeroClass IGame := by
   constructor <;>
   · intro x
     induction x using ofSetsRecOn with | H s t IHl IHr =>
     rw [add_eq]
-    aesop
+    simp_all
+
+@[simp]
+theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
+  constructor <;> simp_all [IGame.ext_iff]
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext <;>
@@ -532,6 +551,124 @@ instance : AddCommMonoid IGame where
   add_assoc := add_assoc'
   nsmul := nsmulRec
   __ : AddZeroClass IGame := inferInstance
+
+/-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
+instance : SubNegMonoid IGame where
+  zsmul := zsmulRec
+
+@[simp]
+theorem leftMoves_sub (x y : IGame) :
+    (x - y).leftMoves = (· - y) '' x.leftMoves ∪ (x + ·) '' (-y.rightMoves) := by
+  simp [sub_eq_add_neg]
+
+@[simp]
+theorem rightMoves_sub (x y : IGame) :
+    (x - y).rightMoves = (· - y) '' x.rightMoves ∪ (x + ·) '' (-y.leftMoves) := by
+  simp [sub_eq_add_neg]
+
+theorem sub_left_mem_leftMoves_sub {x y : IGame} (h : x ∈ y.rightMoves) (z : IGame) :
+    z - x ∈ (z - y).leftMoves := by
+  apply add_left_mem_leftMoves_add; simpa
+
+theorem sub_right_mem_leftMoves_sub {x y : IGame} (h : x ∈ y.leftMoves) (z : IGame) :
+    x - z ∈ (y - z).leftMoves :=
+  add_right_mem_leftMoves_add h _
+
+theorem sub_left_mem_rightMoves_sub {x y : IGame} (h : x ∈ y.leftMoves) (z : IGame) :
+    z - x ∈ (z - y).rightMoves := by
+  apply add_left_mem_rightMoves_add; simpa
+
+theorem sub_right_mem_rightMoves_sub {x y : IGame} (h : x ∈ y.rightMoves) (z : IGame) :
+    x - z ∈ (y - z).rightMoves :=
+  add_right_mem_rightMoves_add h _
+
+private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
+  ext <;>
+  · simp
+    rw [← (Equiv.neg IGame).exists_congr_right]
+    nth_rewrite 2 [← (Equiv.neg IGame).exists_congr_right]
+    congr! 3 <;>
+    · refine and_congr_right_iff.2 fun _ ↦ ?_
+      rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
+termination_by (x, y)
+decreasing_by all_goals igame_wf
+
+instance : SubtractionCommMonoid IGame where
+  neg_neg := neg_neg
+  neg_add_rev x y := by rw [neg_add', add_comm]
+  neg_eq_of_add := by simp
+  add_comm := add_comm
+
+private theorem sub_self_le (x : IGame) : x - x ≤ 0 := by
+  rw [le_zero, leftMoves_sub]
+  rintro _ (⟨y, hy, rfl⟩ | ⟨y, hy, rfl⟩)
+  · exact lf_of_rightMove_le (sub_self_le y) (sub_left_mem_rightMoves_sub hy y)
+  · apply lf_of_rightMove_le (sub_self_le (-y))
+    rw [mem_neg] at hy
+    rw [sub_neg_eq_add]
+    exact add_right_mem_rightMoves_add hy _
+termination_by x
+decreasing_by igame_wf
+
+/-- The sum of a game and its negative is equivalent, though not necessarily identical to zero. -/
+theorem sub_self_equiv (x : IGame) : x - x ≈ 0 := by
+  rw [AntisymmRel, ← neg_le_zero, neg_sub, and_self]
+  exact sub_self_le x
+
+/-- The sum of a game and its negative is equivalent, though not necessarily identical to zero. -/
+theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
+  simpa [add_comm] using sub_self_equiv x
+
+private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
+  rw [le_iff_forall_lf, leftMoves_add, rightMoves_add]
+  refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
+  · exact lf_of_le_leftMove (add_le_add_left' h a) (add_right_mem_leftMoves_add ha y)
+  · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (leftMove_lf_of_le h ha)
+    · exact lf_of_le_leftMove (add_le_add_left' hb' z) (add_left_mem_leftMoves_add hb z)
+    · exact lf_of_rightMove_le (add_le_add_left' hb' z) (add_left_mem_rightMoves_add hb z)
+  · exact lf_of_rightMove_le (add_le_add_left' h a) (add_right_mem_rightMoves_add ha x)
+  · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (lf_rightMove_of_le h ha)
+    · exact lf_of_le_leftMove (add_le_add_left' hb' z) (add_left_mem_leftMoves_add hb z)
+    · exact lf_of_rightMove_le (add_le_add_left' hb' z) (add_left_mem_rightMoves_add hb z)
+termination_by (x, y, z)
+decreasing_by igame_wf
+
+private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
+  simpa [add_comm] using add_le_add_left' h z
+
+instance : AddLeftMono IGame := ⟨fun x _ _ h ↦ add_le_add_left' h x⟩
+instance : AddRightMono IGame := ⟨fun x _ _ h ↦ add_le_add_right' h x⟩
+
+instance : AddLeftReflectLE IGame where
+  elim x y z h := by
+    rw [← zero_add y, ← zero_add z]
+    apply (add_le_add_right (neg_add_equiv x).ge y).trans
+    rw [add_assoc]
+    apply (add_le_add_left h (-x)).trans
+    rw [← add_assoc]
+    exact add_le_add_right (neg_add_equiv x).le z
+
+instance : AddRightReflectLE IGame where
+  elim x y z h := by
+    rw [Function.swap, Function.swap, add_comm, add_comm z] at h
+    exact le_of_add_le_add_left h
+
+instance : AddLeftStrictMono IGame where
+  elim x y z h := by
+    apply lt_of_le_not_le (add_le_add_left h.le x)
+    contrapose! h
+    exact (le_of_add_le_add_left h).not_lt
+
+instance : AddRightStrictMono IGame where
+  elim x y z h := by
+    rw [Function.swap, Function.swap, add_comm, add_comm z]
+    exact add_lt_add_left h x
+
+theorem add_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a + c ≈ b + d :=
+  ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
+
+theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c ≈ b - d :=
+  add_congr h₁ (neg_congr h₂)
 
 end IGame
 end
