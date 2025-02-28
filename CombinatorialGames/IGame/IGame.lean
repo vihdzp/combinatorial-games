@@ -52,7 +52,10 @@ theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
 def out (x : IGame) : PGame := Quotient.out x
 @[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
 
--- TODO: docstring
+/--
+`Quotient.lift` for `IGame`: if f : PGame → α respects the identical equivalence relation ≡, then f
+lifts IGame to α
+-/
 def lift {α : Sort*} (f : PGame → α) (hf : ∀ x y, x ≡ y → f x = f y) : IGame → α :=
   Quotient.lift f hf
 
