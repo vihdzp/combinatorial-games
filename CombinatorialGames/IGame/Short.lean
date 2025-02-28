@@ -26,9 +26,6 @@ compile_inductive% SGame
 
 namespace SGame
 
-def ofLists (l m : List SGame) : SGame :=
-  mk l.length m.length l.get m.get
-
 def LeftMoves : SGame → ℕ
   | mk α _ _ _ => α
 
@@ -89,173 +86,70 @@ decreasing_by
 instance : DecidableLE SGame := @decidableLE'
 instance : DecidableLT SGame := decidableLTOfDecidableLE
 
-/-
+/-! ### Basic games -/
 
-theorem ext_iff {x y : SGame} : x = y ↔
-    ∃ (hl : x.LeftMoves = y.LeftMoves) (hr : x.RightMoves = y.RightMoves),
-      (∀ i, x.moveLeft i = y.moveLeft (i.cast hl)) ∧
-      (∀ i, x.moveRight i = y.moveRight (i.cast hr)) := by
-  constructor
-  · rintro rfl
-    tauto
-  · rintro ⟨hl₁, hr₁, hl₂, hr₂⟩
-    cases x
-    cases y
-    simp_rw [LeftMoves, RightMoves] at hl₁ hr₁
-    subst_vars
-    congr
-    exacts [funext hl₂, funext hr₂]
+def ofLists (l m : List SGame) : SGame :=
+  mk l.length m.length l.get m.get
 
-def decidableEq' : DecidableEq SGame := fun x y ↦
-  let _ : Π i hl, Decidable (x.moveLeft i = y.moveLeft (Fin.cast hl i)) :=
-    fun _ _ ↦ decidableEq' ..
-  let _ : Π i hr, Decidable (x.moveRight i = y.moveRight (Fin.cast hr i)) :=
-    fun _ _ ↦ decidableEq' ..
-  decidable_of_iff' _ ext_iff
-termination_by x y => (x, y)
-decreasing_by all_goals sorry-/
+@[simp] theorem leftMoves_ofLists (l m : List SGame) : (ofLists l m).LeftMoves = l.length := rfl
+@[simp] theorem righttMoves_ofLists (l m : List SGame) : (ofLists l m).RightMoves = m.length := rfl
 
-#exit
-def leftMoves (x : SGame) : Finset SGame := by
-  cases x with | mk α β =>
-    apply Fintype.range
-    sorry
+@[simp] theorem moveLeft_ofLists (l m : List SGame) (n : Fin l.length) :
+    (ofLists l m).moveLeft n = l[n] :=
+  rfl
 
+@[simp] theorem moveRight_ofLists (l m : List SGame) (n : Fin m.length) :
+    (ofLists l m).moveRight n = m[n] :=
+  rfl
+
+instance : Zero SGame := ⟨ofLists [] []⟩
+
+theorem zero_def : 0 = ofLists [] [] := rfl
+@[simp] theorem leftMoves_zero : LeftMoves 0 = 0 := rfl
+@[simp] theorem rightMoves_zero : RightMoves 0 = 0 := rfl
+@[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
+
+instance : One SGame := ⟨ofLists [0] []⟩
+
+theorem one_def : 1 = ofLists [0] [] := rfl
+@[simp] theorem leftMoves_one : LeftMoves 1 = 1 := rfl
+@[simp] theorem rightMoves_one : RightMoves 1 = 0 := rfl
+@[simp] theorem moveLeft_one (n : Fin 1) : moveLeft 1 n = 0 := by simp [one_def]
+@[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
 end SGame
 
-#exit
 namespace IGame
 
-inductive Short : IGame.{u} → Type (u + 1) where
-  /-- If `s` and `t` are finsets of short games, then `{s | t}ᴵ` is short.
-
-  You should prefer the `Short.mk` constructor. -/
-  | mk' (s : Finset IGame) (t : Finset IGame) (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y) :
-    Short {s | t}ᴵ
-
-attribute [class] Short
+class Short (x : IGame.{u}) : Type u where
+  toSGame : SGame.{u}
+  toIGame_toSGame : toSGame.toIGame = x
 
 namespace Short
-
-/-- If `s` and `t` are finsets of short games, then `{s | t}ᴵ` is short. -/
-def mk (s : Finset IGame) (t : Finset IGame) (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y)
-    {x : IGame} (h : {s | t}ᴵ = x) : Short x :=
-  cast (by rw [h]) (Short.mk' s t hs ht)
-
-/-- The left moves of a short game, as a `Finset`. -/
-protected def leftMoves (x : IGame) [h : Short x] : Finset IGame :=
-  h.casesOn fun s _ _ _ ↦ s
-
-/-- The right moves of a short game, as a `Finset`. -/
-protected def rightMoves (x : IGame) [h : Short x] : Finset IGame :=
-  h.casesOn fun _ t _ _ ↦ t
+attribute [simp] toIGame_toSGame
 
 @[simp]
-theorem leftMoves_mk' (s : Finset IGame) (t : Finset IGame)
-    (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y) : @Short.leftMoves _ (mk' s t hs ht) = s :=
-  rfl
+theorem toSGame_le_iff {x y : IGame} [Short x] [Short y] : toSGame x ≤ toSGame y ↔ x ≤ y := by
+  change (toSGame x).toIGame ≤ (toSGame y).toIGame ↔ x ≤ y
+  simp
 
 @[simp]
-theorem rightMoves_mk' (s : Finset IGame) (t : Finset IGame)
-    (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y) : @Short.rightMoves _ (mk' s t hs ht) = t :=
-  rfl
+theorem toSGame_lt_iff {x y : IGame} [Short x] [Short y] : toSGame x < toSGame y ↔ x < y :=
+  lt_iff_lt_of_le_iff_le' toSGame_le_iff toSGame_le_iff
 
-@[simp]
-theorem leftMoves_mk (s : Finset IGame) (t : Finset IGame)
-    (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y) {x : IGame} (h : {s | t}ᴵ = x) :
-    @Short.leftMoves _ (mk s t hs ht h) = s := by
-  subst h
-  rfl
+instance (x y : IGame) [Short x] [Short y] : Decidable (x ≤ y) :=
+  decidable_of_iff _ toSGame_le_iff
 
-@[simp]
-theorem rightMoves_mk (s : Finset IGame) (t : Finset IGame)
-    (hs : Π y ∈ s, Short y) (ht : Π y ∈ t, Short y) {x : IGame} (h : {s | t}ᴵ = x) :
-    @Short.rightMoves _ (mk s t hs ht h) = t := by
-  subst h
-  rfl
+instance (x y : IGame) [Short x] [Short y] : Decidable (x < y) :=
+  decidable_of_iff _ toSGame_lt_iff
 
-@[simp]
-theorem leftMoves_eq (x : IGame) [h : Short x] : Short.leftMoves x = x.leftMoves := by
-  cases h; simp
+instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
+  inferInstanceAs (Decidable (_ ∧ _))
 
-@[simp]
-theorem rightMoves_eq (x : IGame) [h : Short x] : Short.rightMoves x = x.rightMoves := by
-  cases h; simp
+instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
+instance : Short 1 := ⟨1, SGame.toIGame_one⟩
 
-@[simp]
-theorem mem_leftMoves_iff {x y : IGame} [Short x] : y ∈ Short.leftMoves x ↔ y ∈ x.leftMoves := by
-  rw [← Finset.mem_coe, leftMoves_eq]
-
-@[simp]
-theorem mem_rightMoves_iff {x y : IGame} [Short x] : y ∈ Short.rightMoves x ↔ y ∈ x.rightMoves := by
-  rw [← Finset.mem_coe, rightMoves_eq]
-
-/-- Any left move from a short game yields a short game. -/
-def ofMemLeftMoves {x y : IGame} [hx : Short x] (h : y ∈ x.leftMoves) : Short y :=
-  let f : y ∈ Short.leftMoves x → Short y := hx.casesOn fun _ _ hs _ ↦ hs y
-  f (mem_leftMoves_iff.2 h)
-
-/-- Any right move from a short game yields a short game. -/
-def ofMemRightMoves {x y : IGame} [hx : Short x] (h : y ∈ x.rightMoves) : Short y :=
-  let f : y ∈ Short.rightMoves x → Short y := hx.casesOn fun _ _ _ ht ↦ ht y
-  f (mem_rightMoves_iff.2 h)
-
-instance (x : IGame) [Short x] : Fintype x.leftMoves where
-  elems := (Short.leftMoves x).attach.map
-    ⟨fun x ↦ ⟨x.1, mem_leftMoves_iff.1 x.2⟩, fun a b ↦ by simpa using Subtype.eq⟩
-  complete := by simp
-
-instance (x : IGame) [Short x] : Fintype x.rightMoves where
-  elems := (Short.rightMoves x).attach.map
-    ⟨fun x ↦ ⟨x.1, mem_rightMoves_iff.1 x.2⟩, fun a b ↦ by simpa using Subtype.eq⟩
-  complete := by simp
-
-private theorem heq_mk' {x : IGame} (h : Short x) :
-    HEq h (mk' (Short.leftMoves x) (Short.rightMoves x)
-      (fun _ hy ↦ ofMemLeftMoves  (mem_leftMoves_iff.1 hy))
-      (fun _ hy ↦ ofMemRightMoves (mem_rightMoves_iff.1 hy))) := by
-  cases h; rfl
-
-private theorem subsingleton' {x : IGame} (a : Short x) (b : Short x) : a = b := by
-  apply eq_of_heq <| (heq_mk' a).trans (.trans _ (heq_mk' b).symm)
-  congr! 1
-  · rw [← Finset.coe_inj, leftMoves_eq, leftMoves_eq]
-  · rw [← Finset.coe_inj, rightMoves_eq, rightMoves_eq]
-  all_goals
-  · apply Function.hfunext rfl fun y z h ↦ ?_
-    cases h
-    refine Function.hfunext ?_ fun hy _ ↦ ?_
-    · simp
-    · simp only [mem_leftMoves_iff, mem_rightMoves_iff] at hy
-      simpa using subsingleton' ..
-termination_by x
-decreasing_by all_goals simp_all; subst_vars; igame_wf
-
-instance (x : IGame) : Subsingleton (Short x) :=
-  ⟨subsingleton'⟩
-
-protected instance zero : Short 0 :=
-  .mk ∅ ∅
-    (fun _ h ↦ (Finset.not_mem_empty _ h).elim)
-    (fun _ h ↦ (Finset.not_mem_empty _ h).elim)
-    (by simp [zero_def])
-
-@[simp] protected theorem leftMoves_zero : Short.leftMoves 0 = ∅ := leftMoves_mk ..
-@[simp] protected theorem rightMoves_zero : Short.rightMoves 0 = ∅ := rightMoves_mk ..
-
--- This shouldn't be noncomputable... that's bad.
-protected instance one : Short 1 :=
-  .mk {0} ∅
-    (fun _ h ↦ cast (by simp_all) Short.zero)
-    (fun _ h ↦ (Finset.not_mem_empty _ h).elim)
-    (by simp [one_def])
+example : 0 < 1 := by decide
 
 end Short
-
-/-example (x : IGame) (h : Short x) : sorry := by
-  cases h-/
-
-#exit
-
 end IGame
