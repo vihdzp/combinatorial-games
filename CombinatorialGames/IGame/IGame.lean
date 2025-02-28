@@ -165,8 +165,12 @@ macro "igame_wf" : tactic =>
 
 /-- Construct an `IGame` from its left and right sets.
 
-This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate
-from set builder notation, and from the analogous constructor on `Game`. -/
+This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
+notation, and from the analogous constructor on `Game`.
+
+This function is regretably noncomputable. Among other issues, sets simply do not carry data in
+Lean. To perform computations on `IGame` we instead depend on another auxiliary type, see
+`IGame.Short` for more information. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
