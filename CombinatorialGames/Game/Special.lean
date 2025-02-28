@@ -136,24 +136,28 @@ variable (x : PGame)
 
 /-! ## Tiny and Miny -/
 
-/-- A tiny game ⧾ is defined as {0 | {0 | -G}}, and is amongst the smallest of the infinitesimals. -/
+/-- A tiny game ⧾G is defined as {0 | {0 | -G}}, and is amongst the smallest of the infinitesimals. -/
 def tiny : PGame :=
   ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ -x⟩⟩
 
-/-- A miny game ⧿ is defined as {{G | 0} | 0}. -/
+@[inherit_doc] notation:1024 "⧾"x => tiny x
+
+/-- A miny game ⧿G is defined as {{G | 0} | 0}. -/
 def miny : PGame :=
   ⟨PUnit, PUnit, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ x, fun _ ↦ 0⟩, fun _ ↦ 0⟩
 
+@[inherit_doc] notation:1024 "⧿"x => miny x
+
 @[simp]
-theorem neg_tiny : -tiny x = miny x := by
+theorem neg_tiny : -(⧾x) = ⧿x := by
   simp [miny, tiny]
 
 @[simp]
-theorem neg_miny : -miny x = tiny x := by
+theorem neg_miny : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted exists_tiny_lt_of_pos (x : PGame) (hx : 0 < x) : ∃ n : ℕ, tiny n < x
+proof_wanted exists_tiny_lt_of_pos (x : PGame) (hx : 0 < x) : ∃ n : ℕ, (⧾n) < x
 
 end TinyMiny
 
