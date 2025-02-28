@@ -521,7 +521,7 @@ instance : AddZeroClass IGame := by
   · intro x
     induction x using ofSetsRecOn with | H s t IHl IHr =>
     rw [add_eq]
-    aesop
+    simp_all
 
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
