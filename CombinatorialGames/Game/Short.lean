@@ -3,10 +3,10 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison
 -/
-
+import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Relabelling
 import Mathlib.Data.Fintype.Basic
 import Mathlib.SetTheory.Cardinal.Cofinality
-import CombinatorialGames.Game.Birthday
 
 /-!
 # Short games
@@ -17,6 +17,10 @@ In particular, this means there is a finite set of moves at every point.
 We prove that the order relations `≤` and `<`, and the equivalence relation `≈`, are decidable on
 short games, although unfortunately in practice `decide` doesn't seem to be able to
 prove anything using these instances.
+
+TODO: This is not the real "short game". It is only defined for `PGame`.
+The real "short game" will be defined once `IGame` (`Game` over the `Identical` setoid)
+is added.
 -/
 
 -- Porting note: The local instances `moveLeftShort'` and `fintypeLeft` (and resp. `Right`)
