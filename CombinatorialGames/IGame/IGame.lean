@@ -19,7 +19,17 @@ open PGame Set Pointwise
 
 /-- Games up to identity.
 
-TODO: write proper docstring. -/
+`IGame` uses the set-theoretic notion of equality on Games,
+compared to `PGame`'s 'type-theoretic' notion of equality.
+
+This is not the same equivalence as used broadly in combinatorial game theory literature,
+as a game like {0,1|0} is not _identical_ to {1|0}, despite being equivalent.
+However, many theorems can be proven over the 'identical' equivalence relation,
+and the literature may occasionally specifically use the 'identical' equivalence
+relation for this reason. 
+
+For game equivalence from literature, see `Game.Basic`.
+-/
 def IGame : Type (u + 1) :=
   Quotient identicalSetoid
 
