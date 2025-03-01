@@ -14,6 +14,7 @@ import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.State
 import CombinatorialGames.IGame.IGame
 import CombinatorialGames.Mathlib.AntisymmRel
+import CombinatorialGames.Mathlib.CompRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
