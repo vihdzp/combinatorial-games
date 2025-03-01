@@ -16,6 +16,10 @@ set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
+-- This avoids name clashes with the existing `PGame`.
+-- Remove it when we finish porting!
+namespace Temp
+
 open Set Pointwise
 
 /-! ### Pre-games -/
@@ -139,7 +143,7 @@ def mk (x : PGame) : IGame := Quotient.mk _ x
 theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
-alias _root_.PGame.Identical.mk_eq := mk_eq
+alias _root_.Temp.PGame.Identical.mk_eq := mk_eq
 
 @[cases_eliminator]
 theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
@@ -767,4 +771,5 @@ theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c �
   add_congr h₁ (neg_congr h₂)
 
 end IGame
+end Temp
 end
