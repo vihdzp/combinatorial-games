@@ -16,7 +16,7 @@ set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
--- This avoids name clashes with the existing `PGame`.
+-- TODO: This avoids name clashes with the existing `PGame`.
 -- Remove it when we finish porting!
 namespace Temp
 
