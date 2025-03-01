@@ -16,7 +16,7 @@ Two values in a preorder are comparable whenever `a ≤ b` or `b ≤ a`.
   either direction by `r`.
 -/
 
-open Function OrderDual
+open Function
 
 variable {α : Type*} {a b c d : α}
 
