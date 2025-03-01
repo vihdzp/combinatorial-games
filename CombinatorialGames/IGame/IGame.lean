@@ -61,10 +61,10 @@ def moveLeft : ∀ g : PGame, LeftMoves g → PGame
 def moveRight : ∀ g : PGame, RightMoves g → PGame
   | mk _ _r _ R => R
 
-@[simp] theorem leftMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).LeftMoves = xl := rfl
-@[simp] theorem moveLeft_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveLeft = xL := rfl
-@[simp] theorem rightMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).RightMoves = xr := rfl
-@[simp] theorem moveRight_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveRight = xR := rfl
+@[simp] theorem leftMoves_mk {xl xr xL xR} : (mk xl xr xL xR).LeftMoves = xl := rfl
+@[simp] theorem moveLeft_mk {xl xr xL xR} : (mk xl xr xL xR).moveLeft = xL := rfl
+@[simp] theorem rightMoves_mk {xl xr xL xR} : (mk xl xr xL xR).RightMoves = xr := rfl
+@[simp] theorem moveRight_mk {xl xr xL xR} : (mk xl xr xL xR).moveRight = xR := rfl
 
 /-- Two pre-games are identical if their left and right sets are identical. That is, `Identical x y`
 if every left move of `x` is identical to some left move of `y`, every right move of `x` is
