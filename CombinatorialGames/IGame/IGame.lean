@@ -3,10 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.PGame
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
+import Mathlib.Order.Antisymmetrization
+import Mathlib.Order.GameAdd
 
 universe u
 
@@ -15,7 +16,106 @@ set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
-open PGame Set Pointwise
+open Set Pointwise
+
+/-! ### Pre-games -/
+
+/-- The type of "pre-games", before we have quotiented by equivalence (`identicalSetoid`).
+
+In ZFC, a combinatorial game is constructed from two sets of combinatorial games that have been
+constructed at an earlier stage. To do this in type theory, we say that a pre-game is built
+inductively from two families of pre-games indexed over any type in `Type u`. The resulting type
+`PGame.{u}` lives in `Type (u + 1)`, reflecting that it is a proper class in ZFC.
+
+This type was historically the foundation for game theory in Lean, but this led to many annoyances.
+Most impactfully, this type has a notion of equality that is too strict: two games `0 = { | }` could
+be distinct (and unprovably so!) if the indexed families of left and right sets were two distinct
+empty types. To get the correct notion of equality, we define `IGame` as the quotient of this type
+by the `Identical` relation, representing extensional equivalence.
+
+This type has thus been relegated to an auxiliary construction for `IGame`. **You should not build
+any substantial theory based on this type.** -/
+inductive PGame : Type (u + 1)
+  | mk : ∀ α β : Type u, (α → PGame) → (β → PGame) → PGame
+compile_inductive% PGame
+
+namespace PGame
+
+/-- The indexing type for allowable moves by Left. -/
+def LeftMoves : PGame → Type u
+  | mk l _ _ _ => l
+
+/-- The indexing type for allowable moves by Right. -/
+def RightMoves : PGame → Type u
+  | mk _ r _ _ => r
+
+/-- The new game after Left makes an allowed move. -/
+def moveLeft : ∀ g : PGame, LeftMoves g → PGame
+  | mk _l _ L _ => L
+
+/-- The new game after Right makes an allowed move. -/
+def moveRight : ∀ g : PGame, RightMoves g → PGame
+  | mk _ _r _ R => R
+
+@[simp] theorem leftMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).LeftMoves = xl := rfl
+@[simp] theorem moveLeft_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveLeft = xL := rfl
+@[simp] theorem rightMoves_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).RightMoves = xr := rfl
+@[simp] theorem moveRight_mk {xl xr xL xR} : (⟨xl, xr, xL, xR⟩ : PGame).moveRight = xR := rfl
+
+/-- Two pre-games are identical if their left and right sets are identical. That is, `Identical x y`
+if every left move of `x` is identical to some left move of `y`, every right move of `x` is
+identical to some right move of `y`, and vice versa.
+
+`IGame` is defined as a quotient of `PGame` under this relation. -/
+def Identical : PGame.{u} → PGame.{u} → Prop
+  | mk _ _ xL xR, mk _ _ yL yR =>
+      Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
+      Relator.BiTotal (fun i j ↦ Identical (xR i) (yR j))
+
+@[inherit_doc] scoped infix:50 " ≡ " => PGame.Identical
+
+theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
+    Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
+  | mk .., mk .. => Iff.rfl
+
+@[refl]
+protected theorem Identical.refl (x) : x ≡ x :=
+  x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
+
+protected theorem Identical.rfl {x} : x ≡ x := Identical.refl x
+
+@[symm]
+protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
+  | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
+
+@[trans]
+protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
+  | mk .., mk .., mk .., ⟨hL₁, hR₁⟩, ⟨hL₂, hR₂⟩ =>
+    ⟨hL₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hL₂, hR₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hR₂⟩
+
+/-- `Identical` as a `Setoid`. -/
+def identicalSetoid : Setoid PGame :=
+  ⟨Identical, Identical.refl, Identical.symm, Identical.trans⟩
+
+/-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
+theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
+  | mk .., mk .., ⟨hl, _⟩ => hl.1
+
+/-- If `x ≡ y`, then a left move of `y` is identical to some left move of `x`. -/
+theorem Identical.moveLeft_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft j ≡ y.moveLeft i
+  | mk .., mk .., ⟨hl, _⟩ => hl.2
+
+/-- If `x ≡ y`, then a right move of `x` is identical to some right move of `y`. -/
+theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i ≡ y.moveRight j
+  | mk .., mk .., ⟨_, hr⟩ => hr.1
+
+/-- If `x ≡ y`, then a right move of `y` is identical to some right move of `x`. -/
+theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
+  | mk .., mk .., ⟨_, hr⟩ => hr.2
+
+end PGame
+
+/-! ### Game moves -/
 
 /-- Games up to identity.
 
@@ -23,17 +123,16 @@ open PGame Set Pointwise
 notion of equality.
 
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
-like {0, 1 | 0} is not *identical* to {1 | 0}, despite being equivalent. However, many theorems can
-be proven over the 'identical' equivalence relation, and the literature may occasionally
+like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
+can be proven over the 'identical' equivalence relation, and the literature may occasionally
 specifically use the 'identical' equivalence relation for this reason.
 
 For the more common game equivalence from literature, see `Game.Basic`. -/
 def IGame : Type (u + 1) :=
-  Quotient identicalSetoid
+  Quotient PGame.identicalSetoid
 
 namespace IGame
-
-/-! ### Game moves -/
+open scoped PGame
 
 /-- The quotient map from `PGame` into `IGame`. -/
 def mk (x : PGame) : IGame := Quotient.mk _ x
@@ -91,7 +190,7 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
   cases x with | H x =>
   cases y with | H y =>
   dsimp at hl hr
-  refine (identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
+  refine (PGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := x.moveLeft) i)
     exact ⟨j, mk_eq_mk.1 hj.symm⟩
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := y.moveLeft) i)
@@ -113,8 +212,8 @@ theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOpti
 theorem isOption_wf : WellFounded IsOption := by
   suffices ∀ x, Acc IsOption (mk x) from ⟨ind this⟩
   intro x
-  induction x using PGame.moveRecOn with
-  | IH x hl hr =>
+  induction x with
+  | mk x _ _ _ hl hr =>
     constructor
     rintro ⟨y⟩ (h | h) <;>
     obtain ⟨_, ⟨i, rfl⟩, (hi : _ = Quot.mk _ _)⟩ := h
@@ -132,7 +231,6 @@ def moveRecOn {P : IGame → Sort*} (x)
   isOption_wf.recursion x fun x IH ↦
     H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
 
-@[simp]
 theorem moveRecOn_eq {P : IGame → Sort*} (x)
     (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
     moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
@@ -175,8 +273,7 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
--- TODO: can a macro expert verify this makes sense?
-@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴵ" : term => `(ofSets $s $t)
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
 @[simp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
@@ -249,11 +346,10 @@ instance : LE IGame where
     (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
     (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
 
--- TODO: can a macro expert verify this makes sense?
 /-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
 If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
-macro_rules | `($x ⧏ $y) => `(¬$y ≤ $x)
+notation:50 x:50 " ⧏ " y:50 => ¬ y ≤ x
 
 /-- Definition of `x ≤ y` on pre-games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
