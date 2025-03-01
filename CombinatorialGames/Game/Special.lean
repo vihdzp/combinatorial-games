@@ -19,7 +19,7 @@ universe u
 
 namespace PGame
 
-/-! ### Star -/
+/-! ## Star -/
 
 /-- The pre-game `star`, which is fuzzy with zero. -/
 def star : PGame.{u} :=
@@ -63,7 +63,7 @@ theorem star_fuzzy_zero : star ‖ 0 :=
 @[simp]
 theorem neg_star : -star = star := by simp [star]
 
-/-! ### Up and down -/
+/-! ## Up and down -/
 
 /-- The pre-game `up` -/
 def up : PGame.{u} :=
@@ -129,5 +129,36 @@ theorem neg_up : -up = down := by simp [up, down]
 theorem star_fuzzy_down : star ‖ down := by
   rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
   exact star_fuzzy_up
+
+section TinyMiny
+
+variable (x : PGame)
+
+/-! ## Tiny and Miny -/
+
+/-- A tiny game ⧾G is defined as {0 | {0 | -G}}, and is amongst the smallest of the infinitesimals. -/
+def tiny : PGame :=
+  ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ -x⟩⟩
+
+@[inherit_doc] notation:1024 "⧾"x => tiny x
+
+/-- A miny game ⧿G is defined as {{G | 0} | 0}. -/
+def miny : PGame :=
+  ⟨PUnit, PUnit, fun _ ↦ ⟨PUnit, PUnit, fun _ ↦ x, fun _ ↦ 0⟩, fun _ ↦ 0⟩
+
+@[inherit_doc] notation:1024 "⧿"x => miny x
+
+@[simp]
+theorem neg_tiny : -(⧾x) = ⧿x := by
+  simp [miny, tiny]
+
+@[simp]
+theorem neg_miny : -(⧿x) = ⧾x := by
+  simp [miny, tiny]
+
+/-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
+proof_wanted exists_tiny_lt_of_pos (x : PGame) (hx : 0 < x) : ∃ n : ℕ, (⧾n) < x
+
+end TinyMiny
 
 end PGame
