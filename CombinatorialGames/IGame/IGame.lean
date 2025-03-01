@@ -832,10 +832,10 @@ instance : AddRightStrictMono IGame where
     rw [Function.swap, Function.swap, add_comm, add_comm z]
     exact add_lt_add_left h x
 
-theorem add_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a + c ≈ b + d :=
+theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
-theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c ≈ b - d :=
+theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
