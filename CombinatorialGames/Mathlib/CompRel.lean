@@ -131,7 +131,7 @@ theorem AntisymmRel.compRel_congr_left (h : AntisymmRel (· ≤ ·) a b) :
     CompRel (· ≤ ·) a c ↔ CompRel (· ≤ ·) b c :=
   h.compRel_congr .rfl
 
-theorem AntisymmRel.incompRel_congr_right (h : AntisymmRel (· ≤ ·) b c) :
+theorem AntisymmRel.compRel_congr_right (h : AntisymmRel (· ≤ ·) b c) :
     CompRel (· ≤ ·) a b ↔ CompRel (· ≤ ·) a c :=
   AntisymmRel.rfl.compRel_congr h
 
