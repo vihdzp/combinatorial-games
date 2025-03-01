@@ -9,12 +9,13 @@ import Mathlib.Data.Countable.Small
 /-!
 # Short games
 
-A combinatorial game is `Short` [Conway, ch.9][conway2001] if it has only finitely many positions.
-In particular, this means there is a finite set of moves at every point.
+A combinatorial game is `Short` if it has only finitely many positions. In particular, this means
+there is a finite set of moves at every point.
 
 We define here `IGame.Short` as data, providing data for the left and right moves of a game in the
 form of an auxiliary `SGame` type. This makes us capable of performing some basic computations on
-`IGame`.
+`IGame`. Unfortunately, well-founded recursion and reducibility don't mix very well in Lean. As
+such, we must often rely on `native_decide` to make use of this typeclass for computation.
 -/
 
 universe u
@@ -22,7 +23,7 @@ universe u
 /-- An auxiliary type for `IGame.Short`.
 
 The purpose of this type is to provide auxiliary data for an `IGame` which can then be used to
-perform computations. You should not build any substantial theory around this type.
+perform computations. **You should not build any substantial theory based on this type.**
 
 This could perfectly well have been in `Type 0`, but we make it universe polymorphic for
 convenience: operations on `SGame.{u}` correspond to operations on `IGame.{u}`. -/
@@ -50,10 +51,10 @@ def moveLeft : (x : SGame) → Fin x.leftMoves → SGame
 def moveRight : (x : SGame) → Fin x.rightMoves → SGame
   | mk _ _ _ g => g
 
-@[simp] theorem leftMoves_mk (m n f g) : leftMoves (mk m n f g) = m := rfl
-@[simp] theorem rightMoves_mk (m n f g) : rightMoves (mk m n f g) = n := rfl
-@[simp] theorem moveLeft_mk (m n f g) : moveLeft (mk m n f g) = f := rfl
-@[simp] theorem moveRight_mk (m n f g) : moveRight (mk m n f g) = g := rfl
+@[simp] theorem leftMoves_mk (m n f g) : (mk m n f g).leftMoves = m := rfl
+@[simp] theorem rightMoves_mk (m n f g) : (mk m n f g).rightMoves = n := rfl
+@[simp] theorem moveLeft_mk (m n f g) : (mk m n f g).moveLeft = f := rfl
+@[simp] theorem moveRight_mk (m n f g) : (mk m n f g).moveRight = g := rfl
 
 /-- A well-founded relation on `SGame`, see `IGame.IsOption`. -/
 inductive IsOption : SGame → SGame → Prop
@@ -63,16 +64,22 @@ inductive IsOption : SGame → SGame → Prop
 theorem isOption_wf : WellFounded IsOption := by
   refine ⟨rec fun s t f g IHl IHr ↦ .intro _ ?_⟩
   rintro y (h | h)
-  · apply IHl
-  · apply IHr
+  · exact IHl _
+  · exact IHr _
 
 instance : WellFoundedRelation SGame := ⟨_, isOption_wf⟩
+
+/-- See `igame_wf`. -/
+macro "sgame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    IsOption.moveLeft, IsOption.moveRight] )
 
 /-- (Noncomputably) converts an `SGame` into an `IGame`. -/
 noncomputable def toIGame (x : SGame.{u}) : IGame.{u} :=
   {.range fun m ↦ toIGame (x.moveLeft m) | .range fun n ↦ toIGame (x.moveRight n)}ᴵ
 termination_by x
-decreasing_by all_goals apply_rules [IsOption.moveLeft, IsOption.moveRight]
+decreasing_by sgame_wf
 
 theorem toIGame_def (x : SGame) : x.toIGame =
     {.range (toIGame ∘ x.moveLeft) | .range (toIGame ∘ x.moveRight)}ᴵ :=
@@ -86,9 +93,9 @@ theorem leftMoves_toIGame (x : SGame) : x.toIGame.leftMoves = .range (toIGame �
 theorem rightMoves_toIGame (x : SGame) : x.toIGame.rightMoves = .range (toIGame ∘ x.moveRight) := by
   simp [toIGame_def]
 
-/-- We define a preorder instance by simply lifting to `IGame`. -/
+/-- We define a preorder instance by lifting to `IGame`. -/
 instance : Preorder SGame.{u} :=
-  Preorder.lift toIGame.{u}
+  .lift toIGame.{u}
 
 theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
     (∀ m, ¬ toIGame y ≤ toIGame (x.moveLeft m)) ∧
@@ -96,7 +103,7 @@ theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
   rw [IGame.le_iff_forall_lf]
   simp
 
-@[semireducible]
+@[semireducible] -- This aids in, but doesn't completely fix reducibility issues.
 private def decidableLE' {x y : SGame} : Decidable (x.toIGame ≤ y.toIGame) :=
   letI (m) : Decidable (toIGame y ≤ toIGame (x.moveLeft m)) := decidableLE'
   letI (n) : Decidable (toIGame (y.moveRight n) ≤ toIGame x) := decidableLE'
@@ -110,7 +117,9 @@ instance : DecidableLE SGame := @decidableLE'
 instance : DecidableLT SGame := decidableLTOfDecidableLE
 
 /-! ### Basic games -/
-/--/
+
+/-! ### Game from lists -/
+
 /-- Create an `SGame` from two lists of `SGame`s. -/
 def ofLists (l m : List SGame) : SGame :=
   mk l.length m.length l.get m.get
@@ -124,7 +133,9 @@ def ofLists (l m : List SGame) : SGame :=
 
 @[simp] theorem moveRight_ofLists (l m : List SGame) (n : Fin m.length) :
     (ofLists l m).moveRight n = m[n] :=
-  rfl-/
+  rfl
+
+/-! #### Natural numbers -/
 
 instance : Zero SGame := ⟨mk 0 0 nofun nofun⟩
 
@@ -141,15 +152,38 @@ theorem one_def : (1 : SGame) = mk 1 0 (fun _ ↦ 0) nofun := rfl
 @[simp] theorem moveLeft_one (n : Fin 1) : moveLeft 1 n = 0 := rfl
 @[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
+private def natCast' : ℕ → SGame
+  | 0 => 0
+  | n + 1 => mk 1 0 (fun _ ↦ natCast' n) nofun
+
+instance : NatCast SGame := ⟨natCast'⟩
+
+@[simp] theorem natCast_zero : ((0 : ℕ) : SGame) = 0 := rfl
+
+@[simp]
+theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) nofun :=
+  rfl
+
+@[simp] theorem leftMoves_natCast_succ (n : ℕ) : leftMoves ((n + 1) : ℕ) = 1 := rfl
+@[simp] theorem rightMoves_natCast (n : ℕ) : rightMoves n = 0 := by cases n <;> rfl
+
+@[simp] theorem moveLeft_natCast_succ (n : ℕ) (i : Fin 1) : moveLeft ((n + 1) : ℕ) i = n := rfl
+@[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := by ext <;> simp [eq_comm]
+--theorem natCast_def (n : ℕ) : (n : SGame) = mk 1 0 (fun _ ↦ 0) nofun := rfl
+
+#exit
+
+/-! #### Negation -/
+
 private def neg' (x : SGame) : SGame :=
   mk _ _ (fun n ↦ neg' (x.moveRight n)) (fun m ↦ neg' (x.moveLeft m))
 termination_by x
-decreasing_by all_goals apply_rules [IsOption.moveLeft, IsOption.moveRight]
+decreasing_by sgame_wf
 
 instance : Neg SGame := ⟨neg'⟩
 
 theorem neg_def (x : SGame) : -x = mk _ _ (Neg.neg ∘ x.moveRight) (Neg.neg ∘ x.moveLeft) := by
-  change neg' _ = _
+  change neg' x = _
   rw [neg']
   rfl
 
@@ -157,49 +191,139 @@ theorem neg_def (x : SGame) : -x = mk _ _ (Neg.neg ∘ x.moveRight) (Neg.neg ∘
 @[simp] theorem rightMoves_neg (x : SGame) : (-x).rightMoves = x.leftMoves := by rw [neg_def]; rfl
 
 theorem moveLeft_neg_heq (x : SGame) : HEq (moveLeft (-x)) (Neg.neg ∘ x.moveRight) := by
-  rw [neg_def]
-  rfl
+  rw [neg_def]; rfl
 
 theorem moveRight_neg_heq (x : SGame) : HEq (moveRight (-x)) (Neg.neg ∘ x.moveLeft) := by
-  rw [neg_def]
-  rfl
+  rw [neg_def]; rfl
 
 @[simp]
 theorem moveLeft_neg (x : SGame) (n) : (-x).moveLeft n = -x.moveRight (cast (by simp) n) := by
-  apply congr_heq (moveLeft_neg_heq x); simp
+  apply congr_heq (moveLeft_neg_heq x); rw [heq_cast_iff_heq]
 
 @[simp]
 theorem moveRight_neg (x : SGame) (n) : (-x).moveRight n = -x.moveLeft (cast (by simp) n) := by
-  apply congr_heq (moveRight_neg_heq x); simp
+  apply congr_heq (moveRight_neg_heq x); rw [heq_cast_iff_heq]
 
-@[simp] theorem toIGame_neg (s : SGame) : toIGame (-s) = -toIGame s := by
+@[simp]
+theorem toIGame_neg (x : SGame) : toIGame (-x) = -toIGame x := by
   ext
   on_goal 1 =>
     simp only [leftMoves_toIGame, IGame.leftMoves_neg, rightMoves_toIGame,
       Set.mem_range, Set.mem_neg]
-    have H : Fin (-s).leftMoves = Fin s.rightMoves := by simp
+    have H : Fin (-x).leftMoves = Fin x.rightMoves := by rw [leftMoves_neg]
   on_goal 2 =>
     simp only [rightMoves_toIGame, IGame.rightMoves_neg, leftMoves_toIGame,
       Set.mem_range, Set.mem_neg]
-    have H : Fin (-s).rightMoves = Fin s.leftMoves := by simp
+    have H : Fin (-x).rightMoves = Fin x.leftMoves := by rw [rightMoves_neg]
   all_goals
     rw [← (Equiv.cast H).exists_congr_right]
     simp only [Function.comp_apply, moveLeft_neg, moveRight_neg, Equiv.cast_apply]
     congr! 2
     rw [← neg_inj, toIGame_neg, neg_neg]
-termination_by s
-decreasing_by all_goals apply_rules [IsOption.moveLeft, IsOption.moveRight]
+termination_by x
+decreasing_by sgame_wf
+
+/-! #### Addition -/
+
+private def add' (x y : SGame) : SGame :=
+  mk (x.leftMoves + y.leftMoves) (x.rightMoves + y.rightMoves)
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun i ↦ add' (x.moveLeft i) y) (fun i ↦ add' x (y.moveLeft i)))
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun i ↦ add' (x.moveRight i) y) (fun i ↦ add' x (y.moveRight i)))
+termination_by (x, y)
+decreasing_by sgame_wf
+
+instance : Add SGame := ⟨add'⟩
+
+theorem add_def (x y : SGame) : x + y =
+    mk (x.leftMoves + y.leftMoves) (x.rightMoves + y.rightMoves)
+      (fun m ↦ (finSumFinEquiv.symm m).rec
+        (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i))
+      (fun m ↦ (finSumFinEquiv.symm m).rec
+        (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i)) := by
+  change add' x y = _
+  rw [add']
+  rfl
+
+@[simp]
+theorem leftMoves_add (x y : SGame) : (x + y).leftMoves = x.leftMoves + y.leftMoves := by
+  rw [add_def]; rfl
+
+@[simp]
+theorem rightMoves_add (x y : SGame) : (x + y).rightMoves = x.rightMoves + y.rightMoves := by
+  rw [add_def]; rfl
+
+theorem moveLeft_add_heq (x y : SGame) :
+  HEq (moveLeft (x + y))
+    (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
+      (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i)) := by
+  rw [add_def]; rfl
+
+theorem moveRight_add_heq (x y : SGame) :
+  HEq (moveRight (x + y))
+    (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
+      (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i)) := by
+  rw [add_def]; rfl
+
+@[simp]
+theorem moveLeft_add (x y : SGame) (n) :
+    (x + y).moveLeft n = (finSumFinEquiv.symm (cast (by simp) n)).rec
+      (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i) := by
+  apply congr_heq (moveLeft_add_heq x y); rw [heq_cast_iff_heq]
+
+@[simp]
+theorem moveRight_add (x y : SGame) (n) :
+    (x + y).moveRight n = (finSumFinEquiv.symm (cast (by simp) n)).rec
+      (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i) := by
+  apply congr_heq (moveRight_add_heq x y); rw [heq_cast_iff_heq]
+
+@[simp]
+theorem toIGame_add (x y : SGame) : toIGame (x + y) = toIGame x + toIGame y := by
+  ext
+  on_goal 1 =>
+    simp only [leftMoves_toIGame, Set.mem_range, moveLeft_add, IGame.leftMoves_add]
+    let e : Fin (x + y).leftMoves ≃ Fin x.leftMoves ⊕ Fin y.leftMoves :=
+      (Equiv.cast (by simp)).trans finSumFinEquiv.symm
+  on_goal 2 =>
+    simp only [rightMoves_toIGame, Set.mem_range, moveRight_add, IGame.rightMoves_add]
+    let e : Fin (x + y).rightMoves ≃ Fin x.rightMoves ⊕ Fin y.rightMoves :=
+      (Equiv.cast (by simp)).trans finSumFinEquiv.symm
+  all_goals
+    rw [e.exists_congr_left]
+    simp [e]
+    congr! 4 <;> rw [toIGame_add]
+termination_by (x, y)
+decreasing_by sgame_wf
+
+-- TODO: multiplication!
 
 end SGame
 
+/-! ### Short instances -/
+
 namespace IGame
 
+/-- A short game is one with finitely many subpositions.
+
+Short games are those for which we can feasibly perform computations. To enable this, this typeclass
+provides a term of an auxiliary type `SGame`, which mimics `PGame` but restricts the indexing types
+to `Fin n`, alongside a proof that this term, casted in the obvious way to `IGame`, represents the
+game in question. All computations can then go through `SGame`.
+
+Unfortunately, well-founded recursion and reducibility don't mix very well in Lean. As such, we must
+often rely on `native_decide` to make use of this typeclass for computation. -/
 class Short (x : IGame.{u}) : Type u where
   toSGame : SGame.{u}
   toIGame_toSGame : toSGame.toIGame = x
 
 namespace Short
 attribute [simp] toIGame_toSGame
+
+/-- Converts a `Short` instance on `x` into a `Short` instance on an equal game `y`. -/
+def cast (x : IGame) [hx : Short x] {y : IGame} (h : x = y) : Short y where
+  toSGame := hx.toSGame
+  toIGame_toSGame := by rwa [toIGame_toSGame]
 
 @[simp]
 theorem toSGame_le_iff {x y : IGame} [Short x] [Short y] : toSGame x ≤ toSGame y ↔ x ≤ y := by
@@ -223,11 +347,10 @@ instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
 
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
+instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
 
 example : (0 : IGame.{0}) < 1 := by decide
-
--- Why doesn't this work?
-example : (-0 : IGame.{0}) < 1 := by decide
+example : (-1 : IGame.{0}) < 0 := by native_decide
 
 end Short
 end IGame
