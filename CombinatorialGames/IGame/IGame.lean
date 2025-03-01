@@ -8,6 +8,64 @@ import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
 
+/-!
+# Combinatorial games
+
+The basic theory of combinatorial games, following Conway's book `On Numbers and Games`.
+
+In ZFC, games are built inductively out of two other sets of games, representing the options for two
+players Left and Right. In Lean, we instead define the type of games `IGame` as arising from two
+`Small` sets of games, with notation `{s | t}ᴵ` (see `IGame.ofSets`). A `u`-small type `α : Type v`
+is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
+a given universe closely mimicks the ZFC distinction between sets and proper clases.
+
+This definition requires some amount of setup, which we achieve through an auxiliary type `PGame`.
+This type was historically the foundation for game theory in Lean, but it has now been superceded by
+`IGame`, a quotient of it with the correct notion of equality. See the docstring on `PGame` for more
+information.
+
+We are also interested in further quotients of `IGame`. The quotient of games under equivalence
+`x ≈ y ↔ x ≤ y ∧ y ≤ x`, which in the literature is often what is meant by a "combinatorial game",
+is defined as `Game` in `CombinatorialGames.Game.Basic`. The surreal numbers `Surreal` are defined
+as a quotient (of a subtype) of games in `CombinatorialGames.Surreal.Basic`.
+
+## Conway induction
+
+Most constructions within game theory, and as such, many proofs within it, are done by structural
+induction. Structural induction on games is sometimes called "Conway induction".
+
+The most straightforward way to employ Conway induction is by using the termination checker, with
+the auxiliary `igame_wf` tactic. This uses `solve_by_elim` to search the context for proofs of the
+form `y ∈ x.leftMoves` or `y ∈ x.rightMoves`, which prove termination. Alternatively, you can use
+the explicit recursion principles `IGame.ofSetsRecOn` or `IGame.moveRecOn`.
+
+## Order properties
+
+Pregames have both a `≤` and a `<` relation, satisfying the properties of a `Preorder`. The relation
+`0 < x` means that `x` can always be won by Left, while `0 ≤ x` means that `x` can be won by Left as
+the second player. Likewise, `x < 0` means that `x` can always be won by Right, while `x ≤ 0` means
+that `x` can be won by Right as the second player.
+
+Note that we don't actually prove these characterizations. Indeed, in Conway's setup, combinatorial
+game theory can be done entirely without the concept of a strategy. For instance, `IGame.zero_le`
+implies that if `0 ≤ x`, then any move by Right satisfies `¬ x ≤ 0`, and `IGame.zero_lf` implies
+that if `¬ x ≤ 0`, then some move by Left satisfies `0 ≤ x`. The strategy is thus already encoded
+within these game relations.
+
+For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, and notation
+`x ≈ y` for `x ≤ y ∧ y ≤ x`.
+
+## Algebraic structures
+
+Most of the usual arithmetic operations can be defined for games. Addition is defined for
+`x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` by `x + y = {s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴵ`. Negation is
+defined by `-{s | t}ᴵ = {-t | -s}ᴵ`.
+
+The order structures interact in the expected way with arithmetic. In particular, `Game` is an
+`OrderedAddCommGroup`. Meanwhile, `IGame` satisfies the slightly weaker axioms of a
+`SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
+-/
+
 universe u
 
 -- This is a false positive due to the provisional duplicated IGame/IGame file path.
