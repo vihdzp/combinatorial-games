@@ -23,8 +23,8 @@ open PGame Set Pointwise
 notion of equality.
 
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
-like {0, 1 | 0} is not *identical* to {1 | 0}, despite being equivalent. However, many theorems can
-be proven over the 'identical' equivalence relation, and the literature may occasionally
+like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
+can be proven over the 'identical' equivalence relation, and the literature may occasionally
 specifically use the 'identical' equivalence relation for this reason.
 
 For the more common game equivalence from literature, see `Game.Basic`. -/
@@ -175,8 +175,7 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
--- TODO: can a macro expert verify this makes sense?
-@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴵ" : term => `(ofSets $s $t)
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
 @[simp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
@@ -664,10 +663,10 @@ instance : AddRightStrictMono IGame where
     rw [Function.swap, Function.swap, add_comm, add_comm z]
     exact add_lt_add_left h x
 
-theorem add_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a + c ≈ b + d :=
+theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
-theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c ≈ b - d :=
+theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
