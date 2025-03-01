@@ -19,6 +19,7 @@ universe u
 
 noncomputable section
 
+-- TODO: remove Temp namespace
 namespace Temp
 
 namespace IGame
@@ -34,10 +35,11 @@ def star : IGame :=
 @[simp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
 
-theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
-theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
+@[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
+@[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
--- TODO: `star_fuzzy_zero` once we define `CompRel`.
+theorem star_fuzzy_zero : ⋆ ‖ 0 := not_compRel_iff.2 ⟨zero_lf_star, star_lf_zero⟩
+theorem zero_fuzzy_star : 0 ‖ ⋆ := not_compRel_iff.2 ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem neg_star : -star = star := by simp [star]
 
@@ -55,43 +57,42 @@ def up : IGame :=
 @[simp]
 theorem up_pos : 0 < ↑ := by
   rw [lt_iff_le_not_le, zero_lf, zero_le]
-  simpa using zero_lf_star
+  simp
 
--- TODO: `star_fuzzy_up` once we define `CompRel`.
+theorem up_fuzzy_star : ↑ ‖ ⋆ := by
+  simp [CompRel]
+  rw [le_iff_forall_lf, le_iff_forall_lf]
+  simpa using up_pos.le
 
-/-- The pre-game `down` -/
-def down : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ ↦ star, fun _ ↦ 0⟩
+theorem star_fuzzy_up : ⋆ ‖ ↑ := by
+  rw [compRel_comm]
+  exact up_fuzzy_star
 
-@[simp]
-theorem down_leftMoves : down.LeftMoves = PUnit :=
-  rfl
+/-- The game `↓ = {{⋆} | {0}}ᴵ`. -/
+def down : IGame :=
+  {{⋆} | {0}}ᴵ
 
-@[simp]
-theorem down_rightMoves : down.RightMoves = PUnit :=
-  rfl
+@[inherit_doc] notation "↓" => down
 
-@[simp]
-theorem down_moveLeft (x) : down.moveLeft x = star :=
-  rfl
+@[simp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
 
-@[simp]
-theorem down_moveRight (x) : down.moveRight x = 0 :=
-  rfl
-
-@[simp]
-theorem down_neg : down < 0 := by
-  rw [lt_iff_le_and_lf, lf_zero]
-  simp [le_zero_lf, star_lf_zero]
+@[simp] theorem neg_down : -↓ = ↑ := by simp [up, down]
+@[simp] theorem neg_up : -↑ = ↓ := by simp [up, down]
 
 @[simp]
-theorem neg_down : -down = up := by simp [up, down]
+theorem down_neg : ↓ < 0 := by
+  rw [← zero_lt_neg, neg_down]
+  exact up_pos
 
-@[simp]
-theorem neg_up : -up = down := by simp [up, down]
-
-theorem star_fuzzy_down : star ‖ down := by
+theorem down_fuzzy_star : ↓ ‖ ⋆ := by
   rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
-  exact star_fuzzy_up
+  exact up_fuzzy_star
 
-end PGame
+theorem star_fuzzy_down : ⋆ ‖ ↓ := by
+  rw [compRel_comm]
+  exact down_fuzzy_star
+
+end IGame
+end Temp
+end

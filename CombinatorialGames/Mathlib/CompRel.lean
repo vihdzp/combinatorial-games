@@ -28,10 +28,10 @@ variable {r : α → α → Prop}
 def CompRel (r : α → α → Prop) (a b : α) : Prop :=
   r a b ∨ r b a
 
-theorem CompRel.of_rel {a b : α} (h : r a b) : CompRel r a b :=
+theorem CompRel.of_rel (h : r a b) : CompRel r a b :=
   Or.inl h
 
-theorem CompRel.of_rel_symm {a b : α} (h : r b a) : CompRel r a b :=
+theorem CompRel.of_rel_symm (h : r b a) : CompRel r a b :=
   Or.inr h
 
 theorem compRel_swap (r : α → α → Prop) : CompRel (swap r) = CompRel r :=
@@ -39,6 +39,9 @@ theorem compRel_swap (r : α → α → Prop) : CompRel (swap r) = CompRel r :=
 
 theorem compRel_swap_apply (r : α → α → Prop) : CompRel (swap r) a b ↔ CompRel r a b :=
   or_comm
+
+theorem not_compRel_iff : ¬ CompRel r a b ↔ ¬ r a b ∧ ¬ r b a :=
+  not_or
 
 @[refl]
 theorem CompRel.refl (r : α → α → Prop) [IsRefl α r] (a : α) : CompRel r a a :=
@@ -55,6 +58,9 @@ theorem CompRel.symm : CompRel r a b → CompRel r b a :=
 
 instance : IsSymm α (CompRel r) where
   symm _ _ := CompRel.symm
+
+theorem compRel_comm : CompRel r a b ↔ CompRel r b a :=
+  Or.comm
 
 instance CompRel.decidableRel [DecidableRel r] : DecidableRel (CompRel r) :=
   fun _ _ ↦ inferInstanceAs (Decidable (_ ∨ _))
@@ -78,6 +84,9 @@ theorem CompRel.of_ge (h : b ≤ a) : CompRel (· ≤ ·) a b := .of_rel_symm h
 alias LE.le.compRel := CompRel.of_le
 alias LE.le.compRel_symm := CompRel.of_ge
 
+theorem not_le_of_not_compRel : ¬ CompRel (· ≤ ·) a b → ¬ a ≤ b := mt CompRel.of_le
+theorem not_ge_of_not_compRel : ¬ CompRel (· ≤ ·) a b → ¬ b ≤ a := mt CompRel.of_ge
+
 end LE
 
 section Preorder
@@ -89,6 +98,9 @@ theorem CompRel.of_gt (h : b < a) : CompRel (· ≤ ·) a b := h.le.compRel_symm
 
 alias LT.lt.compRel := CompRel.of_lt
 alias LT.lt.compRel_symm := CompRel.of_gt
+
+theorem not_lt_of_not_compRel : ¬ CompRel (· ≤ ·) a b → ¬ a < b := mt CompRel.of_lt
+theorem not_gt_of_not_compRel : ¬ CompRel (· ≤ ·) a b → ¬ b < a := mt CompRel.of_gt
 
 theorem not_le_iff_lt_or_not_compRel : ¬ b ≤ a ↔ a < b ∨ ¬ CompRel (· ≤ ·) a b := by
   rw [lt_iff_le_not_le, CompRel]
