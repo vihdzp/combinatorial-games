@@ -110,5 +110,8 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
   | 0 => rfl
   | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
 
+theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+
 end Game
 end
