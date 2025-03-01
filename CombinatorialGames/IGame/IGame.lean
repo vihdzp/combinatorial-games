@@ -86,8 +86,6 @@ theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
 protected theorem Identical.refl (x) : x ≡ x :=
   x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
 
-protected theorem Identical.rfl {x} : x ≡ x := Identical.refl x
-
 @[symm]
 protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
   | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
@@ -99,7 +97,7 @@ protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
 
 /-- `Identical` as a `Setoid`. -/
 def identicalSetoid : Setoid PGame :=
-  ⟨Identical, Identical.refl, Identical.symm, Identical.trans⟩
+  ⟨Identical, .refl, .symm, .trans⟩
 
 /-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
 theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
