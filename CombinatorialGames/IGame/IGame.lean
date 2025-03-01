@@ -286,12 +286,12 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
-theorem ofSets_leftMoves_rightMoves (x : IGame) : ofSets x.leftMoves x.rightMoves = x := by
+theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
   ext <;> simp
 
 @[simp]
 theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
-    ofSets s₁ t₁ = ofSets s₂ t₂ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
   simp [IGame.ext_iff]
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
