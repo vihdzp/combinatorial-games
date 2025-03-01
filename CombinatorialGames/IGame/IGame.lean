@@ -248,7 +248,6 @@ instance : LE IGame where
     (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
     (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
 
--- TODO: can a macro expert verify this makes sense?
 /-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
 If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
