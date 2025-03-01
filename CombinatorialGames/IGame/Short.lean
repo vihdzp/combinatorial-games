@@ -166,12 +166,13 @@ theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) 
 
 @[simp] theorem leftMoves_natCast_succ (n : ℕ) : leftMoves ((n + 1) : ℕ) = 1 := rfl
 @[simp] theorem rightMoves_natCast (n : ℕ) : rightMoves n = 0 := by cases n <;> rfl
-
 @[simp] theorem moveLeft_natCast_succ (n : ℕ) (i : Fin 1) : moveLeft ((n + 1) : ℕ) i = n := rfl
-@[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := by ext <;> simp [eq_comm]
---theorem natCast_def (n : ℕ) : (n : SGame) = mk 1 0 (fun _ ↦ 0) nofun := rfl
 
-#exit
+@[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
+  cases n
+  · simp
+  · ext <;> simp
+    rw [eq_comm, toIGame_natCast]
 
 /-! #### Negation -/
 
@@ -345,12 +346,14 @@ instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
 
 instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
+instance (n : ℕ) : Short n := ⟨SGame.natCast' n, SGame.toIGame_natCast n⟩
 
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
 
 example : (0 : IGame.{0}) < 1 := by decide
 example : (-1 : IGame.{0}) < 0 := by native_decide
+example : (2 : IGame.{0}) < 5 := by native_decide
 
 end Short
 end IGame

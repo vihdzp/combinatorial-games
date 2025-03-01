@@ -674,7 +674,7 @@ theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c �
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
 For that, use `Ordinal.toIGame`. -/
-instance : AddMonoidWithOne IGame where
+noncomputable instance : AddMonoidWithOne IGame where
 
 @[simp 1100] -- This should trigger before `leftMoves_add`.
 theorem leftMoves_natCast_succ : ∀ n : ℕ, leftMoves (n + 1) = {(n : IGame)}
