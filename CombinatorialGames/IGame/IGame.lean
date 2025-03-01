@@ -1,12 +1,72 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios
+Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
-import CombinatorialGames.Game.PGame
+import CombinatorialGames.Mathlib.CompRel
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
+import Mathlib.Order.Antisymmetrization
+import Mathlib.Order.GameAdd
+
+/-!
+# Combinatorial games
+
+The basic theory of combinatorial games, following Conway's book `On Numbers and Games`.
+
+In ZFC, games are built inductively out of two other sets of games, representing the options for two
+players Left and Right. In Lean, we instead define the type of games `IGame` as arising from two
+`Small` sets of games, with notation `{s | t}ᴵ` (see `IGame.ofSets`). A `u`-small type `α : Type v`
+is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
+a given universe closely mimicks the ZFC distinction between sets and proper clases.
+
+This definition requires some amount of setup, which we achieve through an auxiliary type `PGame`.
+This type was historically the foundation for game theory in Lean, but it has now been superceded by
+`IGame`, a quotient of it with the correct notion of equality. See the docstring on `PGame` for more
+information.
+
+We are also interested in further quotients of `IGame`. The quotient of games under equivalence
+`x ≈ y ↔ x ≤ y ∧ y ≤ x`, which in the literature is often what is meant by a "combinatorial game",
+is defined as `Game` in `CombinatorialGames.Game.Basic`. The surreal numbers `Surreal` are defined
+as a quotient (of a subtype) of games in `CombinatorialGames.Surreal.Basic`.
+
+## Conway induction
+
+Most constructions within game theory, and as such, many proofs within it, are done by structural
+induction. Structural induction on games is sometimes called "Conway induction".
+
+The most straightforward way to employ Conway induction is by using the termination checker, with
+the auxiliary `igame_wf` tactic. This uses `solve_by_elim` to search the context for proofs of the
+form `y ∈ x.leftMoves` or `y ∈ x.rightMoves`, which prove termination. Alternatively, you can use
+the explicit recursion principles `IGame.ofSetsRecOn` or `IGame.moveRecOn`.
+
+## Order properties
+
+Pregames have both a `≤` and a `<` relation, satisfying the properties of a `Preorder`. The relation
+`0 < x` means that `x` can always be won by Left, while `0 ≤ x` means that `x` can be won by Left as
+the second player. Likewise, `x < 0` means that `x` can always be won by Right, while `x ≤ 0` means
+that `x` can be won by Right as the second player.
+
+Note that we don't actually prove these characterizations. Indeed, in Conway's setup, combinatorial
+game theory can be done entirely without the concept of a strategy. For instance, `IGame.zero_le`
+implies that if `0 ≤ x`, then any move by Right satisfies `¬ x ≤ 0`, and `IGame.zero_lf` implies
+that if `¬ x ≤ 0`, then some move by Left satisfies `0 ≤ x`. The strategy is thus already encoded
+within these game relations.
+
+For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, and notation
+`x ≈ y` for `x ≤ y ∧ y ≤ x`.
+
+## Algebraic structures
+
+Most of the usual arithmetic operations can be defined for games. Addition is defined for
+`x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` by `x + y = {s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴵ`. Negation is
+defined by `-{s | t}ᴵ = {-t | -s}ᴵ`.
+
+The order structures interact in the expected way with arithmetic. In particular, `Game` is an
+`OrderedAddCommGroup`. Meanwhile, `IGame` satisfies the slightly weaker axioms of a
+`SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
+-/
 
 universe u
 
@@ -15,7 +75,108 @@ set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
 
-open PGame Set Pointwise
+-- TODO: This avoids name clashes with the existing `PGame`.
+-- Remove it when we finish porting!
+namespace Temp
+
+open Set Pointwise
+
+/-! ### Pre-games -/
+
+/-- The type of "pre-games", before we have quotiented by equivalence (`identicalSetoid`).
+
+In ZFC, a combinatorial game is constructed from two sets of combinatorial games that have been
+constructed at an earlier stage. To do this in type theory, we say that a pre-game is built
+inductively from two families of pre-games indexed over any type in `Type u`. The resulting type
+`PGame.{u}` lives in `Type (u + 1)`, reflecting that it is a proper class in ZFC.
+
+This type was historically the foundation for game theory in Lean, but this led to many annoyances.
+Most impactfully, this type has a notion of equality that is too strict: two games `0 = { | }` could
+be distinct (and unprovably so!) if the indexed families of left and right sets were two distinct
+empty types. To get the correct notion of equality, we define `IGame` as the quotient of this type
+by the `Identical` relation, representing extensional equivalence.
+
+This type has thus been relegated to an auxiliary construction for `IGame`. **You should not build
+any substantial theory based on this type.** -/
+inductive PGame : Type (u + 1)
+  | mk : ∀ α β : Type u, (α → PGame) → (β → PGame) → PGame
+compile_inductive% PGame
+
+namespace PGame
+
+/-- The indexing type for allowable moves by Left. -/
+def LeftMoves : PGame → Type u
+  | mk l _ _ _ => l
+
+/-- The indexing type for allowable moves by Right. -/
+def RightMoves : PGame → Type u
+  | mk _ r _ _ => r
+
+/-- The new game after Left makes an allowed move. -/
+def moveLeft : ∀ g : PGame, LeftMoves g → PGame
+  | mk _l _ L _ => L
+
+/-- The new game after Right makes an allowed move. -/
+def moveRight : ∀ g : PGame, RightMoves g → PGame
+  | mk _ _r _ R => R
+
+@[simp] theorem leftMoves_mk {xl xr xL xR} : (mk xl xr xL xR).LeftMoves = xl := rfl
+@[simp] theorem moveLeft_mk {xl xr xL xR} : (mk xl xr xL xR).moveLeft = xL := rfl
+@[simp] theorem rightMoves_mk {xl xr xL xR} : (mk xl xr xL xR).RightMoves = xr := rfl
+@[simp] theorem moveRight_mk {xl xr xL xR} : (mk xl xr xL xR).moveRight = xR := rfl
+
+/-- Two pre-games are identical if their left and right sets are identical. That is, `Identical x y`
+if every left move of `x` is identical to some left move of `y`, every right move of `x` is
+identical to some right move of `y`, and vice versa.
+
+`IGame` is defined as a quotient of `PGame` under this relation. -/
+def Identical : PGame.{u} → PGame.{u} → Prop
+  | mk _ _ xL xR, mk _ _ yL yR =>
+      Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
+      Relator.BiTotal (fun i j ↦ Identical (xR i) (yR j))
+
+@[inherit_doc] scoped infix:50 " ≡ " => PGame.Identical
+
+theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
+    Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
+  | mk .., mk .. => Iff.rfl
+
+@[refl]
+protected theorem Identical.refl (x) : x ≡ x :=
+  x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
+
+@[symm]
+protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
+  | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
+
+@[trans]
+protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
+  | mk .., mk .., mk .., ⟨hL₁, hR₁⟩, ⟨hL₂, hR₂⟩ =>
+    ⟨hL₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hL₂, hR₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hR₂⟩
+
+/-- `Identical` as a `Setoid`. -/
+def identicalSetoid : Setoid PGame :=
+  ⟨Identical, .refl, .symm, .trans⟩
+
+/-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
+theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
+  | mk .., mk .., ⟨hl, _⟩ => hl.1
+
+/-- If `x ≡ y`, then a left move of `y` is identical to some left move of `x`. -/
+theorem Identical.moveLeft_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft j ≡ y.moveLeft i
+  | mk .., mk .., ⟨hl, _⟩ => hl.2
+
+/-- If `x ≡ y`, then a right move of `x` is identical to some right move of `y`. -/
+theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i ≡ y.moveRight j
+  | mk .., mk .., ⟨_, hr⟩ => hr.1
+
+/-- If `x ≡ y`, then a right move of `y` is identical to some right move of `x`. -/
+theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
+  | mk .., mk .., ⟨_, hr⟩ => hr.2
+
+end PGame
+
+/-! ### Game moves -/
 
 /-- Games up to identity.
 
@@ -23,24 +184,23 @@ open PGame Set Pointwise
 notion of equality.
 
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
-like {0, 1 | 0} is not *identical* to {1 | 0}, despite being equivalent. However, many theorems can
-be proven over the 'identical' equivalence relation, and the literature may occasionally
+like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
+can be proven over the 'identical' equivalence relation, and the literature may occasionally
 specifically use the 'identical' equivalence relation for this reason.
 
 For the more common game equivalence from literature, see `Game.Basic`. -/
 def IGame : Type (u + 1) :=
-  Quotient identicalSetoid
+  Quotient PGame.identicalSetoid
 
 namespace IGame
-
-/-! ### Game moves -/
+open scoped PGame
 
 /-- The quotient map from `PGame` into `IGame`. -/
 def mk (x : PGame) : IGame := Quotient.mk _ x
 theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
-alias _root_.PGame.Identical.mk_eq := mk_eq
+alias _root_.Temp.PGame.Identical.mk_eq := mk_eq
 
 @[cases_eliminator]
 theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
@@ -91,7 +251,7 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
   cases x with | H x =>
   cases y with | H y =>
   dsimp at hl hr
-  refine (identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
+  refine (PGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := x.moveLeft) i)
     exact ⟨j, mk_eq_mk.1 hj.symm⟩
   · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := y.moveLeft) i)
@@ -113,8 +273,8 @@ theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOpti
 theorem isOption_wf : WellFounded IsOption := by
   suffices ∀ x, Acc IsOption (mk x) from ⟨ind this⟩
   intro x
-  induction x using PGame.moveRecOn with
-  | IH x hl hr =>
+  induction x with
+  | mk x _ _ _ hl hr =>
     constructor
     rintro ⟨y⟩ (h | h) <;>
     obtain ⟨_, ⟨i, rfl⟩, (hi : _ = Quot.mk _ _)⟩ := h
@@ -132,7 +292,6 @@ def moveRecOn {P : IGame → Sort*} (x)
   isOption_wf.recursion x fun x IH ↦
     H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
 
-@[simp]
 theorem moveRecOn_eq {P : IGame → Sort*} (x)
     (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
     moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
@@ -175,8 +334,7 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
 
--- TODO: can a macro expert verify this makes sense?
-@[inherit_doc ofSets] macro "{" s:term " | " t:term "}ᴵ" : term => `(ofSets $s $t)
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
 @[simp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
@@ -187,12 +345,12 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
 @[simp]
-theorem ofSets_leftMoves_rightMoves (x : IGame) : ofSets x.leftMoves x.rightMoves = x := by
+theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
   ext <;> simp
 
 @[simp]
 theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
-    ofSets s₁ t₁ = ofSets s₂ t₂ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
   simp [IGame.ext_iff]
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
@@ -249,11 +407,10 @@ instance : LE IGame where
     (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
     (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
 
--- TODO: can a macro expert verify this makes sense?
 /-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
 If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
-macro_rules | `($x ⧏ $y) => `(¬$y ≤ $x)
+notation:50 x:50 " ⧏ " y:50 => ¬ y ≤ x
 
 /-- Definition of `x ≤ y` on pre-games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
@@ -343,8 +500,13 @@ instance : Preorder IGame where
   le_refl _ := le_rfl'
   le_trans x y z := le_trans'
 
--- We use `equiv` in theorem names for convenience.
-@[inherit_doc AntisymmRel] infix:50 " ≈ " => AntisymmRel (· ≤ ·)
+/-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
+`AntisymmRel (⬝ ≤ ⬝) x y`. -/
+infix:50 " ≈ " => AntisymmRel (· ≤ ·)
+
+/-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
+`CompRel (⬝ ≤ ⬝) x y`. -/
+notation:50 x:50 " ‖ " y:50 => ¬ CompRel (· ≤ ·) x y
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
@@ -361,9 +523,6 @@ theorem equiv_of_exists {x y : IGame}
     exact Or.inl ⟨j, hj, hj'.ge⟩
   · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
     exact Or.inr ⟨j, hj, hj'.ge⟩
-
--- TODO: define the comparability relation `CompRel r a b = r a b ∨ r b a`, port it to Mathlib,
--- use it to define notation `x ‖ y = ¬ CompRel (· ≤ ·) x y`.
 
 instance : ZeroLEOneClass IGame where
   zero_le_one := by rw [zero_le]; simp
@@ -454,6 +613,10 @@ theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
 
 alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
+@[simp]
+theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
+  simp [CompRel, and_comm]
+
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
 @[simp] theorem neg_lt_zero {x : IGame} : -x < 0 ↔ 0 < x := by simpa using @IGame.neg_lt x 0
@@ -463,6 +626,11 @@ alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
   simpa using @IGame.neg_equiv_neg_iff x 0
 @[simp] theorem zero_equiv_neg {x : IGame} : 0 ≈ -x ↔ 0 ≈ x := by
   simpa using @IGame.neg_equiv_neg_iff 0 x
+
+@[simp] theorem neg_fuzzy_zero {x : IGame} : -x ‖ 0 ↔ x ‖ 0 := by
+  simpa using @IGame.neg_fuzzy_neg_iff x 0
+@[simp] theorem zero_fuzzy_neg {x : IGame} : 0 ‖ -x ↔ 0 ‖ x := by
+  simpa using @IGame.neg_fuzzy_neg_iff 0 x
 
 /-! ### Addition and subtraction -/
 
@@ -664,17 +832,17 @@ instance : AddRightStrictMono IGame where
     rw [Function.swap, Function.swap, add_comm, add_comm z]
     exact add_lt_add_left h x
 
-theorem add_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a + c ≈ b + d :=
+theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
-theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c ≈ b - d :=
+theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
 For that, use `Ordinal.toIGame`. -/
-noncomputable instance : AddMonoidWithOne IGame where
+instance : AddMonoidWithOne IGame where
 
 @[simp 1100] -- This should trigger before `leftMoves_add`.
 theorem leftMoves_natCast_succ : ∀ n : ℕ, leftMoves (n + 1) = {(n : IGame)}
@@ -694,4 +862,5 @@ theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ :
   ext <;> simp
 
 end IGame
+end Temp
 end
