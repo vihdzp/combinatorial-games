@@ -670,5 +670,28 @@ theorem add_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a + c �
 theorem sub_congr {a b c d : IGame} (h₁ : a ≈ b) (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 
+/-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
+
+Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
+For that, use `Ordinal.toIGame`. -/
+instance : AddMonoidWithOne IGame where
+
+@[simp 1100] -- This should trigger before `leftMoves_add`.
+theorem leftMoves_natCast_succ : ∀ n : ℕ, leftMoves (n + 1) = {(n : IGame)}
+  | 0 => by simp
+  | n + 1 => by
+    rw [Nat.cast_succ, leftMoves_add, leftMoves_natCast_succ]
+    simp
+
+@[simp 1100] -- This should trigger before `rightMoves_add`.
+theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
+  | 0 => by simp
+  | n + 1 => by
+    rw [Nat.cast_succ, rightMoves_add, rightMoves_natCast]
+    simp
+
+theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
+  ext <;> simp
+
 end IGame
 end
