@@ -127,13 +127,24 @@ def ofLists (l m : List SGame) : SGame :=
 @[simp] theorem leftMoves_ofLists (l m : List SGame) : (ofLists l m).leftMoves = l.length := rfl
 @[simp] theorem rightMoves_ofLists (l m : List SGame) : (ofLists l m).rightMoves = m.length := rfl
 
-@[simp] theorem moveLeft_ofLists (l m : List SGame) (n : Fin l.length) :
+@[simp]
+theorem moveLeft_ofLists (l m : List SGame) (n : Fin l.length) :
     (ofLists l m).moveLeft n = l[n] :=
   rfl
 
-@[simp] theorem moveRight_ofLists (l m : List SGame) (n : Fin m.length) :
+@[simp]
+theorem moveRight_ofLists (l m : List SGame) (n : Fin m.length) :
     (ofLists l m).moveRight n = m[n] :=
   rfl
+
+instance {α : Type*} (l : List α) : Small {x | x ∈ l} := by
+  have := @Fintype.ofFinite _ (List.finite_toSet l)
+  infer_instance
+
+@[simp]
+theorem toIGame_ofLists (l m : List SGame) :
+    (ofLists l m).toIGame = {toIGame '' {x | x ∈ l} | toIGame '' {x | x ∈ m}}ᴵ := by
+  ext <;> simp [List.exists_mem_iff_getElem, Fin.exists_iff]
 
 /-! #### Natural numbers -/
 
@@ -168,11 +179,16 @@ theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) 
 @[simp] theorem rightMoves_natCast (n : ℕ) : rightMoves n = 0 := by cases n <;> rfl
 @[simp] theorem moveLeft_natCast_succ (n : ℕ) (i : Fin 1) : moveLeft ((n + 1) : ℕ) i = n := rfl
 
-@[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
+@[simp]
+theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
   cases n
   · simp
   · ext <;> simp
     rw [eq_comm, toIGame_natCast]
+
+@[simp]
+theorem toIGame_ofNat (n : ℕ) [n.AtLeastTwo] : toIGame ofNat(n) = n :=
+  toIGame_natCast n
 
 /-! #### Negation -/
 
@@ -321,11 +337,6 @@ class Short (x : IGame.{u}) : Type u where
 namespace Short
 attribute [simp] toIGame_toSGame
 
-/-- Converts a `Short` instance on `x` into a `Short` instance on an equal game `y`. -/
-def cast (x : IGame) [hx : Short x] {y : IGame} (h : x = y) : Short y where
-  toSGame := hx.toSGame
-  toIGame_toSGame := by rwa [toIGame_toSGame]
-
 @[simp]
 theorem toSGame_le_iff {x y : IGame} [Short x] [Short y] : toSGame x ≤ toSGame y ↔ x ≤ y := by
   change (toSGame x).toIGame ≤ (toSGame y).toIGame ↔ x ≤ y
@@ -346,14 +357,23 @@ instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
 
 instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
-instance (n : ℕ) : Short n := ⟨SGame.natCast' n, SGame.toIGame_natCast n⟩
+
+-- TODO: these instances should not require this weird hack to be computable.
+noncomputable def hack (n : ℕ) : IGame := n
+instance (n : ℕ) : Short (hack n) := ⟨n, SGame.toIGame_natCast n⟩
+instance (n : ℕ) : Short n := inferInstanceAs (Short (hack n))
+instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanceAs (Short (hack n))
 
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
 
-example : (0 : IGame.{0}) < 1 := by decide
-example : (-1 : IGame.{0}) < 0 := by native_decide
-example : (2 : IGame.{0}) < 5 := by native_decide
+example : Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
+  toSGame := .ofLists [0, 2, 5] [3, -1, 7]
+  toIGame_toSGame := by aesop
+
+example : (0 : IGame) < 1 := by decide
+example : (-1 : IGame) < 0 := by native_decide
+example : (2 : IGame) < (5 : IGame) := show hack 2 < hack 5 by native_decide
 
 end Short
 end IGame
