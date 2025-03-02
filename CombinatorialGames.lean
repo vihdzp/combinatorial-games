@@ -11,7 +11,6 @@ import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
-import CombinatorialGames.Game.State
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.IGame.IGame
 import CombinatorialGames.IGame.Special
