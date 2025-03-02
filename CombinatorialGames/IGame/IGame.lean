@@ -924,23 +924,19 @@ theorem rightMoves_mul (x y : IGame) :
   rw [mul_eq, rightMoves_ofSets]
 
 theorem mulOption_left_left_mem_leftMoves_mul {x y a b : IGame}
-    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.leftMoves) :
-    mulOption x y a b ∈ (x * y).leftMoves := by
+    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.leftMoves) : mulOption x y a b ∈ (x * y).leftMoves := by
   rw [leftMoves_mul]; use (a, b); simp_all
 
 theorem mulOption_right_right_mem_leftMoves_mul {x y a b : IGame}
-    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.rightMoves) :
-    mulOption x y a b ∈ (x * y).leftMoves := by
+    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.rightMoves) : mulOption x y a b ∈ (x * y).leftMoves := by
   rw [leftMoves_mul]; use (a, b); simp_all
 
 theorem mulOption_left_right_mem_rightMoves_mul {x y a b : IGame}
-    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.rightMoves) :
-    mulOption x y a b ∈ (x * y).rightMoves := by
+    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.rightMoves) : mulOption x y a b ∈ (x * y).rightMoves := by
   rw [rightMoves_mul]; use (a, b); simp_all
 
 theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
-    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.leftMoves) :
-    mulOption x y a b ∈ (x * y).rightMoves := by
+    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.leftMoves) : mulOption x y a b ∈ (x * y).rightMoves := by
   rw [rightMoves_mul]; use (a, b); simp_all
 
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
