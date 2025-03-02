@@ -301,9 +301,11 @@ theorem moveRecOn_eq {P : IGame → Sort*} (x)
 def Subposition : IGame → IGame → Prop :=
   Relation.TransGen IsOption
 
+@[aesop unsafe apply 50%]
 theorem Subposition.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subposition x y :=
   Relation.TransGen.single (.of_mem_leftMoves h)
 
+@[aesop unsafe apply 50%]
 theorem Subposition.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subposition x y :=
   Relation.TransGen.single (.of_mem_rightMoves h)
 
@@ -661,12 +663,12 @@ theorem ofSets_add_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small 
 @[simp]
 theorem leftMoves_add (x y : IGame) :
     (x + y).leftMoves = (· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves := by
-  rw [add_eq]; simp
+  rw [add_eq, leftMoves_ofSets]
 
 @[simp]
 theorem rightMoves_add (x y : IGame) :
     (x + y).rightMoves = (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves := by
-  rw [add_eq]; simp
+  rw [add_eq, rightMoves_ofSets]
 
 theorem add_left_mem_leftMoves_add {x y : IGame} (h : x ∈ y.leftMoves) (z : IGame) :
     z + x ∈ (z + y).leftMoves := by
@@ -683,6 +685,16 @@ theorem add_left_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z : 
 theorem add_right_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z : IGame) :
     x + z ∈ (y + z).rightMoves := by
   rw [rightMoves_add]; left; use x
+
+theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
+  obtain (h | h) := h
+  · exact .of_mem_leftMoves (add_left_mem_leftMoves_add h z)
+  · exact .of_mem_rightMoves (add_left_mem_rightMoves_add h z)
+
+theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
+  obtain (h | h) := h
+  · exact .of_mem_leftMoves (add_right_mem_leftMoves_add h z)
+  · exact .of_mem_rightMoves (add_right_mem_rightMoves_add h z)
 
 instance : AddZeroClass IGame := by
   constructor <;>
@@ -860,6 +872,90 @@ theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
 
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
   ext <;> simp
+
+/-! ### Multiplication
+
+Although we define multiplication here, its properties are much more tedious to verify without
+passing to the quotient `Game`, so we build the rest of the API in
+`CombinatorialGames.Game.Basic`. -/
+
+-- TODO: upstream
+attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
+
+def mul' (x y : IGame) : IGame :=
+  {(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
+      mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
+  (range fun a : (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves :) ↦
+    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}ᴵ
+termination_by (x, y)
+decreasing_by all_goals aesop
+
+/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
+`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`. -/
+instance : Mul IGame where
+  mul := mul'
+
+/-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
+`x` and `y`, respectively. -/
+def mulOption (x y a b : IGame) : IGame :=
+  a * y + x * b - a * b
+
+theorem mul_eq (x y : IGame) : x * y =
+    {(fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) |
+    (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves)}ᴵ := by
+  change mul' _ _ = _
+  rw [mul']
+  simp [mulOption, HMul.hMul, Mul.mul, Set.ext_iff]
+
+theorem ofSets_mul_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
+    {s₁ | t₁}ᴵ * {s₂ | t₂}ᴵ =
+      {(fun a ↦ mulOption {s₁ | t₁}ᴵ {s₂ | t₂}ᴵ a.1 a.2) '' (s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂) |
+      (fun a ↦ mulOption {s₁ | t₁}ᴵ {s₂ | t₂}ᴵ a.1 a.2) '' (s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂)}ᴵ := by
+  rw [mul_eq]
+  simp
+
+@[simp]
+theorem leftMoves_mul (x y : IGame) :
+    (x * y).leftMoves = (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
+  rw [mul_eq, leftMoves_ofSets]
+
+@[simp]
+theorem rightMoves_mul (x y : IGame) :
+    (x * y).rightMoves = (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves) := by
+  rw [mul_eq, rightMoves_ofSets]
+
+theorem mulOption_left_left_mem_leftMoves_mul {x y a b : IGame}
+    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.leftMoves) :
+    mulOption x y a b ∈ (x * y).leftMoves := by
+  rw [leftMoves_mul]; use (a, b); simp_all
+
+theorem mulOption_right_right_mem_leftMoves_mul {x y a b : IGame}
+    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.rightMoves) :
+    mulOption x y a b ∈ (x * y).leftMoves := by
+  rw [leftMoves_mul]; use (a, b); simp_all
+
+theorem mulOption_left_right_mem_rightMoves_mul {x y a b : IGame}
+    (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.rightMoves) :
+    mulOption x y a b ∈ (x * y).rightMoves := by
+  rw [rightMoves_mul]; use (a, b); simp_all
+
+theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
+    (h₁ : a ∈ x.rightMoves) (h₂ : b ∈ y.leftMoves) :
+    mulOption x y a b ∈ (x * y).rightMoves := by
+  rw [rightMoves_mul]; use (a, b); simp_all
+
+theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
+    IsOption (mulOption x y a b) (x * y) := by
+  obtain (h₁ | h₁) := h₁ <;> obtain (h₂ | h₂) := h₂
+  · exact .of_mem_leftMoves (mulOption_left_left_mem_leftMoves_mul h₁ h₂)
+  · exact .of_mem_rightMoves (mulOption_left_right_mem_rightMoves_mul h₁ h₂)
+  · exact .of_mem_rightMoves (mulOption_right_left_mem_rightMoves_mul h₁ h₂)
+  · exact .of_mem_leftMoves (mulOption_right_right_mem_leftMoves_mul h₁ h₂)
 
 end IGame
 end Temp
