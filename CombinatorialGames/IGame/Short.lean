@@ -106,7 +106,7 @@ theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
   rw [IGame.le_iff_forall_lf]
   simp
 
-@[semireducible] -- This aids in, but doesn't completely fix reducibility issues.
+@[semireducible] -- This aids, but doesn't completely fix reducibility issues.
 private def decidableLE' {x y : SGame} : Decidable (x.toIGame ≤ y.toIGame) :=
   letI (m) : Decidable (toIGame y ≤ toIGame (x.moveLeft m)) := decidableLE'
   letI (n) : Decidable (toIGame (y.moveRight n) ≤ toIGame x) := decidableLE'
@@ -379,5 +379,13 @@ example : (-1 : IGame) < 0 := by native_decide
 --example : (2 : IGame) < (5 : IGame) := by native_decide
 
 end Short
+
+-- TODO: add some actual theorems
+
+proof_wanted exists_nat_lt_of_short (x : IGame) [Short x] : ∃ n : ℕ, x < n
+
+proof_wanted short_iff_finite_subposition (x : IGame) :
+    Nonempty (Short x) ↔ Set.Finite {y | Subposition y x}
+
 end IGame
 end Temp
