@@ -19,10 +19,10 @@ In ZFC, games are built inductively out of two other sets of games, representing
 players Left and Right. In Lean, we instead define the type of games `IGame` as arising from two
 `Small` sets of games, with notation `{s | t}ᴵ` (see `IGame.ofSets`). A `u`-small type `α : Type v`
 is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
-a given universe closely mimicks the ZFC distinction between sets and proper clases.
+a given universe closely mimics the ZFC distinction between sets and proper classes.
 
 This definition requires some amount of setup, which we achieve through an auxiliary type `PGame`.
-This type was historically the foundation for game theory in Lean, but it has now been superceded by
+This type was historically the foundation for game theory in Lean, but it has now been superseded by
 `IGame`, a quotient of it with the correct notion of equality. See the docstring on `PGame` for more
 information.
 
@@ -327,7 +327,7 @@ macro "igame_wf" : tactic =>
 This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
 notation, and from the analogous constructor on `Game`.
 
-This function is regretably noncomputable. Among other issues, sets simply do not carry data in
+This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we instead depend on another auxiliary type, see
 `IGame.Short` for more information. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
