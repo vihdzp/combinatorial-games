@@ -93,7 +93,7 @@ theorem star_fuzzy_down : ⋆ ‖ ↓ := by
   rw [compRel_comm]
   exact down_fuzzy_star
 
-/-! ## Tiny and Miny -/
+/-! #### Tiny and miny -/
 
 /-- A tiny game `⧾x` is defined as `{0 | {0 | -x}}`, and is amongst the smallest of the
 infinitesimals. -/
@@ -133,7 +133,7 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted exists_tiny_lt_of_pos (x : IGame) (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+proof_wanted exists_tiny_lt_of_pos {x : IGame} (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
 end Temp
