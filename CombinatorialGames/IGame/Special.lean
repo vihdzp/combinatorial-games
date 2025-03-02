@@ -93,7 +93,7 @@ theorem star_fuzzy_down : ⋆ ‖ ↓ := by
   rw [compRel_comm]
   exact down_fuzzy_star
 
-/-! #### Tiny and miny -/
+/-! ### Tiny and miny -/
 
 /-- A tiny game `⧾x` is defined as `{0 | {0 | -x}}`, and is amongst the smallest of the
 infinitesimals. -/
