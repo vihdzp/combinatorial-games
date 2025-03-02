@@ -368,9 +368,21 @@ noncomputable instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanc
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
 
+end Short
+
+-- TODO: add some actual theorems
+
+proof_wanted exists_lt_natCast_of_short (x : IGame) [Short x] : ∃ n : ℕ, x < n
+proof_wanted exists_neg_natCast_lt_of_short (x : IGame) [Short x] : ∃ n : ℕ, -n < x
+
+proof_wanted short_iff_finite_subposition (x : IGame) :
+    Nonempty (Short x) ↔ Set.Finite {y | Subposition y x}
+
+end IGame
+
 -- Some examples:
 
-example : Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
+example : IGame.Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
   toSGame := .ofLists [0, 2, 5] [3, -1, 7]
   toIGame_toSGame := by aesop
 
@@ -378,14 +390,4 @@ example : (0 : IGame) < 1 := by decide
 example : (-1 : IGame) < 0 := by native_decide
 --example : (2 : IGame) < (5 : IGame) := by native_decide
 
-end Short
-
--- TODO: add some actual theorems
-
-proof_wanted exists_nat_lt_of_short (x : IGame) [Short x] : ∃ n : ℕ, x < n
-
-proof_wanted short_iff_finite_subposition (x : IGame) :
-    Nonempty (Short x) ↔ Set.Finite {y | Subposition y x}
-
-end IGame
 end Temp
