@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
 import CombinatorialGames.IGame.IGame
+import CombinatorialGames.IGame.Short
 
 /-!
 # Special games
@@ -133,7 +134,7 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted exists_tiny_lt_of_pos {x : IGame} (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
 end Temp
