@@ -388,6 +388,7 @@ example : IGame.Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
 
 example : (0 : IGame) < 1 := by decide
 example : (-1 : IGame) < 0 := by native_decide
+example : (0 : IGame) < 1 + 1 := by native_decide
 --example : (2 : IGame) < (5 : IGame) := by native_decide
 
 end Temp
