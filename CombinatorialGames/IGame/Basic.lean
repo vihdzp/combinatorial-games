@@ -129,14 +129,6 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 
-theorem mk_eq_of_exists {x y : IGame}
-    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  mk a = mk b)
-    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, mk a = mk b)
-    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  mk a = mk b)
-    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, mk a = mk b) : mk x = mk y := by
-  simp_rw [Game.mk_eq_mk] at *
-  exact equiv_of_exists hl₁ hr₁ hl₂ hr₂
-
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq (x * y), mul_eq]
   simp only [leftMoves_add, rightMoves_add, leftMoves_mul, rightMoves_mul, prod_union,
