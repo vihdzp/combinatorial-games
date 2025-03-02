@@ -973,7 +973,7 @@ instance : CommMagma IGame where
 private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
   ext
   all_goals
-  · simp only [leftMoves_mul, leftMoves_neg,  rightMoves_mul, rightMoves_neg,
+  · simp only [leftMoves_mul, leftMoves_neg, rightMoves_mul, rightMoves_neg,
       mem_image, mem_union, mem_prod, mem_neg, Prod.exists]
     rw [← (Equiv.neg _).exists_congr_right]
     simp only [Equiv.neg_apply, neg_neg, and_comm, mulOption, or_comm]
@@ -993,7 +993,7 @@ instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
   mul_neg := mul_neg'
 
-/-! Distributivity and associativity only hold up to equivalence, we prove this in
+/-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/
 
 end IGame
