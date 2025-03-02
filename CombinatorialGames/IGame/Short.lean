@@ -78,6 +78,8 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
+/-! ### Decidability instances -/
+
 /-- (Noncomputably) converts an `SGame` into an `IGame`. -/
 noncomputable def toIGame (x : SGame.{u}) : IGame.{u} :=
   {.range fun m ↦ toIGame (x.moveLeft m) | .range fun n ↦ toIGame (x.moveRight n)}ᴵ
@@ -106,6 +108,14 @@ theorem toIGame_le_iff {x y : SGame} : toIGame x ≤ toIGame y ↔
   rw [IGame.le_iff_forall_lf]
   simp
 
+theorem toIGame_eq_iff {x y : SGame} : toIGame x = toIGame y ↔
+    (∀ m, ∃ n, toIGame (x.moveLeft m) = toIGame (y.moveLeft n)) ∧
+    (∀ n, ∃ m, toIGame (x.moveLeft m) = toIGame (y.moveLeft n)) ∧
+    (∀ m, ∃ n, toIGame (x.moveRight m) = toIGame (y.moveRight n)) ∧
+    (∀ n, ∃ m, toIGame (x.moveRight m) = toIGame (y.moveRight n)) := by
+  rw [IGame.ext_iff]
+  simp [subset_antisymm_iff, Set.subset_def, and_assoc, eq_comm]
+
 @[semireducible] -- This aids, but doesn't completely fix reducibility issues.
 private def decidableLE' {x y : SGame} : Decidable (x.toIGame ≤ y.toIGame) :=
   letI (m) : Decidable (toIGame y ≤ toIGame (x.moveLeft m)) := decidableLE'
@@ -118,6 +128,16 @@ decreasing_by
 
 instance : DecidableLE SGame := @decidableLE'
 instance : DecidableLT SGame := decidableLTOfDecidableLE
+
+@[semireducible] -- This aids, but doesn't completely fix reducibility issues.
+private def decidableEQ' {x y : SGame} : Decidable (x.toIGame = y.toIGame) :=
+  letI (m n) : Decidable (toIGame (x.moveLeft m) = toIGame (y.moveLeft n)) := decidableEQ'
+  letI (m n) : Decidable (toIGame (x.moveRight m) = toIGame (y.moveRight n)) := decidableEQ'
+  decidable_of_iff' _ toIGame_eq_iff
+termination_by (x, y)
+decreasing_by sgame_wf
+
+instance (x y : SGame) : Decidable (toIGame x = toIGame y) := decidableEQ'
 
 /-! ### Basic games -/
 
@@ -332,7 +352,16 @@ to `Fin n`, alongside a proof that this term, casted in the obvious way to `IGam
 game in question. All computations can then go through `SGame`.
 
 Unfortunately, well-founded recursion and reducibility don't mix very well in Lean. As such, we must
-often rely on `native_decide` to make use of this typeclass for computation. -/
+often rely on `native_decide` to make use of this typeclass for computation.
+
+A prototypical instance looks something like this:
+
+```
+example : IGame.Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
+  toSGame := .ofLists [0, 2, 5] [3, -1, 7]
+  toIGame_toSGame := by aesop
+```
+-/
 class Short (x : IGame.{u}) : Type u where
   toSGame : SGame.{u}
   toIGame_toSGame : toSGame.toIGame = x
@@ -358,6 +387,9 @@ instance (x y : IGame) [Short x] [Short y] : Decidable (x < y) :=
 instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
   inferInstanceAs (Decidable (_ ∧ _))
 
+instance (x y : IGame) [Short x] [Short y] : Decidable (x = y) :=
+  decidable_of_iff ((toSGame x).toIGame = (toSGame y).toIGame) (by simp)
+
 instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
 
@@ -380,15 +412,14 @@ proof_wanted short_iff_finite_subposition (x : IGame) :
 
 end IGame
 
--- Some examples:
-
-example : IGame.Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
-  toSGame := .ofLists [0, 2, 5] [3, -1, 7]
-  toIGame_toSGame := by aesop
+section Test
 
 example : (0 : IGame) < 1 := by decide
 example : (-1 : IGame) < 0 := by native_decide
 example : (0 : IGame) < 1 + 1 := by native_decide
+example : (-1 : IGame) + 1 ≠ 0 := by native_decide
 --example : (2 : IGame) < (5 : IGame) := by native_decide
+
+end Test
 
 end Temp
