@@ -816,10 +816,8 @@ instance : AddLeftReflectLE IGame where
     rw [← add_assoc]
     exact add_le_add_right (neg_add_equiv x).le z
 
-instance : AddRightReflectLE IGame where
-  elim x y z h := by
-    rw [Function.swap, Function.swap, add_comm, add_comm z] at h
-    exact le_of_add_le_add_left h
+instance : AddRightReflectLE IGame :=
+  addRightReflectLE_of_addLeftReflectLE _
 
 instance : AddLeftStrictMono IGame where
   elim x y z h := by
@@ -827,10 +825,16 @@ instance : AddLeftStrictMono IGame where
     contrapose! h
     exact (le_of_add_le_add_left h).not_lt
 
-instance : AddRightStrictMono IGame where
+instance : AddRightStrictMono IGame :=
+  addRightStrictMono_of_addLeftStrictMono _
+
+-- TODO: [AddLeftMono α] [AddLeftReflectLE α] → AddLeftReflectLT α
+instance : AddLeftReflectLT IGame where
   elim x y z h := by
-    rw [Function.swap, Function.swap, add_comm, add_comm z]
-    exact add_lt_add_left h x
+    rwa [lt_iff_le_not_le, add_le_add_iff_left, add_le_add_iff_left, ← lt_iff_le_not_le] at h
+
+instance : AddRightReflectLT IGame :=
+  addRightReflectLT_of_addLeftReflectLT _
 
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
