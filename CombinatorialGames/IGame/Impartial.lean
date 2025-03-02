@@ -138,6 +138,9 @@ theorem equiv_iff_add_equiv_zero' (y : IGame) : x ≈ y ↔ x + y ≈ 0 := by
 
 variable {x y}
 
+-- TODO: We should be using `IncompRel` instead of `CompRel`.
+-- TODO: These theorems should not be specific to `0`.
+
 @[simp]
 theorem compRel_zero_iff : CompRel (· ≤ ·) x 0 ↔ x ≈ 0 :=
   ⟨not_imp_not.1 (equiv_or_fuzzy_zero x).resolve_left, AntisymmRel.compRel⟩
