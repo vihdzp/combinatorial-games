@@ -125,44 +125,24 @@ theorem mk_eq_of_exists {x y : IGame}
   simp_rw [Game.mk_eq_mk] at *
   exact equiv_of_exists hl₁ hr₁ hl₂ hr₂
 
-set_option maxHeartbeats 1000000 in
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
-  conv_rhs =>
-    rw [← mk_add, add_eq, mk_ofSets]
-    simp only [leftMoves_mul, rightMoves_mul, image_union, image_image, mk_add]
-  rw [mul_eq, mk_ofSets]
-  congr
+  rw [← mk_add, add_eq (x * y), mul_eq]
+  simp only [leftMoves_add, rightMoves_add, leftMoves_mul, rightMoves_mul, prod_union,
+    union_assoc, image_union, image_image, mk_ofSets]
+  congr 1
   all_goals
-    ext
-    simp only [leftMoves_add, rightMoves_add, prod_union, mem_image, mem_union, mem_prod,
-      or_assoc, Prod.exists]
-    constructor
-    · rintro ⟨a, ⟨⟨b, _, ⟨(⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩),
-        rfl⟩⟩, rfl⟩⟩
-      on_goal 1 => left
-      on_goal 2 => right; right; left
-      on_goal 3 => right; left
-      on_goal 4 => right; right; right
-      all_goals
-        use b, c, ⟨hb, hc⟩
-        simp only [mulOption, mk_add, mk_sub]
-        rw [mk_mul_add, mk_mul_add, mk_mul_add]
-        abel
-    · rintro (⟨a, b, ⟨ha, hb⟩, rfl⟩ | ⟨a, b, ⟨ha, hb⟩, rfl⟩ |
-        ⟨a, b, ⟨ha, hb⟩, rfl⟩ | ⟨a, b, ⟨ha, hb⟩, rfl⟩)
-      on_goal 1 => refine ⟨_, ⟨a, b + z, .inl ?_, rfl⟩, ?_⟩
-      on_goal 3 => refine ⟨_, ⟨a, b + z, .inr <| .inr <| .inl ?_, rfl⟩, ?_⟩
-      on_goal 5 => refine ⟨_, ⟨a, y + b, .inr <| .inl ?_, rfl⟩, ?_⟩
-      on_goal 7 => refine ⟨_, ⟨a, y + b, .inr <| .inr <| .inr ?_, rfl⟩, ?_⟩
-      all_goals
-        first | exact ⟨ha, b, hb, rfl⟩ |
-        simp only [mulOption, mk_add, mk_sub]
-        rw [mk_mul_add, mk_mul_add, mk_mul_add]
-        abel
+    nth_rewrite 2 [union_left_comm]
+    congr
+    all_goals
+      ext
+      simp only [mulOption, mk_sub, mk_add, mem_image, mem_prod, and_assoc, Prod.exists,
+        exists_and_left, exists_exists_and_eq_and]
+      iterate 2 (congr! 2; rw [and_congr_right_iff]; intro _)
+      congr! 1
+      rw [mk_mul_add, mk_mul_add, mk_mul_add]
+      abel
 termination_by (x, y, z)
 decreasing_by igame_wf
-
-
 
 end Game
 end Temp
