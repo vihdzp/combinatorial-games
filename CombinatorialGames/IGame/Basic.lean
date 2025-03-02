@@ -217,3 +217,4 @@ theorem mul_assoc_equiv (x y z : IGame) : x * y * z ≈ x * (y * z) :=
 
 end IGame
 end Temp
+end
