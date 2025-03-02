@@ -95,6 +95,7 @@ theorem toIGame_inj {a b : Ordinal} : toIGame a = toIGame b ↔ a = b := by simp
 theorem not_toIGame_fuzzy (a b : Ordinal) : ¬ toIGame a ‖ toIGame b := by
   simpa [CompRel] using le_of_lt
 
+@[simp]
 theorem toIGame_nonneg (a : Ordinal) : 0 ≤ a.toIGame := by
   simpa using toIGame_le_iff.2 (Ordinal.zero_le a)
 
@@ -115,8 +116,13 @@ theorem toGame_le_iff {a b : Ordinal} : toGame a ≤ toGame b ↔ a ≤ b := by 
 theorem toGame_lt_iff {a b : Ordinal} : toGame a < toGame b ↔ a < b := by simp
 theorem toGame_inj {a b : Ordinal} : toGame a = toGame b ↔ a = b := by simp
 
-theorem not_toGame_fuzzy (a b : Ordinal) : ¬ toGame a ‖ toGame b := not_toIGame_fuzzy a b
-theorem toGame_nonneg (a : Ordinal) : 0 ≤ a.toGame := toIGame_nonneg a
+@[simp]
+theorem not_toGame_fuzzy (a b : Ordinal) : ¬ toGame a ‖ toGame b :=
+  not_toIGame_fuzzy a b
+
+@[simp]
+theorem toGame_nonneg (a : Ordinal) : 0 ≤ a.toGame :=
+  toIGame_nonneg a
 
 /-- The natural addition of ordinals corresponds to their sum as games. -/
 theorem toIGame_nadd (a b : Ordinal) : (a ♯ b).toIGame ≈ a.toIGame + b.toIGame := by
