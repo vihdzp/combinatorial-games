@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.IGame
+import Mathlib.Tactic.Abel
 
 universe u
 
@@ -115,6 +116,53 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+
+theorem mk_eq_of_exists {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  mk a = mk b)
+    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, mk a = mk b)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  mk a = mk b)
+    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, mk a = mk b) : mk x = mk y := by
+  simp_rw [Game.mk_eq_mk] at *
+  exact equiv_of_exists hl₁ hr₁ hl₂ hr₂
+
+set_option maxHeartbeats 1000000 in
+theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
+  conv_rhs =>
+    rw [← mk_add, add_eq, mk_ofSets]
+    simp only [leftMoves_mul, rightMoves_mul, image_union, image_image, mk_add]
+  rw [mul_eq, mk_ofSets]
+  congr
+  all_goals
+    ext
+    simp only [leftMoves_add, rightMoves_add, prod_union, mem_image, mem_union, mem_prod,
+      or_assoc, Prod.exists]
+    constructor
+    · rintro ⟨a, ⟨⟨b, _, ⟨(⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩ | ⟨hb, c, hc, rfl⟩),
+        rfl⟩⟩, rfl⟩⟩
+      on_goal 1 => left
+      on_goal 2 => right; right; left
+      on_goal 3 => right; left
+      on_goal 4 => right; right; right
+      all_goals
+        use b, c, ⟨hb, hc⟩
+        simp only [mulOption, mk_add, mk_sub]
+        rw [mk_mul_add, mk_mul_add, mk_mul_add]
+        abel
+    · rintro (⟨a, b, ⟨ha, hb⟩, rfl⟩ | ⟨a, b, ⟨ha, hb⟩, rfl⟩ |
+        ⟨a, b, ⟨ha, hb⟩, rfl⟩ | ⟨a, b, ⟨ha, hb⟩, rfl⟩)
+      on_goal 1 => refine ⟨_, ⟨a, b + z, .inl ?_, rfl⟩, ?_⟩
+      on_goal 3 => refine ⟨_, ⟨a, b + z, .inr <| .inr <| .inl ?_, rfl⟩, ?_⟩
+      on_goal 5 => refine ⟨_, ⟨a, y + b, .inr <| .inl ?_, rfl⟩, ?_⟩
+      on_goal 7 => refine ⟨_, ⟨a, y + b, .inr <| .inr <| .inr ?_, rfl⟩, ?_⟩
+      all_goals
+        first | exact ⟨ha, b, hb, rfl⟩ |
+        simp only [mulOption, mk_add, mk_sub]
+        rw [mk_mul_add, mk_mul_add, mk_mul_add]
+        abel
+termination_by (x, y, z)
+decreasing_by igame_wf
+
+
 
 end Game
 end Temp

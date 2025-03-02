@@ -687,21 +687,15 @@ theorem add_right_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z :
   rw [rightMoves_add]; left; use x
 
 theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
-  obtain (h | h) := h
-  · exact .of_mem_leftMoves (add_left_mem_leftMoves_add h z)
-  · exact .of_mem_rightMoves (add_left_mem_rightMoves_add h z)
+  aesop (add simp [IsOption])
 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
-  obtain (h | h) := h
-  · exact .of_mem_leftMoves (add_right_mem_leftMoves_add h z)
-  · exact .of_mem_rightMoves (add_right_mem_rightMoves_add h z)
+  aesop (add simp [IsOption])
 
 instance : AddZeroClass IGame := by
   constructor <;>
-  · intro x
-    induction x using ofSetsRecOn with | H s t IHl IHr =>
-    rw [add_eq]
-    simp_all
+  · refine (moveRecOn · fun _ _ _ ↦ ?_)
+    aesop
 
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
@@ -873,11 +867,7 @@ theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
   ext <;> simp
 
-/-! ### Multiplication
-
-Although we define multiplication here, its properties are much more tedious to verify without
-passing to the quotient `Game`, so we build the rest of the API in
-`CombinatorialGames.Game.Basic`. -/
+/-! ### Multiplication -/
 
 -- TODO: upstream
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
@@ -892,12 +882,16 @@ decreasing_by all_goals aesop
 
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
-and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`. -/
+and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
+
+Using `IGame.mulOption`, this can alternatively be written as
+`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
 instance : Mul IGame where
   mul := mul'
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
+@[pp_nodot]
 def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
@@ -951,11 +945,57 @@ theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
 
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
     IsOption (mulOption x y a b) (x * y) := by
-  obtain (h₁ | h₁) := h₁ <;> obtain (h₂ | h₂) := h₂
-  · exact .of_mem_leftMoves (mulOption_left_left_mem_leftMoves_mul h₁ h₂)
-  · exact .of_mem_rightMoves (mulOption_left_right_mem_rightMoves_mul h₁ h₂)
-  · exact .of_mem_rightMoves (mulOption_right_left_mem_rightMoves_mul h₁ h₂)
-  · exact .of_mem_leftMoves (mulOption_right_right_mem_leftMoves_mul h₁ h₂)
+  aesop (add simp [IsOption])
+
+instance : MulZeroClass IGame := by
+  constructor <;>
+  · refine (moveRecOn · fun _ _ _ ↦ ?_)
+    aesop
+
+instance : MulOneClass IGame := by
+  constructor <;>
+  · refine (moveRecOn · fun _ _ _ ↦ ?_)
+    aesop (add simp [mulOption])
+
+private theorem mul_comm' (x y : IGame) : x * y = y * x := by
+  ext
+  all_goals
+    simp only [leftMoves_mul, rightMoves_mul, mem_image, mem_prod, mem_union, Prod.exists,
+      and_comm, or_comm]
+    rw [exists_comm]
+    congr! 4
+    rename_i b a
+    rw [and_congr_left_iff]
+    rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
+      rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]
+termination_by (x, y)
+decreasing_by igame_wf
+
+instance : CommMagma IGame where
+  mul_comm := mul_comm'
+
+private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
+  ext
+  all_goals
+  · simp only [leftMoves_mul, leftMoves_neg,  rightMoves_mul, rightMoves_neg,
+      mem_image, mem_union, mem_prod, mem_neg, Prod.exists]
+    rw [← (Equiv.neg _).exists_congr_right]
+    simp only [Equiv.neg_apply, neg_neg, and_comm, mulOption, or_comm]
+    congr! 4
+    rw [and_congr_left_iff]
+    rintro (⟨_, _⟩ | ⟨_, _⟩)
+    all_goals
+      rw [← neg_inj, neg_mul', neg_mul', neg_mul']
+      simp [sub_eq_add_neg, add_comm]
+termination_by (x, y)
+decreasing_by igame_wf
+
+private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
+  rw [mul_comm, neg_mul', mul_comm]
+
+instance : HasDistribNeg IGame where
+  neg_mul := neg_mul'
+  mul_neg := mul_neg'
 
 end IGame
 end Temp
