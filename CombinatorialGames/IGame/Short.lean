@@ -368,6 +368,8 @@ noncomputable instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanc
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
 
+-- Some examples:
+
 example : Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
   toSGame := .ofLists [0, 2, 5] [3, -1, 7]
   toIGame_toSGame := by aesop
