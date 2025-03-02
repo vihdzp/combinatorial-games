@@ -60,13 +60,13 @@ private theorem rightMoves_toIGame' (o : Ordinal) : o.toIGame'.rightMoves = ∅ 
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
-  refine fun a b h ↦ lt_of_le_not_le ?_ (lf_of_le_leftMove le_rfl ?_)
+  refine fun a b h ↦ lt_of_le_not_le ?_ (leftMove_lf ?_)
   · rw [le_iff_forall_lf]
     simpa [leftMoves_toIGame', rightMoves_toIGame'] using
       fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_le
   · rw [leftMoves_toIGame']
     exact ⟨a, h, rfl⟩
-termination_by a b => (a, b)
+termination_by a => a
 
 /-- The canonical map from `Ordinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
 def toIGame : Ordinal.{u} ↪o IGame.{u} :=
