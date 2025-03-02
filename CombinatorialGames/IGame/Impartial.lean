@@ -23,164 +23,153 @@ namespace Temp
 
 namespace IGame
 
-private def ImpartialAux (G : IGame) : Prop :=
-  G ≈ -G ∧ (∀ i ∈ G.leftMoves, ImpartialAux i) ∧ (∀ j ∈ G.rightMoves, ImpartialAux j)
-termination_by G
+private def ImpartialAux (x : IGame) : Prop :=
+  x ≈ -x ∧ (∀ i ∈ x.leftMoves, ImpartialAux i) ∧ (∀ j ∈ x.rightMoves, ImpartialAux j)
+termination_by x
 decreasing_by igame_wf
 
 /-- An impartial game is one that's equivalent to its negative, such that each left and right move
 is also impartial.
 
 Note that this is a slightly more general definition than the one that's usually in the literature,
-as we don't require `G ≡ -G`. Despite this, the Sprague-Grundy theorem still holds: see
+as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still holds: see
 `IGame.equiv_nim_grundyValue`.
 
 In such a game, both players have the same payoffs at any subposition. -/
-class Impartial (G : IGame) : Prop where
-  out : ImpartialAux G
+@[mk_iff impartial_iff_aux]
+class Impartial (x : IGame) : Prop where
+  out : ImpartialAux x
 
-private theorem impartial_iff_aux {G : IGame} : G.Impartial ↔ G.ImpartialAux :=
-  ⟨fun h ↦ h.1, fun h ↦ ⟨h⟩⟩
-
-theorem impartial_def {G : IGame} :
-    G.Impartial ↔ G ≈ -G ∧ (∀ i ∈ G.leftMoves, Impartial i) ∧ ∀ j ∈ G.rightMoves, Impartial j := by
+theorem impartial_def {x : IGame} :
+    x.Impartial ↔ -x ≈ x ∧ (∀ i ∈ x.leftMoves, Impartial i) ∧ ∀ j ∈ x.rightMoves, Impartial j := by
   simp_rw [impartial_iff_aux]
   rw [ImpartialAux]
 
 namespace Impartial
+variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
 
-variable (G : IGame) [h : Impartial G]
+theorem mk' {x : IGame} (h₁ : -x ≈ x)
+    (h₂ : ∀ i ∈ x.leftMoves, Impartial i) (h₃ : ∀ j ∈ x.rightMoves, Impartial j) : Impartial x :=
+  impartial_def.2 ⟨h₁, h₂, h₃⟩
 
-instance impartial_zero : Impartial 0 := by
+@[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
+@[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
+
+@[simp]
+theorem neg_mk : -Game.mk x = Game.mk x :=
+  Game.mk_eq (equiv_neg x).symm
+
+@[simp]
+theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
+  rw [add_eq_zero_iff_neg_eq, neg_mk]
+
+theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
+  Game.mk_eq_mk.1 (mk_add_self x)
+
+@[aesop unsafe 50% apply]
+protected theorem leftMove {x y : IGame} [h : Impartial x] : y ∈ x.leftMoves → Impartial y :=
+  (impartial_def.1 h).2.1 y
+
+@[aesop unsafe 50% apply]
+protected theorem rightMove {x y : IGame} [h : Impartial x] : y ∈ x.rightMoves → Impartial y :=
+  (impartial_def.1 h).2.2 y
+
+-- TODO: upstream
+attribute [simp] AntisymmRel.refl
+
+protected instance zero : Impartial 0 := by
   rw [impartial_def]
   simp
-  rfl
 
-instance impartial_star : Impartial star := by
+protected instance star : Impartial ⋆ := by
   rw [impartial_def]
-  simp [Impartial.impartial_zero]
-  rfl
+  simp [Impartial.zero]
 
-theorem neg_equiv_self : G ≈ -G :=
-  (impartial_def.1 h).1
+protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
+  apply mk'
+  · simp
+  on_goal 1 => rw [leftMoves_neg]
+  on_goal 2 => rw [rightMoves_neg]
+  all_goals
+  · intro y hy
+    try have := Impartial.leftMove hy
+    try have := Impartial.rightMove hy
+    rw [← neg_neg y]
+    exact .neg _
+termination_by x
+decreasing_by igame_wf
 
-@[simp]
-theorem mk'_neg_equiv_self : -(Game.mk G) = (Game.mk G) :=
-  Game.mk_eq (neg_equiv_self G).symm
+protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
+  apply mk'
+  · rw [neg_add]
+    exact add_congr (neg_equiv x) (neg_equiv y)
+  on_goal 1 => rw [leftMoves_add]
+  on_goal 2 => rw [rightMoves_add]
+  all_goals
+  · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
+    · try have := Impartial.leftMove hz
+      try have := Impartial.rightMove hz
+      exact .add ..
+termination_by (x, y)
+decreasing_by igame_wf
 
-instance moveLeft_impartial {G : IGame} [h : G.Impartial] (i : G.leftMoves) :
-    Impartial i :=
-  (impartial_def.1 h).2.1 i i.coe_prop
-
-instance moveRight_impartial {G : IGame} [h : G.Impartial] (j : G.rightMoves) :
-    Impartial j :=
-  (impartial_def.1 h).2.2 j j.coe_prop
-
-theorem impartial_congr {G H : IGame} (e : G = H) [G.Impartial] : H.Impartial :=
-  impartial_def.2
-    ⟨e.symm.equiv.trans ((neg_equiv_self G).trans (neg_equiv_neg_iff.2 e.equiv)),
-      fun i ↦ (e.moveLeft_symm i).elim fun _ ↦ (impartial_congr ·),
-      fun j ↦ (e.moveRight_symm j).elim fun _ ↦ (impartial_congr ·)⟩
-termination_by (G, H)
-
-instance impartial_add (G H : IGame) [G.Impartial] [H.Impartial] : (G + H).Impartial := by
-  rw [impartial_def]
-  refine ⟨(add_congr (neg_equiv_self G) (neg_equiv_self _)).trans
-      (of_eq (G.neg_add H).symm), fun k ↦ ?_, fun k ↦ ?_⟩
-  · apply leftMoves_add_cases k
-    all_goals
-      intro i; simp only [add_moveLeft_inl, add_moveLeft_inr]
-      apply impartial_add
-  · apply rightMoves_add_cases k
-    all_goals
-      intro i; simp only [add_moveRight_inl, add_moveRight_inr]
-      apply impartial_add
-termination_by (G, H)
-
-instance impartial_neg (G : IGame) [G.Impartial] : (-G).Impartial := by
-  rw [impartial_def]
-  refine ⟨?_, fun i ↦ ?_, fun i ↦ ?_⟩
-  · rw [neg_neg]
-    exact (neg_equiv_self G).symm
-  · rw [leftMoves_neg]
-    exact impartial_neg _
-  · rw [rightMoves_neg]
-    exact impartial_neg _
-termination_by G
-
-theorem nonpos : ¬0 < G := by
+theorem nonpos : ¬0 < x := by
   apply (lt_asymm · ?_)
-  rwa [← IGame.neg_lt_neg_iff, neg_zero, ← (neg_equiv_self G).lt_congr_right]
+  rwa [← IGame.neg_lt_neg_iff, neg_zero, (neg_equiv x).lt_congr_right]
 
-theorem nonneg : ¬G < 0 := by
-  simpa using nonpos (-G)
+theorem nonneg : ¬x < 0 := by
+  simpa using nonpos (-x)
 
 /-- In an impartial game, either the first player always wins, or the second player always wins. -/
-theorem equiv_or_fuzzy_zero : G ≈ 0 ∨ G ‖ 0 := by
-  rcases lt_or_equiv_or_gt_or_fuzzy G 0 with (h | h | h | h)
-  · exact (nonneg G h).elim
-  · exact Or.inl h
-  · exact (nonpos G h).elim
-  · exact Or.inr h
+theorem equiv_or_fuzzy_zero : x ≈ 0 ∨ x ‖ 0 := by
+  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_not_compRel x 0
+  · cases nonneg x h
+  · exact .inl h
+  · cases nonpos x h
+  · exact .inr h
 
-theorem add_self : G + G ≈ 0 :=
-  (add_congr_left (neg_equiv_self G)).trans (neg_add_equiv G)
+/-- This lemma doesn't require `x` to be impartial. -/
+theorem equiv_iff_add_equiv_zero (x : IGame) : x ≈ y ↔ x + y ≈ 0 := by
+  rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, Game.mk_add, Game.mk_zero, add_eq_zero_iff_eq_neg, neg_mk]
 
-@[simp]
-theorem mk'_add_self : (Game.mk G) + (.mk G) = 0 :=
-  Game.mk_eq (add_self G)
+/-- This lemma doesn't require `y` to be impartial. -/
+theorem equiv_iff_add_equiv_zero' (y : IGame) : x ≈ y ↔ x + y ≈ 0 := by
+  rw [antisymmRel_comm, add_comm, equiv_iff_add_equiv_zero]
 
-/-- This lemma doesn't require `H` to be impartial. -/
-theorem equiv_iff_add_equiv_zero (H : IGame) : H ≈ G ↔ H + G ≈ 0 := by
-  -- rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, ← add_right_cancel_iff (a := .mk G), mk'_add_self, ← quot_add,
-  --   equiv_iff_game_eq, quot_zero]
-  rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, ← add_right_cancel_iff (a := .mk G),
-    mk'_add_self, Game.mk_add]
-  rfl
-
-/-- This lemma doesn't require `H` to be impartial. -/
-theorem equiv_iff_add_equiv_zero' (H : IGame) : G ≈ H ↔ G + H ≈ 0 := by
-  rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, ← add_left_cancel_iff, mk'_add_self,
-    Game.mk_add, Game.mk_zero]
-  aesop -- TODO: a + b = 0 ↔ 0 = a + b
-
-variable {G}
+variable {x y}
 
 @[simp]
-theorem not_equiv_zero_iff : ¬ G ≈ 0 ↔ G ‖ 0 :=
-  ⟨(equiv_or_fuzzy_zero G).resolve_left, Fuzzy.not_equiv⟩
+theorem compRel_zero_iff : CompRel (· ≤ ·) x 0 ↔ x ≈ 0 :=
+  ⟨not_imp_not.1 (equiv_or_fuzzy_zero x).resolve_left, AntisymmRel.compRel⟩
 
 @[simp]
-theorem not_fuzzy_zero_iff : ¬ G ‖ 0 ↔ G ≈ 0 :=
-  ⟨(equiv_or_fuzzy_zero G).resolve_right, Equiv.not_fuzzy⟩
+theorem zero_compRel_iff : CompRel (· ≤ ·) 0 x ↔ 0 ≈ x := by
+  rw [compRel_comm, antisymmRel_comm, compRel_zero_iff]
 
-theorem le_zero_iff : G ≤ 0 ↔ 0 ≤ G := by
-  rw [← zero_le_neg, (neg_equiv_self G).le_congr_right]
+theorem not_equiv_zero_iff : ¬ x ≈ 0 ↔ x ‖ 0 := by simp
+theorem not_fuzzy_zero_iff : ¬ x ‖ 0 ↔ x ≈ 0 := by simp
 
-theorem lf_zero_iff : G ⧏ 0 ↔ 0 ⧏ G := by
-  rw [← zero_lf_neg_iff, lf_congr_right (neg_equiv_self G)]
-
-@[simp]
-theorem le_zero_iff_equiv : G ≤ 0 ↔ G ≈ 0 :=
-  ⟨fun h ↦ ⟨h, le_zero_iff.1 h⟩, And.left⟩
+theorem le_zero_comm : x ≤ 0 ↔ 0 ≤ x := by
+  rw [← zero_le_neg, (neg_equiv x).le_congr_right]
 
 @[simp]
-theorem zero_le_iff_equiv : 0 ≤ G ↔ G ≈ 0 :=
-  ⟨fun h ↦ ⟨le_zero_iff.2 h, h⟩, And.right⟩
+theorem le_zero_iff_equiv : x ≤ 0 ↔ x ≈ 0 :=
+  ⟨fun h ↦ ⟨h, le_zero_comm.1 h⟩, And.left⟩
 
 @[simp]
-theorem lf_zero_iff_fuzzy : G ⧏ 0 ↔ G ‖ 0 :=
-  ⟨fun h ↦ ⟨h, lf_zero_iff.1 h⟩, And.left⟩
+theorem zero_le_iff_equiv : 0 ≤ x ↔ x ≈ 0 :=
+  ⟨fun h ↦ ⟨le_zero_comm.2 h, h⟩, And.right⟩
 
-@[simp]
-theorem zero_lf_iff_fuzzy : 0 ⧏ G ↔ G ‖ 0 :=
-  ⟨fun h ↦ ⟨lf_zero_iff.2 h, h⟩, And.right⟩
+theorem lf_zero_iff_fuzzy : x ⧏ 0 ↔ x ‖ 0 := by simp
+theorem zero_lf_iff_fuzzy : 0 ⧏ x ↔ x ‖ 0 := by simp
 
-theorem equiv_zero_iff_forall_leftMoves_fuzzy : G ≈ 0 ↔ ∀ i ∈ G.leftMoves, i ‖ 0 := by
-  simpa using le_zero (x := G)
+#exit
+
+theorem equiv_zero_iff_forall_leftMoves_fuzzy : x ≈ 0 ↔ ∀ i ∈ x.leftMoves, i ‖ 0 := by
+  simpa using le_zero (x := x)
 
 theorem equiv_zero_iff_forall_rightMoves_fuzzy : G ≈ 0 ↔ ∀ j ∈ G.rightMoves, j ‖ 0 := by
-  simpa using zero_le (x := G)
+  simpa using zero_le (x := x)
 
 theorem fuzzy_zero_iff_exists_leftMoves_equiv : G ‖ 0 ↔ ∃ i ∈ G.leftMoves, i ≈ 0 := by
   simpa using zero_lf (x := G)
