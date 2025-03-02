@@ -45,7 +45,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := not_compRel_iff.2 ⟨star_lf_zero, zero_l
 
 /-! ### Up and down -/
 
-/-- The game `↑ = {{0} | {⋆}}ᴵ`. -/
+/-- The game `↑ = {0 | ⋆}`. -/
 def up : IGame :=
   {{0} | {⋆}}ᴵ
 
@@ -68,7 +68,7 @@ theorem star_fuzzy_up : ⋆ ‖ ↑ := by
   rw [compRel_comm]
   exact up_fuzzy_star
 
-/-- The game `↓ = {{⋆} | {0}}ᴵ`. -/
+/-- The game `↓ = {⋆ | 0}`. -/
 def down : IGame :=
   {{⋆} | {0}}ᴵ
 
@@ -92,6 +92,48 @@ theorem down_fuzzy_star : ↓ ‖ ⋆ := by
 theorem star_fuzzy_down : ⋆ ‖ ↓ := by
   rw [compRel_comm]
   exact down_fuzzy_star
+
+/-! ## Tiny and Miny -/
+
+/-- A tiny game `⧾x` is defined as `{0 | {0 | -x}}`, and is amongst the smallest of the
+infinitesimals. -/
+def tiny (x : IGame) : IGame :=
+  {{0} | {{{0} | {-x}}ᴵ}}ᴵ
+
+@[inherit_doc] prefix:75 "⧾" => tiny
+
+@[simp]
+theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
+  leftMoves_ofSets ..
+
+@[simp]
+theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
+  rightMoves_ofSets ..
+
+/-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
+def miny (x : IGame) : IGame :=
+  {{{{x} | {0}}ᴵ} | {0}}ᴵ
+
+@[inherit_doc] prefix:75 "⧿" => miny
+
+@[simp]
+theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
+  leftMoves_ofSets ..
+
+@[simp]
+theorem rightMoves_miny (x : IGame) : rightMoves (⧿x) = {0} :=
+  rightMoves_ofSets ..
+
+@[simp]
+theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
+  simp [miny, tiny]
+
+@[simp]
+theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
+  simp [miny, tiny]
+
+/-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
+proof_wanted exists_tiny_lt_of_pos (x : IGame) (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
 end Temp

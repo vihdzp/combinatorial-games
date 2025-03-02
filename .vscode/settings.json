@@ -1,3 +1,9 @@
 {
-    "editor.rulers" : [100]
+    "editor.rulers": [
+        100
+    ],
+    "lean4.input.customTranslations": {
+        "tiny": "⧾",
+        "miny": "⧿"
+    }
 }
