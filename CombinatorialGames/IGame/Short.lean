@@ -20,6 +20,9 @@ such, we must often rely on `native_decide` to make use of this typeclass for co
 
 universe u
 
+-- TODO: remove Temp namespace
+namespace Temp
+
 /-- An auxiliary type for `IGame.Short`.
 
 The purpose of this type is to provide auxiliary data for an `IGame` which can then be used to
@@ -118,7 +121,7 @@ instance : DecidableLT SGame := decidableLTOfDecidableLE
 
 /-! ### Basic games -/
 
-/-! ### Game from lists -/
+/-! #### Game from lists -/
 
 /-- Create an `SGame` from two lists of `SGame`s. -/
 def ofLists (l m : List SGame) : SGame :=
@@ -358,11 +361,9 @@ instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
 instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
 instance : Short 1 := ⟨1, SGame.toIGame_one⟩
 
--- TODO: these instances should not require this weird hack to be computable.
-noncomputable def hack (n : ℕ) : IGame := n
-instance (n : ℕ) : Short (hack n) := ⟨n, SGame.toIGame_natCast n⟩
-instance (n : ℕ) : Short n := inferInstanceAs (Short (hack n))
-instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanceAs (Short (hack n))
+-- These should be computable: https://github.com/leanprover/lean4/pull/7283
+noncomputable instance (n : ℕ) : Short n := ⟨n, SGame.toIGame_natCast n⟩
+noncomputable instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanceAs (Short n)
 
 instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
@@ -373,7 +374,8 @@ example : Short {{0, 2, 5} | {3, -1, 7}}ᴵ where
 
 example : (0 : IGame) < 1 := by decide
 example : (-1 : IGame) < 0 := by native_decide
-example : (2 : IGame) < (5 : IGame) := show hack 2 < hack 5 by native_decide
+--example : (2 : IGame) < (5 : IGame) := by native_decide
 
 end Short
 end IGame
+end Temp
