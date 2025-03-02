@@ -11,7 +11,7 @@ import Mathlib.Order.Antisymmetrization
 import Mathlib.Order.GameAdd
 
 /-!
-# Combinatorial games
+# Combinatorial (pre-)games
 
 The basic theory of combinatorial games, following Conway's book `On Numbers and Games`.
 
@@ -996,6 +996,9 @@ private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
   mul_neg := mul_neg'
+
+/-! Distributivity and associativity only hold up to equivalence, we prove this in
+`CombinatorialGames.Game.Basic`. -/
 
 end IGame
 end Temp
