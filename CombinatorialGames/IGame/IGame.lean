@@ -765,7 +765,7 @@ private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
     · refine and_congr_right_iff.2 fun _ ↦ ?_
       rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
 termination_by (x, y)
-decreasing_by all_goals igame_wf
+decreasing_by igame_wf
 
 instance : SubtractionCommMonoid IGame where
   neg_neg := neg_neg
