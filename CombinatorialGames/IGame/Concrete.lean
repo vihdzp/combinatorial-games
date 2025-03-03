@@ -15,9 +15,6 @@ used to define a `IGame`.
 
 noncomputable section
 
--- TODO: delete namespace
-namespace Temp
-
 open IGame
 
 variable {α : Type*}
@@ -103,5 +100,4 @@ termination_by isWellFounded_subsequent.wf.wrap a
 -/
 
 end ConcreteGame
-end Temp
 end
