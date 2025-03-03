@@ -847,8 +847,20 @@ instance : AddRightReflectLT IGame :=
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
+theorem add_congr_left {a b c : IGame} (h : a ≈ b) : a + c ≈ b + c :=
+  add_congr h .rfl
+
+theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
+  add_congr .rfl h
+
 theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
+
+theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
+  sub_congr h .rfl
+
+theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
+  sub_congr .rfl h
 
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
 

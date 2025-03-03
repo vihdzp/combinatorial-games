@@ -189,6 +189,12 @@ end Game
 
 namespace IGame
 
+protected theorem sub_le_iff_le_add {x y z : IGame} : x - z ≤ y ↔ x ≤ y + z :=
+  @sub_le_iff_le_add Game _ _ _ (.mk x) (.mk y) (.mk z)
+
+protected theorem le_sub_iff_add_le {x y z : IGame} : x ≤ z - y ↔ x + y ≤ z :=
+  @le_sub_iff_add_le Game _ _ _ (.mk x) (.mk y) (.mk z)
+
 theorem mul_add_equiv (x y z : IGame) : x * (y + z) ≈ x * y + x * z :=
   Game.mk_eq_mk.1 (Game.mk_mul_add x y z)
 

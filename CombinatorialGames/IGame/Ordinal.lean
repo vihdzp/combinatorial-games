@@ -25,7 +25,6 @@ The map to surreals is defined in `NatOrdinal.toSurreal`.
 universe u
 
 open Set IGame
-open scoped NaturalOps IGame
 
 noncomputable section
 
@@ -38,6 +37,14 @@ theorem OrderEmbedding.antisymmRel_iff_antisymmRel {α β : Type*} [Preorder α]
 theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [PartialOrder β]
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
+
+theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
+    ¬ c ≤ a :=
+  fun h ↦ h₂ (h.trans h₁)
+
+theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
+    ¬ c ≤ a :=
+  fun h ↦ h₁ (h₂.trans h)
 
 namespace NatOrdinal
 
@@ -60,6 +67,22 @@ theorem lt_add_iff {a b c : NatOrdinal} :
 theorem add_le_iff {a b c : NatOrdinal} :
      b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b + c' < a :=
   Ordinal.nadd_le_iff
+
+theorem lt_mul_iff {a b c : NatOrdinal} :
+    c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' :=
+  Ordinal.lt_nmul_iff
+
+theorem mul_le_iff {a b c : NatOrdinal} :
+    a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' :=
+  Ordinal.nmul_le_iff
+
+theorem mul_add_lt {a b a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
+    a' * b + a * b' < a * b + a' * b' :=
+  Ordinal.nmul_nadd_lt ha hb
+
+theorem nmul_nadd_le {a b a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
+    a' * b + a * b' ≤ a * b + a' * b' :=
+  Ordinal.nmul_nadd_le ha hb
 
 /-! ### `NatOrdinal` to `PGame` -/
 
@@ -100,6 +123,12 @@ theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGame.leftMoves = toIGame '' Ii
 @[simp]
 theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
   rightMoves_toIGame' o
+
+theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
+    a.toIGame ∈ b.toIGame.leftMoves := by
+  simpa
+
+alias _root_.LT.lt.mem_leftMoves_toIGame := mem_leftMoves_toIGame_of_lt
 
 @[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
 @[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
@@ -151,11 +180,11 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
     all_goals
     · rw [← toIGame_le_iff] at hd
       apply (hd.trans_lt _).not_le
-      rw [(toIGame_add _ _).lt_congr_left]
+      rw [(toIGame_add ..).lt_congr_left]
       simpa
   · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
     all_goals
-      rw [← (toIGame_add _ _).le_congr_right]
+      rw [← (toIGame_add ..).le_congr_right]
       simpa
 termination_by (a, b)
 
@@ -163,35 +192,28 @@ termination_by (a, b)
 theorem toGame_add (a b : NatOrdinal) : (a + b).toGame = a.toGame + b.toGame :=
   Game.mk_eq (toIGame_add a b)
 
--- TODO: fix this once game multiplication is ported
-
-/-
-/-- The natural multiplication of ordinals corresponds to their product as pre-games. -/
-theorem toPGame_nmul (a b : NatOrdinal) : (a ⨳ b).toPGame ≈ a.toPGame * b.toPGame := by
-  refine ⟨le_of_forall_lf (fun i ↦ ?_) isEmptyElim, le_of_forall_lf (fun i ↦ ?_) isEmptyElim⟩
-  · rw [toPGame_moveLeft']
-    rcases lt_nmul_iff.1 (toLeftMovesToPGame_symm_lt i) with ⟨c, hc, d, hd, h⟩
-    rw [← toPGame_le_iff, le_iff_game_le, mk_toPGame, mk_toPGame, toGame_nadd _ _, toGame_nadd _ _,
-      ← le_sub_iff_add_le] at h
-    refine lf_of_le_of_lf h <| (lf_congr_left ?_).1 <| moveLeft_lf <| toLeftMovesMul <| Sum.inl
-      ⟨toLeftMovesToPGame ⟨c, hc⟩, toLeftMovesToPGame ⟨d, hd⟩⟩
-    simp only [mul_moveLeft_inl, toPGame_moveLeft', Equiv.symm_apply_apply, equiv_iff_game_eq,
-      quot_sub, quot_add]
-    repeat rw [← game_eq (toPGame_nmul _ _)]
-    rfl
-  · apply leftMoves_mul_cases i _ isEmptyElim
-    intro i j
-    rw [mul_moveLeft_inl, toPGame_moveLeft', toPGame_moveLeft', lf_iff_game_lf,
-      quot_sub, quot_add, ← Game.not_le, le_sub_iff_add_le]
-    repeat rw [← game_eq (toPGame_nmul _ _)]
-    simp_rw [mk_toPGame, ← toGame_nadd]
-    apply toPGame_lf (nmul_nadd_lt _ _) <;>
-    exact toLeftMovesToPGame_symm_lt _
+/-- The natural multiplication of ordinals corresponds to their product as games. -/
+theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGame := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  simp [NatOrdinal.lt_mul_iff, mulOption]
+  constructor
+  · rintro _ e c hc d hd he rfl
+    rw [← toIGame_le_iff, (toIGame_add ..).le_congr (toIGame_add ..)] at he
+    rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
+    apply not_le_of_le_of_not_le he
+    rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
+    exact leftMove_lf <|
+      mulOption_left_left_mem_leftMoves_mul hc.mem_leftMoves_toIGame hd.mem_leftMoves_toIGame
+  · rintro _ _ _ c hc rfl d hd rfl rfl
+    rw [IGame.le_sub_iff_add_le,
+      ← (add_congr_right (toIGame_mul ..)).le_congr (add_congr (toIGame_mul ..) (toIGame_mul ..)),
+      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame_le_iff, not_le]
+    exact mul_add_lt hc hd
 termination_by (a, b)
 
-theorem toGame_nmul (a b : NatOrdinal) : (a ⨳ b).toGame = ⟦a.toPGame * b.toPGame⟧ :=
-  game_eq (toPGame_nmul a b)
--/
+@[simp]
+theorem toGame_mul (a b : NatOrdinal) : (a * b).toGame = .mk (a.toIGame * b.toIGame) :=
+  Game.mk_eq (toIGame_mul a b)
 
 @[simp]
 theorem toGame_natCast : ∀ n : ℕ, toGame n = n
