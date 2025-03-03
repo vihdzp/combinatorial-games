@@ -36,6 +36,14 @@ form a linear ordered commutative ring.
 
 universe u
 
+theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
+    ¬ c ≤ a :=
+  fun h ↦ h₂ (h.trans h₁)
+
+theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
+    ¬ c ≤ a :=
+  fun h ↦ h₁ (h₂.trans h)
+
 namespace IGame
 
 private def NumericAux (x : IGame) : Prop :=
@@ -78,34 +86,24 @@ protected theorem isOption {x y : IGame} [Numeric x] (h : IsOption y x) : Numeri
   | inl h => exact Numeric.of_mem_leftMoves h
   | inr h => exact Numeric.of_mem_rightMoves h
 
+protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
+  rw [lf_iff_exists_le]
+  rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩)
+  · have := Numeric.of_mem_leftMoves hz
+    exact h.trans (Numeric.le_of_not_le (leftMove_lf hz))
+  · have := Numeric.of_mem_rightMoves hz
+    apply le_trans (Numeric.le_of_not_le (lf_rightMove hz)) h
+termination_by (x, y)
+decreasing_by
+· sorry
+· sorry
+
+#exit
+protected theorem le_total {x y : IGame} [Numeric x] [Numeric y] : x ≤ y ∨ y ≤ x := by
+  rw [or_iff_not_imp_left]
+  exact Numeric.le_of_not_le
+
 end Numeric
-
-/-- **Conway recursion** for numeric games: build data for a numeric game by recursively building it
-on its left and right sets. -/
-@[elab_as_elim]
-def numericRecOn {P : (x : IGame) → [Numeric x] → Sort*} (x : IGame) [Numeric x]
-    (H : Π x [Numeric x],
-      (Π y (hy : y ∈ x.leftMoves), @P _ (.of_mem_leftMoves hy)) →
-      (Π y (hy : y ∈ x.rightMoves), @P _ (.of_mem_rightMoves hy)) → P x) : P x :=
-  H x
-    (fun y hy ↦ @numericRecOn P y (.of_mem_leftMoves hy) H)
-    (fun y hy ↦ @numericRecOn P y (.of_mem_rightMoves hy) H)
-termination_by x
-decreasing_by igame_wf
-
-@[simp]
-theorem numericRecOn_eq {P : (x : IGame) → [Numeric x] → Sort*} (x : IGame) [Numeric x]
-    (H : Π x [Numeric x],
-      (Π y (hy : y ∈ x.leftMoves), @P _ (.of_mem_leftMoves hy)) →
-      (Π y (hy : y ∈ x.rightMoves), @P _ (.of_mem_rightMoves hy)) → P x) :
-    numericRecOn (P := P) x H = H x
-      (fun y hy ↦ @numericRecOn P y (.of_mem_leftMoves hy) H)
-      (fun y hy ↦ @numericRecOn P y (.of_mem_rightMoves hy) H) := by
-  rw [numericRecOn]
-
-theorem Numeric.le_total {x y : IGame} [Numeric x] [Numeric y] : x ≤ y ∨ y ≤ x := by
-  rw [le_iff_forall_lf, le_iff_forall_lf]
-
   #exit
 
 theorem lf_asymm {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y → ¬y ⧏ x := by

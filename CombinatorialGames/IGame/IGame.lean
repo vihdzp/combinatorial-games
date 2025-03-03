@@ -498,6 +498,12 @@ instance : Preorder IGame where
   le_refl _ := le_rfl'
   le_trans x y z := le_trans'
 
+theorem leftMove_lf {x y : IGame} (h : y ∈ x.leftMoves) : y ⧏ x :=
+  lf_of_le_leftMove le_rfl h
+
+theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
+  lf_of_rightMove_le le_rfl h
+
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
