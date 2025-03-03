@@ -70,14 +70,10 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
--- This is a false positive due to the provisional duplicated IGame/IGame file path.
+-- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
-
--- TODO: This avoids name clashes with the existing `PGame`.
--- Remove it when we finish porting!
-namespace Temp
 
 open Set Pointwise
 
@@ -872,5 +868,4 @@ theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ :
   ext <;> simp
 
 end IGame
-end Temp
 end

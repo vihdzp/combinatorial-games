@@ -19,9 +19,6 @@ universe u
 
 noncomputable section
 
--- TODO: remove Temp namespace
-namespace Temp
-
 namespace IGame
 
 /-! ### Star -/
@@ -94,5 +91,4 @@ theorem star_fuzzy_down : ⋆ ‖ ↓ := by
   exact down_fuzzy_star
 
 end IGame
-end Temp
 end

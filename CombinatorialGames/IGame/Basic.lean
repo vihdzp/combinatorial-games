@@ -9,9 +9,6 @@ universe u
 
 noncomputable section
 
--- TODO: remove Temp namespace
-namespace Temp
-
 open IGame Set Pointwise
 
 /-- Games up to equivalence.
@@ -117,4 +114,4 @@ theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 
 end Game
-end Temp
+end
