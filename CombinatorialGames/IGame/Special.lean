@@ -3,6 +3,7 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
+import CombinatorialGames.IGame.IGame
 import CombinatorialGames.IGame.Short
 
 /-!
@@ -18,9 +19,6 @@ This file defines some simple yet notable combinatorial games:
 universe u
 
 noncomputable section
-
--- TODO: remove Temp namespace
-namespace Temp
 
 namespace IGame
 
@@ -44,11 +42,11 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := not_compRel_iff.2 ⟨star_lf_zero, zero_l
 @[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
 /-- See `IGame.star`. -/
-def _root_.Temp.SGame.star : SGame :=
+def _root_.SGame.star : SGame :=
   .mk 1 1 (fun _ ↦ 0) (fun _ ↦ 0)
 
 @[simp]
-theorem _root_.Temp.SGame.toIGame_star : SGame.star.toIGame = ⋆ :=
+theorem _root_.SGame.toIGame_star : SGame.star.toIGame = ⋆ :=
   by ext <;> simp [SGame.star, eq_comm]
 
 instance : Short ⋆ := ⟨_, SGame.toIGame_star⟩
@@ -79,11 +77,11 @@ theorem star_fuzzy_up : ⋆ ‖ ↑ := by
   exact up_fuzzy_star
 
 /-- See `IGame.up`. -/
-def _root_.Temp.SGame.up : SGame :=
+def _root_.SGame.up : SGame :=
   .mk 1 1 (fun _ ↦ 0) (fun _ ↦ .star)
 
 @[simp]
-theorem _root_.Temp.SGame.toIGame_up : SGame.up.toIGame = ↑ :=
+theorem _root_.SGame.toIGame_up : SGame.up.toIGame = ↑ :=
   by ext <;> simp [SGame.up, eq_comm]
 
 instance : Short ↑ := ⟨_, SGame.toIGame_up⟩
@@ -114,11 +112,11 @@ theorem star_fuzzy_down : ⋆ ‖ ↓ := by
   exact down_fuzzy_star
 
 /-- See `IGame.down`. -/
-def _root_.Temp.SGame.down : SGame :=
+def _root_.SGame.down : SGame :=
   .mk 1 1 (fun _ ↦ .star) (fun _ ↦ 0)
 
 @[simp]
-theorem _root_.Temp.SGame.toIGame_down : SGame.down.toIGame = ↓ :=
+theorem _root_.SGame.toIGame_down : SGame.down.toIGame = ↓ :=
   by ext <;> simp [SGame.down, eq_comm]
 
 instance : Short ↓ := ⟨_, SGame.toIGame_down⟩
@@ -141,11 +139,11 @@ theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
   rightMoves_ofSets ..
 
 /-- See `IGame.tiny`. -/
-def _root_.Temp.SGame.tiny (x : SGame) : SGame :=
+def _root_.SGame.tiny (x : SGame) : SGame :=
   .mk 1 1 (fun _ ↦ 0) (fun _ ↦ .mk 1 1 (fun _ ↦ 0) (fun _ ↦ -x))
 
 @[simp]
-theorem _root_.Temp.SGame.toIGame_tiny (x : SGame) : x.tiny.toIGame = ⧾x.toIGame := by
+theorem _root_.SGame.toIGame_tiny (x : SGame) : x.tiny.toIGame = ⧾x.toIGame := by
   ext <;> simp [SGame.tiny, eq_comm]
   congr!
   ext <;> simp [eq_comm]
@@ -175,11 +173,11 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
 /-- See `IGame.miny`. -/
-def _root_.Temp.SGame.miny (x : SGame) : SGame :=
+def _root_.SGame.miny (x : SGame) : SGame :=
   .mk 1 1 (fun _ ↦ .mk 1 1 (fun _ ↦ x) (fun _ ↦ 0)) (fun _ ↦ 0)
 
 @[simp]
-theorem _root_.Temp.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame := by
+theorem _root_.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame := by
   ext <;> simp [SGame.miny, eq_comm]
   congr!
   ext <;> simp [eq_comm]
@@ -190,5 +188,4 @@ instance (x : IGame) [Short x] : Short (⧿x) := ⟨(Short.toSGame x).miny, by s
 proof_wanted exists_tiny_lt_of_pos {x : IGame} (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
-end Temp
 end

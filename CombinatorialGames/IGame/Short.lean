@@ -20,9 +20,6 @@ such, we must often rely on `native_decide` to make use of this typeclass for co
 
 universe u
 
--- TODO: remove Temp namespace
-namespace Temp
-
 /-- An auxiliary type for `IGame.Short`.
 
 The purpose of this type is to provide auxiliary data for an `IGame` which can then be used to
@@ -421,5 +418,3 @@ example : (-1 : IGame) + 1 ≠ 0 := by native_decide
 --example : (2 : IGame) < (5 : IGame) := by native_decide
 
 end Test
-
-end Temp
