@@ -87,13 +87,16 @@ protected theorem isOption {x y : IGame} [Numeric x] (h : IsOption y x) : Numeri
   | inr h => exact Numeric.of_mem_rightMoves h
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
-  rw [lf_iff_exists_le]
-  rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩)
+  rw [lf_iff_exists_le, le_iff_forall_lf]
+  rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha
   · have := Numeric.of_mem_leftMoves hz
-    exact h.trans (Numeric.le_of_not_le (leftMove_lf hz))
+    have := (leftMove_lf hz)
+    exact not_le_of_not_le_of_le (leftMove_lf ha) (h.trans (Numeric.le_of_not_le (leftMove_lf hz)))
+  · exact (h.trans_lt <| leftMove_lt_rightMove hz ha).not_le
+  · exact ((leftMove_lt_rightMove ha hz).trans_le h).not_le
   · have := Numeric.of_mem_rightMoves hz
-    apply le_trans (Numeric.le_of_not_le (lf_rightMove hz)) h
-termination_by (x, y)
+    exact not_le_of_le_of_not_le ((Numeric.le_of_not_le (lf_rightMove hz)).trans h) (lf_rightMove ha)
+termination_by x
 decreasing_by
 · sorry
 · sorry
