@@ -3,8 +3,7 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison
 -/
-import CombinatorialGames.Game.Basic
-import Mathlib.Algebra.Order.Hom.Monoid
+import CombinatorialGames.IGame.Basic
 
 /-!
 # Surreal numbers
@@ -16,98 +15,98 @@ all those options are themselves numeric. In terms of combinatorial games, the n
 "frozen"; you can only make your position worse by playing, and Left is some definite "number" of
 moves ahead (or behind) Right.
 
-A surreal number is an equivalence class of numeric pregames.
+A surreal number is an equivalence class of numeric games.
 
-In fact, the surreals form a complete ordered field, containing a copy of the reals (and much else
-besides!) but we do not yet have a complete development.
-
-## Order properties
-
-Surreal numbers inherit the relations `≤` and `<` from games (`Surreal.instLE` and
-`Surreal.instLT`), and these relations satisfy the axioms of a linear order.
+Surreal numbers inherit the relations `≤` and `<` from games, and these relations satisfy the axioms
+of a linear order. In fact, the surreals form a complete ordered field, containing a copy of the
+reals, and much else besides!
 
 ## Algebraic operations
 
 In this file, we show that the surreals form a linear ordered commutative group.
 
-In `CombinatorialGames.Surreal.Multiplication`, we define multiplication and show that the
-surreals form a linear ordered commutative ring.
-
-One can also map all the ordinals into the surreals!
+In `CombinatorialGames.Surreal.Multiplication`, we define multiplication and show that the surreals
+form a linear ordered commutative ring.
 
 ## TODO
 
 - Define the field structure on the surreals.
-
-## References
-
-* [Conway, *On numbers and games*][Conway2001]
-* [Schleicher, Stoll, *An introduction to Conway's games and numbers*][SchleicherStoll]
+- Build the embedding from reals into surreals.
 -/
 
 universe u
 
-open scoped PGame
+namespace IGame
 
-namespace PGame
+private def NumericAux (x : IGame) : Prop :=
+  (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧
+  (∀ y ∈ x.leftMoves, NumericAux y) ∧ (∀ y ∈ x.rightMoves, NumericAux y)
+termination_by x
+decreasing_by igame_wf
 
-/-- A pre-game is numeric if everything in the L set is less than everything in the R set,
-and all the elements of L and R are also numeric. -/
-def Numeric : PGame → Prop
-  | ⟨_, _, L, R⟩ => (∀ i j, L i < R j) ∧ (∀ i, Numeric (L i)) ∧ ∀ j, Numeric (R j)
+/-- A game `{s | t}ᴵ` is numeric if everything in `s` is less than everything in `t`, and all the
+elements of these sets are also numeric. -/
+@[mk_iff numeric_iff_aux]
+class Numeric (x : IGame) : Prop where
+  out : NumericAux x
 
-theorem numeric_def {x : PGame} :
-    Numeric x ↔
-      (∀ i j, x.moveLeft i < x.moveRight j) ∧
-        (∀ i, Numeric (x.moveLeft i)) ∧ ∀ j, Numeric (x.moveRight j) := by
-  cases x; rfl
+theorem numeric_def {x : IGame} : Numeric x ↔
+    (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧
+    (∀ y ∈ x.leftMoves, Numeric y) ∧ (∀ y ∈ x.rightMoves, Numeric y) := by
+  simp_rw [numeric_iff_aux]; rw [NumericAux]
 
 namespace Numeric
 
-theorem mk {x : PGame} (h₁ : ∀ i j, x.moveLeft i < x.moveRight j) (h₂ : ∀ i, Numeric (x.moveLeft i))
-    (h₃ : ∀ j, Numeric (x.moveRight j)) : Numeric x :=
+theorem mk' {x : IGame} (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
+    (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
   numeric_def.2 ⟨h₁, h₂, h₃⟩
 
-theorem left_lt_right {x : PGame} (o : Numeric x) (i : x.LeftMoves) (j : x.RightMoves) :
-    x.moveLeft i < x.moveRight j := by cases x; exact o.1 i j
+theorem leftMove_lt_rightMove {x y z : IGame} [h : Numeric x]
+    (hy : y ∈ x.leftMoves) (hz : z ∈ x.rightMoves) : y < z :=
+  (numeric_def.1 h).1 y hy z hz
 
-theorem moveLeft {x : PGame} (o : Numeric x) (i : x.LeftMoves) : Numeric (x.moveLeft i) := by
-  cases x; exact o.2.1 i
+protected theorem of_mem_leftMoves {x y : IGame} [h : Numeric x] (hy : y ∈ x.leftMoves) :
+    Numeric y :=
+  (numeric_def.1 h).2.1 y hy
 
-theorem moveRight {x : PGame} (o : Numeric x) (j : x.RightMoves) : Numeric (x.moveRight j) := by
-  cases x; exact o.2.2 j
+protected theorem of_mem_rightMoves {x y : IGame} [h : Numeric x] (hy : y ∈ x.rightMoves) :
+    Numeric y :=
+  (numeric_def.1 h).2.2 y hy
 
-lemma isOption {x' x} (h : IsOption x' x) (hx : Numeric x) : Numeric x' := by
-  cases h
-  · apply hx.moveLeft
-  · apply hx.moveRight
+protected theorem isOption {x y : IGame} [Numeric x] (h : IsOption y x) : Numeric y := by
+  cases h with
+  | inl h => exact Numeric.of_mem_leftMoves h
+  | inr h => exact Numeric.of_mem_rightMoves h
 
 end Numeric
 
+/-- **Conway recursion** for numeric games: build data for a numeric game by recursively building it
+on its left and right sets. -/
 @[elab_as_elim]
-theorem numeric_rec {C : PGame → Prop}
-    (H : ∀ (l r) (L : l → PGame) (R : r → PGame), (∀ i j, L i < R j) →
-      (∀ i, Numeric (L i)) → (∀ i, Numeric (R i)) → (∀ i, C (L i)) → (∀ i, C (R i)) →
-      C ⟨l, r, L, R⟩) :
-    ∀ x, Numeric x → C x
-  | ⟨_, _, _, _⟩, ⟨h, hl, hr⟩ =>
-    H _ _ _ _ h hl hr (fun i ↦ numeric_rec H _ (hl i)) (fun i ↦ numeric_rec H _ (hr i))
+def numericRecOn {P : (x : IGame) → [Numeric x] → Sort*} (x : IGame) [Numeric x]
+    (H : Π x [Numeric x],
+      (Π y (hy : y ∈ x.leftMoves), @P _ (.of_mem_leftMoves hy)) →
+      (Π y (hy : y ∈ x.rightMoves), @P _ (.of_mem_rightMoves hy)) → P x) : P x :=
+  H x
+    (fun y hy ↦ @numericRecOn P y (.of_mem_leftMoves hy) H)
+    (fun y hy ↦ @numericRecOn P y (.of_mem_rightMoves hy) H)
+termination_by x
+decreasing_by igame_wf
 
-theorem Identical.numeric_imp {x y : PGame} (r : x ≡ y) (ox : Numeric x) : Numeric y := by
-  induction' x using PGame.moveRecOn with x IHl IHr generalizing y
-  apply Numeric.mk (fun i j ↦ ?_) (fun i ↦ ?_) fun j ↦ ?_
-  · obtain ⟨l, hl⟩ := r.moveLeft_symm i
-    obtain ⟨r, hr⟩ := r.moveRight_symm j
-    rw [← hl.equiv.lt_congr hr.equiv]
-    apply ox.left_lt_right
-  · obtain ⟨l, hl⟩ := r.moveLeft_symm i
-    exact IHl _ hl (ox.moveLeft _)
-  · obtain ⟨r, hr⟩ := r.moveRight_symm j
-    exact IHr _ hr (ox.moveRight _)
+@[simp]
+theorem numericRecOn_eq {P : (x : IGame) → [Numeric x] → Sort*} (x : IGame) [Numeric x]
+    (H : Π x [Numeric x],
+      (Π y (hy : y ∈ x.leftMoves), @P _ (.of_mem_leftMoves hy)) →
+      (Π y (hy : y ∈ x.rightMoves), @P _ (.of_mem_rightMoves hy)) → P x) :
+    numericRecOn (P := P) x H = H x
+      (fun y hy ↦ @numericRecOn P y (.of_mem_leftMoves hy) H)
+      (fun y hy ↦ @numericRecOn P y (.of_mem_rightMoves hy) H) := by
+  rw [numericRecOn]
 
-/-- Identities preserve being numeric. -/
-theorem Identical.numeric_congr {x y : PGame} (r : x ≡ y) : Numeric x ↔ Numeric y :=
-  ⟨r.numeric_imp, r.symm.numeric_imp⟩
+theorem Numeric.le_total {x y : IGame} [Numeric x] [Numeric y] : x ≤ y ∨ y ≤ x := by
+  rw [le_iff_forall_lf, le_iff_forall_lf]
+
+  #exit
 
 theorem lf_asymm {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y → ¬y ⧏ x := by
   refine numeric_rec (C := fun x ↦ ∀ z (_oz : Numeric z), x ⧏ z → ¬z ⧏ x)
@@ -119,6 +118,7 @@ theorem lf_asymm {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y → �
   · exact (le_trans h₁ h₂).not_gf (lf_of_lt (hx _ _))
   · exact IHxr _ _ (oyr _) (h₁.lf_moveRight _) (h₂.lf_moveRight _)
 
+#exit
 theorem le_of_lf {x y : PGame} (h : x ⧏ y) (ox : Numeric x) (oy : Numeric y) : x ≤ y :=
   not_lf.1 (lf_asymm ox oy h)
 
