@@ -10,20 +10,21 @@ import Mathlib.SetTheory.Ordinal.NaturalOps
 /-!
 # Ordinals as games
 
-We define the canonical map `Ordinal → IGame`, where every ordinal is mapped to the game whose left
-set consists of all previous ordinals.
+We define the canonical map `NatOrdinal → IGame`, where every ordinal is mapped to the game whose
+left set consists of all previous ordinals. We make use of the type alias `NatOrdinal` rather than
+`Ordinal`, as this map also preserves addition, and in the case of surreals, multiplication.
 
-The map to surreals is defined in `Ordinal.toSurreal`.
+The map to surreals is defined in `NatOrdinal.toSurreal`.
 
 # Main declarations
 
-- `Ordinal.toIGame`: The canonical map between `Ordinal` and `IGame`.
-- `Ordinal.toGame`: The canonical map between `Ordinal` and `Game`.
+- `NatOrdinal.toIGame`: The canonical map between `NatOrdinal` and `IGame`.
+- `NatOrdinal.toGame`: The canonical map between `NatOrdinal` and `Game`.
 -/
 
 universe u
 
-open Set Temp IGame
+open Set IGame
 open scoped NaturalOps IGame
 
 noncomputable section
@@ -38,25 +39,42 @@ theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [Partial
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
 
-namespace Ordinal
+namespace NatOrdinal
 
--- TODO: upstream
-attribute [simp] nadd_lt_nadd_iff_left nadd_lt_nadd_iff_right nadd_le_nadd_iff_left nadd_le_nadd_iff_right
+instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
 
-/-! ### `Ordinal` to `PGame` -/
+@[simp]
+theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
+  Ordinal.zero_le o
+
+theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 := by simp
+
+@[simp]
+theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
+  Ordinal.lt_one_iff_zero
+
+theorem lt_add_iff {a b c : NatOrdinal} :
+    a < b + c ↔ (∃ b' < b, a ≤ b' + c) ∨ ∃ c' < c, a ≤ b + c' :=
+  Ordinal.lt_nadd_iff
+
+theorem add_le_iff {a b c : NatOrdinal} :
+     b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b + c' < a :=
+  Ordinal.nadd_le_iff
+
+/-! ### `NatOrdinal` to `PGame` -/
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
-private def toIGame' (o : Ordinal.{u}) : IGame.{u} :=
+private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
   {.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}ᴵ
 termination_by o
 
-theorem toIGame'_def (o : Ordinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
+theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
   rw [toIGame']; simp [image_eq_range]
 
-private theorem leftMoves_toIGame' (o : Ordinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
+private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
   rw [toIGame'_def]; exact leftMoves_ofSets ..
 
-private theorem rightMoves_toIGame' (o : Ordinal) : o.toIGame'.rightMoves = ∅ := by
+private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'.rightMoves = ∅ := by
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
@@ -68,87 +86,88 @@ private theorem toIGame'_strictMono : StrictMono toIGame' := by
     exact ⟨a, h, rfl⟩
 termination_by a => a
 
-/-- The canonical map from `Ordinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
-def toIGame : Ordinal.{u} ↪o IGame.{u} :=
-  .ofStrictMono Ordinal.toIGame' toIGame'_strictMono
+/-- The canonical map from `NatOrdinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
+def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
+  .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
-theorem toIGame_def (o : Ordinal) : o.toIGame = {toIGame '' Iio o | ∅}ᴵ :=
+theorem toIGame_def (o : NatOrdinal) : o.toIGame = {toIGame '' Iio o | ∅}ᴵ :=
   toIGame'_def o
 
 @[simp]
-theorem leftMoves_toIGame (o : Ordinal) : o.toIGame.leftMoves = toIGame '' Iio o :=
+theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGame.leftMoves = toIGame '' Iio o :=
   leftMoves_toIGame' o
 
 @[simp]
-theorem rightMoves_toIGame (o : Ordinal) : o.toIGame.rightMoves = ∅ :=
+theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
   rightMoves_toIGame' o
 
 @[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
 @[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
-theorem toIGame_le_iff {a b : Ordinal} : toIGame a ≤ toIGame b ↔ a ≤ b := by simp
-theorem toIGame_lt_iff {a b : Ordinal} : toIGame a < toIGame b ↔ a < b := by simp
-theorem toIGame_equiv_iff {a b : Ordinal} : toIGame a ≈ toIGame b ↔ a = b := by simp
-theorem toIGame_inj {a b : Ordinal} : toIGame a = toIGame b ↔ a = b := by simp
+theorem toIGame_le_iff {a b : NatOrdinal} : toIGame a ≤ toIGame b ↔ a ≤ b := by simp
+theorem toIGame_lt_iff {a b : NatOrdinal} : toIGame a < toIGame b ↔ a < b := by simp
+theorem toIGame_equiv_iff {a b : NatOrdinal} : toIGame a ≈ toIGame b ↔ a = b := by simp
+theorem toIGame_inj {a b : NatOrdinal} : toIGame a = toIGame b ↔ a = b := by simp
 
 @[simp]
-theorem not_toIGame_fuzzy (a b : Ordinal) : ¬ toIGame a ‖ toIGame b := by
+theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
   simpa [CompRel] using le_of_lt
 
 @[simp]
-theorem toIGame_nonneg (a : Ordinal) : 0 ≤ a.toIGame := by
-  simpa using toIGame_le_iff.2 (Ordinal.zero_le a)
+theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
+  simpa using toIGame_le_iff.2 (NatOrdinal.zero_le a)
 
-/-! ### `Ordinal` to `Game` -/
+/-! ### `NatOrdinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
-noncomputable def toGame : Ordinal.{u} ↪o Game.{u} where
+noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
   toFun o := .mk o.toIGame
   inj' a b := by simp [le_antisymm_iff]
   map_rel_iff' := toIGame_le_iff
 
-@[simp] theorem mk_toPGame (o : Ordinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
 @[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← mk_toPGame]
 @[simp] theorem toGame_one : toGame 1 = 1 := by simp [← mk_toPGame]
 
-theorem toGame_le_iff {a b : Ordinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
-theorem toGame_lt_iff {a b : Ordinal} : toGame a < toGame b ↔ a < b := by simp
-theorem toGame_inj {a b : Ordinal} : toGame a = toGame b ↔ a = b := by simp
+theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
+theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
+theorem toGame_inj {a b : NatOrdinal} : toGame a = toGame b ↔ a = b := by simp
 
 @[simp]
-theorem not_toGame_fuzzy (a b : Ordinal) : ¬ toGame a ‖ toGame b :=
+theorem not_toGame_fuzzy (a b : NatOrdinal) : ¬ toGame a ‖ toGame b :=
   not_toIGame_fuzzy a b
 
 @[simp]
-theorem toGame_nonneg (a : Ordinal) : 0 ≤ a.toGame :=
+theorem toGame_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
   toIGame_nonneg a
 
 /-- The natural addition of ordinals corresponds to their sum as games. -/
-theorem toIGame_nadd (a b : Ordinal) : (a ♯ b).toIGame ≈ a.toIGame + b.toIGame := by
+theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp [lt_nadd_iff]
+  simp [NatOrdinal.lt_add_iff]
   constructor
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
     · rw [← toIGame_le_iff] at hd
       apply (hd.trans_lt _).not_le
-      rw [(toIGame_nadd _ _).lt_congr_left]
+      rw [(toIGame_add _ _).lt_congr_left]
       simpa
   · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
     all_goals
-      rw [← (toIGame_nadd _ _).le_congr_right]
+      rw [← (toIGame_add _ _).le_congr_right]
       simpa
 termination_by (a, b)
 
-theorem toGame_nadd (a b : Ordinal) : (a ♯ b).toGame = a.toGame + b.toGame :=
-  Game.mk_eq (toIGame_nadd a b)
+@[simp]
+theorem toGame_add (a b : NatOrdinal) : (a + b).toGame = a.toGame + b.toGame :=
+  Game.mk_eq (toIGame_add a b)
 
 -- TODO: fix this once game multiplication is ported
 
 /-
 /-- The natural multiplication of ordinals corresponds to their product as pre-games. -/
-theorem toPGame_nmul (a b : Ordinal) : (a ⨳ b).toPGame ≈ a.toPGame * b.toPGame := by
+theorem toPGame_nmul (a b : NatOrdinal) : (a ⨳ b).toPGame ≈ a.toPGame * b.toPGame := by
   refine ⟨le_of_forall_lf (fun i ↦ ?_) isEmptyElim, le_of_forall_lf (fun i ↦ ?_) isEmptyElim⟩
   · rw [toPGame_moveLeft']
     rcases lt_nmul_iff.1 (toLeftMovesToPGame_symm_lt i) with ⟨c, hc, d, hd, h⟩
@@ -170,7 +189,7 @@ theorem toPGame_nmul (a b : Ordinal) : (a ⨳ b).toPGame ≈ a.toPGame * b.toPGa
     exact toLeftMovesToPGame_symm_lt _
 termination_by (a, b)
 
-theorem toGame_nmul (a b : Ordinal) : (a ⨳ b).toGame = ⟦a.toPGame * b.toPGame⟧ :=
+theorem toGame_nmul (a b : NatOrdinal) : (a ⨳ b).toGame = ⟦a.toPGame * b.toPGame⟧ :=
   game_eq (toPGame_nmul a b)
 -/
 
@@ -178,12 +197,11 @@ theorem toGame_nmul (a b : Ordinal) : (a ⨳ b).toGame = ⟦a.toPGame * b.toPGam
 theorem toGame_natCast : ∀ n : ℕ, toGame n = n
   | 0 => toGame_zero
   | n + 1 => by
-    rw [Nat.cast_add, ← nadd_nat, toGame_nadd, toGame_natCast, Nat.cast_one,
-      toGame_one, Nat.cast_add_one]
+    rw [Nat.cast_add, toGame_add, toGame_natCast, Nat.cast_one, toGame_one, Nat.cast_add_one]
 
 /-- Note that the equality doesn't hold, as e.g. `↑2 = {1 | }`, while `toIGame 2 = {0, 1 | }`. -/
 @[simp]
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
   Game.mk_eq_mk.1 (by simp)
 
-end Ordinal
+end NatOrdinal
