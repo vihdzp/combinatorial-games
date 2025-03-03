@@ -7,12 +7,13 @@ import CombinatorialGames.Surreal.Basic
 import Mathlib.Logic.Hydra
 
 /-!
-### Surreal multiplication
+# Surreal multiplication
 
 In this file, we show that multiplication of surreal numbers is well-defined, and thus the
 surreal numbers form a linear ordered commutative ring.
 
 An inductive argument proves the following three main theorems:
+
 * P1: being numeric is closed under multiplication,
 * P2: multiplying a numeric pregame by equivalent numeric pregames results in equivalent pregames,
 * P3: the product of two positive numeric pregames is positive (`mul_pos`).
@@ -40,6 +41,7 @@ requires that `y₂ = y` or `-y` and that `y₁` is a left option of `y₂`. Aft
 shown, a further inductive argument (this time using the `GameAdd` relation) proves P3 in full.
 
 Implementation strategy of the inductive argument: we
+
 * extract specialized versions (`IH1`, `IH2`, `IH3`, `IH4` and `IH24`) of the induction hypothesis
   that are easier to apply (taking `IsOption` arguments directly), and
 * show they are invariant under certain symmetries (permutation and negation of arguments) and that
@@ -47,6 +49,7 @@ Implementation strategy of the inductive argument: we
 * utilize the symmetries to minimize calculation.
 
 The whole proof features a clear separation into lemmas of different roles:
+
 * verification of symmetry properties of P and IH (`P3_comm`, `ih1_neg_left`, etc.),
 * calculations that connect P1, P2, P3, and inequalities between the product of
   two surreals and its options (`mulOption_lt_iff_P1`, etc.),
@@ -54,72 +57,63 @@ The whole proof features a clear separation into lemmas of different roles:
   (`numeric_option_mul`, `ih1`, `ih1_swap`, `ih₁₂`, `ih4`, etc.),
 * application of specialized induction hypothesis
   (`P1_of_ih`, `mul_right_le_of_equiv`, `P3_of_lt`, etc.).
-
-## References
-
-* [Conway, *On numbers and games*][Conway2001]
-* [Schleicher, Stoll, *An introduction to Conway's games and numbers*][SchleicherStoll]
-
 -/
 
 universe u
 
-open Game PGame WellFounded
+open IGame Game WellFounded
 
 namespace Surreal.Multiplication
 
+/-! #### Propositions -/
+
 /-- The nontrivial part of P1 in [SchleicherStoll] says that the left options of `x * y` are less
-  than the right options, and this is the general form of these statements. -/
-def P1 (x₁ x₂ x₃ y₁ y₂ y₃ : PGame) :=
-  ⟦x₁ * y₁⟧ + ⟦x₂ * y₂⟧ - ⟦x₁ * y₂⟧ < ⟦x₃ * y₁⟧ + ⟦x₂ * y₃⟧ - (⟦x₃ * y₃⟧ : Game)
+than the right options, and this is the general form of these statements. -/
+def P1 (x₁ x₂ x₃ y₁ y₂ y₃ : IGame) : Prop :=
+  Game.mk (x₁ * y₁) + Game.mk (x₂ * y₂) - Game.mk (x₁ * y₂) <
+    Game.mk (x₃ * y₁) + Game.mk (x₂ * y₃) - Game.mk (x₃ * y₃)
 
 /-- The proposition P2, without numericity assumptions. -/
-def P2 (x₁ x₂ y : PGame) := x₁ ≈ x₂ → ⟦x₁ * y⟧ = (⟦x₂ * y⟧ : Game)
+def P2 (x₁ x₂ y : IGame) : Prop := x₁ ≈ x₂ → Game.mk (x₁ * y) = Game.mk (x₂ * y)
 
 /-- The proposition P3, without the `x₁ < x₂` and `y₁ < y₂` assumptions. -/
-def P3 (x₁ x₂ y₁ y₂ : PGame) := ⟦x₁ * y₂⟧ + ⟦x₂ * y₁⟧ < ⟦x₁ * y₁⟧ + (⟦x₂ * y₂⟧ : Game)
+def P3 (x₁ x₂ y₁ y₂ : IGame) : Prop :=
+  Game.mk (x₁ * y₂) + Game.mk (x₂ * y₁) < Game.mk (x₁ * y₁) + Game.mk (x₂ * y₂)
 
-/-- The proposition P4, without numericity assumptions. In the references, the second part of the
-  conjunction is stated as `∀ j, P3 x₁ x₂ y (y.moveRight j)`, which is equivalent to our statement
-  by `P3_comm` and `P3_neg`. We choose to state everything in terms of left options for uniform
-  treatment. -/
-def P4 (x₁ x₂ y : PGame) :=
-  x₁ < x₂ → (∀ i, P3 x₁ x₂ (y.moveLeft i) y) ∧ ∀ j, P3 x₁ x₂ ((-y).moveLeft j) (-y)
+/-- The proposition P4, without numericity assumptions.
+
+In the references, the second part of the conjunction is stated as
+`∀ z ∈ y.rightMoves, P3 x₁ x₂ y z`, which is equivalent to our statement by `P3_comm` and `P3_neg`.
+We choose to state everything in terms of left options for uniform treatment. -/
+def P4 (x₁ x₂ y : IGame) := x₁ < x₂ →
+  (∀ z ∈ y.leftMoves, P3 x₁ x₂ z y) ∧ (∀ z ∈ (-y).leftMoves, P3 x₁ x₂ z (-y))
 
 /-- The conjunction of P2 and P4. -/
-def P24 (x₁ x₂ y : PGame) : Prop := P2 x₁ x₂ y ∧ P4 x₁ x₂ y
+def P24 (x₁ x₂ y : IGame) : Prop := P2 x₁ x₂ y ∧ P4 x₁ x₂ y
 
-variable {x x₁ x₂ x₃ x' y y₁ y₂ y₃ y' : PGame.{u}}
+variable {x x₁ x₂ x₃ x' y y₁ y₂ y₃ y' : IGame}
 
 /-! #### Symmetry properties of P1, P2, P3, and P4 -/
 
 lemma P3_comm : P3 x₁ x₂ y₁ y₂ ↔ P3 y₁ y₂ x₁ x₂ := by
-  rw [P3, P3, add_comm]
-  congr! 2 <;> rw [quot_mul_comm]
+  simp [P3, add_comm, mul_comm]
 
 lemma P3.trans (h₁ : P3 x₁ x₂ y₁ y₂) (h₂ : P3 x₂ x₃ y₁ y₂) : P3 x₁ x₃ y₁ y₂ := by
-  rw [P3] at h₁ h₂
-  rw [P3, ← add_lt_add_iff_left (⟦x₂ * y₁⟧ + ⟦x₂ * y₂⟧)]
+  rw [P3, ← add_lt_add_iff_left (Game.mk (x₂ * y₁) + Game.mk (x₂ * y₂))]
   convert add_lt_add h₁ h₂ using 1 <;> abel
 
+-- TODO: can I swap the order and make them simp lemmas?
+
 lemma P3_neg : P3 x₁ x₂ y₁ y₂ ↔ P3 (-x₂) (-x₁) y₁ y₂ := by
-  simp_rw [P3, quot_neg_mul]
-  rw [← _root_.neg_lt_neg_iff]
+  simp_rw [P3, neg_mul, Game.mk_neg]
+  rw [← neg_lt_neg_iff]
   abel_nf
 
-lemma P2_neg_left : P2 x₁ x₂ y ↔ P2 (-x₂) (-x₁) y := by
-  rw [P2, P2]
-  constructor
-  · rw [quot_neg_mul, quot_neg_mul, eq_comm, neg_inj, neg_equiv_neg_iff, PGame.equiv_comm]
-    exact (· ·)
-  · rw [PGame.equiv_comm, neg_equiv_neg_iff, quot_neg_mul, quot_neg_mul, neg_inj, eq_comm]
-    exact (· ·)
-
-lemma P2_neg_right : P2 x₁ x₂ y ↔ P2 x₁ x₂ (-y) := by
-  rw [P2, P2, quot_mul_neg, quot_mul_neg, neg_inj]
+lemma P2_neg_left : P2 x₁ x₂ y ↔ P2 (-x₂) (-x₁) y := by simp [P2, antisymmRel_comm, eq_comm]
+lemma P2_neg_right : P2 x₁ x₂ y ↔ P2 x₁ x₂ (-y) := by simp [P2]
 
 lemma P4_neg_left : P4 x₁ x₂ y ↔ P4 (-x₂) (-x₁) y := by
-  simp_rw [P4, PGame.neg_lt_neg_iff, moveLeft_neg, ← P3_neg]
+  simp_rw [P4, IGame.neg_lt_neg_iff, leftMoves_neg, ← P3_neg]
 
 lemma P4_neg_right : P4 x₁ x₂ y ↔ P4 x₁ x₂ (-y) := by
   rw [P4, P4, neg_neg, and_comm]
@@ -129,17 +123,15 @@ lemma P24_neg_right : P24 x₁ x₂ y ↔ P24 x₁ x₂ (-y) := by rw [P24, P24,
 
 /-! #### Explicit calculations necessary for the main proof -/
 
-lemma mulOption_lt_iff_P1 {i j k l} :
-    (⟦mulOption x y i k⟧ : Game) < -⟦mulOption x (-y) j l⟧ ↔
-    P1 (x.moveLeft i) x (x.moveLeft j) y (y.moveLeft k) (-(-y).moveLeft l) := by
-  dsimp only [P1, mulOption, quot_sub, quot_add]
-  simp_rw [neg_sub', neg_add, quot_mul_neg, neg_neg]
+lemma mulOption_lt_iff_P1 {a b c d} :
+    Game.mk (mulOption x y a c) < -Game.mk (mulOption x (-y) b d) ↔ P1 a x b y c (-d) := by
+  simp [P1, mulOption]; abel_nf
 
 lemma mulOption_lt_mul_iff_P3 {i j} :
-    ⟦mulOption x y i j⟧ < (⟦x * y⟧ : Game) ↔ P3 (x.moveLeft i) x (y.moveLeft j) y := by
-  dsimp only [mulOption, quot_sub, quot_add]
-  exact sub_lt_iff_lt_add'
+    Game.mk (mulOption x y i j) < Game.mk (x * y) ↔ P3 i x j y := by
+  simpa [mulOption] using sub_lt_iff_lt_add'
 
+#exit
 lemma P1_of_eq (he : x₁ ≈ x₃) (h₁ : P2 x₁ x₃ y₁) (h₃ : P2 x₁ x₃ y₃) (h3 : P3 x₁ x₂ y₂ y₃) :
     P1 x₁ x₂ x₃ y₁ y₂ y₃ := by
   rw [P1, ← h₁ he, ← h₃ he, sub_lt_sub_iff]
@@ -149,6 +141,7 @@ lemma P1_of_lt (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) :
   rw [P1, sub_lt_sub_iff, ← add_lt_add_iff_left ⟦x₃ * y₂⟧]
   convert add_lt_add h₁ h₂ using 1 <;> abel
 
+#exit
 /-- The type of lists of arguments for P1, P2, and P4. -/
 inductive Args : Type (u+1)
   | P1 (x y : PGame.{u}) : Args
