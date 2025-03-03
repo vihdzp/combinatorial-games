@@ -36,13 +36,7 @@ form a linear ordered commutative ring.
 
 universe u
 
-theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
-    ¬ c ≤ a :=
-  fun h ↦ h₂ (h.trans h₁)
-
-theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
-    ¬ c ≤ a :=
-  fun h ↦ h₁ (h₂.trans h)
+/-! ### Numeric games -/
 
 namespace IGame
 
@@ -53,7 +47,9 @@ termination_by x
 decreasing_by igame_wf
 
 /-- A game `{s | t}ᴵ` is numeric if everything in `s` is less than everything in `t`, and all the
-elements of these sets are also numeric. -/
+elements of these sets are also numeric.
+
+The `Surreal` numbers are built as the quotient of numeric games under equivalence. -/
 @[mk_iff numeric_iff_aux]
 class Numeric (x : IGame) : Prop where
   out : NumericAux x
@@ -84,6 +80,14 @@ protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   cases h with
   | inl h => exact Numeric.of_mem_leftMoves h
   | inr h => exact Numeric.of_mem_rightMoves h
+
+@[simp]
+protected instance zero : Numeric 0 := by
+  rw [numeric_def]; simp
+
+@[simp]
+protected instance one : Numeric 1 := by
+  rw [numeric_def]; simp
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
@@ -129,68 +133,42 @@ theorem lt_iff_exists_le [Numeric x] [Numeric y] :
     x < y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
   rw [← Numeric.not_le, lf_iff_exists_le]
 
-end Numeric
-  #exit
+theorem leftMove_lt [Numeric x] (h : y ∈ x.leftMoves) : y < x := by
+  have := Numeric.of_mem_leftMoves h; simpa using leftMove_lf h
 
-theorem lf_asymm {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y → ¬y ⧏ x := by
-  refine numeric_rec (C := fun x ↦ ∀ z (_oz : Numeric z), x ⧏ z → ¬z ⧏ x)
-    (fun xl xr xL xR hx _oxl _oxr IHxl IHxr ↦ ?_) x ox y oy
-  refine numeric_rec fun yl yr yL yR hy oyl oyr _IHyl _IHyr ↦ ?_
-  rw [mk_lf_mk, mk_lf_mk]; rintro (⟨i, h₁⟩ | ⟨j, h₁⟩) (⟨i, h₂⟩ | ⟨j, h₂⟩)
-  · exact IHxl _ _ (oyl _) (h₁.moveLeft_lf _) (h₂.moveLeft_lf _)
-  · exact (le_trans h₂ h₁).not_gf (lf_of_lt (hy _ _))
-  · exact (le_trans h₁ h₂).not_gf (lf_of_lt (hx _ _))
-  · exact IHxr _ _ (oyr _) (h₁.lf_moveRight _) (h₂.lf_moveRight _)
+theorem lt_rightMove [Numeric x] (h : y ∈ x.rightMoves) : x < y := by
+  have := Numeric.of_mem_rightMoves h; simpa using lf_rightMove h
+
+protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
+  refine mk' (fun y hy z hz ↦ ?_) ?_ ?_
+  · rw [← IGame.neg_lt_neg_iff]
+    apply @leftMove_lt_rightMove x <;> simp_all
+  all_goals
+    intro y hy
+    simp only [leftMoves_neg, rightMoves_neg] at hy
+    try have := Numeric.of_mem_leftMoves hy
+    try have := Numeric.of_mem_rightMoves hy
+    simpa using Numeric.neg (-y)
+termination_by x
+decreasing_by all_goals simp_all; igame_wf
+
+protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
+  apply mk'
+  · simp_rw [leftMoves_add, rightMoves_add, Set.mem_union, Set.mem_image]
+    rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
+    · rw [add_lt_add_iff_right]
 
 #exit
 
-theorem not_fuzzy {x y : PGame} (ox : Numeric x) (oy : Numeric y) : ¬Fuzzy x y :=
-  fun h ↦ not_lf.2 ((lf_of_fuzzy h).le ox oy) h.2
+theorem sub {x y : PGame} (ox : Numeric x) (oy : Numeric y) : Numeric (x - y) :=
+  ox.add oy.neg
 
-theorem lt_or_equiv_or_gt {x y : PGame} (ox : Numeric x) (oy : Numeric y) :
-    x < y ∨ (x ≈ y) ∨ y < x :=
-  ((lf_or_equiv_or_gf x y).imp fun h ↦ h.lt ox oy) <| Or.imp_right fun h ↦ h.lt oy ox
+#exit
 
-theorem numeric_of_isEmpty (x : PGame) [IsEmpty x.LeftMoves] [IsEmpty x.RightMoves] : Numeric x :=
-  Numeric.mk isEmptyElim isEmptyElim isEmptyElim
+end Numeric
+  #exit
 
-theorem numeric_of_isEmpty_leftMoves (x : PGame) [IsEmpty x.LeftMoves] :
-    (∀ j, Numeric (x.moveRight j)) → Numeric x :=
-  Numeric.mk isEmptyElim isEmptyElim
 
-theorem numeric_of_isEmpty_rightMoves (x : PGame) [IsEmpty x.RightMoves]
-    (H : ∀ i, Numeric (x.moveLeft i)) : Numeric x :=
-  Numeric.mk (fun _ ↦ isEmptyElim) H isEmptyElim
-
-theorem numeric_zero : Numeric 0 :=
-  numeric_of_isEmpty 0
-
-theorem numeric_one : Numeric 1 :=
-  numeric_of_isEmpty_rightMoves 1 fun _ ↦ numeric_zero
-
-theorem Numeric.neg : ∀ {x : PGame} (_ : Numeric x), Numeric (-x)
-  | ⟨_, _, _, _⟩, o =>
-    ⟨fun j i ↦ neg_lt_neg_iff.2 (o.1 i j), fun j ↦ (o.2.2 j).neg, fun i ↦ (o.2.1 i).neg⟩
-
-/-- Inserting a smaller numeric left option into a numeric game results in a numeric game. -/
-theorem insertLeft_numeric {x x' : PGame} (x_num : x.Numeric) (x'_num : x'.Numeric)
-    (h : x' ≤ x) : (insertLeft x x').Numeric := by
-  rw [le_iff_forall_lt x'_num x_num] at h
-  unfold Numeric at x_num ⊢
-  rcases x with ⟨xl, xr, xL, xR⟩
-  simp only [insertLeft, Sum.forall, forall_const, Sum.elim_inl, Sum.elim_inr] at x_num ⊢
-  constructor
-  · simp only [x_num.1, implies_true, true_and]
-    simp only [rightMoves_mk, moveRight_mk] at h
-    exact h.2
-  · simp only [x_num, implies_true, x'_num, and_self]
-
-/-- Inserting a larger numeric right option into a numeric game results in a numeric game. -/
-theorem insertRight_numeric {x x' : PGame} (x_num : x.Numeric) (x'_num : x'.Numeric)
-    (h : x ≤ x') : (insertRight x x').Numeric := by
-  rw [← neg_neg (x.insertRight x'), ← neg_insertLeft_neg]
-  apply Numeric.neg
-  exact insertLeft_numeric (Numeric.neg x_num) (Numeric.neg x'_num) (neg_le_neg_iff.mpr h)
 
 namespace Numeric
 
