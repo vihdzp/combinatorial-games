@@ -8,3 +8,4 @@ import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Mathlib.CompRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Surreal.Basic
