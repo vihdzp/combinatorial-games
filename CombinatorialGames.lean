@@ -1,6 +1,7 @@
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.IGame.Concrete
 import CombinatorialGames.IGame.IGame
+import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Short
 import CombinatorialGames.IGame.Special
 import CombinatorialGames.Mathlib.AntisymmRel

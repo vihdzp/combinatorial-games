@@ -70,7 +70,7 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
--- This is a false positive due to the provisional duplicated IGame/IGame file path.
+-- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
 -- All computation should be done through `IGame.Short`.
 noncomputable section
@@ -498,6 +498,12 @@ instance : Preorder IGame where
   le_refl _ := le_rfl'
   le_trans x y z := le_trans'
 
+theorem leftMove_lf {x y : IGame} (h : y ∈ x.leftMoves) : y ⧏ x :=
+  lf_of_le_leftMove le_rfl h
+
+theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
+  lf_of_rightMove_le le_rfl h
+
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
@@ -818,10 +824,8 @@ instance : AddLeftReflectLE IGame where
     rw [← add_assoc]
     exact add_le_add_right (neg_add_equiv x).le z
 
-instance : AddRightReflectLE IGame where
-  elim x y z h := by
-    rw [Function.swap, Function.swap, add_comm, add_comm z] at h
-    exact le_of_add_le_add_left h
+instance : AddRightReflectLE IGame :=
+  addRightReflectLE_of_addLeftReflectLE _
 
 instance : AddLeftStrictMono IGame where
   elim x y z h := by
@@ -829,16 +833,34 @@ instance : AddLeftStrictMono IGame where
     contrapose! h
     exact (le_of_add_le_add_left h).not_lt
 
-instance : AddRightStrictMono IGame where
+instance : AddRightStrictMono IGame :=
+  addRightStrictMono_of_addLeftStrictMono _
+
+-- TODO: [AddLeftMono α] [AddLeftReflectLE α] → AddLeftReflectLT α
+instance : AddLeftReflectLT IGame where
   elim x y z h := by
-    rw [Function.swap, Function.swap, add_comm, add_comm z]
-    exact add_lt_add_left h x
+    rwa [lt_iff_le_not_le, add_le_add_iff_left, add_le_add_iff_left, ← lt_iff_le_not_le] at h
+
+instance : AddRightReflectLT IGame :=
+  addRightReflectLT_of_addLeftReflectLT _
 
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
+theorem add_congr_left {a b c : IGame} (h : a ≈ b) : a + c ≈ b + c :=
+  add_congr h .rfl
+
+theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
+  add_congr .rfl h
+
 theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
+
+theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
+  sub_congr h .rfl
+
+theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
+  sub_congr .rfl h
 
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
 
