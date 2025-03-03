@@ -268,8 +268,12 @@ def toGame : Surreal ↪o Game where
 @[simp] theorem toGame_zero : toGame 0 = 0 := rfl
 @[simp] theorem toGame_one : toGame 1 = 1 := rfl
 
+theorem toGame_le_iff {a b : Surreal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
+theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp
+theorem toGame_inj {a b : Surreal} : toGame a = toGame b ↔ a = b := by simp
+
 /-- `Surreal.toGame` as an `OrderAddMonoidHom` -/
-@[simps!]
+@[simps]
 def toGameAddHom : Surreal →+o Game where
   toFun := toGame
   map_zero' := rfl
