@@ -22,9 +22,6 @@ universe u
 
 noncomputable section
 
--- TODO: remove Temp namespace
-namespace Temp
-
 open IGame Set Pointwise
 
 /-- Games up to equivalence.
@@ -208,5 +205,4 @@ theorem mul_assoc_equiv (x y z : IGame) : x * y * z ≈ x * (y * z) :=
   Game.mk_eq_mk.1 (Game.mk_mul_assoc x y z)
 
 end IGame
-end Temp
 end

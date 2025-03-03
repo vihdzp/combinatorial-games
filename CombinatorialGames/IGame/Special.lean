@@ -20,9 +20,6 @@ universe u
 
 noncomputable section
 
--- TODO: remove Temp namespace
-namespace Temp
-
 namespace IGame
 
 /-! ### Star -/
@@ -137,5 +134,4 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
 proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
-end Temp
 end
