@@ -196,7 +196,7 @@ def mk (x : PGame) : IGame := Quotient.mk _ x
 theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
-alias _root_.Temp.PGame.Identical.mk_eq := mk_eq
+alias _root_.PGame.Identical.mk_eq := mk_eq
 
 @[cases_eliminator]
 theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
@@ -984,7 +984,7 @@ private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
     rw [← (Equiv.neg _).exists_congr_right]
     simp only [Equiv.neg_apply, neg_neg, and_comm, mulOption, or_comm]
     congr! 4
-    rw [and_congr_left_iff]
+    rw [and_congr_right_iff]
     rintro (⟨_, _⟩ | ⟨_, _⟩)
     all_goals
       rw [← neg_inj, neg_mul', neg_mul', neg_mul']
