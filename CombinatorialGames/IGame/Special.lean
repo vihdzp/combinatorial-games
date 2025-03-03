@@ -185,7 +185,7 @@ theorem _root_.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame :=
 instance (x : IGame) [Short x] : Short (⧿x) := ⟨(Short.toSGame x).miny, by simp⟩
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted exists_tiny_lt_of_pos {x : IGame} (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
 end IGame
 end
