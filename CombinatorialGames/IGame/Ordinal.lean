@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.Mathlib.AntisymmRel
+import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -215,11 +216,17 @@ termination_by (a, b)
 theorem toGame_mul (a b : NatOrdinal) : (a * b).toGame = .mk (a.toIGame * b.toIGame) :=
   Game.mk_eq (toIGame_mul a b)
 
+/-- `NatOrdinal.toGame` as an `OrderAddMonoidHom`. -/
+@[simps]
+def toGameAddHom : NatOrdinal →+o Game where
+  toFun := toGame
+  map_zero' := toGame_zero
+  map_add' := toGame_add
+  monotone' _ _ := toGame_le_iff.2
+
 @[simp]
-theorem toGame_natCast : ∀ n : ℕ, toGame n = n
-  | 0 => toGame_zero
-  | n + 1 => by
-    rw [Nat.cast_add, toGame_add, toGame_natCast, Nat.cast_one, toGame_one, Nat.cast_add_one]
+theorem toGame_natCast (n : ℕ) : toGame n = n :=
+  map_natCast' toGameAddHom toGame_one n
 
 /-- Note that the equality doesn't hold, as e.g. `↑2 = {1 | }`, while `toIGame 2 = {0, 1 | }`. -/
 @[simp]
