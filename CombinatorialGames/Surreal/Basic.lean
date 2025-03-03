@@ -64,24 +64,23 @@ theorem numeric_def {x : IGame} : Numeric x ↔
   simp_rw [numeric_iff_aux]; rw [NumericAux]
 
 namespace Numeric
+variable {x y z : IGame}
 
-theorem mk' {x : IGame} (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
+theorem mk' (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
     (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
   numeric_def.2 ⟨h₁, h₂, h₃⟩
 
-theorem leftMove_lt_rightMove {x y z : IGame} [h : Numeric x]
+theorem leftMove_lt_rightMove [h : Numeric x]
     (hy : y ∈ x.leftMoves) (hz : z ∈ x.rightMoves) : y < z :=
   (numeric_def.1 h).1 y hy z hz
 
-protected theorem of_mem_leftMoves {x y : IGame} [h : Numeric x] (hy : y ∈ x.leftMoves) :
-    Numeric y :=
+protected theorem of_mem_leftMoves [h : Numeric x] (hy : y ∈ x.leftMoves) : Numeric y :=
   (numeric_def.1 h).2.1 y hy
 
-protected theorem of_mem_rightMoves {x y : IGame} [h : Numeric x] (hy : y ∈ x.rightMoves) :
-    Numeric y :=
+protected theorem of_mem_rightMoves [h : Numeric x] (hy : y ∈ x.rightMoves) : Numeric y :=
   (numeric_def.1 h).2.2 y hy
 
-protected theorem isOption {x y : IGame} [Numeric x] (h : IsOption y x) : Numeric y := by
+protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   cases h with
   | inl h => exact Numeric.of_mem_leftMoves h
   | inr h => exact Numeric.of_mem_rightMoves h
@@ -98,9 +97,37 @@ protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ 
 termination_by x
 decreasing_by igame_wf
 
-protected theorem le_total {x y : IGame} [Numeric x] [Numeric y] : x ≤ y ∨ y ≤ x := by
+protected theorem le_total (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y ≤ x := by
   rw [or_iff_not_imp_left]
   exact Numeric.le_of_not_le
+
+protected theorem lt_of_not_le [Numeric x] [Numeric y] (h : ¬ x ≤ y) : y < x :=
+  (Numeric.le_of_not_le h).lt_of_not_le h
+
+@[simp]
+protected theorem not_le [Numeric x] [Numeric y] : ¬ x ≤ y ↔ y < x :=
+  ⟨Numeric.lt_of_not_le, not_le_of_lt⟩
+
+@[simp]
+protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
+  not_iff_comm.1 Numeric.not_le
+
+theorem not_fuzzy [Numeric x] [Numeric y] : ¬ x ‖ y := by
+  simpa using Numeric.le_total x y
+
+theorem lt_or_equiv_or_gt [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
+  simp_rw [← Numeric.not_le]; tauto
+
+theorem le_iff_forall_lt [Numeric x] [Numeric y] :
+    x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
+  rw [le_iff_forall_lf]
+  congr! <;> rename_i z hz
+  · have := Numeric.of_mem_leftMoves hz; rw [Numeric.not_le]
+  · have := Numeric.of_mem_rightMoves hz; rw [Numeric.not_le]
+
+theorem lt_iff_exists_le [Numeric x] [Numeric y] :
+    x < y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
+  rw [← Numeric.not_le, lf_iff_exists_le]
 
 end Numeric
   #exit
@@ -116,44 +143,6 @@ theorem lf_asymm {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y → �
   · exact IHxr _ _ (oyr _) (h₁.lf_moveRight _) (h₂.lf_moveRight _)
 
 #exit
-theorem le_of_lf {x y : PGame} (h : x ⧏ y) (ox : Numeric x) (oy : Numeric y) : x ≤ y :=
-  not_lf.1 (lf_asymm ox oy h)
-
-alias LF.le := le_of_lf
-
-theorem lt_of_lf {x y : PGame} (h : x ⧏ y) (ox : Numeric x) (oy : Numeric y) : x < y :=
-  (lt_or_fuzzy_of_lf h).resolve_right (not_fuzzy_of_le (h.le ox oy))
-
-alias LF.lt := lt_of_lf
-
-theorem lf_iff_lt {x y : PGame} (ox : Numeric x) (oy : Numeric y) : x ⧏ y ↔ x < y :=
-  ⟨fun h ↦ h.lt ox oy, lf_of_lt⟩
-
-/-- Definition of `x ≤ y` on numeric pre-games, in terms of `<` -/
-theorem le_iff_forall_lt {x y : PGame} (ox : x.Numeric) (oy : y.Numeric) :
-    x ≤ y ↔ (∀ i, x.moveLeft i < y) ∧ ∀ j, x < y.moveRight j := by
-  refine le_iff_forall_lf.trans (and_congr ?_ ?_) <;>
-      refine forall_congr' fun i ↦ lf_iff_lt ?_ ?_ <;>
-    apply_rules [Numeric.moveLeft, Numeric.moveRight]
-
-/-- Definition of `x < y` on numeric pre-games, in terms of `≤` -/
-theorem lt_iff_exists_le {x y : PGame} (ox : x.Numeric) (oy : y.Numeric) :
-    x < y ↔ (∃ i, x ≤ y.moveLeft i) ∨ ∃ j, x.moveRight j ≤ y := by
-  rw [← lf_iff_lt ox oy, lf_iff_exists_le]
-
-theorem lt_of_exists_le {x y : PGame} (ox : x.Numeric) (oy : y.Numeric) :
-    ((∃ i, x ≤ y.moveLeft i) ∨ ∃ j, x.moveRight j ≤ y) → x < y :=
-  (lt_iff_exists_le ox oy).2
-
-/-- The definition of `x < y` on numeric pre-games, in terms of `<` two moves later. -/
-theorem lt_def {x y : PGame} (ox : x.Numeric) (oy : y.Numeric) :
-    x < y ↔
-      (∃ i, (∀ i', x.moveLeft i' < y.moveLeft i) ∧ ∀ j, x < (y.moveLeft i).moveRight j) ∨
-        ∃ j, (∀ i, (x.moveRight j).moveLeft i < y) ∧ ∀ j', x.moveRight j < y.moveRight j' := by
-  rw [← lf_iff_lt ox oy, lf_def]
-  refine or_congr ?_ ?_ <;> refine exists_congr fun x_1 ↦ ?_ <;> refine and_congr ?_ ?_ <;>
-      refine forall_congr' fun i ↦ lf_iff_lt ?_ ?_ <;>
-    apply_rules [Numeric.moveLeft, Numeric.moveRight]
 
 theorem not_fuzzy {x y : PGame} (ox : Numeric x) (oy : Numeric y) : ¬Fuzzy x y :=
   fun h ↦ not_lf.2 ((lf_of_fuzzy h).le ox oy) h.2
