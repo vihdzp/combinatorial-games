@@ -3,7 +3,7 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Concrete
+import CombinatorialGames.IGame.Concrete
 import Mathlib.Algebra.Group.Units.Equiv
 import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Data.Finset.Sort
@@ -22,7 +22,7 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
-namespace PGame
+namespace IGame
 
 open Function
 
@@ -153,4 +153,4 @@ instance : ConcreteGame Domineering where
     · exact subrelation_relRight h
 
 end Domineering
-end PGame
+end IGame
