@@ -157,6 +157,10 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
 
+@[simp]
+theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
+  ⟨fun _ ↦ by simpa using Numeric.neg (-x), fun _ ↦ Numeric.neg x⟩
+
 protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
   apply mk' <;> simp only [leftMoves_add, rightMoves_add, Set.mem_union, Set.mem_image]
   · rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
@@ -254,6 +258,15 @@ instance : AddMonoidWithOne Surreal where
 
 @[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
+
+instance : ZeroLEOneClass Surreal where
+  zero_le_one := zero_le_one (α := IGame)
+
+instance : NeZero (1 : Surreal) where
+  out := by apply ne_of_gt; exact IGame.zero_lt_one
+
+instance : Nontrivial Surreal :=
+  ⟨_, _, zero_ne_one⟩
 
 /-- Casts a `Surreal` number into a `Game`. -/
 def toGame : Surreal ↪o Game where

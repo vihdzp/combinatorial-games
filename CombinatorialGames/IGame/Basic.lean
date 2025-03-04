@@ -113,6 +113,15 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 
+instance : ZeroLEOneClass Game where
+  zero_le_one := zero_le_one (α := IGame)
+
+instance : NeZero (1 : Game) where
+  out := by apply ne_of_gt; exact IGame.zero_lt_one
+
+instance : Nontrivial Game :=
+  ⟨_, _, zero_ne_one⟩
+
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq (x * y), mul_eq]
   simp only [leftMoves_add, rightMoves_add, leftMoves_mul, rightMoves_mul, prod_union,
