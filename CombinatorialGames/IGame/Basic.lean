@@ -114,6 +114,10 @@ instance : AddMonoidWithOne Game where
 @[simp] theorem mk_neg (x : IGame) : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) : mk (x - y) = mk x - mk y := rfl
 
+theorem mk_mulOption (x y a b : IGame) :
+    mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
+  rfl
+
 @[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
 @[simp] theorem mk_equiv_mk {x y : IGame} : mk x ≈ mk y ↔ x ≈ y := Iff.rfl
