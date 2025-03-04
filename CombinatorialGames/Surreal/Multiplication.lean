@@ -34,7 +34,7 @@ paper. As in said argument, P3 is proven by proxy of an auxiliary P4, which stat
 This argument is very casework heavy in a way that's difficult to automate. For instance, in P1, we
 have to prove four different inequalities of the form
 `a ∈ (x * y).leftMoves → b ∈ (x * y).rightMoves → a < b`, and depending on what form the options of
-`x * y` take, we have to apply different instantations of the inductive hypothesis.
+`x * y` take, we have to apply different instantiations of the inductive hypothesis.
 
 To greatly simplify things, we work uniquely in terms of left options, which we achieve by rewriting
 `a ∈ x.rightMoves` as `-a ∈ (-x).leftMoves`. We then show that our distinct lemmas and inductive
