@@ -526,8 +526,7 @@ private lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂]
 termination_by (x₁, x₂)
 decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf
 
-theorem Numeric.mul_pos (hx₁ : x₁.Numeric) (hx₂ : x₂.Numeric) (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) :
-    0 < x₁ * x₂ := by
+theorem Numeric.mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
   simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
 
 end IGame
@@ -535,17 +534,18 @@ end IGame
 namespace Surreal
 
 noncomputable instance : LinearOrderedCommRing Surreal where
-  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩)
-    fun _ _ h₁ _ _ h₂ ↦ Numeric.mul_congr h₁ h₂
-  mul_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (mul_assoc_equiv ..)
-  one_mul := by rintro ⟨x⟩; change mk (1 * _) = mk _; simp_rw [one_mul]
-  mul_one := by rintro ⟨x⟩; change mk (_ * 1) = mk _; simp_rw [mul_one]
+  __ := Surreal.instLinearOrderedAddCommGroup
+  __ := Surreal.instZeroLEOneClass
+  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h₁ _ _ ↦ Numeric.mul_congr h₁
+  zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
+  mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
+  one_mul := by rintro ⟨x⟩; change mk (1 * x) = mk x; simp_rw [one_mul]
+  mul_one := by rintro ⟨x⟩; change mk (x * 1) = mk x; simp_rw [mul_one]
   left_distrib := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (mul_add_equiv ..)
   right_distrib := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (add_mul_equiv ..)
-  zero_mul := by rintro ⟨_⟩; exact Quotient.sound (zero_mul_equiv _)
-  mul_zero := by rintro ⟨_⟩; exact Quotient.sound (mul_zero_equiv _)
-  exists_pair_ne := ⟨0, 1, zero_lt_one⟩
-  le_total := by rintro ⟨x⟩ ⟨y⟩; exact (le_or_gf x.1 y.1).imp id (fun h ↦ h.le y.2 x.2)
-  mul_pos := by rintro ⟨x⟩ ⟨y⟩; exact x.2.mul_pos y.2
+  mul_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x * y) = mk (y * x); simp_rw [mul_comm]
+  mul_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (mul_assoc_equiv ..)
+  mul_pos := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.mul_pos
+  le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
 
 end Surreal

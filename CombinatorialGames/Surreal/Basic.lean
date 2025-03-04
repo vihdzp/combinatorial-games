@@ -237,10 +237,10 @@ instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))
 
 instance : LinearOrderedAddCommGroup Surreal where
-  zero_add := by rintro ⟨x⟩; change mk (0 + _) = mk _; simp_rw [zero_add]
-  add_zero := by rintro ⟨x⟩; change mk (_ + 0) = mk _; simp_rw [add_zero]
-  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (_ + _) = mk (_ + _); simp_rw [add_comm]
-  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (_ + _ + _) = mk (_ + (_ + _)); simp_rw [add_assoc]
+  zero_add := by rintro ⟨x⟩; change mk (0 + x) = mk x; simp_rw [zero_add]
+  add_zero := by rintro ⟨x⟩; change mk (x + 0) = mk x; simp_rw [add_zero]
+  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x + y) = mk (y + x); simp_rw [add_comm]
+  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (x + y + z) = mk (x + (y + z)); simp_rw [add_assoc]
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
   le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
