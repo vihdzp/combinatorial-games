@@ -421,7 +421,6 @@ lemma P3_of_IH3 {y₁ y₂} (h : ∀ i ∈ x₂.leftMoves, IH3 x₁ i x₂ y₁ 
 /-- `P4` follows from the induction hypothesis. -/
 lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x₂ y := by
   have h₁₂ := IH24_of_IH IH
-  have h₂₁ := IH24_swap_of_IH IH
   have h4 := IH4_of_IH IH
   obtain ⟨h₁₂x, h₁₂y⟩ := IH24_neg h₁₂
   obtain ⟨h4x, h4y⟩ := IH4_neg h4
