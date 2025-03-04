@@ -87,10 +87,9 @@ namespace Surreal.Multiplication
 
 /-! ### Predicates P1 – P4 -/
 
-/-- `P1 a x c y b d` means that `mulOption x y a b < mulOption x y c d`. This is the general form
+/-- `P1 x y a b c d` means that `mulOption x y a b < mulOption x y c d`. This is the general form
 of the statements needed to prove that `x * y` is numeric. -/
--- TODO: reorder variables
-def P1 (a x c y b d : IGame) := Game.mk (mulOption x y a b) < Game.mk (mulOption x y c d)
+def P1 (x y a b c d : IGame) := Game.mk (mulOption x y a b) < Game.mk (mulOption x y c d)
 
 /-- `P2 x₁ x₂ y` states that if `x₁ ≈ x₂`, then `x₁ * y ≈ x₂ * y`. The RHS is stated in terms of
 `Game.mk` for rewriting convenience. -/
@@ -113,8 +112,7 @@ def P4 (x₁ x₂ y : IGame) :=
 similar symmetry properties, so we can slightly simplify the argument by merging them. -/
 def P24 (x₁ x₂ y : IGame) : Prop := P2 x₁ x₂ y ∧ P4 x₁ x₂ y
 
--- TODO: better variable naming? And remove all the {x y} from everything below.
-variable {x x₁ x₂ x₃ x' y y₁ y₂ y₃ y' : IGame.{u}}
+variable {x x₁ x₂ x₃ x' y y₁ y₂ y₃ y' a b c d : IGame.{u}}
 
 /-! #### Symmetry properties of P1 – P4 -/
 
@@ -125,31 +123,25 @@ lemma P3.trans (h₁ : P3 x₁ x₂ y₁ y₂) (h₂ : P3 x₂ x₃ y₁ y₂) :
   rw [P3, ← add_lt_add_iff_left (Game.mk (x₂ * y₁) + Game.mk (x₂ * y₂))]
   convert add_lt_add h₁ h₂ using 1 <;> abel
 
--- TODO: flip this
-lemma P3_neg : P3 x₁ x₂ y₁ y₂ ↔ P3 (-x₂) (-x₁) y₁ y₂ := by
+lemma P3_neg : P3 (-x₂) (-x₁) y₁ y₂ ↔ P3 x₁ x₂ y₁ y₂ := by
   simp_rw [P3, neg_mul, Game.mk_neg]
   rw [← _root_.neg_lt_neg_iff]
   abel_nf
 
--- TODO: flip this
-lemma P2_neg_left : P2 x₁ x₂ y ↔ P2 (-x₂) (-x₁) y := by
+lemma P2_neg_left : P2 (-x₂) (-x₁) y ↔ P2 x₁ x₂ y := by
   simp [P2, AntisymmRel, eq_comm]
 
--- TODO: flip this
-lemma P2_neg_right : P2 x₁ x₂ y ↔ P2 x₁ x₂ (-y) := by
+lemma P2_neg_right : P2 x₁ x₂ (-y) ↔ P2 x₁ x₂ y := by
   simp [P2]
 
--- TODO: flip this
-lemma P4_neg_left : P4 x₁ x₂ y ↔ P4 (-x₂) (-x₁) y := by
-  simp_rw [P4, IGame.neg_lt_neg_iff, ← P3_neg]
+lemma P4_neg_left : P4 (-x₂) (-x₁) y ↔P4 x₁ x₂ y  := by
+  simp_rw [P4, IGame.neg_lt_neg_iff, P3_neg]
 
--- TODO: flip this
-lemma P4_neg_right : P4 x₁ x₂ y ↔ P4 x₁ x₂ (-y) := by
+lemma P4_neg_right : P4 x₁ x₂ (-y) ↔ P4 x₁ x₂ y := by
   rw [P4, P4, neg_neg, and_comm]
 
--- TODO: flip this
-lemma P24_neg_left : P24 x₁ x₂ y ↔ P24 (-x₂) (-x₁) y := by rw [P24, P24, P2_neg_left, P4_neg_left]
-lemma P24_neg_right : P24 x₁ x₂ y ↔ P24 x₁ x₂ (-y) := by rw [P24, P24, P2_neg_right, P4_neg_right]
+lemma P24_neg_left : P24 (-x₂) (-x₁) y ↔ P24 x₁ x₂ y := by rw [P24, P24, P2_neg_left, P4_neg_left]
+lemma P24_neg_right : P24 x₁ x₂ (-y) ↔ P24 x₁ x₂ y := by rw [P24, P24, P2_neg_right, P4_neg_right]
 
 /-! ### Inductive setup -/
 
@@ -183,31 +175,23 @@ repeatedly removing a game from `a₂` and adding back one or two options of the
 See also `WellFounded.CutExpand`. -/
 def ArgsRel := InvImage (TransGen <| CutExpand IsOption) Args.toMultiset
 
--- TODO: `IsWellFounded _ ArgsRel` and `IsTrans _ ArgsRel` should both be immediate from
--- typeclass inference.
-
 /-- `ArgsRel` is well-founded. -/
 lemma argsRel_wf : WellFounded ArgsRel := InvImage.wf _ isOption_wf.cutExpand.transGen
+instance : IsWellFounded _ ArgsRel := ⟨argsRel_wf⟩
 
 /-- The property that all arguments are numeric is leftward-closed under `ArgsRel`. -/
 lemma ArgsRel.numeric_closed {a' a} : ArgsRel a' a → a.Numeric → a'.Numeric :=
-  TransGen.closed' <| @cutExpand_closed _ IsOption ⟨isOption_wf.isIrrefl.1⟩ _
-    fun h h' ↦ h'.isOption h -- TODO: `IsOption.numeric` alias
+  TransGen.closed' <| @cutExpand_closed _ _ _ _ fun h h' ↦ h'.isOption h
 
 /-- The statement that we will show by induction for all `Numeric` args, using the well-founded
 relation `ArgsRel`.
 
 The inductive hypothesis in the proof will be `∀ a', ArgsRel a' a → P124 a`. -/
--- TODO: what about renaming to `Args.prop`?
 def P124 : Args → Prop
   | (Args.P1 x y) => Numeric (x * y)
   | (Args.P24 x₁ x₂ y) => P24 x₁ x₂ y
 
 /-! ### P1 follows from the inductive hypothesis -/
-
--- TODO: move this to P3
-lemma mulOption_lt_mul_iff_P3 {i j} : mulOption x y i j < x * y ↔ P3 i x j y :=
-  @sub_lt_iff_lt_add' Game _ _ _ (.mk _) (.mk _) (.mk _)
 
 lemma numeric_isOption_mul_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) (h : IsOption x' x) :
     (x' * y).Numeric :=
@@ -238,34 +222,34 @@ lemma IH1_swap_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) : IH1 y x 
 lemma IH1_neg_left : IH1 x y → IH1 (-x) y := by
   intro h x₁ x₂ y' h₁ h₂ hy
   rw [isOption_neg] at h₁ h₂
-  exact P24_neg_left.2 (h h₂ h₁ hy)
+  exact P24_neg_left.1 (h h₂ h₁ hy)
 
 lemma IH1_neg_right : IH1 x y → IH1 x (-y) := by
   intro h x₁ x₂ y'
-  rw [← neg_eq_iff_eq_neg, isOption_neg, P24_neg_right]
+  rw [← neg_eq_iff_eq_neg, isOption_neg, ← P24_neg_right]
   apply h
 
 lemma P1_of_equiv (he : x₁ ≈ x₃) (h₁ : P2 x₁ x₃ y₁) (h₃ : P2 x₁ x₃ y₃) (h3 : P3 x₁ x₂ y₂ y₃) :
-    P1 x₁ x₂ x₃ y₁ y₂ y₃ := by
+    P1 x₂ y₁ x₁ y₂ x₃ y₃ := by
   rw [P1, mk_mulOption, mk_mulOption, ← h₁ he, ← h₃ he, sub_lt_sub_iff]
   convert add_lt_add_left h3 (.mk (x₁ * y₁)) using 1 <;> abel
 
-lemma P1_of_P3 (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) : P1 x₁ x₂ x₃ y₁ y₂ y₃ := by
+lemma P1_of_P3 (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) : P1 x₂ y₁ x₁ y₂ x₃ y₃ := by
   rw [P1, mk_mulOption, mk_mulOption, sub_lt_sub_iff, ← add_lt_add_iff_left (.mk (x₃ * y₂))]
   convert add_lt_add h₁ h₂ using 1 <;> abel
 
-lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x) {a b d}
+lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x)
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hd : d ∈ (-y).leftMoves) : P3 a x b (-d) := by
   rw [P3_comm]
   rw [leftMoves_neg] at hd
   refine ((ihyx (.of_mem_leftMoves hb) (.of_mem_rightMoves hd) <| Or.inl rfl).2 ?_).1 a ha
   exact Numeric.leftMove_lt_rightMove hb hd
 
-lemma P24_of_IH1 (ihxy : IH1 x y) {a b} (ha : a ∈ x.leftMoves) (hb : b ∈ x.leftMoves) : P24 a b y :=
+lemma P24_of_IH1 (ihxy : IH1 x y) (ha : a ∈ x.leftMoves) (hb : b ∈ x.leftMoves) : P24 a b y :=
   ihxy (.of_mem_leftMoves ha) (.of_mem_leftMoves hb) (Or.inl rfl)
 
-lemma mulOption_lt_iff_P1 {a b c d} :
-    Game.mk (mulOption x y a c) < -Game.mk (mulOption x (-y) b d) ↔ P1 a x b y c (-d) := by
+lemma mulOption_lt_iff_P1 :
+    Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) ↔ P1 x y a b c (-d) := by
   simp [P1, mulOption, sub_eq_add_neg, add_comm]
 
 lemma mulOption_lt_of_lt [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d} (h : a < c)
@@ -319,8 +303,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
 
 /-! ### P2 follows from the inductive hypothesis -/
 
--- numeric_of_IH
-lemma numeric_of_ih (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) :
+lemma numeric_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) :
     (x₁ * y).Numeric ∧ (x₂ * y).Numeric := by
   constructor <;> refine IH (.P1 ..) (.single ?_)
   · exact (cutExpand_add_right {y}).2 <| (cutExpand_add_left {x₁}).2 cutExpand_zero
@@ -335,8 +318,7 @@ def IH4 (x₁ x₂ y : IGame) : Prop :=
   ∀ ⦃z w⦄, IsOption w y → (IsOption z x₁ → P2 z x₂ w) ∧ (IsOption z x₂ → P2 x₁ z w)
 
 /-- `IH24 x₁ x₂ y` follows from the inductive hypothesis for `P24 x₁ x₂ y`. -/
--- IH24_of_IH
-lemma ih₁₂ (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH24 x₁ x₂ y := by
+lemma IH24_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH24 x₁ x₂ y := by
   rw [IH24]
   refine fun z ↦ ⟨?_, ?_, ?_⟩ <;> refine fun h ↦ IH (.P24 ..) (.single ?_)
   · exact (cutExpand_add_right {y}).2 (cutExpand_pair_left h)
@@ -344,46 +326,41 @@ lemma ih₁₂ (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH24 
   · exact (cutExpand_add_left {x₁}).2 (cutExpand_pair_right h)
 
 /-- `IH24 x₂ x₁ y` follows from the inductive hypothesis for `P24 x₁ x₂ y`. -/
--- IH24_swap_of_IH
-lemma ih₂₁ (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH24 x₂ x₁ y := ih₁₂ <| by
+lemma IH24_swap_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH24 x₂ x₁ y := by
+  apply IH24_of_IH
   convert IH using 2
   dsimp [ArgsRel, InvImage, Multiset.insert_eq_cons, ← Multiset.singleton_add]
   abel_nf
 
 /-- `IH4 x₁ x₂ y` follows from the inductive hypothesis for `P24 x₁ x₂ y`. -/
--- IH4_of_IH
-lemma ih4 (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH4 x₁ x₂ y := by
+lemma IH4_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) : IH4 x₁ x₂ y := by
   refine fun a b h ↦ ⟨?_, ?_⟩ <;>
     refine fun h' ↦ (IH (.P24 ..) <| (TransGen.single ?_).tail <|
       (cutExpand_add_left {x₁}).2 <| cutExpand_pair_right h).1
   · exact (cutExpand_add_right {b}).2 <| cutExpand_pair_left h'
   · exact (cutExpand_add_right {b}).2 <| cutExpand_pair_right h'
 
--- IH24_neg
--- TODO: split into two lemmas?
-lemma ih24_neg : IH24 x₁ x₂ y → IH24 (-x₂) (-x₁) y ∧ IH24 x₁ x₂ (-y) := by
-  simp_rw [IH24, ← P24_neg_right, isOption_neg]
+lemma IH24_neg : IH24 x₁ x₂ y → IH24 (-x₂) (-x₁) y ∧ IH24 x₁ x₂ (-y) := by
+  simp_rw [IH24, P24_neg_right, isOption_neg]
   refine fun (h : ∀ _, _) ↦ ⟨fun z ↦ ⟨?_, ?_, ?_⟩,
-    fun z ↦ ⟨(h z).1, (h z).2.1, P24_neg_right.2 ∘ (h (-z)).2.2⟩⟩
+    fun z ↦ ⟨(h z).1, (h z).2.1, P24_neg_right.1 ∘ (h (-z)).2.2⟩⟩
   all_goals
-    rw [P24_neg_left]
+    rw [← P24_neg_left]
     simp only [neg_neg]
   · exact (h (-z)).2.1
   · exact (h (-z)).1
   · exact (h z).2.2
 
--- IH4_neg
-lemma ih4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y) := by
+lemma IH4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y) := by
   simp_rw [IH4, isOption_neg]
   refine fun h ↦ ⟨fun z w h' ↦ ?_, fun z w h' ↦ ?_⟩
-  · convert (h h').symm using 2 <;> rw [P2_neg_left, neg_neg]
+  · convert (h h').symm using 2 <;> rw [← P2_neg_left, neg_neg]
   · convert h h' using 2 <;> rw [P2_neg_right]
 
--- TODO: rename vars
-lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁ ≈ x₂) {i j}
-    (hi : i ∈ x₁.leftMoves) (hj : j ∈ y.leftMoves) :
-    Game.mk (mulOption x₁ y i j) < Game.mk (x₂ * y) := by
-  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_leftMoves hi)).2 _).1 j hj) using 1
+lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁ ≈ x₂)
+    (hi : a ∈ x₁.leftMoves) (hj : b ∈ y.leftMoves) :
+    Game.mk (mulOption x₁ y a b) < Game.mk (x₂ * y) := by
+  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_leftMoves hi)).2 _).1 b hj) using 1
   · rw [← (h.2.2 (.of_mem_leftMoves hj)).1 he]
     rfl
   · rw [← he.lt_congr_right]
@@ -398,35 +375,34 @@ lemma mul_right_le_of_equiv [Numeric x₁] [Numeric x₂]
   · rw [forall_leftMoves_mul]
     constructor <;> intro a ha b hb
     · exact (mulOption_lt_mul_of_equiv ih₁₂ he ha hb).not_le
-    · simpa using (mulOption_lt_mul_of_equiv (ih24_neg <| (ih24_neg ih₂₁).1).2 he' ha hb).not_le
+    · simpa using (mulOption_lt_mul_of_equiv (IH24_neg <| (IH24_neg ih₂₁).1).2 he' ha hb).not_le
   · rw [forall_rightMoves_mul]
     constructor <;> intro a ha b hb
-    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (ih24_neg ih₂₁).2 he.symm ha hb).not_le
-    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (ih24_neg ih₁₂).1 he'.symm ha hb).not_le
+    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₂₁).2 he.symm ha hb).not_le
+    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₁₂).1 he'.symm ha hb).not_le
 
 /-- `P2` follows from the induction hypothesis. -/
 lemma P2_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) [Numeric x₁] [Numeric x₂]
     (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
-  ⟨mul_right_le_of_equiv (ih₁₂ IH) (ih₂₁ IH) he, mul_right_le_of_equiv (ih₂₁ IH) (ih₁₂ IH) he.symm⟩
+  ⟨mul_right_le_of_equiv (IH24_of_IH IH) (IH24_swap_of_IH IH) he,
+    mul_right_le_of_equiv (IH24_swap_of_IH IH) (IH24_of_IH IH) he.symm⟩
 
 /-! ### P4 follows from the inductive hypothesis -/
 
-/-- A condition just enough to deduce P3, which will always be used with `x'` being a left
-  option of `x₂`. When `y₁` is a left option of `y₂`, it can be deduced from induction hypotheses
-  `IH24 x₁ x₂ y₂`, `IH4 x₁ x₂ y₂`, and `(x₂ * y₂).Numeric` (`ih3_of_ih`); when `y₁` is
-  not necessarily an option of `y₂`, it follows from the induction hypothesis for P3 (with `x₂`
-  replaced by a left option `x'`) after the `main` theorem (P124) is established, and is used to
-  prove P3 in full (`P3_of_lt_of_lt`). -/
-def IH3 (x₁ x' x₂ y₁ y₂ : IGame) : Prop :=
-    P2 x₁ x' y₁ ∧ P2 x₁ x' y₂ ∧ P3 x' x₂ y₁ y₂ ∧ (x₁ < x' → P3 x₁ x' y₁ y₂)
+lemma mulOption_lt_mul_iff_P3 : mulOption x y a b < x * y ↔ P3 a x b y :=
+  @sub_lt_iff_lt_add' Game _ _ _ (.mk _) (.mk _) (.mk _)
 
--- TODO: can I not just take `mulOption x y i j < x * y` directly?
-lemma ih3_of_ih (h24 : IH24 x₁ x₂ y) (h4 : IH4 x₁ x₂ y)
-    {i j} (hi : i ∈ x₂.leftMoves) (hj : j ∈ y.leftMoves) (hl : mulOption x₂ y i j < x₂ * y) :
-    IH3 x₁ i x₂ j y :=
-  have h24 := (@h24 _).2.1 (.of_mem_leftMoves hi)
-  ⟨(h4 <| .of_mem_leftMoves hj).2 (.of_mem_leftMoves hi), h24.1,
-    mulOption_lt_mul_iff_P3.1 hl, fun l ↦ (h24.2 l).1 j hj⟩
+/-- A specialization of the induction hypothesis used to prove `P3`. -/
+def IH3 (x₁ x' x₂ y₁ y₂ : IGame) : Prop :=
+  P2 x₁ x' y₁ ∧ P2 x₁ x' y₂ ∧ P3 x' x₂ y₁ y₂ ∧ (x₁ < x' → P3 x₁ x' y₁ y₂)
+
+/-- `IH3` follows from the induction hypothesis for `P24 x₁ x₂ y`. -/
+lemma IH3_of_IH (ih24 : IH24 x₁ x₂ y) (ih4 : IH4 x₁ x₂ y)
+    (hi : a ∈ x₂.leftMoves) (hb : b ∈ y.leftMoves) (hl : mulOption x₂ y a b < x₂ * y) :
+    IH3 x₁ a x₂ b y :=
+  have h24 := ih24.2.1 (.of_mem_leftMoves hi)
+  ⟨(ih4 <| .of_mem_leftMoves hb).2 (.of_mem_leftMoves hi), h24.1,
+    mulOption_lt_mul_iff_P3.1 hl, fun l ↦ (h24.2 l).1 b hb⟩
 
 lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ ≤ i) : P3 x₁ x₂ y₁ y₂ := by
   obtain (hl | he) := le_iff_lt_or_antisymmRel.1 hl
@@ -434,30 +410,31 @@ lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ �
   · rw [P3, h.1 he, h.2.1 he]
     exact h.2.2.1
 
-/-- P3 follows from `IH3` (so P4 (with `y₁` a left option of `y₂`) follows from the induction
-  hypothesis). -/
-lemma P3_of_lt {y₁ y₂} (h : ∀ i ∈ x₂.leftMoves, IH3 x₁ i x₂ y₁ y₂)
+/-- P3 follows from `IH3`, so P4 (with `y₁` a left option of `y₂`) follows from the induction
+hypothesis. -/
+lemma P3_of_IH3 {y₁ y₂} (h : ∀ i ∈ x₂.leftMoves, IH3 x₁ i x₂ y₁ y₂)
     (hs : ∀ i ∈ (-x₁).leftMoves, IH3 (-x₂) i (-x₁) y₁ y₂) (hl : x₁ < x₂) : P3 x₁ x₂ y₁ y₂ := by
   obtain (⟨i, hi, hi'⟩ | ⟨i, hi, hi'⟩) := lf_iff_exists_le.1 hl.not_le
   · exact P3_of_le_left i (h i hi) hi'
-  · refine P3_neg.2 <| P3_of_le_left _ (hs (-i) ?_) ?_ <;> simpa
+  · refine P3_neg.1 <| P3_of_le_left _ (hs (-i) ?_) ?_ <;> simpa
 
-lemma P4_of_IH (ih : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x₂ y := by
-  have h₁₂ := ih₁₂ ih
-  have h₂₁ := ih₂₁ ih
-  have h4 := ih4 ih
-  obtain ⟨h₁₂x, h₁₂y⟩ := ih24_neg h₁₂
-  obtain ⟨h4x, h4y⟩ := ih4_neg h4
-  have := (ih24_neg h₁₂y).1
-  have := (ih4_neg h4y).1
-  obtain ⟨hn₁, hn₂⟩ := numeric_of_ih ih
+/-- `P4` follows from the induction hypothesis. -/
+lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x₂ y := by
+  have h₁₂ := IH24_of_IH IH
+  have h₂₁ := IH24_swap_of_IH IH
+  have h4 := IH4_of_IH IH
+  obtain ⟨h₁₂x, h₁₂y⟩ := IH24_neg h₁₂
+  obtain ⟨h4x, h4y⟩ := IH4_neg h4
+  have := (IH24_neg h₁₂y).1
+  have := (IH4_neg h4y).1
+  obtain ⟨hn₁, hn₂⟩ := numeric_of_IH IH
   have : (-x₁ * y).Numeric := by simpa
   have : (-x₁ * -y).Numeric := by simpa
   have : (x₂ * -y).Numeric := by simpa
   refine fun hl ↦ ⟨?_, ?_⟩ <;>
-    refine fun a ha ↦ P3_of_lt ?_ ?_ hl <;>
+    refine fun a ha ↦ P3_of_IH3 ?_ ?_ hl <;>
     intro b hb <;>
-    apply ih3_of_ih
+    apply IH3_of_IH
   assumption'
   all_goals
     apply Numeric.leftMove_lt (mulOption_left_left_mem_leftMoves_mul _ _) <;> assumption
@@ -479,10 +456,12 @@ theorem main (a : Args) : a.Numeric → P124 a := by
 
 end Surreal.Multiplication
 
+/-! ### Instances -/
+
 namespace IGame
 open Surreal.Multiplication
 
-variable {x x₁ x₂ y y₁ y₂ a b : IGame.{u}}
+variable {x x₁ x₂ y y₁ y₂ a b : IGame}
 
 instance Numeric.mul [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
   main _ <| Args.numeric_P1.mpr ⟨hx, hy⟩
@@ -507,12 +486,10 @@ theorem Numeric.mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric 
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-open Prod.GameAdd
-
-/-- One additional inductive argument that supplies the last missing part of Theorem 8. -/
+/-- One additional inductive argument that proves `P3`. -/
 private lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ < x₂) (hy : y₁ < y₂) : P3 x₁ x₂ y₁ y₂ := by
-  refine P3_of_lt ?_ ?_ hx
+  refine P3_of_IH3 ?_ ?_ hx
   all_goals
     intro i hi
     have := Numeric.of_mem_leftMoves hi
@@ -521,7 +498,7 @@ private lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂]
   · exact P3_of_lt_of_lt h hy
   · exact ((P24 y₁ y₂ x₁).2 hy).2 _ hi
   · rw [IGame.neg_lt] at h
-    rw [P3_neg, neg_neg]
+    rw [← P3_neg, neg_neg]
     exact P3_of_lt_of_lt h hy
 termination_by (x₁, x₂)
 decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf

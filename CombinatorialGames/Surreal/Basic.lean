@@ -84,6 +84,8 @@ protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   | inl h => exact Numeric.of_mem_leftMoves h
   | inr h => exact Numeric.of_mem_rightMoves h
 
+alias _root_.IGame.IsOption.numeric := Numeric.isOption
+
 @[simp]
 protected instance zero : Numeric 0 := by
   rw [numeric_def]; simp
