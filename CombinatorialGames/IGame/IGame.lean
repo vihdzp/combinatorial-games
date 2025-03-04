@@ -988,6 +988,9 @@ decreasing_by igame_wf
 instance : CommMagma IGame where
   mul_comm := mul_comm'
 
+theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
+  simp [mulOption, add_comm, mul_comm]
+
 private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
   ext
   all_goals
@@ -1010,6 +1013,15 @@ private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
   mul_neg := mul_neg'
+
+theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
+
+theorem mulOption_neg_right (x y a b : IGame) : mulOption x (-y) a b = -mulOption x y a (-b) := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
+
+theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x y (-a) (-b) := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
 
 /-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/
