@@ -81,28 +81,12 @@ instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrizatio
 instance : Inhabited Game := ⟨0⟩
 
 instance : OrderedAddCommGroup Game where
-  zero_add := by
-    rintro ⟨x⟩
-    change mk (0 + _) = mk _
-    rw [zero_add]
-  add_zero := by
-    rintro ⟨x⟩
-    change mk (_ + 0) = mk _
-    rw [add_zero]
-  add_comm := by
-    rintro ⟨x⟩ ⟨y⟩
-    change mk (_ + _) = mk (_ + _)
-    rw [add_comm]
-  add_assoc := by
-    rintro ⟨x⟩ ⟨y⟩ ⟨z⟩
-    change mk (_ + _ + _) = mk (_ + (_ + _))
-    rw [add_assoc]
-  neg_add_cancel := by
-    rintro ⟨a⟩
-    exact mk_eq (neg_add_equiv _)
-  add_le_add_left := by
-    rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩
-    exact add_le_add_left (α := IGame) h _
+  zero_add := by rintro ⟨x⟩; change mk (0 + _) = mk _; rw [zero_add]
+  add_zero := by rintro ⟨x⟩; change mk (_ + 0) = mk _; rw [add_zero]
+  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (_ + _) = mk (_ + _); rw [add_comm]
+  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (_ + _ + _) = mk (_ + (_ + _)); rw [add_assoc]
+  neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
+  add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
   nsmul := nsmulRec
   zsmul := zsmulRec
 
@@ -120,7 +104,6 @@ theorem mk_mulOption (x y a b : IGame) :
 
 @[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
-@[simp] theorem mk_equiv_mk {x y : IGame} : mk x ≈ mk y ↔ x ≈ y := Iff.rfl
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
