@@ -121,10 +121,10 @@ protected theorem not_le [Numeric x] [Numeric y] : ¬ x ≤ y ↔ y < x :=
 protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
   not_iff_comm.1 Numeric.not_le
 
-theorem not_fuzzy [Numeric x] [Numeric y] : ¬ x ‖ y := by
+theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
   simpa using Numeric.le_total x y
 
-theorem lt_or_equiv_or_gt [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
+theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
