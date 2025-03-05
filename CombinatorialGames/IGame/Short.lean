@@ -475,7 +475,7 @@ theorem toIGame_mul (x y : SGame) : toIGame (x * y) = toIGame x * toIGame y := b
   all_goals aesop (add simp [IGame.mulOption])
 termination_by (x, y)
 decreasing_by sgame_wf
-#exit
+
 end SGame
 
 /-! ### Short instances -/
