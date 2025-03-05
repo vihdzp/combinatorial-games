@@ -91,8 +91,8 @@ protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
   on_goal 2 => rw [rightMoves_neg]
   all_goals
   · intro y hy
-    try have := Impartial.leftMove hy
-    try have := Impartial.rightMove hy
+    try have := Impartial.of_mem_leftMoves hy
+    try have := Impartial.of_mem_rightMoves hy
     rw [← neg_neg y]
     exact .neg _
 termination_by x
@@ -106,8 +106,8 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   on_goal 2 => rw [rightMoves_add]
   all_goals
   · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
-    · try have := Impartial.leftMove hz
-      try have := Impartial.rightMove hz
+    · try have := Impartial.of_mem_leftMoves hz
+      try have := Impartial.of_mem_rightMoves hz
       exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
@@ -164,7 +164,7 @@ theorem equiv_zero_iff_forall_leftMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.leftMove
   rw [ge_iff_equiv, not_equiv_iff]
 
 theorem equiv_zero_iff_forall_rightMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.rightMoves, y ‖ 0 := by
-  rw [← neg_equiv_zero, equiv_zero_iff_forall_leftMoves_fuzzy, ← (Equiv.neg _).forall_congr_right]
+  rw [← neg_equiv_zero, equiv_zero_iff_forall_leftMoves_fuzzy, exists_rightMoves_neg]
   simp
 
 theorem fuzzy_zero_iff_exists_leftMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.leftMoves, y ≈ 0 := by
@@ -176,7 +176,7 @@ theorem fuzzy_zero_iff_exists_leftMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.leftMove
   exact ge_iff_equiv
 
 theorem fuzzy_zero_iff_exists_rightMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.rightMoves, y ≈ 0 := by
-  rw [← neg_fuzzy_zero, fuzzy_zero_iff_exists_leftMoves_equiv, ← (Equiv.neg _).exists_congr_right]
+  rw [← neg_fuzzy_zero, fuzzy_zero_iff_exists_leftMoves_equiv, exists_leftMoves_neg]
   simp
 
 #exit
