@@ -694,6 +694,26 @@ theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
   aesop (add simp [IsOption])
 
+theorem forall_leftMoves_add {P : IGame → Prop} {x y : IGame} :
+    (∀ a ∈ (x + y).leftMoves, P a) ↔
+      (∀ a ∈ x.leftMoves, P (a + y)) ∧ (∀ b ∈ y.leftMoves, P (x + b)) := by
+  aesop
+
+theorem forall_rightMoves_add {P : IGame → Prop} {x y : IGame} :
+    (∀ a ∈ (x + y).rightMoves, P a) ↔
+      (∀ a ∈ x.rightMoves, P (a + y)) ∧ (∀ b ∈ y.rightMoves, P (x + b)) := by
+  aesop
+
+theorem exists_leftMoves_add {P : IGame → Prop} {x y : IGame} :
+    (∃ a ∈ (x + y).leftMoves, P a) ↔
+      (∃ a ∈ x.leftMoves, P (a + y)) ∨ (∃ b ∈ y.leftMoves, P (x + b)) := by
+  aesop
+
+theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
+    (∃ a ∈ (x + y).rightMoves, P a) ↔
+      (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
+  aesop
+
 instance : AddZeroClass IGame := by
   constructor <;>
   · refine (moveRecOn · fun _ _ _ ↦ ?_)
@@ -961,6 +981,30 @@ theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b 
     IsOption (mulOption x y a b) (x * y) := by
   aesop (add simp [IsOption])
 
+theorem forall_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
+    (∀ a ∈ (x * y).leftMoves, P a) ↔
+      (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
+      (∀ a ∈ x.rightMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) := by
+  aesop
+
+theorem forall_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
+    (∀ a ∈ (x * y).rightMoves, P a) ↔
+      (∀ a ∈ x.leftMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) ∧
+      (∀ a ∈ x.rightMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) := by
+  aesop
+
+theorem exists_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
+    (∃ a ∈ (x * y).leftMoves, P a) ↔
+      (∃ a ∈ x.leftMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) ∨
+      (∃ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) := by
+  aesop
+
+theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
+    (∃ a ∈ (x * y).rightMoves, P a) ↔
+      (∃ a ∈ x.leftMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) ∨
+      (∃ a ∈ x.rightMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) := by
+  aesop
+
 instance : MulZeroClass IGame := by
   constructor <;>
   · refine (moveRecOn · fun _ _ _ ↦ ?_)
@@ -988,6 +1032,9 @@ decreasing_by igame_wf
 instance : CommMagma IGame where
   mul_comm := mul_comm'
 
+theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
+  simp [mulOption, add_comm, mul_comm]
+
 private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
   ext
   all_goals
@@ -1010,6 +1057,15 @@ private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
   mul_neg := mul_neg'
+
+theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
+
+theorem mulOption_neg_right (x y a b : IGame) : mulOption x (-y) a b = -mulOption x y a (-b) := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
+
+theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x y (-a) (-b) := by
+  simp [mulOption, sub_eq_neg_add, add_comm]
 
 /-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/

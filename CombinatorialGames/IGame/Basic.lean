@@ -98,6 +98,10 @@ instance : AddMonoidWithOne Game where
 @[simp] theorem mk_neg (x : IGame) : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) : mk (x - y) = mk x - mk y := rfl
 
+theorem mk_mulOption (x y a b : IGame) :
+    mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
+  rfl
+
 @[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
 
@@ -108,6 +112,15 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+
+instance : ZeroLEOneClass Game where
+  zero_le_one := zero_le_one (α := IGame)
+
+instance : NeZero (1 : Game) where
+  out := by apply ne_of_gt; exact IGame.zero_lt_one
+
+instance : Nontrivial Game :=
+  ⟨_, _, zero_ne_one⟩
 
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq (x * y), mul_eq]
