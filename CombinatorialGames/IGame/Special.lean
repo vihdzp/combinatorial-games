@@ -24,7 +24,7 @@ namespace IGame
 
 /-! ### Star -/
 
-/-- The game `⋆ = {{0} | {0}}ᴵ`, which is fuzzy with zero. -/
+/-- The game `⋆ = {0 | 0}`, which is fuzzy with zero. -/
 def star : IGame :=
   {{0} | {0}}ᴵ
 
@@ -50,6 +50,37 @@ theorem _root_.SGame.toIGame_star : SGame.star.toIGame = ⋆ :=
   by ext <;> simp [SGame.star, eq_comm]
 
 instance : Short ⋆ := ⟨_, SGame.toIGame_star⟩
+
+/-! ### Half -/
+
+/-- The game `½ = {0 | 1}`, which we prove satisfies `½ + ½ = 1`. -/
+def half : IGame :=
+  {{0} | {1}}ᴵ
+
+@[inherit_doc] notation "½" => half
+
+@[simp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
+
+theorem zero_lt_half : 0 < ½ := by
+  rw [lt_iff_le_not_le, zero_le, le_zero]; simpa using zero_lt_one.not_le
+
+theorem half_lt_one : ½ < 1 := by
+  rw [lt_iff_le_not_le, le_iff_forall_lf, le_iff_forall_lf]; simpa using zero_lt_one.not_le
+
+theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  simp [zero_lt_half.not_le, half_lt_one.not_le, (add_pos zero_lt_half zero_lt_half).not_le]
+
+/-- See `IGame.half`. -/
+def _root_.SGame.half : SGame :=
+  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ 1)
+
+@[simp]
+theorem _root_.SGame.toIGame_half : SGame.half.toIGame = ½ :=
+  by ext <;> simp [SGame.half, eq_comm]
+
+instance : Short ½ := ⟨_, SGame.toIGame_half⟩
 
 /-! ### Up and down -/
 
