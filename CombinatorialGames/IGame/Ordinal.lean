@@ -154,10 +154,10 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
   inj' a b := by simp [le_antisymm_iff]
   map_rel_iff' := toIGame_le_iff
 
-@[simp] theorem mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← mk_toPGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← mk_toPGame]
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← mk_toIGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← mk_toIGame]
 
 theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
