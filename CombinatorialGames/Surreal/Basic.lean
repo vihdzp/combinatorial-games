@@ -129,6 +129,12 @@ theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
 
+/-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
+to the right options.-/
+theorem mk_of_lf (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y ⧏ z)
+    (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
+  mk' (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
+
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
   rw [le_iff_forall_lf]
@@ -191,6 +197,35 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
 
 end Numeric
+
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ y.leftMoves`, and `y ⧏ z` for every
+`z ∈ y.rightMoves`. -/
+def Fits (x y : IGame) : Prop :=
+  (∀ z ∈ y.leftMoves, z ⧏ x) ∧ (∀ z ∈ y.rightMoves, y ⧏ z)
+
+theorem Fits.refl (x : IGame) : x.Fits x :=
+  ⟨fun _ ↦ leftMove_lf, fun _ ↦ lf_rightMove⟩
+
+theorem Fits.neg {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
+  rw [Fits, forall_leftMoves_neg]
+
+#exit
+theorem not_fits_iff {x y : IGame} :
+    ¬ Fits x y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ y.rightMoves, z ≤ y) := by
+  rw [Fits, not_and_or]; simp
+
+/-- A variant of the **simplicity theorem**: if `x` fits within a numeric game `y`, but none of its
+options do, then `x ≈ y`. -/
+theorem eq_of_fits_of_forall_mem_not_fits {x : IGame} (y : IGame) [Numeric y] (hx : x.Fits y)
+    (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : x ≈ y := by
+  simp_rw [not_fits_iff] at hl hr
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
+  · intro z hz
+    have := hl z hz
+
+#exit
+
 end IGame
 
 /-! ### Surreal numbers -/
