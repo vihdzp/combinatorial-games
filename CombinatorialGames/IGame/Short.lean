@@ -75,12 +75,9 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
-def toStringAux {n : ℕ} (f : Fin n → String) : String :=
-  ", ".intercalate (.ofFn f)
-
 def toString' (x : SGame) : String :=
-  "{" ++ toStringAux (fun i ↦ toString' (x.moveLeft i)) ++ " | " ++
-    toStringAux (fun j ↦ toString' (x.moveRight j)) ++ "}"
+  "{" ++ ", ".intercalate (.ofFn fun i ↦ toString' (x.moveLeft i)) ++ " | " ++
+    ", ".intercalate (.ofFn fun j ↦ toString' (x.moveRight j)) ++ "}"
 termination_by x
 decreasing_by sgame_wf
 
@@ -478,7 +475,7 @@ theorem toIGame_mul (x y : SGame) : toIGame (x * y) = toIGame x * toIGame y := b
   all_goals aesop (add simp [IGame.mulOption])
 termination_by (x, y)
 decreasing_by sgame_wf
-
+#exit
 end SGame
 
 /-! ### Short instances -/
