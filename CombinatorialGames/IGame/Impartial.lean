@@ -203,8 +203,7 @@ theorem fuzzy_zero_of_forall_exists_moveRight {y} (hy : y ∈ x.rightMoves)
   rw [← neg_fuzzy_zero]
   apply fuzzy_zero_of_forall_exists_moveLeft (x := -x) (y := -y)
   · simpa
-  · simp_rw [forall_leftMoves_neg, exists_leftMoves_neg]
-    simpa
+  · simpa only [forall_leftMoves_neg, exists_leftMoves_neg, neg_equiv_neg_iff]
 
 end Impartial
 end IGame
