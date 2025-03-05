@@ -90,6 +90,12 @@ def size (x : SGame) : ℕ :=
 termination_by x
 decreasing_by sgame_wf
 
+/-- Some natural number such that `x ≤ n`. -/
+def upperBound (x : SGame) : ℕ :=
+  (List.ofFn fun i ↦ upperBound (x.moveLeft i) + 1).max?.getD 0
+termination_by x
+decreasing_by sgame_wf
+
 instance : ToString SGame := ⟨toString'⟩
 
 /-! ### Decidability instances -/
@@ -507,6 +513,32 @@ class Short (x : IGame.{u}) : Type u where
 namespace Short
 attribute [simp] toIGame_toSGame
 
+theorem leftMoves_eq_range (x : IGame) [Short x] :
+    x.leftMoves = .range (SGame.toIGame ∘ (toSGame x).moveLeft) := by
+  conv_lhs => rw [← @toIGame_toSGame x, SGame.leftMoves_toIGame]
+
+theorem rightMoves_eq_range (x : IGame) [Short x] :
+    x.rightMoves = .range (SGame.toIGame ∘ (toSGame x).moveRight) := by
+  conv_lhs => rw [← @toIGame_toSGame x, SGame.rightMoves_toIGame]
+
+noncomputable def of_mem_leftMoves {x y : IGame} [Short x] (h : y ∈ x.leftMoves) : Short y := by
+  apply Classical.choice
+  rw [leftMoves_eq_range, Set.mem_range] at h
+  obtain ⟨a, rfl⟩ := h
+  exact ⟨_, rfl⟩
+
+noncomputable def of_mem_rightMoves {x y : IGame} [Short x] (h : y ∈ x.rightMoves) : Short y := by
+  apply Classical.choice
+  rw [rightMoves_eq_range, Set.mem_range] at h
+  obtain ⟨a, rfl⟩ := h
+  exact ⟨_, rfl⟩
+
+noncomputable def isOption {x y : IGame} [Short x] (h : IsOption y x) : Short y := by
+  apply Classical.choice
+  obtain (h | h) := h
+  · exact ⟨.of_mem_leftMoves h⟩
+  · exact ⟨.of_mem_rightMoves h⟩
+
 @[simp]
 theorem toSGame_le_iff {x y : IGame} [Short x] [Short y] : toSGame x ≤ toSGame y ↔ x ≤ y := by
   change (toSGame x).toIGame ≤ (toSGame y).toIGame ↔ x ≤ y
@@ -540,15 +572,32 @@ instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toS
 instance (x y : IGame) [Short x] [Short y] : Short (x - y) := ⟨toSGame x - toSGame y, by simp⟩
 instance (x y : IGame) [Short x] [Short y] : Short (x * y) := ⟨toSGame x * toSGame y, by simp⟩
 
+theorem finite_leftMoves (x : IGame) [Short x] : x.leftMoves.Finite := by
+  rw [leftMoves_eq_range]
+  exact Set.finite_range _
+
+theorem finite_rightMoves (x : IGame) [Short x] : x.rightMoves.Finite := by
+  rw [rightMoves_eq_range]
+  exact Set.finite_range _
+
+theorem finite_setOf_isOption (x : IGame) [Short x] : {y | IsOption y x}.Finite :=
+  (finite_leftMoves x).union (finite_rightMoves x)
+
+theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
+  have : {y | Subposition y x} =
+      {y | IsOption y x} ∪ ⋃ z ∈ {y | IsOption y x}, {y | Subposition y z} := by
+    ext
+    dsimp
+    rw [Subposition, Relation.transGen_iff]
+    simp [and_comm]
+  rw [this]
+  refine (finite_setOf_isOption x).union <| (finite_setOf_isOption x).biUnion fun z hz ↦ ?_
+  have := Short.isOption hz
+  exact finite_setOf_subposition z
+termination_by x
+decreasing_by igame_wf
+
 end Short
-
--- TODO: add some actual theorems
-
-proof_wanted exists_lt_natCast_of_short (x : IGame) [Short x] : ∃ n : ℕ, x < n
-proof_wanted exists_neg_natCast_lt_of_short (x : IGame) [Short x] : ∃ n : ℕ, -n < x
-
-proof_wanted short_iff_finite_subposition (x : IGame) :
-    Nonempty (Short x) ↔ Set.Finite {y | Subposition y x}
 
 end IGame
 
