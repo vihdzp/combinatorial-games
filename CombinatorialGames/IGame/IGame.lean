@@ -694,26 +694,6 @@ theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
   aesop (add simp [IsOption])
 
-theorem forall_leftMoves_add {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x + y).leftMoves, P a) ↔
-      (∀ a ∈ x.leftMoves, P (a + y)) ∧ (∀ b ∈ y.leftMoves, P (x + b)) := by
-  aesop
-
-theorem forall_rightMoves_add {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x + y).rightMoves, P a) ↔
-      (∀ a ∈ x.rightMoves, P (a + y)) ∧ (∀ b ∈ y.rightMoves, P (x + b)) := by
-  aesop
-
-theorem exists_leftMoves_add {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x + y).leftMoves, P a) ↔
-      (∃ a ∈ x.leftMoves, P (a + y)) ∨ (∃ b ∈ y.leftMoves, P (x + b)) := by
-  aesop
-
-theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x + y).rightMoves, P a) ↔
-      (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
-  aesop
-
 instance : AddZeroClass IGame := by
   constructor <;>
   · refine (moveRecOn · fun _ _ _ ↦ ?_)
@@ -980,30 +960,6 @@ theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
     IsOption (mulOption x y a b) (x * y) := by
   aesop (add simp [IsOption])
-
-theorem forall_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x * y).leftMoves, P a) ↔
-      (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
-      (∀ a ∈ x.rightMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) := by
-  aesop
-
-theorem forall_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x * y).rightMoves, P a) ↔
-      (∀ a ∈ x.leftMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) ∧
-      (∀ a ∈ x.rightMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) := by
-  aesop
-
-theorem exists_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x * y).leftMoves, P a) ↔
-      (∃ a ∈ x.leftMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) ∨
-      (∃ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) := by
-  aesop
-
-theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x * y).rightMoves, P a) ↔
-      (∃ a ∈ x.leftMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) ∨
-      (∃ a ∈ x.rightMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) := by
-  aesop
 
 instance : MulZeroClass IGame := by
   constructor <;>
