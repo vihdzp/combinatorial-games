@@ -141,9 +141,7 @@ def _root_.SGame.tiny (x : SGame) : SGame :=
 
 @[simp]
 theorem _root_.SGame.toIGame_tiny (x : SGame) : x.tiny.toIGame = ⧾x.toIGame := by
-  ext <;> simp [SGame.tiny, eq_comm]
-  congr!
-  ext <;> simp [eq_comm]
+  aesop (add simp [SGame.tiny])
 
 instance (x : IGame) [Short x] : Short (⧾x) := ⟨(Short.toSGame x).tiny, by simp⟩
 
@@ -175,9 +173,7 @@ def _root_.SGame.miny (x : SGame) : SGame :=
 
 @[simp]
 theorem _root_.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame := by
-  ext <;> simp [SGame.miny, eq_comm]
-  congr!
-  ext <;> simp [eq_comm]
+  aesop (add simp [SGame.miny])
 
 instance (x : IGame) [Short x] : Short (⧿x) := ⟨(Short.toSGame x).miny, by simp⟩
 
