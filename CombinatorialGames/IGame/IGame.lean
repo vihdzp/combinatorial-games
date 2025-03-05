@@ -7,7 +7,6 @@ import CombinatorialGames.Mathlib.CompRel
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
-import Mathlib.Order.Antisymmetrization
 import Mathlib.Order.GameAdd
 
 /-!
@@ -892,7 +891,7 @@ attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
 def mul' (x y : IGame) : IGame :=
   {(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
-      mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
+    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}ᴵ
 termination_by (x, y)

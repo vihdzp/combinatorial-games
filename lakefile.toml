@@ -11,6 +11,7 @@ relaxedAutoImplicit = false # switch off relaxed auto-implicit
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
+rev = "v4.17.0"
 
 [[lean_lib]]
 name = "CombinatorialGames"
