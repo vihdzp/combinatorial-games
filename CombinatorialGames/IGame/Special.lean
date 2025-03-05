@@ -36,8 +36,8 @@ def star : IGame :=
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 @[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
-theorem star_fuzzy_zero : ⋆ ‖ 0 := not_compRel_iff.2 ⟨zero_lf_star, star_lf_zero⟩
-theorem zero_fuzzy_star : 0 ‖ ⋆ := not_compRel_iff.2 ⟨star_lf_zero, zero_lf_star⟩
+theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
+theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
@@ -68,13 +68,11 @@ theorem up_pos : 0 < ↑ := by
   simp
 
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by
-  simp [CompRel]
-  rw [le_iff_forall_lf, le_iff_forall_lf]
+  rw [IncompRel, le_iff_forall_lf, le_iff_forall_lf]
   simpa using up_pos.le
 
-theorem star_fuzzy_up : ⋆ ‖ ↑ := by
-  rw [compRel_comm]
-  exact up_fuzzy_star
+theorem star_fuzzy_up : ⋆ ‖ ↑ :=
+  up_fuzzy_star.symm
 
 /-- See `IGame.up`. -/
 def _root_.SGame.up : SGame :=
@@ -107,9 +105,8 @@ theorem down_fuzzy_star : ↓ ‖ ⋆ := by
   rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
   exact up_fuzzy_star
 
-theorem star_fuzzy_down : ⋆ ‖ ↓ := by
-  rw [compRel_comm]
-  exact down_fuzzy_star
+theorem star_fuzzy_down : ⋆ ‖ ↓ :=
+  down_fuzzy_star.symm
 
 /-- See `IGame.down`. -/
 def _root_.SGame.down : SGame :=
