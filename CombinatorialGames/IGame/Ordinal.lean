@@ -274,13 +274,25 @@ theorem SGame.le_upperBound (x : SGame) : x ≤ upperBound x := by
 termination_by x
 decreasing_by sgame_wf
 
-theorem IGame.Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n, x < n := by
+theorem IGame.Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   use (toSGame x).upperBound + 1
   conv_lhs => rw [← @toIGame_toSGame x]
   refine lt_of_le_of_lt (SGame.le_upperBound _) ?_
   simpa using zero_lt_one
 
-theorem IGame.Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n, -n < x := by
+theorem IGame.Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x := by
   obtain ⟨n, hn⟩ := exists_lt_natCast (-x)
   use n
   rwa [IGame.neg_lt]
+
+notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+
+theorem IGame.Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
+  obtain ⟨n, hn⟩ := exists_lt_natCast x
+  apply hn.trans
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
+  exact Ordinal.nat_lt_omega0 n
+
+theorem IGame.Short.neg_omega0_lt (x : IGame) [Short x] : - ω < x := by
+  rw [IGame.neg_lt]
+  exact lt_omega0 _
