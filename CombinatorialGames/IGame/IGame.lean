@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
-import CombinatorialGames.Mathlib.CompRel
+import CombinatorialGames.Mathlib.Comparable
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
@@ -53,8 +53,8 @@ implies that if `0 ≤ x`, then any move by Right satisfies `¬ x ≤ 0`, and `I
 that if `¬ x ≤ 0`, then some move by Left satisfies `0 ≤ x`. The strategy is thus already encoded
 within these game relations.
 
-For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, and notation
-`x ≈ y` for `x ≤ y ∧ y ≤ x`.
+For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, notation
+`x ‖ y` for `¬ x ≤ y ∧ ¬ y ≤ x`, and notation `x ≈ y` for `x ≤ y ∧ y ≤ x`.
 
 ## Algebraic structures
 
@@ -508,8 +508,8 @@ theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 
 /-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
-`CompRel (⬝ ≤ ⬝) x y`. -/
-notation:50 x:50 " ‖ " y:50 => ¬ CompRel (· ≤ ·) x y
+`IncompRel (⬝ ≤ ⬝) x y`. -/
+notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
@@ -618,7 +618,7 @@ alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
 @[simp]
 theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
-  simp [CompRel, and_comm]
+  simp [IncompRel, and_comm]
 
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
