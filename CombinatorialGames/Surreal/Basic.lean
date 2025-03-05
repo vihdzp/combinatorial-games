@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
+import CombinatorialGames.Mathlib.Order
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
@@ -129,6 +130,12 @@ theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
 
+/-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
+to the right options.-/
+theorem mk_of_lf (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y ⧏ z)
+    (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
+  mk' (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
+
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
   rw [le_iff_forall_lf]
@@ -191,6 +198,51 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
 
 end Numeric
+
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ y.leftMoves`, and `y ⧏ z` for every
+`z ∈ y.rightMoves`.
+
+The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
+the games are equivalent. In particular, a numeric game is equivalent to the game of the least
+birthday that fits in it -/
+def Fits (x y : IGame) : Prop :=
+  (∀ z ∈ y.leftMoves, z ⧏ x) ∧ (∀ z ∈ y.rightMoves, x ⧏ z)
+
+theorem Fits.refl (x : IGame) : x.Fits x :=
+  ⟨fun _ ↦ leftMove_lf, fun _ ↦ lf_rightMove⟩
+
+@[simp]
+theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
+  rw [Fits, forall_leftMoves_neg, forall_rightMoves_neg, and_comm]; simp [Fits]
+
+alias ⟨_, Fits.neg⟩ := fits_neg_iff
+
+theorem not_fits_iff {x y : IGame} :
+    ¬ Fits x y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ y.rightMoves, z ≤ x) := by
+  rw [Fits, not_and_or]; simp
+
+theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
+    (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) : x ≤ y := by
+  simp_rw [not_fits_iff] at hl
+  refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
+  obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
+  · exact not_le_of_le_of_not_le hw' (leftMove_lf hw)
+  · cases hx.2 w hw <| (hw'.trans_lt (Numeric.leftMove_lt hz)).le
+
+theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
+    (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : y ≤ x := by
+  rw [← IGame.neg_le_neg_iff]
+  apply hx.neg.le_of_forall_leftMoves_not_fits
+  simpa only [fits_neg_iff, forall_leftMoves_neg]
+
+/-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
+of its options do, then `x ≈ y`. -/
+theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
+    (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : x ≈ y :=
+  ⟨hx.le_of_forall_leftMoves_not_fits hl, hx.le_of_forall_rightMoves_not_fits hr⟩
+
+-- TODO: version of the simplicity theorem for birthdays
+
 end IGame
 
 /-! ### Surreal numbers -/
