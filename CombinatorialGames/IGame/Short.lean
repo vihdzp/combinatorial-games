@@ -75,6 +75,26 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
+def toStringAux {n : ℕ} (f : Fin n → String) : String :=
+  ", ".intercalate (.ofFn f)
+
+def toString' (x : SGame) : String :=
+  "{" ++ toStringAux (fun i ↦ toString' (x.moveLeft i)) ++ " | " ++
+    toStringAux (fun j ↦ toString' (x.moveRight j)) ++ "}"
+termination_by x
+decreasing_by sgame_wf
+
+/-- The size of an `SGame` is its number of proper subpositions.
+
+Note that this doesn't necessarily correspond to the number of subpositions of the `IGame`, though
+it does serve as a way to estimate how "complex" the game is to build. -/
+def size (x : SGame) : ℕ :=
+  ∑ i, ((x.moveLeft i).size + 1) + ∑ j, ((x.moveRight j).size + 1)
+termination_by x
+decreasing_by sgame_wf
+
+instance : ToString SGame := ⟨toString'⟩
+
 /-! ### Decidability instances -/
 
 /-- (Noncomputably) converts an `SGame` into an `IGame`. -/
@@ -262,12 +282,12 @@ decreasing_by sgame_wf
 
 /-! #### Addition -/
 
-private def add' (x y : SGame) : SGame :=
+private def add' (x y : SGame.{u}) : SGame.{u} :=
   mk (x.leftMoves + y.leftMoves) (x.rightMoves + y.rightMoves)
     (fun m ↦ (finSumFinEquiv.symm m).rec
-      (fun i ↦ add' (x.moveLeft i) y) (fun i ↦ add' x (y.moveLeft i)))
+      (fun n ↦ add' (x.moveLeft n) y) (fun n ↦ add' x (y.moveLeft n)))
     (fun m ↦ (finSumFinEquiv.symm m).rec
-      (fun i ↦ add' (x.moveRight i) y) (fun i ↦ add' x (y.moveRight i)))
+      (fun n ↦ add' (x.moveRight n) y) (fun n ↦ add' x (y.moveRight n)))
 termination_by (x, y)
 decreasing_by sgame_wf
 
@@ -276,9 +296,9 @@ instance : Add SGame := ⟨add'⟩
 theorem add_def (x y : SGame) : x + y =
     mk (x.leftMoves + y.leftMoves) (x.rightMoves + y.rightMoves)
       (fun m ↦ (finSumFinEquiv.symm m).rec
-        (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i))
+        (fun n ↦ x.moveLeft n + y) (fun n ↦ x + y.moveLeft n))
       (fun m ↦ (finSumFinEquiv.symm m).rec
-        (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i)) := by
+        (fun n ↦ x.moveRight n + y) (fun n ↦ x + y.moveRight n)) := by
   change add' x y = _
   rw [add']
   rfl
@@ -294,25 +314,25 @@ theorem rightMoves_add (x y : SGame) : (x + y).rightMoves = x.rightMoves + y.rig
 theorem moveLeft_add_heq (x y : SGame) :
   HEq (moveLeft (x + y))
     (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
-      (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i)) := by
+      (fun n ↦ x.moveLeft n + y) (fun n ↦ x + y.moveLeft n)) := by
   rw [add_def]; rfl
 
 theorem moveRight_add_heq (x y : SGame) :
   HEq (moveRight (x + y))
     (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
-      (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i)) := by
+      (fun n ↦ x.moveRight n + y) (fun n ↦ x + y.moveRight n)) := by
   rw [add_def]; rfl
 
 @[simp]
 theorem moveLeft_add (x y : SGame) (n) :
     (x + y).moveLeft n = (finSumFinEquiv.symm (cast (by simp) n)).rec
-      (fun i ↦ x.moveLeft i + y) (fun i ↦ x + y.moveLeft i) := by
+      (fun n ↦ x.moveLeft n + y) (fun n ↦ x + y.moveLeft n) := by
   apply congr_heq (moveLeft_add_heq x y); rw [heq_cast_iff_heq]
 
 @[simp]
 theorem moveRight_add (x y : SGame) (n) :
     (x + y).moveRight n = (finSumFinEquiv.symm (cast (by simp) n)).rec
-      (fun i ↦ x.moveRight i + y) (fun i ↦ x + y.moveRight i) := by
+      (fun n ↦ x.moveRight n + y) (fun n ↦ x + y.moveRight n) := by
   apply congr_heq (moveRight_add_heq x y); rw [heq_cast_iff_heq]
 
 @[simp]
@@ -333,7 +353,87 @@ theorem toIGame_add (x y : SGame) : toIGame (x + y) = toIGame x + toIGame y := b
 termination_by (x, y)
 decreasing_by sgame_wf
 
--- TODO: multiplication!
+/-! #### Multiplication -/
+
+private def mul' (x y : SGame.{u}) : SGame.{u} :=
+  mk (x.leftMoves * y.leftMoves + x.rightMoves * y.rightMoves)
+    (x.leftMoves * y.rightMoves + x.rightMoves * y.leftMoves)
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n;
+        mul' (x.moveLeft a.1) y + mul' x (y.moveLeft a.2))
+      (fun n ↦ let a := finProdFinEquiv.symm n;
+        mul' (x.moveRight a.1) y + mul' x (y.moveRight a.2)))
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n;
+        mul' (x.moveLeft a.1) y + mul' x (y.moveRight a.2))
+      (fun n ↦ let a := finProdFinEquiv.symm n;
+        mul' (x.moveRight a.1) y + mul' x (y.moveLeft a.2)))
+termination_by (x, y)
+decreasing_by sgame_wf
+
+instance : Mul SGame := ⟨mul'⟩
+
+theorem mul_def (x y : SGame) : x * y =
+  mk (x.leftMoves * y.leftMoves + x.rightMoves * y.rightMoves)
+    (x.leftMoves * y.rightMoves + x.rightMoves * y.leftMoves)
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveLeft a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveRight a.2))
+    (fun m ↦ (finSumFinEquiv.symm m).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveRight a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveLeft a.2)) := by
+  change mul' x y = _
+  rw [mul']
+  rfl
+
+@[simp]
+theorem leftMoves_mul (x y : SGame) : (x * y).leftMoves =
+    x.leftMoves * y.leftMoves + x.rightMoves * y.rightMoves := by
+  rw [mul_def]; rfl
+
+@[simp]
+theorem rightMoves_mul (x y : SGame) : (x * y).rightMoves =
+    x.leftMoves * y.rightMoves + x.rightMoves * y.leftMoves := by
+  rw [mul_def]; rfl
+
+theorem moveLeft_mul_heq (x y : SGame) :
+  HEq (moveLeft (x * y))
+    (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveLeft a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveRight a.2)) := by
+  rw [mul_def]; rfl
+
+theorem moveRight_mul_heq (x y : SGame) :
+  HEq (moveRight (x * y))
+    (fun m ↦ (finSumFinEquiv.symm m).rec (motive := fun _ ↦ SGame)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveRight a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveLeft a.2)) := by
+  rw [mul_def]; rfl
+
+@[simp]
+theorem moveLeft_mul (x y : SGame) (n) :
+    (x * y).moveLeft n = (finSumFinEquiv.symm (cast (by simp) n)).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveLeft a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveRight a.2)  := by
+  apply congr_heq (moveLeft_mul_heq x y); rw [heq_cast_iff_heq]
+
+@[simp]
+theorem moveRight_mul (x y : SGame) (n) :
+    (x * y).moveRight n = (finSumFinEquiv.symm (cast (by simp) n)).rec
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveLeft a.1 * y + x * y.moveRight a.2)
+      (fun n ↦ let a := finProdFinEquiv.symm n; x.moveRight a.1 * y + x * y.moveLeft a.2) := by
+  apply congr_heq (moveRight_mul_heq x y); rw [heq_cast_iff_heq]
+
+@[simp]
+theorem toIGame_mul (x y : SGame) : toIGame (x * y) = toIGame x * toIGame y := by
+  ext
+  simp only [leftMoves_toIGame, Set.mem_range, Function.comp_apply, moveLeft_mul,
+    IGame.leftMoves_mul, rightMoves_toIGame, Set.mem_image,
+    Set.mem_union, Set.mem_prod, Prod.exists]
+termination_by (x, y)
+decreasing_by sgame_wf
+
+#exit
 
 end SGame
 
