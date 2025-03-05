@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
-import CombinatorialGames.Mathlib.CompRel
+import CombinatorialGames.Mathlib.Comparable
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
@@ -53,8 +53,8 @@ implies that if `0 ≤ x`, then any move by Right satisfies `¬ x ≤ 0`, and `I
 that if `¬ x ≤ 0`, then some move by Left satisfies `0 ≤ x`. The strategy is thus already encoded
 within these game relations.
 
-For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, and notation
-`x ≈ y` for `x ≤ y ∧ y ≤ x`.
+For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, notation
+`x ‖ y` for `¬ x ≤ y ∧ ¬ y ≤ x`, and notation `x ≈ y` for `x ≤ y ∧ y ≤ x`.
 
 ## Algebraic structures
 
@@ -508,8 +508,8 @@ theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 
 /-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
-`CompRel (⬝ ≤ ⬝) x y`. -/
-notation:50 x:50 " ‖ " y:50 => ¬ CompRel (· ≤ ·) x y
+`IncompRel (⬝ ≤ ⬝) x y`. -/
+notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
@@ -584,14 +584,28 @@ theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
 theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := by
   rw [isOption_neg, neg_neg]
 
+theorem forall_leftMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∀ y ∈ (-x).leftMoves, P y) ↔ (∀ y ∈ x.rightMoves, P (-y)) := by
+  rw [← (Equiv.neg _).forall_congr_right]; simp
+
+theorem forall_rightMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∀ y ∈ (-x).rightMoves, P y) ↔ (∀ y ∈ x.leftMoves, P (-y)) := by
+  rw [← (Equiv.neg _).forall_congr_right]; simp
+
+theorem exists_leftMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∃ y ∈ (-x).leftMoves, P y) ↔ (∃ y ∈ x.rightMoves, P (-y)) := by
+  rw [← (Equiv.neg _).exists_congr_right]; simp
+
+theorem exists_rightMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∃ y ∈ (-x).rightMoves, P y) ↔ (∃ y ∈ x.leftMoves, P (-y)) := by
+  rw [← (Equiv.neg _).exists_congr_right]; simp
+
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
   refine Sym2.GameAdd.induction (C := fun x y ↦ -x ≤ -y ↔ y ≤ x) isOption_wf (fun x y IH ↦ ?_) x y
   dsimp at *
-  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, ← (Equiv.neg IGame).forall_congr_right]
-  nth_rewrite 2 [← (Equiv.neg IGame).forall_congr_right]
-  simp only [rightMoves_neg, Equiv.neg_apply, mem_neg, neg_neg, leftMoves_neg]
+  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_leftMoves_neg, forall_rightMoves_neg]
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_leftMoves hz))]
   · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_rightMoves hz))]
@@ -618,7 +632,7 @@ alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
 @[simp]
 theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
-  simp [CompRel, and_comm]
+  simp [IncompRel, and_comm]
 
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
@@ -1020,8 +1034,7 @@ private theorem mul_comm' (x y : IGame) : x * y = y * x := by
     simp only [leftMoves_mul, rightMoves_mul, mem_image, mem_prod, mem_union, Prod.exists,
       and_comm, or_comm]
     rw [exists_comm]
-    congr! 4
-    rename_i b a
+    congr! 4 with b a
     rw [and_congr_left_iff]
     rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
       rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]

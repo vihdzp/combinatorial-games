@@ -124,7 +124,7 @@ protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
   not_iff_comm.1 Numeric.not_le
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa using Numeric.le_total x y
+  simpa [not_incompRel_iff] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -132,7 +132,7 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
   rw [le_iff_forall_lf]
-  congr! <;> rename_i z hz
+  congr! with z hz z hz
   · have := Numeric.of_mem_leftMoves hz; rw [Numeric.not_le]
   · have := Numeric.of_mem_rightMoves hz; rw [Numeric.not_le]
 
