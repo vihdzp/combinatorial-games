@@ -584,6 +584,22 @@ theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
 theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := by
   rw [isOption_neg, neg_neg]
 
+theorem forall_leftMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∀ y ∈ (-x).leftMoves, P y) ↔ (∀ y ∈ x.rightMoves, P (-y)) := by
+  rw [← (Equiv.neg _).forall_congr_right]; simp
+
+theorem forall_rightMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∀ y ∈ (-x).rightMoves, P y) ↔ (∀ y ∈ x.leftMoves, P (-y)) := by
+  rw [← (Equiv.neg _).forall_congr_right]; simp
+
+theorem exists_leftMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∃ y ∈ (-x).leftMoves, P y) ↔ (∃ y ∈ x.rightMoves, P (-y)) := by
+  rw [← (Equiv.neg _).exists_congr_right]; simp
+
+theorem exists_rightMoves_neg {P : IGame → Prop} {x : IGame} :
+    (∃ y ∈ (-x).rightMoves, P y) ↔ (∃ y ∈ x.leftMoves, P (-y)) := by
+  rw [← (Equiv.neg _).exists_congr_right]; simp
+
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
