@@ -164,7 +164,7 @@ theorem equiv_zero_iff_forall_leftMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.leftMove
   rw [ge_iff_equiv, not_equiv_iff]
 
 theorem equiv_zero_iff_forall_rightMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.rightMoves, y ‖ 0 := by
-  rw [← neg_equiv_zero, equiv_zero_iff_forall_leftMoves_fuzzy, exists_rightMoves_neg]
+  rw [← neg_equiv_zero, equiv_zero_iff_forall_leftMoves_fuzzy, forall_leftMoves_neg]
   simp
 
 theorem fuzzy_zero_iff_exists_leftMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.leftMoves, y ≈ 0 := by
@@ -179,31 +179,32 @@ theorem fuzzy_zero_iff_exists_rightMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.rightMo
   rw [← neg_fuzzy_zero, fuzzy_zero_iff_exists_leftMoves_equiv, exists_leftMoves_neg]
   simp
 
-#exit
-/-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
-have also been reached in the first turn, then `G` is won by the first player.
+/-- A **strategy stealing** argument. If there's a move in `x`, such that any subsequent move could
+have also been reached in the first turn, then `x` is won by the first player.
 
 This version of the theorem is stated exclusively in terms of left moves; see
 `fuzzy_zero_of_forall_exists_moveRight` for a version stated with right moves. -/
-theorem fuzzy_zero_of_forall_exists_moveLeft (i : G.leftMoves)
-    (H : ∀ j ∈ (i : IGame).leftMoves, ∃ k ∈ G.leftMoves, j ≈ k) : G ‖ 0 := by
-  apply (equiv_or_fuzzy_zero _).resolve_left fun hG ↦ ?_
-  rw [equiv_zero_iff_forall_leftMoves_fuzzy] at hG
-  obtain ⟨j, hj⟩ := fuzzy_zero_iff_exists_leftMoves_equiv.1 (hG i.1 i.2)
-  obtain ⟨k, hk⟩ := H j hj.1
-  exact (hG k hk.1).not_equiv (hk.symm.trans hj)
+theorem fuzzy_zero_of_forall_exists_moveLeft {y} (hy : y ∈ x.leftMoves)
+    (H : ∀ z ∈ y.leftMoves, ∃ w ∈ x.leftMoves, z ≈ w) : x ‖ 0 := by
+  apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
+  have := Impartial.of_mem_leftMoves hy
+  rw [equiv_zero_iff_forall_leftMoves_fuzzy] at hx
+  obtain ⟨z, hz, hz'⟩ := fuzzy_zero_iff_exists_leftMoves_equiv.1 (hx y hy)
+  obtain ⟨w, hw, hw'⟩ := H z hz
+  exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
 
-/-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
-have also been reached in the first turn, then `G` is won by the first player.
+/-- A **strategy stealing** argument. If there's a move in `x`, such that any subsequent move could
+have also been reached in the first turn, then `x` is won by the first player.
 
 This version of the theorem is stated exclusively in terms of right moves; see
 `fuzzy_zero_of_forall_exists_moveLeft` for a version stated with left moves. -/
-theorem fuzzy_zero_of_forall_exists_moveRight (i : G.rightMoves)
-    (H : ∀ j ∈ (i : IGame).rightMoves, ∃ k ∈ G.rightMoves, j ≈ k) : G ‖ 0 := by
-  rw [← neg_fuzzy_zero_iff]
-  apply fuzzy_zero_of_forall_exists_moveLeft (toLeftMovesNeg i)
-  rw [moveLeft_neg_toLeftMovesNeg]
-  simpa
+theorem fuzzy_zero_of_forall_exists_moveRight {y} (hy : y ∈ x.rightMoves)
+    (H : ∀ z ∈ y.rightMoves, ∃ w ∈ x.rightMoves, z ≈ w) : x ‖ 0 := by
+  rw [← neg_fuzzy_zero]
+  apply fuzzy_zero_of_forall_exists_moveLeft (x := -x) (y := -y)
+  · simpa
+  · simp_rw [forall_leftMoves_neg, exists_leftMoves_neg]
+    simpa
 
 end Impartial
 end IGame
