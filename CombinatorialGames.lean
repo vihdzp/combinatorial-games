@@ -5,8 +5,8 @@ import CombinatorialGames.IGame.IGame
 import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Short
 import CombinatorialGames.IGame.Special
-import CombinatorialGames.Mathlib.AntisymmRel
 import CombinatorialGames.Mathlib.CompRel
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Multiplication

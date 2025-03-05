@@ -84,6 +84,8 @@ protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   | inl h => exact Numeric.of_mem_leftMoves h
   | inr h => exact Numeric.of_mem_rightMoves h
 
+alias _root_.IGame.IsOption.numeric := Numeric.isOption
+
 @[simp]
 protected instance zero : Numeric 0 := by
   rw [numeric_def]; simp
@@ -156,6 +158,10 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
     simpa using Numeric.neg (-y)
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
+
+@[simp]
+theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
+  ⟨fun _ ↦ by simpa using Numeric.neg (-x), fun _ ↦ Numeric.neg x⟩
 
 protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
   apply mk' <;> simp only [leftMoves_add, rightMoves_add, Set.mem_union, Set.mem_image]
@@ -233,10 +239,10 @@ instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))
 
 instance : LinearOrderedAddCommGroup Surreal where
-  zero_add := by rintro ⟨x⟩; change mk (0 + _) = mk _; simp_rw [zero_add]
-  add_zero := by rintro ⟨x⟩; change mk (_ + 0) = mk _; simp_rw [add_zero]
-  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (_ + _) = mk (_ + _); simp_rw [add_comm]
-  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (_ + _ + _) = mk (_ + (_ + _)); simp_rw [add_assoc]
+  zero_add := by rintro ⟨x⟩; change mk (0 + x) = mk x; simp_rw [zero_add]
+  add_zero := by rintro ⟨x⟩; change mk (x + 0) = mk x; simp_rw [add_zero]
+  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x + y) = mk (y + x); simp_rw [add_comm]
+  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (x + y + z) = mk (x + (y + z)); simp_rw [add_assoc]
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
   le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
@@ -254,6 +260,15 @@ instance : AddMonoidWithOne Surreal where
 
 @[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
+
+instance : ZeroLEOneClass Surreal where
+  zero_le_one := zero_le_one (α := IGame)
+
+instance : NeZero (1 : Surreal) where
+  out := by apply ne_of_gt; exact IGame.zero_lt_one
+
+instance : Nontrivial Surreal :=
+  ⟨_, _, zero_ne_one⟩
 
 /-- Casts a `Surreal` number into a `Game`. -/
 def toGame : Surreal ↪o Game where

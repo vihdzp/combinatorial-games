@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
-import CombinatorialGames.Mathlib.AntisymmRel
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
