@@ -1020,8 +1020,7 @@ private theorem mul_comm' (x y : IGame) : x * y = y * x := by
     simp only [leftMoves_mul, rightMoves_mul, mem_image, mem_prod, mem_union, Prod.exists,
       and_comm, or_comm]
     rw [exists_comm]
-    congr! 4
-    rename_i b a
+    congr! 4 with b a
     rw [and_congr_left_iff]
     rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
       rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]

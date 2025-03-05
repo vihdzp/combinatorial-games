@@ -5,7 +5,7 @@ Authors: Fox Thomson, Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.IGame.Special
-import CombinatorialGames.Mathlib.AntisymmRel
+import CombinatorialGames.Mathlib.Comparable
 
 /-!
 # Basic definitions about impartial games
@@ -18,13 +18,10 @@ impartial.
 
 universe u
 
--- TODO: remove Temp namespace
-namespace Temp
-
 namespace IGame
 
 private def ImpartialAux (x : IGame) : Prop :=
-  x ≈ -x ∧ (∀ i ∈ x.leftMoves, ImpartialAux i) ∧ (∀ j ∈ x.rightMoves, ImpartialAux j)
+  -x ≈ x ∧ (∀ i ∈ x.leftMoves, ImpartialAux i) ∧ (∀ j ∈ x.rightMoves, ImpartialAux j)
 termination_by x
 decreasing_by igame_wf
 
@@ -67,11 +64,13 @@ theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
 
 @[aesop unsafe 50% apply]
-protected theorem leftMove {x y : IGame} [h : Impartial x] : y ∈ x.leftMoves → Impartial y :=
+protected theorem of_mem_leftMoves {x y : IGame} [h : Impartial x] :
+    y ∈ x.leftMoves → Impartial y :=
   (impartial_def.1 h).2.1 y
 
 @[aesop unsafe 50% apply]
-protected theorem rightMove {x y : IGame} [h : Impartial x] : y ∈ x.rightMoves → Impartial y :=
+protected theorem of_mem_rightMoves {x y : IGame} [h : Impartial x] :
+    y ∈ x.rightMoves → Impartial y :=
   (impartial_def.1 h).2.2 y
 
 -- TODO: upstream
@@ -113,19 +112,21 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
 termination_by (x, y)
 decreasing_by igame_wf
 
-theorem nonpos : ¬0 < x := by
+theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x := by
+  rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
+
+@[simp]
+theorem not_lt : ¬x < y := by
   apply (lt_asymm · ?_)
-  rwa [← IGame.neg_lt_neg_iff, neg_zero, (neg_equiv x).lt_congr_right]
+  rwa [← IGame.neg_lt_neg_iff, (neg_equiv x).lt_congr (neg_equiv y)]
 
-theorem nonneg : ¬x < 0 := by
-  simpa using nonpos (-x)
-
-/-- In an impartial game, either the first player always wins, or the second player always wins. -/
-theorem equiv_or_fuzzy_zero : x ≈ 0 ∨ x ‖ 0 := by
-  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_not_compRel x 0
-  · cases nonneg x h
+/-- By setting `y = 0`, we find that in an impartial game, either the first player always wins, or
+the second player always wins. -/
+theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y := by
+  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
+  · cases not_lt x y h
   · exact .inl h
-  · cases nonpos x h
+  · cases not_lt y x h
   · exact .inr h
 
 /-- This lemma doesn't require `x` to be impartial. -/
@@ -138,48 +139,47 @@ theorem equiv_iff_add_equiv_zero' (y : IGame) : x ≈ y ↔ x + y ≈ 0 := by
 
 variable {x y}
 
--- TODO: We should be using `IncompRel` instead of `CompRel`.
--- TODO: These theorems should not be specific to `0`.
+@[simp]
+theorem not_equiv_iff : ¬ x ≈ y ↔ x ‖ y :=
+   ⟨(equiv_or_fuzzy x y).resolve_left, IncompRel.not_antisymmRel⟩
 
 @[simp]
-theorem compRel_zero_iff : CompRel (· ≤ ·) x 0 ↔ x ≈ 0 :=
-  ⟨not_imp_not.1 (equiv_or_fuzzy_zero x).resolve_left, AntisymmRel.compRel⟩
+theorem not_fuzzy_iff : ¬ x ‖ y ↔ x ≈ y :=
+  not_iff_comm.1 not_equiv_iff
 
 @[simp]
-theorem zero_compRel_iff : CompRel (· ≤ ·) 0 x ↔ 0 ≈ x := by
-  rw [compRel_comm, antisymmRel_comm, compRel_zero_iff]
+theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
+  ⟨fun h ↦ ⟨h, le_comm.1 h⟩, And.left⟩
 
-theorem not_equiv_zero_iff : ¬ x ≈ 0 ↔ x ‖ 0 := by simp
-theorem not_fuzzy_zero_iff : ¬ x ‖ 0 ↔ x ≈ 0 := by simp
+theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
+  ⟨fun h ↦ ⟨le_comm.2 h, h⟩, And.right⟩
 
-theorem le_zero_comm : x ≤ 0 ↔ 0 ≤ x := by
-  rw [← zero_le_neg, (neg_equiv x).le_congr_right]
+theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
+theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
-@[simp]
-theorem le_zero_iff_equiv : x ≤ 0 ↔ x ≈ 0 :=
-  ⟨fun h ↦ ⟨h, le_zero_comm.1 h⟩, And.left⟩
+theorem equiv_zero_iff_forall_leftMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.leftMoves, y ‖ 0 := by
+  rw [← le_iff_equiv, le_zero]
+  congr! 2 with a ha
+  have := Impartial.of_mem_leftMoves ha
+  rw [ge_iff_equiv, not_equiv_iff]
 
-@[simp]
-theorem zero_le_iff_equiv : 0 ≤ x ↔ x ≈ 0 :=
-  ⟨fun h ↦ ⟨le_zero_comm.2 h, h⟩, And.right⟩
+theorem equiv_zero_iff_forall_rightMoves_fuzzy : x ≈ 0 ↔ ∀ y ∈ x.rightMoves, y ‖ 0 := by
+  rw [← neg_equiv_zero, equiv_zero_iff_forall_leftMoves_fuzzy, ← (Equiv.neg _).forall_congr_right]
+  simp
 
-theorem lf_zero_iff_fuzzy : x ⧏ 0 ↔ x ‖ 0 := by simp
-theorem zero_lf_iff_fuzzy : 0 ⧏ x ↔ x ‖ 0 := by simp
+theorem fuzzy_zero_iff_exists_leftMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.leftMoves, y ≈ 0 := by
+  rw [← gf_iff_fuzzy, zero_lf]
+  congr! 2
+  rw [and_congr_right_iff]
+  intro ha
+  have := Impartial.of_mem_leftMoves ha
+  exact ge_iff_equiv
+
+theorem fuzzy_zero_iff_exists_rightMoves_equiv : x ‖ 0 ↔ ∃ y ∈ x.rightMoves, y ≈ 0 := by
+  rw [← neg_fuzzy_zero, fuzzy_zero_iff_exists_leftMoves_equiv, ← (Equiv.neg _).exists_congr_right]
+  simp
 
 #exit
-
-theorem equiv_zero_iff_forall_leftMoves_fuzzy : x ≈ 0 ↔ ∀ i ∈ x.leftMoves, i ‖ 0 := by
-  simpa using le_zero (x := x)
-
-theorem equiv_zero_iff_forall_rightMoves_fuzzy : G ≈ 0 ↔ ∀ j ∈ G.rightMoves, j ‖ 0 := by
-  simpa using zero_le (x := x)
-
-theorem fuzzy_zero_iff_exists_leftMoves_equiv : G ‖ 0 ↔ ∃ i ∈ G.leftMoves, i ≈ 0 := by
-  simpa using zero_lf (x := G)
-
-theorem fuzzy_zero_iff_exists_rightMoves_equiv : G ‖ 0 ↔ ∃ j ∈ G.rightMoves, j ≈ 0 := by
-  simpa using lf_zero (x := G)
-
 /-- A **strategy stealing** argument. If there's a move in `G`, such that any subsequent move could
 have also been reached in the first turn, then `G` is won by the first player.
 
