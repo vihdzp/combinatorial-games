@@ -87,7 +87,7 @@ decreasing_by sgame_wf
 /-- The size of an `SGame` is its number of proper subpositions.
 
 Note that this doesn't necessarily correspond to the number of subpositions of the `IGame`, though
-it does serve as a way to estimate how "complex" the game is to build. -/
+it does serve as a way to estimate how "complex" the game was to build. -/
 def size (x : SGame) : ℕ :=
   ∑ i, ((x.moveLeft i).size + 1) + ∑ j, ((x.moveRight j).size + 1)
 termination_by x
