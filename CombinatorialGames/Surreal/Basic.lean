@@ -81,8 +81,8 @@ protected theorem of_mem_rightMoves [h : Numeric x] (hy : y ∈ x.rightMoves) : 
 
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   cases h with
-  | inl h => exact Numeric.of_mem_leftMoves h
-  | inr h => exact Numeric.of_mem_rightMoves h
+  | inl h => exact .of_mem_leftMoves h
+  | inr h => exact .of_mem_rightMoves h
 
 alias _root_.IGame.IsOption.numeric := Numeric.isOption
 
