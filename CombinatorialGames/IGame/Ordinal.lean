@@ -293,6 +293,6 @@ theorem IGame.Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
   exact Ordinal.nat_lt_omega0 n
 
-theorem IGame.Short.neg_omega0_lt (x : IGame) [Short x] : - ω < x := by
+theorem IGame.Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   rw [IGame.neg_lt]
   exact lt_omega0 _
