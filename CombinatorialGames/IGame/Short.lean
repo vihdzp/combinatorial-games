@@ -188,17 +188,12 @@ theorem toIGame_ofLists (l m : List SGame) :
 instance : Zero SGame := ⟨mk 0 0 nofun nofun⟩
 
 theorem zero_def : (0 : SGame) = mk 0 0 nofun nofun := rfl
-@[simp] theorem leftMoves_zero : leftMoves 0 = 0 := rfl
-@[simp] theorem rightMoves_zero : rightMoves 0 = 0 := rfl
-@[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
+@[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp [zero_def]
 
 instance : One SGame := ⟨mk 1 0 (fun _ ↦ 0) nofun⟩
 
 theorem one_def : (1 : SGame) = mk 1 0 (fun _ ↦ 0) nofun := rfl
-@[simp] theorem leftMoves_one : leftMoves 1 = 1 := rfl
-@[simp] theorem rightMoves_one : rightMoves 1 = 0 := rfl
-@[simp] theorem moveLeft_one (n : Fin _) : moveLeft 1 n = 0 := rfl
-@[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
+@[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [one_def, eq_comm]
 
 private def natCast' : ℕ → SGame
   | 0 => 0
@@ -208,6 +203,7 @@ instance : NatCast SGame := ⟨natCast'⟩
 
 @[simp] theorem natCast_zero : ((0 : ℕ) : SGame) = 0 := rfl
 @[simp] theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) nofun := rfl
+@[simp] theorem rightMoves_natCast (n : ℕ) : rightMoves n = 0 := by cases n <;> rfl
 
 @[simp]
 theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
@@ -219,11 +215,6 @@ theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
 @[simp]
 theorem toIGame_ofNat (n : ℕ) [n.AtLeastTwo] : toIGame ofNat(n) = n :=
   toIGame_natCast n
-
-/-- This represents the game `n = {Iio n | }`, unlike the `NatCast` instance which represents
-`n + 1 = {n | }`. -/
-def ordinalNat (n : ℕ) : SGame :=
-  mk n 0 (fun i ↦ ordinalNat i) nofun
 
 /-! #### Negation -/
 

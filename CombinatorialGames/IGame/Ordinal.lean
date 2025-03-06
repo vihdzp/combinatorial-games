@@ -47,6 +47,25 @@ theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : �
     ¬ c ≤ a :=
   fun h ↦ h₁ (h₂.trans h)
 
+theorem range_fin {α} (f : ℕ → α) (n : ℕ) : range (f ∘ @Fin.val n) = f '' Iio n := by
+  ext
+  simp [Fin.exists_iff]
+
+theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n := by
+  ext o
+  constructor
+  · intro ho
+    obtain ⟨n, rfl⟩ := Ordinal.lt_omega0.1 (ho.trans (nat_lt_omega0 _))
+    simp_all
+  · rintro ⟨o, ho, rfl⟩
+    simp_all
+
+theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
+  rw [← Ordinal.toNatOrdinal_cast_nat]
+  apply (Ordinal.Iio_natCast _).trans
+  congr! 1
+  exact Ordinal.toNatOrdinal_cast_nat _
+
 namespace NatOrdinal
 
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
@@ -260,10 +279,23 @@ theorem IGame.natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n :=
 instance : CharZero Game where
   cast_injective := Game.natCast_strictMono.injective
 
-/-- This represents the game `n = {Iio n | }`, unlike the `NatCast` instance which represents
-`n + 1 = {n | }`. -/
-def ordinalNat (n : ℕ) : SGame :=
-  mk n 0 (fun i ↦ ordinalNat i) nofun
+/-- This represents the game `n = {Iio n | }`, unlike the `NatCast` instance which
+represents `n + 1 = {n | }`. -/
+def SGame.ordinalNat (n : ℕ) : SGame :=
+  .mk n 0 (fun i ↦ ordinalNat i) nofun
+
+@[simp]
+theorem SGame.toIGame_ordinalNat (n : ℕ) : (ordinalNat n).toIGame = NatOrdinal.toIGame n := by
+  rw [SGame.ordinalNat]
+  apply IGame.ext
+  · suffices Set.range ((toIGame ∘ ordinalNat) ∘ Fin.val) = NatOrdinal.toIGame '' Iio n by simpa
+    rw [range_fin, NatOrdinal.Iio_natCast, image_image]
+    congr!
+    exact toIGame_ordinalNat _
+  · simp
+
+instance (n : ℕ) : Short (NatOrdinal.toIGame n) :=
+  ⟨_, SGame.toIGame_ordinalNat n⟩
 
 /-- Some natural number such that `x ≤ n`. -/
 def SGame.upperBound (x : SGame) : ℕ :=
