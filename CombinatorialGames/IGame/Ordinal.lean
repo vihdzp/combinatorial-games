@@ -27,7 +27,8 @@ open Set IGame
 
 noncomputable section
 
--- TODO: upstream
+/-! ### Lemmas to upstream -/
+
 @[simp]
 theorem OrderEmbedding.antisymmRel_iff_antisymmRel {α β : Type*} [Preorder α] [Preorder β]
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a ≈ b := by
@@ -45,7 +46,44 @@ theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : �
     ¬ c ≤ a :=
   fun h ↦ h₁ (h₂.trans h)
 
+theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n := by
+  ext o
+  constructor
+  · intro ho
+    obtain ⟨n, rfl⟩ := Ordinal.lt_omega0.1 (ho.trans (nat_lt_omega0 _))
+    simp_all
+  · rintro ⟨o, ho, rfl⟩
+    simp_all
+
+theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
+  rw [← Ordinal.toNatOrdinal_cast_nat]
+  apply (Ordinal.Iio_natCast _).trans
+  congr! 1
+  exact Ordinal.toNatOrdinal_cast_nat _
+
 namespace NatOrdinal
+
+@[simp]
+theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
+    (∀ a < (n : NatOrdinal), P a) ↔ ∀ a < n, P a := by
+  change (∀ a ∈ Iio _, _) ↔ ∀ a ∈ Iio _, _
+  simp [NatOrdinal.Iio_natCast]
+
+@[simp]
+theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
+    (∃ a < (n : NatOrdinal), P a) ↔ ∃ a < n, P a := by
+  change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
+  simp [NatOrdinal.Iio_natCast]
+
+@[simp]
+theorem forall_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ a < ofNat(n), P a) ↔ ∀ a < n, P a :=
+  forall_lt_natCast
+
+@[simp]
+theorem exists_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ a < ofNat(n), P a) ↔ ∃ a < n, P a :=
+  exists_lt_natCast
 
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
 
@@ -225,20 +263,7 @@ theorem toGame_natCast : ∀ n : ℕ, toGame n = n
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
   Game.mk_eq_mk.1 (by simp)
 
-@[simp]
-theorem forall_lt_natCast {P : NatOrdinal → Prop} (n : ℕ) :
-    (∀ a < (n : NatOrdinal), P a) ↔ ∀ a < n, P a := by
-  constructor
-  · 
-
 end NatOrdinal
 
-#exit
-
 attribute [simp] Nat.forall_lt_succ Nat.exists_lt_succ
-
-example : NatOrdinal.toIGame 3 ≈ 3 := by
-  rw [AntisymmRel]
-  rw [le_iff_forall_lf]
-
-  simp
+example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp

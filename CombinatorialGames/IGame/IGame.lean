@@ -72,11 +72,10 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
-
 -- TODO: upstream
 @[simp]
-theorem forall_eq_or_eq {α} {P : α → Prop} {y z : α} :
-    (∀ x, (y = x ∨ z = x) → P x) ↔ P y ∧ P z := by
+theorem forall_or_eq {α} {P Q : α → Prop} {y : α} :
+    (∀ x, (P x ∨ y = x) → Q x) ↔ (∀ x, P x → Q x) ∧ Q y := by
   aesop
 
 -- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
