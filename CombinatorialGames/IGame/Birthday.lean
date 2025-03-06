@@ -42,22 +42,16 @@ namespace IGame
 birthdays of its left and right games. It may be thought as the "step" in which a certain game is
 constructed. -/
 noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
-  max (⨆ i ∈ x.leftMoves, Order.succ (birthday i)) (⨆ i ∈ x.rightMoves, Order.succ (birthday i))
+  max (iSup fun i : x.leftMoves ↦ Order.succ (birthday i)) (⨆ i : x.rightMoves, Order.succ (birthday i))
 termination_by x
 decreasing_by igame_wf
-
-theorem birthday_def (x : IGame) :
-    birthday x =
-      max (⨆ i ∈ x.leftMoves, Order.succ (birthday i))
-        (⨆ i ∈ x.rightMoves, Order.succ (birthday i)) := by
-  rw [birthday]
 
 theorem birthday_moveLeft_lt {x : IGame} (i : IGame) (hi : i ∈ x.leftMoves) :
     i.birthday < x.birthday := by
   repeat rw [birthday]
-  suffices _ ⊔ _ < _ from lt_sup_of_lt_left this
-  rw [max_lt_iff]
-  -- ⨆
+
+  suffices _ ⊔ _ < _ from lt_max_of_lt_left this
+  rw [max_lt_iff,]
   sorry
   -- cases x; rw [birthday]; exact lt_max_of_lt_left (lt_lsub _ i)
 
@@ -71,35 +65,29 @@ theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} :
       (∃ i ∈ x.leftMoves, o ≤ i.birthday) ∨
         ∃ i ∈ x.rightMoves, o ≤ i.birthday := by
   constructor
-  · rw [birthday_def]
+  · rw [birthday]
     intro h
     rcases lt_max_iff.1 h with h' | h'
     · left
+      rw [iSup_le_iff]
       rwa [lt_lsub_iff] at h'
     · right
       rwa [lt_lsub_iff] at h'
   · rintro (⟨i, hi⟩ | ⟨i, hi⟩)
-    · exact hi.trans_lt (birthday_moveLeft_lt i)
-    · exact hi.trans_lt (birthday_moveRight_lt i)
+    · exact hi.2.trans_lt (birthday_moveLeft_lt i hi.1)
+    · exact hi.2.trans_lt (birthday_moveRight_lt i hi.1)
 
-theorem Identical.birthday_congr : ∀ {x y : IGame.{u}}, x = y → birthday x = birthday y
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩, r => by
-    unfold birthday
-    congr 1
-    all_goals
-      apply lsub_eq_of_range_eq.{u, u, u}
-      ext i; constructor
-    all_goals rintro ⟨j, rfl⟩
-    · exact (r.moveLeft j).imp (fun _ hi ↦ hi.birthday_congr.symm)
-    · exact (r.moveLeft_symm j).imp (fun _ hi ↦ hi.birthday_congr)
-    · exact (r.moveRight j).imp (fun _ hi ↦ hi.birthday_congr.symm)
-    · exact (r.moveRight_symm j).imp (fun _ hi ↦ hi.birthday_congr)
+theorem Identical.birthday_congr (x y : IGame.{u}) (hxy : x = y) : birthday x = birthday y := by
+  unfold birthday
+  congr 1 <;> subst hxy <;> rfl
 
 @[simp]
 theorem birthday_eq_zero {x : IGame} :
-    birthday x = 0 ↔ IsEmpty x.leftMoves ∧ IsEmpty x.rightMoves := by
-  rw [birthday_def]
-  rw [max_eq_zero, lsub_eq_zero_iff, lsub_eq_zero_iff]
+    birthday x = 0 ↔ x.leftMoves = ∅ ∧ x.rightMoves = ∅ := by
+  rw [birthday]
+  rw [@max_eq_iff]
+  sorry
+  -- rw [max_eq_zero, lsub_eq_zero_iff, lsub_eq_zero_iff]
 
 @[simp]
 theorem birthday_zero : birthday 0 = 0 := by simp [inferInstanceAs (IsEmpty PEmpty)]
@@ -112,14 +100,8 @@ theorem birthday_star : birthday star = 1 := by rw [birthday]; simp
 
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
-  rw [birthday_def, birthday_def, max_comm]
-  congr <;> funext
-  · rw [rightMoves_neg]
-
-    sorry
-  · rw [leftMoves_neg]
-
-    sorry
+  rw [birthday, birthday, max_comm]
+  sorry
 
 @[simp]
 theorem birthday_ordinalToIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
@@ -134,9 +116,10 @@ theorem birthday_ordinalToIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
 
 theorem le_birthday (x : IGame) : x ≤ x.birthday.toIGame := by
   rw [le_def]
-  simp
-
   sorry
+termination_by x
+decreasing_by igame_wf
+
   -- | ⟨xl, _, xL, _⟩ =>
   --   le_def.2
   --     ⟨fun i ↦
@@ -149,32 +132,30 @@ theorem neg_birthday_le : -x.birthday.toIGame ≤ x := by
   simpa only [birthday_neg, ← neg_le_iff] using le_birthday (-x)
 
 @[simp]
-theorem birthday_add : ∀ x y : IGame.{u}, (x + y).birthday = x.birthday ♯ y.birthday
-  | ⟨xl, xr, xL, xR⟩, ⟨yl, yr, yL, yR⟩ => by
-    rw [birthday_def, nadd, lsub_sum, lsub_sum]
-    simp only [mk_add_moveLeft_inl, mk_add_moveLeft_inr, mk_add_moveRight_inl, mk_add_moveRight_inr,
-      moveLeft_mk, moveRight_mk]
-    conv_lhs => left; left; right; intro a; rw [birthday_add (xL a) ⟨yl, yr, yL, yR⟩]
-    conv_lhs => left; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yL b)]
-    conv_lhs => right; left; right; intro a; rw [birthday_add (xR a) ⟨yl, yr, yL, yR⟩]
-    conv_lhs => right; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yR b)]
-    rw [max_max_max_comm]
-    congr <;> apply le_antisymm
-    any_goals
-      refine max_le_iff.2 ⟨?_, ?_⟩
-      all_goals
-        refine lsub_le_iff.2 fun i ↦ ?_
-        rw [← Order.succ_le_iff]
-        refine NatOrdinal.le_iSup (fun _ : Set.Iio _ ↦ _) ⟨_, ?_⟩
-        apply_rules [birthday_moveLeft_lt, birthday_moveRight_lt]
+theorem birthday_add (x y : IGame.{u}) : (x + y).birthday = x.birthday ♯ y.birthday := by
+  rw [birthday, nadd]
+  simp only [leftMoves_add, Set.mem_union, Set.mem_image, rightMoves_add]
+  conv_lhs => left; left; right; intro a; rw [birthday_add (xL a) ⟨yl, yr, yL, yR⟩]
+  conv_lhs => left; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yL b)]
+  conv_lhs => right; left; right; intro a; rw [birthday_add (xR a) ⟨yl, yr, yL, yR⟩]
+  conv_lhs => right; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yR b)]
+  rw [max_max_max_comm]
+  congr <;> apply le_antisymm
+  any_goals
+    refine max_le_iff.2 ⟨?_, ?_⟩
     all_goals
-      rw [NatOrdinal.iSup_le_iff]
-      rintro ⟨i, hi⟩
-      obtain ⟨j, hj⟩ | ⟨j, hj⟩ := lt_birthday_iff.1 hi <;> rw [Order.succ_le_iff]
-    · exact lt_max_of_lt_left ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
-    · exact lt_max_of_lt_right ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
-    · exact lt_max_of_lt_left ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
-    · exact lt_max_of_lt_right ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
+      refine lsub_le_iff.2 fun i ↦ ?_
+      rw [← Order.succ_le_iff]
+      refine NatOrdinal.le_iSup (fun _ : Set.Iio _ ↦ _) ⟨_, ?_⟩
+      apply_rules [birthday_moveLeft_lt, birthday_moveRight_lt]
+  all_goals
+    rw [NatOrdinal.iSup_le_iff]
+    rintro ⟨i, hi⟩
+    obtain ⟨j, hj⟩ | ⟨j, hj⟩ := lt_birthday_iff.1 hi <;> rw [Order.succ_le_iff]
+  · exact lt_max_of_lt_left ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
+  · exact lt_max_of_lt_right ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
+  · exact lt_max_of_lt_left ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
+  · exact lt_max_of_lt_right ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
 termination_by a b => (a, b)
 
 @[simp]
@@ -215,9 +196,9 @@ theorem birthday_eq_zero {x : Game} : birthday x = 0 ↔ x = 0 := by
   constructor
   · intro h
     let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
-    rw [← hy₁]
+    rw [← hy₁, ← mk_zero, ← IGame.ofSets_leftMoves_rightMoves y, IGame.zero_def]
     rw [h, IGame.birthday_eq_zero] at hy₂
-    exact IGame.game_eq (@IGame.equiv_zero_of_isEmpty _ hy₂.1 hy₂.2)
+    simp_rw [mk_ofSets, hy₂]
   · rintro rfl
     exact birthday_zero
 
