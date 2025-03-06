@@ -53,6 +53,12 @@ theorem finite_rightMoves (x : IGame) [h : Short x] : x.rightMoves.Finite :=
 theorem finite_setOf_isOption (x : IGame) [Short x] : {y | IsOption y x}.Finite :=
   (finite_leftMoves x).union (finite_rightMoves x)
 
+instance (x : IGame) [Short x] : Finite x.leftMoves :=
+  (Short.finite_leftMoves x).to_subtype
+
+instance (x : IGame) [Short x] : Finite x.rightMoves :=
+  (Short.finite_rightMoves x).to_subtype
+
 protected theorem of_mem_leftMoves [h : Short x] (hy : y ∈ x.leftMoves) : Short y :=
   (short_def.1 h).2.2.1 y hy
 
