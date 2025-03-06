@@ -225,4 +225,20 @@ theorem toGame_natCast : ∀ n : ℕ, toGame n = n
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
   Game.mk_eq_mk.1 (by simp)
 
+@[simp]
+theorem forall_lt_natCast {P : NatOrdinal → Prop} (n : ℕ) :
+    (∀ a < (n : NatOrdinal), P a) ↔ ∀ a < n, P a := by
+  constructor
+  · 
+
 end NatOrdinal
+
+#exit
+
+attribute [simp] Nat.forall_lt_succ Nat.exists_lt_succ
+
+example : NatOrdinal.toIGame 3 ≈ 3 := by
+  rw [AntisymmRel]
+  rw [le_iff_forall_lf]
+
+  simp
