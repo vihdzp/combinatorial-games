@@ -115,6 +115,10 @@ protected instance neg (x : IGame) [Short x] : Short (-x) := by
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
+theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
+  ⟨fun _ ↦ by simpa using Short.neg (-x), fun _ ↦ Short.neg x⟩
+
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
   apply mk'
   · simpa using ⟨(finite_leftMoves x).image _, (finite_leftMoves y).image _⟩
