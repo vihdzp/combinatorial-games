@@ -62,15 +62,9 @@ def half : IGame :=
 @[simp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
 
-theorem zero_lt_half : 0 < ½ := by
-  rw [lt_iff_le_not_le, zero_le, le_zero]; simpa using zero_lt_one.not_le
-
-theorem half_lt_one : ½ < 1 := by
-  rw [lt_iff_le_not_le, le_iff_forall_lf, le_iff_forall_lf]; simpa using zero_lt_one.not_le
-
-theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by
-  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp [zero_lt_half.not_le, half_lt_one.not_le, (add_pos zero_lt_half zero_lt_half).not_le]
+theorem zero_lt_half : 0 < ½ := by game_cmp
+theorem half_lt_one : ½ < 1 := by game_cmp
+theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
 /-- See `IGame.half`. -/
 def _root_.SGame.half : SGame :=
@@ -94,7 +88,6 @@ def up : IGame :=
 @[simp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
-
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
@@ -121,7 +114,6 @@ def down : IGame :=
 @[simp] theorem neg_up : -↑ = ↓ := by simp [up, down]
 
 @[simp] theorem down_neg : ↓ < 0 := by game_cmp
-
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
