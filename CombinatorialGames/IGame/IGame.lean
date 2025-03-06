@@ -605,9 +605,7 @@ protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
   refine Sym2.GameAdd.induction (C := fun x y ↦ -x ≤ -y ↔ y ≤ x) isOption_wf (fun x y IH ↦ ?_) x y
   dsimp at *
-  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, ← (Equiv.neg IGame).forall_congr_right]
-  nth_rewrite 2 [← (Equiv.neg IGame).forall_congr_right]
-  simp only [rightMoves_neg, Equiv.neg_apply, mem_neg, neg_neg, leftMoves_neg]
+  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_leftMoves_neg, forall_rightMoves_neg]
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_leftMoves hz))]
   · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_rightMoves hz))]
@@ -1036,8 +1034,7 @@ private theorem mul_comm' (x y : IGame) : x * y = y * x := by
     simp only [leftMoves_mul, rightMoves_mul, mem_image, mem_prod, mem_union, Prod.exists,
       and_comm, or_comm]
     rw [exists_comm]
-    congr! 4
-    rename_i b a
+    congr! 4 with b a
     rw [and_congr_left_iff]
     rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
       rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]
