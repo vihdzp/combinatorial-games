@@ -296,6 +296,8 @@ theorem SGame.toIGame_ordinalNat (n : ℕ) : (ordinalNat n).toIGame = NatOrdinal
 
 instance (n : ℕ) : Short (NatOrdinal.toIGame n) :=
   ⟨_, SGame.toIGame_ordinalNat n⟩
+instance (n : ℕ) [n.AtLeastTwo] : Short (NatOrdinal.toIGame ofNat(n)) :=
+  ⟨_, SGame.toIGame_ordinalNat n⟩
 
 /-- Some natural number such that `x ≤ n`. -/
 def SGame.upperBound (x : SGame) : ℕ :=
@@ -339,3 +341,5 @@ theorem IGame.Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
 theorem IGame.Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   rw [IGame.neg_lt]
   exact lt_omega0 _
+
+#eval SGame.size (IGame.Short.toSGame (toIGame 3)) -- ???
