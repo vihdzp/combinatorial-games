@@ -81,18 +81,14 @@ def toString' (x : SGame) : String :=
 termination_by x
 decreasing_by sgame_wf
 
+instance : ToString SGame := ⟨toString'⟩
+
 /-- The size of an `SGame` is its number of proper subpositions.
 
 Note that this doesn't necessarily correspond to the number of subpositions of the `IGame`, though
 it does serve as a way to estimate how "complex" the game was to build. -/
 def size (x : SGame) : ℕ :=
   ∑ i, ((x.moveLeft i).size + 1) + ∑ j, ((x.moveRight j).size + 1)
-termination_by x
-decreasing_by sgame_wf
-
-/-- Some natural number such that `x ≤ n`. -/
-def upperBound (x : SGame) : ℕ :=
-  (List.ofFn fun i ↦ upperBound (x.moveLeft i) + 1).max?.getD 0
 termination_by x
 decreasing_by sgame_wf
 
@@ -203,7 +199,7 @@ instance : One SGame := ⟨mk 1 0 (fun _ ↦ 0) nofun⟩
 theorem one_def : (1 : SGame) = mk 1 0 (fun _ ↦ 0) nofun := rfl
 @[simp] theorem leftMoves_one : leftMoves 1 = 1 := rfl
 @[simp] theorem rightMoves_one : rightMoves 1 = 0 := rfl
-@[simp] theorem moveLeft_one (n : Fin 1) : moveLeft 1 n = 0 := rfl
+@[simp] theorem moveLeft_one (n : Fin _) : moveLeft 1 n = 0 := rfl
 @[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
 private def natCast' : ℕ → SGame
@@ -213,14 +209,7 @@ private def natCast' : ℕ → SGame
 instance : NatCast SGame := ⟨natCast'⟩
 
 @[simp] theorem natCast_zero : ((0 : ℕ) : SGame) = 0 := rfl
-
-@[simp]
-theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) nofun :=
-  rfl
-
-@[simp] theorem leftMoves_natCast_succ (n : ℕ) : leftMoves ((n + 1) : ℕ) = 1 := rfl
-@[simp] theorem rightMoves_natCast (n : ℕ) : rightMoves n = 0 := by cases n <;> rfl
-@[simp] theorem moveLeft_natCast_succ (n : ℕ) (i : Fin 1) : moveLeft ((n + 1) : ℕ) i = n := rfl
+@[simp] theorem natCast_succ (n : ℕ) : ((n + 1 : ℕ) : SGame) = mk 1 0 (fun _ ↦ n) nofun := rfl
 
 @[simp]
 theorem toIGame_natCast (n : ℕ) : toIGame n = n := by

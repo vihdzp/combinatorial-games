@@ -146,7 +146,7 @@ theorem toIGame_inj {a b : NatOrdinal} : toIGame a = toIGame b ↔ a = b := by s
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
-  simpa [CompRel] using le_of_lt
+  simpa [IncompRel] using le_of_lt
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
@@ -259,6 +259,17 @@ theorem IGame.natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n :=
 
 instance : CharZero Game where
   cast_injective := Game.natCast_strictMono.injective
+
+/-- This represents the game `n = {Iio n | }`, unlike the `NatCast` instance which represents
+`n + 1 = {n | }`. -/
+def ordinalNat (n : ℕ) : SGame :=
+  mk n 0 (fun i ↦ ordinalNat i) nofun
+
+/-- Some natural number such that `x ≤ n`. -/
+def SGame.upperBound (x : SGame) : ℕ :=
+  (List.ofFn fun i ↦ upperBound (x.moveLeft i) + 1).max?.getD 0
+termination_by x
+decreasing_by sgame_wf
 
 theorem SGame.le_upperBound (x : SGame) : x ≤ upperBound x := by
   apply toIGame_le_iff.2
