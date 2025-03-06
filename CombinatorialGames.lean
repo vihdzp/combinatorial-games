@@ -11,3 +11,4 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Ordinal
