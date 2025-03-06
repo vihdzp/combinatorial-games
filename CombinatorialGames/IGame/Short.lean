@@ -100,16 +100,15 @@ protected instance neg (x : IGame) [Short x] : Short (-x) := by
   apply mk'
   · simpa [← Set.image_neg_eq_neg] using (finite_rightMoves x).image _
   · simpa [← Set.image_neg_eq_neg] using (finite_leftMoves x).image _
-  · intro y hy
-    rw [leftMoves_neg] at hy
+  · rw [forall_leftMoves_neg]
+    intro y hy
     simpa using (Short.of_mem_rightMoves hy).neg
   · rw [forall_rightMoves_neg]
     intro y hy
     simpa using (Short.of_mem_leftMoves hy).neg
 termination_by x
-decreasing_by all_goals simp_all; igame_wf
+decreasing_by igame_wf
 
-#exit
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
   apply mk'
   · simpa using ⟨(finite_leftMoves x).image _, (finite_leftMoves y).image _⟩
@@ -118,7 +117,7 @@ protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
     constructor
     all_goals
       intro z hz
-      have := Short.of_mem_rightMoves hz
+      have := Short.of_mem_leftMoves hz
       exact Short.add ..
   · rw [forall_rightMoves_add]
     constructor
@@ -147,67 +146,23 @@ protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
   · simpa [Set.image_union] using
       ⟨((finite_leftMoves x).prod (finite_rightMoves y)).image _,
         ((finite_rightMoves x).prod (finite_leftMoves y)).image _⟩
-  · intro z hz
-    rw []
+  on_goal 1 => rw [forall_leftMoves_mul]
+  on_goal 2 => rw [forall_rightMoves_mul]
+  all_goals
+  · constructor
+    all_goals
+      intro a ha b hb
+      first | replace ha := Short.of_mem_leftMoves ha | replace ha := Short.of_mem_rightMoves ha
+      first | replace hb := Short.of_mem_leftMoves hb | replace hb := Short.of_mem_rightMoves hb
+      have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
+      rw [mulOption]
+      infer_instance
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance mulOption (x y a b : IGame) [Short x] [Short y] [Short a] [Short b] :
+    Short (mulOption x y a b) :=
+  inferInstanceAs (Short (_ - _))
 
 end Short
-
-#exit
-#exit
-namespace Short
-attribute [simp] toIGame_toSGame
-
-@[simp]
-theorem toSGame_le_iff {x y : IGame} [Short x] [Short y] : toSGame x ≤ toSGame y ↔ x ≤ y := by
-  change (toSGame x).toIGame ≤ (toSGame y).toIGame ↔ x ≤ y
-  simp
-
-@[simp]
-theorem toSGame_lt_iff {x y : IGame} [Short x] [Short y] : toSGame x < toSGame y ↔ x < y :=
-  lt_iff_lt_of_le_iff_le' toSGame_le_iff toSGame_le_iff
-
-instance (x y : IGame) [Short x] [Short y] : Decidable (x ≤ y) :=
-  decidable_of_iff _ toSGame_le_iff
-
-instance (x y : IGame) [Short x] [Short y] : Decidable (x < y) :=
-  decidable_of_iff _ toSGame_lt_iff
-
-instance (x y : IGame) [Short x] [Short y] : Decidable (x ≈ y) :=
-  inferInstanceAs (Decidable (_ ∧ _))
-
-instance (x y : IGame) [Short x] [Short y] : Decidable (x = y) :=
-  decidable_of_iff ((toSGame x).toIGame = (toSGame y).toIGame) (by simp)
-
-instance : Short 0 := ⟨0, SGame.toIGame_zero⟩
-instance : Short 1 := ⟨1, SGame.toIGame_one⟩
-
--- These should be computable: https://github.com/leanprover/lean4/pull/7283
-noncomputable instance (n : ℕ) : Short n := ⟨n, SGame.toIGame_natCast n⟩
-noncomputable instance (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) := inferInstanceAs (Short n)
-
-instance (x : IGame) [Short x] : Short (-x) := ⟨-toSGame x, by simp⟩
-instance (x y : IGame) [Short x] [Short y] : Short (x + y) := ⟨toSGame x + toSGame y, by simp⟩
-instance (x y : IGame) [Short x] [Short y] : Short (x - y) := ⟨toSGame x - toSGame y, by simp⟩
-instance (x y : IGame) [Short x] [Short y] : Short (x * y) := ⟨toSGame x * toSGame y, by simp⟩
-
-end Short
-
--- TODO: add some actual theorems
-
-proof_wanted exists_lt_natCast_of_short (x : IGame) [Short x] : ∃ n : ℕ, x < n
-proof_wanted exists_neg_natCast_lt_of_short (x : IGame) [Short x] : ∃ n : ℕ, -n < x
-
-proof_wanted short_iff_finite_subposition (x : IGame) :
-    Nonempty (Short x) ↔ Set.Finite {y | Subposition y x}
-
 end IGame
-
-section Test
-
-example : (0 : IGame) < 1 := by decide
-example : (-1 : IGame) < 0 := by native_decide
-example : (0 : IGame) < 1 + 1 := by native_decide
-example : (-1 : IGame) + 1 ≠ 0 := by native_decide
---example : (2 : IGame) < (5 : IGame) := by native_decide
-
-end Test
