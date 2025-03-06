@@ -92,11 +92,12 @@ theorem birthday_eq_zero {x : IGame} :
 @[simp]
 theorem birthday_zero : birthday 0 = 0 := by simp [inferInstanceAs (IsEmpty PEmpty)]
 
+-- TODO: NatOrdinal succ_zero
 @[simp]
-theorem birthday_one : birthday 1 = 1 := by rw [birthday]; simp
+theorem birthday_one : birthday 1 = 1 := by rw [birthday, leftMoves_one]; simp
 
 @[simp]
-theorem birthday_star : birthday star = 1 := by rw [birthday]; simp
+theorem birthday_star : birthday ⋆ = 1 := by rw [birthday, leftMoves_star, rightMoves_star]; simp
 
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
@@ -119,8 +120,16 @@ theorem birthday_ordinalToIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
   -- exact IH _ (typein_lt_self x)
 
 theorem le_birthday (x : IGame) : x ≤ x.birthday.toIGame := by
-  rw [le_def]
-  sorry
+  refine le_def.2 ⟨fun i hi ↦ ?_, fun i hi ↦ ?_⟩
+  · right
+    by_cases h : Nonempty i.rightMoves
+    · use h.some
+      refine ⟨h.some.prop, ?_⟩
+      have := le_birthday h.some
+      sorry
+    · sorry
+  · rw [rightMoves_toIGame x.birthday] at hi
+    contradiction
 termination_by x
 decreasing_by igame_wf
 
@@ -133,7 +142,7 @@ decreasing_by igame_wf
 variable (x : IGame.{u})
 
 theorem neg_birthday_le : -x.birthday.toIGame ≤ x := by
-  simpa only [birthday_neg, ← neg_le_iff] using le_birthday (-x)
+  simpa only [birthday_neg, ← IGame.neg_le] using le_birthday (-x)
 
 @[simp]
 theorem birthday_add (x y : IGame.{u}) : (x + y).birthday = x.birthday ♯ y.birthday := by
