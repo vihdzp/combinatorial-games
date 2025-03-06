@@ -543,7 +543,7 @@ macro "game_cmp" : tactic =>
   `(tactic| {
     try simp only [lt_iff_le_not_le, AntisymmRel, CompRel, IncompRel]
     repeat
-      try rw [le_iff_forall_lf]
+      rw [le_iff_forall_lf]
       simp })
 
 @[simp]
@@ -1119,8 +1119,6 @@ example : (0 : IGame) < 1 := by game_cmp
 example : (2 : IGame) + 2 ≈ 4 := by game_cmp
 example : (3 : IGame) - 2 ≈ 1 := by game_cmp
 example : {{1} | {2}}ᴵ ≈ {{0, 1} | {2, 3}}ᴵ := by game_cmp
-
-set_option maxHeartbeats 500000 in
 example : (2 : IGame) * 2 ≈ 4 := by game_cmp
 
 end Test
