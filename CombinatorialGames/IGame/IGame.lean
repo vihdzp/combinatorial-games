@@ -72,6 +72,13 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
+
+-- TODO: upstream
+@[simp]
+theorem forall_eq_or_eq {α} {P : α → Prop} {y z : α} :
+    (∀ x, (y = x ∨ z = x) → P x) ↔ P y ∧ P z := by
+  aesop
+
 -- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
 -- Computations can be performed through the `game_cmp` tactic.
@@ -983,6 +990,16 @@ theorem rightMoves_mul (x y : IGame) :
       (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves) := by
   rw [mul_eq, rightMoves_ofSets]
 
+@[simp]
+theorem leftMoves_mulOption (x y a b : IGame) :
+    (mulOption x y a b).leftMoves = leftMoves (a * y + x * b - a * b) :=
+  rfl
+
+@[simp]
+theorem rightMoves_mulOption (x y a b : IGame) :
+    (mulOption x y a b).rightMoves = rightMoves (a * y + x * b - a * b) :=
+  rfl
+
 theorem mulOption_left_left_mem_leftMoves_mul {x y a b : IGame}
     (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.leftMoves) : mulOption x y a b ∈ (x * y).leftMoves := by
   rw [leftMoves_mul]; use (a, b); simp_all
@@ -1093,4 +1110,18 @@ theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x 
 `CombinatorialGames.Game.Basic`. -/
 
 end IGame
+
+/-! ### Tactic tests -/
+
+section Test
+
+example : (0 : IGame) < 1 := by game_cmp
+example : (2 : IGame) + 2 ≈ 4 := by game_cmp
+example : (3 : IGame) - 2 ≈ 1 := by game_cmp
+example : {{1} | {2}}ᴵ ≈ {{0, 1} | {2, 3}}ᴵ := by game_cmp
+
+set_option maxHeartbeats 500000 in
+example : (2 : IGame) * 2 ≈ 4 := by game_cmp
+
+end Test
 end
