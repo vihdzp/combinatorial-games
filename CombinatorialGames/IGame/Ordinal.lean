@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
+import CombinatorialGames.Mathlib.Order
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -36,14 +37,6 @@ theorem OrderEmbedding.antisymmRel_iff_antisymmRel {α β : Type*} [Preorder α]
 theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [PartialOrder β]
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
-
-theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
-    ¬ c ≤ a :=
-  fun h ↦ h₂ (h.trans h₁)
-
-theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
-    ¬ c ≤ a :=
-  fun h ↦ h₁ (h₂.trans h)
 
 namespace NatOrdinal
 
