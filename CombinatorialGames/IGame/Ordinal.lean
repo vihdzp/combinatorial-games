@@ -146,7 +146,7 @@ theorem toIGame_inj {a b : NatOrdinal} : toIGame a = toIGame b ↔ a = b := by s
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
-  simpa [CompRel] using le_of_lt
+  simpa [IncompRel] using le_of_lt
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by

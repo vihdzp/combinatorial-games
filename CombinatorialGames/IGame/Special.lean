@@ -24,7 +24,7 @@ namespace IGame
 
 /-! ### Star -/
 
-/-- The game `⋆ = {{0} | {0}}ᴵ`, which is fuzzy with zero. -/
+/-- The game `⋆ = {0 | 0}`, which is fuzzy with zero. -/
 def star : IGame :=
   {{0} | {0}}ᴵ
 
@@ -36,8 +36,8 @@ def star : IGame :=
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 @[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
-theorem star_fuzzy_zero : ⋆ ‖ 0 := not_compRel_iff.2 ⟨zero_lf_star, star_lf_zero⟩
-theorem zero_fuzzy_star : 0 ‖ ⋆ := not_compRel_iff.2 ⟨star_lf_zero, zero_lf_star⟩
+theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
+theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
@@ -50,6 +50,37 @@ theorem _root_.SGame.toIGame_star : SGame.star.toIGame = ⋆ :=
   by ext <;> simp [SGame.star, eq_comm]
 
 instance : Short ⋆ := ⟨_, SGame.toIGame_star⟩
+
+/-! ### Half -/
+
+/-- The game `½ = {0 | 1}`, which we prove satisfies `½ + ½ = 1`. -/
+def half : IGame :=
+  {{0} | {1}}ᴵ
+
+@[inherit_doc] notation "½" => half
+
+@[simp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
+
+theorem zero_lt_half : 0 < ½ := by
+  rw [lt_iff_le_not_le, zero_le, le_zero]; simpa using zero_lt_one.not_le
+
+theorem half_lt_one : ½ < 1 := by
+  rw [lt_iff_le_not_le, le_iff_forall_lf, le_iff_forall_lf]; simpa using zero_lt_one.not_le
+
+theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  simp [zero_lt_half.not_le, half_lt_one.not_le, (add_pos zero_lt_half zero_lt_half).not_le]
+
+/-- See `IGame.half`. -/
+def _root_.SGame.half : SGame :=
+  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ 1)
+
+@[simp]
+theorem _root_.SGame.toIGame_half : SGame.half.toIGame = ½ :=
+  by ext <;> simp [SGame.half, eq_comm]
+
+instance : Short ½ := ⟨_, SGame.toIGame_half⟩
 
 /-! ### Up and down -/
 
@@ -68,13 +99,11 @@ theorem up_pos : 0 < ↑ := by
   simp
 
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by
-  simp [CompRel]
-  rw [le_iff_forall_lf, le_iff_forall_lf]
+  rw [IncompRel, le_iff_forall_lf, le_iff_forall_lf]
   simpa using up_pos.le
 
-theorem star_fuzzy_up : ⋆ ‖ ↑ := by
-  rw [compRel_comm]
-  exact up_fuzzy_star
+theorem star_fuzzy_up : ⋆ ‖ ↑ :=
+  up_fuzzy_star.symm
 
 /-- See `IGame.up`. -/
 def _root_.SGame.up : SGame :=
@@ -107,9 +136,8 @@ theorem down_fuzzy_star : ↓ ‖ ⋆ := by
   rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
   exact up_fuzzy_star
 
-theorem star_fuzzy_down : ⋆ ‖ ↓ := by
-  rw [compRel_comm]
-  exact down_fuzzy_star
+theorem star_fuzzy_down : ⋆ ‖ ↓ :=
+  down_fuzzy_star.symm
 
 /-- See `IGame.down`. -/
 def _root_.SGame.down : SGame :=
@@ -144,9 +172,7 @@ def _root_.SGame.tiny (x : SGame) : SGame :=
 
 @[simp]
 theorem _root_.SGame.toIGame_tiny (x : SGame) : x.tiny.toIGame = ⧾x.toIGame := by
-  ext <;> simp [SGame.tiny, eq_comm]
-  congr!
-  ext <;> simp [eq_comm]
+  aesop (add simp [SGame.tiny])
 
 instance (x : IGame) [Short x] : Short (⧾x) := ⟨(Short.toSGame x).tiny, by simp⟩
 
@@ -178,9 +204,7 @@ def _root_.SGame.miny (x : SGame) : SGame :=
 
 @[simp]
 theorem _root_.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame := by
-  ext <;> simp [SGame.miny, eq_comm]
-  congr!
-  ext <;> simp [eq_comm]
+  aesop (add simp [SGame.miny])
 
 instance (x : IGame) [Short x] : Short (⧿x) := ⟨(Short.toSGame x).miny, by simp⟩
 
