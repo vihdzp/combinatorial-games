@@ -285,8 +285,4 @@ theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   rw [IGame.neg_lt]
   exact lt_omega0 _
 
-/-- The **Archimedean property** for short games. -/
-proof_wanted Short.exists_nat_smul_lt {x y : IGame} [Short x] [Short y] (h : 0 < x) :
-    ∃ n : ℕ, y < n • x
-
 end IGame
