@@ -92,8 +92,6 @@ def size (x : SGame) : ℕ :=
 termination_by x
 decreasing_by sgame_wf
 
-instance : ToString SGame := ⟨toString'⟩
-
 /-! ### Decidability instances -/
 
 /-- (Noncomputably) converts an `SGame` into an `IGame`. -/
@@ -221,6 +219,11 @@ theorem toIGame_natCast (n : ℕ) : toIGame n = n := by
 @[simp]
 theorem toIGame_ofNat (n : ℕ) [n.AtLeastTwo] : toIGame ofNat(n) = n :=
   toIGame_natCast n
+
+/-- This represents the game `n = {Iio n | }`, unlike the `NatCast` instance which represents
+`n + 1 = {n | }`. -/
+def ordinalNat (n : ℕ) : SGame :=
+  mk n 0 (fun i ↦ ordinalNat i) nofun
 
 /-! #### Negation -/
 
