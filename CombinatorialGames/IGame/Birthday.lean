@@ -101,7 +101,11 @@ theorem birthday_star : birthday star = 1 := by rw [birthday]; simp
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   rw [birthday, birthday, max_comm]
-  sorry
+  congr 1
+  · rw [rightMoves_neg]
+    sorry
+  · rw [leftMoves_neg]
+    sorry
 
 @[simp]
 theorem birthday_ordinalToIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
@@ -282,18 +286,20 @@ theorem small_setOf_birthday_lt (o : NatOrdinal) : Small.{u} {x : Game.{u} // bi
   · simp_rw [Order.lt_succ_iff, le_iff_lt_or_eq]
     convert small_union.{u} {x | birthday x < a} {x | birthday x = a}
     · exact IH _ (Order.lt_succ a)
-    · let f (g : Set S × Set S) : Game := Game.mk (IGame.mk _ _
-        (fun x ↦ ((equivShrink g.1).symm x).1.1.out) (fun x ↦ ((equivShrink g.2).symm x).1.1.out))
+    · let f (g : Set S × Set S) : Game := Game.mk ({
+        Set.range (fun x ↦ ((equivShrink g.1).symm x).1.1.out) |
+        Set.range (fun x ↦ ((equivShrink g.2).symm x).1.1.out)
+      }ᴵ)
       suffices {x | x.birthday = a} ⊆ Set.range f from small_subset this
       rintro x rfl
       obtain ⟨y, rfl, hy'⟩ := birthday_eq_pGameBirthday x
-      refine ⟨⟨{z | ∃ i, ⟦y.moveLeft i⟧ = z.1}, {z | ∃ i, ⟦y.moveRight i⟧ = z.1}⟩, ?_⟩
-      apply IGame.game_eq <| IGame.equiv_of_exists _ _ _ _ <;> intro i
+      refine ⟨⟨{z | ∃ i ∈ y.leftMoves, .mk i = z.1}, {z | ∃ i ∈ y.rightMoves, .mk i = z.1}⟩, ?_⟩
+      apply Game.mk_eq <| IGame.equiv_of_exists _ _ _ _ <;> intro i hi
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
         exact ⟨j, by simp [IGame.equiv_iff_game_eq, hj]⟩
       · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
         exact ⟨j, by simp [IGame.equiv_iff_game_eq, hj]⟩
-      · refine ⟨equivShrink _ ⟨⟨⟦y.moveLeft i⟧, ?_⟩, i, rfl⟩, by simpa using Quotient.mk_out _⟩
+      · refine ⟨equivShrink _ ⟨⟨.mk i, ?_⟩, i, rfl⟩, by simpa using Quotient.mk_out _⟩
         suffices ∃ b ≤ y.birthday, birthday ⟦y.moveLeft i⟧ < b by simpa [S, hy'] using this
         refine ⟨_, le_rfl, ?_⟩
         exact (birthday_quot_le_pGameBirthday _).trans_lt (IGame.birthday_moveLeft_lt i)
