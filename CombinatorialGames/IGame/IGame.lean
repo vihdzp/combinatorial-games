@@ -56,6 +56,9 @@ within these game relations.
 For convenience, we define notation `x ⧏ y` (pronounced "less or fuzzy") for `¬ y ≤ x`, notation
 `x ‖ y` for `¬ x ≤ y ∧ ¬ y ≤ x`, and notation `x ≈ y` for `x ≤ y ∧ y ≤ x`.
 
+You can prove most (simple) inequalities on concrete games through the `game_cmp` tactic, which
+repeatedly unfolds the definition of `≤` and applies `simp` until it solves the goal.
+
 ## Algebraic structures
 
 Most of the usual arithmetic operations can be defined for games. Addition is defined for
@@ -71,7 +74,7 @@ universe u
 
 -- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
--- All computation should be done through `IGame.Short`.
+-- Computations can be performed through the `game_cmp` tactic.
 noncomputable section
 
 open Set Pointwise
@@ -527,11 +530,21 @@ theorem equiv_of_exists {x y : IGame}
   · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
     exact Or.inr ⟨j, hj, hj'.ge⟩
 
-instance : ZeroLEOneClass IGame where
-  zero_le_one := by rw [zero_le]; simp
+/-- Proves simple inequalities on concrete games. This is done by unfolding the definition of `≤`
+and applying `simp` until the goal is solved. -/
+macro "game_cmp" : tactic =>
+  `(tactic| {
+    try simp only [lt_iff_le_not_le, AntisymmRel, CompRel, IncompRel]
+    repeat
+      try rw [le_iff_forall_lf]
+      simp })
 
-theorem zero_lt_one : (0 : IGame) < 1 :=
-  lt_of_le_not_le zero_le_one (by rw [le_zero]; simp)
+@[simp]
+theorem zero_lt_one : (0 : IGame) < 1 := by
+  game_cmp
+
+instance : ZeroLEOneClass IGame where
+  zero_le_one := zero_lt_one.le
 
 /-! ### Negation -/
 
@@ -900,6 +913,16 @@ theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
   | n + 1 => by
     rw [Nat.cast_succ, rightMoves_add, rightMoves_natCast]
     simp
+
+@[simp 1100]
+theorem leftMoves_ofNat (n : ℕ) [n.AtLeastTwo] : leftMoves ofNat(n) = {((n - 1 : ℕ) : IGame)} := by
+  change leftMoves n = _
+  rw [← Nat.succ_pred (NeZero.out (n := n))]
+  simp
+
+@[simp 1100]
+theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
+  rightMoves_natCast n
 
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
   ext <;> simp

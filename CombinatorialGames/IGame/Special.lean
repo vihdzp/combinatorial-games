@@ -93,17 +93,10 @@ def up : IGame :=
 @[simp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
 
-@[simp]
-theorem up_pos : 0 < ↑ := by
-  rw [lt_iff_le_not_le, zero_lf, zero_le]
-  simp
+@[simp] theorem up_pos : 0 < ↑ := by game_cmp
 
-theorem up_fuzzy_star : ↑ ‖ ⋆ := by
-  rw [IncompRel, le_iff_forall_lf, le_iff_forall_lf]
-  simpa using up_pos.le
-
-theorem star_fuzzy_up : ⋆ ‖ ↑ :=
-  up_fuzzy_star.symm
+theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
+theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
 /-- See `IGame.up`. -/
 def _root_.SGame.up : SGame :=
@@ -127,17 +120,10 @@ def down : IGame :=
 @[simp] theorem neg_down : -↓ = ↑ := by simp [up, down]
 @[simp] theorem neg_up : -↑ = ↓ := by simp [up, down]
 
-@[simp]
-theorem down_neg : ↓ < 0 := by
-  rw [← zero_lt_neg, neg_down]
-  exact up_pos
+@[simp] theorem down_neg : ↓ < 0 := by game_cmp
 
-theorem down_fuzzy_star : ↓ ‖ ⋆ := by
-  rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
-  exact up_fuzzy_star
-
-theorem star_fuzzy_down : ⋆ ‖ ↓ :=
-  down_fuzzy_star.symm
+theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
+theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
 /-- See `IGame.down`. -/
 def _root_.SGame.down : SGame :=
