@@ -35,7 +35,6 @@ theorem IncompRel.ne {α : Type*} {r : α → α → Prop} [IsRefl α r] {a b : 
   rintro rfl
   exact h.1 <| refl_of r a
 
--- TODO: upstream
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
@@ -45,7 +44,6 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
 theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
   rfl
 
--- TODO: upstream
 @[simp]
 theorem NatOrdinal.succ_ne_zero (x : NatOrdinal) : succ x ≠ 0 :=
   Ordinal.succ_ne_zero x
@@ -62,12 +60,10 @@ protected theorem NatOrdinal.succ_zero : succ (0 : NatOrdinal) = 1 :=
 protected theorem NatOrdinal.succ_one : succ (1 : NatOrdinal) = 2 := by
   rw [succ_eq_add_one, one_add_one_eq_two]
 
--- TODO: upstream
 protected theorem NatOrdinal.lt_iSup_iff {ι : Type*} [Small.{u} ι] (f : ι → NatOrdinal.{u}) {x} :
     x < ⨆ i, f i ↔ ∃ i, x < f i :=
   Ordinal.lt_iSup_iff
 
--- TODO: upstream
 protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : ι → NatOrdinal.{u}} :
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
