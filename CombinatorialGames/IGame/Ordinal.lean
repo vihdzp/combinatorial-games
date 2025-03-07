@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.IGame.Short
 import CombinatorialGames.Mathlib.Order
+import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -31,7 +32,8 @@ open Set IGame
 
 noncomputable section
 
--- TODO: upstream
+/-! ### Lemmas to upstream -/
+
 @[simp]
 theorem OrderEmbedding.antisymmRel_iff_antisymmRel {α β : Type*} [Preorder α] [Preorder β]
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a ≈ b := by
@@ -41,7 +43,44 @@ theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [Partial
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
 
+theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n := by
+  ext o
+  constructor
+  · intro ho
+    obtain ⟨n, rfl⟩ := Ordinal.lt_omega0.1 (ho.trans (nat_lt_omega0 _))
+    simp_all
+  · rintro ⟨o, ho, rfl⟩
+    simp_all
+
+theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
+  rw [← Ordinal.toNatOrdinal_cast_nat]
+  apply (Ordinal.Iio_natCast _).trans
+  congr! 1
+  exact Ordinal.toNatOrdinal_cast_nat _
+
 namespace NatOrdinal
+
+@[simp]
+theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
+    (∀ a < (n : NatOrdinal), P a) ↔ ∀ a < n, P a := by
+  change (∀ a ∈ Iio _, _) ↔ ∀ a ∈ Iio _, _
+  simp [NatOrdinal.Iio_natCast]
+
+@[simp]
+theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
+    (∃ a < (n : NatOrdinal), P a) ↔ ∃ a < n, P a := by
+  change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
+  simp [NatOrdinal.Iio_natCast]
+
+@[simp]
+theorem forall_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ a < ofNat(n), P a) ↔ ∀ a < n, P a :=
+  forall_lt_natCast
+
+@[simp]
+theorem exists_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ a < ofNat(n), P a) ↔ ∃ a < n, P a :=
+  exists_lt_natCast
 
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
 
@@ -154,10 +193,10 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
   inj' a b := by simp [le_antisymm_iff]
   map_rel_iff' := toIGame_le_iff
 
-@[simp] theorem mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← mk_toPGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← mk_toPGame]
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toPGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toPGame]
 
 theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
@@ -215,13 +254,19 @@ termination_by (a, b)
 theorem toGame_mul (a b : NatOrdinal) : (a * b).toGame = .mk (a.toIGame * b.toIGame) :=
   Game.mk_eq (toIGame_mul a b)
 
+/-- `NatOrdinal.toGame` as an `OrderAddMonoidHom`. -/
+@[simps]
+def toGameAddHom : NatOrdinal →+o Game where
+  toFun := toGame
+  map_zero' := toGame_zero
+  map_add' := toGame_add
+  monotone' _ _ := toGame_le_iff.2
+
 /-! ### `NatCast` properties -/
 
 @[simp]
-theorem toGame_natCast : ∀ n : ℕ, toGame n = n
-  | 0 => toGame_zero
-  | n + 1 => by
-    rw [Nat.cast_add, toGame_add, toGame_natCast, Nat.cast_one, toGame_one, Nat.cast_add_one]
+theorem toGame_natCast : ∀ n : ℕ, toGame n = n :=
+  map_natCast' toGameAddHom toGame_one
 
 /-- Note that the equality doesn't hold, as e.g. `↑2 = {1 | }`, while `toIGame 2 = {0, 1 | }`. -/
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
@@ -285,3 +330,6 @@ theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   exact lt_omega0 _
 
 end IGame
+
+attribute [simp] Nat.forall_lt_succ Nat.exists_lt_succ
+example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp
