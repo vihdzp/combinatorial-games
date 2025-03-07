@@ -156,46 +156,35 @@ decreasing_by igame_wf
 theorem neg_toIGame_birthday_le (x : IGame) : -x.birthday.toIGame ≤ x := by
   simpa [IGame.neg_le] using le_toIGame_birthday (-x)
 
-#exit
-
 @[simp]
-theorem birthday_add (x y : IGame.{u}) : (x + y).birthday = x.birthday ♯ y.birthday := by
-  rw [birthday, nadd]
-  simp only [leftMoves_add, mem_union, mem_image, rightMoves_add]
-  conv_lhs => left; left; right; intro a; rw [birthday_add (xL a) ⟨yl, yr, yL, yR⟩]
-  conv_lhs => left; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yL b)]
-  conv_lhs => right; left; right; intro a; rw [birthday_add (xR a) ⟨yl, yr, yL, yR⟩]
-  conv_lhs => right; right; right; intro b; rw [birthday_add ⟨xl, xr, xL, xR⟩ (yR b)]
-  rw [max_max_max_comm]
-  congr <;> apply le_antisymm
-  any_goals
-    refine max_le_iff.2 ⟨?_, ?_⟩
-    all_goals
-      refine lsub_le_iff.2 fun i ↦ ?_
-      rw [← succ_le_iff]
-      refine NatOrdinal.le_iSup (fun _ : Iio _ ↦ _) ⟨_, ?_⟩
-      apply_rules [birthday_moveLeft_lt, birthday_moveRight_lt]
+theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
+  refine eq_of_forall_lt_iff fun o ↦ ?_
+  simp_rw [lt_add_iff, lt_birthday_iff, exists_leftMoves_add, exists_rightMoves_add, or_and_right,
+    exists_or, or_or_or_comm]
+  congr! 2
   all_goals
-    rw [NatOrdinal.iSup_le_iff]
-    rintro ⟨i, hi⟩
-    obtain ⟨j, hj⟩ | ⟨j, hj⟩ := lt_birthday_iff.1 hi <;> rw [succ_le_iff]
-  · exact lt_max_of_lt_left ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
-  · exact lt_max_of_lt_right ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
-  · exact lt_max_of_lt_left ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
-  · exact lt_max_of_lt_right ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
-termination_by a b => (a, b)
+    constructor
+    · rintro ⟨z, hz, hz'⟩
+      refine ⟨_, ⟨z, hz, le_rfl⟩, ?_⟩
+      rwa [← birthday_add]
+    · rintro ⟨a, ⟨⟨z, hz, hz'⟩, ha⟩⟩
+      use z, hz
+      rw [birthday_add]
+      apply ha.trans
+      first | exact add_le_add_left hz' _ | exact add_le_add_right hz' _
+termination_by (x, y)
+decreasing_by igame_wf
 
 @[simp]
-theorem birthday_sub (x y : IGame) : (x - y).birthday = x.birthday ♯ y.birthday := by
-  apply (birthday_add x _).trans
-  rw [birthday_neg]
+theorem birthday_sub (x y : IGame) : (x - y).birthday = x.birthday + y.birthday := by
+  simp [sub_eq_add_neg]
 
 @[simp]
 theorem birthday_natCast : ∀ n : ℕ, birthday n = n
   | 0 => birthday_zero
-  | n + 1 => by
-    simp_rw [Nat.cast_add, Nat.cast_one, birthday_add, birthday_natCast, birthday_one, nadd_one]
-    rw [← succ_eq_add_one]
+  | n + 1 => by simp_rw [Nat.cast_add_one, birthday_add, birthday_natCast, birthday_one]
+
+#exit
 
 end IGame
 
