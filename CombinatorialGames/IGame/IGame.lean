@@ -240,9 +240,6 @@ instance (x : IGame.{u}) : Small.{u} x.rightMoves := by
   rw [rightMoves_mk]
   infer_instance
 
-instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
-
 @[ext]
 theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
@@ -265,6 +262,9 @@ def IsOption (x y : IGame) : Prop :=
 
 theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := .inl
 theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := .inr
+
+instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
 -- TODO: is there some more general theorem about well-founded relations on quotients
 -- that we could use here?
