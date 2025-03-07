@@ -89,25 +89,13 @@ instance : WellFoundedLT Nimber :=
 instance : ConditionallyCompleteLinearOrderBot Nimber :=
   WellFoundedLT.conditionallyCompleteLinearOrderBot _
 
-@[simp]
-theorem bot_eq_zero : ⊥ = 0 :=
-  rfl
+@[simp] theorem bot_eq_zero : (⊥ : Nimber) = 0 := rfl
 
-@[simp]
-theorem toOrdinal_zero : toOrdinal 0 = 0 :=
-  rfl
+@[simp] theorem toOrdinal_zero : toOrdinal 0 = 0 := rfl
+@[simp] theorem toOrdinal_one : toOrdinal 1 = 1 := rfl
 
-@[simp]
-theorem toOrdinal_one : toOrdinal 1 = 1 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 :=
-  Iff.rfl
+@[simp] theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 := .rfl
+@[simp] theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 := .rfl
 
 @[simp]
 theorem toOrdinal_max (a b : Nimber) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
@@ -129,18 +117,22 @@ protected def rec {β : Nimber → Sort*} (h : ∀ a, β (∗a)) : ∀ a, β a :
 theorem induction {p : Nimber → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
+@[simp]
 protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
   Ordinal.le_zero
 
+@[simp]
 protected theorem not_lt_zero (a : Nimber) : ¬ a < 0 :=
   Ordinal.not_lt_zero a
 
 protected theorem pos_iff_ne_zero {a : Nimber} : 0 < a ↔ a ≠ 0 :=
   Ordinal.pos_iff_ne_zero
 
+@[simp]
 theorem lt_one_iff_zero {a : Nimber} : a < 1 ↔ a = 0 :=
   Ordinal.lt_one_iff_zero
 
+@[simp]
 theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
 

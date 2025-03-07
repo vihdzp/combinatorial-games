@@ -280,6 +280,14 @@ theorem isOption_wf : WellFounded IsOption := by
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
+theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
+
+theorem self_not_mem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
+
+theorem self_not_mem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
+
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets.
 
