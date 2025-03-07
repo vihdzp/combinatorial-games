@@ -328,13 +328,7 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
-  have : Small.{u} (mk '' {x | IGame.birthday x < o}) :=
-    @small_image _ _ _ _ (IGame.small_setOf_birthday_lt o)
-  refine @small_subset _ _ _ ?_ this
-  change {x | birthday x < o} ⊆ mk '' {x | IGame.birthday x < o}
-  intro x hx
-  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
-  use y
-  simp_all
+  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
+  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
 end Game
