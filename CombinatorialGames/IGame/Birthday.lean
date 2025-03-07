@@ -12,93 +12,93 @@ import Mathlib.SetTheory.Ordinal.NaturalOps
 # Birthdays of games
 
 There are two related but distinct notions of a birthday within combinatorial game theory. One is
-the birthday of an IGame, which represents the "step" at which it is constructed. We define it
+the birthday of an `IGame`, which represents the "step" at which it is constructed. We define it
 recursively as the least ordinal larger than the birthdays of its left and right options. On the
-other hand, the birthday of a game is the smallest birthday among all pre-games that quotient to it.
+other hand, the birthday of a `Game` is the smallest birthday among all `IGame`s that quotient to
+it.
 
-The birthday of a pre-game can be understood as representing the depth of its game tree. On the
-other hand, the birthday of a game more closely matches Conway's original description. The lemma
-`Game.birthday_eq_pGameBirthday` links both definitions together.
-
-# Main declarations
-
-- `IGame.birthday`: The birthday of a pre-game.
-- `Game.birthday`: The birthday of a game.
-
-# Todo
-
-- Characterize the birthdays of other basic arithmetical operations.
+The birthday of an `IGame` can be understood as representing the depth of its game tree. Meanwhile,
+the birthday of a `Game` more closely matches Conway's original description. The lemma
+`Game.birthday_eq_iGameBirthday` links both definitions together.
 -/
 
 universe u
 
-open NatOrdinal Ordinal
-
+open NatOrdinal Order
 open scoped NaturalOps IGame
+
+-- TODO: upstream
+theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
+    (hf : BddAbove (Set.range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
+  simpa using ciSup_le_iff' hf (a := ⊥)
+
+-- fix this! embarassing
+@[simp]
+theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
+  rfl
+
+-- TODO: upstream
+@[simp]
+theorem NatOrdinal.succ_ne_zero (x : NatOrdinal) : succ x ≠ 0 :=
+  Ordinal.succ_ne_zero x
+
+@[simp]
+protected theorem NatOrdinal.succ_zero : succ (0 : NatOrdinal) = 1 :=
+  Ordinal.succ_zero
+
+-- TODO: upstream
+protected theorem NatOrdinal.lt_iSup_iff {ι : Type*} [Small.{u} ι] (f : ι → NatOrdinal.{u}) {x} :
+    x < ⨆ i, f i ↔ ∃ i, x < f i :=
+  Ordinal.lt_iSup_iff
+
+-- TODO: upstream
+protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : ι → NatOrdinal.{u}} :
+    ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
+  Ordinal.iSup_eq_zero_iff
 
 namespace IGame
 
-/-- The birthday of a pre-game is inductively defined as the least strict upper bound of the
-birthdays of its left and right games. It may be thought as the "step" in which a certain game is
-constructed. -/
+-- move to `IGame` file
+instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+
+/-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
+birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
 noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
-  max (iSup fun i : x.leftMoves ↦ Order.succ (birthday i)) (⨆ i : x.rightMoves, Order.succ (birthday i))
+  ⨆ y : {y // IsOption y x}, succ (birthday y)
 termination_by x
 decreasing_by igame_wf
 
-theorem birthday_moveLeft_lt {x : IGame} (i : IGame) (hi : i ∈ x.leftMoves) :
-    i.birthday < x.birthday := by
-  repeat rw [birthday]
+theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
+    (∃ y ∈ x.leftMoves, o ≤ y.birthday) ∨ (∃ y ∈ x.rightMoves, o ≤ y.birthday) := by
+  rw [birthday, NatOrdinal.lt_iSup_iff]
+  simp [IsOption, or_and_right, exists_or]
 
-  suffices _ ⊔ _ < _ from lt_max_of_lt_left this
-  rw [max_lt_iff,]
-  sorry
-  -- cases x; rw [birthday]; exact lt_max_of_lt_left (lt_lsub _ i)
+theorem birthday_eq_max (x : IGame) : birthday x =
+    max (⨆ y : x.leftMoves, succ y.1.birthday) (⨆ y : x.rightMoves, succ y.1.birthday) := by
+  apply eq_of_forall_lt_iff
+  simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
-theorem birthday_moveRight_lt {x : IGame} (i : IGame) (hi : i ∈ x.rightMoves) :
-    i.birthday < x.birthday := by
-  sorry
-  -- cases x; rw [birthday]; exact lt_max_of_lt_right (lt_lsub _ i)
+theorem birthday_lt_of_mem_leftMoves {x y : IGame} (hy : y ∈ x.leftMoves) :
+    y.birthday < x.birthday :=
+  lt_birthday_iff.2 (.inl ⟨y, hy, le_rfl⟩)
 
-theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} :
-    o < x.birthday ↔
-      (∃ i ∈ x.leftMoves, o ≤ i.birthday) ∨
-        ∃ i ∈ x.rightMoves, o ≤ i.birthday := by
-  constructor
-  · rw [birthday]
-    intro h
-    rcases lt_max_iff.1 h with h' | h'
-    · left
-      rw [iSup_le_iff]
-      rwa [lt_lsub_iff] at h'
-    · right
-      rwa [lt_lsub_iff] at h'
-  · rintro (⟨i, hi⟩ | ⟨i, hi⟩)
-    · exact hi.2.trans_lt (birthday_moveLeft_lt i hi.1)
-    · exact hi.2.trans_lt (birthday_moveRight_lt i hi.1)
-
-theorem Identical.birthday_congr (x y : IGame.{u}) (hxy : x = y) : birthday x = birthday y := by
-  unfold birthday
-  congr 1 <;> subst hxy <;> rfl
+theorem birthday_lt_of_mem_rightMoves {x y : IGame} (hy : y ∈ x.rightMoves) :
+    y.birthday < x.birthday :=
+  lt_birthday_iff.2 (.inr ⟨y, hy, le_rfl⟩)
 
 @[simp]
 theorem birthday_eq_zero {x : IGame} :
-    birthday x = 0 ↔ x.leftMoves = ∅ ∧ x.rightMoves = ∅ := by
-  rw [birthday]
-  rw [@max_eq_iff]
-  sorry
-  -- rw [max_eq_zero, lsub_eq_zero_iff, lsub_eq_zero_iff]
+    birthday x = (0 : NatOrdinal) ↔ x.leftMoves = ∅ ∧ x.rightMoves = ∅ := by
+  rw [birthday, NatOrdinal.iSup_eq_zero_iff]
+  simp [IsOption, forall_and, Set.eq_empty_iff_forall_not_mem]
 
-@[simp]
-theorem birthday_zero : birthday 0 = 0 := by simp [inferInstanceAs (IsEmpty PEmpty)]
+@[simp] theorem birthday_zero : birthday 0 = 0 := by simp
+@[simp] theorem birthday_one : birthday 1 = 1 := by rw [birthday_eq_max, leftMoves_one]; simp
+@[simp] theorem birthday_star : birthday ⋆ = 1 := by
+  rw [birthday_eq_max, leftMoves_star, rightMoves_star]; simp
 
--- TODO: NatOrdinal succ_zero
-@[simp]
-theorem birthday_one : birthday 1 = 1 := by rw [birthday, leftMoves_one]; simp
-
-@[simp]
-theorem birthday_star : birthday ⋆ = 1 := by rw [birthday, leftMoves_star, rightMoves_star]; simp
-
+#exit
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   rw [birthday, birthday, max_comm]
@@ -107,6 +107,8 @@ theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
     sorry
   · rw [leftMoves_neg]
     sorry
+
+#exit
 
 @[simp]
 theorem birthday_ordinalToIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
@@ -158,13 +160,13 @@ theorem birthday_add (x y : IGame.{u}) : (x + y).birthday = x.birthday ♯ y.bir
     refine max_le_iff.2 ⟨?_, ?_⟩
     all_goals
       refine lsub_le_iff.2 fun i ↦ ?_
-      rw [← Order.succ_le_iff]
+      rw [← succ_le_iff]
       refine NatOrdinal.le_iSup (fun _ : Set.Iio _ ↦ _) ⟨_, ?_⟩
       apply_rules [birthday_moveLeft_lt, birthday_moveRight_lt]
   all_goals
     rw [NatOrdinal.iSup_le_iff]
     rintro ⟨i, hi⟩
-    obtain ⟨j, hj⟩ | ⟨j, hj⟩ := lt_birthday_iff.1 hi <;> rw [Order.succ_le_iff]
+    obtain ⟨j, hj⟩ | ⟨j, hj⟩ := lt_birthday_iff.1 hi <;> rw [succ_le_iff]
   · exact lt_max_of_lt_left ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
   · exact lt_max_of_lt_right ((nadd_le_nadd_right hj _).trans_lt (lt_lsub _ _))
   · exact lt_max_of_lt_left ((nadd_le_nadd_left hj _).trans_lt (lt_lsub _ _))
@@ -181,7 +183,7 @@ theorem birthday_natCast : ∀ n : ℕ, birthday n = n
   | 0 => birthday_zero
   | n + 1 => by
     simp_rw [Nat.cast_add, Nat.cast_one, birthday_add, birthday_natCast, birthday_one, nadd_one]
-    rw [← Order.succ_eq_add_one]
+    rw [← succ_eq_add_one]
 
 end IGame
 
@@ -292,9 +294,9 @@ theorem small_setOf_birthday_lt (o : NatOrdinal) : Small.{u} {x : Game.{u} // bi
   obtain rfl | ⟨a, rfl⟩ | ho := zero_or_succ_or_limit o
   · simp_rw [NatOrdinal.not_lt_zero]
     exact small_empty
-  · simp_rw [Order.lt_succ_iff, le_iff_lt_or_eq]
+  · simp_rw [lt_succ_iff, le_iff_lt_or_eq]
     convert small_union.{u} {x | birthday x < a} {x | birthday x = a}
-    · exact IH _ (Order.lt_succ a)
+    · exact IH _ (lt_succ a)
     · let f (g : Set S × Set S) : Game := Game.mk ({
         Set.range (fun x ↦ ((equivShrink g.1).symm x).1.1.out) |
         Set.range (fun x ↦ ((equivShrink g.2).symm x).1.1.out)
