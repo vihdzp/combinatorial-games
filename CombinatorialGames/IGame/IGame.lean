@@ -240,6 +240,9 @@ instance (x : IGame.{u}) : Small.{u} x.rightMoves := by
   rw [rightMoves_mk]
   infer_instance
 
+instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+
 @[ext]
 theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by

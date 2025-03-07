@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Special
 import Mathlib.Algebra.Order.Group.OrderIso
+import Mathlib.Logic.Small.Set
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -75,10 +76,6 @@ protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : �
 
 namespace IGame
 
--- move to `IGame` file
-instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
-
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
 noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
@@ -96,10 +93,12 @@ theorem birthday_eq_max (x : IGame) : birthday x =
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
+@[aesop apply unsafe 50%]
 theorem birthday_lt_of_mem_leftMoves {x y : IGame} (hy : y ∈ x.leftMoves) :
     y.birthday < x.birthday :=
   lt_birthday_iff.2 (.inl ⟨y, hy, le_rfl⟩)
 
+@[aesop apply unsafe 50%]
 theorem birthday_lt_of_mem_rightMoves {x y : IGame} (hy : y ∈ x.rightMoves) :
     y.birthday < x.birthday :=
   lt_birthday_iff.2 (.inr ⟨y, hy, le_rfl⟩)
@@ -199,12 +198,37 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 
 @[simp]
 theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
-  rw [tiny]
-  simp [Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
+  simp [tiny, Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
 
 @[simp]
 theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
   rw [← neg_tiny, birthday_neg, birthday_tiny]
+
+/-- Games with a bounded birthday form a small set. -/
+instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} := by
+  have (y : Iio o) := have := y.2; small_setOf_birthday_le y.1
+  have : Small.{u} {x // birthday x < o} := by
+    convert @small_iUnion _ _ _ _ fun y : Iio o ↦ have := y.2; small_setOf_birthday_le y.1
+    change _ ↔ _ ∈ ⋃ y : Iio o, {x : IGame | x.birthday ≤ y.1}
+    simpa using ⟨fun hy ↦ ⟨_, hy, le_rfl⟩, fun ⟨a, ha, ha'⟩ ↦  ha'.trans_lt ha⟩
+  let f (y : Set {x // birthday x < o} × Set {x // birthday x < o}) : {x // birthday x ≤ o} := by
+    refine ⟨{Subtype.val '' y.1 | Subtype.val '' y.2}ᴵ, ?_⟩
+    rw [birthday_ofSets, max_le_iff,
+      csSup_le_iff' (Ordinal.bddAbove_of_small _), csSup_le_iff' (Ordinal.bddAbove_of_small _)]
+    aesop
+  have hl (x : {x // birthday x ≤ o}) (y : x.1.leftMoves) : birthday y.1 < o :=
+    (birthday_lt_of_mem_leftMoves y.2).trans_le x.2
+  have hr (x : {x // birthday x ≤ o}) (y : x.1.rightMoves) : birthday y.1 < o :=
+    (birthday_lt_of_mem_rightMoves y.2).trans_le x.2
+  refine small_of_surjective (f := f) fun x ↦
+    ⟨⟨range fun y : x.1.leftMoves ↦ ⟨y, hl x y⟩, range fun y : x.1.rightMoves ↦ ⟨y, hr x y⟩⟩, ?_⟩
+  aesop
+termination_by o
+
+/-- Games with a bounded birthday form a small set. -/
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
+  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
+  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
 -- TODO: short game iff finite birthday
 
@@ -291,40 +315,26 @@ theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birth
 /- The bound `(x * y).birthday ≤ x.birthday * y.birthday` on surreals is currently an open problem.
 See https://mathoverflow.net/a/476829/147705. -/
 
-/-- Games with bounded birthday are a small set. -/
-theorem small_setOf_birthday_lt (o : NatOrdinal) : Small.{u} {x : Game.{u} // birthday x < o} := by
-  induction o using Ordinal.induction with | h o IH =>
-  let S := ⋃ a ∈ Iio o, {x : Game.{u} | birthday x < a}
-  let H : Small.{u} S := @small_biUnion _ _ _ _ _ IH
-  obtain rfl | ⟨a, rfl⟩ | ho := zero_or_succ_or_limit o
-  · simp_rw [NatOrdinal.not_lt_zero]
-    exact small_empty
-  · simp_rw [lt_succ_iff, le_iff_lt_or_eq]
-    convert small_union.{u} {x | birthday x < a} {x | birthday x = a}
-    · exact IH _ (lt_succ a)
-    · let f (g : Set S × Set S) : Game := Game.mk ({
-        range (fun x ↦ ((equivShrink g.1).symm x).1.1.out) |
-        range (fun x ↦ ((equivShrink g.2).symm x).1.1.out)
-      }ᴵ)
-      suffices {x | x.birthday = a} ⊆ range f from small_subset this
-      rintro x rfl
-      obtain ⟨y, rfl, hy'⟩ := birthday_eq_pGameBirthday x
-      refine ⟨⟨{z | ∃ i ∈ y.leftMoves, .mk i = z.1}, {z | ∃ i ∈ y.rightMoves, .mk i = z.1}⟩, ?_⟩
-      apply Game.mk_eq <| IGame.equiv_of_exists _ _ _ _ <;> intro i hi
-      · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
-        exact ⟨j, by simp [IGame.equiv_iff_game_eq, hj]⟩
-      · obtain ⟨j, hj⟩ := ((equivShrink _).symm i).2
-        exact ⟨j, by simp [IGame.equiv_iff_game_eq, hj]⟩
-      · refine ⟨equivShrink _ ⟨⟨.mk i, ?_⟩, i, rfl⟩, by simpa using Quotient.mk_out _⟩
-        suffices ∃ b ≤ y.birthday, birthday ⟦y.moveLeft i⟧ < b by simpa [S, hy'] using this
-        refine ⟨_, le_rfl, ?_⟩
-        exact (birthday_quot_le_pGameBirthday _).trans_lt (IGame.birthday_moveLeft_lt i)
-      · refine ⟨equivShrink _ ⟨⟨⟦y.moveRight i⟧, ?_⟩, i, rfl⟩, by simpa using Quotient.mk_out _⟩
-        suffices ∃ b ≤ y.birthday, birthday ⟦y.moveRight i⟧ < b by simpa [S, hy'] using this
-        refine ⟨_, le_rfl, ?_⟩
-        exact (birthday_quot_le_pGameBirthday _).trans_lt (IGame.birthday_moveRight_lt i)
-  · convert H
-    change birthday _ < o ↔ ∃ a, _
-    simpa using lt_limit ho
+/-- Games with a bounded birthday form a small set. -/
+instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} := by
+  have : Small.{u} (mk '' {x | IGame.birthday x ≤ o}) :=
+    @small_image _ _ _ _ (IGame.small_setOf_birthday_le o)
+  refine @small_subset _ _ _ ?_ this
+  change {x | birthday x ≤ o} ⊆ mk '' {x | IGame.birthday x ≤ o}
+  intro x hx
+  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
+  use y
+  simp_all
+
+/-- Games with a bounded birthday form a small set. -/
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
+  have : Small.{u} (mk '' {x | IGame.birthday x < o}) :=
+    @small_image _ _ _ _ (IGame.small_setOf_birthday_lt o)
+  refine @small_subset _ _ _ ?_ this
+  change {x | birthday x < o} ⊆ mk '' {x | IGame.birthday x < o}
+  intro x hx
+  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
+  use y
+  simp_all
 
 end Game
