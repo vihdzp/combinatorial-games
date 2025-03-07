@@ -1,5 +1,6 @@
 import CombinatorialGames.IGame.Specific.Domineering
 import CombinatorialGames.IGame.Basic
+import CombinatorialGames.IGame.Birthday
 import CombinatorialGames.IGame.Concrete
 import CombinatorialGames.IGame.IGame
 import CombinatorialGames.IGame.Impartial
