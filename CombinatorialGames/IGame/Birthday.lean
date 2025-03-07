@@ -98,15 +98,12 @@ theorem birthday_eq_zero {x : IGame} :
 @[simp] theorem birthday_star : birthday ⋆ = 1 := by
   rw [birthday_eq_max, leftMoves_star, rightMoves_star]; simp
 
-#exit
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
-  rw [birthday, birthday, max_comm]
-  congr 1
-  · rw [rightMoves_neg]
-    sorry
-  · rw [leftMoves_neg]
-    sorry
+  apply eq_of_forall_lt_iff
+  simp_rw [lt_birthday_iff, exists_leftMoves_neg]
+
+#exit
 
 #exit
 
