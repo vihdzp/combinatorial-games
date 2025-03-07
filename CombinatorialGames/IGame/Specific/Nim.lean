@@ -44,6 +44,22 @@ theorem leftMoves_nim (o : Nimber) : (nim o).leftMoves = nim '' Iio o := by
 theorem rightMoves_nim (o : Nimber) : (nim o).rightMoves = nim '' Iio o := by
   rw [nim_def]; exact rightMoves_ofSets ..
 
+theorem forall_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
+    (∀ x ∈ (nim o).leftMoves, P x) ↔ (∀ a < o, P (nim a)) := by
+  simp
+
+theorem forall_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
+    (∀ x ∈ (nim o).rightMoves, P x) ↔ (∀ a < o, P (nim a)) := by
+  simp
+
+theorem exists_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
+    (∃ x ∈ (nim o).leftMoves, P x) ↔ (∃ a < o, P (nim a)) := by
+  simp
+
+theorem exists_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
+    (∃ x ∈ (nim o).rightMoves, P x) ↔ (∃ a < o, P (nim a)) := by
+  simp
+
 theorem mem_leftMoves_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).leftMoves := by
   simpa using ⟨_, h, rfl⟩
 
@@ -102,6 +118,26 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
   rw [← Impartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+
+theorem nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b) := by
+  rw [Impartial.equiv_iff_forall_fuzzy, forall_leftMoves_add,
+    forall_leftMoves_nim, forall_leftMoves_nim, forall_rightMoves_nim]
+  refine ⟨⟨?_, ?_⟩, ?_⟩ <;> intro c hc
+  · rw [(nim_add_equiv c b).incompRel_congr_left, nim_fuzzy_iff, ne_eq, add_left_inj]
+    exact hc.ne
+  · rw [(nim_add_equiv a c).incompRel_congr_left, nim_fuzzy_iff, ne_eq, add_right_inj]
+    exact hc.ne
+  · obtain h | h := Nimber.lt_add_cases hc
+    · have := nim_add_equiv (c + b) b
+      rw [add_cancel_right] at this
+      rw [← this.incompRel_congr_right, add_fuzzy_add_iff_right, nim_fuzzy_iff]
+      exact h.ne'
+    · rw [add_comm] at h
+      have := nim_add_equiv a (c + a)
+      rw [add_comm c, add_cancel_left] at this
+      rw [← this.incompRel_congr_right, add_fuzzy_add_iff_left, nim_fuzzy_iff]
+      exact h.ne'
+termination_by (a, b)
 
 /-! ### Grundy value -/
 
@@ -177,68 +213,49 @@ theorem grundy_eq_iff_equiv {x y : IGame} [Impartial x] [Impartial y] :
 @[simp] theorem grundy_zero : grundy 0 = 0 := by simpa using grundy_nim 0
 @[simp] theorem grundy_star : grundy ⋆ = 1 := by simpa using grundy_nim 1
 
-#exit
+@[simp]
+theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
+  rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
 
 @[simp]
-theorem grundy_neg (G : PGame) [G.Impartial] : grundy (-G) = grundy G := by
-  rw [grundy_eq_iff_equiv_nim, neg_equiv_iff, neg_nim, ← grundy_eq_iff_equiv_nim]
+theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
+    grundy (x + y) = grundy x + grundy y := by
+  rw [grundy_eq_iff_equiv_nim, ← (nim_add_equiv _ _).antisymmRel_congr_right]
+  exact add_congr (equiv_nim_grundy x) (equiv_nim_grundy y)
 
-theorem grundy_eq_sInf_moveRight (G : PGame) [G.Impartial] :
-    grundy G = sInf (Set.range (grundy ∘ G.moveRight))ᶜ := by
-  obtain ⟨l, r, L, R⟩ := G
-  rw [← grundy_neg, grundy_eq_sInf_moveLeft]
-  iterate 3 apply congr_arg
-  ext i
-  exact @grundy_neg _ (@Impartial.moveRight_impartial ⟨l, r, L, R⟩ _ _)
+private theorem grundy_image_neg_rightMoves (x : IGame) [Impartial x] :
+    grundy '' (-x.rightMoves) = grundy '' x.rightMoves := by
+  rw [← Set.image_neg_eq_neg, image_image]
+  congr! 1 with y hy
+  have := Impartial.of_mem_rightMoves hy
+  rw [grundy_neg]
 
-theorem grundy_ne_moveRight {G : PGame} [G.Impartial] (i : G.RightMoves) :
-    grundy (G.moveRight i) ≠ grundy G := by
-  convert grundy_ne_moveLeft (toLeftMovesNeg i) using 1 <;> simp
+/-- This version is stated in terms of right moves of `x`. -/
+theorem grundy_def' (x : IGame) [Impartial x] : grundy x = sInf (grundy '' x.rightMoves)ᶜ := by
+  rw [← grundy_image_neg_rightMoves]
+  simpa using grundy_def (-x)
 
-theorem le_grundy_of_Iio_subset_moveRight {G : PGame} [G.Impartial] {o : Nimber}
-    (h : Set.Iio o ⊆ Set.range (grundy ∘ G.moveRight)) : o ≤ grundy G := by
-  by_contra! ho
-  obtain ⟨i, hi⟩ := h ho
-  exact grundy_ne_moveRight i hi
+/-- This version is stated in terms of right moves of `x`. -/
+theorem le_grundy_iff' {x : IGame} [Impartial x] {o : Nimber} :
+    o ≤ grundy x ↔ Iio o ⊆ grundy '' x.rightMoves := by
+  rw [← grundy_image_neg_rightMoves]
+  simpa using le_grundy_iff (x := -x)
 
-theorem exists_grundy_moveRight_of_lt {G : PGame} [G.Impartial] {o : Nimber}
-    (h : o < grundy G) : ∃ i, grundy (G.moveRight i) = o := by
-  rw [← grundy_neg] at h
-  obtain ⟨i, hi⟩ := exists_grundy_moveLeft_of_lt h
-  use toLeftMovesNeg.symm i
-  rwa [← grundy_neg, ← moveLeft_neg]
+/-- This version is stated in terms of right moves of `x`. -/
+theorem lt_grundy_iff' {x : IGame} [Impartial x] {o : Nimber} :
+    o < grundy x ↔ Iic o ⊆ grundy '' x.rightMoves := by
+  simpa using le_grundy_iff' (o := Order.succ o)
 
-theorem grundy_le_of_forall_moveRight {G : PGame} [G.Impartial] {o : Nimber}
-    (h : ∀ i, grundy (G.moveRight i) ≠ o) : G.grundy ≤ o := by
-  contrapose! h
-  exact exists_grundy_moveRight_of_lt h
+/-- This version is stated in terms of right moves of `x`. -/
+theorem mem_grundy_image_of_lt' {x : IGame} [Impartial x] {o : Nimber} (h : o < grundy x) :
+    o ∈ grundy '' x.rightMoves :=
+  le_grundy_iff'.1 le_rfl h
 
-/-- The Grundy value of the sum of two nim games equals their nimber addition. -/
-theorem grundy_nim_add_nim (x y : Ordinal) : grundy (nim x + nim y) = ∗x + ∗y := by
-  apply (grundy_le_of_forall_moveLeft _).antisymm (le_grundy_of_Iio_subset_moveLeft _)
-  · intro i
-    apply leftMoves_add_cases i <;> intro j <;> have := (toLeftMovesNim_symm_lt j).ne
-    · simpa [grundy_nim_add_nim (toLeftMovesNim.symm j) y]
-    · simpa [grundy_nim_add_nim x (toLeftMovesNim.symm j)]
-  · intro k hk
-    obtain h | h := Nimber.lt_add_cases hk
-    · let a := toOrdinal (k + ∗y)
-      use toLeftMovesAdd (Sum.inl (toLeftMovesNim ⟨a, h⟩))
-      simp [a, grundy_nim_add_nim a y]
-    · let a := toOrdinal (k + ∗x)
-      use toLeftMovesAdd (Sum.inr (toLeftMovesNim ⟨a, h⟩))
-      simp [a, grundy_nim_add_nim x a, add_comm (∗x)]
-termination_by (x, y)
+/-- This version is stated in terms of right moves of `x`. -/
+theorem grundy_ne' {x y : IGame} [Impartial x] (hy : y ∈ x.rightMoves) : grundy y ≠ grundy x := by
+  have hy' : -y ∈ (-x).leftMoves := by simpa
+  have := Impartial.of_mem_rightMoves hy
+  simpa using grundy_ne hy'
 
-theorem nim_add_nim_equiv (x y : Ordinal) :
-    nim x + nim y ≈ nim (toOrdinal (∗x + ∗y)) := by
-  rw [← grundy_eq_iff_equiv_nim, grundy_nim_add_nim]
-
-@[simp]
-theorem grundy_add (G H : PGame) [G.Impartial] [H.Impartial] :
-    grundy (G + H) = grundy G + grundy H := by
-  rw [← (grundy G).toOrdinal_toNimber, ← (grundy H).toOrdinal_toNimber,
-    ← grundy_nim_add_nim, grundy_eq_iff_equiv]
-  exact add_congr (equiv_nim_grundy G) (equiv_nim_grundy H)
-
-end PGame
+end Impartial
+end IGame
