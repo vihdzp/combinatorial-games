@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
+import CombinatorialGames.Mathlib.Order
+import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
@@ -37,14 +39,6 @@ theorem OrderEmbedding.antisymmRel_iff_antisymmRel {α β : Type*} [Preorder α]
 theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [PartialOrder β]
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
-
-theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
-    ¬ c ≤ a :=
-  fun h ↦ h₂ (h.trans h₁)
-
-theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
-    ¬ c ≤ a :=
-  fun h ↦ h₁ (h₂.trans h)
 
 theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n := by
   ext o
@@ -191,10 +185,10 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
   inj' a b := by simp [le_antisymm_iff]
   map_rel_iff' := toIGame_le_iff
 
-@[simp] theorem mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← mk_toPGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← mk_toPGame]
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toPGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toPGame]
 
 theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
@@ -252,11 +246,17 @@ termination_by (a, b)
 theorem toGame_mul (a b : NatOrdinal) : (a * b).toGame = .mk (a.toIGame * b.toIGame) :=
   Game.mk_eq (toIGame_mul a b)
 
+/-- `NatOrdinal.toGame` as an `OrderAddMonoidHom`. -/
+@[simps]
+def toGameAddHom : NatOrdinal →+o Game where
+  toFun := toGame
+  map_zero' := toGame_zero
+  map_add' := toGame_add
+  monotone' _ _ := toGame_le_iff.2
+
 @[simp]
-theorem toGame_natCast : ∀ n : ℕ, toGame n = n
-  | 0 => toGame_zero
-  | n + 1 => by
-    rw [Nat.cast_add, toGame_add, toGame_natCast, Nat.cast_one, toGame_one, Nat.cast_add_one]
+theorem toGame_natCast : ∀ n : ℕ, toGame n = n :=
+  map_natCast' toGameAddHom toGame_one
 
 /-- Note that the equality doesn't hold, as e.g. `↑2 = {1 | }`, while `toIGame 2 = {0, 1 | }`. -/
 @[simp]

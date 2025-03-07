@@ -3,59 +3,71 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.Surreal.Multiplication
+import Mathlib.Algebra.Order.Hom.Ring
 
 /-!
-# Surreals as games
+# Ordinals as surreals
 
-We define the canonical map `Ordinal → Surreal` in terms of the map `Ordinal.toPGame`.
-
-# Main declarations
-
-- `Ordinal.toSurreal`: The canonical map between ordinals and surreal numbers.
+We define the canonical map `NatOrdinal → Surreal` in terms of the map `NatOrdinal.toIGame`.
 -/
 
-open PGame Surreal
-open scoped NaturalOps PGame
+open IGame Surreal
 
-namespace Ordinal
+noncomputable section
 
 /-- Ordinal games are numeric. -/
-theorem numeric_toPGame (o : Ordinal) : o.toPGame.Numeric := by
-  induction' o using Ordinal.induction with o IH
-  apply numeric_of_isEmpty_rightMoves
-  simpa using fun i ↦ IH _ (Ordinal.toLeftMovesToPGame_symm_lt i)
+instance IGame.Numeric.toIGame (o : NatOrdinal) : Numeric o.toIGame := by
+  rw [numeric_def]
+  simpa using fun a ha ↦ IGame.Numeric.toIGame a
+termination_by o
+
+namespace NatOrdinal
 
 /-- Converts an ordinal into the corresponding surreal. -/
-noncomputable def toSurreal : Ordinal ↪o Surreal where
-  toFun o := .mk _ o.numeric_toPGame
-  inj' _ _ h := toPGame_equiv_iff.1 (Quotient.exact h :)
-  map_rel_iff' := @toPGame_le_iff
+def toSurreal : NatOrdinal ↪o Surreal where
+  toFun o := .mk o.toIGame
+  inj' _ _ h := toIGame_equiv_iff.1 (Quotient.exact h :)
+  map_rel_iff' := @toIGame_le_iff
+
+@[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
+
+@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
+@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
 
 @[simp]
-theorem _root_.Surreal.mk_toPGame (o : Ordinal) : .mk _ (numeric_toPGame o) = o.toSurreal :=
-  rfl
-
-@[simp]
-theorem toSurreal_zero : toSurreal 0 = 0 :=
-  Surreal.mk_eq toPGame_zero_equiv
-
-@[simp]
-theorem toSurreal_one : toSurreal 1 = 1 :=
-  Surreal.mk_eq toPGame_one_equiv
+theorem toSurreal_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
+  toIGame_nonneg a
 
 theorem toSurreal_injective : Function.Injective toSurreal :=
   toSurreal.injective
 
-theorem toSurreal_le_iff {a b : Ordinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b := by simp
-theorem toSurreal_lt_iff {a b : Ordinal} : a.toSurreal < b.toSurreal ↔ a < b := by simp
-theorem toSurreal_inj {a b : Ordinal} : a.toSurreal = b.toSurreal ↔ a = b := by simp
+theorem toSurreal_le_iff {a b : NatOrdinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b := by simp
+theorem toSurreal_lt_iff {a b : NatOrdinal} : a.toSurreal < b.toSurreal ↔ a < b := by simp
+theorem toSurreal_inj {a b : NatOrdinal} : a.toSurreal = b.toSurreal ↔ a = b := by simp
 
-theorem toSurreal_nadd (a b : Ordinal) : (a ♯ b).toSurreal = a.toSurreal + b.toSurreal :=
-  mk_eq (toPGame_nadd a b)
+@[simp]
+theorem toSurreal_add (a b : NatOrdinal) : (a + b).toSurreal = a.toSurreal + b.toSurreal :=
+  mk_eq (toIGame_add a b)
 
-theorem toSurreal_nmul (a b : Ordinal) : (a ⨳ b).toSurreal = a.toSurreal * b.toSurreal :=
-  mk_eq (toPGame_nmul a b)
+@[simp]
+theorem toSurreal_mul (a b : NatOrdinal) : (a * b).toSurreal = a.toSurreal * b.toSurreal :=
+  mk_eq (toIGame_mul a b)
 
-end Ordinal
+/-- `NatOrdinal.toGame` as an `OrderRingHom`. -/
+@[simps]
+def toSurrealRingHom : NatOrdinal →+*o Surreal where
+  toFun := toSurreal
+  map_zero' := toSurreal_zero
+  map_one' := toSurreal_one
+  map_add' := toSurreal_add
+  map_mul' := toSurreal_mul
+  monotone' _ _ := toGame_le_iff.2
+
+@[simp]
+theorem toSurreal_natCast : ∀ n : ℕ, toSurreal n = n :=
+  map_natCast' toSurrealRingHom toSurreal_one
+
+end NatOrdinal
+end

@@ -2,6 +2,7 @@ import CombinatorialGames.IGame.Specific.Domineering
 import CombinatorialGames.IGame.Basic
 import CombinatorialGames.IGame.Concrete
 import CombinatorialGames.IGame.IGame
+import CombinatorialGames.IGame.Impartial
 import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Short
 import CombinatorialGames.IGame.Special
@@ -10,3 +11,4 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Ordinal
