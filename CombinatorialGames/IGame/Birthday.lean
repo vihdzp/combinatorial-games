@@ -29,6 +29,11 @@ open scoped NaturalOps IGame
 
 /-! ### Stuff for Mathlib -/
 
+theorem IncompRel.ne {α : Type*} {r : α → α → Prop} [IsRefl α r] {a b : α}
+    (h : IncompRel r a b) : a ≠ b := by
+  rintro rfl
+  exact h.1 <| refl_of r a
+
 -- TODO: upstream
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
@@ -43,6 +48,10 @@ theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
 @[simp]
 theorem NatOrdinal.succ_ne_zero (x : NatOrdinal) : succ x ≠ 0 :=
   Ordinal.succ_ne_zero x
+
+@[simp]
+protected theorem NatOrdinal.le_zero {x : NatOrdinal} : x ≤ 0 ↔ x = 0 :=
+  Ordinal.le_zero
 
 @[simp]
 protected theorem NatOrdinal.succ_zero : succ (0 : NatOrdinal) = 1 :=
@@ -101,7 +110,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   simp [iSup, image_eq_range]
 
 @[simp]
-theorem birthday_eq_zero {x : IGame} : birthday x = (0 : NatOrdinal) ↔ x = 0 := by
+theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
   rw [birthday, NatOrdinal.iSup_eq_zero_iff, IGame.ext_iff]
   simp [IsOption, forall_and, eq_empty_iff_forall_not_mem]
 
@@ -179,113 +188,108 @@ decreasing_by igame_wf
 theorem birthday_sub (x y : IGame) : (x - y).birthday = x.birthday + y.birthday := by
   simp [sub_eq_add_neg]
 
-@[simp]
+@[simp, norm_cast]
 theorem birthday_natCast : ∀ n : ℕ, birthday n = n
   | 0 => birthday_zero
   | n + 1 => by simp_rw [Nat.cast_add_one, birthday_add, birthday_natCast, birthday_one]
 
-#exit
+@[simp]
+theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
+  birthday_natCast n
+
+@[simp]
+theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
+  rw [tiny]
+  simp [Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
+
+@[simp]
+theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
+  rw [← neg_tiny, birthday_neg, birthday_tiny]
+
+-- TODO: short game iff finite birthday
 
 end IGame
+
+/-! ### `Game` birthday -/
 
 namespace Game
 
 /-- The birthday of a game is defined as the least birthday among all pre-games that define it. -/
 noncomputable def birthday (x : Game.{u}) : NatOrdinal.{u} :=
-  sInf (IGame.birthday '' (Game.mk ⁻¹' {x}))
+  sInf (IGame.birthday '' (mk ⁻¹' {x}))
 
-theorem birthday_eq_pGameBirthday (x : Game) :
-    ∃ y : IGame.{u}, (Game.mk y) = x ∧ y.birthday = birthday x := by
+theorem birthday_eq_iGameBirthday (x : Game) :
+    ∃ y : IGame, Game.mk y = x ∧ y.birthday = birthday x := by
   refine csInf_mem (image_nonempty.2 ?_)
   exact ⟨_, x.out_eq⟩
 
-theorem birthday_quot_le_pGameBirthday  (x : IGame) : birthday ⟦x⟧ ≤ x.birthday :=
+theorem birthday_mk_le (x : IGame) : birthday (mk x) ≤ x.birthday :=
   csInf_le' ⟨x, rfl, rfl⟩
 
 @[simp]
 theorem birthday_zero : birthday 0 = 0 := by
-  rw [← Ordinal.le_zero, ← IGame.birthday_zero]
-  exact birthday_quot_le_pGameBirthday  _
+  simpa using birthday_mk_le 0
 
 @[simp]
 theorem birthday_eq_zero {x : Game} : birthday x = 0 ↔ x = 0 := by
-  constructor
-  · intro h
-    let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
-    rw [← hy₁, ← mk_zero, ← IGame.ofSets_leftMoves_rightMoves y, IGame.zero_def]
-    rw [h, IGame.birthday_eq_zero] at hy₂
-    simp_rw [mk_ofSets, hy₂]
-  · rintro rfl
-    exact birthday_zero
+  obtain ⟨_, _, _⟩ := birthday_eq_iGameBirthday x
+  refine ⟨fun _ ↦ ?_, ?_⟩ <;> simp_all
+
+private theorem birthday_neg_le (x : Game) : (-x).birthday ≤ x.birthday := by
+  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
+  rw [← hy', ← hy]
+  apply (birthday_mk_le _).trans
+  rw [IGame.birthday_neg]
 
 @[simp]
-theorem birthday_ordinalToGame (o : NatOrdinal) : birthday o.toGame = o := by
+theorem birthday_neg (x : Game) : (-x).birthday = x.birthday := by
+  apply (birthday_neg_le x).antisymm
+  simpa using birthday_neg_le (-x)
+
+theorem le_toGame_birthday (x : Game) : x ≤ x.birthday.toGame := by
+  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
+  rw [← hy', ← hy]
+  exact y.le_toIGame_birthday
+
+theorem neg_toGame_birthday_le (x : Game) : -x.birthday.toGame ≤ x := by
+  simpa [neg_le] using le_toGame_birthday (-x)
+
+@[simp]
+theorem birthday_toGame (o : NatOrdinal) : birthday o.toGame = o := by
   apply le_antisymm
-  · conv_rhs => rw [← IGame.birthday_ordinalToIGame o]
-    apply birthday_quot_le_pGameBirthday
-  · let ⟨x, hx₁, hx₂⟩ := birthday_eq_pGameBirthday o.toGame
-    rw [← hx₂, ← toIGame_le_iff]
-    rw [← mk_toIGame, Game.mk_eq_mk] at hx₁
-    exact hx₁.2.trans (IGame.le_birthday x)
+  · simpa using birthday_mk_le o.toIGame
+  · simpa using o.toGame.le_toGame_birthday
 
 @[simp, norm_cast]
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
-  rw [← toGame_natCast]
-  exact birthday_ordinalToGame _
+  simpa using birthday_toGame n
 
 @[simp]
-theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] :
-    birthday ofNat(n) = OfNat.ofNat n :=
+theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
 
 @[simp]
 theorem birthday_one : birthday 1 = 1 := by
-  rw [← Nat.cast_one, birthday_natCast, Nat.cast_one]
+  simpa using birthday_natCast 1
 
 @[simp]
 theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
-  · rw [← IGame.birthday_star]
-    exact birthday_quot_le_pGameBirthday  _
-  · rw [one_le_iff_ne_zero, ne_eq, birthday_eq_zero, Game.zero_def,
-      ofSets, Game.mk_eq_mk, AntisymmRel, not_and]
-    simp_rw [image_empty]
-    exact fun _ ↦ IGame.star_lf_zero
+  · simpa using birthday_mk_le ⋆
+  · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
+    exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
 
-private theorem birthday_neg' (x : Game) : (-x).birthday ≤ x.birthday := by
-  let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
-  rw [← hy₂, ← IGame.birthday_neg y]
-  conv_lhs => rw [← hy₁]
-  apply birthday_quot_le_pGameBirthday
+theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birthday := by
+  obtain ⟨a, ha, ha'⟩ := birthday_eq_iGameBirthday x
+  obtain ⟨b, hb, hb'⟩ := birthday_eq_iGameBirthday y
+  rw [← ha', ← hb', ← ha, ← hb, ← IGame.birthday_add]
+  exact birthday_mk_le _
 
-@[simp]
-theorem birthday_neg (x : Game) : (-x).birthday = x.birthday := by
-  apply le_antisymm (birthday_neg' x)
-  conv_lhs => rw [← neg_neg x]
-  exact birthday_neg' _
+theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
+  simpa using birthday_add_le x (-y)
 
-theorem le_birthday (x : Game) : x ≤ x.birthday.toGame := by
-  let ⟨y, hy₁, hy₂⟩ := birthday_eq_pGameBirthday x
-  rw [← hy₁]
-  apply (y.le_birthday).trans
-  rw [toIGame_le_iff, hy₁, hy₂]
-
-theorem neg_birthday_le (x : Game) : -x.birthday.toGame ≤ x := by
-  rw [neg_le, ← birthday_neg]
-  exact le_birthday _
-
-theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday ♯ y.birthday := by
-  let ⟨a, ha₁, ha₂⟩ := birthday_eq_pGameBirthday x
-  let ⟨b, hb₁, hb₂⟩ := birthday_eq_pGameBirthday y
-  rw [← ha₂, ← hb₂, ← ha₁, ← hb₁, ← IGame.birthday_add]
-  exact birthday_quot_le_pGameBirthday  _
-
-theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday ♯ y.birthday := by
-  apply (birthday_add_le x _).trans_eq
-  rw [birthday_neg]
-
-/- The bound `(x * y).birthday ≤ x.birthday ⨳ y.birthday` is currently an open problem. See
-  https://mathoverflow.net/a/476829/147705. -/
+/- The bound `(x * y).birthday ≤ x.birthday * y.birthday` on surreals is currently an open problem.
+See https://mathoverflow.net/a/476829/147705. -/
 
 /-- Games with bounded birthday are a small set. -/
 theorem small_setOf_birthday_lt (o : NatOrdinal) : Small.{u} {x : Game.{u} // birthday x < o} := by
