@@ -145,5 +145,22 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
 proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
 
+/-! ### Switches -/
+
+/-- A **switch** ±x is defined as {x | -x}: switches are their own confusion interval! -/
+def switch (x : IGame) : IGame :=
+  {{x} | {-x}}ᴵ
+
+@[inherit_doc] prefix:75 "±" => switch
+
+@[simp]
+theorem neg_switch (x : IGame) : -±x = ±x := by
+  rw [switch, neg_ofSets]
+  simp [Set.neg_singleton]
+
+theorem switch_zero_star : ±0 = ⋆ := by
+  rw [switch, star]
+  simp only [neg_zero]
+
 end IGame
 end
