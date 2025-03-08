@@ -132,7 +132,8 @@ def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (univ α) ‖ 0 := by
-  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft (rel_leftMove (top_compl_posetRel_univ))
+  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
+    (mem_leftMoves_toIGame_of_relLeft (top_compl_posetRel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [leftMoves_toIGame, mem_image] at hz
   rw [leftMoves_toIGame (univ α), mem_image]

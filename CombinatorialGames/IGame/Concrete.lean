@@ -72,19 +72,15 @@ theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' {b | b �
 theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' {b | b ≺ᵣ a} := by
   rw [toIGame_def, rightMoves_ofSets]
 
-theorem rel_leftMove_iff {a b : α} :
-    toIGame b ∈ (toIGame a).leftMoves ↔ ∃ c, c ≺ₗ a ∧ toIGame c = toIGame b := by
-  simp_rw [leftMoves_toIGame, Set.mem_image, Set.mem_setOf_eq]
+theorem mem_leftMoves_toIGame_of_relLeft {a b : α} (hab : b ≺ₗ a) :
+    toIGame b ∈ (toIGame a).leftMoves := by
+  rw [leftMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
 
-theorem rel_leftMove {a b : α} (hab : b ≺ₗ a) : toIGame b ∈ (toIGame a).leftMoves :=
-  rel_leftMove_iff.mpr ⟨b, hab, rfl⟩
-
-theorem rel_rightMove_iff {a b : α} :
-    toIGame b ∈ (toIGame a).rightMoves ↔ ∃ c, c ≺ᵣ a ∧ toIGame c = toIGame b := by
-  simp_rw [rightMoves_toIGame, Set.mem_image, Set.mem_setOf_eq]
-
-theorem rel_rightMove {a b : α} (hab : b ≺ᵣ a) : toIGame b ∈ (toIGame a).rightMoves :=
-  rel_rightMove_iff.mpr ⟨b, hab, rfl⟩
+theorem mem_rightMoves_toIGame_of_relRight {a b : α} (hab : b ≺ᵣ a) :
+    toIGame b ∈ (toIGame a).rightMoves := by
+  rw [rightMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
 
 theorem neg_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toIGame a = toIGame a := by
   ext
