@@ -30,7 +30,7 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 variable {α : Type*} [Preorder α]
 
-open Set IGame.Impartial
+open Set
 
 section Set
 
@@ -88,7 +88,7 @@ instance isWellFounded_posetRel [WellQuasiOrderedLE α] : IsWellFounded (Set α)
 
 end Set
 
-namespace PGame
+namespace IGame
 variable [WellQuasiOrderedLE α]
 
 /-- The set of states in a poset game. This is a type alias for `Set α`. -/
@@ -132,11 +132,11 @@ def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (univ α) ‖ 0 := by
-  apply fuzzy_zero_of_forall_exists_moveLeft (rel_leftMove (top_compl_posetRel_univ))
+  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft (rel_leftMove (top_compl_posetRel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [leftMoves_toIGame, mem_image] at hz
   rw [leftMoves_toIGame (univ α), mem_image]
   exact ⟨hz.choose, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end Poset
-end PGame
+end IGame
