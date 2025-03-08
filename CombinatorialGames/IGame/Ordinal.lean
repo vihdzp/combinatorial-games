@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.Basic
+import CombinatorialGames.IGame.Short
 import CombinatorialGames.Mathlib.Order
 import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.SetTheory.Ordinal.NaturalOps
@@ -13,9 +14,11 @@ import Mathlib.SetTheory.Ordinal.NaturalOps
 
 We define the canonical map `NatOrdinal → IGame`, where every ordinal is mapped to the game whose
 left set consists of all previous ordinals. We make use of the type alias `NatOrdinal` rather than
-`Ordinal`, as this map also preserves addition, and in the case of surreals, multiplication.
+`Ordinal`, as this map also preserves addition, and in the case of surreals, multiplication. The map
+to surreals is defined in `NatOrdinal.toSurreal`.
 
-The map to surreals is defined in `NatOrdinal.toSurreal`.
+We also prove some properties about `NatCast`, which is related to the previous construction by
+`toIGame (↑n) ≈ ↑n`.
 
 # Main declarations
 
@@ -114,6 +117,11 @@ theorem mul_add_lt {a b a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
 theorem nmul_nadd_le {a b a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
     a' * b + a * b' ≤ a * b + a' * b' :=
   Ordinal.nmul_nadd_le ha hb
+
+instance : CharZero NatOrdinal where
+  cast_injective m n h := by
+    apply_fun toOrdinal at h
+    simpa using h
 
 /-! ### `NatOrdinal` to `PGame` -/
 
@@ -254,16 +262,74 @@ def toGameAddHom : NatOrdinal →+o Game where
   map_add' := toGame_add
   monotone' _ _ := toGame_le_iff.2
 
+/-! ### `NatCast` properties -/
+
 @[simp]
 theorem toGame_natCast : ∀ n : ℕ, toGame n = n :=
   map_natCast' toGameAddHom toGame_one
 
 /-- Note that the equality doesn't hold, as e.g. `↑2 = {1 | }`, while `toIGame 2 = {0, 1 | }`. -/
-@[simp]
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
   Game.mk_eq_mk.1 (by simp)
 
 end NatOrdinal
+
+open NatOrdinal
+
+theorem Game.natCast_strictMono : StrictMono ((↑) : ℕ → Game) := by
+  intro x y h
+  rwa [← toGame_natCast, ← toGame_natCast, toGame_lt_iff, Nat.cast_lt]
+
+instance : CharZero Game where
+  cast_injective := Game.natCast_strictMono.injective
+
+namespace IGame
+
+theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) := by
+  intro x y h
+  rwa [← (toIGame_natCast_equiv x).lt_congr (toIGame_natCast_equiv y), toIGame_lt_iff, Nat.cast_lt]
+
+instance : CharZero IGame where
+  cast_injective := natCast_strictMono.injective
+
+@[simp, norm_cast]
+theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n :=
+  natCast_strictMono.lt_iff_lt
+
+@[simp, norm_cast]
+theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n :=
+  natCast_strictMono.le_iff_le
+
+theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
+  have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
+    have := Short.of_mem_leftMoves y.2
+    exact Short.exists_lt_natCast y
+  choose f hf using this
+  obtain ⟨n, hn⟩ := (Set.finite_range f).bddAbove
+  refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
+  rw [le_iff_forall_lf]
+  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
+termination_by x
+decreasing_by igame_wf
+
+theorem Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x := by
+  obtain ⟨n, hn⟩ := exists_lt_natCast (-x)
+  use n
+  rwa [IGame.neg_lt]
+
+notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+
+theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
+  obtain ⟨n, hn⟩ := exists_lt_natCast x
+  apply hn.trans
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
+  exact Ordinal.nat_lt_omega0 n
+
+theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
+  rw [IGame.neg_lt]
+  exact lt_omega0 _
+
+end IGame
 
 attribute [simp] Nat.forall_lt_succ Nat.exists_lt_succ
 example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp

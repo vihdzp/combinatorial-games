@@ -345,8 +345,7 @@ This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguat
 notation, and from the analogous constructor on `Game`.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we instead depend on another auxiliary type, see
-`IGame.Short` for more information. -/
+Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
