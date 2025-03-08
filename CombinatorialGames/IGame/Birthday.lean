@@ -6,6 +6,8 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Special
 import Mathlib.Algebra.Order.Group.OrderIso
+import Mathlib.Logic.Small.Set
+import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
 # Birthdays of games
