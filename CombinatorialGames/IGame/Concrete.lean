@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.IGame
+import CombinatorialGames.IGame.Impartial
 
 /-!
 # Combinatorial games from a type of states
@@ -71,6 +72,16 @@ theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' {b | b �
 theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' {b | b ≺ᵣ a} := by
   rw [toIGame_def, rightMoves_ofSets]
 
+theorem mem_leftMoves_toIGame_of_relLeft {a b : α} (hab : b ≺ₗ a) :
+    toIGame b ∈ (toIGame a).leftMoves := by
+  rw [leftMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
+
+theorem mem_rightMoves_toIGame_of_relRight {a b : α} (hab : b ≺ᵣ a) :
+    toIGame b ∈ (toIGame a).rightMoves := by
+  rw [rightMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
+
 theorem neg_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toIGame a = toIGame a := by
   ext
   all_goals
@@ -83,21 +94,16 @@ theorem neg_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toIGa
 termination_by isWellFounded_subsequent.wf.wrap a
 decreasing_by all_goals aesop
 
--- TODO: port once we have impartial games
-
-/-
-theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
-    Impartial (toPGame a) := by
-  rw [impartial_def, neg_toPGame h]
-  refine ⟨.rfl, fun i ↦ ?_, fun i ↦ ?_⟩
-  · rw [moveLeft_toPGame]
-    have := subrelation_subsequentL <| toLeftMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
-  · rw [moveRight_toPGame]
-    have := subrelation_subsequentR <| toRightMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
+theorem impartial_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) :
+    (toIGame a).Impartial := by
+  rw [impartial_def, neg_toIGame h, leftMoves_toIGame, rightMoves_toIGame]
+  refine ⟨.rfl, fun i hi ↦ ?_, fun i hi ↦ ?_⟩
+  all_goals rw [← hi.choose_spec.2]
+  · have := subrelation_subsequentL <| hi.choose_spec.1
+    exact impartial_toIGame h _
+  · have := subrelation_subsequentR <| hi.choose_spec.1
+    exact impartial_toIGame h _
 termination_by isWellFounded_subsequent.wf.wrap a
--/
 
 end ConcreteGame
 end
