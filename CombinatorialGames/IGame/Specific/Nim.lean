@@ -159,8 +159,8 @@ theorem grundy_def (x : IGame) : grundy x = sInf (grundy '' x.leftMoves)ᶜ := b
 /-- This version is stated in terms of left moves of `x`. -/
 theorem le_grundy_iff {x : IGame} {o : Nimber} : o ≤ grundy x ↔ Iio o ⊆ grundy '' x.leftMoves := by
   rw [grundy_def, le_csInf_iff'']
-  · simp_rw [← compl_subset_compl (t := Iio o), subset_def]
-    aesop
+  · rw [← compl_subset_compl (t := Iio o), subset_def]
+    simp
   · exact nonempty_of_not_bddAbove (Nimber.not_bddAbove_compl_of_small _)
 
 /-- This version is stated in terms of left moves of `x`. -/
