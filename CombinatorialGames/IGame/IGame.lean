@@ -272,6 +272,9 @@ def IsOption (x y : IGame) : Prop :=
 theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := .inl
 theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := .inr
 
+instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+
 -- TODO: is there some more general theorem about well-founded relations on quotients
 -- that we could use here?
 theorem isOption_wf : WellFounded IsOption := by
