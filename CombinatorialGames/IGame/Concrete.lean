@@ -100,15 +100,12 @@ decreasing_by all_goals aesop
 
 theorem impartial_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) :
     (toIGame a).Impartial := by
-  rw [impartial_def, neg_toIGame h]
+  rw [impartial_def, neg_toIGame h, leftMoves_toIGame, rightMoves_toIGame]
   refine ⟨.rfl, fun i hi ↦ ?_, fun i hi ↦ ?_⟩
-  · rw [leftMoves_toIGame, Set.mem_image] at hi
-    have := subrelation_subsequentL <| hi.choose_spec.1
-    rw [← hi.choose_spec.2]
+  all_goals rw [← hi.choose_spec.2]
+  · have := subrelation_subsequentL <| hi.choose_spec.1
     exact impartial_toIGame h _
-  · rw [rightMoves_toIGame, Set.mem_image] at hi
-    have := subrelation_subsequentR <| hi.choose_spec.1
-    rw [← hi.choose_spec.2]
+  · have := subrelation_subsequentR <| hi.choose_spec.1
     exact impartial_toIGame h _
 termination_by isWellFounded_subsequent.wf.wrap a
 
