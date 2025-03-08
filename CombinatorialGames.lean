@@ -7,6 +7,7 @@ import CombinatorialGames.IGame.Impartial
 import CombinatorialGames.IGame.Ordinal
 import CombinatorialGames.IGame.Short
 import CombinatorialGames.IGame.Special
+import CombinatorialGames.IGame.Specific.Nim
 import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
