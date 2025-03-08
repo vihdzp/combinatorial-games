@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Concrete
-import CombinatorialGames.Game.Impartial
+import CombinatorialGames.IGame.Concrete
+import CombinatorialGames.IGame.Impartial
 import Mathlib.Order.WellQuasiOrder
 
 /-!
@@ -30,7 +30,7 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 variable {α : Type*} [Preorder α]
 
-open Set
+open Set IGame.Impartial
 
 section Set
 
@@ -115,11 +115,11 @@ instance : WellFoundedRelation (Poset α) := ⟨rel, isWellFounded_posetRel.wf�
 instance : ConcreteGame (Poset α) := .ofImpartial rel
 
 @[simp]
-protected theorem neg_toPGame (a : Poset α) : -toPGame a = toPGame a :=
-  neg_toPGame rfl a
+protected theorem neg_toPGame (a : Poset α) : -toIGame a = toIGame a :=
+  neg_toIGame rfl a
 
-protected instance impartial_toPGame (a : Poset α) : Impartial (toPGame a) :=
-  impartial_toPGame rfl a
+protected instance impartial_toPGame (a : Poset α) : (toIGame a).Impartial :=
+  impartial_toIGame rfl a
 
 /-- The starting position in a poset game. -/
 def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
@@ -131,13 +131,12 @@ def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
 /-- Any poset game on a poset with a top element is won by the first player. This is proven by
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
-    toPGame (univ α) ‖ 0 := by
-  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (toLeftMovesToPGame ⟨_, top_compl_posetRel_univ⟩)
-  rw [moveLeft_toPGame_toLeftMovesToPGame]
-  refine fun i ↦ ⟨toLeftMovesToPGame ⟨_, posetRel_univ_of_posetRel_top_compl
-    (toLeftMovesToPGame_symm_prop i)⟩, ?_⟩
-  simp
+    toIGame (univ α) ‖ 0 := by
+  apply fuzzy_zero_of_forall_exists_moveLeft (rel_leftMove (top_compl_posetRel_univ))
+  refine fun z hz ↦ ⟨z, ?_, by rfl⟩
+  rw [leftMoves_toIGame, mem_image] at hz
+  rw [leftMoves_toIGame (univ α), mem_image]
+  exact ⟨hz.choose, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end Poset
 end PGame

@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.IGame.IGame
+import CombinatorialGames.IGame.Impartial
 
 /-!
 # Combinatorial games from a type of states
@@ -71,6 +72,20 @@ theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' {b | b �
 theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' {b | b ≺ᵣ a} := by
   rw [toIGame_def, rightMoves_ofSets]
 
+theorem rel_leftMove_iff {a b : α} :
+    toIGame b ∈ (toIGame a).leftMoves ↔ ∃ c, c ≺ₗ a ∧ toIGame c = toIGame b := by
+  simp_rw [leftMoves_toIGame, Set.mem_image, Set.mem_setOf_eq]
+
+theorem rel_leftMove {a b : α} (hab : b ≺ₗ a) : toIGame b ∈ (toIGame a).leftMoves :=
+  rel_leftMove_iff.mpr ⟨b, hab, rfl⟩
+
+theorem rel_rightMove_iff {a b : α} :
+    toIGame b ∈ (toIGame a).rightMoves ↔ ∃ c, c ≺ᵣ a ∧ toIGame c = toIGame b := by
+  simp_rw [rightMoves_toIGame, Set.mem_image, Set.mem_setOf_eq]
+
+theorem rel_rightMove {a b : α} (hab : b ≺ᵣ a) : toIGame b ∈ (toIGame a).rightMoves :=
+  rel_rightMove_iff.mpr ⟨b, hab, rfl⟩
+
 theorem neg_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toIGame a = toIGame a := by
   ext
   all_goals
@@ -83,21 +98,19 @@ theorem neg_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toIGa
 termination_by isWellFounded_subsequent.wf.wrap a
 decreasing_by all_goals aesop
 
--- TODO: port once we have impartial games
-
-/-
-theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
-    Impartial (toPGame a) := by
-  rw [impartial_def, neg_toPGame h]
-  refine ⟨.rfl, fun i ↦ ?_, fun i ↦ ?_⟩
-  · rw [moveLeft_toPGame]
-    have := subrelation_subsequentL <| toLeftMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
-  · rw [moveRight_toPGame]
-    have := subrelation_subsequentR <| toRightMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
+theorem impartial_toIGame (h : subsequentL (α := α) = subsequentR) (a : α) :
+    (toIGame a).Impartial := by
+  rw [impartial_def, neg_toIGame h]
+  refine ⟨.rfl, fun i hi ↦ ?_, fun i hi ↦ ?_⟩
+  · rw [leftMoves_toIGame, Set.mem_image] at hi
+    have := subrelation_subsequentL <| hi.choose_spec.1
+    rw [← hi.choose_spec.2]
+    exact impartial_toIGame h _
+  · rw [rightMoves_toIGame, Set.mem_image] at hi
+    have := subrelation_subsequentR <| hi.choose_spec.1
+    rw [← hi.choose_spec.2]
+    exact impartial_toIGame h _
 termination_by isWellFounded_subsequent.wf.wrap a
--/
 
 end ConcreteGame
 end
