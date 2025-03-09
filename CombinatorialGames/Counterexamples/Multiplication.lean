@@ -46,6 +46,6 @@ theorem star'_mul_star_lf : star' * star ⧏ star := by
 
 /-- Pre-game multiplication cannot be lifted to games. -/
 theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
-  ⟨star', ⋆, ⋆, star'_equiv_star, fun h ↦ absurd (h.trans star_sq).ge star'_mul_star_lf⟩
+  ⟨_, _, _, star'_equiv_star, fun h ↦ absurd (h.trans star_sq).ge star'_mul_star_lf⟩
 
 end IGame
