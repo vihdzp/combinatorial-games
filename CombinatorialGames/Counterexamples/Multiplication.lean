@@ -3,8 +3,8 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Special
+import CombinatorialGames.IGame.Basic
+import CombinatorialGames.IGame.Special
 import Mathlib.Tactic.FinCases
 
 /-!
@@ -18,61 +18,34 @@ is colloquially known as `star`, so we use the name `star'` for the second. We p
 `star ≈ star'` and `star * star ≈ star`, but `star' * star ≉ star`.
 -/
 
-namespace PGame
+noncomputable section
+open IGame
 
-open PGame
+namespace IGame
 
 /-- The game `{-1, 0 | 0, 1}`, which is equivalent but not identical to `*`. -/
-def star' : PGame := ofLists [0, -1] [0, 1]
+def star' : IGame := {{0, -1} | {0, 1}}ᴵ
+
+@[simp] theorem leftMoves_star' : leftMoves star' = {0, -1} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_star' : rightMoves star' = {0, 1} := rightMoves_ofSets ..
 
 /-- `*'` is its own negative. -/
-theorem neg_star' : -star' = star' := by
-  simp [star']
+theorem neg_star' : -star' = star' := by simp [star']
 
 /-- `*'` is equivalent to `*`. -/
-theorem star'_equiv_star : star' ≈ star := by
-  have le : star' ≤ star := by
-    apply PGame.le_of_forall_lf
-    · rintro ⟨i⟩
-      fin_cases i
-      · exact zero_lf_star
-      · exact (neg_lt_zero_iff.2 PGame.zero_lt_one).trans_lf zero_lf_star
-    · exact fun _ ↦ lf_zero_le.2 ⟨⟨0, Nat.zero_lt_two⟩, le_rfl⟩
-  constructor
-  case' right => dsimp; rw [← neg_le_neg_iff, neg_star, neg_star']
-  assumption'
+theorem star'_equiv_star : star' ≈ ⋆ := by game_cmp
 
 /-- The equation `** = *` is an identity, though not a relabelling. -/
-theorem star_sq : star * star ≈ star := by
-  have le : star * star ≤ star := by
-    rw [le_iff_forall_lf]
-    constructor <;>
-    intro i
-    · apply leftMoves_mul_cases i <;>
-      intro _ _
-      case' hl => rw [mul_moveLeft_inl]
-      case' hr => rw [mul_moveLeft_inr]
-      all_goals rw [lf_iff_game_lf]; simpa using zero_lf_star
-    · refine lf_zero.2 ⟨toRightMovesMul (Sum.inl default), ?_⟩
-      rintro (j | j) <;> -- Instance can't be inferred otherwise.
-      exact isEmptyElim j
-  constructor
-  case' right =>
-    dsimp
-    rw [← neg_le_neg_iff]
-    apply (neg_mul _ _).symm.equiv.1.trans
-    rw [neg_star]
-  assumption'
+theorem star_sq : ⋆ * ⋆ ≈ ⋆ := by game_cmp
 
 /-- `*'* ⧏ *` implies `*'* ≉ *`.-/
 theorem star'_mul_star_lf : star' * star ⧏ star := by
-  rw [lf_iff_exists_le]
-  refine Or.inr ⟨toRightMovesMul (Sum.inr ⟨⟨1, Nat.one_lt_two⟩, default⟩), ?_⟩
-  rw [mul_moveRight_inr, le_iff_game_le]
-  simp [star']
+  rw [lf_iff_exists_le, rightMoves_mul]
+  simp_rw [Set.mem_image, Prod.exists, mulOption]
+  exact Or.inr ⟨⋆, ⟨1, 0, by simp⟩, by game_cmp⟩
 
 /-- Pre-game multiplication cannot be lifted to games. -/
-theorem mul_not_lift : ∃ x₁ x₂ y : PGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
-  ⟨_, _, _, ⟨star'_equiv_star, fun h ↦ (h.trans star_sq).ge.not_gf star'_mul_star_lf⟩⟩
+theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
+  ⟨_, _, _, star'_equiv_star, fun h ↦ absurd (h.trans star_sq).ge star'_mul_star_lf⟩
 
-end PGame
+end IGame
