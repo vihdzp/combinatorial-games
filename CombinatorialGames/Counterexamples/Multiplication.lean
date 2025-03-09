@@ -23,29 +23,27 @@ open IGame
 
 namespace IGame
 
-/-- The game `{-1, 0 | 0, 1}`, which is equivalent but not identical to `*`. -/
+/-- The game `⋆' = {-1, 0 | 0, 1}`, which is equivalent but not identical to `⋆`. -/
 def star' : IGame := {{0, -1} | {0, 1}}ᴵ
+local notation " ⋆' " => star'
 
-@[simp] theorem leftMoves_star' : leftMoves star' = {0, -1} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_star' : rightMoves star' = {0, 1} := rightMoves_ofSets ..
+@[simp] theorem leftMoves_star' : leftMoves ⋆' = {0, -1} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_star' : rightMoves ⋆' = {0, 1} := rightMoves_ofSets ..
 
-/-- `*'` is its own negative. -/
-theorem neg_star' : -star' = star' := by simp [star']
+/-- `⋆'` is its own negative. -/
+theorem neg_star' : -⋆' = ⋆' := by simp [star']
 
-/-- `*'` is equivalent to `*`. -/
-theorem star'_equiv_star : star' ≈ ⋆ := by game_cmp
+/-- `⋆'` is equivalent to `⋆`. -/
+theorem star'_equiv_star : ⋆' ≈ ⋆ := by game_cmp
 
-/-- The equation `** = *` is an identity, though not a relabelling. -/
-theorem star_sq : ⋆ * ⋆ ≈ ⋆ := by game_cmp
-
-/-- `*'* ⧏ *` implies `*'* ≉ *`.-/
-theorem star'_mul_star_lf : star' * star ⧏ star := by
+/-- `⋆' * ⋆ ⧏ ⋆` implies `⋆' * ⋆ ≉  ⋆`.-/
+theorem star'_mul_star_lf : ⋆' * ⋆ ⧏ ⋆ := by
   rw [lf_iff_exists_le, rightMoves_mul]
   simp_rw [Set.mem_image, Prod.exists, mulOption]
   exact Or.inr ⟨⋆, ⟨1, 0, by simp⟩, by game_cmp⟩
 
 /-- Pre-game multiplication cannot be lifted to games. -/
 theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
-  ⟨_, _, _, star'_equiv_star, fun h ↦ absurd (h.trans star_sq).ge star'_mul_star_lf⟩
+  ⟨_, _, _, star'_equiv_star, fun h ↦ absurd (star_mul_star ▸ h).ge star'_mul_star_lf⟩
 
 end IGame
