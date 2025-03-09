@@ -272,6 +272,9 @@ def IsOption (x y : IGame) : Prop :=
 theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := .inl
 theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := .inr
 
+instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+
 -- TODO: is there some more general theorem about well-founded relations on quotients
 -- that we could use here?
 theorem isOption_wf : WellFounded IsOption := by
@@ -285,6 +288,14 @@ theorem isOption_wf : WellFounded IsOption := by
     exacts [hi ▸ hl i, hi ▸ hr i]
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
+
+theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
+
+theorem self_not_mem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
+
+theorem self_not_mem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets.
@@ -334,8 +345,7 @@ This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguat
 notation, and from the analogous constructor on `Game`.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we instead depend on another auxiliary type, see
-`IGame.Short` for more information. -/
+Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
 def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
   mk <| .mk (Shrink s) (Shrink t)
     (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
@@ -896,6 +906,8 @@ instance : AddLeftReflectLT IGame where
 instance : AddRightReflectLT IGame :=
   addRightReflectLT_of_addLeftReflectLT _
 
+-- TODO: add the general versions of this to Mathlib
+
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
@@ -904,6 +916,14 @@ theorem add_congr_left {a b c : IGame} (h : a ≈ b) : a + c ≈ b + c :=
 
 theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
   add_congr .rfl h
+
+@[simp]
+theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := by
+  simp [IncompRel]
+
+@[simp]
+theorem add_fuzzy_add_iff_right {a b c : IGame} : b + a ‖ c + a ↔ b ‖ c := by
+  simp [IncompRel]
 
 theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)

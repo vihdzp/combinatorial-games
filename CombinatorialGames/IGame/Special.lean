@@ -41,15 +41,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
-/-- See `IGame.star`. -/
-def _root_.SGame.star : SGame :=
-  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ 0)
-
-@[simp]
-theorem _root_.SGame.toIGame_star : SGame.star.toIGame = ⋆ :=
-  by ext <;> simp [SGame.star, eq_comm]
-
-instance : Short ⋆ := ⟨_, SGame.toIGame_star⟩
+@[simp] instance : Short ⋆ := by rw [short_def]; simp
 
 /-! ### Half -/
 
@@ -66,15 +58,7 @@ theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
 theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
-/-- See `IGame.half`. -/
-def _root_.SGame.half : SGame :=
-  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ 1)
-
-@[simp]
-theorem _root_.SGame.toIGame_half : SGame.half.toIGame = ½ :=
-  by ext <;> simp [SGame.half, eq_comm]
-
-instance : Short ½ := ⟨_, SGame.toIGame_half⟩
+instance : Short ½ := by rw [short_def]; simp
 
 /-! ### Up and down -/
 
@@ -91,15 +75,7 @@ def up : IGame :=
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
-/-- See `IGame.up`. -/
-def _root_.SGame.up : SGame :=
-  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ .star)
-
-@[simp]
-theorem _root_.SGame.toIGame_up : SGame.up.toIGame = ↑ :=
-  by ext <;> simp [SGame.up, eq_comm]
-
-instance : Short ↑ := ⟨_, SGame.toIGame_up⟩
+instance : Short ↑ := by rw [short_def]; simp
 
 /-- The game `↓ = {⋆ | 0}`. -/
 def down : IGame :=
@@ -117,15 +93,7 @@ def down : IGame :=
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
-/-- See `IGame.down`. -/
-def _root_.SGame.down : SGame :=
-  .mk 1 1 (fun _ ↦ .star) (fun _ ↦ 0)
-
-@[simp]
-theorem _root_.SGame.toIGame_down : SGame.down.toIGame = ↓ :=
-  by ext <;> simp [SGame.down, eq_comm]
-
-instance : Short ↓ := ⟨_, SGame.toIGame_down⟩
+instance : Short ↓ := by rw [short_def]; simp
 
 /-! ### Tiny and miny -/
 
@@ -144,15 +112,10 @@ theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
 theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
   rightMoves_ofSets ..
 
-/-- See `IGame.tiny`. -/
-def _root_.SGame.tiny (x : SGame) : SGame :=
-  .mk 1 1 (fun _ ↦ 0) (fun _ ↦ .mk 1 1 (fun _ ↦ 0) (fun _ ↦ -x))
-
-@[simp]
-theorem _root_.SGame.toIGame_tiny (x : SGame) : x.tiny.toIGame = ⧾x.toIGame := by
-  aesop (add simp [SGame.tiny])
-
-instance (x : IGame) [Short x] : Short (⧾x) := ⟨(Short.toSGame x).tiny, by simp⟩
+instance (x : IGame) [Short x] : Short (⧾x) := by
+  have : {{0} | {-x}}ᴵ.Short := by rw [short_def]; simpa
+  rw [short_def]
+  simpa
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
@@ -176,18 +139,28 @@ theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
 theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
-/-- See `IGame.miny`. -/
-def _root_.SGame.miny (x : SGame) : SGame :=
-  .mk 1 1 (fun _ ↦ .mk 1 1 (fun _ ↦ x) (fun _ ↦ 0)) (fun _ ↦ 0)
-
-@[simp]
-theorem _root_.SGame.toIGame_miny (x : SGame) : x.miny.toIGame = ⧿x.toIGame := by
-  aesop (add simp [SGame.miny])
-
-instance (x : IGame) [Short x] : Short (⧿x) := ⟨(Short.toSGame x).miny, by simp⟩
+instance (x : IGame) [Short x] : Short (⧿x) := by
+  rw [← neg_tiny]; infer_instance
 
 /-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
 proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+
+/-! ### Switches -/
+
+/-- A **switch** ±x is defined as {x | -x}: switches are their own confusion interval! -/
+def switch (x : IGame) : IGame :=
+  {{x} | {-x}}ᴵ
+
+@[inherit_doc] prefix:75 "±" => switch
+
+@[simp]
+theorem neg_switch (x : IGame) : -±x = ±x := by
+  rw [switch, neg_ofSets]
+  simp [Set.neg_singleton]
+
+theorem switch_zero_star : ±0 = ⋆ := by
+  rw [switch, star]
+  simp only [neg_zero]
 
 end IGame
 end

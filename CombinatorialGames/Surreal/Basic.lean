@@ -3,7 +3,7 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.IGame.Basic
+import CombinatorialGames.IGame.Birthday
 import CombinatorialGames.Mathlib.Order
 import Mathlib.Algebra.Order.Hom.Monoid
 
@@ -82,8 +82,8 @@ protected theorem of_mem_rightMoves [h : Numeric x] (hy : y ∈ x.rightMoves) : 
 
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   cases h with
-  | inl h => exact Numeric.of_mem_leftMoves h
-  | inr h => exact Numeric.of_mem_rightMoves h
+  | inl h => exact .of_mem_leftMoves h
+  | inr h => exact .of_mem_rightMoves h
 
 alias _root_.IGame.IsOption.numeric := Numeric.isOption
 
@@ -199,6 +199,8 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
 
 end Numeric
 
+/-! ### Simplicity theorem -/
+
 /-- `x` fits within `y` when `z ⧏ x` for every `z ∈ y.leftMoves`, and `y ⧏ z` for every
 `z ∈ y.rightMoves`.
 
@@ -241,7 +243,13 @@ theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : x ≈ y :=
   ⟨hx.le_of_forall_leftMoves_not_fits hl, hx.le_of_forall_rightMoves_not_fits hr⟩
 
--- TODO: version of the simplicity theorem for birthdays
+/-- A variant of the **simplicity theorem**: if `x` is the numeric game with the least birthday that
+fits within `y`, then `x ≈ y`. -/
+theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits y)
+    (H : ∀ z, Numeric z → z.Fits y → x.birthday ≤ z.birthday) : x ≈ y := by
+  apply hx.equiv_of_forall_not_fits
+  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_le <| H z (.of_mem_leftMoves hz) h
+  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_le <| H z (.of_mem_rightMoves hz) h
 
 end IGame
 
