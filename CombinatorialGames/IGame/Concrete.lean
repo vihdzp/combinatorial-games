@@ -28,14 +28,14 @@ class ConcreteGame (α : Type*) where
   /-- The move relation for the right player. -/
   relRight : α → α → Prop
   /-- The move relation is well-founded. -/
-  isWellFounded_subsequent : IsWellFounded α fun a b ↦ relLeft a b ∨ relRight a b
+  isWellFounded_rel : IsWellFounded α fun a b ↦ relLeft a b ∨ relRight a b
 
 namespace ConcreteGame
 variable [ConcreteGame α]
 
 local infix:50 " ≺ₗ " => relLeft
 local infix:50 " ≺ᵣ " => relRight
-attribute [instance] isWellFounded_subsequent
+attribute [instance] isWellFounded_rel
 
 theorem subrelation_relLeft :
     Subrelation relLeft fun a b : α ↦ relLeft a b ∨ relRight a b :=
@@ -52,13 +52,13 @@ instance [ConcreteGame α] : IsWellFounded α relRight := subrelation_relRight.i
 def ofImpartial (r : α → α → Prop) [h : IsWellFounded α r] : ConcreteGame α where
   relLeft := r
   relRight := r
-  isWellFounded_subsequent := by convert h; rw [or_self]
+  isWellFounded_rel := by convert h; rw [or_self]
 
 /-- Turns a state of a `ConcreteGame` into an `IGame`. -/
 def toIGame (a : α) : IGame :=
   {.range fun b : {b // b ≺ₗ a} ↦ toIGame b |
     .range fun b : {b // b ≺ᵣ a} ↦ toIGame b}ᴵ
-termination_by isWellFounded_subsequent.wf.wrap a
+termination_by isWellFounded_rel.wf.wrap a
 decreasing_by all_goals aesop
 
 theorem toIGame_def (a : α) : toIGame a = {toIGame '' {b | b ≺ₗ a} | toIGame '' {b | b ≺ᵣ a}}ᴵ := by
@@ -91,7 +91,7 @@ theorem neg_toIGame (h : relLeft (α := α) = relRight) (a : α) : -toIGame a = 
     rw [and_congr_right_iff]
     intros
     rw [← neg_eq_iff_eq_neg, neg_toIGame h]
-termination_by isWellFounded_subsequent.wf.wrap a
+termination_by isWellFounded_rel.wf.wrap a
 decreasing_by all_goals aesop
 
 theorem impartial_toIGame (h : relLeft (α := α) = relRight) (a : α) :
@@ -103,7 +103,7 @@ theorem impartial_toIGame (h : relLeft (α := α) = relRight) (a : α) :
     exact impartial_toIGame h _
   · have := subrelation_relRight <| hi.choose_spec.1
     exact impartial_toIGame h _
-termination_by isWellFounded_subsequent.wf.wrap a
+termination_by isWellFounded_rel.wf.wrap a
 
 end ConcreteGame
 end
