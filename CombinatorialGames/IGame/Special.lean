@@ -41,6 +41,8 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
+@[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext <;> simp [mulOption]
+
 @[simp] instance : Short ⋆ := by rw [short_def]; simp
 
 /-! ### Half -/
