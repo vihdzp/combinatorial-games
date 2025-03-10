@@ -144,9 +144,9 @@ instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
 instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
 
 instance : ConcreteGame Domineering where
-  subsequentL := relLeft
-  subsequentR := relRight
-  isWellFounded_subsequent := by
+  relLeft := relLeft
+  relRight := relRight
+  isWellFounded_rel := by
     apply @Subrelation.isWellFounded (r := InvImage (· < ·) fun b ↦ (ofDomineering b).card)
     rintro a b (h | h)
     · exact subrelation_relLeft h

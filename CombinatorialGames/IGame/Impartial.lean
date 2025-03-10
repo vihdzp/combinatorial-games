@@ -217,7 +217,7 @@ theorem fuzzy_zero : x ‖ 0 ↔ ∃ y ∈ x.leftMoves, y ≈ 0 := by
 theorem fuzzy_zero' : x ‖ 0 ↔ ∃ y ∈ x.rightMoves, y ≈ 0 := by
   rw [fuzzy_iff_exists_equiv']; simp
 
-/-- A **strategy stealing** argument. If there's a move in `x`, such that any subsequent move could
+/-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
 have also been reached in the first turn, then `x` is won by the first player.
 
 This version of the theorem is stated exclusively in terms of left moves; see
@@ -231,7 +231,7 @@ theorem fuzzy_zero_of_forall_exists_moveLeft {y} (hy : y ∈ x.leftMoves)
   obtain ⟨w, hw, hw'⟩ := H z hz
   exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
 
-/-- A **strategy stealing** argument. If there's a move in `x`, such that any subsequent move could
+/-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
 have also been reached in the first turn, then `x` is won by the first player.
 
 This version of the theorem is stated exclusively in terms of right moves; see
