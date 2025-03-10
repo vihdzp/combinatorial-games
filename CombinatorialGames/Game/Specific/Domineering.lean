@@ -3,7 +3,7 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.IGame.Concrete
+import CombinatorialGames.Game.Concrete
 import Mathlib.Algebra.Group.Units.Equiv
 import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Data.Finset.Sort

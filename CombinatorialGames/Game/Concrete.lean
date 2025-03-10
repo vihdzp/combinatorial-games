@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.IGame.IGame
-import CombinatorialGames.IGame.Impartial
+import CombinatorialGames.Game.IGame
+import CombinatorialGames.Game.Impartial
 
 /-!
 # Combinatorial games from a type of states
