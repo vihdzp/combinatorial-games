@@ -1,278 +1,178 @@
 /-
-Copyright (c) 2019 Kim Morrison. All rights reserved.
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Kim Morrison
+Authors: Violeta Hernández Palacios, Kim Morrison
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Relabelling
-import Mathlib.Data.Fintype.Basic
-import Mathlib.SetTheory.Cardinal.Cofinality
+import CombinatorialGames.Game.IGame
+import Mathlib.Data.Finite.Prod
 
 /-!
 # Short games
 
-A combinatorial game is `Short` [Conway, ch.9][conway2001] if it has only finitely many positions.
-In particular, this means there is a finite set of moves at every point.
+A combinatorial game is `Short` if it has only finitely many subpositions. In particular, this means
+there is a finite set of moves at every point.
 
-We prove that the order relations `≤` and `<`, and the equivalence relation `≈`, are decidable on
-short games, although unfortunately in practice `decide` doesn't seem to be able to
-prove anything using these instances.
-
-TODO: This is not the real "short game". It is only defined for `PGame`.
-The real "short game" will be defined once `IGame` (`Game` over the `Identical` setoid)
-is added.
+We historically defined `Short x` as data, which we then used to enable some degree of computation
+on combinatorial games. This functionality is now implemented through the `game_cmp` tactic instead.
 -/
-
--- Porting note: The local instances `moveLeftShort'` and `fintypeLeft` (and resp. `Right`)
--- trigger this error.
-set_option synthInstance.checkSynthOrder false
 
 universe u
 
-open scoped PGame
+namespace IGame
 
-namespace PGame
+def ShortAux (x : IGame) : Prop :=
+  x.leftMoves.Finite ∧ x.rightMoves.Finite ∧
+    (∀ y ∈ x.leftMoves, ShortAux y) ∧ (∀ y ∈ x.rightMoves, ShortAux y)
+termination_by x
+decreasing_by igame_wf
 
-/-- A short game is a game with a finite set of moves at every turn. -/
-inductive Short : PGame.{u} → Type (u + 1)
-  | mk :
-    ∀ {α β : Type u} {L : α → PGame.{u}} {R : β → PGame.{u}} (_ : ∀ i : α, Short (L i))
-      (_ : ∀ j : β, Short (R j)) [Fintype α] [Fintype β], Short ⟨α, β, L, R⟩
+/-- A short game is one with finitely many subpositions. That is, the left and right sets are
+finite, and all of the games in them are short as well. -/
+@[mk_iff short_iff_aux]
+class Short (x : IGame) : Prop where
+  out : ShortAux x
 
-instance subsingleton_short (x : PGame) : Subsingleton (Short x) := by
-  induction x with
-  | mk xl xr xL xR =>
-    constructor
-    intro a b
-    cases a; cases b
-    congr!
+theorem short_def {x : IGame} : Short x ↔
+    x.leftMoves.Finite ∧ x.rightMoves.Finite ∧
+      (∀ y ∈ x.leftMoves, Short y) ∧ (∀ y ∈ x.rightMoves, Short y) := by
+  simp_rw [short_iff_aux]; rw [ShortAux]
 
--- Porting note: We use `induction` to prove `subsingleton_short` instead of recursion.
--- A proof using recursion generates a harder `decreasing_by` goal than in Lean 3 for some reason:
-attribute [-instance] subsingleton_short in
-theorem subsingleton_short_example : ∀ x : PGame, Subsingleton (Short x)
-  | mk xl xr xL xR =>
-    ⟨fun a b ↦ by
-      cases a; cases b
-      congr!
-      · funext x
-        apply @Subsingleton.elim _ (subsingleton_short_example (xL x))
-        -- Decreasing goal in Lean 4 is `Subsequent (xL x) (mk α β L R)`
-        -- where `α`, `β`, `L`, and `R` are fresh hypotheses only propositionally
-        -- equal to `xl`, `xr`, `xL`, and `xR`.
-        -- (In Lean 3 it was `(mk xl xr xL xR)` instead.)
-      · funext x
-        apply @Subsingleton.elim _ (subsingleton_short_example (xR x))⟩
-termination_by x => x
--- We need to unify a bunch of hypotheses before `pgame_wf_tac` can work.
-decreasing_by all_goals {
-  subst_vars
-  simp only [mk.injEq, heq_eq_eq, true_and] at *
-  casesm* _ ∧ _
-  subst_vars
-  pgame_wf_tac
-}
+namespace Short
+variable {x y : IGame}
 
-/-- A synonym for `Short.mk` that specifies the pgame in an implicit argument. -/
-def Short.mk' {x : PGame} [Fintype x.LeftMoves] [Fintype x.RightMoves]
-    (sL : ∀ i : x.LeftMoves, Short (x.moveLeft i))
-    (sR : ∀ j : x.RightMoves, Short (x.moveRight j)) : Short x := by
-  convert Short.mk sL sR
-  cases x
-  dsimp
+theorem mk' (h₁ : x.leftMoves.Finite) (h₂ : x.rightMoves.Finite)
+    (h₃ : ∀ y ∈ x.leftMoves, Short y) (h₄ : ∀ y ∈ x.rightMoves, Short y) : Short x :=
+  short_def.2 ⟨h₁, h₂, h₃, h₄⟩
 
-attribute [class] Short
+theorem finite_leftMoves (x : IGame) [h : Short x] : x.leftMoves.Finite :=
+  (short_def.1 h).1
 
-/-- Extracting the `Fintype` instance for the indexing type for Left's moves in a short game.
-This is an unindexed typeclass, so it can't be made a global instance.
--/
-def fintypeLeft {α β : Type u} {L : α → PGame.{u}} {R : β → PGame.{u}} [S : Short ⟨α, β, L, R⟩] :
-    Fintype α := by cases S; assumption
+theorem finite_rightMoves (x : IGame) [h : Short x] : x.rightMoves.Finite :=
+  (short_def.1 h).2.1
 
-attribute [local instance] fintypeLeft
+theorem finite_setOf_isOption (x : IGame) [Short x] : {y | IsOption y x}.Finite :=
+  (finite_leftMoves x).union (finite_rightMoves x)
 
-instance fintypeLeftMoves (x : PGame) [S : Short x] : Fintype x.LeftMoves := by
-  cases S; assumption
+instance (x : IGame) [Short x] : Finite x.leftMoves :=
+  (Short.finite_leftMoves x).to_subtype
 
-/-- Extracting the `Fintype` instance for the indexing type for Right's moves in a short game.
-This is an unindexed typeclass, so it can't be made a global instance.
--/
-def fintypeRight {α β : Type u} {L : α → PGame.{u}} {R : β → PGame.{u}} [S : Short ⟨α, β, L, R⟩] :
-    Fintype β := by cases S; assumption
+instance (x : IGame) [Short x] : Finite x.rightMoves :=
+  (Short.finite_rightMoves x).to_subtype
 
-attribute [local instance] fintypeRight
+protected theorem of_mem_leftMoves [h : Short x] (hy : y ∈ x.leftMoves) : Short y :=
+  (short_def.1 h).2.2.1 y hy
 
-instance fintypeRightMoves (x : PGame) [S : Short x] : Fintype x.RightMoves := by
-  cases S; assumption
+protected theorem of_mem_rightMoves [h : Short x] (hy : y ∈ x.rightMoves) : Short y :=
+  (short_def.1 h).2.2.2 y hy
 
-instance moveLeftShort (x : PGame) [S : Short x] (i : x.LeftMoves) : Short (x.moveLeft i) := by
-  obtain ⟨L, _⟩ := S; apply L
+protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
+  cases h with
+  | inl h => exact .of_mem_leftMoves h
+  | inr h => exact .of_mem_rightMoves h
 
-/-- Extracting the `Short` instance for a move by Left.
-This would be a dangerous instance potentially introducing new metavariables
-in typeclass search, so we only make it an instance locally.
--/
-def moveLeftShort' {xl xr} (xL xR) [S : Short (mk xl xr xL xR)] (i : xl) : Short (xL i) := by
-  obtain ⟨L, _⟩ := S; apply L
+alias _root_.IGame.IsOption.short := Short.isOption
 
-attribute [local instance] moveLeftShort'
+theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
+  have : {y | Subposition y x} = {y | IsOption y x} ∪
+      ⋃ y ∈ {y | IsOption y x}, {z | Subposition z y} := by
+    ext
+    rw [Set.mem_setOf_eq, Subposition, Relation.transGen_iff]
+    simp [and_comm]
+  rw [this]
+  refine (finite_setOf_isOption x).union <| (finite_setOf_isOption x).biUnion fun y hy ↦ ?_
+  have := hy.short
+  exact finite_setOf_subposition y
+termination_by x
+decreasing_by igame_wf
 
-instance moveRightShort (x : PGame) [S : Short x] (j : x.RightMoves) : Short (x.moveRight j) := by
-  obtain ⟨_, R⟩ := S; apply R
+theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
+    Short x ↔ {y | Subposition y x}.Finite := by
+  refine ⟨@finite_setOf_subposition x, fun h ↦ mk' ?_ ?_ ?_ ?_⟩
+  any_goals refine h.subset fun y hy ↦ ?_
+  any_goals refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
+  all_goals igame_wf
+termination_by x
+decreasing_by igame_wf
 
-/-- Extracting the `Short` instance for a move by Right.
-This would be a dangerous instance potentially introducing new metavariables
-in typeclass search, so we only make it an instance locally.
--/
-def moveRightShort' {xl xr} (xL xR) [S : Short (mk xl xr xL xR)] (j : xr) : Short (xR j) := by
-  obtain ⟨_, R⟩ := S; apply R
+@[simp]
+protected instance zero : Short 0 := by
+  rw [short_def]; simp
 
-attribute [local instance] moveRightShort'
+@[simp]
+protected instance one : Short 1 := by
+  rw [short_def]; simp
 
-theorem short_birthday (x : PGame.{u}) : [Short x] → x.birthday < Ordinal.omega0 := by
-  induction x with
-  | mk xl xr xL xR ihl ihr =>
-    intro hs
-    rcases hs with ⟨sL, sR⟩
-    rw [birthday, max_lt_iff]
+protected instance neg (x : IGame) [Short x] : Short (-x) := by
+  apply mk'
+  · simpa [← Set.image_neg_eq_neg] using (finite_rightMoves x).image _
+  · simpa [← Set.image_neg_eq_neg] using (finite_leftMoves x).image _
+  · rw [forall_leftMoves_neg]
+    intro y hy
+    simpa using (Short.of_mem_rightMoves hy).neg
+  · rw [forall_rightMoves_neg]
+    intro y hy
+    simpa using (Short.of_mem_leftMoves hy).neg
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
+  ⟨fun _ ↦ by simpa using Short.neg (-x), fun _ ↦ Short.neg x⟩
+
+protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
+  apply mk'
+  · simpa using ⟨(finite_leftMoves x).image _, (finite_leftMoves y).image _⟩
+  · simpa using ⟨(finite_rightMoves x).image _, (finite_rightMoves y).image _⟩
+  · rw [forall_leftMoves_add]
     constructor
     all_goals
-      rw [← Cardinal.ord_aleph0]
-      refine
-        Cardinal.lsub_lt_ord_of_isRegular.{u, u} Cardinal.isRegular_aleph0
-          (Cardinal.lt_aleph0_of_finite _) fun i ↦ ?_
-      rw [Cardinal.ord_aleph0]
-    · apply ihl
-    · apply ihr
-
-/-- This leads to infinite loops if made into an instance. -/
-def Short.ofIsEmpty {l r xL xR} [IsEmpty l] [IsEmpty r] : Short (PGame.mk l r xL xR) := by
-  have : Fintype l := Fintype.ofIsEmpty
-  have : Fintype r := Fintype.ofIsEmpty
-  exact Short.mk isEmptyElim isEmptyElim
-
-instance short0 : Short 0 :=
-  Short.ofIsEmpty
-
-instance short1 : Short 1 :=
-  Short.mk (fun i ↦ by cases i; infer_instance) fun j ↦ by cases j
-
-/-- Evidence that every `PGame` in a list is `Short`. -/
-class inductive ListShort : List PGame.{u} → Type (u + 1)
-  | nil : ListShort []
-  -- Porting note: We introduce `cons` as a separate instance because attempting to use
-  -- `[ListShort tl]` as a constructor argument errors saying that `ListShort tl` is not a class.
-  -- Is this a bug in `class inductive`?
-  | cons' {hd : PGame.{u}} {tl : List PGame.{u}} : Short hd → ListShort tl → ListShort (hd::tl)
-
-attribute [instance] ListShort.nil
-
-instance ListShort.cons
-    (hd : PGame.{u}) [short_hd : Short hd] (tl : List PGame.{u}) [short_tl : ListShort tl] :
-    ListShort (hd::tl) :=
-  cons' short_hd short_tl
-
-instance listShortGet :
-    ∀ (L : List PGame.{u}) [ListShort L] (i : Nat) (h : i < List.length L), Short L[i]
-  | _::_, ListShort.cons' S _, 0, _ => S
-  | _::tl, ListShort.cons' _ S, n + 1, h =>
-    @listShortGet tl S n ((add_lt_add_iff_right 1).mp h)
-
-instance shortOfLists : ∀ (L R : List PGame) [ListShort L] [ListShort R], Short (PGame.ofLists L R)
-  | L, R, _, _ => by
-    exact Short.mk (fun i ↦ inferInstance) fun j ↦ listShortGet R (↑j.down) (ofLists.proof_2 R j)
-
-/-- If `x` is a short game, and `y` is a relabelling of `x`, then `y` is also short. -/
-def shortOfRelabelling : ∀ {x y : PGame.{u}}, Relabelling x y → Short x → Short y
-  | x, y, ⟨L, R, rL, rR⟩, S => by
-    haveI := Fintype.ofEquiv _ L
-    haveI := Fintype.ofEquiv _ R
-    exact
-      Short.mk'
-        (fun i ↦ by rw [← L.right_inv i]; apply shortOfRelabelling (rL (L.symm i)) inferInstance)
-        fun j ↦ by simpa using shortOfRelabelling (rR (R.symm j)) inferInstance
-
-instance shortNeg : ∀ (x : PGame.{u}) [Short x], Short (-x)
-  | mk xl xr xL xR, _ => by
-    exact Short.mk (fun i ↦ shortNeg _) fun i ↦ shortNeg _
-
-instance shortAdd : ∀ (x y : PGame.{u}) [Short x] [Short y], Short (x + y)
-  | mk xl xr xL xR, mk yl yr yL yR, _, _ => by
-    apply Short.mk
-    all_goals
-      rintro ⟨i⟩
-      · apply shortAdd
-      · change Short (mk xl xr xL xR + _); apply shortAdd
-termination_by x y => (x, y)
-
-instance shortNat : ∀ n : ℕ, Short n
-  | 0 => PGame.short0
-  | n + 1 => @PGame.shortAdd _ _ (shortNat n) PGame.short1
-
-instance shortOfNat (n : ℕ) [Nat.AtLeastTwo n] : Short ofNat(n) := shortNat n
-
-instance shortBit0 (x : PGame.{u}) [Short x] : Short (x + x) := by infer_instance
-
-instance shortBit1 (x : PGame.{u}) [Short x] : Short ((x + x) + 1) := shortAdd _ _
-
-/-- Auxiliary construction of decidability instances.
-We build `Decidable (x ≤ y)` and `Decidable (x ⧏ y)` in a simultaneous induction.
-Instances for the two projections separately are provided below.
--/
-def leLFDecidable : ∀ (x y : PGame.{u}) [Short x] [Short y], Decidable (x ≤ y) × Decidable (x ⧏ y)
-  | mk xl xr xL xR, mk yl yr yL yR, shortx, shorty => by
+      intro z hz
+      have := Short.of_mem_leftMoves hz
+      exact Short.add ..
+  · rw [forall_rightMoves_add]
     constructor
-    · refine @decidable_of_iff' _ _ mk_le_mk (id ?_)
-      have : Decidable (∀ (i : xl), xL i ⧏ mk yl yr yL yR) := by
-        apply @Fintype.decidableForallFintype xl _ ?_ _
-        intro i
-        apply (leLFDecidable _ _).2
-      have : Decidable (∀ (j : yr), mk xl xr xL xR ⧏ yR j) := by
-        apply @Fintype.decidableForallFintype yr _ ?_ _
-        intro i
-        apply (leLFDecidable _ _).2
-      exact inferInstanceAs (Decidable (_ ∧ _))
-    · refine @decidable_of_iff' _ _ mk_lf_mk (id ?_)
-      have : Decidable (∃ i, mk xl xr xL xR ≤ yL i) := by
-        apply @Fintype.decidableExistsFintype yl _ ?_ _
-        intro i
-        apply (leLFDecidable _ _).1
-      have : Decidable (∃ j, xR j ≤ mk yl yr yL yR) := by
-        apply @Fintype.decidableExistsFintype xr _ ?_ _
-        intro i
-        apply (leLFDecidable _ _).1
-      exact inferInstanceAs (Decidable (_ ∨ _))
-termination_by x y => (x, y)
+    all_goals
+      intro z hz
+      have := Short.of_mem_rightMoves hz
+      exact Short.add ..
+termination_by (x, y)
+decreasing_by igame_wf
 
-instance leDecidable (x y : PGame.{u}) [Short x] [Short y] : Decidable (x ≤ y) :=
-  (leLFDecidable x y).1
+protected instance sub (x y : IGame) [Short x] [Short y] : Short (x - y) :=
+  inferInstanceAs (Short (x + -y))
 
-instance lfDecidable (x y : PGame.{u}) [Short x] [Short y] : Decidable (x ⧏ y) :=
-  (leLFDecidable x y).2
+protected instance natCast : ∀ n : ℕ, Short n
+  | 0 => inferInstanceAs (Short 0)
+  | n + 1 => have := Short.natCast n; inferInstanceAs (Short (n + 1))
 
-instance ltDecidable (x y : PGame.{u}) [Short x] [Short y] : Decidable (x < y) :=
-  inferInstanceAs (Decidable (_ ∧ _))
+protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) :=
+  inferInstanceAs (Short n)
 
-instance equivDecidable (x y : PGame.{u}) [Short x] [Short y] : Decidable (x ≈ y) :=
-  inferInstanceAs (Decidable (_ ∧ _))
+protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
+  apply mk'
+  · simpa [Set.image_union] using
+      ⟨((finite_leftMoves x).prod (finite_leftMoves y)).image _,
+        ((finite_rightMoves x).prod (finite_rightMoves y)).image _⟩
+  · simpa [Set.image_union] using
+      ⟨((finite_leftMoves x).prod (finite_rightMoves y)).image _,
+        ((finite_rightMoves x).prod (finite_leftMoves y)).image _⟩
+  on_goal 1 => rw [forall_leftMoves_mul]
+  on_goal 2 => rw [forall_rightMoves_mul]
+  all_goals
+  · constructor
+    all_goals
+      intro a ha b hb
+      first | replace ha := Short.of_mem_leftMoves ha | replace ha := Short.of_mem_rightMoves ha
+      first | replace hb := Short.of_mem_leftMoves hb | replace hb := Short.of_mem_rightMoves hb
+      have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
+      rw [mulOption]
+      infer_instance
+termination_by (x, y)
+decreasing_by igame_wf
 
-example : Short 0 := by infer_instance
+protected instance mulOption (x y a b : IGame) [Short x] [Short y] [Short a] [Short b] :
+    Short (mulOption x y a b) :=
+  inferInstanceAs (Short (_ - _))
 
-example : Short 1 := by infer_instance
-
-example : Short 2 := by infer_instance
-
-example : Short (-2) := by infer_instance
-
-example : Short (ofLists [0] [1]) := by infer_instance
-
-example : Short (ofLists [-2, -1] [1]) := by infer_instance
-
-example : Short (0 + 0) := by infer_instance
-
-example : Decidable ((1 : PGame) ≤ 1) := by infer_instance
-
--- No longer works since definitional reduction of well-founded definitions has been restricted.
--- example : (0 : PGame.{u}) ≤ 0 := by decide
--- example : (1 : PGame.{u}) ≤ 1 := by decide
-end PGame
+end Short
+end IGame
