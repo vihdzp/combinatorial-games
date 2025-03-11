@@ -3,8 +3,8 @@ Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
-import CombinatorialGames.IGame.Birthday
-import CombinatorialGames.IGame.Impartial
+import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Nimber.Basic
 
 /-!

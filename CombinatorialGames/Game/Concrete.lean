@@ -3,143 +3,136 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
 
 /-!
 # Combinatorial games from a type of states
 
-A "concrete" game is a type of states endowed with well-founded subsequence relations for the
+A "concrete" game is a type of states endowed with well-founded move relations for the
 left and right players. This is often a more convenient representation for a game, which can then be
-used to define a `PGame` or any of the other combinatorial game types.
+used to define a `IGame`.
 -/
 
-open PGame
+noncomputable section
+
+open IGame
 
 variable {α : Type*}
 
-/-- A "concrete" game is a type of states endowed with well-founded subsequence relations for the
+/-- A "concrete" game is a type of states endowed with well-founded move relations for the
 left and right players. -/
 class ConcreteGame (α : Type*) where
-  /-- The subsequence relation for the left player. -/
-  subsequentL : α → α → Prop
-  /-- The subsequence relation for the right player. -/
-  subsequentR : α → α → Prop
-  /-- The subsequence relation is well-founded. -/
-  isWellFounded_subsequent : IsWellFounded α fun a b ↦ subsequentL a b ∨ subsequentR a b
+  /-- The move relation for the left player. -/
+  relLeft : α → α → Prop
+  /-- The move relation for the right player. -/
+  relRight : α → α → Prop
+  /-- The move relation is well-founded. -/
+  isWellFounded_rel : IsWellFounded α fun a b ↦ relLeft a b ∨ relRight a b
 
 namespace ConcreteGame
 variable [ConcreteGame α]
 
-local infix:50 " ≺ₗ " => subsequentL
-local infix:50 " ≺ᵣ " => subsequentR
-attribute [instance] isWellFounded_subsequent
+scoped infix:50 " ≺ₗ " => relLeft
+scoped infix:50 " ≺ᵣ " => relRight
+attribute [instance] isWellFounded_rel
 
-theorem subrelation_subsequentL :
-    Subrelation subsequentL fun a b : α ↦ subsequentL a b ∨ subsequentR a b :=
+theorem subrelation_relLeft :
+    Subrelation relLeft fun a b : α ↦ relLeft a b ∨ relRight a b :=
   Or.inl
 
-theorem subrelation_subsequentR :
-    Subrelation subsequentR fun a b : α ↦ subsequentL a b ∨ subsequentR a b :=
+theorem subrelation_relRight :
+    Subrelation relRight fun a b : α ↦ relLeft a b ∨ relRight a b :=
   Or.inr
 
-instance [ConcreteGame α] : IsWellFounded α subsequentL := subrelation_subsequentL.isWellFounded
-instance [ConcreteGame α] : IsWellFounded α subsequentR := subrelation_subsequentR.isWellFounded
+instance [ConcreteGame α] : IsWellFounded α relLeft := subrelation_relLeft.isWellFounded
+instance [ConcreteGame α] : IsWellFounded α relRight := subrelation_relRight.isWellFounded
 
 /-- Defines a concrete game from a single relation, to be used for both players. -/
 def ofImpartial (r : α → α → Prop) [h : IsWellFounded α r] : ConcreteGame α where
-  subsequentL := r
-  subsequentR := r
-  isWellFounded_subsequent := by convert h; rw [or_self]
+  relLeft := r
+  relRight := r
+  isWellFounded_rel := by convert h; rw [or_self]
 
-/-- Turns a state of a `ConcreteGame` into a `PGame`. -/
-def toPGame (a : α) : PGame :=
-  PGame.mk {b // b ≺ₗ a} {b // b ≺ᵣ a}
-    (fun b ↦ have := subrelation_subsequentL b.2; toPGame b)
-    (fun b ↦ have := subrelation_subsequentR b.2; toPGame b)
-termination_by isWellFounded_subsequent.wf.wrap a
+/-- Turns a state of a `ConcreteGame` into an `IGame`. -/
+def toIGame (a : α) : IGame :=
+  {.range fun b : {b // b ≺ₗ a} ↦ toIGame b | .range fun b : {b // b ≺ᵣ a} ↦ toIGame b}ᴵ
+termination_by isWellFounded_rel.wf.wrap a
+decreasing_by all_goals aesop
 
-/-- Use `toLeftMovesToPGame` to cast between these two types. -/
-theorem leftMoves_toPGame (a : α) : (toPGame a).LeftMoves = {b // b ≺ₗ a} := by
-  rw [toPGame]; rfl
-
-/-- Use `toRightMovesToPGame` to cast between these two types. -/
-theorem rightMoves_toPGame (a : α) : (toPGame a).RightMoves = {b // b ≺ᵣ a} := by
-  rw [toPGame]; rfl
-
-theorem moveLeft_toPGame_hEq (a : α) :
-    HEq (toPGame a).moveLeft fun i : {b // b ≺ₗ a} ↦ toPGame i.1 := by
-  rw [toPGame]; rfl
-
-theorem moveRight_toPGame_hEq (a : α) :
-    HEq (toPGame a).moveRight fun i : {b // b ≺ᵣ a} ↦ toPGame i.1 := by
-  rw [toPGame]; rfl
-
-/-- Turns a left-subsequent position for `a` into a left move for `toPGame a` and vice versa.
-
-Even though these types are the same (not definitionally so), this is the preferred way to convert
-between them. -/
-def toLeftMovesToPGame {a : α} : {b // b ≺ₗ a} ≃ (toPGame a).LeftMoves :=
-  Equiv.cast (leftMoves_toPGame a).symm
-
-/-- Turns a right-subsequent position for `a` into a right move for `toPGame a` and vice versa.
-
-Even though these types are the same (not definitionally so), this is the preferred way to convert
-between them. -/
-def toRightMovesToPGame {a : α} : {b // b ≺ᵣ a} ≃ (toPGame a).RightMoves :=
-  Equiv.cast (rightMoves_toPGame a).symm
+theorem toIGame_def (a : α) : toIGame a = {toIGame '' {b | b ≺ₗ a} | toIGame '' {b | b ≺ᵣ a}}ᴵ := by
+  rw [toIGame]; simp [Set.image_eq_range]
 
 @[simp]
-theorem moveLeft_toPGame {a : α} (i) :
-    (toPGame a).moveLeft i = toPGame (toLeftMovesToPGame.symm i).1 :=
-  (congr_heq (moveLeft_toPGame_hEq a).symm (cast_heq _ i)).symm
+theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' {b | b ≺ₗ a} := by
+  rw [toIGame_def, leftMoves_ofSets]
 
 @[simp]
-theorem moveRight_toPGame {a : α} (i) :
-    (toPGame a).moveRight i = toPGame (toRightMovesToPGame.symm i).1 :=
-  (congr_heq (moveRight_toPGame_hEq a).symm (cast_heq _ i)).symm
+theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' {b | b ≺ᵣ a} := by
+  rw [toIGame_def, rightMoves_ofSets]
 
-theorem moveLeft_toPGame_toLeftMovesToPGame {a : α} (i) :
-    (toPGame a).moveLeft (toLeftMovesToPGame i) = toPGame i.1 :=
-  by simp
+theorem mem_leftMoves_toIGame_of_relLeft {a b : α} (hab : b ≺ₗ a) :
+    toIGame b ∈ (toIGame a).leftMoves := by
+  rw [leftMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
 
-theorem moveRight_toPGame_toRightMovesToPGame {a : α} (i) :
-    (toPGame a).moveRight (toRightMovesToPGame i) = toPGame i.1 :=
-  by simp
+theorem mem_rightMoves_toIGame_of_relRight {a b : α} (hab : b ≺ᵣ a) :
+    toIGame b ∈ (toIGame a).rightMoves := by
+  rw [rightMoves_toIGame]
+  exact ⟨b, hab, rfl⟩
 
-@[simp]
-theorem toLeftMovesToPGame_symm_prop {a : α} (i : (toPGame a).LeftMoves) :
-    (toLeftMovesToPGame.symm i).1 ≺ₗ a :=
-  (toLeftMovesToPGame.symm i).prop
-
-@[simp]
-theorem toRightMovesToPGame_symm_prop {a : α} (i : (toPGame a).RightMoves) :
-    (toRightMovesToPGame.symm i).1 ≺ᵣ a :=
-  (toRightMovesToPGame.symm i).prop
-
-theorem neg_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) : -toPGame a = toPGame a := by
-  rw [toPGame, neg_def]
-  congr
-  any_goals ext; rw [h]
+theorem neg_toIGame (h : relLeft (α := α) = relRight) (a : α) : -toIGame a = toIGame a := by
+  ext
   all_goals
-    apply Function.hfunext (by rw [h])
-    simp_rw [heq_eq_eq, Subtype.forall, h]
-    intro a ha b hb he
-    rw [Subtype.heq_iff_coe_eq (fun _ ↦ by rw [h])] at he
-    subst he
-    have := subrelation_subsequentR hb
-    apply neg_toPGame h
-termination_by isWellFounded_subsequent.wf.wrap a
+    simp only [leftMoves_neg, rightMoves_neg, rightMoves_toIGame, Set.mem_neg, Set.mem_image,
+      Set.mem_setOf_eq, leftMoves_toIGame, h]
+    congr! 2
+    rw [and_congr_right_iff]
+    intros
+    rw [← neg_eq_iff_eq_neg, neg_toIGame h]
+termination_by isWellFounded_rel.wf.wrap a
+decreasing_by all_goals aesop
 
-theorem impartial_toPGame (h : subsequentL (α := α) = subsequentR) (a : α) :
-    Impartial (toPGame a) := by
-  rw [impartial_def, neg_toPGame h]
-  refine ⟨.rfl, fun i ↦ ?_, fun i ↦ ?_⟩
-  · rw [moveLeft_toPGame]
-    have := subrelation_subsequentL <| toLeftMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
-  · rw [moveRight_toPGame]
-    have := subrelation_subsequentR <| toRightMovesToPGame_symm_prop i
-    exact impartial_toPGame h _
-termination_by isWellFounded_subsequent.wf.wrap a
+theorem impartial_toIGame (h : relLeft (α := α) = relRight) (a : α) :
+    (toIGame a).Impartial := by
+  rw [impartial_def, neg_toIGame h, leftMoves_toIGame, rightMoves_toIGame]
+  refine ⟨.rfl, fun i hi ↦ ?_, fun i hi ↦ ?_⟩
+  all_goals rw [← hi.choose_spec.2]
+  · have := subrelation_relLeft <| hi.choose_spec.1
+    exact impartial_toIGame h _
+  · have := subrelation_relRight <| hi.choose_spec.1
+    exact impartial_toIGame h _
+termination_by isWellFounded_rel.wf.wrap a
 
 end ConcreteGame
+
+/-- A type alias to turn a concrete game impartial, by allowing both players to perform
+each other's moves. -/
+def ToImpartial (α : Type*) := α
+
+def toImpartial : α ≃ ToImpartial α := Equiv.refl _
+def ofImpartial : ToImpartial α ≃ α := Equiv.refl _
+@[simp] theorem ofImpartial_toImpartial (x : α) : ofImpartial (toImpartial x) = x := rfl
+@[simp] theorem toImpartial_ofImpartial (x : ToImpartial α) : toImpartial (ofImpartial x) = x := rfl
+
+open scoped ConcreteGame
+
+instance [ConcreteGame α] : ConcreteGame (ToImpartial α) where
+  relLeft x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
+  relRight x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
+  isWellFounded_rel := by
+    convert ConcreteGame.isWellFounded_rel (α := α) using 1
+    simp [ConcreteGame.relLeft, ConcreteGame.relRight]; rfl
+
+instance [ConcreteGame α] (x : α) : Impartial (ConcreteGame.toIGame (toImpartial x)) :=
+  ConcreteGame.impartial_toIGame rfl _
+
+theorem ToImpartial.relLeft_iff {x y : ToImpartial α} [ConcreteGame α] :
+    x ≺ₗ y ↔ (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y) :=
+  .rfl
+
+theorem ToImpartial.relRight_iff {x y : ToImpartial α} [ConcreteGame α] :
+    x ≺ᵣ y ↔ (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y) :=
+  .rfl
+
+end

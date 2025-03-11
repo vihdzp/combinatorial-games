@@ -3,131 +3,166 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.Game.PGame
+import CombinatorialGames.Game.IGame
+import CombinatorialGames.Game.Short
 
 /-!
 # Special games
 
 This file defines some simple yet notable combinatorial games:
 
-* `star = {0 | 0}`
-* `up = {0 | star}`
-* `down = {star | 0}`.
+* `⋆ = {0 | 0}`
+* `↑ = {0 | ⋆}`
+* `↓ = {⋆ | 0}`.
 -/
 
 universe u
 
-namespace PGame
+noncomputable section
+
+namespace IGame
 
 /-! ### Star -/
 
-/-- The pre-game `star`, which is fuzzy with zero. -/
-def star : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ 0⟩
+/-- The game `⋆ = {0 | 0}`, which is fuzzy with zero. -/
+def star : IGame :=
+  {{0} | {0}}ᴵ
 
-@[simp]
-theorem star_leftMoves : star.LeftMoves = PUnit :=
-  rfl
+@[inherit_doc] notation "⋆" => star
 
-@[simp]
-theorem star_rightMoves : star.RightMoves = PUnit :=
-  rfl
+@[simp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
 
-@[simp]
-theorem star_moveLeft (x) : star.moveLeft x = 0 :=
-  rfl
+@[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
+@[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
-@[simp]
-theorem star_moveRight (x) : star.moveRight x = 0 :=
-  rfl
+theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
+theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
-instance uniqueStarLeftMoves : Unique star.LeftMoves :=
-  PUnit.instUnique
+@[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
-instance uniqueStarRightMoves : Unique star.RightMoves :=
-  PUnit.instUnique
+@[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext <;> simp [mulOption]
 
-theorem zero_lf_star : 0 ⧏ star := by
-  rw [zero_lf]
-  use default
-  rintro ⟨⟩
+@[simp] instance : Short ⋆ := by rw [short_def]; simp
 
-theorem star_lf_zero : star ⧏ 0 := by
-  rw [lf_zero]
-  use default
-  rintro ⟨⟩
+/-! ### Half -/
 
-theorem star_fuzzy_zero : star ‖ 0 :=
-  ⟨star_lf_zero, zero_lf_star⟩
+/-- The game `½ = {0 | 1}`, which we prove satisfies `½ + ½ = 1`. -/
+def half : IGame :=
+  {{0} | {1}}ᴵ
 
-@[simp]
-theorem neg_star : -star = star := by simp [star]
+@[inherit_doc] notation "½" => half
+
+@[simp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
+
+theorem zero_lt_half : 0 < ½ := by game_cmp
+theorem half_lt_one : ½ < 1 := by game_cmp
+theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
+
+instance : Short ½ := by rw [short_def]; simp
 
 /-! ### Up and down -/
 
-/-- The pre-game `up` -/
-def up : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ ↦ 0, fun _ ↦ star⟩
+/-- The game `↑ = {0 | ⋆}`. -/
+def up : IGame :=
+  {{0} | {⋆}}ᴵ
+
+@[inherit_doc] notation "↑" => up
+
+@[simp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
+
+@[simp] theorem up_pos : 0 < ↑ := by game_cmp
+theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
+theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
+
+instance : Short ↑ := by rw [short_def]; simp
+
+/-- The game `↓ = {⋆ | 0}`. -/
+def down : IGame :=
+  {{⋆} | {0}}ᴵ
+
+@[inherit_doc] notation "↓" => down
+
+@[simp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
+
+@[simp] theorem neg_down : -↓ = ↑ := by simp [up, down]
+@[simp] theorem neg_up : -↑ = ↓ := by simp [up, down]
+
+@[simp] theorem down_neg : ↓ < 0 := by game_cmp
+theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
+theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
+
+instance : Short ↓ := by rw [short_def]; simp
+
+/-! ### Tiny and miny -/
+
+/-- A tiny game `⧾x` is defined as `{0 | {0 | -x}}`, and is amongst the smallest of the
+infinitesimals. -/
+def tiny (x : IGame) : IGame :=
+  {{0} | {{{0} | {-x}}ᴵ}}ᴵ
+
+@[inherit_doc] prefix:75 "⧾" => tiny
 
 @[simp]
-theorem up_leftMoves : up.LeftMoves = PUnit :=
-  rfl
+theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
+  leftMoves_ofSets ..
 
 @[simp]
-theorem up_rightMoves : up.RightMoves = PUnit :=
-  rfl
+theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
+  rightMoves_ofSets ..
+
+instance (x : IGame) [Short x] : Short (⧾x) := by
+  have : {{0} | {-x}}ᴵ.Short := by rw [short_def]; simpa
+  rw [short_def]
+  simpa
+
+/-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
+def miny (x : IGame) : IGame :=
+  {{{{x} | {0}}ᴵ} | {0}}ᴵ
+
+@[inherit_doc] prefix:75 "⧿" => miny
 
 @[simp]
-theorem up_moveLeft (x) : up.moveLeft x = 0 :=
-  rfl
+theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
+  leftMoves_ofSets ..
 
 @[simp]
-theorem up_moveRight (x) : up.moveRight x = star :=
-  rfl
+theorem rightMoves_miny (x : IGame) : rightMoves (⧿x) = {0} :=
+  rightMoves_ofSets ..
 
 @[simp]
-theorem up_neg : 0 < up := by
-  rw [lt_iff_le_and_lf, zero_lf]
-  simp [zero_le_lf, zero_lf_star]
-
-theorem star_fuzzy_up : star ‖ up := by
-  unfold Fuzzy
-  simp only [← PGame.not_le]
-  simp [le_iff_forall_lf]
-
-/-- The pre-game `down` -/
-def down : PGame.{u} :=
-  ⟨PUnit, PUnit, fun _ ↦ star, fun _ ↦ 0⟩
+theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
+  simp [miny, tiny]
 
 @[simp]
-theorem down_leftMoves : down.LeftMoves = PUnit :=
-  rfl
+theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
+  simp [miny, tiny]
+
+instance (x : IGame) [Short x] : Short (⧿x) := by
+  rw [← neg_tiny]; infer_instance
+
+/-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
+proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+
+/-! ### Switches -/
+
+/-- A **switch** ±x is defined as {x | -x}: switches are their own confusion interval! -/
+def switch (x : IGame) : IGame :=
+  {{x} | {-x}}ᴵ
+
+@[inherit_doc] prefix:75 "±" => switch
 
 @[simp]
-theorem down_rightMoves : down.RightMoves = PUnit :=
-  rfl
+theorem neg_switch (x : IGame) : -±x = ±x := by
+  rw [switch, neg_ofSets]
+  simp [Set.neg_singleton]
 
-@[simp]
-theorem down_moveLeft (x) : down.moveLeft x = star :=
-  rfl
+theorem switch_zero_star : ±0 = ⋆ := by
+  rw [switch, star]
+  simp only [neg_zero]
 
-@[simp]
-theorem down_moveRight (x) : down.moveRight x = 0 :=
-  rfl
-
-@[simp]
-theorem down_neg : down < 0 := by
-  rw [lt_iff_le_and_lf, lf_zero]
-  simp [le_zero_lf, star_lf_zero]
-
-@[simp]
-theorem neg_down : -down = up := by simp [up, down]
-
-@[simp]
-theorem neg_up : -up = down := by simp [up, down]
-
-theorem star_fuzzy_down : star ‖ down := by
-  rw [← neg_fuzzy_neg_iff, neg_down, neg_star]
-  exact star_fuzzy_up
-
-end PGame
+end IGame
+end
