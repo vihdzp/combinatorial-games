@@ -154,34 +154,26 @@ theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
   rightMoves_toIGame' o
 
 @[game_cmp]
-theorem forall_leftMoves_toIGame_natCast_succ {P : IGame → Prop} {n : ℕ} :
-    (∀ x ∈ leftMoves (toIGame n.succ), P x) ↔
-      (∀ x ∈ leftMoves (toIGame n), P x) ∧ P (toIGame n) := by
+theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ leftMoves (toIGame n), P x) ↔ ∀ m < n, P (toIGame m) := by
   rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
-  simpa using Nat.forall_lt_succ
+  simp
 
 @[game_cmp]
-theorem exists_leftMoves_toIGame_natCast_succ {P : IGame → Prop} {n : ℕ} :
-    (∃ x ∈ leftMoves (toIGame n.succ), P x) ↔
-      (∃ x ∈ leftMoves (toIGame n), P x) ∨ P (toIGame n) := by
+theorem exists_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ leftMoves (toIGame n), P x) ↔ (∃ m < n, P (toIGame m)) := by
   rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
-  simpa using Nat.exists_lt_succ
+  simp
 
 @[game_cmp]
 theorem forall_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔
-      (∀ x ∈ leftMoves (toIGame (n - 1 : ℕ)), P x) ∧ P (toIGame (n - 1 : ℕ)) := by
-  change (∀ x ∈ leftMoves (toIGame n), P x) ↔ _
-  rw [← Nat.succ_pred (NeZero.out (n := n)), forall_leftMoves_toIGame_natCast_succ]
-  simp
+    (∀ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∀ m < n, P (toIGame m) :=
+  forall_leftMoves_toIGame_natCast
 
 @[game_cmp]
 theorem exists_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔
-      (∃ x ∈ leftMoves (toIGame (n - 1 : ℕ)), P x) ∨ P (toIGame (n - 1 : ℕ)) := by
-  change (∃ x ∈ leftMoves (toIGame n), P x) ↔ _
-  rw [← Nat.succ_pred (NeZero.out (n := n)), exists_leftMoves_toIGame_natCast_succ]
-  simp
+    (∃ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∃ m < n, P (toIGame m) :=
+  exists_leftMoves_toIGame_natCast
 
 theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGame.leftMoves := by

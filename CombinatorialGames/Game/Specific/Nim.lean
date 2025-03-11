@@ -23,6 +23,9 @@ open Nimber Set
 
 noncomputable section
 
+theorem Nimber.Iio_toNimber (n : ℕ) : Iio (∗n) = Ordinal.toNimber '' Iio n := by
+  ext; simp
+
 namespace IGame
 
 /-! ### Nim game -/
@@ -60,6 +63,50 @@ theorem exists_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
     (∃ x ∈ (nim o).rightMoves, P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
+@[game_cmp]
+theorem forall_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ leftMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
+  rw [leftMoves_nim, Nimber.Iio_toNimber, Ordinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem forall_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ rightMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
+  rw [rightMoves_nim, Nimber.Iio_toNimber, Ordinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem exists_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ leftMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
+  rw [leftMoves_nim, Nimber.Iio_toNimber, Ordinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem exists_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ rightMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
+  rw [rightMoves_nim, Nimber.Iio_toNimber, Ordinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem forall_leftMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ x ∈ leftMoves (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
+  forall_leftMoves_nim_natCast
+
+@[game_cmp]
+theorem forall_rightMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ x ∈ rightMoves (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
+  forall_rightMoves_nim_natCast
+
+@[game_cmp]
+theorem exists_leftMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ x ∈ leftMoves (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
+  exists_leftMoves_nim_natCast
+
+@[game_cmp]
+theorem exists_rightMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ x ∈ rightMoves (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
+  exists_rightMoves_nim_natCast
+
 theorem mem_leftMoves_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).leftMoves := by
   simpa using ⟨_, h, rfl⟩
 
@@ -74,8 +121,8 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp] theorem nim_inj {a b : Nimber} : nim a = nim b ↔ a = b := nim_injective.eq_iff
 
-@[simp] theorem nim_zero : nim 0 = 0 := by ext <;> simp
-@[simp] theorem nim_one : nim 1 = ⋆ := by ext <;> simp [eq_comm]
+@[simp, game_cmp] theorem nim_zero : nim 0 = 0 := by ext <;> simp
+@[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext <;> simp [eq_comm]
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
@@ -86,7 +133,7 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
   rw [birthday_nim]
 termination_by o
 
-@[simp]
+@[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o := by
   rw [nim_def, neg_ofSets]
   congr!
