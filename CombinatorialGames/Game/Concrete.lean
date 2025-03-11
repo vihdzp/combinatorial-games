@@ -33,8 +33,8 @@ class ConcreteGame (α : Type*) where
 namespace ConcreteGame
 variable [ConcreteGame α]
 
-local infix:50 " ≺ₗ " => relLeft
-local infix:50 " ≺ᵣ " => relRight
+scoped infix:50 " ≺ₗ " => relLeft
+scoped infix:50 " ≺ᵣ " => relRight
 attribute [instance] isWellFounded_rel
 
 theorem subrelation_relLeft :
@@ -56,8 +56,7 @@ def ofImpartial (r : α → α → Prop) [h : IsWellFounded α r] : ConcreteGame
 
 /-- Turns a state of a `ConcreteGame` into an `IGame`. -/
 def toIGame (a : α) : IGame :=
-  {.range fun b : {b // b ≺ₗ a} ↦ toIGame b |
-    .range fun b : {b // b ≺ᵣ a} ↦ toIGame b}ᴵ
+  {.range fun b : {b // b ≺ₗ a} ↦ toIGame b | .range fun b : {b // b ≺ᵣ a} ↦ toIGame b}ᴵ
 termination_by isWellFounded_rel.wf.wrap a
 decreasing_by all_goals aesop
 
@@ -106,4 +105,34 @@ theorem impartial_toIGame (h : relLeft (α := α) = relRight) (a : α) :
 termination_by isWellFounded_rel.wf.wrap a
 
 end ConcreteGame
+
+/-- A type alias to turn a concrete game impartial, by allowing both players to perform
+each other's moves. -/
+def ToImpartial (α : Type*) := α
+
+def toImpartial : α ≃ ToImpartial α := Equiv.refl _
+def ofImpartial : ToImpartial α ≃ α := Equiv.refl _
+@[simp] theorem ofImpartial_toImpartial (x : α) : ofImpartial (toImpartial x) = x := rfl
+@[simp] theorem toImpartial_ofImpartial (x : ToImpartial α) : toImpartial (ofImpartial x) = x := rfl
+
+open scoped ConcreteGame
+
+instance [ConcreteGame α] : ConcreteGame (ToImpartial α) where
+  relLeft x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
+  relRight x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
+  isWellFounded_rel := by
+    convert ConcreteGame.isWellFounded_rel (α := α) using 1
+    simp [ConcreteGame.relLeft, ConcreteGame.relRight]; rfl
+
+instance [ConcreteGame α] (x : α) : Impartial (ConcreteGame.toIGame (toImpartial x)) :=
+  ConcreteGame.impartial_toIGame rfl _
+
+theorem ToImpartial.relLeft_iff {x y : ToImpartial α} [ConcreteGame α] :
+    x ≺ₗ y ↔ (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y) :=
+  .rfl
+
+theorem ToImpartial.relRight_iff {x y : ToImpartial α} [ConcreteGame α] :
+    x ≺ᵣ y ↔ (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y) :=
+  .rfl
+
 end
