@@ -10,10 +10,13 @@ import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
+import CombinatorialGames.Game.Tactic
 import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
+import CombinatorialGames.Test
