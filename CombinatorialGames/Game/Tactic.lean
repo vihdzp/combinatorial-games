@@ -30,7 +30,7 @@ Lemmas which are safe to tag with `game_cmp` are the following:
   in the simplified form are over left or right moves of simpler games.
 * Lemmas of the form `leftMoves (f x) = _` and analogous, as long as the simplified set is of the
   form `{x₁, x₂, …}`, listing out all elements explicitly.
-* Lemmas which replace games by other simpler games.
+* Lemmas which directly replace games by other simpler games.
 
 Tagging any other lemmas might lead to `simp` getting stuck in a goal that it can't solve.
 -/
@@ -41,7 +41,8 @@ macro "game_cmp" : tactic =>
       rw [IGame.le_iff_forall_lf]
       simp only [game_cmp]})
 
-section Extra
+/-! ### Extra tagged lemmas -/
+
 variable {α : Type*} {P : α → Prop}
 
 attribute [game_cmp] Set.forall_mem_empty
@@ -64,5 +65,3 @@ attribute [game_cmp] le_rfl
   zero_add add_zero zero_mul mul_zero one_mul mul_one sub_eq_add_neg
   Nat.cast_zero Nat.cast_one
   not_not not_true not_false_eq_true not_forall true_and and_true false_and and_false
-
-end Extra
