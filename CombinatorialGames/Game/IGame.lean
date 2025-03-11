@@ -935,7 +935,7 @@ Note that this is equivalent, but not identical, to the more common definition `
 For that, use `Ordinal.toIGame`. -/
 instance : AddMonoidWithOne IGame where
 
-/-- This version of the theorem is more convenient for the `game_cmp`. -/
+/-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
 @[game_cmp]
 theorem leftMoves_natCast_succ' : ∀ n : ℕ, leftMoves n.succ = {(n : IGame)}
   | 0 => by simp

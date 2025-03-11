@@ -32,7 +32,8 @@ Lemmas which are safe to tag with `game_cmp` are the following:
   form `{x₁, x₂, …}`, listing out all elements explicitly.
 * Lemmas which directly replace games by other simpler games.
 
-Tagging any other lemmas might lead to `simp` getting stuck in a goal that it can't solve.
+Tagging any other lemmas might lead to `simp` failing to eliminate all quantifiers, and getting
+stuck in a goal that it can't solve.
 -/
 macro "game_cmp" : tactic =>
   `(tactic| {
