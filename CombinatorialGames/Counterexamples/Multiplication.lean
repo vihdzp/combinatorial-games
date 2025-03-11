@@ -3,9 +3,7 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Special
-import Mathlib.Tactic.FinCases
 
 /-!
 # Multiplication of pre-games can't be lifted to the quotient
@@ -38,9 +36,7 @@ theorem star'_equiv_star : ⋆' ≈ ⋆ := by game_cmp
 
 /-- `⋆' * ⋆ ⧏ ⋆` implies `⋆' * ⋆ ≉  ⋆`.-/
 theorem star'_mul_star_lf : ⋆' * ⋆ ⧏ ⋆ := by
-  rw [lf_iff_exists_le, rightMoves_mul]
-  simp_rw [Set.mem_image, Prod.exists, mulOption]
-  exact Or.inr ⟨⋆, ⟨1, 0, by simp⟩, by game_cmp⟩
+  game_cmp
 
 /-- Pre-game multiplication cannot be lifted to games. -/
 theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y :=
