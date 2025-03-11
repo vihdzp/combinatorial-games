@@ -114,17 +114,17 @@ theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
 @[simp]
 theorem birthday_half : birthday ½ = 2 := by
   rw [half, birthday_ofSets]
-  simpa using one_le_two
+  simp
 
 @[simp]
 theorem birthday_up : birthday ↑ = 2 := by
   rw [up, birthday_ofSets]
-  simpa using one_le_two
+  simp
 
 @[simp]
 theorem birthday_down : birthday ↓ = 2 := by
   rw [down, birthday_ofSets]
-  simpa using one_le_two
+  simp
 
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
