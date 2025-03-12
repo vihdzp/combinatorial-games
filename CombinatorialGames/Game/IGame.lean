@@ -1201,13 +1201,16 @@ private theorem inv_eq (x : IGame.{u}) :
 def invOption (x y a : IGame) : IGame :=
   (1 + (y - x) * a) / y
 
-theorem zero_mem_leftMoves_inv (x : IGame) : 0 ∈ (x⁻¹).leftMoves := by
+theorem zero_mem_leftMoves_inv (x : IGame) : 0 ∈ x⁻¹.leftMoves := by
   rw [inv_eq, leftMoves_ofSets]
   exact ⟨InvTy.zero, rfl⟩
 
+theorem inv_nonneg (x : IGame) : 0 ⧏ x⁻¹ :=
+  leftMove_lf (zero_mem_leftMoves_inv x)
+
 theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame}
-    (hy : y ∈ x.rightMoves) (ha : a ∈ (x⁻¹).leftMoves) :
-    invOption x y a ∈ (x⁻¹).leftMoves := by
+    (hy : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.leftMoves) :
+    invOption x y a ∈ x⁻¹.leftMoves := by
   rw [inv_eq, leftMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.left₁ (equivShrink _ ⟨_, hy⟩) i
@@ -1215,8 +1218,8 @@ theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame}
   rfl
 
 theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame}
-    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ (x⁻¹).rightMoves) :
-    invOption x y a ∈ (x⁻¹).leftMoves := by
+    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ x⁻¹.rightMoves) :
+    invOption x y a ∈ x⁻¹.leftMoves := by
   rw [inv_eq, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.left₂ (equivShrink _ ⟨_, hy, hy'⟩) i
@@ -1224,8 +1227,8 @@ theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame}
   rfl
 
 theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame}
-    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ (x⁻¹).leftMoves) :
-    invOption x y a ∈ (x⁻¹).rightMoves := by
+    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ x⁻¹.leftMoves) :
+    invOption x y a ∈ x⁻¹.rightMoves := by
   rw [inv_eq, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.right₁ (equivShrink _ ⟨_, hy, hy'⟩) i
@@ -1233,8 +1236,8 @@ theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame}
   rfl
 
 theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame}
-    (hy : y ∈ x.rightMoves) (ha : a ∈ (x⁻¹).rightMoves) :
-    invOption x y a ∈ (x⁻¹).rightMoves := by
+    (hy : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.rightMoves) :
+    invOption x y a ∈ x⁻¹.rightMoves := by
   rw [inv_eq, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.right₂ (equivShrink _ ⟨_, hy⟩) i
@@ -1243,17 +1246,17 @@ theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame}
 
 set_option linter.unnecessarySimpa false in
 /-- An induction principle on left and right moves of `x⁻¹`. -/
-theorem invRec (x : IGame) {P : ∀ y ∈ (x⁻¹).leftMoves, Prop} {Q : ∀ y ∈ (x⁻¹).rightMoves, Prop}
+theorem invRec (x : IGame) {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
     (zero : P 0 (zero_mem_leftMoves_inv x))
-    (left₁ : ∀ y (hy : y ∈ x.rightMoves), ∀ a (ha : a ∈ (x⁻¹).leftMoves), P a ha →
+    (left₁ : ∀ y (hy : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
       P _ (invOption_right_left_mem_leftMoves_inv hy ha))
-    (left₂ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ (x⁻¹).rightMoves), Q a ha →
+    (left₂ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
       P _ (invOption_left_right_mem_leftMoves_inv hy hy' ha))
-    (right₁ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ (x⁻¹).leftMoves), P a ha →
+    (right₁ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
       Q _ (invOption_left_left_mem_rightMoves_inv hy hy' ha))
-    (right₂ : ∀ y (hy : y ∈ x.rightMoves) , ∀ a (ha : a ∈ (x⁻¹).rightMoves), Q a ha →
+    (right₂ : ∀ y (hy : y ∈ x.rightMoves) , ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
       Q _ (invOption_right_right_mem_rightMoves_inv hy ha)) :
-    (∀ y (hy : y ∈ (x⁻¹).leftMoves), P y hy) ∧ (∀ y (hy : y ∈ (x⁻¹).rightMoves), Q y hy) := by
+    (∀ y (hy : y ∈ x⁻¹.leftMoves), P y hy) ∧ (∀ y (hy : y ∈ x⁻¹.rightMoves), Q y hy) := by
   suffices ∀ b : Bool, ∀ i, if hb : b then
       Q (InvTy.val x b i) (by subst hb; simp [inv_eq]) else
       P (InvTy.val x b i) (by rw [Bool.not_eq_true] at hb; subst hb; simp [inv_eq]) by
