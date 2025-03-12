@@ -6,9 +6,22 @@ noncomputable section
 
 namespace IGame
 
+instance (x y : IGame) [Numeric x] [Numeric y⁻¹] : Numeric (x / y) :=
+  inferInstanceAs (Numeric (_ * _))
+
+@[simp]
+theorem Surreal.mk_mul (x y : IGame) [Numeric x] [Numeric y] :
+    Surreal.mk (x * y) = Surreal.mk x * Surreal.mk y :=
+  rfl
+
+@[simp]
+theorem Surreal.mk_div (x y : IGame) [Numeric x] [Numeric y⁻¹] :
+    Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
+  rfl
+
 instance (x y a : IGame) [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
     Numeric (invOption x y a) :=
-  inferInstanceAs (Numeric (_ * _))
+  inferInstanceAs (Numeric (_ / _))
 
 theorem numeric_option_inv {x : IGame} [Numeric x]
     (hl : ∀ y ∈ x.leftMoves, Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
@@ -21,6 +34,16 @@ theorem numeric_option_inv {x : IGame} [Numeric x]
       have := Numeric.of_mem_leftMoves hy; have := hl _ hy |
       have := Numeric.of_mem_rightMoves hy; have := hr _ hy
     infer_instance
+
+theorem one_neg_mul_invOption (x : IGame) {y : IGame} (hy : y * y⁻¹ ≈ 1) (a : IGame)
+    [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
+    1 - x * invOption x y a ≈ (1 - x * a) * (y - x) / y := by
+  rw [← Surreal.mk_eq_mk] at *
+  dsimp [invOption] at *
+  simp only [one_mul, sub_eq_add_neg, add_mul, hy]
+  ring
+
+
 #exit
 /-
 theorem one_neg_mul_invOption (x : IGame) {y : IGame} (hy : Game.mk (y * y⁻¹) = 1) (a : IGame) :
