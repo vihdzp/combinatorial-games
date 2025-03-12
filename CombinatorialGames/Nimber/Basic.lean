@@ -3,6 +3,7 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Register
 import Mathlib.Data.Nat.Bitwise
 import Mathlib.SetTheory.Ordinal.Arithmetic
 
@@ -72,13 +73,8 @@ namespace Nimber
 
 open Ordinal
 
-@[simp]
-theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber :=
-  rfl
-
-@[simp]
-theorem toOrdinal_toNimber (a : Nimber) : ∗(Nimber.toOrdinal a) = a :=
-  rfl
+@[simp] theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber := rfl
+@[simp] theorem toOrdinal_toNimber (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
 
 theorem lt_wf : @WellFounded Nimber (· < ·) :=
   Ordinal.lt_wf
@@ -161,37 +157,17 @@ open Nimber
 
 namespace Ordinal
 
-@[simp]
-theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal :=
-  rfl
+@[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
+@[simp] theorem toNimber_toOrdinal (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
 
-@[simp]
-theorem toNimber_toOrdinal (a : Ordinal) : Nimber.toOrdinal (∗a) = a :=
-  rfl
+@[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
+@[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl
 
-@[simp]
-theorem toNimber_zero : ∗0 = 0 :=
-  rfl
+@[simp] theorem toNimber_eq_zero {a} : ∗a = 0 ↔ a = 0 := .rfl
+@[simp] theorem toNimber_eq_one {a} : ∗a = 1 ↔ a = 1 := .rfl
 
-@[simp]
-theorem toNimber_one : ∗1 = 1 :=
-  rfl
-
-@[simp]
-theorem toNimber_eq_zero {a} : ∗a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toNimber_eq_one {a} : ∗a = 1 ↔ a = 1 :=
-  Iff.rfl
-
-@[simp]
-theorem toNimber_max (a b : Ordinal) : ∗(max a b) = max (∗a) (∗b) :=
-  rfl
-
-@[simp]
-theorem toNimber_min (a b : Ordinal) : ∗(min a b) = min (∗a) (∗b) :=
-  rfl
+@[simp] theorem toNimber_max (a b : Ordinal) : ∗(max a b) = max (∗a) (∗b) := rfl
+@[simp] theorem toNimber_min (a b : Ordinal) : ∗(min a b) = min (∗a) (∗b) := rfl
 
 end Ordinal
 
