@@ -1184,8 +1184,8 @@ such that `0 ∈ s'`, and such that `(1 + (z - x) * a) / z, (1 + (y - x) * b) / 
 `(1 + (y - x) * a) / y, (1 + (z - x) * b) / z ∈ t'` for `y ∈ s` positive, `z ∈ t`, `a ∈ s'`, and
 `b ∈ t'`.
 
-When `x` is a positive numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any other
-game should be treated as a junk value. -/
+If `x` is a positive numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any other game
+should be treated as a junk value. -/
 instance : Inv IGame where
   inv := inv'
 
@@ -1202,6 +1202,7 @@ private theorem inv_eq (x : IGame.{u}) :
 
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
 `a` some other "earlier" option of `x⁻¹`. -/
+@[pp_nodot]
 def invOption (x y a : IGame) : IGame :=
   (1 + (y - x) * a) / y
 

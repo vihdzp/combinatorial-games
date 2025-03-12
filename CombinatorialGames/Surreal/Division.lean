@@ -2,12 +2,15 @@ import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Tactic.Ring.RingNF
 import Mathlib.Tactic.FieldSimp
 
-noncomputable section
+open IGame
 
-namespace IGame
+noncomputable section
 
 instance (x y : IGame) [Numeric x] [Numeric y⁻¹] : Numeric (x / y) :=
   inferInstanceAs (Numeric (_ * _))
+
+theorem IGame.inv_pos (x : IGame) [Numeric x⁻¹] : 0 < x⁻¹ :=
+  Numeric.lt_of_not_le (inv_nonneg x)
 
 @[simp]
 theorem Surreal.mk_mul (x y : IGame) [Numeric x] [Numeric y] :
@@ -19,9 +22,29 @@ theorem Surreal.mk_div (x y : IGame) [Numeric x] [Numeric y⁻¹] :
     Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
   rfl
 
+protected theorem IGame.sub_pos {x y : IGame} : 0 < x - y ↔ y < x :=
+  sub_pos (a := Game.mk x) (b := Game.mk y)
+
+protected theorem IGame.sub_neg {x y : IGame} : x - y < 0 ↔ x < y :=
+  sub_neg (a := Game.mk x) (b := Game.mk y)
+
 instance (x y a : IGame) [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
     Numeric (invOption x y a) :=
   inferInstanceAs (Numeric (_ / _))
+
+protected theorem IGame.Numeric.mul_neg_of_pos_of_neg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : 0 < x) (hy : y < 0) : x * y < 0 := by
+  exact mul_neg_of_pos_of_neg (a := Surreal.mk x) (b := Surreal.mk y) hx hy
+
+protected theorem IGame.Numeric.mul_neg_of_neg_of_pos {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x < 0) (hy : 0 < y) : x * y < 0 := by
+  exact mul_neg_of_neg_of_pos (a := Surreal.mk x) (b := Surreal.mk y) hx hy
+
+protected theorem IGame.Numeric.mul_pos_of_neg_of_neg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x < 0) (hy : y < 0) : 0 < x * y := by
+  exact mul_pos_of_neg_of_neg (a := Surreal.mk x) (b := Surreal.mk y) hx hy
+
+namespace Surreal.Division
 
 theorem numeric_option_inv {x : IGame} [Numeric x]
     (hl : ∀ y ∈ x.leftMoves, Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
@@ -43,6 +66,48 @@ theorem one_neg_mul_invOption (x : IGame) {y : IGame} (hy : y * y⁻¹ ≈ 1) (a
   simp only [one_mul, sub_eq_add_neg, add_mul, hy]
   ring
 
+theorem mul_inv_option_mem (x : IGame) [Numeric x]
+    (hl : ∀ y ∈ x.leftMoves, Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
+    (hl' : ∀ y ∈ x.leftMoves, y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
+    (∀ y ∈ x⁻¹.leftMoves, x * y < 1) ∧ (∀ y ∈ x⁻¹.rightMoves, 1 < x * y) := by
+  apply invRec x
+  · simp
+  · intro y hy a ha h
+    have := Numeric.of_mem_rightMoves hy
+    have := hr y hy
+    have := (numeric_option_inv hl hr).1 a ha
+    rw [← IGame.sub_pos, (one_neg_mul_invOption x (hr' y hy) a).lt_congr_right]
+    apply Numeric.mul_pos (Numeric.mul_pos _ _) (IGame.inv_pos y)
+    · rwa [IGame.sub_pos]
+    · rw [IGame.sub_pos]
+      exact Numeric.lt_rightMove hy
+  · intro y hy hy' a ha h
+    have := Numeric.of_mem_leftMoves hy
+    have := hl y hy
+    have := (numeric_option_inv hl hr).1 a ha
+    rw [← IGame.sub_pos, (one_neg_mul_invOption x (hl' y hy) a).lt_congr_right]
+    apply Numeric.mul_pos (Numeric.mul_pos_of_neg_of_neg _ _) (IGame.inv_pos y)
+    · rwa [IGame.sub_neg]
+    · rw [IGame.sub_neg]
+      exact Numeric.leftMove_lt hy
+  · intro y hy hy' a ha h
+    have := Numeric.of_mem_leftMoves hy
+    have := hl y hy
+    have := (numeric_option_inv hl hr).1 a ha
+    rw [← IGame.sub_neg, (one_neg_mul_invOption x (hl' y hy) a).lt_congr_left]
+    apply Numeric.mul_neg_of_neg_of_pos (Numeric.mul_neg_of_pos_of_neg _ _) (IGame.inv_pos y)
+    · rwa [IGame.sub_pos]
+    · rw [IGame.sub_neg]
+      exact Numeric.leftMove_lt hy
+  · intro y hy a ha h
+    have := Numeric.of_mem_rightMoves hy
+    have := hr y hy
+    have := (numeric_option_inv hl hr).1 a ha
+    rw [← IGame.sub_neg, (one_neg_mul_invOption x (hr' y hy) a).lt_congr_left]
+    apply Numeric.mul_neg_of_neg_of_pos (Numeric.mul_neg_of_neg_of_pos _ _) (IGame.inv_pos y)
+    · rwa [IGame.sub_neg]
+    · rw [IGame.sub_pos]
+      exact Numeric.lt_rightMove hy
 
 #exit
 /-
