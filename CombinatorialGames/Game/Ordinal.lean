@@ -72,16 +72,6 @@ theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
   change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
   simp [NatOrdinal.Iio_natCast]
 
-@[simp]
-theorem forall_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ a < ofNat(n), P a) ↔ ∀ a < n, P a :=
-  forall_lt_natCast
-
-@[simp]
-theorem exists_lt_ofNat {P : NatOrdinal → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ a < ofNat(n), P a) ↔ ∃ a < n, P a :=
-  exists_lt_natCast
-
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
 
 @[simp]
@@ -159,9 +149,31 @@ theorem toIGame_def (o : NatOrdinal) : o.toIGame = {toIGame '' Iio o | ∅}ᴵ :
 theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGame.leftMoves = toIGame '' Iio o :=
   leftMoves_toIGame' o
 
-@[simp]
+@[simp, game_cmp]
 theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
   rightMoves_toIGame' o
+
+@[game_cmp]
+theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ leftMoves (toIGame n), P x) ↔ ∀ m < n, P (toIGame m) := by
+  rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem exists_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ leftMoves (toIGame n), P x) ↔ (∃ m < n, P (toIGame m)) := by
+  rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
+  simp
+
+@[game_cmp]
+theorem forall_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∀ m < n, P (toIGame m) :=
+  forall_leftMoves_toIGame_natCast
+
+@[game_cmp]
+theorem exists_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∃ m < n, P (toIGame m) :=
+  exists_leftMoves_toIGame_natCast
 
 theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGame.leftMoves := by
@@ -169,8 +181,8 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
 
 alias _root_.LT.lt.mem_leftMoves_toIGame := mem_leftMoves_toIGame_of_lt
 
-@[simp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
-@[simp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
+@[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
+@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
 theorem toIGame_le_iff {a b : NatOrdinal} : toIGame a ≤ toIGame b ↔ a ≤ b := by simp
 theorem toIGame_lt_iff {a b : NatOrdinal} : toIGame a < toIGame b ↔ a < b := by simp
@@ -330,6 +342,3 @@ theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   exact lt_omega0 _
 
 end IGame
-
-attribute [simp] Nat.forall_lt_succ Nat.exists_lt_succ
-example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp

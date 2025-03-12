@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
 import CombinatorialGames.Mathlib.Comparable
+import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
@@ -71,12 +72,6 @@ The order structures interact in the expected way with arithmetic. In particular
 -/
 
 universe u
-
--- TODO: upstream
-@[simp]
-theorem forall_or_eq {α} {P Q : α → Prop} {y : α} :
-    (∀ x, (P x ∨ y = x) → Q x) ↔ (∀ x, P x → Q x) ∧ Q y := by
-  aesop
 
 -- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
@@ -352,11 +347,11 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
 
 @[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
-@[simp]
+@[simp, game_cmp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
-@[simp]
+@[simp, game_cmp]
 theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
   ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
 
@@ -400,8 +395,8 @@ instance : Zero IGame := ⟨{∅ | ∅}ᴵ⟩
 
 theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
 
-@[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
-@[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
 
 instance : Inhabited IGame := ⟨0⟩
 
@@ -410,8 +405,8 @@ instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
 theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
 
-@[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
 
 /-! ### Order relations -/
 
@@ -546,18 +541,10 @@ theorem equiv_of_exists {x y : IGame}
   · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
     exact Or.inr ⟨j, hj, hj'.ge⟩
 
-/-- Proves simple inequalities on concrete games. This is done by unfolding the definition of `≤`
-and applying `simp` until the goal is solved. -/
-macro "game_cmp" : tactic =>
-  `(tactic| {
-    try simp only [lt_iff_le_not_le, AntisymmRel, CompRel, IncompRel]
-    repeat
-      rw [le_iff_forall_lf]
-      simp })
-
 @[simp]
 theorem zero_lt_one : (0 : IGame) < 1 := by
-  game_cmp
+  rw [lt_iff_le_not_le, le_iff_forall_lf, le_iff_forall_lf]
+  simp
 
 instance : ZeroLEOneClass IGame where
   zero_le_one := zero_lt_one.le
@@ -613,18 +600,22 @@ theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
 theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := by
   rw [isOption_neg, neg_neg]
 
+@[game_cmp]
 theorem forall_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).leftMoves, P y) ↔ (∀ y ∈ x.rightMoves, P (-y)) := by
   rw [← (Equiv.neg _).forall_congr_right]; simp
 
+@[game_cmp]
 theorem forall_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).rightMoves, P y) ↔ (∀ y ∈ x.leftMoves, P (-y)) := by
   rw [← (Equiv.neg _).forall_congr_right]; simp
 
+@[game_cmp]
 theorem exists_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).leftMoves, P y) ↔ (∃ y ∈ x.rightMoves, P (-y)) := by
   rw [← (Equiv.neg _).exists_congr_right]; simp
 
+@[game_cmp]
 theorem exists_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).rightMoves, P y) ↔ (∃ y ∈ x.leftMoves, P (-y)) := by
   rw [← (Equiv.neg _).exists_congr_right]; simp
@@ -736,21 +727,25 @@ theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
   aesop (add simp [IsOption])
 
+@[game_cmp]
 theorem forall_leftMoves_add {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x + y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, P (a + y)) ∧ (∀ b ∈ y.leftMoves, P (x + b)) := by
   aesop
 
+@[game_cmp]
 theorem forall_rightMoves_add {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x + y).rightMoves, P a) ↔
       (∀ a ∈ x.rightMoves, P (a + y)) ∧ (∀ b ∈ y.rightMoves, P (x + b)) := by
   aesop
 
+@[game_cmp]
 theorem exists_leftMoves_add {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x + y).leftMoves, P a) ↔
       (∃ a ∈ x.leftMoves, P (a + y)) ∨ (∃ b ∈ y.leftMoves, P (x + b)) := by
   aesop
 
+@[game_cmp]
 theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x + y).rightMoves, P a) ↔
       (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
@@ -940,27 +935,32 @@ Note that this is equivalent, but not identical, to the more common definition `
 For that, use `Ordinal.toIGame`. -/
 instance : AddMonoidWithOne IGame where
 
-@[simp 1100] -- This should trigger before `leftMoves_add`.
-theorem leftMoves_natCast_succ : ∀ n : ℕ, leftMoves (n + 1) = {(n : IGame)}
+/-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
+@[game_cmp]
+theorem leftMoves_natCast_succ' : ∀ n : ℕ, leftMoves n.succ = {(n : IGame)}
   | 0 => by simp
   | n + 1 => by
-    rw [Nat.cast_succ, leftMoves_add, leftMoves_natCast_succ]
+    rw [Nat.cast_succ, leftMoves_add, leftMoves_natCast_succ']
     simp
 
-@[simp 1100] -- This should trigger before `rightMoves_add`.
+@[simp 1100] -- This should trigger before `leftMoves_add`.
+theorem leftMoves_natCast_succ (n : ℕ) : leftMoves (n + 1) = {(n : IGame)} :=
+  leftMoves_natCast_succ' n
+
+@[simp 1100, game_cmp] -- This should trigger before `rightMoves_add`.
 theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
   | 0 => by simp
   | n + 1 => by
     rw [Nat.cast_succ, rightMoves_add, rightMoves_natCast]
     simp
 
-@[simp 1100]
+@[simp 1100, game_cmp]
 theorem leftMoves_ofNat (n : ℕ) [n.AtLeastTwo] : leftMoves ofNat(n) = {((n - 1 : ℕ) : IGame)} := by
   change leftMoves n = _
-  rw [← Nat.succ_pred (NeZero.out (n := n))]
+  rw [← Nat.succ_pred (NeZero.out (n := n)), leftMoves_natCast_succ']
   simp
 
-@[simp 1100]
+@[simp 1100, game_cmp]
 theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
   rightMoves_natCast n
 
@@ -991,7 +991,7 @@ instance : Mul IGame where
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot]
+@[pp_nodot, game_cmp]
 def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
@@ -1053,24 +1053,28 @@ theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b 
     IsOption (mulOption x y a b) (x * y) := by
   aesop (add simp [IsOption])
 
+@[game_cmp]
 theorem forall_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ x.rightMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) := by
   aesop
 
+@[game_cmp]
 theorem forall_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).rightMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.rightMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ x.rightMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) := by
   aesop
 
+@[game_cmp]
 theorem exists_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).leftMoves, P a) ↔
       (∃ a ∈ x.leftMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) ∨
       (∃ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) := by
   aesop
 
+@[game_cmp]
 theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).rightMoves, P a) ↔
       (∃ a ∈ x.leftMoves, ∃ b ∈ y.rightMoves, P (mulOption x y a b)) ∨
@@ -1142,16 +1146,4 @@ theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x 
 `CombinatorialGames.Game.Basic`. -/
 
 end IGame
-
-/-! ### Tactic tests -/
-
-section Test
-
-example : (0 : IGame) < 1 := by game_cmp
-example : (2 : IGame) + 2 ≈ 4 := by game_cmp
-example : (3 : IGame) - 2 ≈ 1 := by game_cmp
-example : {{1} | {2}}ᴵ ≈ {{0, 1} | {2, 3}}ᴵ := by game_cmp
-example : (2 : IGame) * 2 ≈ 4 := by game_cmp
-
-end Test
 end

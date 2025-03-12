@@ -3,8 +3,8 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Tactic
 
 /-!
 # Special games
@@ -30,8 +30,8 @@ def star : IGame :=
 
 @[inherit_doc] notation "⋆" => star
 
-@[simp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
 
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 @[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
@@ -39,7 +39,7 @@ def star : IGame :=
 theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
 theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
-@[simp] theorem neg_star : -⋆ = ⋆ := by simp [star]
+@[simp, game_cmp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext <;> simp [mulOption]
 
@@ -53,8 +53,8 @@ def half : IGame :=
 
 @[inherit_doc] notation "½" => half
 
-@[simp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
 
 theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
@@ -70,8 +70,8 @@ def up : IGame :=
 
 @[inherit_doc] notation "↑" => up
 
-@[simp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
@@ -85,11 +85,11 @@ def down : IGame :=
 
 @[inherit_doc] notation "↓" => down
 
-@[simp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
 
-@[simp] theorem neg_down : -↓ = ↑ := by simp [up, down]
-@[simp] theorem neg_up : -↑ = ↓ := by simp [up, down]
+@[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
+@[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
 
 @[simp] theorem down_neg : ↓ < 0 := by game_cmp
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
@@ -106,11 +106,11 @@ def tiny (x : IGame) : IGame :=
 
 @[inherit_doc] prefix:75 "⧾" => tiny
 
-@[simp]
+@[simp, game_cmp]
 theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
   leftMoves_ofSets ..
 
-@[simp]
+@[simp, game_cmp]
 theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
   rightMoves_ofSets ..
 
@@ -125,19 +125,19 @@ def miny (x : IGame) : IGame :=
 
 @[inherit_doc] prefix:75 "⧿" => miny
 
-@[simp]
+@[simp, game_cmp]
 theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
   leftMoves_ofSets ..
 
-@[simp]
+@[simp, game_cmp]
 theorem rightMoves_miny (x : IGame) : rightMoves (⧿x) = {0} :=
   rightMoves_ofSets ..
 
-@[simp]
+@[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
   simp [miny, tiny]
 
-@[simp]
+@[simp, game_cmp]
 theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
@@ -149,20 +149,28 @@ proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : 
 
 /-! ### Switches -/
 
-/-- A **switch** ±x is defined as {x | -x}: switches are their own confusion interval! -/
+/-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
 def switch (x : IGame) : IGame :=
   {{x} | {-x}}ᴵ
 
 @[inherit_doc] prefix:75 "±" => switch
+
+@[simp, game_cmp]
+theorem leftMoves_switch (x : IGame) : leftMoves (±x) = {x} :=
+  leftMoves_ofSets ..
+
+@[simp, game_cmp]
+theorem rightMoves_switch (x : IGame) : rightMoves (±x) = {-x} :=
+  rightMoves_ofSets ..
 
 @[simp]
 theorem neg_switch (x : IGame) : -±x = ±x := by
   rw [switch, neg_ofSets]
   simp [Set.neg_singleton]
 
-theorem switch_zero_star : ±0 = ⋆ := by
-  rw [switch, star]
-  simp only [neg_zero]
+@[simp]
+theorem switch_zero : ±0 = ⋆ := by
+  simp_rw [switch, star, neg_zero]
 
 end IGame
 end
