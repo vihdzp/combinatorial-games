@@ -53,7 +53,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x]
   · intro y hy hy' a ha h
     have := Numeric.of_mem_leftMoves hy
     have := hl y hy hy'
-    have := (numeric_option_inv hl hr).1 a ha
+    have := (numeric_option_inv hl hr).2 a ha
     rw [← IGame.sub_pos, (one_neg_mul_invOption x (hl' y hy hy') a).lt_congr_right]
     apply Numeric.mul_pos (Numeric.mul_pos_of_neg_of_neg _ _) (Numeric.inv_pos y)
     · rwa [IGame.sub_neg]
@@ -71,7 +71,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x]
   · intro y hy a ha h
     have := Numeric.of_mem_rightMoves hy
     have := hr y hy
-    have := (numeric_option_inv hl hr).1 a ha
+    have := (numeric_option_inv hl hr).2 a ha
     rw [← IGame.sub_neg, (one_neg_mul_invOption x (hr' y hy) a).lt_congr_left]
     apply Numeric.mul_neg_of_neg_of_pos (Numeric.mul_neg_of_neg_of_pos _ _) (Numeric.inv_pos y)
     · rwa [IGame.sub_neg]
