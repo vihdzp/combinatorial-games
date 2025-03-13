@@ -52,6 +52,17 @@ lemma mulOption_le (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeric 
   rw [← add_le_add_iff_left (Game.mk (x * b))] at this
   convert this using 1 <;> abel
 
+theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeric a] [Numeric b]
+    (ha : a ≤ 0) (hb : y ≤ b) : x * b ≤ mulOption x y a b := by
+  rw [mulOption, ← Game.mk_le_mk]
+  dsimp
+  have : 0 ≤ Game.mk (a * y) - Game.mk (a * b) := by
+    rw [← Game.mk_mul_sub]
+    apply Numeric.mul_nonneg_of_nonpos_of_nonpos ha
+    rwa [IGame.sub_nonpos]
+  rw [← add_le_add_iff_left (Game.mk (x * b))] at this
+  convert this using 1 <;> abel
+
 lemma numeric_option_inv {x : IGame} [Numeric x]
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
     (∀ y ∈ x⁻¹.leftMoves, Numeric y) ∧ (∀ y ∈ x⁻¹.rightMoves, Numeric y) := by
@@ -126,24 +137,40 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
   obtain ⟨Hl, Hr⟩ := numeric_option_inv hl hr
   rw [forall_leftMoves_mul, forall_rightMoves_mul]
   refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
-  · intro y hy a ha
-    have := Numeric.of_mem_leftMoves hy
-    have := Hl a ha
-    obtain hy' | hy' := Numeric.lt_or_le 0 y
+  all_goals
+    intro y hy a ha
+    first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+    first | have := Hl a ha | have := Hr a ha
+    try (have := hr y hy; have hy' := hx.trans (Numeric.lt_rightMove hy))
+  · obtain hy' | hy' := Numeric.lt_or_le 0 y
     · have := hl y hy hy'
-      rw [(mulOption_self_inv x (hl' y hy hy') a).lt_congr_left, add_comm, ← IGame.lt_sub_iff_add_lt,
-        (IGame.sub_self_equiv _).lt_congr_right]
+      rw [(mulOption_self_inv x (hl' y hy hy') a).lt_congr_left, add_comm,
+        ← IGame.lt_sub_iff_add_lt, (IGame.sub_self_equiv _).lt_congr_right]
       apply Numeric.mul_neg_of_neg_of_pos _ hy'
       rw [IGame.sub_neg]
       exact Numeric.lt_rightMove (invOption_left_left_mem_rightMoves_inv hy hy' ha)
-    · apply (mulOption_le x x⁻¹ hy' (Numeric.leftMove_lt ha).le).trans_lt
+    · apply (mulOption_le _ _ hy' (Numeric.leftMove_lt ha).le).trans_lt
       exact (mul_inv_option_mem hl hr hl' hr').1 a ha
-  · intro y hy a ha
-    sorry
-  · sorry
-  · sorry
+  · rw [(mulOption_self_inv x (hr' y hy) a).lt_congr_left, add_comm,
+      ← IGame.lt_sub_iff_add_lt, (IGame.sub_self_equiv _).lt_congr_right]
+    apply Numeric.mul_neg_of_neg_of_pos _ hy'
+    rw [IGame.sub_neg]
+    exact Numeric.lt_rightMove (invOption_right_right_mem_rightMoves_inv hy ha)
+  · obtain hy' | hy' := Numeric.lt_or_le 0 y
+    · have := hl y hy hy'
+      rw [(mulOption_self_inv x (hl' y hy hy') a).lt_congr_right, add_comm,
+        ← IGame.sub_lt_iff_lt_add, (IGame.sub_self_equiv _).lt_congr_left]
+      apply Numeric.mul_pos _ hy'
+      rw [IGame.sub_pos]
+      apply Numeric.leftMove_lt (invOption_left_right_mem_leftMoves_inv hy hy' ha)
+    · apply ((mul_inv_option_mem hl hr hl' hr').2 a ha).trans_le
+      exact le_mulOption _ _ hy' (Numeric.lt_rightMove ha).le
+  · rw [(mulOption_self_inv x (hr' y hy) a).lt_congr_right, add_comm,
+      ← IGame.sub_lt_iff_lt_add, (IGame.sub_self_equiv _).lt_congr_left]
+    apply Numeric.mul_pos _ hy'
+    rw [IGame.sub_pos]
+    exact Numeric.leftMove_lt (invOption_right_left_mem_leftMoves_inv hy ha)
 
-#exit
 lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
     (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
@@ -154,8 +181,7 @@ lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
   rw [Numeric.mul_equiv_zero, not_or]
   exact ⟨hx.not_antisymmRel_symm, (Numeric.inv_pos x).not_antisymmRel_symm⟩
 
-theorem main {x : IGame} [Numeric x] (hx : 0 < x) (hx' : ∀ y ∈ x.leftMoves, 0 < y) :
-    Numeric x⁻¹ ∧ x * x⁻¹ ≈ 1 := by
+theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻¹ ≈ 1 := by
   have IHl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
     fun y hy hy' ↦ have := Numeric.of_mem_leftMoves hy; main hy'
   have IHr : ∀ y ∈ x.rightMoves, Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
