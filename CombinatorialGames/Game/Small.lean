@@ -41,10 +41,10 @@ class Dicotic (x : IGame) : Prop where
   out : DicoticAux x
 
 theorem dicotic_def {x : IGame} : Dicotic x ↔
-  (x.leftMoves = ∅ ∧ x.rightMoves = ∅) ∨
-  (x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ ∧
-    (∀ l ∈ x.leftMoves, DicoticAux l) ∧
-    ∀ r ∈ x.rightMoves, DicoticAux r) := by
+    (x.leftMoves = ∅ ∧ x.rightMoves = ∅) ∨
+    (x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ ∧
+      (∀ l ∈ x.leftMoves, DicoticAux l) ∧
+      ∀ r ∈ x.rightMoves, DicoticAux r) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 namespace Dicotic
