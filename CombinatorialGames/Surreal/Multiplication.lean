@@ -592,4 +592,8 @@ protected theorem mul_lt_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Nume
     (hx : 0 < x) : y * x < z * x ↔ y < z :=
   mul_lt_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
+theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
+  repeat rw [← Surreal.mk_eq_mk]
+  exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
+
 end IGame.Numeric
