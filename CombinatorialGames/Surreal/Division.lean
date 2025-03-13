@@ -241,15 +241,11 @@ private instance {x : IGame} [Numeric x] : Numeric (inv' x) := by
 
 private theorem Numeric.mul_inv'_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) :
     x * (inv' x) ≈ 1 := by
-  rw [inv']
+  unfold inv'
   obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
-  · rw [if_neg h.asymm, if_pos h]
-    rw [← IGame.zero_lt_neg] at h
-    convert Numeric.mul_inv_cancel h using 1
-    simp
+  · simpa [h, h.asymm] using Numeric.mul_inv_cancel (IGame.zero_lt_neg.2 h)
   · contradiction
-  · rw [if_pos h]
-    exact Numeric.mul_inv_cancel h
+  · simpa [h] using Numeric.mul_inv_cancel h
 
 private theorem Numeric.inv'_congr {x y : IGame} [Numeric x] [Numeric y] (hy : x ≈ y) :
     inv' x ≈ inv' y := by
