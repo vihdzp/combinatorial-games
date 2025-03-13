@@ -32,8 +32,9 @@ form a linear ordered commutative ring.
 
 ## TODO
 
-- Define the field structure on the surreals.
+- Prove that surreals with finite birthday are dyadic rationals.
 - Build the embedding from reals into surreals.
+- Define sign sequences.
 -/
 
 universe u
@@ -197,6 +198,10 @@ protected instance natCast : ∀ n : ℕ, Numeric n
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
 
+/-- Note that this assumes `x⁻¹` numeric. -/
+theorem inv_pos (x : IGame) [Numeric x⁻¹] : 0 < x⁻¹ :=
+  Numeric.lt_of_not_le (inv_nonneg x)
+
 end Numeric
 
 /-! ### Simplicity theorem -/
@@ -250,6 +255,16 @@ theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits 
   apply hx.equiv_of_forall_not_fits
   · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_le <| H z (.of_mem_leftMoves hz) h
   · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_le <| H z (.of_mem_rightMoves hz) h
+
+/-- A specialization of the simplicity theorem to `0`. -/
+theorem equiv_zero_of_fits {x : IGame} [Numeric x] (hx : Fits 0 x) : x ≈ 0 := by
+  apply (hx.equiv_of_forall_not_fits _ _).symm <;> simp
+
+/-- A specialization of the simplicity theorem to `1`. -/
+theorem equiv_one_of_fits {x : IGame} [Numeric x] (hx : Fits 1 x) (h : ¬ Fits 0 x) : x ≈ 1 := by
+  apply (hx.equiv_of_forall_not_fits _ _).symm
+  · simpa
+  · simp
 
 end IGame
 
