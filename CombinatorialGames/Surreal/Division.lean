@@ -1,28 +1,38 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios, Theodore Hwa
+-/
 import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Tactic.Ring.RingNF
-import Mathlib.Tactic.FieldSimp
+
+/-!
+# Surreal division
+
+In this file, we prove that if `x` is a positive numeric game, then `x⁻¹` (defined in
+`Mathlib.SetTheory.Game.IGame`) is a number and is a multiplicative inverse for `x`. We use that
+to define the field structure on `Surreal`.
+
+This is Theorem 1.10 in ONAG, and we follow the broad strokes of the proof. We prove
+by simultaneous induction that if `x` is positive and numeric, then (ii) `x⁻¹` is numeric, and (iv)
+`x * x⁻¹ ≈ 1`. We do this by showing the inductive hypothesis implies that (i) `x * y < 1` for
+`y ∈ x⁻¹.leftMoves` and `1 < x * y` for `y ∈ x⁻¹.rightMoves`, and that (iv) `y < 1` for
+`y ∈ (x * x⁻¹).leftMoves` and `1 < y` for `y ∈ (x * x⁻¹.rightMoves)`.
+
+An important difference is that Conway assumes that `x` has no negative left options, while we don't
+make use of this assumption. This is because our definition of the inverse is tweaked to ensure that
+only positive left options of `x` generate the options for `x⁻¹`. To make sure the induction checks
+out, we require two small extra arithmetic lemmas `mulOption_le` and `le_mulOption`.
+
+Once we have defined the inverse for positive `x`, it is extended in the obvious way to negative
+numbers.
+-/
 
 open IGame
 
--- TODO: upstream
-theorem not_antisymmRel_of_lt {α} [Preorder α] {x y : α} (h : x < y) : ¬ AntisymmRel (· ≤ ·) x y :=
-  fun h' ↦ h.not_le h'.ge
-
-theorem not_antisymmRel_of_gt {α} [Preorder α] {x y : α} (h : y < x) : ¬ AntisymmRel (· ≤ ·) x y :=
-  fun h' ↦ h.not_le h'.le
-
-alias LT.lt.not_antisymmRel := not_antisymmRel_of_lt
-alias LT.lt.not_antisymmRel_symm := not_antisymmRel_of_gt
-
-theorem IGame.Numeric.le_or_lt (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y < x := by
-  rw [← Numeric.not_le]
-  exact em _
-
-theorem IGame.Numeric.lt_or_le (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y ≤ x := by
-  rw [← Numeric.not_lt]
-  exact em _
-
 namespace Surreal.Division
+
+/-! ### Arithmetic lemmas -/
 
 lemma one_neg_mul_invOption (x : IGame) {y : IGame} (hy : y * y⁻¹ ≈ 1) (a : IGame)
     [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
@@ -62,6 +72,8 @@ theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeri
     rwa [IGame.sub_nonpos]
   rw [← add_le_add_iff_left (Game.mk (x * b))] at this
   convert this using 1 <;> abel
+
+/-! ### Inductive proof -/
 
 lemma numeric_option_inv {x : IGame} [Numeric x]
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
@@ -196,15 +208,73 @@ decreasing_by igame_wf
 
 end Surreal.Division
 
+/-! ### Instances and corollaries -/
+
 namespace IGame
 open Surreal.Division
 
 theorem Numeric.inv {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ := (main hx).1
 theorem Numeric.mul_inv_cancel {x : IGame} [Numeric x] (hx : 0 < x) : x * x⁻¹ ≈ 1 := (main hx).2
 
+theorem Numeric.inv_congr {x y : IGame} [Numeric x] [Numeric y] (hx : 0 < x) (hy : x ≈ y) :
+    x⁻¹ ≈ y⁻¹ := by
+  have hy' := hx.trans_antisymmRel hy
+  have := Numeric.inv hx
+  have := Numeric.inv hy'
+  have := (Numeric.mul_inv_cancel hx).trans (Numeric.mul_inv_cancel hy').symm
+  rw [← (Numeric.mul_congr_left hy).antisymmRel_congr_right] at this
+  exact Numeric.mul_left_cancel hx.not_antisymmRel_symm this
+
+/-- An auxiliary definition for the surreal inverse. -/
+private noncomputable def inv' (x : IGame) : IGame := by
+  classical exact if 0 < x then x⁻¹ else if x < 0 then -(-x)⁻¹ else 0
+
+private theorem inv'_zero : inv' 0 = 0 := by
+  simp [inv']
+
+protected instance Numeric.inv' {x : IGame} [Numeric x] : Numeric (inv' x) := by
+  unfold inv'
+  obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
+  · simpa [h, h.asymm] using Numeric.inv (IGame.zero_lt_neg.2 h)
+  · simp [h.not_lt, h.not_gt]
+  · simpa [h] using Numeric.inv h
+
+private theorem Numeric.mul_inv'_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) :
+    x * (inv' x) ≈ 1 := by
+  rw [inv']
+  obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
+  · rw [if_neg h.asymm, if_pos h]
+    rw [← IGame.zero_lt_neg] at h
+    convert Numeric.mul_inv_cancel h using 1
+    simp
+  · contradiction
+  · rw [if_pos h]
+    exact Numeric.mul_inv_cancel h
+
+private theorem Numeric.inv'_congr {x y : IGame} [Numeric x] [Numeric y] (hy : x ≈ y) :
+    inv' x ≈ inv' y := by
+  unfold inv'
+  obtain h | h | h := Numeric.lt_or_equiv_or_gt y 0
+  · have h' := hy.trans_lt h
+    rw [if_neg h.asymm, if_neg h'.asymm, if_pos h, if_pos h', neg_equiv_neg_iff]
+    rw [← IGame.zero_lt_neg] at h'
+    apply Numeric.inv_congr h'
+    rwa [neg_equiv_neg_iff]
+  · have h' := hy.trans h
+    rw [if_neg h.not_lt, if_neg h'.not_lt, if_neg h.not_gt, if_neg h'.not_gt]
+  · have h' := h.trans_antisymmRel hy.symm
+    rw [if_pos h, if_pos h']
+    exact Numeric.inv_congr h' hy
+
 end IGame
 
 namespace Surreal
 
+noncomputable instance : LinearOrderedField Surreal where
+  inv := Quotient.map (fun x ↦ ⟨inv' x, by infer_instance⟩) fun _ _ ↦ Numeric.inv'_congr
+  mul_inv_cancel := by rintro ⟨a⟩ h; exact mk_eq (Numeric.mul_inv'_cancel (mk_eq_mk.not.1 h))
+  inv_zero := by change mk (inv' 0) = _; simp [inv'_zero]
+  qsmul := _
+  nnqsmul := _
 
 end Surreal

@@ -469,7 +469,7 @@ decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf
 
 end Surreal.Multiplication
 
-/-! ### Instances and lemmas -/
+/-! ### Instances and corollaries -/
 
 namespace IGame.Numeric
 open Surreal.Multiplication
@@ -512,7 +512,7 @@ namespace Surreal
 noncomputable instance : LinearOrderedCommRing Surreal where
   __ := Surreal.instLinearOrderedAddCommGroup
   __ := Surreal.instZeroLEOneClass
-  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h₁ _ _ ↦ Numeric.mul_congr h₁
+  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h _ _ ↦ Numeric.mul_congr h
   zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
   mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
   one_mul := by rintro ⟨x⟩; change mk (1 * x) = mk x; simp_rw [one_mul]
