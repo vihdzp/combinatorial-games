@@ -232,7 +232,7 @@ private noncomputable def inv' (x : IGame) : IGame := by
 private theorem inv'_zero : inv' 0 = 0 := by
   simp [inv']
 
-protected instance Numeric.inv' {x : IGame} [Numeric x] : Numeric (inv' x) := by
+private instance {x : IGame} [Numeric x] : Numeric (inv' x) := by
   unfold inv'
   obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
   · simpa [h, h.asymm] using Numeric.inv (IGame.zero_lt_neg.2 h)
