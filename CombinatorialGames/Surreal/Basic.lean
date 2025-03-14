@@ -321,6 +321,11 @@ instance : AddMonoidWithOne Surreal where
 @[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
 
+@[simp]
+theorem mk_natCast : ∀ n : ℕ, mk n = n
+  | 0 => rfl
+  | n + 1 => by simp_rw [Nat.cast_add_one, mk_add, mk_one, mk_natCast n]
+
 instance : ZeroLEOneClass Surreal where
   zero_le_one := zero_le_one (α := IGame)
 
