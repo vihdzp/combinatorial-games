@@ -68,6 +68,7 @@ def ofSets (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] : Game.{u} :=
 
 @[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets s t
 
+@[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk {s | t}ᴵ = {mk '' s | mk '' t}ᴳ := by
   refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
