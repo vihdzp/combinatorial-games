@@ -19,4 +19,5 @@ import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
+import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Test
