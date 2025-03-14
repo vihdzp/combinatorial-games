@@ -371,5 +371,36 @@ theorem toGame_sub (x y : Surreal) : toGame (x - y) = toGame x - toGame y :=
 theorem toGame_natCast (n : ℕ) : toGame n = n :=
   map_natCast' toGameAddHom rfl n
 
+@[simp]
+theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
+  cases x
+  rw [toGame_mk, Game.mk_eq_mk]
+  exact mk_out_equiv _
+
+/-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
+set are less than all the elements of the right set.
+
+Note that although this function is well-defined, recovering the left/right sets from a surreal
+number is not, as there are many sets that can generate a single number. -/
+def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
+    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : Surreal.{u} := by
+  refine @mk {out '' s | out '' t}ᴵ (.mk' ?_ (by simp) (by simp))
+  rw [leftMoves_ofSets, rightMoves_ofSets]
+  rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
+  rw [← Surreal.mk_lt_mk, out_eq, out_eq]
+  exact H x hx y hy
+
+theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
+    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : toGame (ofSets s t H) = {toGame '' s | toGame '' t}ᴳ := by
+  simp_rw [ofSets, toGame_mk, Game.mk_ofSets, Set.image_image, game_out_eq]
+
+theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] [H : Numeric {s | t}ᴵ] :
+    mk {s | t}ᴵ = ofSets
+      (.range fun x : s ↦ have : Numeric x := H.of_mem_leftMoves (by simp); mk x)
+      (.range fun x : t ↦ have : Numeric x := H.of_mem_rightMoves (by simp); mk x)
+      (by have := @H.leftMove_lt_rightMove; aesop) := by
+  simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
+  congr <;> aesop
+
 end Surreal
 end
