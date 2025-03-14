@@ -59,6 +59,9 @@ instance (x : IGame) [Short x] : Finite x.leftMoves :=
 instance (x : IGame) [Short x] : Finite x.rightMoves :=
   (Short.finite_rightMoves x).to_subtype
 
+instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
+  (Short.finite_setOf_isOption x).to_subtype
+
 protected theorem of_mem_leftMoves [h : Short x] (hy : y ∈ x.leftMoves) : Short y :=
   (short_def.1 h).2.2.1 y hy
 

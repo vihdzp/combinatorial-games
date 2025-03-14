@@ -267,6 +267,14 @@ def IsOption (x y : IGame) : Prop :=
 theorem IsOption.of_mem_leftMoves {x y : IGame} : x ∈ y.leftMoves → IsOption x y := .inl
 theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOption x y := .inr
 
+theorem forall_isOption {P : IGame → Prop} {x : IGame} :
+    (∀ y, IsOption y x → P y) ↔ (∀ y ∈ x.leftMoves, P y) ∧ (∀ y ∈ x.rightMoves, P y) := by
+  aesop (add simp [IsOption])
+
+theorem exists_isOption {P : IGame → Prop} {x : IGame} :
+    (∃ y, IsOption y x ∧ P y) ↔ (∃ y ∈ x.leftMoves, P y) ∨ (∃ y ∈ x.rightMoves, P y) := by
+  aesop (add simp [IsOption])
+
 instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
   inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
