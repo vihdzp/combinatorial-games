@@ -4,6 +4,9 @@
     ],
     "lean4.input.customTranslations": {
         "tiny": "⧾",
-        "miny": "⧿"
+        "miny": "⧿",
+        "plus": "＋",
+        "zero": "０",
+        "minus": "－"
     }
 }
