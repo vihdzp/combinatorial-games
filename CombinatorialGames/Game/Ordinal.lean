@@ -5,9 +5,9 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Short
+import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Mathlib.Order
 import Mathlib.Algebra.Order.Hom.Monoid
-import Mathlib.SetTheory.Ordinal.NaturalOps
 
 /-!
 # Ordinals as games
