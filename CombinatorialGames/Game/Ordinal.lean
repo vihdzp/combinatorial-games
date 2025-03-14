@@ -329,15 +329,15 @@ theorem Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x 
   use n
   rwa [IGame.neg_lt]
 
-notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+notation "ω" => Ordinal.omega0.toNatOrdinal
 
-theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
+theorem Short.lt_omega0 (x : IGame) [Short x] : x < toIGame ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
   rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
   exact Ordinal.nat_lt_omega0 n
 
-theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
+theorem Short.neg_omega0_lt (x : IGame) [Short x] : -toIGame ω < x := by
   rw [IGame.neg_lt]
   exact lt_omega0 _
 

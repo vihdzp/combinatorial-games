@@ -66,7 +66,27 @@ protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : �
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
 
+@[simp]
+theorem toOrdinal_eq_natCast (o : NatOrdinal) (n : ℕ) : o < n
+
+#exit
+
+theorem NatOrdinal.lt_omega0 (o : NatOrdinal) : o < ω ↔ ∃ n : ℕ, o = n := by
+  induction o
+  simp [Ordinal.lt_omega0]
+  sorry
+
+  #exit
+
 /-! ### `IGame` birthday -/
+
+instance small_lt_of_small_le {α β : Type*} [Preorder β] (f : α → β) (x : β)
+    [h : Small.{u} {y // f y ≤ x}] : Small.{u} {y // f y < x} :=
+  @small_subset _ _ _ (fun _ ↦ le_of_lt) h
+
+instance small_eq_of_small_le {α β : Type*} [Preorder β] (f : α → β) (x : β)
+    [h : Small.{u} {y // f y ≤ x}] : Small.{u} {y // f y = x} :=
+  @small_subset _ _ _ (fun _ ↦ le_of_eq) h
 
 namespace IGame
 
@@ -219,13 +239,28 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   aesop
 termination_by o
 
-/-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
-  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
-  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+  infer_instance
 
--- TODO: short game iff finite birthday
+instance small_setOf_birthday_eq (o : NatOrdinal.{u}) : Small.{u} {x // birthday x = o} := by
+  infer_instance
 
+theorem birthday_lt_omega0 (x : IGame) [Short x] : birthday x < ω := by
+  have (y : x.leftMoves) : ∃ n : ℕ, birthday y.1 = n := by
+    have := Short.of_mem_leftMoves y.2
+    exact birthday_lt_omega0 y
+  choose f hf using this
+  obtain ⟨n, hn⟩ := (Set.finite_range f).bddAbove
+  refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
+  rw [le_iff_forall_lf]
+  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
+termination_by x
+decreasing_by igame_wf
+
+theorem short_iffbirthday_lt_omega0 (x : IGame) : Short x ↔ birthday x < ω := by
+  sorry
+
+#exit
 end IGame
 
 /-! ### `Game` birthday -/
@@ -320,9 +355,10 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   use y
   simp_all
 
-/-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
-  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
-  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+  infer_instance
+
+instance small_setOf_birthday_eq (o : NatOrdinal.{u}) : Small.{u} {x // birthday x = o} := by
+  infer_instance
 
 end Game
