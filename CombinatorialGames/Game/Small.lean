@@ -47,6 +47,12 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
 namespace Dicotic
 variable {x y z : IGame}
 
+theorem dicotic_zero_iff [hx : Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+  rw [dicotic_def] at hx
+  rw [Ne.eq_def, zero_def, IGame.ext_iff, leftMoves_ofSets, rightMoves_ofSets]
+  refine ⟨fun h ↦ ?_, fun h ↦ by simp_all⟩
+  by_cases x.leftMoves = ∅ <;> simp_all
+
 @[simp]
 protected instance zero : Dicotic 0 := by
   rw [dicotic_def]
@@ -75,7 +81,7 @@ theorem of_mem_leftMoves [h : Dicotic x] (hy : y ∈ x.leftMoves) : Dicotic y :=
 theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y := by
   cases (dicotic_def.1 h) <;> simp_all
 
-theorem lt_surreal (x) [Dicotic x] (y) [Numeric y] (hy : 0 < y) : x < y := by
+theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
   · suffices z < y by rw [lt_iff_le_not_le] at this; exact this.2
@@ -83,13 +89,20 @@ theorem lt_surreal (x) [Dicotic x] (y) [Numeric y] (hy : 0 < y) : x < y := by
     exact lt_surreal z y hy
   · suffices x < z by rw [lt_iff_le_not_le] at this; exact this.2
     have : Numeric z := Numeric.of_mem_rightMoves hz
-    exact lt_surreal x z (by sorry)
-  · right
-    by_cases h : ∃ r, r ∈ x.rightMoves
-    · refine ⟨h.choose, h.choose_spec, ?_⟩
+    by_cases h : 0 < z
+    · exact lt_surreal x z h
+    · rw [Numeric.not_lt] at h
+      rw [numeric_def] at hny
+      have := hny.1
+      sorry
+  · by_cases h : x = 0
+    · left
+      subst h
+      sorry
+    · have h := (dicotic_zero_iff.mp h).2
+      push_neg at h
       have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
-      exact le_of_lt <| lt_surreal h.choose y hy
-    · sorry
+      exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_surreal h.choose y hy⟩
 termination_by (x, y)
 decreasing_by igame_wf
 
