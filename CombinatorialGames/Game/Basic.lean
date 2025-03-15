@@ -61,8 +61,8 @@ theorem equiv_mk_out (x : IGame) : x ≈ (mk x).out := (mk_out_equiv x).symm
 This is given notation `{s | t}ᴳ`, where the superscript `G` is to disambiguate from set builder
 notation, and from the analogous constructor on `IGame`.
 
-Note that although this function is well-defined, recovering the left/right sets from a game is not,
-as there are many sets that can generate a single game. -/
+Note that although this function is well-defined, this function isn't injective, nor do equivalence
+classes in `Game` have a canonical representative.  -/
 def ofSets (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] : Game.{u} :=
   mk {out '' s | out '' t}ᴵ
 

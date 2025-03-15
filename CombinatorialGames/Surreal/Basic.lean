@@ -380,8 +380,9 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
-Note that although this function is well-defined, recovering the left/right sets from a surreal
-number is not, as there are many sets that can generate a single number. -/
+Note that although this function is well-defined, this function isn't injective, nor do equivalence
+classes in Surreal have a canonical representative. (Note however that every short numeric game has
+a unique "canonical" form!) -/
 def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
     (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : Surreal.{u} := by
   refine @mk {out '' s | out '' t}ᴵ (.mk' ?_ (by simp) (by simp))
