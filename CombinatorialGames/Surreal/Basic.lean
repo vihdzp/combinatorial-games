@@ -32,8 +32,9 @@ form a linear ordered commutative ring.
 
 ## TODO
 
-- Define the field structure on the surreals.
+- Prove that surreals with finite birthday are dyadic rationals.
 - Build the embedding from reals into surreals.
+- Define sign sequences.
 -/
 
 universe u
@@ -124,6 +125,14 @@ protected theorem not_le [Numeric x] [Numeric y] : ¬ x ≤ y ↔ y < x :=
 protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
   not_iff_comm.1 Numeric.not_le
 
+protected theorem le_or_lt (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y < x := by
+  rw [← Numeric.not_le]
+  exact em _
+
+protected theorem lt_or_le (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y ≤ x := by
+  rw [← Numeric.not_lt]
+  exact em _
+
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
   simpa [not_incompRel_iff] using Numeric.le_total x y
 
@@ -197,6 +206,10 @@ protected instance natCast : ∀ n : ℕ, Numeric n
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
 
+/-- Note that this assumes `x⁻¹` numeric. -/
+theorem inv_pos (x : IGame) [Numeric x⁻¹] : 0 < x⁻¹ :=
+  Numeric.lt_of_not_le (inv_nonneg x)
+
 end Numeric
 
 /-! ### Simplicity theorem -/
@@ -210,8 +223,14 @@ birthday that fits in it -/
 def Fits (x y : IGame) : Prop :=
   (∀ z ∈ y.leftMoves, z ⧏ x) ∧ (∀ z ∈ y.rightMoves, x ⧏ z)
 
+theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y :=
+  ⟨fun _ hz ↦ not_le_of_not_le_of_le (leftMove_lf hz) h.ge,
+    fun _ hz ↦ not_le_of_le_of_not_le h.le (lf_rightMove hz) ⟩
+
+alias AntisymmRel.Fits := fits_of_equiv
+
 theorem Fits.refl (x : IGame) : x.Fits x :=
-  ⟨fun _ ↦ leftMove_lf, fun _ ↦ lf_rightMove⟩
+  fits_of_equiv .rfl
 
 @[simp]
 theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
@@ -250,6 +269,16 @@ theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits 
   apply hx.equiv_of_forall_not_fits
   · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_le <| H z (.of_mem_leftMoves hz) h
   · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_le <| H z (.of_mem_rightMoves hz) h
+
+/-- A specialization of the simplicity theorem to `0`. -/
+theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
+  refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
+
+/-- A specialization of the simplicity theorem to `1`. -/
+theorem equiv_one_of_fits {x : IGame} [Numeric x] (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
+  apply (hx.equiv_of_forall_not_fits _ _).symm
+  · simpa [fits_zero_iff_equiv]
+  · simp
 
 end IGame
 
@@ -320,6 +349,11 @@ instance : AddMonoidWithOne Surreal where
 
 @[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
 @[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
+
+@[simp]
+theorem mk_natCast : ∀ n : ℕ, mk n = n
+  | 0 => rfl
+  | n + 1 => by simp_rw [Nat.cast_add_one, mk_add, mk_one, mk_natCast n]
 
 instance : ZeroLEOneClass Surreal where
   zero_le_one := zero_le_one (α := IGame)

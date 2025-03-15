@@ -191,6 +191,24 @@ protected theorem sub_le_iff_le_add {x y z : IGame} : x - z ≤ y ↔ x ≤ y + 
 protected theorem le_sub_iff_add_le {x y z : IGame} : x ≤ z - y ↔ x + y ≤ z :=
   @le_sub_iff_add_le Game _ _ _ (.mk x) (.mk y) (.mk z)
 
+protected theorem sub_lt_iff_lt_add {x y z : IGame} : x - z < y ↔ x < y + z :=
+  @sub_lt_iff_lt_add Game _ _ _ (.mk x) (.mk y) (.mk z)
+
+protected theorem lt_sub_iff_add_lt {x y z : IGame} : x < z - y ↔ x + y < z :=
+  @lt_sub_iff_add_lt Game _ _ _ (.mk x) (.mk y) (.mk z)
+
+protected theorem sub_nonneg {x y : IGame} : 0 ≤ x - y ↔ y ≤ x :=
+  @sub_nonneg Game _ _ _ (.mk x) (.mk y)
+
+protected theorem sub_nonpos {x y : IGame} : x - y ≤ 0 ↔ x ≤ y :=
+  @sub_nonpos Game _ _ _ (.mk x) (.mk y)
+
+protected theorem sub_pos {x y : IGame} : 0 < x - y ↔ y < x :=
+  @sub_pos Game _ _ _ (.mk x) (.mk y)
+
+protected theorem sub_neg {x y : IGame} : x - y < 0 ↔ x < y :=
+  @sub_neg Game _ _ _ (.mk x) (.mk y)
+
 theorem mul_add_equiv (x y z : IGame) : x * (y + z) ≈ x * y + x * z :=
   Game.mk_eq_mk.1 (Game.mk_mul_add x y z)
 
