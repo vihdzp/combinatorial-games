@@ -54,7 +54,8 @@ protected instance zero : Dicotic 0 := by
   rw [dicotic_def]
   simp
 
-proof_wanted lt_numeric (x : IGame) [Dicotic x] (y : IGame) [Numeric y] : Game.mk x < Game.mk y
+proof_wanted lt_numeric (x : IGame) [Dicotic x] (y : IGame) (hy : 0 < y) [Numeric y] :
+  Game.mk x < Game.mk y
 
 end Dicotic
 
