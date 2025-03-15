@@ -446,66 +446,73 @@ theorem main (a : Args) : a.Numeric → P124 a := by
     · exact (Game.mk_eq <| P2_of_IH ih ·)
     · exact P4_of_IH ih
 
-end Surreal.Multiplication
-
-/-! ### Instances -/
-
-namespace IGame
-open Surreal.Multiplication
-
-variable {x x₁ x₂ y y₁ y₂ a b : IGame}
-
-instance Numeric.mul [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
-  main _ <| Args.numeric_P1.mpr ⟨hx, hy⟩
-
-instance Numeric.mulOption [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
-    Numeric (mulOption x y a b) :=
-  inferInstanceAs (Numeric (_ - _))
-
-private lemma P24 (x₁ x₂ y : IGame) [hx₁ : Numeric x₁] [hx₂ : Numeric x₂] [hy : Numeric y] :
+lemma main_P24 (x₁ x₂ y : IGame) [hx₁ : Numeric x₁] [hx₂ : Numeric x₂] [hy : Numeric y] :
     P24 x₁ x₂ y :=
   main _ <| Args.numeric_P24.mpr ⟨hx₁, hx₂, hy⟩
 
-theorem Numeric.mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) :
-    x₁ * y ≈ x₂ * y :=
-  Game.mk_eq_mk.1 ((P24 ..).1 he)
-
-theorem Numeric.mul_congr_right [Numeric x] [Numeric y₁] [Numeric y₂] (he : y₁ ≈ y₂) :
-    x * y₁ ≈ x * y₂ := by
-  rw [mul_comm, mul_comm x]; exact Numeric.mul_congr_left he
-
-theorem Numeric.mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
-    (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
-  (mul_congr_left hx).trans (mul_congr_right hy)
-
-/-- One additional inductive argument that proves `P3`. -/
-private lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
+/-- One additional inductive argument proves `P3`. -/
+lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ < x₂) (hy : y₁ < y₂) : P3 x₁ x₂ y₁ y₂ := by
   refine P3_of_IH3 ?_ ?_ hx
   all_goals
     intro i hi
     have := Numeric.of_mem_leftMoves hi
-    refine ⟨(P24 ..).1, (P24 ..).1, P3_comm.2 ?_, fun h ↦ ?_⟩
-  · exact ((P24 y₁ y₂ x₂).2 hy).1 _ hi
+    refine ⟨(main_P24 ..).1, (main_P24 ..).1, P3_comm.2 ?_, fun h ↦ ?_⟩
+  · exact ((main_P24 y₁ y₂ x₂).2 hy).1 _ hi
   · exact P3_of_lt_of_lt h hy
-  · exact ((P24 y₁ y₂ x₁).2 hy).2 _ hi
+  · exact ((main_P24 y₁ y₂ x₁).2 hy).2 _ hi
   · rw [IGame.neg_lt] at h
     rw [← P3_neg, neg_neg]
     exact P3_of_lt_of_lt h hy
 termination_by (x₁, x₂)
 decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf
 
-theorem Numeric.mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
+end Surreal.Multiplication
+
+/-! ### Instances and corollaries -/
+
+namespace IGame.Numeric
+open Surreal.Multiplication
+
+variable {x x₁ x₂ y y₁ y₂ a b : IGame}
+
+instance mul [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
+  main _ <| Args.numeric_P1.mpr ⟨hx, hy⟩
+
+instance mulOption [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
+    Numeric (mulOption x y a b) :=
+  inferInstanceAs (Numeric (_ - _))
+
+/-- Note that this assumes `y⁻¹` numeric. -/
+instance div (x y : IGame) [Numeric x] [Numeric y⁻¹] : Numeric (x / y) :=
+  inferInstanceAs (Numeric (_ * _))
+
+/-- Note that this assumes `y⁻¹` numeric. -/
+instance invOption (x y a : IGame) [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
+    Numeric (invOption x y a) :=
+  inferInstanceAs (Numeric (_ / _))
+
+theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
+  Game.mk_eq_mk.1 ((main_P24 ..).1 he)
+
+theorem mul_congr_right [Numeric x] [Numeric y₁] [Numeric y₂] (he : y₁ ≈ y₂) : x * y₁ ≈ x * y₂ := by
+  rw [mul_comm, mul_comm x]; exact Numeric.mul_congr_left he
+
+theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
+    (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
+  (mul_congr_left hx).trans (mul_congr_right hy)
+
+theorem mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
   simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
 
-end IGame
+end IGame.Numeric
 
 namespace Surreal
 
 noncomputable instance : LinearOrderedCommRing Surreal where
   __ := Surreal.instLinearOrderedAddCommGroup
   __ := Surreal.instZeroLEOneClass
-  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h₁ _ _ ↦ Numeric.mul_congr h₁
+  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h _ _ ↦ Numeric.mul_congr h
   zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
   mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
   one_mul := by rintro ⟨x⟩; change mk (1 * x) = mk x; simp_rw [one_mul]
@@ -517,4 +524,76 @@ noncomputable instance : LinearOrderedCommRing Surreal where
   mul_pos := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.mul_pos
   le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
 
+@[simp]
+theorem mk_mul (x y : IGame) [Numeric x] [Numeric y] :
+    Surreal.mk (x * y) = Surreal.mk x * Surreal.mk y :=
+  rfl
+
+/-- Note that this assumes `y⁻¹` numeric. -/
+theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
+    Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
+  rfl
+
 end Surreal
+
+namespace IGame.Numeric
+
+protected theorem mul_neg_of_pos_of_neg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : 0 < x) (hy : y < 0) : x * y < 0 :=
+  @mul_neg_of_pos_of_neg Surreal (.mk x) (.mk y) _ _ _ hx hy
+
+protected theorem mul_neg_of_neg_of_pos {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x < 0) (hy : 0 < y) : x * y < 0 :=
+  @mul_neg_of_neg_of_pos Surreal (.mk x) (.mk y) _ _ _ hx hy
+
+protected theorem mul_pos_of_neg_of_neg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x < 0) (hy : y < 0) : 0 < x * y :=
+  @mul_pos_of_neg_of_neg Surreal _ _ _ _ _ _ (.mk x) (.mk y) hx hy
+
+protected theorem mul_nonneg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : 0 ≤ x) (hy : 0 ≤ y) : 0 ≤ x * y :=
+  @mul_nonneg Surreal (.mk x) (.mk y) _ _ _ hx hy
+
+protected theorem mul_nonpos_of_nonneg_of_nonpos {x y : IGame} [Numeric x] [Numeric y]
+    (hx : 0 ≤ x) (hy : y ≤ 0) : x * y ≤ 0 :=
+  @mul_nonpos_of_nonneg_of_nonpos Surreal (.mk x) (.mk y) _ _ _ hx hy
+
+protected theorem mul_nonpos_of_nonpos_of_nonneg {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x ≤ 0) (hy : 0 ≤ y) : x * y ≤ 0 :=
+  @mul_nonpos_of_nonpos_of_nonneg Surreal (.mk x) (.mk y) _ _ _ hx hy
+
+protected theorem mul_nonneg_of_nonpos_of_nonpos {x y : IGame} [Numeric x] [Numeric y]
+    (hx : x ≤ 0) (hy : y ≤ 0) : 0 ≤ x * y :=
+  @mul_nonneg_of_nonpos_of_nonpos Surreal _ _ (.mk x) (.mk y) _ _ _ _ hx hy
+
+protected theorem mul_left_cancel {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : ¬ x ≈ 0) (h : x * y ≈ x * z) : y ≈ z := by
+  rw [← Surreal.mk_eq_mk] at *
+  exact mul_left_cancel₀ hx h
+
+protected theorem mul_right_cancel {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : ¬ x ≈ 0) (h : y * x ≈ z * x) : y ≈ z := by
+  rw [← Surreal.mk_eq_mk] at *
+  exact mul_right_cancel₀ hx h
+
+protected theorem mul_le_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
+  mul_le_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+
+protected theorem mul_le_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
+  mul_le_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+
+protected theorem mul_lt_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : x * y < x * z ↔ y < z :=
+  mul_lt_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+
+protected theorem mul_lt_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : y * x < z * x ↔ y < z :=
+  mul_lt_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+
+theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
+  repeat rw [← Surreal.mk_eq_mk]
+  exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
+
+end IGame.Numeric
