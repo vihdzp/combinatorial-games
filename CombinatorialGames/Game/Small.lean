@@ -52,7 +52,7 @@ protected instance zero : Dicotic 0 := by
   rw [dicotic_def]
   simp
 
-protected instance neg (x : IGame) [hx : Dicotic x] : Dicotic (-x) := by
+protected instance neg (x) [hx : Dicotic x] : Dicotic (-x) := by
   rw [dicotic_def, ne_eq] at *
   cases hx with
   | inl hx => simp_all
@@ -69,8 +69,29 @@ protected instance neg (x : IGame) [hx : Dicotic x] : Dicotic (-x) := by
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
 
-proof_wanted lt_numeric (x : IGame) [Dicotic x] (y : IGame) (hy : 0 < y) [Numeric y] :
-  Game.mk x < Game.mk y
+theorem of_mem_leftMoves [h : Dicotic x] (hy : y ∈ x.leftMoves) : Dicotic y := by
+  cases (dicotic_def.1 h) <;> simp_all
+
+theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y := by
+  cases (dicotic_def.1 h) <;> simp_all
+
+theorem lt_surreal (x) [Dicotic x] (y) [Numeric y] (hy : 0 < y) : x < y := by
+  rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
+  refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
+  · suffices z < y by rw [lt_iff_le_not_le] at this; exact this.2
+    have : Dicotic z := of_mem_leftMoves hz
+    exact lt_surreal z y hy
+  · suffices x < z by rw [lt_iff_le_not_le] at this; exact this.2
+    have : Numeric z := Numeric.of_mem_rightMoves hz
+    exact lt_surreal x z (by sorry)
+  · right
+    by_cases h : ∃ r, r ∈ x.rightMoves
+    · refine ⟨h.choose, h.choose_spec, ?_⟩
+      have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
+      exact le_of_lt <| lt_surreal h.choose y hy
+    · sorry
+termination_by (x, y)
+decreasing_by igame_wf
 
 end Dicotic
 
