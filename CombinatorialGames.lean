@@ -13,6 +13,7 @@ import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.Tactic
 import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
