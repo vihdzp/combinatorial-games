@@ -8,15 +8,15 @@ import CombinatorialGames.Surreal.Basic
 /-!
 # Small games all around
 
-We define dicotic games, games `G` where both players can move from
-every nonempty subposition of `G`. We prove that these games are small, and relate them
+We define dicotic games, games `x` where both players can move from
+every nonempty subposition of `x`. We prove that these games are small, and relate them
 to infinitesimals.
 
 ## TODO
 
 - Define infinitesimal games as games x such that ∀ y : ℝ, 0 < y → -y < x ∧ x < y
   - (Does this hold for small infinitesimal games?)
-- Prove that any short game is an infinitesimal (but not vice versa! see 1/ω)
+- Prove that any short game is an infinitesimal (but not vice versa, consider `ω⁻¹`)
 -/
 
 namespace IGame
@@ -46,7 +46,7 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
 namespace Dicotic
 variable {x y z : IGame}
 
-theorem dicotic_zero_iff [hx : Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+theorem neq_zero_iff [hx : Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
   rw [dicotic_def] at hx
   rw [Ne.eq_def, zero_def, IGame.ext_iff, leftMoves_ofSets, rightMoves_ofSets]
   refine ⟨fun h ↦ ?_, fun h ↦ by simp_all⟩
@@ -94,7 +94,7 @@ theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x <
   · by_cases h : x = 0
     · subst h
       exact Numeric.lt_iff_exists_le.mp hy
-    · have h := (dicotic_zero_iff.mp h).2
+    · have h := (neq_zero_iff.mp h).2
       push_neg at h
       have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
       exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_surreal h.choose y hy⟩
