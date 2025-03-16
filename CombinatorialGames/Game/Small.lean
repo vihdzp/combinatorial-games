@@ -83,9 +83,8 @@ theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y 
 theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · suffices z < y by exact (lt_iff_le_not_le.mp this).2
-    have : Dicotic z := of_mem_leftMoves hz
-    exact lt_surreal z y hy
+  · have : Dicotic z := of_mem_leftMoves hz
+    exact not_le_of_lt <| lt_surreal z y hy
   · suffices x < z by exact (lt_iff_le_not_le.mp this).2
     have : Numeric z := Numeric.of_mem_rightMoves hz
     rcases Numeric.lt_or_equiv_or_gt z 0 with (h | h | h)
