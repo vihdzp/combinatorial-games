@@ -16,7 +16,6 @@ to infinitesimals.
 
 - Define infinitesimal games as games x such that ∀ y : ℝ, 0 < y → -y < x ∧ x < y
   - (Does this hold for small infinitesimal games?)
-- Prove that dicotic = ∀ y : IGame, Numeric y → 0 < y → -y < x ∧ x < y
 - Prove that any short game is an infinitesimal (but not vice versa! see 1/ω)
 -/
 
@@ -89,22 +88,22 @@ theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x <
     exact lt_surreal z y hy
   · suffices x < z by rw [lt_iff_le_not_le] at this; exact this.2
     have : Numeric z := Numeric.of_mem_rightMoves hz
-    by_cases h : 0 < z
+    rcases Numeric.lt_or_equiv_or_gt z 0 with (h | h | h)
+    · exact absurd (h.trans hy) (not_lt_of_gt <| Numeric.lt_rightMove hz)
+    · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans_le h.1)
     · exact lt_surreal x z h
-    · rw [Numeric.not_lt] at h
-      rw [numeric_def] at hny
-      have := hny.1
-      sorry
   · by_cases h : x = 0
-    · left
-      subst h
-      sorry
+    · subst h
+      exact Numeric.lt_iff_exists_le.mp hy
     · have h := (dicotic_zero_iff.mp h).2
       push_neg at h
       have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
       exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_surreal h.choose y hy⟩
 termination_by (x, y)
 decreasing_by igame_wf
+
+theorem surreal_lt (x) [hx : Dicotic x] (y) (hy : Numeric y) (hy : y < 0) : y < x :=
+  IGame.neg_lt_neg_iff.mp <| lt_surreal (-x) (-y) (zero_lt_neg.mpr hy)
 
 end Dicotic
 
