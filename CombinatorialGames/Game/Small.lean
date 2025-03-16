@@ -89,7 +89,7 @@ theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x <
   · suffices x < z by rw [lt_iff_le_not_le] at this; exact this.2
     have : Numeric z := Numeric.of_mem_rightMoves hz
     rcases Numeric.lt_or_equiv_or_gt z 0 with (h | h | h)
-    · exact absurd (h.trans hy) (not_lt_of_gt <| Numeric.lt_rightMove hz)
+    · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans h)
     · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans_le h.1)
     · exact lt_surreal x z h
   · by_cases h : x = 0
