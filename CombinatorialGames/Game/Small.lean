@@ -24,10 +24,8 @@ namespace IGame
 /-! # Dicotic Games -/
 
 private def DicoticAux (x : IGame) : Prop :=
-  (x.leftMoves = ∅ ∧ x.rightMoves = ∅) ∨
-  (x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ ∧
-    (∀ l ∈ x.leftMoves, DicoticAux l) ∧
-    ∀ r ∈ x.rightMoves, DicoticAux r)
+  (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
+    (∀ l ∈ x.leftMoves, DicoticAux l) ∧ (∀ r ∈ x.rightMoves, DicoticAux r)
 termination_by x
 decreasing_by igame_wf
 
@@ -37,10 +35,8 @@ class Dicotic (x : IGame) : Prop where
   out : DicoticAux x
 
 theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (x.leftMoves = ∅ ∧ x.rightMoves = ∅) ∨
-    (x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ ∧
-      (∀ l ∈ x.leftMoves, Dicotic l) ∧
-      ∀ r ∈ x.rightMoves, Dicotic r) := by
+    (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
+      (∀ l ∈ x.leftMoves, Dicotic l) ∧ (∀ r ∈ x.rightMoves, Dicotic r) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 namespace Dicotic
@@ -58,27 +54,22 @@ protected instance zero : Dicotic 0 := by
   simp
 
 protected instance neg (x) [hx : Dicotic x] : Dicotic (-x) := by
-  rw [dicotic_def, ne_eq] at *
-  cases hx with
-  | inl hx => simp_all
-  | inr hx =>
-    refine .inr ⟨by simp_all, by simp_all, fun l hl ↦ ?_, fun r hr ↦ ?_⟩
-    · rw [leftMoves_neg] at hl
-      have h := @Dicotic.neg (-l) (hx.2.2.2 (-l) <| Set.mem_neg.mp hl)
-      rw [neg_neg] at h
-      exact h
-    · rw [rightMoves_neg] at hr
-      have h := @Dicotic.neg (-r) (hx.2.2.1 (-r) <| Set.mem_neg.mp hr)
-      rw [neg_neg] at h
-      exact h
+  rw [dicotic_def, leftMoves_neg, rightMoves_neg] at *
+  refine ⟨by simp_all, fun l hl ↦ ?_, fun r hr ↦ ?_⟩
+  · have h := @Dicotic.neg (-l) (hx.2.2 (-l) <| Set.mem_neg.mp hl)
+    rw [neg_neg] at h
+    exact h
+  · have h := @Dicotic.neg (-r) (hx.2.1 (-r) <| Set.mem_neg.mp hr)
+    rw [neg_neg] at h
+    exact h
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
 
 theorem of_mem_leftMoves [h : Dicotic x] (hy : y ∈ x.leftMoves) : Dicotic y := by
-  cases (dicotic_def.1 h) <;> simp_all
+  cases (dicotic_def.1 h); simp_all
 
 theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y := by
-  cases (dicotic_def.1 h) <;> simp_all
+  cases (dicotic_def.1 h); simp_all
 
 theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
