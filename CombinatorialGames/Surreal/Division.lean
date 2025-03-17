@@ -213,17 +213,25 @@ end Surreal.Division
 namespace IGame
 open Surreal.Division
 
-theorem Numeric.inv {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ := (main hx).1
-theorem Numeric.mul_inv_cancel {x : IGame} [Numeric x] (hx : 0 < x) : x * x⁻¹ ≈ 1 := (main hx).2
+namespace Numeric
 
-theorem Numeric.inv_congr {x y : IGame} [Numeric x] [Numeric y] (hx : 0 < x) (hy : x ≈ y) :
-    x⁻¹ ≈ y⁻¹ := by
+protected theorem inv {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ := (main hx).1
+protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : 0 < x) : x * x⁻¹ ≈ 1 := (main hx).2
+
+theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (hx : 0 < x) (hy : x ≈ y) : x⁻¹ ≈ y⁻¹ := by
   have hy' := hx.trans_antisymmRel hy
   have := Numeric.inv hx
   have := Numeric.inv hy'
   have := (Numeric.mul_inv_cancel hx).trans (Numeric.mul_inv_cancel hy').symm
   rw [← (Numeric.mul_congr_left hy).antisymmRel_congr_right] at this
   exact Numeric.mul_left_cancel hx.not_antisymmRel_symm this
+
+protected instance ratCast (q : ℚ) : Numeric q := by
+  have : Numeric (q.den : IGame)⁻¹ := .inv (mod_cast q.den_pos)
+  change Numeric (_ * _)
+  infer_instance
+
+end Numeric
 
 /-- An auxiliary definition for the surreal inverse. -/
 private noncomputable def inv' (x : IGame) : IGame := by
@@ -272,5 +280,24 @@ noncomputable instance : LinearOrderedField Surreal where
   inv_zero := by change mk (inv' 0) = _; simp [inv'_zero]
   qsmul := _
   nnqsmul := _
+
+theorem mk_inv_of_pos {x : IGame} (h : 0 < x) [Numeric x] : @mk x⁻¹ (.inv h) = (mk x)⁻¹ := by
+  change _ = mk (inv' _)
+  unfold inv'
+  simp_rw [if_pos h]
+
+theorem mk_div_of_pos (x : IGame) {y : IGame} (h : 0 < y) [Numeric x] [Numeric y] :
+    @mk (x / y) (@Numeric.div x y _ (.inv h)) = mk x / mk y := by
+  have := Numeric.inv h
+  simp_rw [IGame.div_eq_mul_inv, mk_mul, mk_inv_of_pos h]
+  rfl
+
+@[simp]
+theorem mk_ratCast (q : ℚ) : mk q = q := by
+  simp_rw [ratCast_def]
+  rw [mk_div_of_pos]
+  · conv_rhs => rw [← q.num_div_den]
+    simp
+  · exact_mod_cast q.den_pos
 
 end Surreal

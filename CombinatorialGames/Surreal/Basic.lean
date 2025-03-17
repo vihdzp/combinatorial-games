@@ -206,6 +206,10 @@ protected instance natCast : ∀ n : ℕ, Numeric n
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
 
+protected instance intCast : ∀ n : ℤ, Numeric n
+  | .ofNat n => inferInstanceAs (Numeric n)
+  | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
+
 /-- Note that this assumes `x⁻¹` numeric. -/
 theorem inv_pos (x : IGame) [Numeric x⁻¹] : 0 < x⁻¹ :=
   Numeric.lt_of_not_le (inv_nonneg x)
@@ -339,7 +343,8 @@ instance : LinearOrderedAddCommGroup Surreal where
   nsmul := nsmulRec
   zsmul := zsmulRec
 
-instance : AddMonoidWithOne Surreal where
+instance : AddGroupWithOne Surreal where
+  __ := Surreal.instLinearOrderedAddCommGroup
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
 @[simp] theorem mk_one : mk 1 = 1 := rfl
@@ -354,6 +359,10 @@ instance : AddMonoidWithOne Surreal where
 theorem mk_natCast : ∀ n : ℕ, mk n = n
   | 0 => rfl
   | n + 1 => by simp_rw [Nat.cast_add_one, mk_add, mk_one, mk_natCast n]
+
+@[simp]
+theorem mk_intCast (n : ℤ) : mk n = n := by
+  cases n <;> simp
 
 instance : ZeroLEOneClass Surreal where
   zero_le_one := zero_le_one (α := IGame)
@@ -401,9 +410,8 @@ theorem toGame_neg (x : Surreal) : toGame (-x) = -toGame x :=
 theorem toGame_sub (x y : Surreal) : toGame (x - y) = toGame x - toGame y :=
   toGameAddHom.map_sub x y
 
-@[simp]
-theorem toGame_natCast (n : ℕ) : toGame n = n :=
-  map_natCast' toGameAddHom rfl n
+@[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := map_natCast' toGameAddHom rfl n
+@[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := map_intCast' toGameAddHom rfl n
 
 @[simp]
 theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
