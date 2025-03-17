@@ -287,7 +287,7 @@ theorem mk_inv_of_pos {x : IGame} (h : 0 < x) [Numeric x] : @mk x⁻¹ (.inv h) 
   simp_rw [if_pos h]
 
 theorem mk_div_of_pos (x : IGame) {y : IGame} (h : 0 < y) [Numeric x] [Numeric y] :
-    @mk (x / y) (@Numeric.mul _ _ _ (.inv h)) = mk x / mk y := by
+    @mk (x / y) (@Numeric.div x y _ (.inv h)) = mk x / mk y := by
   have := Numeric.inv h
   simp_rw [IGame.div_eq_mul_inv, mk_mul, mk_inv_of_pos h]
   rfl
@@ -298,6 +298,6 @@ theorem mk_ratCast (q : ℚ) : mk q = q := by
   rw [mk_div_of_pos]
   · conv_rhs => rw [← q.num_div_den]
     simp
-  · exact_mod_cast q.den_pos 
+  · exact_mod_cast q.den_pos
 
 end Surreal
