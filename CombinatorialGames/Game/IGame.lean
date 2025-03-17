@@ -967,6 +967,27 @@ theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
   ext <;> simp
 
+instance : IntCast IGame where
+  intCast
+  | .ofNat n => n
+  | .negSucc n => -(n + 1)
+
+@[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
+@[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
+@[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
+
+theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
+theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
+
+@[simp]
+theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
+  cases n with
+  | ofNat n =>
+    cases n with
+    | zero => simp
+    | succ n => rfl
+  | negSucc n => exact (neg_neg _).symm
+
 /-! ### Multiplication -/
 
 -- TODO: upstream
@@ -1194,6 +1215,9 @@ instance : Div IGame where
 
 protected theorem div_eq_mul_inv (x y : IGame) : x / y = x * y⁻¹ := rfl
 
+@[simp] protected theorem zero_div (x : IGame) : 0 / x = 0 := zero_mul _
+@[simp] protected theorem neg_div (x y : IGame) : -x / y = -(x / y) := neg_mul ..
+
 private theorem inv_eq (x : IGame.{u}) :
     x⁻¹ = {.range (InvTy.val x false) | .range (InvTy.val x true)}ᴵ := by
   change inv' x = _
@@ -1286,6 +1310,14 @@ theorem invRec (x : IGame) {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈
   all_goals first |
     exact ((equivShrink {y ∈ x.leftMoves | 0 < y}).symm _).2.1 |
     exact ((equivShrink {y ∈ x.leftMoves | 0 < y}).symm _).2.2
+
+instance : RatCast IGame where
+  ratCast q := q.num / q.den
+
+theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
+
+@[simp] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
+@[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
 
 end IGame
 end

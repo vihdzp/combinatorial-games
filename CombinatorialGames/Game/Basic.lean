@@ -91,7 +91,8 @@ instance : OrderedAddCommGroup Game where
   nsmul := nsmulRec
   zsmul := zsmulRec
 
-instance : AddMonoidWithOne Game where
+instance : AddGroupWithOne Game where
+  __ := Game.instOrderedAddCommGroup
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
 @[simp] theorem mk_one : mk 1 = 1 := rfl
@@ -110,6 +111,10 @@ theorem mk_mulOption (x y a b : IGame) :
 theorem mk_natCast : ∀ n : ℕ, mk n = n
   | 0 => rfl
   | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
+
+@[simp]
+theorem mk_intCast (n : ℤ) : mk n = n := by
+  cases n <;> simp
 
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
