@@ -42,57 +42,63 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
 namespace Dicotic
 variable {x y z : IGame}
 
-theorem neq_zero_iff [hx : Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ x.leftMoves = ∅ ∨ x.rightMoves = ∅ := by
   rw [dicotic_def] at hx
-  rw [Ne.eq_def, zero_def, IGame.ext_iff, leftMoves_ofSets, rightMoves_ofSets]
-  refine ⟨fun h ↦ ?_, fun h ↦ by simp_all⟩
-  by_cases x.leftMoves = ∅ <;> simp_all
+  simp_all [IGame.ext_iff]
+
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+  simpa using eq_zero_iff.not
+
+theorem mk' (h : x.leftMoves = ∅ ↔ x.rightMoves = ∅)
+    (hl : ∀ y ∈ x.leftMoves, Dicotic y) (hr : ∀ y ∈ x.rightMoves, Dicotic y) : Dicotic x :=
+  dicotic_def.2 ⟨h, hl, hr⟩
+
+theorem leftMoves_eq_empty_iff [hx : Dicotic x] : x.leftMoves = ∅ ↔ x.rightMoves = ∅ :=
+  (dicotic_def.1 hx).1
+
+theorem rightMoves_eq_empty_iff [hx : Dicotic x] : x.rightMoves = ∅ ↔ x.leftMoves = ∅ :=
+  leftMoves_eq_empty_iff.symm
+
+protected theorem of_mem_leftMoves [hx : Dicotic x] (h : y ∈ x.leftMoves) : Dicotic y :=
+  (dicotic_def.1 hx).2.1 y h
+
+protected theorem of_mem_rightMoves [hx : Dicotic x] (h : y ∈ x.rightMoves) : Dicotic y :=
+  (dicotic_def.1 hx).2.2 y h
 
 @[simp]
 protected instance zero : Dicotic 0 := by
   rw [dicotic_def]
   simp
 
-protected instance neg (x) [hx : Dicotic x] : Dicotic (-x) := by
-  rw [dicotic_def, leftMoves_neg, rightMoves_neg] at *
-  refine ⟨by simp_all, fun l hl ↦ ?_, fun r hr ↦ ?_⟩
-  · have h := @Dicotic.neg (-l) (hx.2.2 (-l) <| Set.mem_neg.mp hl)
-    rw [neg_neg] at h
-    exact h
-  · have h := @Dicotic.neg (-r) (hx.2.1 (-r) <| Set.mem_neg.mp hr)
-    rw [neg_neg] at h
-    exact h
+protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
+  rw [dicotic_def, forall_leftMoves_neg, forall_rightMoves_neg]
+  refine ⟨by simp [leftMoves_eq_empty_iff], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+  · have := Dicotic.of_mem_rightMoves hy
+    exact .neg y
+  · have := Dicotic.of_mem_leftMoves hy
+    exact .neg y
 termination_by x
-decreasing_by all_goals simp_all; igame_wf
-
-theorem of_mem_leftMoves [h : Dicotic x] (hy : y ∈ x.leftMoves) : Dicotic y := by
-  cases (dicotic_def.1 h); simp_all
-
-theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y := by
-  cases (dicotic_def.1 h); simp_all
+decreasing_by igame_wf
 
 /--
 One half of the **lawnmower theorem**:
 any dicotic game is smaller than any positive numeric game.
 -/
-theorem lt_of_numeric_of_pos (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
-  rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
+theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+  rw [lt_iff_le_not_le, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · have : Dicotic z := of_mem_leftMoves hz
-    exact not_le_of_lt <| lt_of_numeric_of_pos z y hy
-  · suffices x < z by exact (lt_iff_le_not_le.mp this).2
-    have : Numeric z := Numeric.of_mem_rightMoves hz
-    rcases Numeric.lt_or_equiv_or_gt z 0 with (h | h | h)
-    · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans h)
-    · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans_le h.1)
-    · exact lt_of_numeric_of_pos x z h
-  · by_cases h : x = 0
-    · subst h
-      exact Numeric.lt_iff_exists_le.mp hy
-    · have h := (neq_zero_iff.mp h).2
-      push_neg at h
-      have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
-      exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_of_numeric_of_pos h.choose y hy⟩
+  · have := Dicotic.of_mem_leftMoves hz
+    exact (lt_of_numeric_of_pos z hy).not_le
+  · have := Numeric.of_mem_rightMoves hz
+    obtain (h | h) := Numeric.le_or_lt z 0
+    · cases ((Numeric.lt_rightMove hz).trans_le h).not_lt hy
+    · exact (lt_of_numeric_of_pos x h).not_le
+  · obtain rfl | h := eq_or_ne x 0
+    · exact hy.not_le
+    · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
+      obtain ⟨z, hz⟩ := h.2
+      have := Dicotic.of_mem_rightMoves hz
+      exact lf_of_rightMove_le (lt_of_numeric_of_pos z hy).le hz
 termination_by (x, y)
 decreasing_by igame_wf
 
