@@ -14,14 +14,14 @@ to infinitesimals.
 
 ## TODO
 
-- Define infinitesimal games as games x such that ∀ y : ℝ, 0 < y → -y < x ∧ x < y
+- Define infinitesimal games as games `x` such that `∀ r : ℝ, 0 < r → -r < x ∧ x < r`
   - (Does this hold for small infinitesimal games?)
-- Prove that any short game is an infinitesimal (but not vice versa, consider `ω⁻¹`)
+- Prove that any short dicotic game is an infinitesimal (but not vice versa, consider `ω⁻¹`)
 -/
 
 namespace IGame
 
-/-! # Dicotic Games -/
+/-! ### Dicotic games -/
 
 private def DicoticAux (x : IGame) : Prop :=
   (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
@@ -29,7 +29,7 @@ private def DicoticAux (x : IGame) : Prop :=
 termination_by x
 decreasing_by igame_wf
 
-/-- A game `G` is dicotic if both players can move from every nonempty subposition of `G` -/
+/-- A game `x` is dicotic if both players can move from every nonempty subposition of `x`. -/
 @[mk_iff dicotic_iff_aux]
 class Dicotic (x : IGame) : Prop where
   out : DicoticAux x
@@ -71,29 +71,37 @@ theorem of_mem_leftMoves [h : Dicotic x] (hy : y ∈ x.leftMoves) : Dicotic y :=
 theorem of_mem_rightMoves [h : Dicotic x] (hy : y ∈ x.rightMoves) : Dicotic y := by
   cases (dicotic_def.1 h); simp_all
 
-theorem lt_surreal (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
+/--
+One half of the **lawnmower theorem**:
+any dicotic game is smaller than any positive numeric game.
+-/
+theorem lt_of_numeric_of_pos (x) [hx : Dicotic x] (y) [hny : Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_le, lf_iff_exists_le, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
   · have : Dicotic z := of_mem_leftMoves hz
-    exact not_le_of_lt <| lt_surreal z y hy
+    exact not_le_of_lt <| lt_of_numeric_of_pos z y hy
   · suffices x < z by exact (lt_iff_le_not_le.mp this).2
     have : Numeric z := Numeric.of_mem_rightMoves hz
     rcases Numeric.lt_or_equiv_or_gt z 0 with (h | h | h)
     · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans h)
     · exact absurd hy (not_lt_of_gt <| (Numeric.lt_rightMove hz).trans_le h.1)
-    · exact lt_surreal x z h
+    · exact lt_of_numeric_of_pos x z h
   · by_cases h : x = 0
     · subst h
       exact Numeric.lt_iff_exists_le.mp hy
     · have h := (neq_zero_iff.mp h).2
       push_neg at h
       have : h.choose.Dicotic := of_mem_rightMoves h.choose_spec
-      exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_surreal h.choose y hy⟩
+      exact .inr ⟨h.choose, h.choose_spec, le_of_lt <| lt_of_numeric_of_pos h.choose y hy⟩
 termination_by (x, y)
 decreasing_by igame_wf
 
-theorem surreal_lt (x) [hx : Dicotic x] (y) (hy : Numeric y) (hy : y < 0) : y < x :=
-  IGame.neg_lt_neg_iff.mp <| lt_surreal (-x) (-y) (zero_lt_neg.mpr hy)
+/--
+One half of the **lawnmower theorem**:
+any dicotic game is greater than any negative numeric game.
+-/
+theorem lt_of_numeric_of_neg (x) [Dicotic x] {y} [Numeric y] (hy : y < 0) : y < x := by
+  have := lt_of_numeric_of_pos (-x) (y := -y); simp_all
 
 end Dicotic
 
