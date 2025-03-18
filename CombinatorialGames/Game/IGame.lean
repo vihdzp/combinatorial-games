@@ -1320,7 +1320,7 @@ private theorem invRec' {x : IGame} (hx : 0 < x)
   intro b i
   induction i
   · simpa
-  all_goals simp only [Bool.false_eq_true, if_false, if_true]
+  all_goals simp only [Bool.false_eq_true]
   on_goal 1 => apply left₁
   on_goal 5 => apply left₂
   on_goal 9 => apply right₁
