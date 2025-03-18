@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Mathlib.Order
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
@@ -209,10 +208,6 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
 protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
-
-/-- Note that this assumes `x⁻¹` numeric. -/
-theorem inv_pos (x : IGame) [Numeric x⁻¹] : 0 < x⁻¹ :=
-  Numeric.lt_of_not_le (inv_nonneg x)
 
 end Numeric
 
