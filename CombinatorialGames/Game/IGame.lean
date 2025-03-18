@@ -1242,14 +1242,13 @@ protected theorem inv_neg (x : IGame) : (-x)⁻¹ = -x⁻¹ := by
     simp [h.not_lt, h.not_gt]
 
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
-`a` some other "earlier" option of `x⁻¹`.
-
-For technical reasons this is not the actual definition: use `invOption_eq` to unfold it. -/
+`a` some other "earlier" option of `x⁻¹`. -/
 @[pp_nodot]
 def invOption (x y a : IGame) : IGame :=
-  (1 + (y - x) * a) * inv' y
+  (1 + (y - x) * a) / y
 
-theorem invOption_eq {x y a : IGame} (hy : 0 < y) : invOption x y a = (1 + (y - x) * a) / y := by
+private theorem invOption_eq {x y a : IGame} (hy : 0 < y) :
+    invOption x y a = (1 + (y - x) * a) * inv' y := by
   rw [invOption, IGame.div_eq_mul_inv, inv_eq', if_pos hy]
 
 theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹.leftMoves := by
@@ -1259,14 +1258,13 @@ theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹.leftMoves
 theorem inv_nonneg {x : IGame} (hx : 0 < x) : 0 ⧏ x⁻¹ :=
   leftMove_lf (zero_mem_leftMoves_inv hx)
 
-theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame.{u}} (hx : 0 < x) (hy : 0 < y)
+theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.leftMoves) :
     invOption x y a ∈ x⁻¹.leftMoves := by
   rw [inv_eq hx, leftMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.left₁ (equivShrink _ ⟨_, hyx, hy⟩) i
-  simp [InvTy.val, InvTy.val']
-  rfl
+  simp [InvTy.val, InvTy.val', invOption_eq hy]
 
 theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.leftMoves) (ha : a ∈ x⁻¹.rightMoves) :
@@ -1274,8 +1272,7 @@ theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame} (hx : 0 < x) (hy 
   rw [inv_eq hx, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.left₂ (equivShrink _ ⟨_, hyx, hy⟩) i
-  simp [InvTy.val, InvTy.val']
-  rfl
+  simp [InvTy.val, InvTy.val', invOption_eq hy]
 
 theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.leftMoves) (ha : a ∈ x⁻¹.leftMoves) :
@@ -1283,8 +1280,7 @@ theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (hy 
   rw [inv_eq hx, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.right₁ (equivShrink _ ⟨_, hyx, hy⟩) i
-  simp [InvTy.val, InvTy.val']
-  rfl
+  simp [InvTy.val, InvTy.val', invOption_eq hy]
 
 theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.rightMoves) :
@@ -1292,22 +1288,20 @@ theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (h
   rw [inv_eq hx, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.right₂ (equivShrink _ ⟨_, hyx, hy⟩) i
-  simp [InvTy.val, InvTy.val']
-  rfl
+  simp [InvTy.val, InvTy.val', invOption_eq hy]
 
 set_option linter.unnecessarySimpa false in
-/-- An induction principle on left and right moves of `x⁻¹`. -/
-theorem invRec {x : IGame} (hx : 0 < x)
+private theorem invRec' {x : IGame} (hx : 0 < x)
     {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
     (zero : P 0 (zero_mem_leftMoves_inv hx))
     (left₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
-      P _ (invOption_right_left_mem_leftMoves_inv hx hy hyx ha))
+      P _ (invOption_eq hy ▸ invOption_right_left_mem_leftMoves_inv hx hy hyx ha))
     (left₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
-      P _ (invOption_left_right_mem_leftMoves_inv hx hy hyx ha))
+      P _ (invOption_eq hy ▸ invOption_left_right_mem_leftMoves_inv hx hy hyx ha))
     (right₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
-      Q _ (invOption_left_left_mem_rightMoves_inv hx hy hyx ha))
+      Q _ (invOption_eq hy ▸ invOption_left_left_mem_rightMoves_inv hx hy hyx ha))
     (right₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
-      Q _ (invOption_right_right_mem_rightMoves_inv hx hy hyx ha)) :
+      Q _ (invOption_eq hy ▸ invOption_right_right_mem_rightMoves_inv hx hy hyx ha)) :
     (∀ y (hy : y ∈ x⁻¹.leftMoves), P y hy) ∧ (∀ y (hy : y ∈ x⁻¹.rightMoves), Q y hy) := by
   suffices ∀ b : Bool, ∀ i, if hb : b then
       Q (InvTy.val x b i) (by subst hb; simp [inv_eq hx]) else
@@ -1333,6 +1327,29 @@ theorem invRec {x : IGame} (hx : 0 < x)
   all_goals first |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.1 |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.2
+
+/-- An induction principle on left and right moves of `x⁻¹`. -/
+theorem invRec {x : IGame} (hx : 0 < x)
+    {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
+    (zero : P 0 (zero_mem_leftMoves_inv hx))
+    (left₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
+      P _ (invOption_right_left_mem_leftMoves_inv hx hy hyx ha))
+    (left₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
+      P _ (invOption_left_right_mem_leftMoves_inv hx hy hyx ha))
+    (right₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
+      Q _ (invOption_left_left_mem_rightMoves_inv hx hy hyx ha))
+    (right₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
+      Q _ (invOption_right_right_mem_rightMoves_inv hx hy hyx ha)) :
+    (∀ y (hy : y ∈ x⁻¹.leftMoves), P y hy) ∧ (∀ y (hy : y ∈ x⁻¹.rightMoves), Q y hy) := by
+  apply invRec' hx zero
+  · convert left₁ using 6 with _ ha
+    simp_rw [invOption_eq ha]
+  · convert left₂ using 6 with _ ha
+    simp_rw [invOption_eq ha]
+  · convert right₁ using 6 with _ ha
+    simp_rw [invOption_eq ha]
+  · convert right₂ using 6 with _ ha
+    simp_rw [invOption_eq ha]
 
 instance : RatCast IGame where
   ratCast q := q.num / q.den

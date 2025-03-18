@@ -30,6 +30,16 @@ numbers.
 
 open IGame
 
+private instance Numeric.div' (x y : IGame) [Numeric x] [Numeric y⁻¹] : Numeric (x / y) := .mul
+
+private instance Numeric.invOption' {x y a : IGame}
+    [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] : Numeric (invOption x y a) :=
+  .mul
+
+private theorem Surreal.mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
+    Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
+  Surreal.mk_mul ..
+
 namespace Surreal.Division
 
 /-! ### Arithmetic lemmas -/
