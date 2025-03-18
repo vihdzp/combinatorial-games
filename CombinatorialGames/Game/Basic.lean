@@ -129,7 +129,7 @@ instance : Nontrivial Game :=
 
 -- https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/OrderedAddCommGroup.20has.20CharZero/near/506296353
 instance {α : Type*} [AddMonoidWithOne α] [PartialOrder α] [ZeroLEOneClass α] [NeZero (1 : α)]
-  [AddLeftStrictMono α] : CharZero α where
+    [AddLeftStrictMono α] : CharZero α where
   cast_injective :=
     (strictMono_nat_of_lt_succ fun n ↦ by rw [Nat.cast_succ]; apply lt_add_one).injective
 
@@ -235,33 +235,32 @@ theorem sub_mul_equiv (x y z : IGame) : (x - y) * z ≈ x * z - y * z :=
 theorem mul_assoc_equiv (x y z : IGame) : x * y * z ≈ x * (y * z) :=
   Game.mk_eq_mk.1 (Game.mk_mul_assoc x y z)
 
-@[simp]
+@[simp, norm_cast]
 theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Game.mk_le_mk]
 
-@[simp]
+@[simp, norm_cast]
 theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n := by
-  simp [← Game.mk_le_mk]
+  simp [← Game.mk_lt_mk]
 
 theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) :=
   fun _ _ h ↦ natCast_lt.2 h
 
-@[simp]
-theorem natCast_inj {m n : ℕ} : (m : IGame) = n ↔ m = n :=
-  natCast_strictMono.injective.eq_iff
+instance : CharZero IGame where
+  cast_injective := natCast_strictMono.injective
 
-@[simp]
+@[simp, norm_cast]
 theorem intCast_le {m n : ℤ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Game.mk_le_mk]
 
-@[simp]
+@[simp, norm_cast]
 theorem intCast_lt {m n : ℤ} : (m : IGame) < n ↔ m < n := by
   simp [← Game.mk_lt_mk]
 
 theorem intCast_strictMono : StrictMono ((↑) : ℤ → IGame) :=
   fun _ _ h ↦ intCast_lt.2 h
 
-@[simp]
+@[simp, norm_cast]
 theorem intCast_inj {m n : ℤ} : (m : IGame) = n ↔ m = n :=
   intCast_strictMono.injective.eq_iff
 
