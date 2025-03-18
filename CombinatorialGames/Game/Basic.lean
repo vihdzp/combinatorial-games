@@ -127,7 +127,7 @@ instance : NeZero (1 : Game) where
 instance : Nontrivial Game :=
   ⟨_, _, zero_ne_one⟩
 
--- https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/OrderedAddCommGroup.20has.20CharZero/near/506296353
+-- https://github.com/leanprover-community/mathlib4/pull/23034
 instance {α : Type*} [AddMonoidWithOne α] [PartialOrder α] [ZeroLEOneClass α] [NeZero (1 : α)]
     [AddLeftStrictMono α] : CharZero α where
   cast_injective :=
