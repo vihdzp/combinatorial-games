@@ -25,6 +25,9 @@ open IGame
 
 noncomputable section
 
+theorem IGame.ratCast_add_equiv (q r : ℚ) : (q + r : IGame) ≈ (q + r : ℚ) := by
+  simp [← Surreal.mk_eq_mk]
+
 namespace Real
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
@@ -108,8 +111,59 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
     simpa
   · simp
 
+@[simp]
+theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < x.toIGame ↔ q < x := by
+  obtain h | rfl | h := lt_trichotomy (q : ℝ) x
+  · exact iff_of_true (Numeric.leftMove_lt (mem_leftMoves_toIGame_of_lt h)) h
+  · simpa using (toIGame_ratCast_equiv q).not_gt
+  · exact iff_of_false (Numeric.lt_rightMove (mem_rightMoves_toIGame_of_lt h)).asymm h.asymm
+
+@[simp]
+theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : x.toIGame < q ↔ x < q := by
+  obtain h | rfl | h := lt_trichotomy (q : ℝ) x
+  · exact iff_of_false (Numeric.leftMove_lt (mem_leftMoves_toIGame_of_lt h)).asymm h.asymm
+  · simpa using (toIGame_ratCast_equiv q).not_lt
+  · exact iff_of_true (Numeric.lt_rightMove (mem_rightMoves_toIGame_of_lt h)) h
+
+@[simp]
+theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ x.toIGame ↔ q ≤ x := by
+  simp [← not_lt, ← Numeric.not_lt]
+
+@[simp]
+theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : x.toIGame ≤ q ↔ x ≤ q := by
+  simp [← not_lt, ← Numeric.not_lt]
+
+@[simp]
+theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ x.toIGame ↔ q = x := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp]
+theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : x.toIGame ≈ q ↔ x = q := by
+  simp [AntisymmRel, le_antisymm_iff]
+
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame + q ≈ (x + q).toIGame := by
-  apply Fits.equiv_of_forall_not_fits
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf,
+    forall_leftMoves_add, forall_rightMoves_add]
+  simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
+  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩
+  · intro r hr
+    rw [(IGame.ratCast_add_equiv ..).lt_congr_left]
+    simpa
+  · intro x hx
+    obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
+    rw [(add_congr_right hr).le_congr_right]
+    apply leftMove_lf
+    simp
+
+
+    #exit
+
+theorem toIGame_add_equiv (x y : ℝ) : x.toIGame + y.toIGame ≈ (x + y).toIGame := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf,
+    forall_leftMoves_add, forall_rightMoves_add]
+  simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
+  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩
+  · intro q hq
 
 end Real
 end
