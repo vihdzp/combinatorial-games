@@ -113,7 +113,7 @@ instance : CharZero NatOrdinal where
     apply_fun toOrdinal at h
     simpa using h
 
-/-! ### `NatOrdinal` to `PGame` -/
+/-! ### `NatOrdinal` to `IGame` -/
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
 private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
