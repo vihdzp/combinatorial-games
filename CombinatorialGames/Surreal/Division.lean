@@ -28,6 +28,8 @@ Once we have defined the inverse for positive `x`, it is extended in the obvious
 numbers.
 -/
 
+universe u
+
 open IGame
 
 namespace Surreal.Division
@@ -218,13 +220,30 @@ namespace Numeric
 protected theorem inv {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ := (main hx).1
 protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : 0 < x) : x * x⁻¹ ≈ 1 := (main hx).2
 
-theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (hx : 0 < x) (hy : x ≈ y) : x⁻¹ ≈ y⁻¹ := by
-  have hy' := hx.trans_antisymmRel hy
+instance inv_natCast_succ (n : ℕ) : Numeric (n + 1)⁻¹ := .inv (mod_cast n.succ_pos)
+
+theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (hx : 0 < x) (he : x ≈ y) : x⁻¹ ≈ y⁻¹ := by
+  have hy' := hx.trans_antisymmRel he
   have := Numeric.inv hx
   have := Numeric.inv hy'
   have := (Numeric.mul_inv_cancel hx).trans (Numeric.mul_inv_cancel hy').symm
-  rw [← (Numeric.mul_congr_left hy).antisymmRel_congr_right] at this
+  rw [← (Numeric.mul_congr_left he).antisymmRel_congr_right] at this
   exact Numeric.mul_left_cancel hx.not_antisymmRel_symm this
+
+theorem div_congr_left {x₁ x₂ y : IGame} [Numeric x₁] [Numeric x₂] [Numeric y] (hy : 0 < y)
+    (he : x₁ ≈ x₂) : x₁ / y ≈ x₂ / y := by
+  have := Numeric.inv hy
+  exact mul_congr_left he
+
+theorem div_congr_right {x y₁ y₂ : IGame} [Numeric x] [Numeric y₁] [Numeric y₂] (hy : 0 < y₁)
+    (he : y₁ ≈ y₂) : x / y₁ ≈ x / y₂ := by
+  have := Numeric.inv hy
+  have := Numeric.inv (hy.trans_antisymmRel he)
+  exact mul_congr_right (inv_congr hy he)
+
+theorem div_congr {x₁ x₂ y₁ y₂ : IGame} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
+    (hy' : 0 < y₁) (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ / y₁ ≈ x₂ / y₂ :=
+  (div_congr_left hy' hx).trans (div_congr_right hy' hy)
 
 protected instance ratCast (q : ℚ) : Numeric q := by
   have : Numeric (q.den : IGame)⁻¹ := .inv (mod_cast q.den_pos)
@@ -262,13 +281,13 @@ private theorem Numeric.inv'_congr {x y : IGame} [Numeric x] [Numeric y] (hy : x
   · have h' := hy.trans_lt h
     rw [if_neg h.asymm, if_neg h'.asymm, if_pos h, if_pos h', neg_equiv_neg_iff]
     rw [← IGame.zero_lt_neg] at h'
-    apply Numeric.inv_congr h'
+    apply inv_congr h'
     rwa [neg_equiv_neg_iff]
   · have h' := hy.trans h
     rw [if_neg h.not_lt, if_neg h'.not_lt, if_neg h.not_gt, if_neg h'.not_gt]
   · have h' := h.trans_antisymmRel hy.symm
     rw [if_pos h, if_pos h']
-    exact Numeric.inv_congr h' hy
+    exact inv_congr h' hy
 
 end IGame
 
@@ -301,3 +320,48 @@ theorem mk_ratCast (q : ℚ) : mk q = q := by
   · exact_mod_cast q.den_pos
 
 end Surreal
+
+namespace IGame
+
+@[simp, norm_cast]
+theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
+  simp [← Surreal.mk_le_mk]
+
+@[simp, norm_cast]
+theorem ratCast_lt {m n : ℚ} : (m : IGame) < n ↔ m < n := by
+  simp [← Surreal.mk_lt_mk]
+
+theorem ratCast_strictMono : StrictMono ((↑) : ℚ → IGame) :=
+  fun _ _ h ↦ ratCast_lt.2 h
+
+@[simp, norm_cast]
+theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
+  ratCast_strictMono.injective.eq_iff
+
+-- TODO: upstream
+attribute [simp] AntisymmRel.refl
+
+private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
+    (∀ x ∈ leftMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) ∧
+      (∀ x ∈ rightMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) := by
+  refine invRec _ ⟨0, ?_⟩ ?_ ?_ ?_ ?_
+  any_goals simp
+  all_goals
+    refine fun hn x hx q hq ↦ ⟨(1 + -q) / n, ?_⟩
+    have : Numeric n⁻¹ := .inv hn
+    first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
+    simp_all [invOption, Surreal.mk_div_of_pos _ hn, ← Surreal.mk_eq_mk]
+
+theorem equiv_ratCast_of_mem_leftMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : IGame}
+    (hx : x ∈ leftMoves n⁻¹) : ∃ q : ℚ, x ≈ q := by
+  cases n
+  · contradiction
+  · exact equiv_ratCast_of_mem_move_inv_natCast.1 x hx
+
+theorem equiv_ratCast_of_mem_rightMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : IGame}
+    (hx : x ∈ rightMoves n⁻¹) : ∃ q : ℚ, x ≈ q := by
+  cases n
+  · contradiction
+  · exact equiv_ratCast_of_mem_move_inv_natCast.2 x hx
+
+end IGame
