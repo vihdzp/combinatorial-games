@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
 import CombinatorialGames.Mathlib.Comparable
+import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
@@ -1177,8 +1178,9 @@ private inductive InvTy (l r : Type u) : Bool → Type u
   | right₂ : r → InvTy l r true → InvTy l r true
 
 private def InvTy.val' {x : IGame}
-    (IHl : Shrink {y ∈ x.leftMoves | 0 < y} → IGame) (IHr : Shrink x.rightMoves → IGame)
-    (b : Bool) : InvTy (Shrink {y ∈ x.leftMoves | 0 < y}) (Shrink x.rightMoves) b → IGame
+    (IHl : Shrink {y ∈ x.leftMoves | 0 < y} → IGame)
+    (IHr : Shrink {y ∈ x.rightMoves | 0 < y} → IGame) (b : Bool) :
+    InvTy (Shrink {y ∈ x.leftMoves | 0 < y}) (Shrink {y ∈ x.rightMoves | 0 < y}) b → IGame
   | InvTy.zero => 0
   | InvTy.left₁ i j => (1 + ((equivShrink _).symm i - x) * val' IHl IHr _ j) * IHr i
   | InvTy.left₂ i j => (1 + ((equivShrink _).symm i - x) * val' IHl IHr _ j) * IHl i
@@ -1188,128 +1190,149 @@ private def InvTy.val' {x : IGame}
 private def inv' (x : IGame.{u}) : IGame.{u} :=
   let IHl : Shrink {y ∈ x.leftMoves | 0 < y} → IGame :=
     fun x ↦ inv' (Subtype.val <| (equivShrink _).symm x)
-  let IHr : Shrink x.rightMoves → IGame :=
+  let IHr : Shrink {y ∈ x.rightMoves | 0 < y} → IGame :=
     fun x ↦ inv' (Subtype.val <| (equivShrink _).symm x)
   {.range (InvTy.val' IHl IHr false) | .range (InvTy.val' IHl IHr true)}ᴵ
 termination_by x
 decreasing_by
-· exact Subposition.of_mem_leftMoves ((equivShrink _).symm x).2.1
-· igame_wf
+· exact .of_mem_leftMoves ((equivShrink _).symm x).2.1
+· exact .of_mem_rightMoves ((equivShrink _).symm x).2.1
 
 private abbrev InvTy.val (x : IGame) (b : Bool)
-    (i : InvTy (Shrink {y ∈ x.leftMoves | 0 < y}) (Shrink x.rightMoves) b) : IGame :=
+    (i : InvTy (Shrink {y ∈ x.leftMoves | 0 < y}) (Shrink {y ∈ x.rightMoves | 0 < y}) b) : IGame :=
   i.val' (inv' ∘ Subtype.val ∘ (equivShrink _).symm) (inv' ∘ Subtype.val ∘ (equivShrink _).symm) b
 
-/-- The inverse of a game `x = {s | t}ᴵ` is `{s' | t'}ᴵ`, where `s'` and `t'` are the smallest sets
-such that `0 ∈ s'`, and such that `(1 + (z - x) * a) / z, (1 + (y - x) * b) / y ∈ s'` and
-`(1 + (y - x) * a) / y, (1 + (z - x) * b) / z ∈ t'` for `y ∈ s` positive, `z ∈ t`, `a ∈ s'`, and
+/-- The inverse of a positive game `x = {s | t}ᴵ` is `{s' | t'}ᴵ`, where `s'` and `t'` are the
+smallest sets such that `0 ∈ s'`, and such that `(1 + (z - x) * a) / z, (1 + (y - x) * b) / y ∈ s'`
+and `(1 + (y - x) * a) / y, (1 + (z - x) * b) / z ∈ t'` for `y ∈ s` positive, `z ∈ t`, `a ∈ s'`, and
 `b ∈ t'`.
 
-If `x` is a positive numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any other game
-should be treated as a junk value. -/
+If `x` is negative, we define `x⁻¹ = -(-x)⁻¹`. For any other game, we set `x⁻¹ = 0`.
+
+If `x` is a non-zero numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any non-numeric
+game should be treated as a junk value. -/
 instance : Inv IGame where
-  inv := inv'
+  inv x := by classical exact if 0 < x then inv' x else if x < 0 then -inv' (-x) else 0
 
 instance : Div IGame where
   div x y := x * y⁻¹
 
+open Classical in
+private theorem inv_eq' {x : IGame} :
+    x⁻¹ = if 0 < x then inv' x else if x < 0 then -inv' (-x) else 0 :=
+  rfl
+
+private theorem inv_eq {x : IGame.{u}} (hx : 0 < x) :
+    x⁻¹ = {.range (InvTy.val x false) | .range (InvTy.val x true)}ᴵ := by
+  rw [inv_eq', if_pos hx, inv']
+  rfl
+
 protected theorem div_eq_mul_inv (x y : IGame) : x / y = x * y⁻¹ := rfl
 
+@[simp] protected theorem inv_zero : (0 : IGame)⁻¹ = 0 := by simp [inv_eq']
 @[simp] protected theorem zero_div (x : IGame) : 0 / x = 0 := zero_mul _
 @[simp] protected theorem neg_div (x y : IGame) : -x / y = -(x / y) := neg_mul ..
 
-private theorem inv_eq (x : IGame.{u}) :
-    x⁻¹ = {.range (InvTy.val x false) | .range (InvTy.val x true)}ᴵ := by
-  change inv' x = _
-  rw [inv']
-  rfl
+@[simp]
+protected theorem inv_neg (x : IGame) : (-x)⁻¹ = -x⁻¹ := by
+  rw [inv_eq', inv_eq']
+  obtain h | h | h | h := lt_or_antisymmRel_or_gt_or_incompRel x 0
+  repeat
+    simp [h, h.asymm]
+    simp [h.not_lt, h.not_gt]
 
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
-`a` some other "earlier" option of `x⁻¹`. -/
+`a` some other "earlier" option of `x⁻¹`.
+
+For technical reasons this is not the actual definition: use `invOption_eq` to unfold it. -/
 @[pp_nodot]
 def invOption (x y a : IGame) : IGame :=
-  (1 + (y - x) * a) / y
+  (1 + (y - x) * a) * inv' y
 
-theorem zero_mem_leftMoves_inv (x : IGame) : 0 ∈ x⁻¹.leftMoves := by
-  rw [inv_eq, leftMoves_ofSets]
+theorem invOption_eq {x y a : IGame} (hy : 0 < y) : invOption x y a = (1 + (y - x) * a) / y := by
+  rw [invOption, IGame.div_eq_mul_inv, inv_eq', if_pos hy]
+
+theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹.leftMoves := by
+  rw [inv_eq hx, leftMoves_ofSets]
   exact ⟨InvTy.zero, rfl⟩
 
-theorem inv_nonneg (x : IGame) : 0 ⧏ x⁻¹ :=
-  leftMove_lf (zero_mem_leftMoves_inv x)
+theorem inv_nonneg {x : IGame} (hx : 0 < x) : 0 ⧏ x⁻¹ :=
+  leftMove_lf (zero_mem_leftMoves_inv hx)
 
-theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame}
-    (hy : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.leftMoves) :
+theorem invOption_right_left_mem_leftMoves_inv {x y a : IGame.{u}} (hx : 0 < x) (hy : 0 < y)
+    (hyx : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.leftMoves) :
     invOption x y a ∈ x⁻¹.leftMoves := by
-  rw [inv_eq, leftMoves_ofSets] at *
+  rw [inv_eq hx, leftMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
-  use InvTy.left₁ (equivShrink _ ⟨_, hy⟩) i
+  use InvTy.left₁ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val']
   rfl
 
-theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame}
-    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ x⁻¹.rightMoves) :
+theorem invOption_left_right_mem_leftMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
+    (hyx : y ∈ x.leftMoves) (ha : a ∈ x⁻¹.rightMoves) :
     invOption x y a ∈ x⁻¹.leftMoves := by
-  rw [inv_eq, leftMoves_ofSets, rightMoves_ofSets] at *
+  rw [inv_eq hx, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
-  use InvTy.left₂ (equivShrink _ ⟨_, hy, hy'⟩) i
+  use InvTy.left₂ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val']
   rfl
 
-theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame}
-    (hy : y ∈ x.leftMoves) (hy' : 0 < y) (ha : a ∈ x⁻¹.leftMoves) :
+theorem invOption_left_left_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
+    (hyx : y ∈ x.leftMoves) (ha : a ∈ x⁻¹.leftMoves) :
     invOption x y a ∈ x⁻¹.rightMoves := by
-  rw [inv_eq, leftMoves_ofSets, rightMoves_ofSets] at *
+  rw [inv_eq hx, leftMoves_ofSets, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
-  use InvTy.right₁ (equivShrink _ ⟨_, hy, hy'⟩) i
+  use InvTy.right₁ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val']
   rfl
 
-theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame}
-    (hy : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.rightMoves) :
+theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (hy : 0 < y)
+    (hyx : y ∈ x.rightMoves) (ha : a ∈ x⁻¹.rightMoves) :
     invOption x y a ∈ x⁻¹.rightMoves := by
-  rw [inv_eq, rightMoves_ofSets] at *
+  rw [inv_eq hx, rightMoves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
-  use InvTy.right₂ (equivShrink _ ⟨_, hy⟩) i
+  use InvTy.right₂ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val']
   rfl
 
 set_option linter.unnecessarySimpa false in
 /-- An induction principle on left and right moves of `x⁻¹`. -/
-theorem invRec (x : IGame) {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
-    (zero : P 0 (zero_mem_leftMoves_inv x))
-    (left₁ : ∀ y (hy : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
-      P _ (invOption_right_left_mem_leftMoves_inv hy ha))
-    (left₂ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
-      P _ (invOption_left_right_mem_leftMoves_inv hy hy' ha))
-    (right₁ : ∀ y (hy : y ∈ x.leftMoves) (hy' : 0 < y), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
-      Q _ (invOption_left_left_mem_rightMoves_inv hy hy' ha))
-    (right₂ : ∀ y (hy : y ∈ x.rightMoves) , ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
-      Q _ (invOption_right_right_mem_rightMoves_inv hy ha)) :
+theorem invRec {x : IGame} (hx : 0 < x)
+    {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
+    (zero : P 0 (zero_mem_leftMoves_inv hx))
+    (left₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
+      P _ (invOption_right_left_mem_leftMoves_inv hx hy hyx ha))
+    (left₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
+      P _ (invOption_left_right_mem_leftMoves_inv hx hy hyx ha))
+    (right₁ : ∀ y (hy : 0 < y) (hyx : y ∈ x.leftMoves), ∀ a (ha : a ∈ x⁻¹.leftMoves), P a ha →
+      Q _ (invOption_left_left_mem_rightMoves_inv hx hy hyx ha))
+    (right₂ : ∀ y (hy : 0 < y) (hyx : y ∈ x.rightMoves), ∀ a (ha : a ∈ x⁻¹.rightMoves), Q a ha →
+      Q _ (invOption_right_right_mem_rightMoves_inv hx hy hyx ha)) :
     (∀ y (hy : y ∈ x⁻¹.leftMoves), P y hy) ∧ (∀ y (hy : y ∈ x⁻¹.rightMoves), Q y hy) := by
   suffices ∀ b : Bool, ∀ i, if hb : b then
-      Q (InvTy.val x b i) (by subst hb; simp [inv_eq]) else
-      P (InvTy.val x b i) (by rw [Bool.not_eq_true] at hb; subst hb; simp [inv_eq]) by
+      Q (InvTy.val x b i) (by subst hb; simp [inv_eq hx]) else
+      P (InvTy.val x b i) (by rw [Bool.not_eq_true] at hb; subst hb; simp [inv_eq hx]) by
     constructor <;> intro y hy
-    · rw [inv_eq, leftMoves_ofSets] at hy
+    · rw [inv_eq hx, leftMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
       have hi := this false i
       simp_all
-    · rw [inv_eq, rightMoves_ofSets] at hy
+    · rw [inv_eq hx, rightMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
       have hi := this true i
       simp_all
   intro b i
   induction i
   · simpa
-  all_goals simp only [Bool.false_eq_true]
+  all_goals simp only [Bool.false_eq_true, if_false, if_true]
   on_goal 1 => apply left₁
-  on_goal 4 => apply left₂
-  on_goal 8 => apply right₁
-  on_goal 12 => apply right₂
-  any_goals simpa [inv_eq, InvTy.val]
+  on_goal 5 => apply left₂
+  on_goal 9 => apply right₁
+  on_goal 13 => apply right₂
+  any_goals simpa [inv_eq hx, InvTy.val]
   all_goals first |
-    exact ((equivShrink {y ∈ x.leftMoves | 0 < y}).symm _).2.1 |
-    exact ((equivShrink {y ∈ x.leftMoves | 0 < y}).symm _).2.2
+    exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.1 |
+    exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.2
 
 instance : RatCast IGame where
   ratCast q := q.num / q.den

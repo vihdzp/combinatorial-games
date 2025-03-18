@@ -483,15 +483,6 @@ instance mulOption [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
   inferInstanceAs (Numeric (_ - _))
 
-/-- Note that this assumes `y⁻¹` numeric. -/
-instance div (x y : IGame) [Numeric x] [Numeric y⁻¹] : Numeric (x / y) :=
-  inferInstanceAs (Numeric (_ * _))
-
-/-- Note that this assumes `y⁻¹` numeric. -/
-instance invOption (x y a : IGame) [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
-    Numeric (invOption x y a) :=
-  inferInstanceAs (Numeric (_ / _))
-
 theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
   Game.mk_eq_mk.1 ((main_P24 ..).1 he)
 
@@ -527,11 +518,6 @@ noncomputable instance : LinearOrderedCommRing Surreal where
 @[simp]
 theorem mk_mul (x y : IGame) [Numeric x] [Numeric y] :
     Surreal.mk (x * y) = Surreal.mk x * Surreal.mk y :=
-  rfl
-
-/-- Note that this assumes `y⁻¹` numeric. -/
-theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
-    Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
   rfl
 
 end Surreal

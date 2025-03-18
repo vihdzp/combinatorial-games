@@ -215,6 +215,8 @@ open Surreal.Division
 
 namespace Numeric
 
+-- don't forget invOption!
+
 protected theorem inv {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ := (main hx).1
 protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : 0 < x) : x * x⁻¹ ≈ 1 := (main hx).2
 
