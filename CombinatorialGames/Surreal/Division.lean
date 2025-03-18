@@ -233,6 +233,13 @@ protected instance inv (x : IGame) [Numeric x] : Numeric x⁻¹ := by
   · simp [inv_of_equiv_zero h]
   · exact (main h).1
 
+protected instance div (x y : IGame) [Numeric x] [Numeric y] : Numeric (x / y) := .mul ..
+protected instance ratCast (q : ℚ) : Numeric q := .div ..
+
+protected instance invOption (x y a : IGame) [Numeric x] [Numeric y] [Numeric a] :
+    Numeric (invOption x y a) :=
+  .div ..
+
 protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) : x * x⁻¹ ≈ 1 := by
   obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
   · rw [← IGame.zero_lt_neg] at h
@@ -248,12 +255,21 @@ theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (he : x ≈ y) : x⁻¹ 
     rw [← (Numeric.mul_congr_left he).antisymmRel_congr_right] at this
     exact Numeric.mul_left_cancel hx this
 
-protected instance div (x y : IGame) [Numeric x] [Numeric y] : Numeric (x / y) := .mul ..
-protected instance ratCast (q : ℚ) : Numeric q := .div ..
 
-protected instance invOption (x y a : IGame) [Numeric x] [Numeric y] [Numeric a] :
-    Numeric (invOption x y a) :=
-  .div ..
+theorem div_congr_left {x₁ x₂ y : IGame} [Numeric x₁] [Numeric x₂] [Numeric y] (hy : 0 < y)
+    (he : x₁ ≈ x₂) : x₁ / y ≈ x₂ / y := by
+  have := Numeric.inv hy
+  exact mul_congr_left he
+
+theorem div_congr_right {x y₁ y₂ : IGame} [Numeric x] [Numeric y₁] [Numeric y₂] (hy : 0 < y₁)
+    (he : y₁ ≈ y₂) : x / y₁ ≈ x / y₂ := by
+  have := Numeric.inv hy
+  have := Numeric.inv (hy.trans_antisymmRel he)
+  exact mul_congr_right (inv_congr hy he)
+
+theorem div_congr {x₁ x₂ y₁ y₂ : IGame} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
+    (hy' : 0 < y₁) (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ / y₁ ≈ x₂ / y₂ :=
+  (div_congr_left hy' hx).trans (div_congr_right hy' hy)
 
 end IGame.Numeric
 
