@@ -325,81 +325,52 @@ theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
 attribute [simp] AntisymmRel.refl
 
 private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
-    (∀ x ∈ leftMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) ∧
-      (∀ x ∈ rightMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) := by
-  refine invRec ?_ ⟨0, ?_⟩ ?_ ?_ ?_ ?_
-  · exact_mod_cast n.succ_pos
-  any_goals simp
-  all_goals
-    rintro _ hn rfl x hx q hq
-    use (1 + -q) / n
-    first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
-    simp_all [invOption, ← Surreal.mk_eq_mk]
+    (∀ x ∈ leftMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) ∧ (∀ x ∈ rightMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) := by
+  cases n with
+  | zero => simp
+  | succ n =>
+    refine invRec (mod_cast n.succ_pos) ⟨0, ?_⟩ ?_ ?_ ?_ ?_
+    any_goals simp
+    all_goals
+      rintro _ hn rfl x hx q hq
+      use (1 + -q) / n
+      first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
+      simp_all [invOption, ← Surreal.mk_eq_mk]
 
-theorem equiv_ratCast_of_mem_leftMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : IGame}
-    (hx : x ∈ leftMoves n⁻¹) : ∃ q : ℚ, x ≈ q := by
-  cases n
-  · contradiction
-  · exact equiv_ratCast_of_mem_move_inv_natCast.1 x hx
-
-theorem equiv_ratCast_of_mem_rightMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : IGame}
-    (hx : x ∈ rightMoves n⁻¹) : ∃ q : ℚ, x ≈ q := by
-  cases n
-  · contradiction
-  · exact equiv_ratCast_of_mem_move_inv_natCast.2 x hx
-
-private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} (hq : 0 ≤ q) :
+private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
     (∀ x ∈ leftMoves.{u} q, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ rightMoves.{u} q, ∃ r : ℚ, x ≈ r) := by
   constructor
   all_goals
     rw [ratCast_def]
     simp only [IGame.div_eq_mul_inv, forall_leftMoves_mul, forall_rightMoves_mul]
-    obtain ⟨((_ | m) | _), n, hn, _⟩ := q
-    · simp
-    · dsimp [mulOption]
-      constructor
-      · simp only [Nat.cast_add_one, leftMoves_natCast_succ]
-        rintro _ rfl y hy
-        replace hn : 0 < n := hn.bot_lt
-        first |
-          obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_leftMoves_inv_natCast hn hy |
-          obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_rightMoves_inv_natCast hn hy
-        first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
-        use m * (n : ℚ)⁻¹ + (m + 1) * q - m * q
-        simp_all [← Surreal.mk_eq_mk]
-      · simp
-    · simp [← Rat.num_nonneg] at hq
+    obtain ⟨m, n, hn, _⟩ := q
+    constructor
+    all_goals
+    · intro x hx y hy
+      first |
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hx |
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hx
+      first |
+        obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.1 _ hy |
+        obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.2 _ hy
+      use k * (n : ℚ)⁻¹ + m * q - k * q
+      first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+      simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/
 theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ leftMoves q) :
     ∃ r : ℚ, r < q ∧ x ≈ r := by
-  suffices ∃ r : ℚ, x ≈ r by
-    obtain ⟨r, hr⟩ := this
-    refine ⟨r, ?_, hr⟩
-    rw [← ratCast_lt, ← hr.lt_congr_left]
-    simpa using Numeric.leftMove_lt hx
-  obtain hq | hq := le_total 0 q
-  · exact (equiv_ratCast_of_mem_move_ratCast hq).1 x hx
-  · replace hx : -x ∈ rightMoves (-q : ℚ) := by simpa
-    rw [← neg_nonneg] at hq
-    obtain ⟨q, h⟩ := (equiv_ratCast_of_mem_move_ratCast hq).2 _ hx
-    use -q
-    simpa using neg_congr h
+  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
+  refine ⟨r, ?_, hr⟩
+  rw [← ratCast_lt, ← hr.lt_congr_left]
+  simpa using Numeric.leftMove_lt hx
 
 /-- Every right option of a rational number is equivalent to a larger rational number. -/
 theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ rightMoves q) :
     ∃ r : ℚ, q < r ∧ x ≈ r := by
-  suffices ∃ r : ℚ, x ≈ r by
-    obtain ⟨r, hr⟩ := this
-    refine ⟨r, ?_, hr⟩
-    rw [← ratCast_lt, ← hr.lt_congr_right]
-    simpa using Numeric.lt_rightMove hx
-  obtain hq | hq := le_total 0 q
-  · exact (equiv_ratCast_of_mem_move_ratCast hq).2 x hx
-  · replace hx : -x ∈ leftMoves (-q : ℚ) := by simpa
-    rw [← neg_nonneg] at hq
-    obtain ⟨q, h⟩ := (equiv_ratCast_of_mem_move_ratCast hq).1 _ hx
-    use -q
-    simpa using neg_congr h
+  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
+  refine ⟨r, ?_, hr⟩
+  rw [← ratCast_lt, ← hr.lt_congr_right]
+  simpa using Numeric.lt_rightMove hx
 
 end IGame

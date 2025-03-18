@@ -968,6 +968,15 @@ theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
   ext <;> simp
 
+/-- Every left option of a natural number is equal to a smaller natural number. -/
+theorem eq_natCast_of_mem_leftMoves_natCast {n : ℕ} {x : IGame} (hx : x ∈ leftMoves n) :
+    ∃ m : ℕ, m < n ∧ m = x := by
+  cases n with
+  | zero => simp at hx
+  | succ n =>
+    use n
+    simp_all
+
 instance : IntCast IGame where
   intCast
   | .ofNat n => n
@@ -988,6 +997,25 @@ theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
     | zero => simp
     | succ n => rfl
   | negSucc n => exact (neg_neg _).symm
+
+/-- Every left option of an integer is equal to a smaller integer. -/
+theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
+    ∃ m : ℤ, m < n ∧ m = x := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
+  · obtain ⟨m, hm, rfl⟩ := eq_natCast_of_mem_leftMoves_natCast hx
+    use m
+    simpa
+  · simp at hx
+
+/-- Every right option of an integer is equal to a larger integer. -/
+theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
+    ∃ m : ℤ, n < m ∧ m = x := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
+  · simp at hx
+  · rw [intCast_neg, intCast_nat, rightMoves_neg] at hx
+    obtain ⟨m, hm, hm'⟩ := eq_natCast_of_mem_leftMoves_natCast hx
+    use -m
+    simp_all
 
 /-! ### Multiplication -/
 
