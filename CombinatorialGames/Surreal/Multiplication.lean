@@ -474,12 +474,12 @@ end Surreal.Multiplication
 namespace IGame.Numeric
 open Surreal.Multiplication
 
-variable {x x₁ x₂ y y₁ y₂ a b : IGame}
+variable {x x₁ x₂ y y₁ y₂: IGame}
 
-instance mul [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
+instance mul (x y : IGame) [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
   main _ <| Args.numeric_P1.mpr ⟨hx, hy⟩
 
-instance mulOption [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
+instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
   inferInstanceAs (Numeric (_ - _))
 

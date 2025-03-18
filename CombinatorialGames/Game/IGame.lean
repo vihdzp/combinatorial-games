@@ -1229,7 +1229,9 @@ private theorem inv_eq {x : IGame.{u}} (hx : 0 < x) :
 
 protected theorem div_eq_mul_inv (x y : IGame) : x / y = x * y⁻¹ := rfl
 
-@[simp] protected theorem inv_zero : (0 : IGame)⁻¹ = 0 := by simp [inv_eq']
+theorem inv_of_equiv_zero {x : IGame} (h : x ≈ 0) : x⁻¹ = 0 := by simp [inv_eq', h.not_lt, h.not_gt]
+
+@[simp] protected theorem inv_zero : (0 : IGame)⁻¹ = 0 := inv_of_equiv_zero .rfl
 @[simp] protected theorem zero_div (x : IGame) : 0 / x = 0 := zero_mul _
 @[simp] protected theorem neg_div (x y : IGame) : -x / y = -(x / y) := neg_mul ..
 
@@ -1342,14 +1344,11 @@ theorem invRec {x : IGame} (hx : 0 < x)
       Q _ (invOption_right_right_mem_rightMoves_inv hx hy hyx ha)) :
     (∀ y (hy : y ∈ x⁻¹.leftMoves), P y hy) ∧ (∀ y (hy : y ∈ x⁻¹.rightMoves), Q y hy) := by
   apply invRec' hx zero
-  · convert left₁ using 6 with _ ha
-    simp_rw [invOption_eq ha]
-  · convert left₂ using 6 with _ ha
-    simp_rw [invOption_eq ha]
-  · convert right₁ using 6 with _ ha
-    simp_rw [invOption_eq ha]
-  · convert right₂ using 6 with _ ha
-    simp_rw [invOption_eq ha]
+  on_goal 1 => convert left₁ using 6 with _ ha
+  on_goal 2 => convert left₂ using 6 with _ ha
+  on_goal 3 => convert right₁ using 6 with _ ha
+  on_goal 4 => convert right₂ using 6 with _ ha
+  all_goals simp_rw [invOption_eq ha]
 
 instance : RatCast IGame where
   ratCast q := q.num / q.den
