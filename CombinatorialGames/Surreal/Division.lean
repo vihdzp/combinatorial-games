@@ -223,7 +223,7 @@ end Surreal.Division
 namespace IGame.Numeric
 open Surreal.Division
 
-protected instance inv {x : IGame} [Numeric x] : Numeric x⁻¹ := by
+protected instance inv (x : IGame) [Numeric x] : Numeric x⁻¹ := by
   obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0
   · rw [← IGame.zero_lt_neg] at h
     simpa using (main h).1
