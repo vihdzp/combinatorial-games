@@ -323,21 +323,6 @@ end Surreal
 
 namespace IGame
 
-@[simp, norm_cast]
-theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
-  simp [← Surreal.mk_le_mk]
-
-@[simp, norm_cast]
-theorem ratCast_lt {m n : ℚ} : (m : IGame) < n ↔ m < n := by
-  simp [← Surreal.mk_lt_mk]
-
-theorem ratCast_strictMono : StrictMono ((↑) : ℚ → IGame) :=
-  fun _ _ h ↦ ratCast_lt.2 h
-
-@[simp, norm_cast]
-theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
-  ratCast_strictMono.injective.eq_iff
-
 -- TODO: upstream
 attribute [simp] AntisymmRel.refl
 
