@@ -396,7 +396,7 @@ theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈
     obtain ⟨r, hr⟩ := this
     refine ⟨r, ?_, hr⟩
     rw [← ratCast_lt, ← hr.lt_congr_left]
-    simpa using
+    simpa using Numeric.leftMove_lt hx
   obtain hq | hq := le_total 0 q
   · exact (equiv_ratCast_of_mem_move_ratCast hq).1 x hx
   · replace hx : -x ∈ rightMoves (-q : ℚ) := by simpa
@@ -408,6 +408,11 @@ theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈
 /-- Every right option of a rational number is equivalent to a larger rational number. -/
 theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ rightMoves q) :
     ∃ r : ℚ, q < r ∧ x ≈ r := by
+  suffices ∃ r : ℚ, x ≈ r by
+    obtain ⟨r, hr⟩ := this
+    refine ⟨r, ?_, hr⟩
+    rw [← ratCast_lt, ← hr.lt_congr_right]
+    simpa using Numeric.lt_rightMove hx
   obtain hq | hq := le_total 0 q
   · exact (equiv_ratCast_of_mem_move_ratCast hq).2 x hx
   · replace hx : -x ∈ leftMoves (-q : ℚ) := by simpa
