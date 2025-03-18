@@ -88,7 +88,7 @@ theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeri
 
 /-! ### Inductive proof -/
 
-lemma numeric_option_inv {x : IGame} (hx : 0 < x) [Numeric x]
+lemma numeric_option_inv {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
     (∀ y ∈ x⁻¹.leftMoves, Numeric y) ∧ (∀ y ∈ x⁻¹.rightMoves, Numeric y) := by
   apply invRec hx Numeric.zero
@@ -100,7 +100,7 @@ lemma numeric_option_inv {x : IGame} (hx : 0 < x) [Numeric x]
       have := Numeric.of_mem_rightMoves hyx; have := hr _ hyx
     infer_instance
 
-lemma mul_inv_option_mem {x : IGame} (hx : 0 < x) [Numeric x]
+lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
     (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
     (∀ y ∈ x⁻¹.leftMoves, x * y < 1) ∧ (∀ y ∈ x⁻¹.rightMoves, 1 < x * y) := by
@@ -140,7 +140,7 @@ lemma mul_inv_option_mem {x : IGame} (hx : 0 < x) [Numeric x]
     · rw [IGame.sub_pos]
       exact Numeric.lt_rightMove hyx
 
-lemma numeric_inv {x : IGame} (hx : 0 < x) [Numeric x]
+lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
     (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
     Numeric x⁻¹ := by
@@ -151,7 +151,7 @@ lemma numeric_inv {x : IGame} (hx : 0 < x) [Numeric x]
   have := Hr' z hz
   exact (Numeric.mul_lt_mul_left hx).1 <| (Hl y hy).trans (Hr z hz)
 
-lemma option_mul_inv_lt {x : IGame} (hx : 0 < x) [Numeric x]
+lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
     (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
     (∀ y ∈ (x * x⁻¹).leftMoves, y < 1) ∧ (∀ y ∈ (x * x⁻¹).rightMoves, 1 < y) := by
