@@ -38,34 +38,27 @@ theorem IGame.ratCast_sub_equiv (q r : ℚ) : ((q - r : ℚ) : IGame) ≈ q - r 
 theorem IGame.ratCast_mul_equiv (q r : ℚ) : ((q * r : ℚ) : IGame) ≈ q * r := by
   simp [← Surreal.mk_eq_mk]
 
-theorem IGame.ratCast_inv_equiv {q : ℚ} (hq : 0 < q) : ((q⁻¹ : ℚ) : IGame) ≈ q⁻¹ := by
-  have := Numeric.inv (x := q) (by simpa)
-  rw [← Surreal.mk_eq_mk, Surreal.mk_inv_of_pos (by simpa)]
-  simp
+theorem IGame.ratCast_inv_equiv (q : ℚ) : ((q⁻¹ : ℚ) : IGame) ≈ q⁻¹ := by
+  simp [← Surreal.mk_eq_mk]
 
-theorem IGame.ratCast_div_equiv (q : ℚ) {r : ℚ} (hr : 0 < r) : ((q / r : ℚ) : IGame) ≈ q / r := by
-  have := Numeric.inv (x := r) (by simpa)
-  rw [← Surreal.mk_eq_mk, Surreal.mk_div_of_pos _ (by simpa)]
-  simp
+theorem IGame.ratCast_div_equiv (q r : ℚ) : ((q / r : ℚ) : IGame) ≈ q / r := by
+  simp [← Surreal.mk_eq_mk]
 
-theorem IGame.Numeric.lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+protected theorem IGame.Numeric.lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : 0 < z) : x < y / z ↔ x * z < y := by
-  have := Numeric.inv hz
-  rw [← Surreal.mk_lt_mk, Surreal.mk_div_of_pos y hz]
-  exact lt_div_iff₀ hz
+  simp [← Surreal.mk_lt_mk, lt_div_iff₀ hz]
 
-theorem IGame.Numeric.div_lt_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+protected theorem IGame.Numeric.div_lt_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hy : 0 < y) : x / y < z ↔ x < z * y := by
-  have := Numeric.inv hy
-  rw [← Surreal.mk_lt_mk, Surreal.mk_div_of_pos x hy]
-  exact div_lt_iff₀ hy
+  simp [← Surreal.mk_lt_mk, div_lt_iff₀ hy]
 
-theorem IGame.Numeric.lt_div_iff_of_neg {x y : IGame} {q : ℚ} [Numeric x] [Numeric y]
-    (hq : q < 0) : x < y * q⁻¹ ↔ y < x * q := by
-  rw [← Surreal.mk_lt_mk, Surreal.mk_mul, ← _root_.lt_div_iff_of_neg]
-  · rw [Surreal.mk_ratCast, Rat.cast_inv, div_inv_eq_mul, ← Surreal.mk_ratCast]
-    rfl
-  · simpa
+protected theorem IGame.Numeric.lt_div_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : x < y / z ↔ y < x * z := by
+  simp [← Surreal.mk_lt_mk, lt_div_iff_of_neg hz]
+
+protected theorem IGame.Numeric.div_lt_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hy : 0 < y) : x / y < z ↔ x < z * y := by
+  simp [← Surreal.mk_lt_mk, lt_div_iff_of_neg hz]
 
     #exit
 
