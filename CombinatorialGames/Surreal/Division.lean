@@ -255,21 +255,17 @@ theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (he : x ≈ y) : x⁻¹ 
     rw [← (Numeric.mul_congr_left he).antisymmRel_congr_right] at this
     exact Numeric.mul_left_cancel hx this
 
+theorem div_congr_left {x₁ x₂ y : IGame} [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) :
+    x₁ / y ≈ x₂ / y :=
+  mul_congr_left he
 
-theorem div_congr_left {x₁ x₂ y : IGame} [Numeric x₁] [Numeric x₂] [Numeric y] (hy : 0 < y)
-    (he : x₁ ≈ x₂) : x₁ / y ≈ x₂ / y := by
-  have := Numeric.inv hy
-  exact mul_congr_left he
-
-theorem div_congr_right {x y₁ y₂ : IGame} [Numeric x] [Numeric y₁] [Numeric y₂] (hy : 0 < y₁)
-    (he : y₁ ≈ y₂) : x / y₁ ≈ x / y₂ := by
-  have := Numeric.inv hy
-  have := Numeric.inv (hy.trans_antisymmRel he)
-  exact mul_congr_right (inv_congr hy he)
+theorem div_congr_right {x y₁ y₂ : IGame} [Numeric x] [Numeric y₁] [Numeric y₂] (he : y₁ ≈ y₂) :
+    x / y₁ ≈ x / y₂ :=
+  mul_congr_right (inv_congr he)
 
 theorem div_congr {x₁ x₂ y₁ y₂ : IGame} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
-    (hy' : 0 < y₁) (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ / y₁ ≈ x₂ / y₂ :=
-  (div_congr_left hy' hx).trans (div_congr_right hy' hy)
+    (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ / y₁ ≈ x₂ / y₂ :=
+  (div_congr_left hx).trans (div_congr_right hy)
 
 end IGame.Numeric
 
@@ -294,6 +290,22 @@ end Surreal
 
 namespace IGame
 
+@[simp]
+theorem Numeric.inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
+  simp [← Surreal.mk_lt_mk]
+
+@[simp]
+theorem Numeric.inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
+  simp [← Surreal.mk_lt_mk]
+
+@[simp]
+theorem Numeric.inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
+  simp [← Surreal.mk_le_mk]
+
+@[simp]
+theorem Numeric.inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
+  simp [← Surreal.mk_le_mk]
+
 @[simp, norm_cast]
 theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Surreal.mk_le_mk]
@@ -315,13 +327,14 @@ attribute [simp] AntisymmRel.refl
 private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
     (∀ x ∈ leftMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) ∧
       (∀ x ∈ rightMoves.{u} (n + 1)⁻¹, ∃ q : ℚ, x ≈ q) := by
-  refine invRec _ ⟨0, ?_⟩ ?_ ?_ ?_ ?_
+  refine invRec ?_ ⟨0, ?_⟩ ?_ ?_ ?_ ?_
+  · exact_mod_cast n.succ_pos
   any_goals simp
   all_goals
-    refine fun hn x hx q hq ↦ ⟨(1 + -q) / n, ?_⟩
-    have : Numeric n⁻¹ := .inv hn
+    rintro _ hn rfl x hx q hq
+    use (1 + -q) / n
     first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
-    simp_all [invOption, Surreal.mk_div_of_pos _ hn, ← Surreal.mk_eq_mk]
+    simp_all [invOption, ← Surreal.mk_eq_mk]
 
 theorem equiv_ratCast_of_mem_leftMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : IGame}
     (hx : x ∈ leftMoves n⁻¹) : ∃ q : ℚ, x ≈ q := by
@@ -348,14 +361,12 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} (hq : 0 ≤ q) :
       · simp only [Nat.cast_add_one, leftMoves_natCast_succ]
         rintro _ rfl y hy
         replace hn : 0 < n := hn.bot_lt
-        have hn' : 0 < (n : IGame) := mod_cast hn
         first |
           obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_leftMoves_inv_natCast hn hy |
           obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_rightMoves_inv_natCast hn hy
-        have := Numeric.inv hn'
         first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
         use m * (n : ℚ)⁻¹ + (m + 1) * q - m * q
-        simp_all [← Surreal.mk_eq_mk, Surreal.mk_inv_of_pos hn']
+        simp_all [← Surreal.mk_eq_mk]
       · simp
     · simp [← Rat.num_nonneg] at hq
 
