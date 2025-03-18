@@ -349,4 +349,50 @@ theorem equiv_ratCast_of_mem_rightMoves_inv_natCast {n : ℕ} (h : 0 < n) {x : I
   · contradiction
   · exact equiv_ratCast_of_mem_move_inv_natCast.2 x hx
 
+private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} (hq : 0 ≤ q) :
+    (∀ x ∈ leftMoves.{u} q, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ rightMoves.{u} q, ∃ r : ℚ, x ≈ r) := by
+  constructor
+  all_goals
+    rw [ratCast_def]
+    simp only [IGame.div_eq_mul_inv, forall_leftMoves_mul, forall_rightMoves_mul]
+    obtain ⟨((_ | m) | _), n, hn, _⟩ := q
+    · simp
+    · dsimp [mulOption]
+      constructor
+      · simp only [Nat.cast_add_one, leftMoves_natCast_succ]
+        rintro _ rfl y hy
+        replace hn : 0 < n := hn.bot_lt
+        have hn' : 0 < (n : IGame) := mod_cast hn
+        first |
+          obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_leftMoves_inv_natCast hn hy |
+          obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_rightMoves_inv_natCast hn hy
+        have := Numeric.inv hn'
+        first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+        use m * (n : ℚ)⁻¹ + (m + 1) * q - m * q
+        simp_all [← Surreal.mk_eq_mk, Surreal.mk_inv_of_pos hn']
+      · simp
+    · simp [← Rat.num_nonneg] at hq
+
+/-- Every left option of a rational number is equivalent to a (smaller) rational number. -/
+theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ leftMoves q) :
+    ∃ r : ℚ, x ≈ r := by
+  obtain hq | hq := le_total 0 q
+  · exact (equiv_ratCast_of_mem_move_ratCast hq).1 x hx
+  · replace hx : -x ∈ rightMoves (-q : ℚ) := by simpa
+    rw [← neg_nonneg] at hq
+    obtain ⟨q, h⟩ := (equiv_ratCast_of_mem_move_ratCast hq).2 _ hx
+    use -q
+    simpa using neg_congr h
+
+/-- Every right option of a rational number is equivalent to a (larger) rational number. -/
+theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ rightMoves q) :
+    ∃ r : ℚ, x ≈ r := by
+  obtain hq | hq := le_total 0 q
+  · exact (equiv_ratCast_of_mem_move_ratCast hq).2 x hx
+  · replace hx : -x ∈ leftMoves (-q : ℚ) := by simpa
+    rw [← neg_nonneg] at hq
+    obtain ⟨q, h⟩ := (equiv_ratCast_of_mem_move_ratCast hq).1 _ hx
+    use -q
+    simpa using neg_congr h
+
 end IGame
