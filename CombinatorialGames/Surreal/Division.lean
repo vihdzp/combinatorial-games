@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Theodore Hwa
 -/
 import CombinatorialGames.Surreal.Multiplication
+import Mathlib.Data.Rat.Cast.Order
 import Mathlib.Tactic.Ring.RingNF
 
 /-!
@@ -322,6 +323,21 @@ theorem mk_ratCast (q : ℚ) : mk q = q := by
 end Surreal
 
 namespace IGame
+
+@[simp, norm_cast]
+theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
+  simp [← Surreal.mk_le_mk]
+
+@[simp, norm_cast]
+theorem ratCast_lt {m n : ℚ} : (m : IGame) < n ↔ m < n := by
+  simp [← Surreal.mk_lt_mk]
+
+theorem ratCast_strictMono : StrictMono ((↑) : ℚ → IGame) :=
+  fun _ _ h ↦ ratCast_lt.2 h
+
+@[simp, norm_cast]
+theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
+  ratCast_strictMono.injective.eq_iff
 
 -- TODO: upstream
 attribute [simp] AntisymmRel.refl
