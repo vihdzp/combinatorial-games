@@ -90,11 +90,22 @@ theorem mem_rightMoves_toIGame_of_lt {q : ℚ} {x : ℝ} (h : x < q) :
 
 theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
+  refine ⟨⟨?_, fun x hx ↦ ?_⟩, ⟨fun x hx ↦ ?_, ?_⟩⟩
   · simp
-  · intro x hx
-    have := equiv_ratCast_of_mem_rightMoves_inv_natCast
-  · simp
+  · obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hx
+    rw [hr.le_congr_left]
+    apply lf_rightMove
+    have : q < r := by
+      rw [← IGame.ratCast_lt, ← hr.lt_congr_right]
+      exact Numeric.lt_rightMove hx
+    simpa
+  · obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
+    rw [hr.le_congr_right]
+    apply leftMove_lf
+    have : r < q := by
+      rw [← IGame.ratCast_lt, ← hr.lt_congr_left]
+      exact Numeric.leftMove_lt hx
+    simpa
   · simp
 
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame + q ≈ (x + q).toIGame := by
