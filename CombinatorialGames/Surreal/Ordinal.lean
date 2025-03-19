@@ -31,6 +31,10 @@ def toSurreal : NatOrdinal ↪o Surreal :=
 
 @[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
 
+@[simp]
+theorem _root_.Surreal.toGame_toSurreal (o : NatOrdinal) : o.toSurreal.toGame = o.toGame :=
+  rfl
+
 theorem toSurreal_def (o : NatOrdinal) : o.toSurreal = {toSurreal '' Iio o | ∅}ˢ := by
   simp_rw [← Surreal.mk_toIGame, toIGame_def o, Surreal.mk_ofSets]
   congr <;> aesop

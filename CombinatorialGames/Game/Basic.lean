@@ -93,6 +93,9 @@ instance : OrderedAddCommGroup Game where
 
 instance : AddCommGroupWithOne Game where
 
+instance : RatCast Game where
+  ratCast q := mk q
+
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
 @[simp] theorem mk_one : mk 1 = 1 := rfl
 @[simp] theorem mk_add (x y : IGame) : mk (x + y) = mk x + mk y := rfl
@@ -114,6 +117,8 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 @[simp]
 theorem mk_intCast (n : ℤ) : mk n = n := by
   cases n <;> simp
+
+@[simp] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
 
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
