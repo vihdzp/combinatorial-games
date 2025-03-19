@@ -247,6 +247,10 @@ protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) : x *
   · contradiction
   · exact (main h).2
 
+protected theorem inv_mul_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) : x⁻¹ * x ≈ 1 := by
+  rw [mul_comm]
+  exact Numeric.mul_inv_cancel hx
+
 theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (he : x ≈ y) : x⁻¹ ≈ y⁻¹ := by
   by_cases hy : y ≈ 0
   · rw [inv_of_equiv_zero hy, inv_of_equiv_zero (he.trans hy)]
@@ -289,6 +293,15 @@ theorem mk_ratCast (q : ℚ) : mk q = q := by
 end Surreal
 
 namespace IGame
+
+theorem Numeric.inv_equiv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x⁻¹ ≈ y := by
+  rw [← Surreal.mk_eq_mk] at *
+  exact inv_eq_of_mul_eq_one_right (a := Surreal.mk x) he
+
+theorem Numeric.equiv_inv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x ≈ y⁻¹ :=
+  (Numeric.inv_equiv_of_mul_eq_one (mul_comm x y ▸ he)).symm
 
 @[simp]
 theorem Numeric.inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by

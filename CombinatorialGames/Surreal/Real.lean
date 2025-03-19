@@ -26,8 +26,20 @@ open IGame
 noncomputable section
 
 @[simp, norm_cast]
-theorem IGame.ratCast_pos {q : ℚ} : 0 < (q : IGame) ↔ 0 < q := by
+theorem IGame.zero_lt_ratCast {q : ℚ} : 0 < (q : IGame) ↔ 0 < q := by
   simpa using ratCast_lt (m := 0)
+
+@[simp, norm_cast]
+theorem IGame.ratCast_lt_zero {q : ℚ} : (q : IGame) < 0 ↔ q < 0 := by
+  simpa using ratCast_lt (n := 0)
+
+@[simp, norm_cast]
+theorem IGame.zero_le_ratCast {q : ℚ} : 0 ≤ (q : IGame) ↔ 0 ≤ q := by
+  simpa using ratCast_le (m := 0)
+
+@[simp, norm_cast]
+theorem IGame.ratCast_le_zero {q : ℚ} : (q : IGame) ≤ 0 ↔ q ≤ 0 := by
+  simpa using ratCast_le (n := 0)
 
 theorem IGame.ratCast_add_equiv (q r : ℚ) : ((q + r : ℚ) : IGame) ≈ q + r := by
   simp [← Surreal.mk_eq_mk]
@@ -44,23 +56,27 @@ theorem IGame.ratCast_inv_equiv (q : ℚ) : ((q⁻¹ : ℚ) : IGame) ≈ q⁻¹ 
 theorem IGame.ratCast_div_equiv (q r : ℚ) : ((q / r : ℚ) : IGame) ≈ q / r := by
   simp [← Surreal.mk_eq_mk]
 
+theorem IGame.ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : IGame) ≈ n := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem IGame.ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : IGame) ≈ n := by
+  simp [← Surreal.mk_eq_mk]
+
 protected theorem IGame.Numeric.lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : 0 < z) : x < y / z ↔ x * z < y := by
-  simp [← Surreal.mk_lt_mk, lt_div_iff₀ hz]
+  simp_all [← Surreal.mk_lt_mk, lt_div_iff₀]
 
 protected theorem IGame.Numeric.div_lt_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hy : 0 < y) : x / y < z ↔ x < z * y := by
-  simp [← Surreal.mk_lt_mk, div_lt_iff₀ hy]
+  simp_all [← Surreal.mk_lt_mk, div_lt_iff₀]
 
 protected theorem IGame.Numeric.lt_div_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : z < 0) : x < y / z ↔ y < x * z := by
-  simp [← Surreal.mk_lt_mk, lt_div_iff_of_neg hz]
+  simp_all [← Surreal.mk_lt_mk, lt_div_iff_of_neg]
 
 protected theorem IGame.Numeric.div_lt_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
-    (hy : 0 < y) : x / y < z ↔ x < z * y := by
-  simp [← Surreal.mk_lt_mk, lt_div_iff_of_neg hz]
-
-    #exit
+    (hy : y < 0) : x / y < z ↔ z * y < x := by
+  simp_all [← Surreal.mk_lt_mk, div_lt_iff_of_neg]
 
 -- TODO: upstream
 open Pointwise in
@@ -155,6 +171,17 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
     apply leftMove_lf
     simpa
   · simp
+
+theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n := by
+  rw [← Rat.cast_natCast]
+  exact (toIGame_ratCast_equiv n).trans (ratCast_natCast_equiv n)
+
+theorem toIGame_intCast_equiv (n : ℤ) : toIGame n ≈ n := by
+  rw [← Rat.cast_intCast]
+  exact (toIGame_ratCast_equiv n).trans (ratCast_intCast_equiv n)
+
+theorem toIGame_zero_equiv : toIGame 0 ≈ 0 := by simpa using toIGame_natCast_equiv 0
+theorem toIGame_one_equiv : toIGame 1 ≈ 1 := by simpa using toIGame_natCast_equiv 1
 
 @[simp]
 theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < x.toIGame ↔ q < x := by
@@ -269,14 +296,52 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame * q ≈ (x * q
   · sorry
   · intro r h
     obtain hq | rfl | hq := lt_trichotomy q 0
-    · rw [← lt_div_iff₀ (mod_cast hq)] at h
-      rw [← Numeric.lt_div_iff (by simpa), ← (ratCast_div_equiv r hq).lt_congr_right]
+    · rw [← div_lt_iff_of_neg (mod_cast hq)] at h
+      rw [← Numeric.div_lt_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
       simpa
     · simp_all
     · rw [← lt_div_iff₀ (mod_cast hq)] at h
-      rw [← Numeric.lt_div_iff (by simpa), ← (ratCast_div_equiv r hq).lt_congr_right]
+      rw [← Numeric.lt_div_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
       simpa
+  · intro r h
+    obtain hq | rfl | hq := lt_trichotomy q 0
+    · rw [← lt_div_iff_of_neg (mod_cast hq)] at h
+      rw [← Numeric.lt_div_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
+      simpa
+    · simp_all
+    · rw [← div_lt_iff₀ (mod_cast hq)] at h
+      rw [← Numeric.div_lt_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
+      simpa
+  · sorry
+  · sorry
 
+theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : q * x.toIGame ≈ (q * x).toIGame := by
+  simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
+
+theorem toIGame_mul_equiv (x y : ℝ) : x.toIGame * y.toIGame ≈ (x * y).toIGame := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
+  simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
+  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+  · sorry
+
+theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
+  obtain rfl | h := eq_or_ne x 0
+  · rw [inv_zero, inv_of_equiv_zero toIGame_zero_equiv]
+    exact toIGame_zero_equiv
+  · apply Numeric.equiv_inv_of_mul_eq_one ((toIGame_mul_equiv ..).trans _)
+    rw [inv_mul_cancel₀ h]
+    exact toIGame_one_equiv
+
+/-! ### `ℝ` to `Game` -/
+
+/-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut. -/
+def toIGame : ℝ ↪o IGame := by
+  refine .ofStrictMono toIGame' fun x y h ↦ ?_
 
 end Real
 end
