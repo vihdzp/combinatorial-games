@@ -6,6 +6,7 @@ import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
@@ -21,5 +22,6 @@ import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
+import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Test
