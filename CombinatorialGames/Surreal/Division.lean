@@ -344,7 +344,7 @@ theorem ratCast_natCast (n : ℕ) : ((n : ℚ) : Game) = n := by
   simpa using Game.mk_eq (IGame.ratCast_natCast_equiv n)
 
 @[simp, norm_cast]
-theorem ratCast_intCast (n : ℤ) : ((n : ℚ) : Game) = n :=by
+theorem ratCast_intCast (n : ℤ) : ((n : ℚ) : Game) = n := by
   simpa using Game.mk_eq (IGame.ratCast_intCast_equiv n)
 
 @[simp, norm_cast]

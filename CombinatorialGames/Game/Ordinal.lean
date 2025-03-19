@@ -112,7 +112,7 @@ instance : CharZero NatOrdinal where
     apply_fun toOrdinal at h
     simpa using h
 
-/-! ### `NatOrdinal` to `PGame` -/
+/-! ### `NatOrdinal` to `IGame` -/
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
 private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
@@ -199,15 +199,17 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 /-! ### `NatOrdinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
-noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
-  toFun o := .mk o.toIGame
-  inj' a b := by simp [le_antisymm_iff]
-  map_rel_iff' := toIGame_le_iff
+noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
-@[simp] theorem _root_.Game.mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toPGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toPGame]
+theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
+  rw [← Game.mk_toIGame, toIGame_def]
+  simp [image_image]
+
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toIGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toIGame]
 
 theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
@@ -293,7 +295,7 @@ theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
     have := Short.of_mem_leftMoves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this
-  obtain ⟨n, hn⟩ := (Set.finite_range f).bddAbove
+  obtain ⟨n, hn⟩ := (finite_range f).bddAbove
   refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
   rw [le_iff_forall_lf]
   simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
