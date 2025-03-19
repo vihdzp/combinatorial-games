@@ -301,6 +301,10 @@ theorem mk_ratCast (q : ℚ) : mk q = q := by
     simp
   · exact_mod_cast q.den_pos
 
+@[simp]
+theorem toGame_ratCast (q : ℚ) : toGame q = q := by
+  rw [← mk_ratCast, toGame_mk, Game.mk_ratCast]
+
 end Surreal
 
 namespace IGame

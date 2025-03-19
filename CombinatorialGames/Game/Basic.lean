@@ -118,6 +118,8 @@ theorem mk_natCast : ∀ n : ℕ, mk n = n
 theorem mk_intCast (n : ℤ) : mk n = n := by
   cases n <;> simp
 
+@[simp] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
+
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 
