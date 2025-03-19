@@ -324,6 +324,33 @@ theorem ratCast_strictMono : StrictMono ((↑) : ℚ → IGame) :=
 theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
   ratCast_strictMono.injective.eq_iff
 
+@[simp, norm_cast]
+theorem ratCast_equiv {m n : ℚ} : (m : IGame) ≈ n ↔ m = n := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+theorem ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : IGame) ≈ n := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : IGame) ≈ n := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem ratCast_add_equiv (m n : ℚ) : ((m + n : ℚ) : IGame) ≈ m + n := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem ratCast_sub_equiv (m n : ℚ) : ((m - n : ℚ) : IGame) ≈ m - n := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem ratCast_mul_equiv (m n : ℚ) : ((m * n : ℚ) : IGame) ≈ m * n := by
+  simp [← Surreal.mk_eq_mk]
+
+/-
+theorem ratCast_inv_equiv (m : ℚ) : ((m⁻¹ : ℚ) : IGame) ≈ m⁻¹ := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem ratCast_div_equiv (m n : ℚ) : ((m / n : ℚ) : IGame) ≈ m / n := by
+  simp [← Surreal.mk_eq_mk]
+-/
+
 end IGame
 
 namespace Game
@@ -342,5 +369,21 @@ theorem ratCast_strictMono : StrictMono ((↑) : ℚ → Game) :=
 @[simp, norm_cast]
 theorem ratCast_inj {m n : ℚ} : (m : Game) = n ↔ m = n :=
   ratCast_strictMono.injective.eq_iff
+
+@[simp, norm_cast]
+theorem ratCast_natCast (n : ℕ) : ((n : ℚ) : Game) = n := by
+  simpa using Game.mk_eq (IGame.ratCast_natCast_equiv n)
+
+@[simp, norm_cast]
+theorem ratCast_intCast (n : ℤ) : ((n : ℚ) : Game) = n :=by
+  simpa using Game.mk_eq (IGame.ratCast_intCast_equiv n)
+
+@[simp, norm_cast]
+theorem ratCast_add (m n : ℚ) : ((m + n : ℚ) : Game) = m + n :=
+  Game.mk_eq (IGame.ratCast_add_equiv m n)
+
+@[simp, norm_cast]
+theorem ratCast_sub (m n : ℚ) : ((m - n : ℚ) : Game) = m - n :=
+  Game.mk_eq (IGame.ratCast_sub_equiv m n)
 
 end Game
