@@ -222,7 +222,7 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
   constructor
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
-    · rw [← toIGame_le_iff] at hd
+    · rw [← toIGame.le_iff_le] at hd
       apply (hd.trans_lt _).not_le
       rw [(toIGame_add ..).lt_congr_left]
       simpa
@@ -242,7 +242,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   simp [NatOrdinal.lt_mul_iff, mulOption]
   constructor
   · rintro _ e c hc d hd he rfl
-    rw [← toIGame_le_iff, (toIGame_add ..).le_congr (toIGame_add ..)] at he
+    rw [← toIGame.le_iff_le, (toIGame_add ..).le_congr (toIGame_add ..)] at he
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
@@ -251,7 +251,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
       ← (add_congr_right (toIGame_mul ..)).le_congr (add_congr (toIGame_mul ..) (toIGame_mul ..)),
-      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame_le_iff, not_le]
+      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
 termination_by (a, b)
 
@@ -304,7 +304,8 @@ notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt,
+    ← Ordinal.toNatOrdinal_cast_nat n]
   exact Ordinal.nat_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
