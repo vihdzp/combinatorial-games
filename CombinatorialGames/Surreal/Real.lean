@@ -546,7 +546,7 @@ def toSurrealRingHom : ℝ →+*o Surreal where
   map_one' := toSurreal_one
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
-  monotone' := toGame.monotone
+  monotone' := toSurreal.monotone
 
 @[simp]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=
