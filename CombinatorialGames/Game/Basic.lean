@@ -255,6 +255,13 @@ instance : CharZero IGame where
   cast_injective := natCast_strictMono.injective
 
 @[simp, norm_cast]
+theorem natCast_equiv {m n : ℕ} : (m : IGame) ≈ n ↔ m = n := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+theorem natCast_add_equiv (m n : ℕ) : ((m + n : ℕ) : IGame) ≈ m + n := by
+  simp [← Game.mk_eq_mk]
+
+@[simp, norm_cast]
 theorem intCast_le {m n : ℤ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Game.mk_le_mk]
 
@@ -268,6 +275,16 @@ theorem intCast_strictMono : StrictMono ((↑) : ℤ → IGame) :=
 @[simp, norm_cast]
 theorem intCast_inj {m n : ℤ} : (m : IGame) = n ↔ m = n :=
   intCast_strictMono.injective.eq_iff
+
+@[simp, norm_cast]
+theorem intCast_equiv {m n : ℤ} : (m : IGame) ≈ n ↔ m = n := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+theorem intCast_add_equiv (m n : ℤ) : ((m + n : ℤ) : IGame) ≈ m + n := by
+  simp [← Game.mk_eq_mk]
+
+theorem intCast_sub_equiv (m n : ℤ) : ((m - n : ℤ) : IGame) ≈ m - n := by
+  simp [← Game.mk_eq_mk]
 
 end IGame
 end
