@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Theodore Hwa
 -/
 import CombinatorialGames.Surreal.Multiplication
+import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
 import Mathlib.Tactic.Ring.RingNF
 
@@ -247,6 +248,10 @@ protected theorem mul_inv_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) : x *
   · contradiction
   · exact (main h).2
 
+protected theorem inv_mul_cancel {x : IGame} [Numeric x] (hx : ¬ x ≈ 0) : x⁻¹ * x ≈ 1 := by
+  rw [mul_comm]
+  exact Numeric.mul_inv_cancel hx
+
 theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (he : x ≈ y) : x⁻¹ ≈ y⁻¹ := by
   by_cases hy : y ≈ 0
   · rw [inv_of_equiv_zero hy, inv_of_equiv_zero (he.trans hy)]
@@ -293,22 +298,50 @@ theorem toGame_ratCast (q : ℚ) : toGame q = q := by
 end Surreal
 
 namespace IGame
+namespace Numeric
 
 @[simp]
-theorem Numeric.inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
+theorem inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
   simp [← Surreal.mk_lt_mk]
 
 @[simp]
-theorem Numeric.inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
+theorem inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
   simp [← Surreal.mk_lt_mk]
 
 @[simp]
-theorem Numeric.inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
+theorem inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
   simp [← Surreal.mk_le_mk]
 
 @[simp]
-theorem Numeric.inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
+theorem inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
   simp [← Surreal.mk_le_mk]
+
+theorem inv_equiv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x⁻¹ ≈ y := by
+  rw [← Surreal.mk_eq_mk] at *
+  exact inv_eq_of_mul_eq_one_right (a := Surreal.mk x) he
+
+theorem equiv_inv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x ≈ y⁻¹ :=
+  (Numeric.inv_equiv_of_mul_eq_one (mul_comm x y ▸ he)).symm
+
+protected theorem lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z] (hz : 0 < z) :
+    x < y / z ↔ x * z < y := by
+  simp_all [← Surreal.mk_lt_mk, lt_div_iff₀]
+
+protected theorem div_lt_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z] (hy : 0 < y) :
+    x / y < z ↔ x < z * y := by
+  simp_all [← Surreal.mk_lt_mk, div_lt_iff₀]
+
+protected theorem lt_div_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : x < y / z ↔ y < x * z := by
+  simp_all [← Surreal.mk_lt_mk, lt_div_iff_of_neg]
+
+protected theorem div_lt_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hy : y < 0) : x / y < z ↔ z * y < x := by
+  simp_all [← Surreal.mk_lt_mk, div_lt_iff_of_neg]
+
+end Numeric
 
 @[simp, norm_cast]
 theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
