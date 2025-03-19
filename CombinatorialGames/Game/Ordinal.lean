@@ -286,31 +286,8 @@ theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n :=
 
 end NatOrdinal
 
-open NatOrdinal
-
-theorem Game.natCast_strictMono : StrictMono ((↑) : ℕ → Game) := by
-  intro x y h
-  rwa [← toGame_natCast, ← toGame_natCast, toGame_lt_iff, Nat.cast_lt]
-
-instance : CharZero Game where
-  cast_injective := Game.natCast_strictMono.injective
-
 namespace IGame
-
-theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) := by
-  intro x y h
-  rwa [← (toIGame_natCast_equiv x).lt_congr (toIGame_natCast_equiv y), toIGame_lt_iff, Nat.cast_lt]
-
-instance : CharZero IGame where
-  cast_injective := natCast_strictMono.injective
-
-@[simp, norm_cast]
-theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n :=
-  natCast_strictMono.lt_iff_lt
-
-@[simp, norm_cast]
-theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n :=
-  natCast_strictMono.le_iff_le
+open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
