@@ -41,35 +41,6 @@ theorem IGame.zero_le_ratCast {q : ℚ} : 0 ≤ (q : IGame) ↔ 0 ≤ q := by
 theorem IGame.ratCast_le_zero {q : ℚ} : (q : IGame) ≤ 0 ↔ q ≤ 0 := by
   simpa using ratCast_le (n := 0)
 
-theorem IGame.ratCast_add_equiv (q r : ℚ) : ((q + r : ℚ) : IGame) ≈ q + r := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_sub_equiv (q r : ℚ) : ((q - r : ℚ) : IGame) ≈ q - r := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_mul_equiv (q r : ℚ) : ((q * r : ℚ) : IGame) ≈ q * r := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_inv_equiv (q : ℚ) : ((q⁻¹ : ℚ) : IGame) ≈ q⁻¹ := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_div_equiv (q r : ℚ) : ((q / r : ℚ) : IGame) ≈ q / r := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : IGame) ≈ n := by
-  simp [← Surreal.mk_eq_mk]
-
-theorem IGame.ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : IGame) ≈ n := by
-  simp [← Surreal.mk_eq_mk]
-
-@[simp]
-theorem Game.ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : Game) = n := by
-  simpa using Game.mk_eq (IGame.ratCast_natCast_equiv n)
-
-@[simp]
-theorem Game.ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : Game) = n := by
-  simpa using Game.mk_eq (IGame.ratCast_intCast_equiv n)
-
 protected theorem IGame.Numeric.lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : 0 < z) : x < y / z ↔ x * z < y := by
   simp_all [← Surreal.mk_lt_mk, lt_div_iff₀]

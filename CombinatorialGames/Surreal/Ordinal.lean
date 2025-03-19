@@ -33,6 +33,10 @@ def toSurreal : NatOrdinal ↪o Surreal where
 
 @[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
 
+@[simp]
+theorem _root_.Surreal.toGame_toSurreal (o : NatOrdinal) : o.toSurreal.toGame = o.toGame :=
+  rfl
+
 @[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
 @[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
 
