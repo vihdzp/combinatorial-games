@@ -339,9 +339,9 @@ theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
 
 /-! ### `ℝ` to `Game` -/
 
-/-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut. -/
-def toIGame : ℝ ↪o IGame := by
-  refine .ofStrictMono toIGame' fun x y h ↦ ?_
+/-- The canonical map from `ℝ` to `Game`, sending a real number to its Dedekind cut. -/
+def toGame : ℝ ↪o Game :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
 end Real
 end
