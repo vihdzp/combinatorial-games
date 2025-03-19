@@ -94,6 +94,9 @@ instance : OrderedAddCommGroup Game where
 instance : AddGroupWithOne Game where
   __ := Game.instOrderedAddCommGroup
 
+instance : RatCast Game where
+  ratCast q := mk q
+
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
 @[simp] theorem mk_one : mk 1 = 1 := rfl
 @[simp] theorem mk_add (x y : IGame) : mk (x + y) = mk x + mk y := rfl
