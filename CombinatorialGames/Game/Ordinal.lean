@@ -181,35 +181,28 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
 @[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
-theorem toIGame_le_iff {a b : NatOrdinal} : toIGame a ≤ toIGame b ↔ a ≤ b := by simp
-theorem toIGame_lt_iff {a b : NatOrdinal} : toIGame a < toIGame b ↔ a < b := by simp
-theorem toIGame_equiv_iff {a b : NatOrdinal} : toIGame a ≈ toIGame b ↔ a = b := by simp
-theorem toIGame_inj {a b : NatOrdinal} : toIGame a = toIGame b ↔ a = b := by simp
-
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
   simpa [IncompRel] using le_of_lt
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
-  simpa using toIGame_le_iff.2 (NatOrdinal.zero_le a)
+  simpa using toIGame.monotone (NatOrdinal.zero_le a)
 
 /-! ### `NatOrdinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
-noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
-  toFun o := .mk o.toIGame
-  inj' a b := by simp [le_antisymm_iff]
-  map_rel_iff' := toIGame_le_iff
+noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
-@[simp] theorem _root_.Game.mk_toPGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toPGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toPGame]
+theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
+  rw [← Game.mk_toIGame, toIGame_def]
+  simp [image_image]
 
-theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
-theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
-theorem toGame_inj {a b : NatOrdinal} : toGame a = toGame b ↔ a = b := by simp
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toIGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toIGame]
 
 @[simp]
 theorem not_toGame_fuzzy (a b : NatOrdinal) : ¬ toGame a ‖ toGame b :=
@@ -226,7 +219,7 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
   constructor
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
-    · rw [← toIGame_le_iff] at hd
+    · rw [← toIGame.le_iff_le] at hd
       apply (hd.trans_lt _).not_le
       rw [(toIGame_add ..).lt_congr_left]
       simpa
@@ -246,7 +239,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   simp [NatOrdinal.lt_mul_iff, mulOption]
   constructor
   · rintro _ e c hc d hd he rfl
-    rw [← toIGame_le_iff, (toIGame_add ..).le_congr (toIGame_add ..)] at he
+    rw [← toIGame.le_iff_le, (toIGame_add ..).le_congr (toIGame_add ..)] at he
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
@@ -255,7 +248,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
       ← (add_congr_right (toIGame_mul ..)).le_congr (add_congr (toIGame_mul ..) (toIGame_mul ..)),
-      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame_le_iff, not_le]
+      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
 termination_by (a, b)
 
@@ -269,7 +262,7 @@ def toGameAddHom : NatOrdinal →+o Game where
   toFun := toGame
   map_zero' := toGame_zero
   map_add' := toGame_add
-  monotone' _ _ := toGame_le_iff.2
+  monotone' := toGame.monotone
 
 /-! ### `NatCast` properties -/
 
@@ -291,7 +284,7 @@ theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
     have := Short.of_mem_leftMoves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this
-  obtain ⟨n, hn⟩ := (Set.finite_range f).bddAbove
+  obtain ⟨n, hn⟩ := (finite_range f).bddAbove
   refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
   rw [le_iff_forall_lf]
   simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
@@ -308,7 +301,8 @@ notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame_lt_iff, ← Ordinal.toNatOrdinal_cast_nat n]
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt,
+    ← Ordinal.toNatOrdinal_cast_nat n]
   exact Ordinal.nat_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by

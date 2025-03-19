@@ -13,7 +13,7 @@ import Mathlib.Algebra.Order.Hom.Ring
 We define the canonical map `NatOrdinal → Surreal` in terms of the map `NatOrdinal.toIGame`.
 -/
 
-open IGame Surreal
+open IGame Set Surreal
 
 noncomputable section
 
@@ -26,10 +26,8 @@ termination_by o
 namespace NatOrdinal
 
 /-- Converts an ordinal into the corresponding surreal. -/
-def toSurreal : NatOrdinal ↪o Surreal where
-  toFun o := .mk o.toIGame
-  inj' _ _ h := toIGame_equiv_iff.1 (Quotient.exact h :)
-  map_rel_iff' := @toIGame_le_iff
+def toSurreal : NatOrdinal ↪o Surreal :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
 @[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
 
@@ -37,19 +35,16 @@ def toSurreal : NatOrdinal ↪o Surreal where
 theorem _root_.Surreal.toGame_toSurreal (o : NatOrdinal) : o.toSurreal.toGame = o.toGame :=
   rfl
 
+theorem toSurreal_def (o : NatOrdinal) : o.toSurreal = {toSurreal '' Iio o | ∅}ˢ := by
+  simp_rw [← Surreal.mk_toIGame, toIGame_def o, Surreal.mk_ofSets]
+  congr <;> aesop
+
 @[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
 @[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
 
 @[simp]
 theorem toSurreal_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
   toIGame_nonneg a
-
-theorem toSurreal_injective : Function.Injective toSurreal :=
-  toSurreal.injective
-
-theorem toSurreal_le_iff {a b : NatOrdinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b := by simp
-theorem toSurreal_lt_iff {a b : NatOrdinal} : a.toSurreal < b.toSurreal ↔ a < b := by simp
-theorem toSurreal_inj {a b : NatOrdinal} : a.toSurreal = b.toSurreal ↔ a = b := by simp
 
 @[simp]
 theorem toSurreal_add (a b : NatOrdinal) : (a + b).toSurreal = a.toSurreal + b.toSurreal :=
@@ -67,7 +62,7 @@ def toSurrealRingHom : NatOrdinal →+*o Surreal where
   map_one' := toSurreal_one
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
-  monotone' _ _ := toGame_le_iff.2
+  monotone' := toSurreal.monotone
 
 @[simp]
 theorem toSurreal_natCast : ∀ n : ℕ, toSurreal n = n :=

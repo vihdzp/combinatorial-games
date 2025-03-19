@@ -298,15 +298,6 @@ end Surreal
 
 namespace IGame
 
-theorem Numeric.inv_equiv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
-    (he : x * y ≈ 1) : x⁻¹ ≈ y := by
-  rw [← Surreal.mk_eq_mk] at *
-  exact inv_eq_of_mul_eq_one_right (a := Surreal.mk x) he
-
-theorem Numeric.equiv_inv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
-    (he : x * y ≈ 1) : x ≈ y⁻¹ :=
-  (Numeric.inv_equiv_of_mul_eq_one (mul_comm x y ▸ he)).symm
-
 @[simp]
 theorem Numeric.inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
   simp [← Surreal.mk_lt_mk]
@@ -322,6 +313,15 @@ theorem Numeric.inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x :=
 @[simp]
 theorem Numeric.inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
   simp [← Surreal.mk_le_mk]
+
+theorem Numeric.inv_equiv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x⁻¹ ≈ y := by
+  rw [← Surreal.mk_eq_mk] at *
+  exact inv_eq_of_mul_eq_one_right (a := Surreal.mk x) he
+
+theorem Numeric.equiv_inv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
+    (he : x * y ≈ 1) : x ≈ y⁻¹ :=
+  (Numeric.inv_equiv_of_mul_eq_one (mul_comm x y ▸ he)).symm
 
 @[simp, norm_cast]
 theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
@@ -371,9 +371,9 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
   cases n with
   | zero => simp
   | succ n =>
-    refine invRec (mod_cast n.succ_pos) ⟨0, ?_⟩ ?_ ?_ ?_ ?_
-    any_goals simp
+    refine invRec (mod_cast n.succ_pos) ⟨0, ?_⟩ ?_ ?_ ?_ ?_ <;> try (· simp)
     all_goals
+      simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
       rintro _ hn rfl x hx q hq
       use (1 + -q) / n
       first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
@@ -439,7 +439,7 @@ theorem ratCast_natCast (n : ℕ) : ((n : ℚ) : Game) = n := by
   simpa using Game.mk_eq (IGame.ratCast_natCast_equiv n)
 
 @[simp, norm_cast]
-theorem ratCast_intCast (n : ℤ) : ((n : ℚ) : Game) = n :=by
+theorem ratCast_intCast (n : ℤ) : ((n : ℚ) : Game) = n := by
   simpa using Game.mk_eq (IGame.ratCast_intCast_equiv n)
 
 @[simp, norm_cast]

@@ -417,6 +417,10 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
+This is given notation `{s | t}ˢ`, where the superscript `s` is to disambiguate from set builder
+notation, and from the analogous constructors on `IGame` and `Game`. This notation will attempt to
+construct the relevant proof using `aesop`.
+
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in Surreal have a canonical representative. (Note however that every short numeric game has
 a unique "canonical" form!) -/
@@ -428,17 +432,22 @@ def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
   rw [← Surreal.mk_lt_mk, out_eq, out_eq]
   exact H x hx y hy
 
+@[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
+
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
-    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : toGame (ofSets s t H) = {toGame '' s | toGame '' t}ᴳ := by
+    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : toGame {s | t}ˢ = {toGame '' s | toGame '' t}ᴳ := by
   simp_rw [ofSets, toGame_mk, Game.mk_ofSets, Set.image_image, game_out_eq]
 
-theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] [H : Numeric {s | t}ᴵ] :
+theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric {s | t}ᴵ} :
     mk {s | t}ᴵ = ofSets
       (.range fun x : s ↦ have : Numeric x := H.of_mem_leftMoves (by simp); mk x)
       (.range fun x : t ↦ have : Numeric x := H.of_mem_rightMoves (by simp); mk x)
       (by have := @H.leftMove_lt_rightMove; aesop) := by
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
+
+theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
+theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
 
 end Surreal
 end
