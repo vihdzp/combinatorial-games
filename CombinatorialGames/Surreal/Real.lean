@@ -455,24 +455,23 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x.to
 theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x.toIGame := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
-private theorem ratCast_lt_mul_toIGame'
-    {x y : ℝ} {q : ℚ} (hx : 0 < x) (hy : 0 < y) (h : q < x * y) : q < toIGame x * toIGame y := by
+private theorem ratCast_lt_mul_toIGame' {x y : ℝ} {q : ℚ}
+    (hx : 0 < x) (hy : 0 < y) (h : q < x * y) : q < toIGame x * toIGame y := by
   rw [← div_lt_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn (max_lt h hx)
   obtain ⟨hr, hr₀⟩ := max_lt_iff.1 hr
   rw [div_lt_comm₀ hy hr₀] at hr
   obtain ⟨s, hs, hs'⟩ := exists_rat_btwn (max_lt hr hy)
   trans r * s
-  · rw [mul_comm, ← IGame.Numeric.div_lt_iff (by simpa using hr₀),
-      ← (ratCast_div_equiv ..).lt_congr_left]
-    simp_all [← Rat.cast_div]
+  · rw [mul_comm, ← IGame.Numeric.div_lt_iff, ← (ratCast_div_equiv ..).lt_congr_left] <;>
+      simp_all [← Rat.cast_div]
   · simp_rw [← Surreal.mk_lt_mk]
     dsimp
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
 
-private theorem mul_toIGame_lt_ratCast'
-    {x y : ℝ} {q : ℚ} (hx : 0 < x) (hy : 0 < y) (h : x * y < q) : toIGame x * toIGame y < q := by
+private theorem mul_toIGame_lt_ratCast' {x y : ℝ} {q : ℚ}
+    (hx : 0 < x) (hy : 0 < y) (h : x * y < q) : toIGame x * toIGame y < q := by
   rw [← lt_div_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn h
   have hr₀ := hx.trans hr
@@ -483,9 +482,8 @@ private theorem mul_toIGame_lt_ratCast'
     dsimp
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
-  · rw [mul_comm, ← IGame.Numeric.lt_div_iff (by simp_all),
-      ← (ratCast_div_equiv ..).lt_congr_right]
-    simp_all [← Rat.cast_div]
+  · rw [mul_comm, ← IGame.Numeric.lt_div_iff, ← (ratCast_div_equiv ..).lt_congr_right] <;>
+      simp_all [← Rat.cast_div]
 
 private theorem ratCast_lt_mul_toIGame {x y : ℝ} (q : ℚ) (h : q < x * y) :
     q < toIGame x * toIGame y := by
