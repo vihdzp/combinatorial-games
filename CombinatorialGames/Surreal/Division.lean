@@ -29,6 +29,8 @@ Once we have defined the inverse for positive `x`, it is extended in the obvious
 numbers.
 -/
 
+universe u
+
 open IGame
 
 private instance {x y : IGame} [Numeric x] [Numeric y⁻¹] : Numeric (x / y) := .mul ..
@@ -253,6 +255,18 @@ theorem inv_congr {x y : IGame} [Numeric x] [Numeric y] (he : x ≈ y) : x⁻¹ 
     rw [← (Numeric.mul_congr_left he).antisymmRel_congr_right] at this
     exact Numeric.mul_left_cancel hx this
 
+theorem div_congr_left {x₁ x₂ y : IGame} [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) :
+    x₁ / y ≈ x₂ / y :=
+  mul_congr_left he
+
+theorem div_congr_right {x y₁ y₂ : IGame} [Numeric x] [Numeric y₁] [Numeric y₂] (he : y₁ ≈ y₂) :
+    x / y₁ ≈ x / y₂ :=
+  mul_congr_right (inv_congr he)
+
+theorem div_congr {x₁ x₂ y₁ y₂ : IGame} [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
+    (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ / y₁ ≈ x₂ / y₂ :=
+  (div_congr_left hx).trans (div_congr_right hy)
+
 end IGame.Numeric
 
 namespace Surreal
@@ -280,6 +294,22 @@ end Surreal
 
 namespace IGame
 
+@[simp]
+theorem Numeric.inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
+  simp [← Surreal.mk_lt_mk]
+
+@[simp]
+theorem Numeric.inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
+  simp [← Surreal.mk_lt_mk]
+
+@[simp]
+theorem Numeric.inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
+  simp [← Surreal.mk_le_mk]
+
+@[simp]
+theorem Numeric.inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
+  simp [← Surreal.mk_le_mk]
+
 @[simp, norm_cast]
 theorem ratCast_le {m n : ℚ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Surreal.mk_le_mk]
@@ -294,6 +324,58 @@ theorem ratCast_strictMono : StrictMono ((↑) : ℚ → IGame) :=
 @[simp, norm_cast]
 theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
   ratCast_strictMono.injective.eq_iff
+
+-- TODO: upstream
+attribute [simp] AntisymmRel.refl
+
+private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
+    (∀ x ∈ leftMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) ∧ (∀ x ∈ rightMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) := by
+  cases n with
+  | zero => simp
+  | succ n =>
+    refine invRec (mod_cast n.succ_pos) ⟨0, ?_⟩ ?_ ?_ ?_ ?_ <;> try (· simp)
+    all_goals
+      simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
+      rintro _ hn rfl x hx q hq
+      use (1 + -q) / n
+      first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
+      simp_all [invOption, ← Surreal.mk_eq_mk]
+
+private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
+    (∀ x ∈ leftMoves.{u} q, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ rightMoves.{u} q, ∃ r : ℚ, x ≈ r) := by
+  constructor
+  all_goals
+    rw [ratCast_def]
+    simp only [IGame.div_eq_mul_inv, forall_leftMoves_mul, forall_rightMoves_mul]
+    obtain ⟨m, n, hn, _⟩ := q
+    constructor
+    all_goals
+    · intro x hx y hy
+      first |
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hx |
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hx
+      first |
+        obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.1 _ hy |
+        obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.2 _ hy
+      use k * (n : ℚ)⁻¹ + m * q - k * q
+      first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+      simp_all [mulOption, ← Surreal.mk_eq_mk]
+
+/-- Every left option of a rational number is equivalent to a smaller rational number. -/
+theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ leftMoves q) :
+    ∃ r : ℚ, r < q ∧ x ≈ r := by
+  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
+  refine ⟨r, ?_, hr⟩
+  rw [← ratCast_lt, ← hr.lt_congr_left]
+  simpa using Numeric.leftMove_lt hx
+
+/-- Every right option of a rational number is equivalent to a larger rational number. -/
+theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ rightMoves q) :
+    ∃ r : ℚ, q < r ∧ x ≈ r := by
+  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
+  refine ⟨r, ?_, hr⟩
+  rw [← ratCast_lt, ← hr.lt_congr_right]
+  simpa using Numeric.lt_rightMove hx
 
 end IGame
 
