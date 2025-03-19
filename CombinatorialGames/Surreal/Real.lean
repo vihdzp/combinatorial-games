@@ -62,6 +62,14 @@ theorem IGame.ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : IGame) ≈ n := by
 theorem IGame.ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : IGame) ≈ n := by
   simp [← Surreal.mk_eq_mk]
 
+@[simp]
+theorem Game.ratCast_natCast_equiv (n : ℕ) : ((n : ℚ) : Game) = n := by
+  simpa using Game.mk_eq (IGame.ratCast_natCast_equiv n)
+
+@[simp]
+theorem Game.ratCast_intCast_equiv (n : ℤ) : ((n : ℚ) : Game) = n := by
+  simpa using Game.mk_eq (IGame.ratCast_intCast_equiv n)
+
 protected theorem IGame.Numeric.lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : 0 < z) : x < y / z ↔ x * z < y := by
   simp_all [← Surreal.mk_lt_mk, lt_div_iff₀]
@@ -213,23 +221,10 @@ theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ x.toIGame �
 theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : x.toIGame ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
-theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame + q ≈ (x + q).toIGame := by
+theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : (x + q).toIGame ≈ x.toIGame + q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩, ⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩⟩
-  · rw [← (IGame.ratCast_add_equiv ..).lt_congr_left]
-    simpa
-  · intro y hy
-    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
-    rw [(add_congr_right hy).le_congr_right]
-    rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
-    obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
-    apply (lt_trans (b := (s : IGame)) _ _).not_le
-    · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
-      simpa [lt_sub_iff_add_lt]
-    · simpa
-  · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
-    simpa [lt_sub_iff_add_lt]
+  refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩ ,⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
   · rw [← IGame.sub_lt_iff_lt_add, ← (IGame.ratCast_sub_equiv ..).lt_congr_left]
     simpa [sub_lt_iff_lt_add]
   · rw [← (IGame.ratCast_add_equiv ..).lt_congr_right]
@@ -243,17 +238,42 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame + q ≈ (x + q
     · simpa
     · rw [← IGame.sub_lt_iff_lt_add, ← (IGame.ratCast_sub_equiv ..).lt_congr_left]
       simpa [sub_lt_iff_lt_add]
+  · rw [← (IGame.ratCast_add_equiv ..).lt_congr_left]
+    simpa
+  · intro y hy
+    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
+    rw [(add_congr_right hy).le_congr_right]
+    rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
+    obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
+    apply (lt_trans (b := (s : IGame)) _ _).not_le
+    · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
+      simpa [lt_sub_iff_add_lt]
+    · simpa
+  · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
+    simpa [lt_sub_iff_add_lt]
 
-theorem toIGame_ratCast_add_equiv (q : ℚ) (x : ℝ) : q + x.toIGame ≈ (q + x).toIGame := by
+theorem toIGame_ratCast_add_equiv (q : ℚ) (x : ℝ) : (q + x).toIGame ≈ q + x.toIGame := by
   simpa [add_comm] using toIGame_add_ratCast_equiv x q
 
-theorem toIGame_add_equiv (x y : ℝ) : x.toIGame + y.toIGame ≈ (x + y).toIGame := by
+theorem toIGame_add_equiv (x y : ℝ) : (x + y).toIGame ≈ x.toIGame + y.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩ <;> intro q hq
-  · rw [(toIGame_ratCast_add_equiv ..).lt_congr_left]
+  refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩ <;> intro q hq
+  · rw [← sub_lt_iff_lt_add] at hq
+    obtain ⟨r, hr, hr'⟩ := exists_rat_btwn hq
+    rw [sub_lt_comm] at hr
+    obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
+    trans r + s
+    · rw [add_comm, ← IGame.sub_lt_iff_lt_add, ← (ratCast_sub_equiv ..).lt_congr_left]
+      simp_all [← Rat.cast_sub]
+    · apply add_lt_add <;> simpa
+  · rw [← (toIGame_ratCast_add_equiv ..).lt_congr_right]
     simpa
-  · rw [(toIGame_add_ratCast_equiv ..).lt_congr_left]
+  · rw [← (toIGame_add_ratCast_equiv ..).lt_congr_right]
+    simpa
+  · rw [← (toIGame_ratCast_add_equiv ..).lt_congr_left]
+    simpa
+  · rw [← (toIGame_add_ratCast_equiv ..).lt_congr_left]
     simpa
   · rw [← lt_sub_iff_add_lt] at hq
     obtain ⟨r, hr, hr'⟩ := exists_rat_btwn hq
@@ -263,32 +283,31 @@ theorem toIGame_add_equiv (x y : ℝ) : x.toIGame + y.toIGame ≈ (x + y).toIGam
     · apply add_lt_add <;> simpa
     · rw [add_comm, ← IGame.lt_sub_iff_add_lt, ← (ratCast_sub_equiv ..).lt_congr_right]
       simp_all [← Rat.cast_sub]
-  · rw [← sub_lt_iff_lt_add] at hq
-    obtain ⟨r, hr, hr'⟩ := exists_rat_btwn hq
-    rw [sub_lt_comm] at hr
-    obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
-    trans r + s
-    · rw [add_comm, ← IGame.sub_lt_iff_lt_add, ← (ratCast_sub_equiv ..).lt_congr_left]
-      simp_all [← Rat.cast_sub]
-    · apply add_lt_add <;> simpa
-  · rw [(toIGame_ratCast_add_equiv ..).lt_congr_right]
-    simpa
-  · rw [(toIGame_add_ratCast_equiv ..).lt_congr_right]
-    simpa
 
-theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame - q ≈ (x - q).toIGame := by
+theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : (x - q).toIGame ≈ x.toIGame - q := by
   simpa using toIGame_add_ratCast_equiv x (-q)
 
-theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : q - x.toIGame ≈ (q - x).toIGame := by
+theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : (q - x).toIGame ≈ q - x.toIGame := by
   simpa using toIGame_ratCast_add_equiv q (-x)
 
-theorem toIGame_sub_equiv (x y : ℝ) : x.toIGame - y.toIGame ≈ (x - y).toIGame := by
+theorem toIGame_sub_equiv (x y : ℝ) : (x - y).toIGame ≈ x.toIGame - y.toIGame := by
   simpa using toIGame_add_equiv x (-y)
 
-theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame * q ≈ (x * q).toIGame := by
+theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x.toIGame * q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩
+  refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
+  · intro r h
+    obtain hq | rfl | hq := lt_trichotomy q 0
+    · rw [← lt_div_iff_of_neg (mod_cast hq)] at h
+      rw [← Numeric.lt_div_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
+      simpa
+    · simp_all
+    · rw [← div_lt_iff₀ (mod_cast hq)] at h
+      rw [← Numeric.div_lt_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
+      simpa
+  · sorry
+  · sorry
   · intro r hr y hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     unfold mulOption
@@ -303,25 +322,14 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : x.toIGame * q ≈ (x * q
     · rw [← lt_div_iff₀ (mod_cast hq)] at h
       rw [← Numeric.lt_div_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
       simpa
-  · intro r h
-    obtain hq | rfl | hq := lt_trichotomy q 0
-    · rw [← lt_div_iff_of_neg (mod_cast hq)] at h
-      rw [← Numeric.lt_div_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
-      simpa
-    · simp_all
-    · rw [← div_lt_iff₀ (mod_cast hq)] at h
-      rw [← Numeric.div_lt_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
-      simpa
-  · sorry
-  · sorry
 
-theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : q * x.toIGame ≈ (q * x).toIGame := by
+theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x.toIGame := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
-theorem toIGame_mul_equiv (x y : ℝ) : x.toIGame * y.toIGame ≈ (x * y).toIGame := by
+theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x.toIGame * y.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨⟨?_, ?_⟩, ?_⟩, ⟨?_, ⟨?_, ?_⟩⟩⟩
+  refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
   · sorry
   · sorry
   · sorry
@@ -333,7 +341,7 @@ theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
   obtain rfl | h := eq_or_ne x 0
   · rw [inv_zero, inv_of_equiv_zero toIGame_zero_equiv]
     exact toIGame_zero_equiv
-  · apply Numeric.equiv_inv_of_mul_eq_one ((toIGame_mul_equiv ..).trans _)
+  · apply Numeric.equiv_inv_of_mul_eq_one ((toIGame_mul_equiv ..).symm.trans _)
     rw [inv_mul_cancel₀ h]
     exact toIGame_one_equiv
 
@@ -346,10 +354,31 @@ def toGame : ℝ ↪o Game :=
 @[simp] theorem _root_.Game.mk_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
 
 theorem toGame_def (x : ℝ) : toGame x = {(↑) '' {q : ℚ | q < x} | (↑) '' {q : ℚ | x < q}}ᴳ := by
-  sorry
+  rw [← Game.mk_toIGame, toIGame_def]
+  simp [Set.image_image]
 
-@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
-@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
+@[simp] theorem toGame_ratCast (q : ℚ) : toGame q = q := Game.mk_eq (toIGame_ratCast_equiv q)
+@[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := by simpa using toGame_ratCast n
+@[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := by simpa using toGame_ratCast n
+
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simpa using toGame_natCast 0
+@[simp] theorem toGame_one : toGame 1 = 1 := by simpa using toGame_natCast 1
+
+@[simp]
+theorem toGame_add (x y : ℝ) : toGame (x + y) = toGame x + toGame y := by
+  simpa using Game.mk_eq (toIGame_add_equiv x y)
+
+@[simp]
+theorem toGame_sub (x y : ℝ) : toGame (x - y) = toGame x - toGame y := by
+  simpa using Game.mk_eq (toIGame_sub_equiv x y)
+
+/-- `Real.toGame` as an `OrderAddMonoidHom`. -/
+@[simps]
+def toGameAddHom : ℝ →+o Game where
+  toFun := toGame
+  map_zero' := toGame_zero
+  map_add' := toGame_add
+  monotone' := toGame.monotone
 
 end Real
 end
