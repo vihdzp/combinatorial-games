@@ -178,8 +178,6 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGame.leftMoves := by
   simpa
 
-alias _root_.LT.lt.mem_leftMoves_toIGame := mem_leftMoves_toIGame_of_lt
-
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
 @[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
@@ -197,14 +195,14 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
-@[simp] theorem _root_.Game.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
 theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
-  rw [← Game.mk_toIGame, toIGame_def]
+  rw [← Game.mk_natOrdinal_toIGame, toIGame_def]
   simp [image_image]
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toIGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toIGame]
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_natOrdinal_toIGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_natOrdinal_toIGame]
 
 @[simp]
 theorem not_toGame_fuzzy (a b : NatOrdinal) : ¬ toGame a ‖ toGame b :=
@@ -245,8 +243,8 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
-    exact leftMove_lf <|
-      mulOption_left_left_mem_leftMoves_mul hc.mem_leftMoves_toIGame hd.mem_leftMoves_toIGame
+    exact leftMove_lf <| mulOption_left_left_mem_leftMoves_mul
+      (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
       ← (add_congr_right (toIGame_mul ..)).le_congr (add_congr (toIGame_mul ..) (toIGame_mul ..)),
