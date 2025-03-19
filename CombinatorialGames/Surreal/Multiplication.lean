@@ -562,21 +562,45 @@ protected theorem mul_right_cancel {x y z : IGame} [Numeric x] [Numeric y] [Nume
   rw [← Surreal.mk_eq_mk] at *
   exact mul_right_cancel₀ hx h
 
+@[simp]
 protected theorem mul_le_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
   mul_le_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
+@[simp]
 protected theorem mul_le_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
   mul_le_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
+@[simp]
 protected theorem mul_lt_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hx : 0 < x) : x * y < x * z ↔ y < z :=
   mul_lt_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
+@[simp]
 protected theorem mul_lt_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hx : 0 < x) : y * x < z * x ↔ y < z :=
   mul_lt_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+
+@[simp]
+protected theorem mul_le_mul_left_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : z * x ≤ z * y ↔ y ≤ x :=
+  mul_le_mul_left_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+@[simp]
+protected theorem mul_le_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : x * z ≤ y * z ↔ y ≤ x :=
+  mul_le_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+@[simp]
+protected theorem mul_lt_mul_left_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : z * x < z * y ↔ y < x :=
+  mul_lt_mul_left_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+@[simp]
+protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hz : z < 0) : x * z < y * z ↔ y < x :=
+  mul_lt_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
 
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]
