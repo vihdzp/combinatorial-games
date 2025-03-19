@@ -321,3 +321,17 @@ theorem ratCast_inj {m n : ℚ} : (m : IGame) = n ↔ m = n :=
   ratCast_strictMono.injective.eq_iff
 
 end IGame
+
+namespace Game
+
+@[simp, norm_cast] theorem ratCast_le {m n : ℚ} : (m : Game) ≤ n ↔ m ≤ n := IGame.ratCast_le
+@[simp, norm_cast] theorem ratCast_lt {m n : ℚ} : (m : Game) < n ↔ m < n := IGame.ratCast_lt
+
+theorem ratCast_strictMono : StrictMono ((↑) : ℚ → Game) :=
+  fun _ _ h ↦ ratCast_lt.2 h
+
+@[simp, norm_cast]
+theorem ratCast_inj {m n : ℚ} : (m : Game) = n ↔ m = n :=
+  ratCast_strictMono.injective.eq_iff
+
+end Game
