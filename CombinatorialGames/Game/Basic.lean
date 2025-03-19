@@ -59,7 +59,7 @@ theorem equiv_mk_out (x : IGame) : x ≈ (mk x).out := (mk_out_equiv x).symm
 /-- Construct a `Game` from its left and right sets.
 
 This is given notation `{s | t}ᴳ`, where the superscript `G` is to disambiguate from set builder
-notation, and from the analogous constructor on `IGame`.
+notation, and from the analogous constructors on `IGame` and `Surreal`.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in `Game` have a canonical representative.  -/

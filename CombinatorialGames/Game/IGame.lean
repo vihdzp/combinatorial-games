@@ -337,7 +337,7 @@ macro "igame_wf" : tactic =>
 /-- Construct an `IGame` from its left and right sets.
 
 This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructor on `Game`.
+notation, and from the analogous constructors on `Game` and `Surreal`.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
