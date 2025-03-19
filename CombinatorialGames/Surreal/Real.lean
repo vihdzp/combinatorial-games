@@ -343,5 +343,13 @@ theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
 def toGame : ℝ ↪o Game :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
+@[simp] theorem _root_.Game.mk_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
+
+theorem toGame_def (x : ℝ) : toGame x = {(↑) '' {q : ℚ | q < x} | (↑) '' {q : ℚ | x < q}}ᴳ := by
+  sorry
+
+@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
+@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
+
 end Real
 end
