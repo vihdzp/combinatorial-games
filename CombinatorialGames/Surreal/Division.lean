@@ -330,8 +330,9 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
   | zero => simp
   | succ n =>
     refine invRec (mod_cast n.succ_pos) ⟨0, ?_⟩ ?_ ?_ ?_ ?_
-    any_goals simp
+    any_goals (try · simp)
     all_goals
+      simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
       rintro _ hn rfl x hx q hq
       use (1 + -q) / n
       first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
