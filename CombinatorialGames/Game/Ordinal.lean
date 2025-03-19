@@ -195,14 +195,14 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
-@[simp] theorem _root_.Game.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
+@[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
 theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
-  rw [← Game.mk_toIGame, toIGame_def]
+  rw [← Game.mk_natOrdinal_toIGame, toIGame_def]
   simp [image_image]
 
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toIGame]
-@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toIGame]
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_natOrdinal_toIGame]
+@[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_natOrdinal_toIGame]
 
 @[simp]
 theorem not_toGame_fuzzy (a b : NatOrdinal) : ¬ toGame a ‖ toGame b :=

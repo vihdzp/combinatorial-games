@@ -29,7 +29,9 @@ namespace NatOrdinal
 def toSurreal : NatOrdinal ↪o Surreal :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
-@[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
+@[simp]
+theorem _root_.Surreal.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal :=
+  rfl
 
 @[simp]
 theorem _root_.Surreal.toGame_toSurreal (o : NatOrdinal) : o.toSurreal.toGame = o.toGame :=
@@ -39,8 +41,8 @@ theorem toSurreal_def (o : NatOrdinal) : o.toSurreal = {toSurreal '' Iio o | ∅
   simp_rw [← Surreal.mk_toIGame, toIGame_def o, Surreal.mk_ofSets]
   congr <;> aesop
 
-@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
-@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
+@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_natOrdinal_toIGame]
+@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_natOrdinal_toIGame]
 
 @[simp]
 theorem toSurreal_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
