@@ -200,10 +200,8 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 /-! ### `NatOrdinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
-noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
-  toFun o := .mk o.toIGame
-  inj' a b := by simp [le_antisymm_iff]
-  map_rel_iff' := toIGame_le_iff
+noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
 @[simp] theorem _root_.Game.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
