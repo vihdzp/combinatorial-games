@@ -184,18 +184,13 @@ alias _root_.LT.lt.mem_leftMoves_toIGame := mem_leftMoves_toIGame_of_lt
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
 @[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
 
-theorem toIGame_le_iff {a b : NatOrdinal} : toIGame a ≤ toIGame b ↔ a ≤ b := by simp
-theorem toIGame_lt_iff {a b : NatOrdinal} : toIGame a < toIGame b ↔ a < b := by simp
-theorem toIGame_equiv_iff {a b : NatOrdinal} : toIGame a ≈ toIGame b ↔ a = b := by simp
-theorem toIGame_inj {a b : NatOrdinal} : toIGame a = toIGame b ↔ a = b := by simp
-
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
   simpa [IncompRel] using le_of_lt
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
-  simpa using toIGame_le_iff.2 (NatOrdinal.zero_le a)
+  simpa using toIGame.monotone (NatOrdinal.zero_le a)
 
 /-! ### `NatOrdinal` to `Game` -/
 
@@ -209,10 +204,6 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} where
 
 @[simp] theorem toGame_zero : toGame 0 = 0 := by simp [← Game.mk_toPGame]
 @[simp] theorem toGame_one : toGame 1 = 1 := by simp [← Game.mk_toPGame]
-
-theorem toGame_le_iff {a b : NatOrdinal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
-theorem toGame_lt_iff {a b : NatOrdinal} : toGame a < toGame b ↔ a < b := by simp
-theorem toGame_inj {a b : NatOrdinal} : toGame a = toGame b ↔ a = b := by simp
 
 @[simp]
 theorem not_toGame_fuzzy (a b : NatOrdinal) : ¬ toGame a ‖ toGame b :=
@@ -272,7 +263,7 @@ def toGameAddHom : NatOrdinal →+o Game where
   toFun := toGame
   map_zero' := toGame_zero
   map_add' := toGame_add
-  monotone' _ _ := toGame_le_iff.2
+  monotone' := toGame.monotone
 
 /-! ### `NatCast` properties -/
 

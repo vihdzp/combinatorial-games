@@ -40,13 +40,6 @@ def toSurreal : NatOrdinal ↪o Surreal where
 theorem toSurreal_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
   toIGame_nonneg a
 
-theorem toSurreal_injective : Function.Injective toSurreal :=
-  toSurreal.injective
-
-theorem toSurreal_le_iff {a b : NatOrdinal} : a.toSurreal ≤ b.toSurreal ↔ a ≤ b := by simp
-theorem toSurreal_lt_iff {a b : NatOrdinal} : a.toSurreal < b.toSurreal ↔ a < b := by simp
-theorem toSurreal_inj {a b : NatOrdinal} : a.toSurreal = b.toSurreal ↔ a = b := by simp
-
 @[simp]
 theorem toSurreal_add (a b : NatOrdinal) : (a + b).toSurreal = a.toSurreal + b.toSurreal :=
   mk_eq (toIGame_add a b)
@@ -63,7 +56,7 @@ def toSurrealRingHom : NatOrdinal →+*o Surreal where
   map_one' := toSurreal_one
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
-  monotone' _ _ := toGame_le_iff.2
+  monotone' := toSurreal.monotone
 
 @[simp]
 theorem toSurreal_natCast : ∀ n : ℕ, toSurreal n = n :=
