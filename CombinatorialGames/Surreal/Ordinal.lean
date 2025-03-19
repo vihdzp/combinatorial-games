@@ -13,7 +13,7 @@ import Mathlib.Algebra.Order.Hom.Ring
 We define the canonical map `NatOrdinal → Surreal` in terms of the map `NatOrdinal.toIGame`.
 -/
 
-open IGame Surreal
+open IGame Set Surreal
 
 noncomputable section
 
@@ -32,6 +32,10 @@ def toSurreal : NatOrdinal ↪o Surreal where
   map_rel_iff' := @toIGame_le_iff
 
 @[simp] theorem _root_.Surreal.mk_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal := rfl
+
+theorem toSurreal_def (o : NatOrdinal) : o.toSurreal = {toSurreal '' Iio o | ∅}ˢ := by
+  simp_rw [← Surreal.mk_toIGame, toIGame_def o, Surreal.mk_ofSets]
+  congr <;> aesop
 
 @[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_toIGame]
 @[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_toIGame]
