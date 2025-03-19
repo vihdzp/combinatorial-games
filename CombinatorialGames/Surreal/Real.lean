@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Surreal.Division
+import Mathlib.Algebra.Order.Hom.Ring
 import Mathlib.Data.Real.Archimedean
 
 /-!
@@ -268,6 +269,87 @@ theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : (q - x).toIGame ≈ q - 
 theorem toIGame_sub_equiv (x y : ℝ) : (x - y).toIGame ≈ x.toIGame - y.toIGame := by
   simpa using toIGame_add_equiv x (-y)
 
+/-! ### `ℝ` to `Game` -/
+
+/-- The canonical map from `ℝ` to `Game`, sending a real number to its Dedekind cut. -/
+def toGame : ℝ ↪o Game :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
+
+@[simp] theorem _root_.Game.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
+
+theorem toGame_def (x : ℝ) : toGame x = {(↑) '' {q : ℚ | q < x} | (↑) '' {q : ℚ | x < q}}ᴳ := by
+  rw [← Game.mk_real_toIGame, toIGame_def]
+  simp [Set.image_image]
+
+@[simp] theorem toGame_ratCast (q : ℚ) : toGame q = q := Game.mk_eq (toIGame_ratCast_equiv q)
+@[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := by simpa using toGame_ratCast n
+@[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := by simpa using toGame_ratCast n
+
+@[simp] theorem toGame_zero : toGame 0 = 0 := by simpa using toGame_natCast 0
+@[simp] theorem toGame_one : toGame 1 = 1 := by simpa using toGame_natCast 1
+
+@[simp]
+theorem toGame_add (x y : ℝ) : toGame (x + y) = toGame x + toGame y := by
+  simpa using Game.mk_eq (toIGame_add_equiv x y)
+
+@[simp]
+theorem toGame_sub (x y : ℝ) : toGame (x - y) = toGame x - toGame y := by
+  simpa using Game.mk_eq (toIGame_sub_equiv x y)
+
+/-- `Real.toGame` as an `OrderAddMonoidHom`. -/
+@[simps]
+def toGameAddHom : ℝ →+o Game where
+  toFun := toGame
+  map_zero' := toGame_zero
+  map_add' := toGame_add
+  monotone' := toGame.monotone
+
+/-! ### `ℝ` to `Surreal` -/
+
+/-- The canonical map from `ℝ` to `Surreal`, sending a real number to its Dedekind cut. -/
+def toSurreal : ℝ ↪o Surreal :=
+  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
+
+@[simp] theorem _root_.Surreal.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toSurreal := rfl
+
+private theorem toSurreal_def_aux {x : ℝ} :
+    ∀ y ∈ ((↑) '' {q : ℚ | q < x} : Set Surreal), ∀ z ∈ (↑) '' {q : ℚ | x < q}, y < z := by
+  rintro - ⟨q, hq, rfl⟩ - ⟨r, hr, rfl⟩
+  dsimp at *
+  exact_mod_cast hq.trans hr
+
+theorem toSurreal_def (x : ℝ) : toSurreal x =
+    .ofSets ((↑) '' {q : ℚ | q < x}) ((↑) '' {q : ℚ | x < q}) toSurreal_def_aux := by
+  rw [← Surreal.mk_real_toIGame]
+  simp_rw [toIGame_def, Surreal.mk_ofSets]
+  congr
+  all_goals
+    ext
+    constructor
+    · aesop
+    · rintro ⟨y, hy, rfl⟩
+      refine ⟨⟨y, ?_⟩, ?_⟩ <;> simp_all
+
+@[simp]
+theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
+  simpa using Surreal.mk_eq (toIGame_ratCast_equiv q)
+
+@[simp] theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by simpa using toSurreal_ratCast n
+@[simp] theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by simpa using toSurreal_ratCast n
+
+@[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simpa using toSurreal_natCast 0
+@[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simpa using toSurreal_natCast 1
+
+@[simp]
+theorem toSurreal_add (x y : ℝ) : toSurreal (x + y) = toSurreal x + toSurreal y := by
+  simpa using Surreal.mk_eq (toIGame_add_equiv x y)
+
+@[simp]
+theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = toSurreal x - toSurreal y := by
+  simpa using Surreal.mk_eq (toIGame_sub_equiv x y)
+
+/-! For convenience, we deal with multiplication after defining `Real.toSurreal`. -/
+
 private theorem exists_rat_mul_btwn {a b x : ℝ} (h : a * x < b) :
     ∃ q : ℚ, a * x ≤ q * x ∧ q * x < b := by
   obtain hx | rfl | hx := lt_trichotomy x 0
@@ -373,60 +455,114 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x.to
 theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x.toIGame := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
+private theorem ratCast_lt_mul_toIGame'
+    {x y : ℝ} {q : ℚ} (hx : 0 < x) (hy : 0 < y) (h : q < x * y) : q < toIGame x * toIGame y := by
+  rw [← div_lt_iff₀ hy] at h
+  obtain ⟨r, hr, hr'⟩ := exists_rat_btwn (max_lt h hx)
+  obtain ⟨hr, hr₀⟩ := max_lt_iff.1 hr
+  rw [div_lt_comm₀ hy hr₀] at hr
+  obtain ⟨s, hs, hs'⟩ := exists_rat_btwn (max_lt hr hy)
+  trans r * s
+  · rw [mul_comm, ← IGame.Numeric.div_lt_iff (by simpa using hr₀),
+      ← (ratCast_div_equiv ..).lt_congr_left]
+    simp_all [← Rat.cast_div]
+  · simp_rw [← Surreal.mk_lt_mk]
+    dsimp
+    apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
+      simp_all [← toSurreal_zero, ← toSurreal_ratCast]
+
+private theorem mul_toIGame_lt_ratCast'
+    {x y : ℝ} {q : ℚ} (hx : 0 < x) (hy : 0 < y) (h : x * y < q) : toIGame x * toIGame y < q := by
+  rw [← lt_div_iff₀ hy] at h
+  obtain ⟨r, hr, hr'⟩ := exists_rat_btwn h
+  have hr₀ := hx.trans hr
+  rw [lt_div_comm₀ hr₀ hy] at hr'
+  obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr'
+  trans r * s
+  · simp_rw [← Surreal.mk_lt_mk]
+    dsimp
+    apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
+      simp_all [← toSurreal_zero, ← toSurreal_ratCast]
+  · rw [mul_comm, ← IGame.Numeric.lt_div_iff (by simp_all),
+      ← (ratCast_div_equiv ..).lt_congr_right]
+    simp_all [← Rat.cast_div]
+
+private theorem ratCast_lt_mul_toIGame {x y : ℝ} (q : ℚ) (h : q < x * y) :
+    q < toIGame x * toIGame y := by
+  obtain hx | rfl | hx := lt_trichotomy x 0
+  · obtain hy | rfl | hy := lt_trichotomy y 0
+    · have := @ratCast_lt_mul_toIGame' (-x) (-y) q
+      simp_all
+    · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
+      simp_all
+    · have := @mul_toIGame_lt_ratCast' (-x) y (-q)
+      simp_all
+  · rw [(Numeric.mul_congr_left toIGame_zero_equiv).lt_congr_right]
+    simp_all
+  · obtain hy | rfl | hy := lt_trichotomy y 0
+    · have := @mul_toIGame_lt_ratCast' x (-y) (-q)
+      simp_all
+    · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
+      simp_all
+    · exact ratCast_lt_mul_toIGame' hx hy h
+
+private theorem mul_toIGame_lt_ratCast {x y : ℝ} (q : ℚ) (h : x * y < q) :
+    toIGame x * toIGame y < q := by
+  have := @ratCast_lt_mul_toIGame (-x) y (-q)
+  simp_all
+
+private theorem toSurreal_mul_ratCast (x : ℝ) (q : ℚ) : toSurreal (x * q) = toSurreal x * q := by
+  simpa using Surreal.mk_eq (toIGame_mul_ratCast_equiv x q)
+
+private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : ℚ} :
+    mulOption (toIGame x) (toIGame y) q r ≈ toIGame (q * y + x * r - q * r) := by
+  simp [← Surreal.mk_eq_mk, mulOption, mul_comm, toSurreal_mul_ratCast]
+
 theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x.toIGame * y.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-  · sorry
-
-#exit
-theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
-  obtain rfl | h := eq_or_ne x 0
-  · rw [inv_zero, inv_of_equiv_zero toIGame_zero_equiv]
-    exact toIGame_zero_equiv
-  · apply Numeric.equiv_inv_of_mul_eq_one ((toIGame_mul_equiv ..).symm.trans _)
-    rw [inv_mul_cancel₀ h]
-    exact toIGame_one_equiv
-
-/-! ### `ℝ` to `Game` -/
-
-/-- The canonical map from `ℝ` to `Game`, sending a real number to its Dedekind cut. -/
-def toGame : ℝ ↪o Game :=
-  .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
-
-@[simp] theorem _root_.Game.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
-
-theorem toGame_def (x : ℝ) : toGame x = {(↑) '' {q : ℚ | q < x} | (↑) '' {q : ℚ | x < q}}ᴳ := by
-  rw [← Game.mk_real_toIGame, toIGame_def]
-  simp [Set.image_image]
-
-@[simp] theorem toGame_ratCast (q : ℚ) : toGame q = q := Game.mk_eq (toIGame_ratCast_equiv q)
-@[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := by simpa using toGame_ratCast n
-@[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := by simpa using toGame_ratCast n
-
-@[simp] theorem toGame_zero : toGame 0 = 0 := by simpa using toGame_natCast 0
-@[simp] theorem toGame_one : toGame 1 = 1 := by simpa using toGame_natCast 1
+  refine ⟨⟨ratCast_lt_mul_toIGame, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, mul_toIGame_lt_ratCast⟩⟩ <;>
+    intro q hq r hr
+  · rw [mulOption_toIGame_equiv.lt_congr_right, toIGame.lt_iff_lt]
+    have : 0 < (x - q) * (r - y) := by apply mul_pos <;> simpa [sub_pos]
+    simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add', add_sub_assoc]
+  · rw [mulOption_toIGame_equiv.lt_congr_right, toIGame.lt_iff_lt]
+    have : 0 < (x - q) * (r - y) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
+    simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add', add_sub_assoc]
+  · rw [mulOption_toIGame_equiv.lt_congr_left, toIGame.lt_iff_lt]
+    have : 0 < (x - q) * (y - r) := by apply mul_pos <;> simpa [sub_pos]
+    simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt', add_sub_assoc]
+  · rw [mulOption_toIGame_equiv.lt_congr_left, toIGame.lt_iff_lt]
+    have : 0 < (x - q) * (y - r) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
+    simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt', add_sub_assoc]
 
 @[simp]
-theorem toGame_add (x y : ℝ) : toGame (x + y) = toGame x + toGame y := by
-  simpa using Game.mk_eq (toIGame_add_equiv x y)
+theorem toSurreal_mul (x y : ℝ) : (x * y).toSurreal = x.toSurreal * y.toSurreal :=
+  Surreal.mk_eq (toIGame_mul_equiv x y)
 
-@[simp]
-theorem toGame_sub (x y : ℝ) : toGame (x - y) = toGame x - toGame y := by
-  simpa using Game.mk_eq (toIGame_sub_equiv x y)
-
-/-- `Real.toGame` as an `OrderAddMonoidHom`. -/
+/-- `Real.toSurreal` as an `OrderRingHom`. -/
 @[simps]
-def toGameAddHom : ℝ →+o Game where
-  toFun := toGame
-  map_zero' := toGame_zero
-  map_add' := toGame_add
+def toSurrealRingHom : ℝ →+*o Surreal where
+  toFun := toSurreal
+  map_zero' := toSurreal_zero
+  map_one' := toSurreal_one
+  map_add' := toSurreal_add
+  map_mul' := toSurreal_mul
   monotone' := toGame.monotone
+
+@[simp]
+theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=
+  map_inv₀ toSurrealRingHom x
+
+@[simp]
+theorem toSurreal_div (x y : ℝ) : (x / y).toSurreal = x.toSurreal / y.toSurreal :=
+  map_div₀ toSurrealRingHom x y
+
+theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
+  simp [← Surreal.mk_eq_mk]
+
+theorem toIGame_div_equiv (x y : ℝ) : (x / y).toIGame ≈ x.toIGame / y.toIGame := by
+  simp [← Surreal.mk_eq_mk]
 
 end Real
 end
