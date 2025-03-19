@@ -314,13 +314,11 @@ theorem ratCast_sub_equiv (m n : ℚ) : ((m - n : ℚ) : IGame) ≈ m - n := by
 theorem ratCast_mul_equiv (m n : ℚ) : ((m * n : ℚ) : IGame) ≈ m * n := by
   simp [← Surreal.mk_eq_mk]
 
-/-
 theorem ratCast_inv_equiv (m : ℚ) : ((m⁻¹ : ℚ) : IGame) ≈ m⁻¹ := by
   simp [← Surreal.mk_eq_mk]
 
 theorem ratCast_div_equiv (m n : ℚ) : ((m / n : ℚ) : IGame) ≈ m / n := by
   simp [← Surreal.mk_eq_mk]
--/
 
 end IGame
 
