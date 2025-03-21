@@ -66,8 +66,7 @@ theorem IGame.mulOption_congr₄ {x y a b₁ b₂ : IGame}
 open Pointwise in
 theorem Set.neg_image {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
     {s : Set β} {f : β → α} (h : ∀ x ∈ s, f (-x) = -f x) : -f '' s = f '' (-s) := by
-  simp_rw [← Set.image_neg_eq_neg, Set.image_image]
-  aesop
+  simp_all [← Set.image_neg_eq_neg, Set.image_image]
 
 namespace Real
 
@@ -83,9 +82,7 @@ private theorem Numeric.toIGame' (x : ℝ) : Numeric (toIGame' x) := by
   · intro x hx y hy
     dsimp at *
     exact_mod_cast hx.trans hy
-  all_goals
-    intros
-    infer_instance
+  all_goals infer_instance
 
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut. -/
 def toIGame : ℝ ↪o IGame := by
