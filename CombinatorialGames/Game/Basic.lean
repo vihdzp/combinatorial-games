@@ -287,5 +287,21 @@ theorem intCast_add_equiv (m n : ℤ) : ((m + n : ℤ) : IGame) ≈ m + n := by
 theorem intCast_sub_equiv (m n : ℤ) : ((m - n : ℤ) : IGame) ≈ m - n := by
   simp [← Game.mk_eq_mk]
 
+@[simp, norm_cast]
+theorem zero_lt_intCast {n : ℤ} : 0 < (n : IGame) ↔ 0 < n := by
+  simpa using intCast_lt (m := 0)
+
+@[simp, norm_cast]
+theorem intCast_lt_zero {n : ℤ} : (n : IGame) < 0 ↔ n < 0 := by
+  simpa using intCast_lt (n := 0)
+
+@[simp, norm_cast]
+theorem zero_le_intCast {n : ℤ} : 0 ≤ (n : IGame) ↔ 0 ≤ n := by
+  simpa using intCast_le (m := 0)
+
+@[simp, norm_cast]
+theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
+  simpa using intCast_le (n := 0)
+
 end IGame
 end

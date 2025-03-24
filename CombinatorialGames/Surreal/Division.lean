@@ -383,6 +383,22 @@ theorem ratCast_inv_equiv (m : ℚ) : ((m⁻¹ : ℚ) : IGame) ≈ m⁻¹ := by
 theorem ratCast_div_equiv (m n : ℚ) : ((m / n : ℚ) : IGame) ≈ m / n := by
   simp [← Surreal.mk_eq_mk]
 
+@[simp, norm_cast]
+theorem zero_lt_ratCast {q : ℚ} : 0 < (q : IGame) ↔ 0 < q := by
+  simpa using ratCast_lt (m := 0)
+
+@[simp, norm_cast]
+theorem ratCast_lt_zero {q : ℚ} : (q : IGame) < 0 ↔ q < 0 := by
+  simpa using ratCast_lt (n := 0)
+
+@[simp, norm_cast]
+theorem zero_le_ratCast {q : ℚ} : 0 ≤ (q : IGame) ↔ 0 ≤ q := by
+  simpa using ratCast_le (m := 0)
+
+@[simp, norm_cast]
+theorem ratCast_le_zero {q : ℚ} : (q : IGame) ≤ 0 ↔ q ≤ 0 := by
+  simpa using ratCast_le (n := 0)
+
 -- TODO: upstream
 attribute [simp] AntisymmRel.refl
 
@@ -469,5 +485,21 @@ theorem ratCast_add (m n : ℚ) : ((m + n : ℚ) : Game) = m + n :=
 @[simp, norm_cast]
 theorem ratCast_sub (m n : ℚ) : ((m - n : ℚ) : Game) = m - n :=
   Game.mk_eq (IGame.ratCast_sub_equiv m n)
+
+@[simp, norm_cast]
+theorem zero_lt_ratCast {q : ℚ} : 0 < (q : Game) ↔ 0 < q :=
+  IGame.zero_lt_ratCast
+
+@[simp, norm_cast]
+theorem ratCast_lt_zero {q : ℚ} : (q : Game) < 0 ↔ q < 0 :=
+  IGame.ratCast_lt_zero
+
+@[simp, norm_cast]
+theorem zero_le_ratCast {q : ℚ} : 0 ≤ (q : Game) ↔ 0 ≤ q :=
+  IGame.zero_le_ratCast
+
+@[simp, norm_cast]
+theorem ratCast_le_zero {q : ℚ} : (q : Game) ≤ 0 ↔ q ≤ 0 :=
+  IGame.ratCast_le_zero
 
 end Game

@@ -479,7 +479,7 @@ variable {x x₁ x₂ y y₁ y₂: IGame}
 instance mul (x y : IGame) [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :=
   main _ <| Args.numeric_P1.mpr ⟨hx, hy⟩
 
-instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
+protected instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
   inferInstanceAs (Numeric (_ - _))
 
@@ -605,5 +605,25 @@ protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
+
+theorem mulOption_congr₁ {x₁ x₂ y a b : IGame}
+    [Numeric x₁] [Numeric x₂] [Numeric y] [Numeric a] [Numeric b] (he : x₁ ≈ x₂) :
+    mulOption x₁ y a b ≈ mulOption x₂ y a b := by
+  simp_all [← Surreal.mk_eq_mk, mulOption]
+
+theorem mulOption_congr₂ {x y₁ y₂ a b : IGame}
+    [Numeric x] [Numeric y₁] [Numeric y₂] [Numeric a] [Numeric b] (he : y₁ ≈ y₂) :
+    mulOption x y₁ a b ≈ mulOption x y₂ a b := by
+  simp_all [← Surreal.mk_eq_mk, mulOption]
+
+theorem mulOption_congr₃ {x y a₁ a₂ b : IGame}
+    [Numeric x] [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
+    mulOption x y a₁ b ≈ mulOption x y a₂ b := by
+  simp_all [← Surreal.mk_eq_mk, mulOption]
+
+theorem mulOption_congr₄ {x y a b₁ b₂ : IGame}
+    [Numeric x] [Numeric y] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
+    mulOption x y a b₁ ≈ mulOption x y a b₂ := by
+  simp_all [← Surreal.mk_eq_mk, mulOption]
 
 end IGame.Numeric
