@@ -33,37 +33,40 @@ instance : DecidableEq (StrNim σ) := instDecidableEqList -- deriving DecidableE
 
 namespace StrNim
 
+def length (s : StrNim σ) : ℕ := (ofStrNim s).length
+
 instance : EmptyCollection (StrNim σ) := ⟨toStrNim []⟩
 
 variable {σ : Type u} [DecidableEq σ] (s t : StrNim σ)
 
-abbrev char (i : ℕ) : Option σ := (ofStrNim s)[i]?
+instance : GetElem (StrNim σ) Nat σ fun s i => i < s.length where
+  getElem s i hi := (ofStrNim s)[i]'hi
 
 structure Move where
   idx : ℕ
   len : ℕ
   len_pos : 0 < len
-  bounded : idx + len < (ofStrNim s).length
+  bounded : idx + len < s.length
   equiv : ∃ σ, List.take len (List.drop idx (ofStrNim s)) = List.replicate len σ
 
-theorem Move.idx_bounded (m : Move s) : m.idx < (ofStrNim s).length - 1 := by
+theorem Move.idx_bounded (m : Move s) : m.idx < s.length - m.len := by
   have := m.bounded
   have := m.len_pos
   omega
 
 /-- Players can remove any repeating substring -/
 def moves : List (Move s) :=
-  let idxs := List.range ((ofStrNim s).length - 1)
-  let lens := List.attach <| List.range' 1 (ofStrNim s).length
+  let idxs := List.range (s.length - 1)
+  let lens := List.attach <| List.range' 1 s.length
   let prod := idxs.product lens
   prod.filterMap fun ⟨i, ⟨l, hl⟩⟩ ↦
-    if h : (i + l) < (ofStrNim s).length ∧
+    if h : (i + l) < s.length ∧
       (List.take l (List.drop i (ofStrNim s))).toFinset.card = 1
     then some ⟨i, l, by rw [List.mem_range'] at hl; omega, by omega, by
       simp_rw [List.eq_replicate_iff]
       rw [Finset.card_eq_one] at h
       refine ⟨h.2.choose, ?_, fun b hb ↦ ?_⟩
-      · rw [List.length_take, List.length_drop, min_eq_left_iff]
+      · rw [List.length_take, List.length_drop, min_eq_left_iff, ← length]
         omega
       · have := h.2.choose_spec
         rw [Finset.eq_singleton_iff_unique_mem, List.mem_toFinset] at this
@@ -76,7 +79,7 @@ theorem moves_total (m : Move s) : m ∈ moves s := by
   simp only [Option.dite_none_right_eq_some, Prod.exists, List.pair_mem_product,
     List.mem_range, List.mem_attach, and_true, exists_and_left, Subtype.exists, List.mem_range'_1]
   refine ⟨
-    m.idx, m.idx_bounded, m.len,
+    m.idx, (by have := m.idx_bounded; have := m.len_pos; omega), m.len,
     ⟨m.len_pos, by have := m.bounded; omega⟩, ⟨m.bounded, ?_⟩, rfl
   ⟩
   rw [m.equiv.choose_spec, List.toFinset_replicate_of_ne_zero (Nat.ne_zero_of_lt m.len_pos)]
@@ -97,14 +100,14 @@ def rel (a b : StrNim σ) : Prop :=
 instance : DecidableRel (@rel σ _) := fun _ _ ↦ inferInstanceAs (Decidable (∃ _, _))
 
 theorem move_size {s : StrNim σ} (m : Move s) :
-    (ofStrNim (move s m)).length + m.len = (ofStrNim s).length := by
+    (ofStrNim (move s m)).length + m.len = s.length := by
   rw [move, ofStrNim_toStrNim, List.length_append, List.length_take, List.length_drop]
   have := m.bounded
-  rw [Nat.min_eq_left (by omega)]
+  rw [← length, Nat.min_eq_left (by omega)]
   omega
 
 theorem subrelation_rel :
-    Subrelation (@rel σ _) (InvImage (· < ·) (fun s ↦ (ofStrNim s).length)) := by
+    Subrelation (@rel σ _) (InvImage (· < ·) (fun s ↦ s.length)) := by
   intro a b h
   rw [InvImage, h.choose_spec.2, ← move_size h.choose]
   exact Nat.lt_add_of_pos_right h.choose.len_pos
