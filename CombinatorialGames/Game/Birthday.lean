@@ -224,7 +224,7 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
--- TODO: short game iff finite birthday
+proof_wanted short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0
 
 end IGame
 
