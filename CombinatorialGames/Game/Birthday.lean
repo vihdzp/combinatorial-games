@@ -7,6 +7,7 @@ import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Special
 import Mathlib.Algebra.Order.Group.OrderIso
 import Mathlib.SetTheory.Cardinal.Cofinality
+import Mathlib.Tactic.Ring
 
 /-!
 # Birthdays of games
@@ -225,12 +226,64 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
+open Classical in
+/-- The finset of all games with birthday ≤ n. -/
+noncomputable def birthday_finset : ℕ → Finset IGame.{0}
+  | 0 => {0}
+  | n + 1 => ((birthday_finset n).powerset ×ˢ (birthday_finset n).powerset).map
+    ⟨fun ⟨a, b⟩ => {a | b}ᴵ, fun a b hab => by aesop⟩
+
+@[simp] theorem birthday_finset_zero : birthday_finset 0 = {0} := rfl
+
+open Classical in
+@[simp] theorem birthday_finset_one_card : (birthday_finset 1).card = 4 := by simp [birthday_finset]
+
+@[simp]
+theorem birthday_finset_card (n : ℕ) :
+    (birthday_finset (n + 1)).card = 4 ^ (birthday_finset n).card := by
+  rw [birthday_finset, Finset.card_map, Finset.card_product, Finset.card_powerset, ← mul_pow]
+  simp only [Nat.reduceMul]
+
+theorem birthday_finset_subset (n : ℕ) : (birthday_finset n) ⊂ (birthday_finset (n + 1)) := by
+  apply ssubset_of_subset_of_ne
+  · conv_rhs => rw [birthday_finset]
+
+    sorry
+  · apply_fun Finset.card
+    rw [birthday_finset_card]
+    by_cases h : (birthday_finset n).card = 0
+    · rw [h]
+      decide
+    · sorry
+
+theorem birthday_finset_complete (n : ℕ) : birthday_finset n = { x : IGame | x.birthday ≤ n } := by
+  ext x
+  constructor <;> intro h
+  · sorry
+  · rw [Finset.mem_coe]
+    rw [mem_setOf_eq, ← OrderIso.le_iff_le NatOrdinal.toOrdinal, toOrdinal_cast_nat] at h
+    have h := h.trans_lt (show n < Ordinal.omega0 by simpa using Ordinal.nat_lt_omega0 n)
+    rw [Ordinal.lt_omega0] at h
+    obtain ⟨k, hk⟩ := h
+    suffices x ∈ birthday_finset k by
+      sorry
+    sorry
+
+theorem leftMoves_finite_birthday_nat (x : IGame) (hx : x.birthday < Ordinal.omega0)
+    : x.leftMoves.Finite := by
+  wlog h : Nonempty x.leftMoves
+  · rw [not_nonempty_iff] at h
+    exact toFinite x.leftMoves
+  rw [birthday_eq_max, sup_lt_iff] at hx
+  obtain ⟨hx, -⟩ := hx
+  sorry
+
 theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0 := by
   rw [short_def]
   refine ⟨fun ⟨hfl, hfr, hl, hr⟩ => ?_, fun h => ?_⟩
   · rw [birthday_eq_max, sup_lt_iff]
     -- TODO: these declarations have to be definition-casted.
-    -- is there a nicer way we can work around finiteness here?
+    -- is there a nicer way we can work around explicit finiteness here?
     have : Finite x.leftMoves := hfl
     have : Finite x.rightMoves := hfr
     constructor
@@ -256,12 +309,12 @@ theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal
       use succ n
       rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
   · refine ⟨?_, ?_, fun y hy => ?_, fun y hy => ?_⟩
-    · by_contra! h
-      rw [← Set.Infinite] at h
-      sorry
-    · sorry
+    rotate_right 2
     · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
     · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
+    all_goals rw [birthday_eq_max] at h
+    · sorry
+    · sorry
 termination_by x
 decreasing_by igame_wf
 
