@@ -304,15 +304,16 @@ theorem birthday_finset_mem_consistent {x : IGame} {n : ℕ} (hxn : x ∈ birthd
       Function.Embedding.coeFn_mk, Prod.exists] at hxn
     obtain ⟨l, r, ⟨⟨hl, hr⟩, hlr⟩⟩ := hxn
     rw [birthday_eq_max, sup_le_iff]
-    constructor
-    · have : ∀ y ∈ x.leftMoves, y.birthday ≤ k := fun y hy => by
+    refine ⟨ciSup_le' fun ⟨y, hy⟩ => ?_, ciSup_le' fun ⟨y, hy⟩ => ?_⟩
+    all_goals rw [Nat.cast_add_one, succ_le_iff]
+    · have : y.birthday ≤ k := by
         rw [← hlr, leftMoves_ofSets, Finset.mem_coe] at hy
         exact birthday_finset_mem_consistent <| hl hy
-      sorry
-    · have : ∀ y ∈ x.rightMoves, y.birthday ≤ k := fun y hy => by
+      exact lt_add_one_iff.mpr this
+    · have : y.birthday ≤ k := by
         rw [← hlr, rightMoves_ofSets, Finset.mem_coe] at hy
         exact birthday_finset_mem_consistent <| hr hy
-      sorry
+      exact lt_add_one_iff.mpr this
 
 theorem birthday_finset_mem_iff {x : IGame} {n : ℕ} : x ∈ birthday_finset n ↔ x.birthday ≤ n :=
   ⟨birthday_finset_mem_consistent, birthday_finset_lt_consistent⟩
