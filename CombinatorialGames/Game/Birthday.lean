@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Special
 import Mathlib.Algebra.Order.Group.OrderIso
+import Mathlib.SetTheory.Cardinal.Cofinality
 
 /-!
 # Birthdays of games
@@ -224,7 +225,45 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
-proof_wanted short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0
+theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0 := by
+  rw [short_def]
+  refine ⟨fun ⟨hfl, hfr, hl, hr⟩ => ?_, fun h => ?_⟩
+  · rw [birthday_eq_max, sup_lt_iff]
+    -- TODO: these declarations have to be definition-casted.
+    -- is there a nicer way we can work around finiteness here?
+    have : Finite x.leftMoves := hfl
+    have : Finite x.rightMoves := hfr
+    constructor
+    on_goal 1 =>
+      by_cases h : IsEmpty x.leftMoves
+      · rw [ciSup_of_empty, NatOrdinal.bot_eq_zero']
+        exact Ordinal.nat_lt_omega0 0
+    on_goal 2 =>
+      by_cases h : IsEmpty x.rightMoves
+      · rw [ciSup_of_empty, NatOrdinal.bot_eq_zero']
+        exact Ordinal.nat_lt_omega0 0
+    all_goals
+      have := Set.Nonempty.ciSup_lt_iff (a := Ordinal.omega0) (f := fun y => succ (y.val).birthday)
+        (nonempty_iff_univ_nonempty.mp (not_isEmpty_iff.mp h)) (Set.finite_univ)
+      simp_rw [mem_univ, ciSup_unique, forall_const, Subtype.forall] at this
+      rw [this]
+      intro y hy
+      rw [Ordinal.lt_omega0]
+    · obtain ⟨n, hn⟩ := Ordinal.lt_omega0.mp <| (short_iff_birthday_finite y).mp (hl y hy)
+      use succ n
+      rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
+    · obtain ⟨n, hn⟩ := Ordinal.lt_omega0.mp <| (short_iff_birthday_finite y).mp (hr y hy)
+      use succ n
+      rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
+  · refine ⟨?_, ?_, fun y hy => ?_, fun y hy => ?_⟩
+    · by_contra! h
+      rw [← Set.Infinite] at h
+      sorry
+    · sorry
+    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
+    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
+termination_by x
+decreasing_by igame_wf
 
 end IGame
 
