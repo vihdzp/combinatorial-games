@@ -233,7 +233,6 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
-open Classical in
 /-- The finset of all games with birthday ≤ n. -/
 noncomputable def birthday_finset : ℕ → Finset IGame.{u}
   | 0 => {0}
@@ -336,7 +335,6 @@ theorem birthday_finset_eq (n : ℕ) : birthday_finset n = { x : IGame | x.birth
   rw [Finset.mem_coe, birthday_finset_mem_iff_birthday_le]
   exact Eq.to_iff rfl
 
-open Classical in
 theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
     : x.leftMoves.Finite := by
   rw [Ordinal.lt_omega0] at hx
