@@ -387,11 +387,10 @@ theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal
       use succ n
       rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
   · refine ⟨?_, ?_, fun y hy => ?_, fun y hy => ?_⟩
-    rotate_right 2
-    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
-    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
     · exact leftMoves_finite_birthday_nat h
     · exact rightMoves_finite_birthday_nat h
+    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
+    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
 termination_by x
 decreasing_by igame_wf
 
