@@ -6,8 +6,6 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Special
 import Mathlib.Algebra.Order.Group.OrderIso
-import Mathlib.SetTheory.Cardinal.Cofinality
-import Mathlib.Tactic.Ring
 
 /-!
 # Birthdays of games
@@ -256,10 +254,8 @@ theorem birthday_finset_card (n : ℕ) :
 
 theorem birthday_finset_option {x : IGame} {n : ℕ} (hnx : x ∈ birthday_finset (n + 1))
     {y : IGame} (hy : IsOption y x) : y ∈ birthday_finset n := by
-  simp_rw [birthday_finset, Finset.mem_map, Finset.mem_product, Finset.mem_powerset,
-    Function.Embedding.coeFn_mk, Prod.exists] at hnx
+  rw [birthday_finset_mem_succ_iff] at hnx
   obtain ⟨xl, xr, ⟨⟨hxl, hxr⟩, rfl⟩⟩ := hnx
-  rw [IsOption, mem_union] at hy
   cases hy with
   | inl hy =>
     rw [leftMoves_ofSets, Finset.mem_coe] at hy
