@@ -235,10 +235,15 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
 
 open Classical in
 /-- The finset of all games with birthday ≤ n. -/
-noncomputable def birthday_finset : ℕ → Finset IGame.{0}
+noncomputable def birthday_finset : ℕ → Finset IGame.{u}
   | 0 => {0}
   | n + 1 => ((birthday_finset n).powerset ×ˢ (birthday_finset n).powerset).map
     ⟨fun ⟨a, b⟩ => {a | b}ᴵ, fun a b hab => by aesop⟩
+
+theorem birthday_finset_mem_succ_iff {x : IGame} {n : ℕ} :
+  x ∈ birthday_finset (n + 1) ↔
+    ∃ l r, (l ⊆ birthday_finset n ∧ r ⊆ birthday_finset n) ∧ {↑l | ↑r}ᴵ = x := by
+  simp [birthday_finset]
 
 @[simp] theorem birthday_finset_zero : birthday_finset 0 = {0} := rfl
 
@@ -247,7 +252,7 @@ open Classical in
 
 @[simp]
 theorem birthday_finset_card (n : ℕ) :
-    (birthday_finset (n + 1)).card = 4 ^ (birthday_finset n).card := by
+    (birthday_finset.{u} (n + 1)).card = 4 ^ (birthday_finset.{u} n).card := by
   rw [birthday_finset, Finset.card_map, Finset.card_product, Finset.card_powerset, ← mul_pow]
   simp only [Nat.reduceMul]
 
@@ -265,7 +270,7 @@ theorem birthday_finset_option {x : IGame} {n : ℕ} (hnx : x ∈ birthday_finse
     rw [rightMoves_ofSets, Finset.mem_coe] at hy
     exact hxr hy
 
-theorem birthday_finset_lt_consistent {x : IGame} {n : ℕ} (hxn : x.birthday ≤ n) :
+theorem birthday_finset_le_consistent {x : IGame.{u}} {n : ℕ} (hxn : x.birthday ≤ n) :
     x ∈ birthday_finset n := by
   unfold birthday_finset
   split
@@ -283,7 +288,7 @@ theorem birthday_finset_lt_consistent {x : IGame} {n : ℕ} (hxn : x.birthday �
       rw [Ordinal.lt_one_iff_zero] at ho
       rw [← OrderIso.le_iff_le Ordinal.toNatOrdinal, toOrdinal_toNatOrdinal, ho,
         add_zero, Ordinal.toNatOrdinal_cast_nat] at hxn
-      exact birthday_finset_lt_consistent hxn
+      exact birthday_finset_le_consistent hxn
     have hxl : x.leftMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_leftMoves ·)
     have hxr : x.rightMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_rightMoves ·)
     classical
@@ -315,30 +320,48 @@ theorem birthday_finset_mem_consistent {x : IGame} {n : ℕ} (hxn : x ∈ birthd
         exact birthday_finset_mem_consistent <| hr hy
       exact lt_add_one_iff.mpr this
 
-theorem birthday_finset_mem_iff {x : IGame} {n : ℕ} : x ∈ birthday_finset n ↔ x.birthday ≤ n :=
-  ⟨birthday_finset_mem_consistent, birthday_finset_lt_consistent⟩
+theorem birthday_finset_mem_iff_birthday {x : IGame} {n : ℕ} :
+    x ∈ birthday_finset n ↔ x.birthday ≤ n :=
+  ⟨birthday_finset_mem_consistent, birthday_finset_le_consistent⟩
 
 theorem birthday_finset_subset (n : ℕ) : (birthday_finset n) ⊆ (birthday_finset (n + 1)) := by
   intro x hx
-  apply birthday_finset_lt_consistent
-  rw [birthday_finset_mem_iff] at hx
+  apply birthday_finset_le_consistent
+  rw [birthday_finset_mem_iff_birthday] at hx
   apply hx.trans
   rw [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right]
   exact zero_le_one
 
 theorem birthday_finset_def (n : ℕ) : birthday_finset n = { x : IGame | x.birthday ≤ n } := by
   ext x
-  rw [Finset.mem_coe, birthday_finset_mem_iff]
+  rw [Finset.mem_coe, birthday_finset_mem_iff_birthday]
   exact Eq.to_iff rfl
 
-theorem leftMoves_finite_birthday_nat (x : IGame) (hx : x.birthday < Ordinal.omega0)
+open Classical in
+theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
     : x.leftMoves.Finite := by
-  wlog h : Nonempty x.leftMoves
-  · rw [not_nonempty_iff] at h
-    exact toFinite x.leftMoves
-  rw [birthday_eq_max, sup_lt_iff] at hx
-  obtain ⟨hx, -⟩ := hx
-  sorry
+  rw [Ordinal.lt_omega0] at hx
+  obtain ⟨n, hn⟩ := hx
+  apply_fun Ordinal.toNatOrdinal at hn
+  rw [Ordinal.toNatOrdinal_cast_nat] at hn
+  apply le_of_eq at hn
+  cases n with
+  | zero =>
+    rw [Nat.cast_zero, NatOrdinal.le_zero, Ordinal.toNatOrdinal_eq_zero, birthday_eq_zero] at hn
+    rw [hn, leftMoves_zero]
+    exact finite_empty
+  | succ n =>
+    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := birthday_finset_mem_succ_iff.mp <| birthday_finset_le_consistent hn
+    rw [leftMoves_ofSets]
+    exact Finset.finite_toSet l
+
+theorem rightMoves_finite_birthday_nat {x : IGame}
+  (hx : x.birthday < Ordinal.omega0)
+    : x.rightMoves.Finite := by
+  rw [← birthday_neg] at hx
+  rw [show x.rightMoves = -(-x).leftMoves by rw [involutiveNeg, leftMoves_neg, neg_neg],
+    ← Set.image_neg_eq_neg]
+  exact Set.Finite.image (fun x => -x) (leftMoves_finite_birthday_nat hx)
 
 theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0 := by
   rw [short_def]
@@ -374,9 +397,8 @@ theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal
     rotate_right 2
     · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
     · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
-    all_goals rw [birthday_eq_max] at h
-    · sorry
-    · sorry
+    · exact leftMoves_finite_birthday_nat h
+    · exact rightMoves_finite_birthday_nat h
 termination_by x
 decreasing_by igame_wf
 
