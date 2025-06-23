@@ -247,7 +247,6 @@ theorem birthday_finset_mem_succ_iff {x : IGame} {n : ℕ} :
 
 @[simp] theorem birthday_finset_zero : birthday_finset 0 = {0} := rfl
 
-open Classical in
 @[simp] theorem birthday_finset_one_card : (birthday_finset 1).card = 4 := by simp [birthday_finset]
 
 @[simp]
@@ -270,7 +269,7 @@ theorem birthday_finset_option {x : IGame} {n : ℕ} (hnx : x ∈ birthday_finse
     rw [rightMoves_ofSets, Finset.mem_coe] at hy
     exact hxr hy
 
-theorem birthday_finset_le_consistent {x : IGame.{u}} {n : ℕ} (hxn : x.birthday ≤ n) :
+theorem birthday_le_mem_birthday_finset {x : IGame.{u}} {n : ℕ} (hxn : x.birthday ≤ n) :
     x ∈ birthday_finset n := by
   unfold birthday_finset
   split
@@ -288,7 +287,7 @@ theorem birthday_finset_le_consistent {x : IGame.{u}} {n : ℕ} (hxn : x.birthda
       rw [Ordinal.lt_one_iff_zero] at ho
       rw [← OrderIso.le_iff_le Ordinal.toNatOrdinal, toOrdinal_toNatOrdinal, ho,
         add_zero, Ordinal.toNatOrdinal_cast_nat] at hxn
-      exact birthday_finset_le_consistent hxn
+      exact birthday_le_mem_birthday_finset hxn
     have hxl : x.leftMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_leftMoves ·)
     have hxr : x.rightMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_rightMoves ·)
     classical
@@ -298,7 +297,7 @@ theorem birthday_finset_le_consistent {x : IGame.{u}} {n : ℕ} (hxn : x.birthda
     simp_rw [toFinset_subset, coe_toFinset, ofSets_leftMoves_rightMoves, and_true]
     exact union_subset_iff.mp hx
 
-theorem birthday_finset_mem_consistent {x : IGame} {n : ℕ} (hxn : x ∈ birthday_finset n) :
+theorem birthday_finset_mem_birthday_le {x : IGame} {n : ℕ} (hxn : x ∈ birthday_finset n) :
     x.birthday ≤ n := by
   unfold birthday_finset at hxn
   split at hxn
@@ -313,28 +312,28 @@ theorem birthday_finset_mem_consistent {x : IGame} {n : ℕ} (hxn : x ∈ birthd
     all_goals rw [Nat.cast_add_one, succ_le_iff]
     · have : y.birthday ≤ k := by
         rw [← hlr, leftMoves_ofSets, Finset.mem_coe] at hy
-        exact birthday_finset_mem_consistent <| hl hy
+        exact birthday_finset_mem_birthday_le <| hl hy
       exact lt_add_one_iff.mpr this
     · have : y.birthday ≤ k := by
         rw [← hlr, rightMoves_ofSets, Finset.mem_coe] at hy
-        exact birthday_finset_mem_consistent <| hr hy
+        exact birthday_finset_mem_birthday_le <| hr hy
       exact lt_add_one_iff.mpr this
 
-theorem birthday_finset_mem_iff_birthday {x : IGame} {n : ℕ} :
+theorem birthday_finset_mem_iff_birthday_le {x : IGame} {n : ℕ} :
     x ∈ birthday_finset n ↔ x.birthday ≤ n :=
-  ⟨birthday_finset_mem_consistent, birthday_finset_le_consistent⟩
+  ⟨birthday_finset_mem_birthday_le, birthday_le_mem_birthday_finset⟩
 
 theorem birthday_finset_subset (n : ℕ) : (birthday_finset n) ⊆ (birthday_finset (n + 1)) := by
   intro x hx
-  apply birthday_finset_le_consistent
-  rw [birthday_finset_mem_iff_birthday] at hx
+  apply birthday_le_mem_birthday_finset
+  rw [birthday_finset_mem_iff_birthday_le] at hx
   apply hx.trans
   rw [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right]
   exact zero_le_one
 
-theorem birthday_finset_def (n : ℕ) : birthday_finset n = { x : IGame | x.birthday ≤ n } := by
+theorem birthday_finset_eq (n : ℕ) : birthday_finset n = { x : IGame | x.birthday ≤ n } := by
   ext x
-  rw [Finset.mem_coe, birthday_finset_mem_iff_birthday]
+  rw [Finset.mem_coe, birthday_finset_mem_iff_birthday_le]
   exact Eq.to_iff rfl
 
 open Classical in
@@ -351,12 +350,12 @@ theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.ome
     rw [hn, leftMoves_zero]
     exact finite_empty
   | succ n =>
-    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := birthday_finset_mem_succ_iff.mp <| birthday_finset_le_consistent hn
+    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := birthday_finset_mem_succ_iff.mp <| birthday_le_mem_birthday_finset hn
     rw [leftMoves_ofSets]
     exact Finset.finite_toSet l
 
 theorem rightMoves_finite_birthday_nat {x : IGame}
-  (hx : x.birthday < Ordinal.omega0)
+    (hx : x.birthday < Ordinal.omega0)
     : x.rightMoves.Finite := by
   rw [← birthday_neg] at hx
   rw [show x.rightMoves = -(-x).leftMoves by rw [involutiveNeg, leftMoves_neg, neg_neg],
