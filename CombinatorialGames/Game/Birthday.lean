@@ -232,29 +232,29 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
 /-- The finset of all games with birthday ≤ n. -/
-noncomputable def birthday_finset : ℕ → Finset IGame.{u}
+noncomputable def birthdayFinset : ℕ → Finset IGame.{u}
   | 0 => {0}
-  | n + 1 => ((birthday_finset n).powerset ×ˢ (birthday_finset n).powerset).map
+  | n + 1 => ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
     ⟨fun ⟨a, b⟩ => {a | b}ᴵ, fun a b hab => by aesop⟩
 
-theorem birthday_finset_mem_succ_iff {x : IGame} {n : ℕ} :
-  x ∈ birthday_finset (n + 1) ↔
-    ∃ l r, (l ⊆ birthday_finset n ∧ r ⊆ birthday_finset n) ∧ {↑l | ↑r}ᴵ = x := by
-  simp [birthday_finset]
+theorem birthdayFinset_mem_succ_iff {x : IGame} {n : ℕ} :
+  x ∈ birthdayFinset (n + 1) ↔
+    ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ {↑l | ↑r}ᴵ = x := by
+  simp [birthdayFinset]
 
-@[simp] theorem birthday_finset_zero : birthday_finset 0 = {0} := rfl
+@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
 
-@[simp] theorem birthday_finset_one_card : (birthday_finset 1).card = 4 := by simp [birthday_finset]
+@[simp] theorem card_birthdayFinset_one : (birthdayFinset 1).card = 4 := by simp [birthdayFinset]
 
 @[simp]
-theorem birthday_finset_card (n : ℕ) :
-    (birthday_finset.{u} (n + 1)).card = 4 ^ (birthday_finset.{u} n).card := by
-  rw [birthday_finset, Finset.card_map, Finset.card_product, Finset.card_powerset, ← mul_pow]
+theorem card_birthdayFinset (n : ℕ) :
+    (birthdayFinset.{u} (n + 1)).card = 4 ^ (birthdayFinset.{u} n).card := by
+  rw [birthdayFinset, Finset.card_map, Finset.card_product, Finset.card_powerset, ← mul_pow]
   simp only [Nat.reduceMul]
 
-theorem birthday_finset_option {x : IGame} {n : ℕ} (hnx : x ∈ birthday_finset (n + 1))
-    {y : IGame} (hy : IsOption y x) : y ∈ birthday_finset n := by
-  rw [birthday_finset_mem_succ_iff] at hnx
+theorem birthday_finset_option {x y : IGame} {n : ℕ} (hnx : x ∈ birthdayFinset (n + 1))
+    (hy : IsOption y x) : y ∈ birthdayFinset n := by
+  rw [birthdayFinset_mem_succ_iff] at hnx
   obtain ⟨xl, xr, ⟨⟨hxl, hxr⟩, rfl⟩⟩ := hnx
   cases hy with
   | inl hy =>
@@ -264,9 +264,9 @@ theorem birthday_finset_option {x : IGame} {n : ℕ} (hnx : x ∈ birthday_finse
     rw [rightMoves_ofSets, Finset.mem_coe] at hy
     exact hxr hy
 
-theorem birthday_le_mem_birthday_finset {x : IGame.{u}} {n : ℕ} (hxn : x.birthday ≤ n) :
-    x ∈ birthday_finset n := by
-  unfold birthday_finset
+theorem mem_birthdayFinset_of_birthday_le {x : IGame.{u}} {n : ℕ} (hxn : x.birthday ≤ n) :
+    x ∈ birthdayFinset n := by
+  unfold birthdayFinset
   split
   · rw [Finset.mem_singleton]
     rwa [Nat.cast_zero, NatOrdinal.le_zero, birthday_eq_zero] at hxn
@@ -274,7 +274,7 @@ theorem birthday_le_mem_birthday_finset {x : IGame.{u}} {n : ℕ} (hxn : x.birth
     rw [Nat.succ_eq_add_one, Nat.cast_add, Nat.cast_one] at hxn
     simp_rw [Finset.mem_map, Finset.mem_product, Finset.mem_powerset, Function.Embedding.coeFn_mk,
       Prod.exists]
-    have hx : ∀ y, IsOption y x → y ∈ birthday_finset k := fun y hy => by
+    have hx : ∀ y, IsOption y x → y ∈ birthdayFinset k := fun y hy => by
       have hxn := (birthday_lt_of_mem_option hy).trans_le hxn
       rw [← Nat.cast_add_one, ← OrderIso.lt_iff_lt NatOrdinal.toOrdinal,
         toOrdinal_cast_nat, Nat.cast_add_one, Ordinal.lt_add_iff Ordinal.one_ne_zero] at hxn
@@ -282,9 +282,9 @@ theorem birthday_le_mem_birthday_finset {x : IGame.{u}} {n : ℕ} (hxn : x.birth
       rw [Ordinal.lt_one_iff_zero] at ho
       rw [← OrderIso.le_iff_le Ordinal.toNatOrdinal, toOrdinal_toNatOrdinal, ho,
         add_zero, Ordinal.toNatOrdinal_cast_nat] at hxn
-      exact birthday_le_mem_birthday_finset hxn
-    have hxl : x.leftMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_leftMoves ·)
-    have hxr : x.rightMoves ⊆ birthday_finset k := (hx · <| IsOption.of_mem_rightMoves ·)
+      exact mem_birthdayFinset_of_birthday_le hxn
+    have hxl : x.leftMoves ⊆ birthdayFinset k := (hx · <| IsOption.of_mem_leftMoves ·)
+    have hxr : x.rightMoves ⊆ birthdayFinset k := (hx · <| IsOption.of_mem_rightMoves ·)
     classical
     have := Set.fintypeSubset _ hxl
     have := Set.fintypeSubset _ hxr
@@ -292,9 +292,9 @@ theorem birthday_le_mem_birthday_finset {x : IGame.{u}} {n : ℕ} (hxn : x.birth
     simp_rw [toFinset_subset, coe_toFinset, ofSets_leftMoves_rightMoves, and_true]
     exact union_subset_iff.mp hx
 
-theorem birthday_finset_mem_birthday_le {x : IGame} {n : ℕ} (hxn : x ∈ birthday_finset n) :
+theorem birthday_le_of_mem_birthdayFinset {x : IGame} {n : ℕ} (hxn : x ∈ birthdayFinset n) :
     x.birthday ≤ n := by
-  unfold birthday_finset at hxn
+  unfold birthdayFinset at hxn
   split at hxn
   · rw [Finset.mem_singleton] at hxn
     simp_rw [hxn, birthday_zero, Nat.cast_zero, le_refl]
@@ -307,29 +307,24 @@ theorem birthday_finset_mem_birthday_le {x : IGame} {n : ℕ} (hxn : x ∈ birth
     all_goals rw [Nat.cast_add_one, succ_le_iff]
     · have : y.birthday ≤ k := by
         rw [← hlr, leftMoves_ofSets, Finset.mem_coe] at hy
-        exact birthday_finset_mem_birthday_le <| hl hy
+        exact birthday_le_of_mem_birthdayFinset <| hl hy
       exact lt_add_one_iff.mpr this
     · have : y.birthday ≤ k := by
         rw [← hlr, rightMoves_ofSets, Finset.mem_coe] at hy
-        exact birthday_finset_mem_birthday_le <| hr hy
+        exact birthday_le_of_mem_birthdayFinset <| hr hy
       exact lt_add_one_iff.mpr this
 
-theorem birthday_finset_mem_iff_birthday_le {x : IGame} {n : ℕ} :
-    x ∈ birthday_finset n ↔ x.birthday ≤ n :=
-  ⟨birthday_finset_mem_birthday_le, birthday_le_mem_birthday_finset⟩
+@[simp] theorem mem_birthdayFinset {x : IGame} {n : ℕ} :
+    x ∈ birthdayFinset n ↔ x.birthday ≤ n :=
+  ⟨birthday_le_of_mem_birthdayFinset, mem_birthdayFinset_of_birthday_le⟩
 
-theorem birthday_finset_subset (n : ℕ) : (birthday_finset n) ⊆ (birthday_finset (n + 1)) := by
+theorem birthday_finset_subset (n : ℕ) : (birthdayFinset n) ⊆ (birthdayFinset (n + 1)) := by
   intro x hx
-  apply birthday_le_mem_birthday_finset
-  rw [birthday_finset_mem_iff_birthday_le] at hx
+  apply mem_birthdayFinset_of_birthday_le
+  rw [mem_birthdayFinset] at hx
   apply hx.trans
   rw [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right]
   exact zero_le_one
-
-theorem birthday_finset_eq (n : ℕ) : birthday_finset n = { x : IGame | x.birthday ≤ n } := by
-  ext x
-  rw [Finset.mem_coe, birthday_finset_mem_iff_birthday_le]
-  exact Eq.to_iff rfl
 
 theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
     : x.leftMoves.Finite := by
@@ -344,7 +339,7 @@ theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.ome
     rw [hn, leftMoves_zero]
     exact finite_empty
   | succ n =>
-    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := birthday_finset_mem_succ_iff.mp <| birthday_le_mem_birthday_finset hn
+    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := birthdayFinset_mem_succ_iff.mp <| mem_birthdayFinset_of_birthday_le hn
     rw [leftMoves_ofSets]
     exact Finset.finite_toSet l
 
@@ -352,7 +347,7 @@ theorem rightMoves_finite_birthday_nat {x : IGame}
     (hx : x.birthday < Ordinal.omega0)
     : x.rightMoves.Finite := by
   rw [← birthday_neg] at hx
-  rw [show x.rightMoves = -(-x).leftMoves by rw [involutiveNeg, leftMoves_neg, neg_neg],
+  rw [show x.rightMoves = -(-x).leftMoves by simp,
     ← Set.image_neg_eq_neg]
   exact Set.Finite.image (fun x => -x) (leftMoves_finite_birthday_nat hx)
 
