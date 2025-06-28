@@ -318,13 +318,24 @@ theorem birthday_le_of_mem_birthdayFinset {x : IGame} {n : ℕ} (hxn : x ∈ bir
     x ∈ birthdayFinset n ↔ x.birthday ≤ n :=
   ⟨birthday_le_of_mem_birthdayFinset, mem_birthdayFinset_of_birthday_le⟩
 
-theorem birthday_finset_subset (n : ℕ) : (birthdayFinset n) ⊆ (birthdayFinset (n + 1)) := by
-  intro x hx
-  apply mem_birthdayFinset_of_birthday_le
-  rw [mem_birthdayFinset] at hx
-  apply hx.trans
-  rw [Nat.cast_add, Nat.cast_one, le_add_iff_nonneg_right]
-  exact zero_le_one
+theorem birthday_finset_strictMono : StrictMono birthdayFinset := by
+  apply strictMono_nat_of_lt_succ
+  intro n
+  constructor
+  · intro x hx
+    apply mem_birthdayFinset_of_birthday_le
+    rw [mem_birthdayFinset] at hx
+    apply hx.trans
+    rw [Nat.cast_le]
+    exact Nat.le_add_right n 1
+  · rw [Finset.not_subset]
+    induction n with
+    | zero =>
+      refine ⟨1, by simp, by simp⟩
+    | succ n hn =>
+      obtain ⟨g, hg⟩ := hn
+      use g + 1
+      constructor <;> simp_all
 
 theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
     : x.leftMoves.Finite := by
