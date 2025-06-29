@@ -77,10 +77,22 @@ noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
 termination_by x
 decreasing_by igame_wf
 
+theorem lt_birthday_iff' {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
+    ∃ y, IsOption y x ∧ o ≤ y.birthday := by
+  rw [birthday, NatOrdinal.lt_iSup_iff]
+  simp
+
+theorem birthday_le_iff' {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
+    ∀ y, IsOption y x → y.birthday < o := by
+  simpa using lt_birthday_iff'.not
+
 theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
     (∃ y ∈ x.leftMoves, o ≤ y.birthday) ∨ (∃ y ∈ x.rightMoves, o ≤ y.birthday) := by
-  rw [birthday, NatOrdinal.lt_iSup_iff]
-  simp [IsOption, or_and_right, exists_or]
+  simp [lt_birthday_iff', IsOption, or_and_right, exists_or]
+
+theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
+    (∀ y ∈ x.leftMoves, y.birthday < o) ∧ (∀ y ∈ x.rightMoves, y.birthday < o) := by
+  simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
     max (⨆ y : x.leftMoves, succ y.1.birthday) (⨆ y : x.rightMoves, succ y.1.birthday) := by
@@ -96,6 +108,17 @@ theorem birthday_lt_of_mem_leftMoves {x y : IGame} (hy : y ∈ x.leftMoves) :
 theorem birthday_lt_of_mem_rightMoves {x y : IGame} (hy : y ∈ x.rightMoves) :
     y.birthday < x.birthday :=
   lt_birthday_iff.2 (.inr ⟨y, hy, le_rfl⟩)
+
+theorem birthday_lt_of_isOption {x y : IGame} (hy : IsOption y x) : y.birthday < x.birthday :=
+  lt_birthday_iff'.2 ⟨y, hy, le_rfl⟩
+
+theorem birthday_lt_of_subposition {x y : IGame} (hy : Subposition y x) :
+    y.birthday < x.birthday := by
+  cases hy with
+  | single h => exact birthday_lt_of_isOption h
+  | tail IH h => exact (birthday_lt_of_subposition IH).trans (birthday_lt_of_isOption h)
+termination_by x
+decreasing_by igame_wf
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday {s | t}ᴵ = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
