@@ -71,7 +71,7 @@ theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
   rw [← o.toOrdinal_toNatOrdinal, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
   simp [← toOrdinal_cast_nat]
 
-theorem NatOrdinal.nat_lt_omega0 {n : ℕ} : n < Ordinal.omega0.toNatOrdinal := by
+theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < Ordinal.omega0.toNatOrdinal := by
   rw [NatOrdinal.lt_omega0]
   use n
 
