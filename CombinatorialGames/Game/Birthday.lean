@@ -261,7 +261,15 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
 
 @[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
 
-@[simp] theorem card_birthdayFinset_one : (birthdayFinset 1).card = 4 := by simp [birthdayFinset]
+@[simp]
+theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
+  (Set.singleton_ne_empty a).symm
+
+theorem birthdayFinset_one :
+    birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
+  ext
+  rw [mem_birthdayFinset_succ]
+  aesop (add simp [IGame.ext_iff])
 
 @[simp]
 theorem card_birthdayFinset (n : ℕ) :
