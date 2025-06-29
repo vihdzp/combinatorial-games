@@ -320,41 +320,12 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_le this
 
-theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
+private theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
     (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | Subposition y x}.Finite := by
   simp_rw [NatOrdinal.lt_omega0] at hx
   obtain ⟨n, hn⟩ := hx
   apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
   simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
-
-theorem finite_setOf_isOption_of_birthday_lt_omega0 {x : IGame}
-    (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | IsOption y x}.Finite :=
-  (finite_setOf_subposition_of_birthday_lt_omega0 hx).subset fun _ h ↦ Relation.TransGen.single h
-
-theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
-    : x.leftMoves.Finite := by
-  rw [Ordinal.lt_omega0] at hx
-  obtain ⟨n, hn⟩ := hx
-  apply_fun Ordinal.toNatOrdinal at hn
-  rw [Ordinal.toNatOrdinal_cast_nat] at hn
-  apply le_of_eq at hn
-  cases n with
-  | zero =>
-    rw [Nat.cast_zero, NatOrdinal.le_zero, Ordinal.toNatOrdinal_eq_zero, birthday_eq_zero] at hn
-    rw [hn, leftMoves_zero]
-    exact finite_empty
-  | succ n =>
-    obtain ⟨l, _, ⟨hl, _, h⟩⟩ := mem_birthdayFinset_succ.mp <| mem_birthdayFinset.mpr hn
-    rw [leftMoves_ofSets]
-    exact Finset.finite_toSet l
-
-theorem rightMoves_finite_birthday_nat {x : IGame}
-    (hx : x.birthday < Ordinal.omega0)
-    : x.rightMoves.Finite := by
-  rw [← birthday_neg] at hx
-  rw [show x.rightMoves = -(-x).leftMoves by simp,
-    ← Set.image_neg_eq_neg]
-  exact Set.Finite.image (fun x => -x) (leftMoves_finite_birthday_nat hx)
 
 theorem short_iff_birthday_finite {x : IGame} :
     x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
