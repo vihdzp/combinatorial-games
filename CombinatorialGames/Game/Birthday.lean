@@ -38,6 +38,10 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
+@[simp]
+theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
+  (Set.singleton_ne_empty a).symm
+
 -- fix this! embarassing
 @[simp]
 theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
@@ -271,9 +275,6 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
 
 @[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
 
-@[simp]
-theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
-  (Set.singleton_ne_empty a).symm
 
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
@@ -290,7 +291,6 @@ theorem card_birthdayFinset (n : ℕ) :
 theorem mem_birthdayFinset_of_isOption {x y : IGame} {n : ℕ} (hnx : x ∈ birthdayFinset (n + 1))
     (hy : IsOption y x) : y ∈ birthdayFinset n := by
   rw [mem_birthdayFinset_succ] at hnx
-  obtain ⟨xl, xr, ⟨⟨hxl, hxr⟩, rfl⟩⟩ := hnx
   aesop
 
 @[simp]
