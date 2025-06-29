@@ -59,6 +59,9 @@ instance (x : IGame) [Short x] : Finite x.leftMoves :=
 instance (x : IGame) [Short x] : Finite x.rightMoves :=
   (Short.finite_rightMoves x).to_subtype
 
+instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
+  (Short.finite_setOf_isOption x).to_subtype
+
 protected theorem of_mem_leftMoves [h : Short x] (hy : y ∈ x.leftMoves) : Short y :=
   (short_def.1 h).2.2.1 y hy
 
@@ -72,6 +75,15 @@ protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
 
 alias _root_.IGame.IsOption.short := Short.isOption
 
+protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
+  cases h with
+  | single h => exact h.short
+  | tail IH h => have := h.short; exact Short.subposition IH
+termination_by x
+decreasing_by igame_wf
+
+alias _root_.IGame.IsOption.subposition := Short.subposition
+
 theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   have : {y | Subposition y x} = {y | IsOption y x} ∪
       ⋃ y ∈ {y | IsOption y x}, {z | Subposition z y} := by
@@ -84,6 +96,9 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
   exact finite_setOf_subposition y
 termination_by x
 decreasing_by igame_wf
+
+instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
+  (Short.finite_setOf_subposition x).to_subtype
 
 theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
     Short x ↔ {y | Subposition y x}.Finite := by
