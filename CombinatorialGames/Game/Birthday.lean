@@ -66,6 +66,15 @@ protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : �
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
 
+theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
+    o < Ordinal.omega0.toNatOrdinal ↔ ∃ n : ℕ, o = n := by
+  rw [← o.toOrdinal_toNatOrdinal, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
+  simp [← toOrdinal_cast_nat]
+
+theorem NatOrdinal.nat_lt_omega0 {n : ℕ} : n < Ordinal.omega0.toNatOrdinal := by
+  rw [NatOrdinal.lt_omega0]
+  use n
+
 /-! ### `IGame` birthday -/
 
 namespace IGame
@@ -281,7 +290,7 @@ theorem mem_birthdayFinset_of_isOption {x y : IGame} {n : ℕ} (hnx : x ∈ birt
     (hy : IsOption y x) : y ∈ birthdayFinset n := by
   rw [mem_birthdayFinset_succ] at hnx
   obtain ⟨xl, xr, ⟨⟨hxl, hxr⟩, rfl⟩⟩ := hnx
-  aesop (add simp [IsOption])
+  aesop
 
 @[simp]
 theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.birthday ≤ n := by
@@ -310,6 +319,17 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_le this
 
+theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
+    (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | Subposition y x}.Finite := by
+  simp_rw [NatOrdinal.lt_omega0] at hx
+  obtain ⟨n, hn⟩ := hx
+  apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
+  simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
+
+theorem finite_setOf_isOption_of_birthday_lt_omega0 {x : IGame}
+    (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | IsOption y x}.Finite :=
+  (finite_setOf_subposition_of_birthday_lt_omega0 hx).subset fun _ h ↦ Relation.TransGen.single h
+
 theorem leftMoves_finite_birthday_nat {x : IGame} (hx : x.birthday < Ordinal.omega0)
     : x.leftMoves.Finite := by
   rw [Ordinal.lt_omega0] at hx
@@ -335,41 +355,23 @@ theorem rightMoves_finite_birthday_nat {x : IGame}
     ← Set.image_neg_eq_neg]
   exact Set.Finite.image (fun x => -x) (leftMoves_finite_birthday_nat hx)
 
-theorem short_iff_birthday_finite (x : IGame) : x.Short ↔ x.birthday < Ordinal.omega0 := by
-  rw [short_def]
-  refine ⟨fun ⟨hfl, hfr, hl, hr⟩ => ?_, fun h => ?_⟩
-  · rw [birthday_eq_max, sup_lt_iff]
-    -- TODO: these declarations have to be definition-casted.
-    -- is there a nicer way we can work around explicit finiteness here?
-    have : Finite x.leftMoves := hfl
-    have : Finite x.rightMoves := hfr
-    constructor
-    on_goal 1 =>
-      by_cases h : IsEmpty x.leftMoves
-      · rw [ciSup_of_empty, NatOrdinal.bot_eq_zero']
-        exact Ordinal.nat_lt_omega0 0
-    on_goal 2 =>
-      by_cases h : IsEmpty x.rightMoves
-      · rw [ciSup_of_empty, NatOrdinal.bot_eq_zero']
-        exact Ordinal.nat_lt_omega0 0
-    all_goals
-      have := Set.Nonempty.ciSup_lt_iff (a := Ordinal.omega0) (f := fun y => succ (y.val).birthday)
-        (nonempty_iff_univ_nonempty.mp (not_isEmpty_iff.mp h)) (Set.finite_univ)
-      simp_rw [mem_univ, ciSup_unique, forall_const, Subtype.forall] at this
-      rw [this]
-      intro y hy
-      rw [Ordinal.lt_omega0]
-    · obtain ⟨n, hn⟩ := Ordinal.lt_omega0.mp <| (short_iff_birthday_finite y).mp (hl y hy)
-      use succ n
-      rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
-    · obtain ⟨n, hn⟩ := Ordinal.lt_omega0.mp <| (short_iff_birthday_finite y).mp (hr y hy)
-      use succ n
-      rw [hn, ← Ordinal.natCast_succ, Nat.succ_eq_succ]
-  · refine ⟨?_, ?_, fun y hy => ?_, fun y hy => ?_⟩
-    · exact leftMoves_finite_birthday_nat h
-    · exact rightMoves_finite_birthday_nat h
-    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_leftMoves hy).trans h)
-    · exact (short_iff_birthday_finite y).mpr ((birthday_lt_of_mem_rightMoves hy).trans h)
+theorem short_iff_birthday_finite {x : IGame} :
+    x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
+  constructor
+  · intro h
+    have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
+      rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
+      exact h.isOption y.2
+    choose f hf using this
+    obtain ⟨n, hn⟩ := (finite_range f).exists_le
+    apply lt_of_le_of_lt _ (NatOrdinal.nat_lt_omega0 (n + 1))
+    rw [birthday_le_iff', Nat.cast_add_one, ← succ_eq_add_one]
+    aesop
+  · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
+    rintro ⟨n, hn⟩
+    apply finite_setOf_subposition_of_birthday_lt_omega0
+    rw [hn]
+    exact NatOrdinal.nat_lt_omega0 n
 termination_by x
 decreasing_by igame_wf
 
