@@ -275,7 +275,6 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
 
 @[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
 
-
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
   ext
