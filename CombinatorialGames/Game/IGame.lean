@@ -262,6 +262,7 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
     exact ⟨j, mk_eq_mk.1 hj⟩
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
+@[aesop simp]
 def IsOption (x y : IGame) : Prop :=
   x ∈ y.leftMoves ∪ y.rightMoves
 
@@ -723,10 +724,10 @@ theorem add_right_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z :
   rw [rightMoves_add]; left; use x
 
 theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
-  aesop (add simp [IsOption])
+  aesop
 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
-  aesop (add simp [IsOption])
+  aesop
 
 @[game_cmp]
 theorem forall_leftMoves_add {P : IGame → Prop} {x y : IGame} :
@@ -1101,7 +1102,7 @@ theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
 
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
     IsOption (mulOption x y a b) (x * y) := by
-  aesop (add simp [IsOption])
+  aesop
 
 @[game_cmp]
 theorem forall_leftMoves_mul {P : IGame → Prop} {x y : IGame} :
