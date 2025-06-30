@@ -21,6 +21,7 @@ import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Numeric
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
