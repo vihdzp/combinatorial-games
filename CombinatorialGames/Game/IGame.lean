@@ -529,19 +529,19 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
-    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
-    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
-    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
-    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
+    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≤ b)
+    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, b ≤ a)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  b ≤ a)
+    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≤ b) : x ≈ y := by
   constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i hi
   · obtain ⟨j, hj, hj'⟩ := hl₁ i hi
-    exact Or.inl ⟨j, hj, hj'.le⟩
+    exact Or.inl ⟨j, hj, hj'⟩
   · obtain ⟨j, hj, hj'⟩ := hr₂ i hi
-    exact Or.inr ⟨j, hj, hj'.le⟩
+    exact Or.inr ⟨j, hj, hj'⟩
   · obtain ⟨j, hj, hj'⟩ := hl₂ i hi
-    exact Or.inl ⟨j, hj, hj'.ge⟩
+    exact Or.inl ⟨j, hj, hj'⟩
   · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
-    exact Or.inr ⟨j, hj, hj'.ge⟩
+    exact Or.inr ⟨j, hj, hj'⟩
 
 @[simp]
 theorem zero_lt_one : (0 : IGame) < 1 := by
