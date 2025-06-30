@@ -163,6 +163,10 @@ protected instance natCast : ∀ n : ℕ, Short n
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Short ofNat(n) :=
   inferInstanceAs (Short n)
 
+protected instance intCast : ∀ n : ℤ, Short n
+  | .ofNat n => inferInstanceAs (Short n)
+  | .negSucc n => inferInstanceAs (Short (-(n + 1)))
+
 protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
   apply mk'
   · simpa [Set.image_union] using
