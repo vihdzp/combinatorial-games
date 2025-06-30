@@ -33,6 +33,32 @@ theorem equiv_of_bypass_right {l r : Set IGame.{u}} [Small.{u} l] [Small.{u} r]
     {ds dls : Set IGame.{u}} [Small.{u} ds] [Small.{u} dls]
     (hdl : ∀ dl ∈ dls, ∃ d ∈ ds, dl ∈ d.leftMoves) :
     {l | ds ∪ r}ᴵ ≈ {l | (⋃ dl ∈ dls, dl.rightMoves) ∪ r}ᴵ := by
-  sorry
+  constructor
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      apply lf_of_le_leftMove le_rfl
+      rwa [leftMoves_ofSets] at hz ⊢
+    · intro z hz
+      rw [rightMoves_ofSets] at hz
+      obtain ⟨k, hk, hz⟩ | hz := hz
+      · sorry
+      · apply lf_of_rightMove_le le_rfl
+        rw [rightMoves_ofSets]
+        exact .inr hz
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      apply lf_of_le_leftMove le_rfl
+      rwa [leftMoves_ofSets] at hz ⊢
+    · intro z hz
+      rw [rightMoves_ofSets] at hz
+      obtain hz | hz := hz
+      · sorry
+      · apply lf_of_rightMove_le le_rfl
+        rw [rightMoves_ofSets]
+        exact .inr hz
 
 end IGame
