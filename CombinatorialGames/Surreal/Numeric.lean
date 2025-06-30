@@ -4,14 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Short
-import CombinatorialGames.Surreal.Real
 import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.Algebra.GCDMonoid.Nat
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Ring.Defs
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.Nat.Prime.Int
-import Mathlib.GroupTheory.MonoidLocalization.Away
+import CombinatorialGames.Surreal.Basic
 
 /-!
 # Dyadic games
