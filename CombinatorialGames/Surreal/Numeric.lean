@@ -258,11 +258,9 @@ theorem toIGame_neg (x : Dyadic) : toIGame (-x) = -toIGame x := by
   dsimp
   split_ifs with h
   · simp
-  · simp only [lower_neg, upper_neg, IGame.neg_ofSets, Set.neg_singleton, IGame.ofSets_inj,
-      Set.singleton_eq_singleton_iff]
-    have := den_upper_lt h
+  · have := den_upper_lt h
     have := den_lower_lt h
-    exact ⟨toIGame_neg _, toIGame_neg _⟩
+    simpa using ⟨toIGame_neg _, toIGame_neg _⟩
 termination_by x.1.den
 
 end Dyadic
