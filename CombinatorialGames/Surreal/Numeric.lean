@@ -33,6 +33,12 @@ open IGame
 
 /-! ### For Mathlib -/
 
+theorem le_of_le_of_lt_of_lt {α β : Type*} [PartialOrder α] [Preorder β] {x y : α}
+    {f : α → β} (h : x < y → f x < f y) (hxy : x ≤ y) : f x ≤ f y := by
+  obtain rfl | h' := hxy.eq_or_lt
+  · rfl
+  · exact (h h').le
+
 theorem Nat.pow_log_eq_self_iff {b n : ℕ} (hb : b ≠ 0) :
     b ^ Nat.log b n = n ↔ n ∈ Set.range (b ^ ·) := by
   constructor
@@ -454,20 +460,16 @@ private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
   · obtain hd | hd := le_total x.den y.den
     · have := numeric_lower y
       have hy := lower_lt_aux y
-      obtain h' | h' := lt_or_eq_of_le (le_lower_of_lt hd h)
-      · by_cases hy' : y.den = 1
-        · rw [hy', den_le_one_iff_eq_one] at hd
-          exact (H ⟨hd, hy'⟩).elim
-        · exact (toIGame_lt_toIGame_aux h').trans hy
-      · exact h' ▸ hy
+      by_cases hy' : y.den = 1
+      · rw [hy', den_le_one_iff_eq_one] at hd
+        exact (H ⟨hd, hy'⟩).elim
+      · exact (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (le_lower_of_lt hd h)).trans_lt hy
     · have := numeric_upper x
       have hx := lt_upper_aux x
-      obtain h' | h' := lt_or_eq_of_le (upper_le_of_lt hd h)
-      · by_cases hx' : x.den = 1
-        · rw [hx', den_le_one_iff_eq_one] at hd
-          exact (H ⟨hx', hd⟩).elim
-        · exact hx.trans (toIGame_lt_toIGame_aux h')
-      · exact h' ▸ hx
+      by_cases hx' : x.den = 1
+      · rw [hx', den_le_one_iff_eq_one] at hd
+        exact (H ⟨hx', hd⟩).elim
+      · exact hx.trans_le (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (upper_le_of_lt hd h))
 termination_by (x.den, y.den)
 decreasing_by dyadic_wf
 
@@ -483,16 +485,25 @@ instance _root_.IGame.Numeric.dyadic (x : Dyadic) : Numeric (toIGame x) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
+/-- `Dyadic.toIGame` as an `OrderEmbedding`. -/
+@[simps!]
+noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
+  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+
 @[simp]
-theorem toIGame_le_toIGame {x y : Dyadic} : toIGame x ≤ toIGame y ↔ x ≤ y := by
-  unfold toIGame
-  split_ifs with h₁ h₂ h₂
-  · rw [intCast_le, ← Int.cast_le (R := ℚ),
-      Rat.coe_int_num_of_den_eq_one h₁, Rat.coe_int_num_of_den_eq_one h₂, Subtype.coe_le_coe]
-  · constructor
-    · rw [le_iff_forall_lf]
-      rintro ⟨H₁, H₂⟩
-      rw [← toIGame_of_den_ne_one h₂] at H₁
-      simp at H₂
+theorem toIGame_le_toIGame {x y : Dyadic} : toIGame x ≤ toIGame y ↔ x ≤ y :=
+  toIGameEmbedding.le_iff_le
+
+@[simp]
+theorem toIGame_lt_toIGame {x y : Dyadic} : toIGame x < toIGame y ↔ x < y :=
+  toIGameEmbedding.lt_iff_lt
+
+@[simp]
+theorem toIGame_equiv_toIGame {x y : Dyadic} : toIGame x ≈ toIGame y ↔ x = y := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp]
+theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
+  toIGameEmbedding.inj
 
 end Dyadic
