@@ -395,25 +395,6 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-/-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
-necessarily be the canonical form. -/
-theorem toIGame_equiv_lower_upper (x : Dyadic) :
-    toIGame x ≈ {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ := by
-  rw [toIGame]
-  split_ifs with h
-  · unfold lower upper
-    simp_rw [h]
-    simp only [Dyadic.mkRat, Rat.mkRat_one, Int.cast_one, mk_intCast, toIGame_intCast]
-    apply Fits.equiv_of_forall_not_fits
-    · simp [Fits]
-    · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
-      simp_all [Fits, Int.sub_one_lt_iff, hm'.not_le]
-    · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
-      simp_all [Fits, Int.lt_add_one_iff, hm'.not_le]
-  · exact .rfl
-
 theorem le_lower_of_lt {x y : Dyadic} (hd : x.den ≤ y.den) (h : x < y) : x ≤ y.lower := by
   obtain ⟨m, rfl⟩ := eq_mkRat_of_den_le hd y.den_mem_powers
   conv_rhs at h => rw [← y.mkRat_self]
