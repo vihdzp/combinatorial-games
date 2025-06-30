@@ -986,6 +986,7 @@ instance : IntCast IGame where
 @[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
+@[simp] theorem intCast_negSucc' (n : ℕ) : (-(n + 1 : ℤ) : IGame) = -(n + 1) := rfl
 
 theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
 theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
@@ -999,24 +1000,32 @@ theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
     | succ n => rfl
   | negSucc n => exact (neg_neg _).symm
 
+theorem eq_sub_one_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
+    x = (n - 1 : ℤ) := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
+  · cases n
+    · simp at hx
+    · rw [intCast_nat] at hx
+      simp_all
+  · simp at hx
+
+theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
+    x = (n + 1 : ℤ) := by
+  have : -x ∈ leftMoves (-n : ℤ) := by simpa
+  rw [← neg_inj]
+  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+
 /-- Every left option of an integer is equal to a smaller integer. -/
 theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
     ∃ m : ℤ, m < n ∧ m = x := by
-  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
-  · obtain ⟨m, hm, rfl⟩ := eq_natCast_of_mem_leftMoves_natCast hx
-    use m
-    simpa
-  · simp at hx
+  use n - 1
+  simp [eq_sub_one_of_mem_leftMoves_intCast hx]
 
 /-- Every right option of an integer is equal to a larger integer. -/
 theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
     ∃ m : ℤ, n < m ∧ m = x := by
-  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
-  · simp at hx
-  · rw [intCast_neg, intCast_nat, rightMoves_neg] at hx
-    obtain ⟨m, hm, hm'⟩ := eq_natCast_of_mem_leftMoves_natCast hx
-    use -m
-    simp_all
+  use n + 1
+  simp [eq_add_one_of_mem_rightMoves_intCast hx]
 
 /-! ### Multiplication -/
 
