@@ -3,8 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Game.Short
+import CombinatorialGames.Surreal.Real
+import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.Algebra.GCDMonoid.Nat
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Ring.Defs
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.Nat.Prime.Int
 import Mathlib.GroupTheory.MonoidLocalization.Away
@@ -26,6 +30,7 @@ Show the latter two bullet points.
 -/
 
 universe u
+open IGame
 
 /-! ### For Mathlib -/
 
@@ -120,7 +125,8 @@ instance : NatCast Dyadic where
 instance : IntCast Dyadic where
   intCast n := ⟨n, ⟨0, rfl⟩⟩
 
-@[simp] theorem val_intCast (n : ℕ) : (n : Dyadic).val = n := rfl
+@[simp] theorem val_intCast (n : ℤ) : (n : Dyadic).val = n := rfl
+@[simp] theorem mk_intCast {n : ℤ} (h : IsDyadic n) : (⟨n, h⟩ : Dyadic) = n := rfl
 
 instance : Zero Dyadic where
   zero := (0 : ℕ)
@@ -160,6 +166,17 @@ def half : Dyadic := ⟨2⁻¹, ⟨1, by simp⟩⟩
 
 @[simp] theorem val_half : half.val = 2⁻¹ := rfl
 
+/-- Constructor for the fraction `m / n`. -/
+protected def mkRat (m : ℤ) {n : ℕ} (h : n ∈ Submonoid.powers 2) : Dyadic :=
+  ⟨mkRat m n, .mkRat m h⟩
+
+@[simp]
+theorem val_mkRat (m : ℤ) {n : ℕ} (h : n ∈ Submonoid.powers 2) :
+    (Dyadic.mkRat m h).val = mkRat m n :=
+  rfl
+
+@[simp] theorem mkRat_self (x : Dyadic) : Dyadic.mkRat x.1.num x.2 = x := by ext; simp
+
 instance : Ring Dyadic where
   add_assoc x y z := by ext; simp [add_assoc]
   zero_add x := by ext; simp
@@ -197,11 +214,11 @@ theorem odd_num {x : Dyadic} (hx : x.1.den ≠ 1) : Odd x.1.num := by
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
 def lower (x : Dyadic) : Dyadic :=
-  ⟨mkRat (x.1.num - 1) x.1.den, IsDyadic.mkRat _ x.2⟩
+  .mkRat (x.1.num - 1) x.2
 
 /-- For a dyadic number `m / n`, returns `(m + 1) / n`. -/
 def upper (x : Dyadic) : Dyadic :=
-  ⟨mkRat (x.1.num + 1) x.1.den, IsDyadic.mkRat _ x.2⟩
+  .mkRat (x.1.num + 1) x.2
 
 private theorem den_mkRat_lt {x : Dyadic} {n : ℤ} (hn : 2 ∣ n) (hd : x.1.den ≠ 1) :
     (mkRat n x.1.den).den < x.1.den := by
@@ -216,15 +233,33 @@ theorem den_lower_lt {x : Dyadic} (h : x.1.den ≠ 1) : (lower x).1.den < x.1.de
 theorem den_upper_lt {x : Dyadic} (h : x.1.den ≠ 1) : (upper x).1.den < x.1.den :=
   den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
 
+/-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
+macro "dyadic_wf" : tactic =>
+  `(tactic| all_goals first | solve_by_elim [den_lower_lt, den_upper_lt] | decreasing_tactic )
+
 @[simp]
 theorem lower_neg (x : Dyadic) : lower (-x) = -upper x := by
   unfold lower upper
+  ext
   simp [Rat.neg_mkRat, ← sub_eq_neg_add]
 
 @[simp]
 theorem upper_neg (x : Dyadic) : upper (-x) = -lower x := by
   unfold lower upper
+  ext
   simp [Rat.neg_mkRat, ← sub_eq_neg_add]
+
+theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.1.den = 1) : lower x = x.1.num - 1 := by
+  simp [lower, h, Dyadic.ext_iff]
+
+theorem upper_eq_of_den_eq_one {x : Dyadic} (h : x.1.den = 1) : upper x = x.1.num + 1 := by
+  simp [upper, h, Dyadic.ext_iff]
+
+theorem lower_lt_upper (x : Dyadic) : lower x < upper x := by
+  unfold lower upper
+  rw [Subtype.mk_lt_mk, val_mkRat, val_mkRat, Rat.mkRat_eq_div, Rat.mkRat_eq_div,
+    div_lt_div_iff_of_pos_right (mod_cast x.1.den_pos)]
+  simp [sub_eq_add_neg]
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
@@ -232,12 +267,14 @@ theorem upper_neg (x : Dyadic) : upper (-x) = -lower x := by
 * Otherwise, if `x = m / n` with `n` even, then `toIGame x = {(m - 1) / n | (m + 1) / n}ᴵ`. Note
   that both options will have smaller denominators. -/
 noncomputable def toIGame (x : Dyadic) : IGame :=
-  if h : x.1.den = 1 then x.1.num else
-    have := den_lower_lt h; have := den_upper_lt h
-    {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
+  if _ : x.1.den = 1 then x.1.num else {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
 termination_by x.1.den
+decreasing_by dyadic_wf
 
-@[simp] theorem toIGame_intCast (n : ℤ) : toIGame n = n := by rw [toIGame, dif_pos] <;> rfl
+theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.1.den = 1) : toIGame x = x.1.num :=
+  by rw [toIGame, dif_pos hx]
+
+@[simp] theorem toIGame_intCast (n : ℤ) : toIGame n = n := toIGame_of_den_eq_one rfl
 @[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := toIGame_intCast n
 
 @[simp] theorem toIGame_zero : toIGame 0 = 0 := toIGame_natCast 0
@@ -250,7 +287,7 @@ theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.1.den ≠ 1) :
 @[simp]
 theorem toIGame_half : toIGame half = ½ := by
   have : mkRat 2 2 = 1 := rfl
-  rw [toIGame_of_den_ne_one] <;> aesop (add simp [lower, upper])
+  rw [toIGame_of_den_ne_one] <;> aesop (add simp [lower, upper, Dyadic.mkRat])
 
 @[simp]
 theorem toIGame_neg (x : Dyadic) : toIGame (-x) = -toIGame x := by
@@ -258,11 +295,91 @@ theorem toIGame_neg (x : Dyadic) : toIGame (-x) = -toIGame x := by
   dsimp
   split_ifs with h
   · simp
-  · simp only [lower_neg, upper_neg, IGame.neg_ofSets, Set.neg_singleton, IGame.ofSets_inj,
-      Set.singleton_eq_singleton_iff]
-    have := den_upper_lt h
-    have := den_lower_lt h
-    exact ⟨toIGame_neg _, toIGame_neg _⟩
+  · simpa using ⟨toIGame_neg _, toIGame_neg _⟩
 termination_by x.1.den
+decreasing_by dyadic_wf
+
+instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
+  rw [toIGame]
+  split_ifs with h
+  · exact .intCast _
+  · rw [short_def]
+    simpa using ⟨.dyadic _, .dyadic _⟩
+termination_by x.1.den
+decreasing_by dyadic_wf
+
+/-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
+necessarily be the canonical form. -/
+theorem toIGame_equiv_lower_upper (x : Dyadic) :
+    toIGame x ≈ {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ := by
+  rw [toIGame]
+  split_ifs with h
+  · unfold lower upper
+    simp_rw [h]
+    simp only [Dyadic.mkRat, Rat.mkRat_one, Int.cast_one, mk_intCast, toIGame_intCast]
+    apply Fits.equiv_of_forall_not_fits
+    · simp [Fits]
+    · intro m hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
+      simp_all [Fits, Int.sub_one_lt_iff, hm'.not_le]
+    · intro m hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
+      simp_all [Fits, Int.lt_add_one_iff, hm'.not_le]
+  · exact .rfl
+
+private theorem numeric_toIGame_aux {k : ℕ} (h : k ∈ Submonoid.powers 2) (m : ℤ) :
+    Numeric (toIGame.{u} (.mkRat m h)) ∧
+      ∀ n, m < n → toIGame.{u} (.mkRat m h) < toIGame (.mkRat n h) := by
+  sorry
+
+instance _root_.IGame.Numeric.dyadic (x : Dyadic) : Numeric (toIGame x) :=
+  x.mkRat_self ▸ (numeric_toIGame_aux x.2 _).1
+#exit
+private theorem numeric_toIGame_aux (x : Dyadic) : Numeric (toIGame.{u} x) ∧ toIGame.{u} x ≈ x := by
+  by_cases h : x.1.den = 1
+  · rw [toIGame_of_den_eq_one h]
+    constructor
+    · infer_instance
+    · rw [← Rat.coe_int_num_of_den_eq_one h]
+      exact (ratCast_intCast_equiv _).symm
+  · obtain ⟨hl₁, hl₂⟩ := numeric_toIGame_aux (lower x)
+    obtain ⟨hr₁, hr₂⟩ := numeric_toIGame_aux (upper x)
+    have H : toIGame (lower x) < toIGame (upper x) := by
+      rw [hl₂.lt_congr hr₂]
+      exact_mod_cast lower_lt_upper x
+    have hx : Numeric (toIGame x) := by
+      rw [toIGame_of_den_ne_one h, numeric_def]
+      aesop
+    use hx
+    apply (Fits.equiv_of_forall_not_fits ..).symm
+termination_by x.1.den
+decreasing_by dyadic_wf
+
+    #exit
+
+@[simp]
+theorem toIGame_le_toIGame {x y : Dyadic} : toIGame x ≤ toIGame y ↔ x ≤ y := by
+  unfold toIGame
+  split_ifs with h₁ h₂ h₂
+  · rw [intCast_le, ← Int.cast_le (R := ℚ),
+      Rat.coe_int_num_of_den_eq_one h₁, Rat.coe_int_num_of_den_eq_one h₂, Subtype.coe_le_coe]
+  · constructor
+    · rw [le_iff_forall_lf]
+      rintro ⟨H₁, H₂⟩
+      rw [← toIGame_of_den_ne_one h₂] at H₁
+      simp at H₂
+
+
+#exit
+
+instance _root_.Numeric.dyadic (x : Dyadic) : Numeric (toIGame x) := by
+  rw [toIGame]
+  split_ifs with h
+  · exact .intCast _
+  · rw [numeric_def]
+    simp
+    simpa using ⟨lower_lt_upper _, .dyadic _, .dyadic _⟩
+termination_by x.1.den
+decreasing_by dyadic_wf
 
 end Dyadic
