@@ -547,18 +547,14 @@ theorem equiv_of_exists {x y : IGame}
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
     (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
     (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
-  apply equiv_of_exists_le
-  · intro a ha
-    obtain ⟨b, hb, hab⟩ := hl₁ a ha
+  apply equiv_of_exists_le <;> intro i hi
+  · obtain ⟨b, hb, hab⟩ := hl₁ i hi
     exact ⟨b, hb, hab.le⟩
-  · intro a ha
-    obtain ⟨b, hb, hab⟩ := hr₁ a ha
+  · obtain ⟨b, hb, hab⟩ := hr₁ i hi
     exact ⟨b, hb, hab.ge⟩
-  · intro b hb
-    obtain ⟨a, ha, hab⟩ := hl₂ b hb
+  · obtain ⟨a, ha, hab⟩ := hl₂ i hi
     exact ⟨a, ha, hab.ge⟩
-  · intro b hb
-    obtain ⟨a, ha, hab⟩ := hr₂ b hb
+  · obtain ⟨a, ha, hab⟩ := hr₂ i hi
     exact ⟨a, ha, hab.le⟩
 
 @[simp]
