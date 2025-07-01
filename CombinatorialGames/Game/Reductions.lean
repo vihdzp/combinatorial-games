@@ -109,12 +109,56 @@ theorem equiv_of_bypass_right {ι : Type u} {l r : Set IGame.{u}} [Small.{u} l] 
         rw [rightMoves_ofSets]
         exact .inr hz
 
-theorem equiv_of_gift_left (gs l r : Set IGame.{u}) [Small.{u} gs] [Small.{u} l] [Small.{u} r]
+theorem equiv_of_gift_left {gs l r : Set IGame.{u}} [Small.{u} gs] [Small.{u} l] [Small.{u} r]
     (hg : ∀ g ∈ gs, ¬{l | r}ᴵ ≤ g) : {l | r}ᴵ ≈ {gs ∪ l | r}ᴵ := by
-  sorry
+  constructor
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      apply lf_of_le_leftMove le_rfl
+      rw [leftMoves_ofSets] at hz ⊢
+      exact .inr hz
+    · intro z hz
+      apply lf_of_rightMove_le le_rfl
+      rwa [rightMoves_ofSets] at hz ⊢
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      rw [leftMoves_ofSets] at hz
+      obtain hz | hz := hz
+      · exact hg z hz
+      · apply lf_of_le_leftMove le_rfl
+        rwa [leftMoves_ofSets]
+    · intro z hz
+      apply lf_of_rightMove_le le_rfl
+      rwa [rightMoves_ofSets] at hz ⊢
 
-theorem equiv_of_gift_right (gs l r : Set IGame.{u}) [Small.{u} gs] [Small.{u} l] [Small.{u} r]
+theorem equiv_of_gift_right {gs l r : Set IGame.{u}} [Small.{u} gs] [Small.{u} l] [Small.{u} r]
     (hg : ∀ g ∈ gs, ¬g ≤ {l | r}ᴵ) : {l | r}ᴵ ≈ {l | gs ∪ r}ᴵ := by
-  sorry
+  constructor
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      apply lf_of_le_leftMove le_rfl
+      rwa [leftMoves_ofSets] at hz ⊢
+    · intro z hz
+      rw [rightMoves_ofSets] at hz
+      obtain hz | hz := hz
+      · exact hg z hz
+      · apply lf_of_rightMove_le le_rfl
+        rwa [rightMoves_ofSets]
+  · dsimp
+    rw [le_iff_forall_lf]
+    constructor
+    · intro z hz
+      apply lf_of_le_leftMove le_rfl
+      rwa [leftMoves_ofSets] at hz ⊢
+    · intro z hz
+      apply lf_of_rightMove_le le_rfl
+      rw [rightMoves_ofSets] at hz ⊢
+      exact .inr hz
 
 end IGame
