@@ -324,11 +324,22 @@ def lower (x : Dyadic) : Dyadic :=
 def upper (x : Dyadic) : Dyadic :=
   .mkRat (x.num + 1) x.2
 
+private theorem den_mkRat_lt {x : Dyadic} {n : ℤ} (hn : 2 ∣ n) (hd : x.den ≠ 1) :
+    (mkRat n x.den).den < x.den := by
+  rw [← Rat.normalize_eq_mkRat x.den_ne_zero, Rat.normalize_eq]
+  apply Nat.div_lt_self x.den_pos
+  apply Nat.le_of_dvd (Nat.gcd_pos_of_pos_right _ x.den_pos) (Nat.dvd_gcd _ (even_den hd).two_dvd)
+  rwa [← Int.natAbs_dvd_natAbs] at hn
+
 theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den :=
   den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
 
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den :=
   den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
+
+/-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
+macro "dyadic_wf" : tactic =>
+  `(tactic| all_goals first | solve_by_elim [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
 
 @[simp]
 theorem lower_neg (x : Dyadic) : lower (-x) = -upper x := by
