@@ -10,6 +10,7 @@ import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
 import Mathlib.Order.GameAdd
+import Mathlib.Lean.PrettyPrinter.Delaborator
 
 /-!
 # Combinatorial (pre-)games
@@ -526,6 +527,36 @@ infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 /-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
+
+/-
+TODO: use `annotateGoToSyntaxDef` from
+`Mathlib.Lean.PrettyPrinter.Delaborator` once mathlib is updated
+-/
+open Lean PrettyPrinter Delaborator SubExpr Qq in
+@[delab app.AntisymmRel]
+def delabEquiv : Delab := do
+  let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
+  have u := f.constLevels![0]!
+  have α : Q(Type u) := α
+  have r : Q($α → $α → Prop) := r
+  let le ← synthInstanceQ q(LE $α)
+  _ ← assertDefEqQ q(($le).le) q($r)
+  let x ← withNaryArg 2 delab
+  let y ← withNaryArg 3 delab
+  `($x ≈ $y)
+
+open Lean PrettyPrinter Delaborator SubExpr Qq in
+@[delab app.IncompRel]
+def delabFuzzy : Delab := do
+  let_expr f@IncompRel α r _ _ := ← getExpr | failure
+  have u := f.constLevels![0]!
+  have α : Q(Type u) := α
+  have r : Q($α → $α → Prop) := r
+  let le ← synthInstanceQ q(LE $α)
+  _ ← assertDefEqQ q(($le).le) q($r)
+  let x ← withNaryArg 2 delab
+  let y ← withNaryArg 3 delab
+  `($x ‖ $y)
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
