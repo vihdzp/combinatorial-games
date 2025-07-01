@@ -527,22 +527,21 @@ infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
--- TODO: this seems like the kind of goal that could be simplified through `aesop`.
+theorem equiv_of_forall_lf {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ¬y ≤ a)
+    (hr₁ : ∀ a ∈ x.rightMoves, ¬a ≤ y)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ¬x ≤ b)
+    (hr₂ : ∀ b ∈ y.rightMoves, ¬b ≤ x) : x ≈ y := by
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
+
 theorem equiv_of_exists_le {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≤ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, b ≤ a)
     (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  b ≤ a)
     (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≤ b) : x ≈ y := by
-  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i hi
-  · obtain ⟨j, hj, hj'⟩ := hl₁ i hi
-    exact Or.inl ⟨j, hj, hj'⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₂ i hi
-    exact Or.inr ⟨j, hj, hj'⟩
-  · obtain ⟨j, hj, hj'⟩ := hl₂ i hi
-    exact Or.inl ⟨j, hj, hj'⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
-    exact Or.inr ⟨j, hj, hj'⟩
+  apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
 
+-- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
