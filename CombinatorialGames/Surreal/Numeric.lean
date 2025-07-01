@@ -403,17 +403,16 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
   rw [toIGame]
   split_ifs with h
   · unfold lower upper
-    simp_rw [h]
-    simp only [Dyadic.mkRat, Rat.mkRat_one, Int.cast_one, mk_intCast, toIGame_intCast]
+    simp only [Dyadic.mkRat, Rat.mkRat_one, mk_intCast, toIGame_intCast, h]
     apply Fits.equiv_of_forall_not_fits
     · simp [Fits]
     · intro m hm
       obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
-      simp_all [Fits, Int.sub_one_lt_iff, hm'.not_le]
+      simp_all [Fits, Int.sub_one_lt_iff]
     · intro m hm
       obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
-      simp_all [Fits, Int.lt_add_one_iff, hm'.not_le]
-  · exact .rfl
+      simp_all [Fits, Int.lt_add_one_iff]
+  · rfl
 
 instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
   rw [toIGame]
