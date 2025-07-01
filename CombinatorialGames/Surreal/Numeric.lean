@@ -33,6 +33,12 @@ open IGame
 
 /-! ### For Mathlib -/
 
+theorem le_of_le_of_lt_of_lt {α β : Type*} [PartialOrder α] [Preorder β] {x y : α}
+    {f : α → β} (h : x < y → f x < f y) (hxy : x ≤ y) : f x ≤ f y := by
+  obtain rfl | h' := hxy.eq_or_lt
+  · rfl
+  · exact (h h').le
+
 theorem Nat.pow_log_eq_self_iff {b n : ℕ} (hb : b ≠ 0) :
     b ^ Nat.log b n = n ↔ n ∈ Set.range (b ^ ·) := by
   constructor
@@ -278,6 +284,19 @@ theorem odd_num {x : Dyadic} (hx : x.den ≠ 1) : Odd x.num := by
   rw [← Int.natAbs_dvd_natAbs]
   exact (Nat.not_coprime_of_dvd_of_dvd one_lt_two · hd x.1.reduced)
 
+theorem num_eq_self_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
+  ext
+  exact Rat.coe_int_num_of_den_eq_one hx
+
+theorem eq_mkRat_of_den_le {x : Dyadic} {n : ℕ} (h : x.den ≤ n) (hn : n ∈ Submonoid.powers 2) :
+    ∃ m, x = .mkRat m hn := by
+  use x.num * (n / x.den)
+  ext
+  rw [← x.mkRat_self, val_mkRat, val_mkRat,
+    Rat.mkRat_eq_iff x.den_ne_zero (ne_zero_of_mem_powers hn), mkRat_self, mul_assoc]
+  congr
+  exact (Nat.div_mul_cancel ((dvd_iff_le_of_mem_powers x.den_mem_powers hn).2 h)).symm
+
 /-! ### Dyadic games -/
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
@@ -316,6 +335,16 @@ theorem upper_neg (x : Dyadic) : upper (-x) = -lower x := by
   unfold lower upper
   ext
   simp [Rat.neg_mkRat, ← sub_eq_neg_add]
+
+theorem le_lower_of_lt {x y : Dyadic} (hd : x.den ≤ y.den) (h : x < y) : x ≤ y.lower := by
+  obtain ⟨m, rfl⟩ := eq_mkRat_of_den_le hd y.den_mem_powers
+  conv_rhs at h => rw [← y.mkRat_self]
+  rw [mkRat_lt_mkRat] at h
+  rwa [lower, mkRat_le_mkRat, Int.le_sub_one_iff]
+
+theorem upper_le_of_lt {x y : Dyadic} (hd : y.den ≤ x.den) (h : x < y) : x.upper ≤ y := by
+  have hd' : (-y).den ≤ (-x).den := hd
+  simpa using le_lower_of_lt hd' (neg_lt_neg h)
 
 theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 1 := by
   simp [lower, h, Dyadic.ext_iff]
@@ -375,5 +404,87 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
     simpa using ⟨.dyadic _, .dyadic _⟩
 termination_by x.den
 decreasing_by dyadic_wf
+
+private theorem numeric_lower (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
+    Numeric (toIGame.{u} (lower x)) := by
+  by_cases h : x.den = 1
+  · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast]
+    infer_instance
+  · apply hx.of_mem_leftMoves
+    simp [toIGame_of_den_ne_one h]
+
+private theorem numeric_upper (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
+    Numeric (toIGame.{u} (upper x)) := by
+  have : Numeric (toIGame.{u} (-x)) := by simpa
+  simpa using numeric_lower (-x)
+
+private theorem lower_lt_aux (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
+    toIGame.{u} (lower x) < toIGame x := by
+  by_cases h : x.den = 1
+  · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast,
+      toIGame_of_den_eq_one h]
+    simp
+  · apply hx.leftMove_lt
+    simp [toIGame_of_den_ne_one h]
+
+private theorem lt_upper_aux (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
+    toIGame.{u} (x) < toIGame (upper x) := by
+  have : Numeric (toIGame.{u} (-x)) := by simpa
+  simpa using lower_lt_aux (-x)
+
+private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
+    [Numeric (toIGame.{u} x)] [Numeric (toIGame.{u} y)] (h : x < y) :
+    toIGame.{u} x < toIGame y := by
+  by_cases H : x.den = 1 ∧ y.den = 1
+  · rwa [toIGame_of_den_eq_one H.1, toIGame_of_den_eq_one H.2, intCast_lt,
+      ← Int.cast_lt (R := Dyadic), num_eq_self_of_den_eq_one H.1, num_eq_self_of_den_eq_one H.2]
+  · obtain hd | hd := le_total x.den y.den
+    · have := numeric_lower y
+      have hy := lower_lt_aux y
+      by_cases hy' : y.den = 1
+      · rw [hy', den_le_one_iff_eq_one] at hd
+        exact (H ⟨hd, hy'⟩).elim
+      · exact (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (le_lower_of_lt hd h)).trans_lt hy
+    · have := numeric_upper x
+      have hx := lt_upper_aux x
+      by_cases hx' : x.den = 1
+      · rw [hx', den_le_one_iff_eq_one] at hd
+        exact (H ⟨hx', hd⟩).elim
+      · exact hx.trans_le (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (upper_le_of_lt hd h))
+termination_by (x.den, y.den)
+decreasing_by dyadic_wf
+
+instance _root_.IGame.Numeric.dyadic (x : Dyadic) : Numeric (toIGame x) := by
+  by_cases h : x.den = 1
+  · rw [toIGame_of_den_eq_one h]
+    infer_instance
+  · rw [numeric_def, toIGame_of_den_ne_one h]
+    have := IGame.Numeric.dyadic (lower x)
+    have := IGame.Numeric.dyadic (upper x)
+    have := toIGame_lt_toIGame_aux (lower_lt_upper x)
+    simp_all
+termination_by x.den
+decreasing_by dyadic_wf
+
+/-- `Dyadic.toIGame` as an `OrderEmbedding`. -/
+@[simps!]
+noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
+  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+
+@[simp]
+theorem toIGame_le_toIGame {x y : Dyadic} : toIGame x ≤ toIGame y ↔ x ≤ y :=
+  toIGameEmbedding.le_iff_le
+
+@[simp]
+theorem toIGame_lt_toIGame {x y : Dyadic} : toIGame x < toIGame y ↔ x < y :=
+  toIGameEmbedding.lt_iff_lt
+
+@[simp]
+theorem toIGame_equiv_toIGame {x y : Dyadic} : toIGame x ≈ toIGame y ↔ x = y := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp]
+theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
+  toIGameEmbedding.inj
 
 end Dyadic
