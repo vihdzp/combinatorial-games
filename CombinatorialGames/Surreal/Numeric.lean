@@ -320,6 +320,10 @@ theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den :=
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den :=
   den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
 
+/-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
+macro "dyadic_wf" : tactic =>
+  `(tactic| all_goals first | solve_by_elim [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
+
 @[simp]
 theorem lower_neg (x : Dyadic) : lower (-x) = -upper x := by
   unfold lower upper
@@ -353,10 +357,6 @@ theorem lower_lt_upper (x : Dyadic) : lower x < upper x := by
   rw [Subtype.mk_lt_mk, val_mkRat, val_mkRat, Rat.mkRat_eq_div, Rat.mkRat_eq_div,
     div_lt_div_iff_of_pos_right (mod_cast x.den_pos)]
   simp [sub_eq_add_neg]
-
-/-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
-macro "dyadic_wf" : tactic =>
-  `(tactic| all_goals first | solve_by_elim [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
