@@ -336,6 +336,16 @@ theorem upper_neg (x : Dyadic) : upper (-x) = -lower x := by
   ext
   simp [Rat.neg_mkRat, ← sub_eq_neg_add]
 
+theorem le_lower_of_lt {x y : Dyadic} (hd : x.den ≤ y.den) (h : x < y) : x ≤ y.lower := by
+  obtain ⟨m, rfl⟩ := eq_mkRat_of_den_le hd y.den_mem_powers
+  conv_rhs at h => rw [← y.mkRat_self]
+  rw [mkRat_lt_mkRat] at h
+  rwa [lower, mkRat_le_mkRat, Int.le_sub_one_iff]
+
+theorem upper_le_of_lt {x y : Dyadic} (hd : y.den ≤ x.den) (h : x < y) : x.upper ≤ y := by
+  have hd' : (-y).den ≤ (-x).den := hd
+  simpa using le_lower_of_lt hd' (neg_lt_neg h)
+
 theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 1 := by
   simp [lower, h, Dyadic.ext_iff]
 
@@ -413,16 +423,6 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
     simpa using ⟨.dyadic _, .dyadic _⟩
 termination_by x.den
 decreasing_by dyadic_wf
-
-theorem le_lower_of_lt {x y : Dyadic} (hd : x.den ≤ y.den) (h : x < y) : x ≤ y.lower := by
-  obtain ⟨m, rfl⟩ := eq_mkRat_of_den_le hd y.den_mem_powers
-  conv_rhs at h => rw [← y.mkRat_self]
-  rw [mkRat_lt_mkRat] at h
-  rwa [lower, mkRat_le_mkRat, Int.le_sub_one_iff]
-
-theorem upper_le_of_lt {x y : Dyadic} (hd : y.den ≤ x.den) (h : x < y) : x.upper ≤ y := by
-  have hd' : (-y).den ≤ (-x).den := hd
-  simpa using le_lower_of_lt hd' (neg_lt_neg h)
 
 private theorem numeric_lower (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
     Numeric (toIGame.{u} (lower x)) := by
