@@ -3,12 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
-import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
+import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 import Mathlib.Lean.PrettyPrinter.Delaborator
 
@@ -352,11 +352,11 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
 
 @[simp, game_cmp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
-  ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
+  ext; simp [ofSets, range_comp]
 
 @[simp, game_cmp]
 theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
-  ext; simp [ofSets, range_comp, Equiv.range_eq_univ]
+  ext; simp [ofSets, range_comp]
 
 @[simp]
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
@@ -491,15 +491,6 @@ private theorem le_rfl' {x : IGame} : x ≤ x := by
 termination_by x
 decreasing_by igame_wf
 
--- TODO: add these convenience theorems to Mathlib
-theorem _root_.Relation.cutExpand_add_single {α : Type*} {r : α → α → Prop} {a' a : α}
-    (s : Multiset α) (h : r a' a) : Relation.CutExpand r (s + {a'}) (s + {a}) :=
-  (Relation.cutExpand_add_left s).2 <| Relation.cutExpand_singleton_singleton h
-
-theorem _root_.Relation.cutExpand_single_add {α : Type*} {r : α → α → Prop} {a' a : α}
-    (h : r a' a) (s : Multiset α) : Relation.CutExpand r ({a'} +  s) ({a} + s) :=
-  (Relation.cutExpand_add_right s).2 <| Relation.cutExpand_singleton_singleton h
-
 private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z := by
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
@@ -576,7 +567,7 @@ theorem equiv_of_exists {x y : IGame}
 
 @[simp]
 theorem zero_lt_one : (0 : IGame) < 1 := by
-  rw [lt_iff_le_not_le, le_iff_forall_lf, le_iff_forall_lf]
+  rw [lt_iff_le_not_ge, le_iff_forall_lf, le_iff_forall_lf]
   simp
 
 instance : ZeroLEOneClass IGame where
@@ -670,7 +661,7 @@ protected theorem le_neg {x y : IGame} : x ≤ -y ↔ y ≤ -x := by
 
 @[simp]
 protected theorem neg_lt_neg_iff {x y : IGame} : -x < -y ↔ y < x := by
-  rw [lt_iff_le_not_le, IGame.neg_le_neg_iff, IGame.neg_le_neg_iff, lt_iff_le_not_le]
+  simp [lt_iff_le_not_ge]
 
 protected theorem neg_lt {x y : IGame} : -x < y ↔ -y < x := by
   simpa using @IGame.neg_lt_neg_iff x (-y)
@@ -919,17 +910,16 @@ instance : AddRightReflectLE IGame :=
 
 instance : AddLeftStrictMono IGame where
   elim x y z h := by
-    apply lt_of_le_not_le (add_le_add_left h.le x)
+    apply lt_of_le_not_ge (add_le_add_left h.le x)
     contrapose! h
-    exact (le_of_add_le_add_left h).not_lt
+    exact (le_of_add_le_add_left h).not_gt
 
 instance : AddRightStrictMono IGame :=
   addRightStrictMono_of_addLeftStrictMono _
 
 -- TODO: [AddLeftMono α] [AddLeftReflectLE α] → AddLeftReflectLT α
 instance : AddLeftReflectLT IGame where
-  elim x y z h := by
-    rwa [lt_iff_le_not_le, add_le_add_iff_left, add_le_add_iff_left, ← lt_iff_le_not_le] at h
+  elim _ := by simp [lt_iff_le_not_ge]
 
 instance : AddRightReflectLT IGame :=
   addRightReflectLT_of_addLeftReflectLT _
@@ -1179,7 +1169,7 @@ instance : MulZeroClass IGame := by
 instance : MulOneClass IGame := by
   constructor <;>
   · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop (add simp [mulOption])
+    aesop (add simp [mulOption, and_assoc])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
   ext

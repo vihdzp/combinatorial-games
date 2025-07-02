@@ -129,7 +129,7 @@ private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'.rightMoves = �
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
-  refine fun a b h ↦ lt_of_le_not_le ?_ (leftMove_lf ?_)
+  refine fun a b h ↦ lt_of_le_not_ge ?_ (leftMove_lf ?_)
   · rw [le_iff_forall_lf]
     simpa [leftMoves_toIGame', rightMoves_toIGame'] using
       fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_le
