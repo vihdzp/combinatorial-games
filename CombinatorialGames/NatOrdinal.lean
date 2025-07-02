@@ -345,7 +345,6 @@ instance : AddLeftReflectLE NatOrdinal.{u} :=
     by_contra! h'
     exact h.not_gt (add_lt_add_left h' a)⟩
 
-
 instance : AddCommMonoid NatOrdinal where
   add_assoc := nadd_assoc
   zero_add := zero_nadd
