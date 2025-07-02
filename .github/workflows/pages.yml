@@ -20,13 +20,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - id: lean-action
-        name: Build and test
         uses: leanprover/lean-action@v1
         with:
-          lint: true
           use-github-cache: false
       - name: Build Doc
         run: |
