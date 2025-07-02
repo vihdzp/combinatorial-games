@@ -93,6 +93,9 @@ instance : WellFoundedLT NatOrdinal :=
 instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
   WellFoundedLT.conditionallyCompleteLinearOrderBot _
 
+instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
+  inferInstanceAs (Small (Iio o.toOrdinal))
+
 @[simp]
 theorem bot_eq_zero : ⊥ = 0 :=
   rfl
@@ -123,6 +126,16 @@ theorem toOrdinal_min (a b : NatOrdinal) : toOrdinal (min a b) = min (toOrdinal 
 
 theorem succ_def (a : NatOrdinal) : succ a = toNatOrdinal (toOrdinal a + 1) :=
   rfl
+
+@[simp]
+theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
+  Ordinal.zero_le o
+
+theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 := by simp
+
+@[simp]
+theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
+  Ordinal.lt_one_iff_zero
 
 /-- A recursor for `NatOrdinal`. Use as `induction x`. -/
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -718,3 +731,36 @@ theorem mul_le_nmul (a b : Ordinal.{u}) : a * b ≤ a ⨳ b := by
       exact (H i hi).trans (nmul_le_nmul_left hi.le a)
 
 end Ordinal
+
+namespace NatOrdinal
+
+theorem lt_add_iff {a b c : NatOrdinal} :
+    a < b + c ↔ (∃ b' < b, a ≤ b' + c) ∨ ∃ c' < c, a ≤ b + c' :=
+  Ordinal.lt_nadd_iff
+
+theorem add_le_iff {a b c : NatOrdinal} :
+     b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b + c' < a :=
+  Ordinal.nadd_le_iff
+
+theorem lt_mul_iff {a b c : NatOrdinal} :
+    c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' :=
+  Ordinal.lt_nmul_iff
+
+theorem mul_le_iff {a b c : NatOrdinal} :
+    a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' :=
+  Ordinal.nmul_le_iff
+
+theorem mul_add_lt {a b a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
+    a' * b + a * b' < a * b + a' * b' :=
+  Ordinal.nmul_nadd_lt ha hb
+
+theorem nmul_nadd_le {a b a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
+    a' * b + a * b' ≤ a * b + a' * b' :=
+  Ordinal.nmul_nadd_le ha hb
+
+instance : CharZero NatOrdinal where
+  cast_injective m n h := by
+    apply_fun toOrdinal at h
+    simpa using h
+
+end NatOrdinal
