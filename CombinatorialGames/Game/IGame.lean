@@ -10,6 +10,7 @@ import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
 import Mathlib.Order.GameAdd
+import Mathlib.Lean.PrettyPrinter.Delaborator
 
 /-!
 # Combinatorial (pre-)games
@@ -262,6 +263,7 @@ theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
     exact ⟨j, mk_eq_mk.1 hj⟩
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
+@[aesop simp]
 def IsOption (x y : IGame) : Prop :=
   x ∈ y.leftMoves ∪ y.rightMoves
 
@@ -526,6 +528,36 @@ infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
+/-
+TODO: use `annotateGoToSyntaxDef` from
+`Mathlib.Lean.PrettyPrinter.Delaborator` once mathlib is updated
+-/
+open Lean PrettyPrinter Delaborator SubExpr Qq in
+@[delab app.AntisymmRel]
+def delabEquiv : Delab := do
+  let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
+  have u := f.constLevels![0]!
+  have α : Q(Type u) := α
+  have r : Q($α → $α → Prop) := r
+  let le ← synthInstanceQ q(LE $α)
+  _ ← assertDefEqQ q(($le).le) q($r)
+  let x ← withNaryArg 2 delab
+  let y ← withNaryArg 3 delab
+  `($x ≈ $y)
+
+open Lean PrettyPrinter Delaborator SubExpr Qq in
+@[delab app.IncompRel]
+def delabFuzzy : Delab := do
+  let_expr f@IncompRel α r _ _ := ← getExpr | failure
+  have u := f.constLevels![0]!
+  have α : Q(Type u) := α
+  have r : Q($α → $α → Prop) := r
+  let le ← synthInstanceQ q(LE $α)
+  _ ← assertDefEqQ q(($le).le) q($r)
+  let x ← withNaryArg 2 delab
+  let y ← withNaryArg 3 delab
+  `($x ‖ $y)
+
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
@@ -723,10 +755,10 @@ theorem add_right_mem_rightMoves_add {x y : IGame} (h : x ∈ y.rightMoves) (z :
   rw [rightMoves_add]; left; use x
 
 theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
-  aesop (add simp [IsOption])
+  aesop
 
 theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
-  aesop (add simp [IsOption])
+  aesop
 
 @[game_cmp]
 theorem forall_leftMoves_add {P : IGame → Prop} {x y : IGame} :
@@ -998,24 +1030,32 @@ theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
     | succ n => rfl
   | negSucc n => exact (neg_neg _).symm
 
+theorem eq_sub_one_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
+    x = (n - 1 : ℤ) := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
+  · cases n
+    · simp at hx
+    · rw [intCast_nat] at hx
+      simp_all
+  · simp at hx
+
+theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
+    x = (n + 1 : ℤ) := by
+  have : -x ∈ leftMoves (-n : ℤ) := by simpa
+  rw [← neg_inj]
+  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+
 /-- Every left option of an integer is equal to a smaller integer. -/
 theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
     ∃ m : ℤ, m < n ∧ m = x := by
-  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
-  · obtain ⟨m, hm, rfl⟩ := eq_natCast_of_mem_leftMoves_natCast hx
-    use m
-    simpa
-  · simp at hx
+  use n - 1
+  simp [eq_sub_one_of_mem_leftMoves_intCast hx]
 
 /-- Every right option of an integer is equal to a larger integer. -/
 theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
     ∃ m : ℤ, n < m ∧ m = x := by
-  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
-  · simp at hx
-  · rw [intCast_neg, intCast_nat, rightMoves_neg] at hx
-    obtain ⟨m, hm, hm'⟩ := eq_natCast_of_mem_leftMoves_natCast hx
-    use -m
-    simp_all
+  use n + 1
+  simp [eq_add_one_of_mem_rightMoves_intCast hx]
 
 /-! ### Multiplication -/
 
@@ -1101,7 +1141,7 @@ theorem mulOption_right_left_mem_rightMoves_mul {x y a b : IGame}
 
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
     IsOption (mulOption x y a b) (x * y) := by
-  aesop (add simp [IsOption])
+  aesop
 
 @[game_cmp]
 theorem forall_leftMoves_mul {P : IGame → Prop} {x y : IGame} :

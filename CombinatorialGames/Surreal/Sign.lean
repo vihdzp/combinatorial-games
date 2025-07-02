@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Basic
+import Mathlib.Algebra.Order.Ring.Int
+import Mathlib.Order.PiLex
+import Mathlib.SetTheory.Ordinal.Arithmetic
 import Mathlib.Tactic.DeriveFintype
 
 /-!
