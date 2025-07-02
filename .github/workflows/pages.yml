@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   workflow_dispatch:
 
 # Bestows GITHUB_TOKEN permission to deploy to GitHub Pages
