@@ -3,7 +3,7 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.SetTheory.Ordinal.Arithmetic
+import Mathlib.SetTheory.Ordinal.Family
 import Mathlib.Tactic.Abel
 
 /-!
@@ -317,10 +317,10 @@ theorem nat_nadd (n : ℕ) : ↑n ♯ a = a + n := by rw [nadd_comm, nadd_nat]
 
 theorem add_le_nadd : a + b ≤ a ♯ b := by
   induction b using limitRecOn with
-  | H₁ => simp
-  | H₂ c h =>
+  | zero => simp
+  | succ c h =>
     rwa [add_succ, nadd_succ, succ_le_succ_iff]
-  | H₃ c hc H =>
+  | isLimit c hc H =>
     rw [(isNormal_add_right a).apply_of_isLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
     exact (H i hi).trans (nadd_le_nadd_left hi.le a)
@@ -343,19 +343,19 @@ instance : AddLeftMono NatOrdinal.{u} :=
 instance : AddLeftReflectLE NatOrdinal.{u} :=
   ⟨fun a b c h => by
     by_contra! h'
-    exact h.not_lt (add_lt_add_left h' a)⟩
+    exact h.not_gt (add_lt_add_left h' a)⟩
 
-instance : OrderedCancelAddCommMonoid NatOrdinal :=
-  { NatOrdinal.instLinearOrder with
-    add := (· + ·)
-    add_assoc := nadd_assoc
-    add_le_add_left := fun _ _ => add_le_add_left
-    le_of_add_le_add_left := fun _ _ _ => le_of_add_le_add_left
-    zero := 0
-    zero_add := zero_nadd
-    add_zero := nadd_zero
-    add_comm := nadd_comm
-    nsmul := nsmulRec }
+
+instance : AddCommMonoid NatOrdinal where
+  add_assoc := nadd_assoc
+  zero_add := zero_nadd
+  add_zero := nadd_zero
+  add_comm := nadd_comm
+  nsmul := nsmulRec
+
+instance : IsOrderedCancelAddMonoid NatOrdinal where
+  add_le_add_left _ _ := add_le_add_left
+  le_of_add_le_add_left _ _ _ := le_of_add_le_add_left
 
 instance : AddMonoidWithOne NatOrdinal :=
   AddMonoidWithOne.unary
@@ -490,7 +490,7 @@ theorem nmul_nadd_le {a' b' : Ordinal} (ha : a' ≤ a) (hb : b' ≤ b) :
 theorem lt_nmul_iff : c < a ⨳ b ↔ ∃ a' < a, ∃ b' < b, c ♯ a' ⨳ b' ≤ a' ⨳ b ♯ a ⨳ b' := by
   refine ⟨fun h => ?_, ?_⟩
   · rw [nmul] at h
-    simpa using not_mem_of_lt_csInf h ⟨0, fun _ _ => bot_le⟩
+    simpa using notMem_of_lt_csInf h ⟨0, fun _ _ => bot_le⟩
   · rintro ⟨a', ha, b', hb, h⟩
     have := h.trans_lt (nmul_nadd_lt ha hb)
     rwa [nadd_lt_nadd_iff_right] at this
@@ -664,24 +664,20 @@ open Ordinal
 instance : Mul NatOrdinal :=
   ⟨nmul⟩
 
--- Porting note: had to add universe annotations to ensure that the
--- two sources lived in the same universe.
-instance : OrderedCommSemiring NatOrdinal.{u} :=
-  { NatOrdinal.instOrderedCancelAddCommMonoid.{u},
-    NatOrdinal.instLinearOrder.{u} with
-    mul := (· * ·)
-    left_distrib := nmul_nadd
-    right_distrib := nadd_nmul
-    zero_mul := zero_nmul
-    mul_zero := nmul_zero
-    mul_assoc := nmul_assoc
-    one := 1
-    one_mul := one_nmul
-    mul_one := nmul_one
-    mul_comm := nmul_comm
-    zero_le_one := @zero_le_one Ordinal _ _ _ _
-    mul_le_mul_of_nonneg_left := fun _ _ c h _ => nmul_le_nmul_left h c
-    mul_le_mul_of_nonneg_right := fun _ _ c h _ => nmul_le_nmul_right h c }
+instance : CommSemiring NatOrdinal where
+  left_distrib := nmul_nadd
+  right_distrib := nadd_nmul
+  zero_mul := zero_nmul
+  mul_zero := nmul_zero
+  mul_assoc := nmul_assoc
+  one_mul := one_nmul
+  mul_one := nmul_one
+  mul_comm := nmul_comm
+
+instance : IsOrderedRing NatOrdinal where
+  zero_le_one := @zero_le_one Ordinal _ _ _ _
+  mul_le_mul_of_nonneg_left _ _ c h _ := nmul_le_nmul_left h c
+  mul_le_mul_of_nonneg_right _ _ c h _ := nmul_le_nmul_right h c
 
 namespace Ordinal
 
