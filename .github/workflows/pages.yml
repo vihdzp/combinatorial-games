@@ -28,7 +28,7 @@ jobs:
       - name: Build Doc
         run: |
           cd docbuild
-          lake update doc-gen4 CombinatorialGames
+          MATHLIB_NO_CACHE_ON_UPDATE=1 lake update doc-gen4 CombinatorialGames
           lake build CombinatorialGames:docs
       - name: Setup Pages
         uses: actions/configure-pages@v4
