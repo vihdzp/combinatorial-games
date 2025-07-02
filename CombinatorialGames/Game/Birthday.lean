@@ -142,7 +142,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
   rw [birthday, NatOrdinal.iSup_eq_zero_iff, IGame.ext_iff]
-  simp [IsOption, forall_and, eq_empty_iff_forall_not_mem]
+  simp [IsOption, forall_and, eq_empty_iff_forall_notMem]
 
 @[simp] theorem birthday_zero : birthday 0 = 0 := by simp
 @[simp] theorem birthday_one : birthday 1 = 1 := by rw [one_def, birthday_ofSets]; simp
@@ -186,7 +186,7 @@ termination_by o
 
 theorem le_toIGame_birthday (x : IGame) : x ≤ x.birthday.toIGame := by
   rw [le_iff_forall_lf]
-  refine ⟨fun y hy ↦ ((le_toIGame_birthday y).trans_lt ?_).not_le, ?_⟩
+  refine ⟨fun y hy ↦ ((le_toIGame_birthday y).trans_lt ?_).not_ge, ?_⟩
   · simpa using birthday_lt_of_mem_leftMoves hy
   · simp
 termination_by x
@@ -317,7 +317,7 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     simp
   · have := Finset.card_le_card h
     rw [card_birthdayFinset] at this
-    exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_le this
+    exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
 private theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
     (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | Subposition y x}.Finite := by

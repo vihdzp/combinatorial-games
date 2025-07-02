@@ -120,9 +120,7 @@ open scoped ConcreteGame
 instance [ConcreteGame α] : ConcreteGame (ToImpartial α) where
   relLeft x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
   relRight x y := (ofImpartial x) ≺ₗ (ofImpartial y) ∨ (ofImpartial x) ≺ᵣ (ofImpartial y)
-  isWellFounded_rel := by
-    convert ConcreteGame.isWellFounded_rel (α := α) using 1
-    simp [ConcreteGame.relLeft, ConcreteGame.relRight]; rfl
+  isWellFounded_rel := by simpa using ConcreteGame.isWellFounded_rel (α := α)
 
 instance [ConcreteGame α] (x : α) : Impartial (ConcreteGame.toIGame (toImpartial x)) :=
   ConcreteGame.impartial_toIGame rfl _
