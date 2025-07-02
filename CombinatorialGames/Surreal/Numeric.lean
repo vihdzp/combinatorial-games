@@ -113,25 +113,12 @@ theorem IsDyadic.mkRat (x : ℤ) {y : ℕ} (hy : y ∈ Submonoid.powers 2) : IsD
 theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
 @[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
 
+theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
+theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
+
 theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
   rw [Rat.add_def']
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
-
-theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  induction n with
-  | zero => exact ⟨0, rfl⟩
-  | succ n ih =>
-    rw [succ_nsmul]
-    exact ih.add hx
-
-theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  cases n with
-  | ofNat n =>
-    rw [Int.ofNat_eq_natCast, natCast_zsmul]
-    exact hx.nsmul n
-  | negSucc n =>
-    rw [negSucc_zsmul]
-    exact (hx.nsmul (n + 1)).neg
 
 theorem IsDyadic.sub {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x - y) := by
   rw [sub_eq_add_neg]
@@ -140,6 +127,12 @@ theorem IsDyadic.sub {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic 
 theorem IsDyadic.mul {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x * y) := by
   rw [Rat.mul_def, Rat.normalize_eq_mkRat]
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
+
+theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := by
+  simpa using .mul (.natCast n) hx
+
+theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
+  simpa using .mul (.intCast n) hx
 
 theorem IsDyadic.pow {x : ℚ} (hx : IsDyadic x) (n : ℕ) : IsDyadic (x ^ n) := by
   induction n with
@@ -172,14 +165,14 @@ theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
 @[ext] theorem ext {x y : Dyadic} (h : x.val = y.val) : x = y := Subtype.ext h
 
 instance : NatCast Dyadic where
-  natCast n := ⟨n, ⟨0, rfl⟩⟩
+  natCast n := ⟨n, .natCast n⟩
 
 @[simp] theorem val_natCast (n : ℕ) : (n : Dyadic).val = n := rfl
 @[simp] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := rfl
 @[simp] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 := rfl
 
 instance : IntCast Dyadic where
-  intCast n := ⟨n, ⟨0, rfl⟩⟩
+  intCast n := ⟨n, .intCast n⟩
 
 @[simp] theorem val_intCast (n : ℤ) : (n : Dyadic).val = n := rfl
 @[simp] theorem mk_intCast {n : ℤ} (h : IsDyadic n) : (⟨n, h⟩ : Dyadic) = n := rfl
