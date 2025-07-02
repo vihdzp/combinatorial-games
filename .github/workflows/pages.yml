@@ -28,7 +28,7 @@ jobs:
       - name: Build Doc
         run: |
           cd docbuild
-          lake update doc-gen4
+          lake update doc-gen4 CombinatorialGames
           lake build CombinatorialGames:docs
       - name: Setup Pages
         uses: actions/configure-pages@v4
