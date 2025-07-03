@@ -543,9 +543,16 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
   · intro z hz
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     rw [not_fits_iff]
+    left
+    obtain h | h | h := lt_trichotomy x.den y.den
+    · use toIGame x + toIGame (lower y)
+      constructor
+      · apply add_left_mem_leftMoves_add
   · sorry
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
+
+#exit
 
 theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
   by_cases h : x.den = 1
