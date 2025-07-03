@@ -170,11 +170,11 @@ protected instance intCast : ∀ n : ℤ, Short n
 protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
   apply mk'
   · simpa [Set.image_union] using
-      ⟨((finite_leftMoves x).prod (finite_leftMoves y)).image _,
-        ((finite_rightMoves x).prod (finite_rightMoves y)).image _⟩
+      ⟨(finite_leftMoves x).image2 _ (finite_leftMoves y),
+        (finite_rightMoves x).image2 _ (finite_rightMoves y)⟩
   · simpa [Set.image_union] using
-      ⟨((finite_leftMoves x).prod (finite_rightMoves y)).image _,
-        ((finite_rightMoves x).prod (finite_leftMoves y)).image _⟩
+      ⟨(finite_leftMoves x).image2 _ (finite_rightMoves y),
+        (finite_rightMoves x).image2 _ (finite_leftMoves y)⟩
   on_goal 1 => rw [forall_leftMoves_mul]
   on_goal 2 => rw [forall_rightMoves_mul]
   all_goals

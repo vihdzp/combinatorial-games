@@ -85,16 +85,16 @@ One half of the **lawnmower theorem**:
 any dicotic game is smaller than any positive numeric game.
 -/
 theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
-  rw [lt_iff_le_not_le, le_iff_forall_lf]
+  rw [lt_iff_le_not_ge, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
   · have := Dicotic.of_mem_leftMoves hz
-    exact (lt_of_numeric_of_pos z hy).not_le
+    exact (lt_of_numeric_of_pos z hy).not_ge
   · have := Numeric.of_mem_rightMoves hz
     obtain (h | h) := Numeric.le_or_lt z 0
-    · cases ((Numeric.lt_rightMove hz).trans_le h).not_lt hy
-    · exact (lt_of_numeric_of_pos x h).not_le
+    · cases ((Numeric.lt_rightMove hz).trans_le h).not_gt hy
+    · exact (lt_of_numeric_of_pos x h).not_ge
   · obtain rfl | h := eq_or_ne x 0
-    · exact hy.not_le
+    · exact hy.not_ge
     · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
       obtain ⟨z, hz⟩ := h.2
       have := Dicotic.of_mem_rightMoves hz
