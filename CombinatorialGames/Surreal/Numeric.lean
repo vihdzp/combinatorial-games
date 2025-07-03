@@ -116,9 +116,6 @@ theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
 theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
 @[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
 
-theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
-theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
-
 theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
   rw [Rat.add_def']
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
@@ -160,10 +157,18 @@ abbrev den (x : Dyadic) : ℕ := x.1.den
 theorem den_ne_zero (x : Dyadic) : x.den ≠ 0 := x.1.den_ne_zero
 theorem den_pos (x : Dyadic) : 0 < x.den := x.1.den_pos
 theorem den_mem_powers (x : Dyadic) : x.den ∈ Submonoid.powers 2 := x.2
+theorem one_le_den (x : Dyadic) : 1 ≤ x.den := x.den_pos
 
 @[simp]
 theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
   simp_rw [Nat.le_one_iff_eq_zero_or_eq_one, x.den_ne_zero, false_or]
+
+@[simp]
+theorem one_lt_den_iff_ne_one {x : Dyadic} : 1 < x.den ↔ x.den ≠ 1 := by
+  simp [← den_le_one_iff_eq_one]
+
+theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 := by
+  simpa using (one_le_den x).trans_lt h
 
 @[ext] theorem ext {x y : Dyadic} (h : x.val = y.val) : x = y := Subtype.ext h
 
@@ -276,6 +281,10 @@ theorem mkRat_le_mkRat {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers
     Dyadic.mkRat m h₁ ≤ Dyadic.mkRat n h₂ ↔ m ≤ n :=
   le_iff_le_iff_lt_iff_lt.2 (mkRat_lt_mkRat h₁ h₂)
 
+theorem mkRat_add_mkRat_self {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers 2) :
+    Dyadic.mkRat m h₁ + Dyadic.mkRat n h₂ = .mkRat (m + n) h₁ := by
+  ext; simp [Rat.mkRat_eq_div, div_add_div_same]
+
 instance : CommRing Dyadic where
   add_assoc x y z := by ext; simp [add_assoc]
   zero_add x := by ext; simp
@@ -329,6 +338,10 @@ theorem coe_int_num_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := b
   ext
   exact Rat.coe_int_num_of_den_eq_one hx
 
+private theorem den_mkRat_le (x : ℤ) {n : ℕ} (hn : n ≠ 0) : (mkRat x n).den ≤ n := by
+  rw [← Rat.normalize_eq_mkRat hn, Rat.normalize_eq hn]
+  exact Nat.div_le_self n _
+
 private theorem den_mkRat_lt {x : Dyadic} {n : ℤ} (hn : 2 ∣ n) (hd : x.den ≠ 1) :
     (mkRat n x.den).den < x.den := by
   rw [← Rat.normalize_eq_mkRat x.den_ne_zero, Rat.normalize_eq]
@@ -354,6 +367,11 @@ theorem eq_mkRat_of_den_le {x : Dyadic} {n : ℕ} (h : x.den ≤ n) (hn : n ∈ 
 instance : CanLift Dyadic Int Int.cast (·.1.den = 1) where
   prf x hx := ⟨x.1.num, Dyadic.ext (x.1.den_eq_one_iff.mp hx)⟩
 
+theorem den_add_le {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den ≤ y.den := by
+  obtain ⟨n, hn⟩ := eq_mkRat_of_den_le h y.den_mem_powers
+  conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
+  exact den_mkRat_le _ y.den_ne_zero
+
 /-! ### Dyadic games -/
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
@@ -372,7 +390,8 @@ theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den :=
 
 /-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
 macro "dyadic_wf" : tactic =>
-  `(tactic| all_goals first | solve_by_elim [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
+  `(tactic| all_goals first | solve_by_elim
+    [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
 
 @[simp]
 theorem lower_neg (x : Dyadic) : lower (-x) = -upper x := by
@@ -413,10 +432,30 @@ theorem lt_upper (x : Dyadic) : x < upper x := by
 theorem lower_lt_upper (x : Dyadic) : lower x < upper x :=
   (lower_lt x).trans (lt_upper x)
 
-/-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
-macro "dyadic_wf" : tactic =>
-  `(tactic| all_goals first | solve_by_elim
-    [Prod.Lex.left, Prod.Lex.right, den_lower_lt, den_upper_lt] | decreasing_tactic)
+theorem val_lower (x : Dyadic) : (lower x).val = x - (x.den : ℚ)⁻¹ := by
+  simp [lower, Rat.mkRat_eq_div, sub_div, Rat.num_div_den]
+
+theorem val_upper (x : Dyadic) : (upper x).val = x + (x.den : ℚ)⁻¹ := by
+  simp [upper, Rat.mkRat_eq_div, add_div, Rat.num_div_den]
+
+theorem lower_add_le_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
+    lower (x + y) ≤ x + lower y := by
+  rw [Subtype.mk_le_mk]
+  suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [val_lower, add_assoc, sub_eq_add_neg]
+  rw [inv_le_inv₀ (mod_cast y.den_pos) (mod_cast den_pos _)]
+  exact_mod_cast den_add_le h
+
+theorem lower_add_le_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
+    lower (x + y) ≤ lower x + y := by
+  simpa [add_comm] using lower_add_le_of_den_le h
+
+theorem le_upper_add_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
+    x + upper y ≤ upper (x + y) := by
+  simpa only [← neg_add, lower_neg, neg_le_neg_iff] using @lower_add_le_of_den_le (-x) (-y) h
+
+theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
+    upper x + y ≤ upper (x + y) := by
+  simpa [add_comm] using le_upper_add_of_den_le h
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
@@ -468,7 +507,7 @@ theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame}
     (h : y ∈ (toIGame x).rightMoves) : y = toIGame (upper x) := by
   have : -y ∈ (toIGame (-x)).leftMoves := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
-  
+
 /-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
 necessarily be the canonical form. -/
 theorem toIGame_equiv_lower_upper (x : Dyadic) :
@@ -579,6 +618,9 @@ theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
   toIGameEmbedding.inj
 
 theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + toIGame y := by
+  by_cases H : x.den = 1 ∧ y.den = 1
+  · rw [← coe_int_num_of_den_eq_one H.1, ← coe_int_num_of_den_eq_one H.2]
+    simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
   · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
@@ -595,14 +637,39 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
     rw [not_fits_iff]
     left
     obtain h | h | h := lt_trichotomy x.den y.den
-    · use toIGame x + toIGame (lower y)
-      constructor
-      · apply add_left_mem_leftMoves_add
-  · sorry
+    on_goal 2 => by_cases hy : y.den = 1; simp_all
+    on_goal 3 =>
+      use toIGame (lower x) + toIGame y
+      have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
+      have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hx]
+      simpa using lower_add_le_of_den_ge h.le
+    all_goals
+      use toIGame x + toIGame (lower y)
+      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
+      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
+      simpa using lower_add_le_of_den_le h.le
+  · intro z hz
+    obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+    rw [not_fits_iff]
+    right
+    obtain h | h | h := lt_trichotomy x.den y.den
+    on_goal 2 => by_cases hy : y.den = 1; simp_all
+    on_goal 3 =>
+      use toIGame (upper x) + toIGame y
+      have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
+      have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
+      simpa using le_upper_add_of_den_ge h.le
+    all_goals
+      use toIGame x + toIGame (upper y)
+      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
+      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
+      simpa using le_upper_add_of_den_le h.le
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
-
-#exit
 
 theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
   by_cases h : x.den = 1
