@@ -671,6 +671,9 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
 
+theorem toIGame_sub_equiv (x y : Dyadic) : toIGame (x - y) ≈ toIGame x - toIGame y := by
+  simpa [sub_eq_add_neg] using toIGame_add_equiv x (-y)
+
 theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
@@ -681,3 +684,14 @@ theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
 termination_by x.den
 
 end Dyadic
+
+@[simp]
+theorem Game.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 :=
+  Game.mk_eq x.toIGame_equiv_ratCast
+
+@[simp]
+theorem Surreal.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 := by
+  simpa using Surreal.mk_eq x.toIGame_equiv_ratCast
+
+theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : toIGame (x * y) ≈ toIGame x * toIGame y := by
+  simp [← Surreal.mk_eq_mk]
