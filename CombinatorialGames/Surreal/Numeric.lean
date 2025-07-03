@@ -110,6 +110,9 @@ theorem IsDyadic.mkRat (x : ℤ) {y : ℕ} (hy : y ∈ Submonoid.powers 2) : IsD
   · rw [← Nat.cast_ofNat, ← Nat.cast_pow 2 m, Nat.cast_eq_neg_cast] at hm
     simp_all
 
+theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
+theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
+
 theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
 @[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
 
@@ -124,6 +127,11 @@ theorem IsDyadic.sub {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic 
 theorem IsDyadic.mul {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x * y) := by
   rw [Rat.mul_def, Rat.normalize_eq_mkRat]
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
+
+theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
+  simpa using IsDyadic.mul (.intCast n) hx
+
+theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := .zsmul n hx
 
 /-- The subtype of `IsDyadic` numbers.
 
@@ -323,13 +331,6 @@ def lower (x : Dyadic) : Dyadic :=
 /-- For a dyadic number `m / n`, returns `(m + 1) / n`. -/
 def upper (x : Dyadic) : Dyadic :=
   .mkRat (x.num + 1) x.2
-
-private theorem den_mkRat_lt {x : Dyadic} {n : ℤ} (hn : 2 ∣ n) (hd : x.den ≠ 1) :
-    (mkRat n x.den).den < x.den := by
-  rw [← Rat.normalize_eq_mkRat x.den_ne_zero, Rat.normalize_eq]
-  apply Nat.div_lt_self x.den_pos
-  apply Nat.le_of_dvd (Nat.gcd_pos_of_pos_right _ x.den_pos) (Nat.dvd_gcd _ (even_den hd).two_dvd)
-  rwa [← Int.natAbs_dvd_natAbs] at hn
 
 theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den :=
   den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
