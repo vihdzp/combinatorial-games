@@ -23,8 +23,7 @@ open Nimber Set
 
 noncomputable section
 
-theorem Nimber.Iio_toNimber (n : ℕ) : Iio (∗n) = Ordinal.toNimber '' Iio n := by
-  ext; simp
+theorem Nimber.Iio_toNimber (n : ℕ) : Iio (∗n) = Ordinal.toNimber '' Iio n := by aesop
 
 namespace IGame
 

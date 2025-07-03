@@ -45,7 +45,7 @@ private theorem inv_pos' {x : IGame} [Numeric x⁻¹] (hx : 0 < x) : 0 < x⁻¹ 
 
 private theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
     Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
-  Surreal.mk_mul ..
+  rfl
 
 namespace Surreal.Division
 
@@ -203,7 +203,7 @@ lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
     x * x⁻¹ ≈ 1 := by
   obtain ⟨Hl, Hr⟩ := option_mul_inv_lt hx hl hr hl' hr'
   have := numeric_inv hx hl hr hl' hr'
-  apply equiv_one_of_fits ⟨fun z hz ↦ (Hl z hz).not_le, fun z hz ↦ (Hr z hz).not_le⟩
+  apply equiv_one_of_fits ⟨fun z hz ↦ (Hl z hz).not_ge, fun z hz ↦ (Hr z hz).not_ge⟩
   rw [Numeric.mul_equiv_zero, not_or]
   exact ⟨hx.not_antisymmRel_symm, (inv_pos' hx).not_antisymmRel_symm⟩
 
@@ -276,10 +276,10 @@ end IGame.Numeric
 
 namespace Surreal
 
-noncomputable instance : LinearOrderedField Surreal where
+noncomputable instance : Field Surreal where
   inv := Quotient.map (fun x ↦ ⟨x⁻¹, by infer_instance⟩) fun _ _ ↦ Numeric.inv_congr
   mul_inv_cancel := by rintro ⟨a⟩ h; exact mk_eq (Numeric.mul_inv_cancel (mk_eq_mk.not.1 h))
-  inv_zero := by change mk 0⁻¹ = _; simp [inv_zero]
+  inv_zero := by change mk 0⁻¹ = _; simp
   qsmul := _
   nnqsmul := _
 
@@ -398,9 +398,6 @@ theorem zero_le_ratCast {q : ℚ} : 0 ≤ (q : IGame) ↔ 0 ≤ q := by
 @[simp, norm_cast]
 theorem ratCast_le_zero {q : ℚ} : (q : IGame) ≤ 0 ↔ q ≤ 0 := by
   simpa using ratCast_le (n := 0)
-
--- TODO: upstream
-attribute [simp] AntisymmRel.refl
 
 private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
     (∀ x ∈ leftMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) ∧ (∀ x ∈ rightMoves.{u} n⁻¹, ∃ q : ℚ, x ≈ q) := by

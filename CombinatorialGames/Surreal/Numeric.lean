@@ -290,18 +290,12 @@ instance : CommRing Dyadic where
   npow n x := x ^ n
   npow_succ n x := by ext; simp [pow_succ]
 
-instance : LinearOrderedRing Dyadic where
+instance : IsStrictOrderedRing Dyadic where
   add_le_add_left x y h z := add_le_add_left (α := ℚ) h z
+  le_of_add_le_add_left x y z := le_of_add_le_add_left (α := ℚ)
+  mul_lt_mul_of_pos_left x y z := mul_lt_mul_of_pos_left (α := ℚ)
+  mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
   zero_le_one := by decide
-  mul_pos x y := mul_pos (α := ℚ)
-  le_total x y := le_total (α := ℚ) x y
-  decidableLE x y := inferInstanceAs (Decidable (x.1 ≤ y.1))
-  min_def x y := by ext; rw [min_def]
-  max_def x y := by ext; rw [max_def]
-  compare_eq_compareOfLessAndEq x y := by
-    change compare x.1 y.1 = _
-    rw [LinearOrder.compare_eq_compareOfLessAndEq]
-    simp [compareOfLessAndEq, Dyadic.ext_iff]
 
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
@@ -384,10 +378,10 @@ theorem upper_le_of_lt {x y : Dyadic} (hd : y.den ≤ x.den) (h : x < y) : x.upp
   simpa using le_lower_of_lt hd' (neg_lt_neg h)
 
 theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 1 := by
-  simp [lower, h, Dyadic.ext_iff]
+  simp [lower, h]
 
 theorem upper_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : upper x = x.num + 1 := by
-  simp [upper, h, Dyadic.ext_iff]
+  simp [upper, h]
 
 theorem lower_lt_upper (x : Dyadic) : lower x < upper x := by
   unfold lower upper

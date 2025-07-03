@@ -129,10 +129,10 @@ private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'.rightMoves = �
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
-  refine fun a b h ↦ lt_of_le_not_le ?_ (leftMove_lf ?_)
+  refine fun a b h ↦ lt_of_le_not_ge ?_ (leftMove_lf ?_)
   · rw [le_iff_forall_lf]
     simpa [leftMoves_toIGame', rightMoves_toIGame'] using
-      fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_le
+      fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_ge
   · rw [leftMoves_toIGame']
     exact ⟨a, h, rfl⟩
 termination_by a => a
@@ -220,7 +220,7 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
     · rw [← toIGame.le_iff_le] at hd
-      apply (hd.trans_lt _).not_le
+      apply (hd.trans_lt _).not_ge
       rw [(toIGame_add ..).lt_congr_left]
       simpa
   · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
@@ -287,7 +287,7 @@ theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove
   refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
   rw [le_iff_forall_lf]
-  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
+  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_ge
 termination_by x
 decreasing_by igame_wf
 
