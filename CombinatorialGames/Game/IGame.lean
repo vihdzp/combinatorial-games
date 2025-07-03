@@ -1017,7 +1017,6 @@ instance : IntCast IGame where
 @[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
-@[simp] theorem intCast_negSucc' (n : ℕ) : (-(n + 1 : ℤ) : IGame) = -(n + 1) := rfl
 
 theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
 theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp

@@ -110,11 +110,11 @@ theorem IsDyadic.mkRat (x : ℤ) {y : ℕ} (hy : y ∈ Submonoid.powers 2) : IsD
   · rw [← Nat.cast_ofNat, ← Nat.cast_pow 2 m, Nat.cast_eq_neg_cast] at hm
     simp_all
 
-theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
-theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
-
 theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
 @[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
+
+theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
+theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
 
 theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
   rw [Rat.add_def']
