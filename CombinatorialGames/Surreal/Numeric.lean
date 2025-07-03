@@ -6,9 +6,9 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Surreal.Division
 import Mathlib.Algebra.GCDMonoid.Nat
-import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Ring.Defs
+import Mathlib.Analysis.Normed.Field.Lemmas
 import Mathlib.Data.Nat.Log
 import Mathlib.Data.Nat.Prime.Int
 
@@ -21,11 +21,7 @@ games are in correspondence with the `Dyadic` rationals, in the sense that there
 
 - `Dyadic.toIGame x` is always a dyadic game.
 - For any dyadic game `y`, there exists `x` with `Dyadic.toIGame x ≈ y`.
-- The map `Dyadic.toGame` (defined in the obvious way) is a ring homomorphism.
-
-## Todo
-
-Show the latter two bullet points.
+- The game `Dyadic.toGame x` is equivalent to the `RatCast` of `x`.
 -/
 
 universe u
