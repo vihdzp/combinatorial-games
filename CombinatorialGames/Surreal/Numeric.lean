@@ -22,6 +22,10 @@ games are in correspondence with the `Dyadic` rationals, in the sense that there
 - `Dyadic.toIGame x` is always a dyadic game.
 - For any dyadic game `y`, there exists `x` with `Dyadic.toIGame x ≈ y`.
 - The game `Dyadic.toGame x` is equivalent to the `RatCast` of `x`.
+
+## Todo
+
+Prove the second bullet point.
 -/
 
 universe u
