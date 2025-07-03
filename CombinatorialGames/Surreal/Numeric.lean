@@ -116,6 +116,9 @@ theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
 theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
 @[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
 
+theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
+theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
+
 theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
   rw [Rat.add_def']
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
@@ -128,10 +131,18 @@ theorem IsDyadic.mul {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic 
   rw [Rat.mul_def, Rat.normalize_eq_mkRat]
   exact .mkRat _ (Submonoid.mul_mem _ hx hy)
 
-theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  simpa using IsDyadic.mul (.intCast n) hx
+theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := by
+  simpa using .mul (.natCast n) hx
 
-theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := .zsmul n hx
+theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
+  simpa using .mul (.intCast n) hx
+
+theorem IsDyadic.pow {x : ℚ} (hx : IsDyadic x) (n : ℕ) : IsDyadic (x ^ n) := by
+  induction n with
+  | zero => exact ⟨0, rfl⟩
+  | succ n ih =>
+    rw [pow_succ]
+    exact ih.mul hx
 
 /-- The subtype of `IsDyadic` numbers.
 
@@ -157,7 +168,7 @@ theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
 @[ext] theorem ext {x y : Dyadic} (h : x.val = y.val) : x = y := Subtype.ext h
 
 instance : NatCast Dyadic where
-  natCast n := ⟨n, ⟨0, rfl⟩⟩
+  natCast n := ⟨n, .natCast n⟩
 
 @[simp] theorem val_natCast (n : ℕ) : (n : Dyadic).val = n := rfl
 @[simp] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := rfl
@@ -168,7 +179,7 @@ instance : NatCast Dyadic where
 @[simp] theorem den_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).den = 1 := rfl
 
 instance : IntCast Dyadic where
-  intCast n := ⟨n, ⟨0, rfl⟩⟩
+  intCast n := ⟨n, .intCast n⟩
 
 @[simp] theorem val_intCast (n : ℤ) : (n : Dyadic).val = n := rfl
 @[simp] theorem mk_intCast {n : ℤ} (h : IsDyadic n) : (⟨n, h⟩ : Dyadic) = n := rfl
@@ -217,6 +228,21 @@ instance : Mul Dyadic where
 
 @[simp] theorem val_mul (x y : Dyadic) : (x * y).val = x.val * y.val := rfl
 
+instance : SMul Nat Dyadic where
+  smul x y := ⟨_, y.2.nsmul x⟩
+
+@[simp] theorem val_nsmul (x : ℕ) (y : Dyadic) : (x • y).val = x • y.val := rfl
+
+instance : SMul Int Dyadic where
+  smul x y := ⟨_, y.2.zsmul x⟩
+
+@[simp] theorem val_zsmul (x : ℤ) (y : Dyadic) : (x • y).val = x • y.val := rfl
+
+instance : NatPow Dyadic where
+  pow x y := ⟨_, x.2.pow y⟩
+
+@[simp] theorem val_pow (x : Dyadic) (y : ℕ) : (x ^ y).val = x.val ^ y := rfl
+
 /-- The dyadic number ½. -/
 def half : Dyadic := ⟨2⁻¹, ⟨1, by simp⟩⟩
 
@@ -250,11 +276,12 @@ theorem mkRat_le_mkRat {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers
     Dyadic.mkRat m h₁ ≤ Dyadic.mkRat n h₂ ↔ m ≤ n :=
   le_iff_le_iff_lt_iff_lt.2 (mkRat_lt_mkRat h₁ h₂)
 
-instance : Ring Dyadic where
+instance : CommRing Dyadic where
   add_assoc x y z := by ext; simp [add_assoc]
   zero_add x := by ext; simp
   add_zero x := by ext; simp
   add_comm x y := by ext; simp [add_comm]
+  mul_comm x y := by ext; simp [mul_comm]
   left_distrib x y z := by ext; simp [mul_add]
   right_distrib x y z := by ext; simp [add_mul]
   zero_mul x := by ext; simp
@@ -265,8 +292,10 @@ instance : Ring Dyadic where
   neg_add_cancel x := by ext; simp
   sub_eq_add_neg x y := by ext; simp [sub_eq_add_neg]
   natCast_succ n := by ext; simp
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul n x := n • x
+  zsmul n x := n • x
+  npow n x := x ^ n
+  npow_succ n x := by ext; simp [pow_succ]
 
 instance : LinearOrderedRing Dyadic where
   add_le_add_left x y h z := add_le_add_left (α := ℚ) h z
@@ -321,6 +350,9 @@ theorem eq_mkRat_of_den_le {x : Dyadic} {n : ℕ} (h : x.den ≤ n) (hn : n ∈ 
     Rat.mkRat_eq_iff x.den_ne_zero (ne_zero_of_mem_powers hn), mkRat_self, mul_assoc]
   congr
   exact (Nat.div_mul_cancel ((dvd_iff_le_of_mem_powers x.den_mem_powers hn).2 h)).symm
+
+instance : CanLift Dyadic Int Int.cast (·.1.den = 1) where
+  prf x hx := ⟨x.1.num, Dyadic.ext (x.1.den_eq_one_iff.mp hx)⟩
 
 /-! ### Dyadic games -/
 
@@ -436,6 +468,24 @@ theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame}
     (h : y ∈ (toIGame x).rightMoves) : y = toIGame (upper x) := by
   have : -y ∈ (toIGame (-x)).leftMoves := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
+  
+/-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
+necessarily be the canonical form. -/
+theorem toIGame_equiv_lower_upper (x : Dyadic) :
+    toIGame x ≈ {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ := by
+  rw [toIGame]
+  split_ifs with h
+  · unfold lower upper
+    simp only [Dyadic.mkRat, Rat.mkRat_one, mk_intCast, toIGame_intCast, h]
+    apply Fits.equiv_of_forall_not_fits
+    · simp [Fits]
+    · intro m hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
+      simp_all [Fits, Int.sub_one_lt_iff]
+    · intro m hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
+      simp_all [Fits, Int.lt_add_one_iff]
+  · rfl
 
 instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
   rw [toIGame]
