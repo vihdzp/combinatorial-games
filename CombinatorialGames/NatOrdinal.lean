@@ -348,13 +348,6 @@ open Ordinal NaturalOps
 instance : Add NatOrdinal := ⟨nadd⟩
 instance : SuccAddOrder NatOrdinal := ⟨fun x => (nadd_one x).symm⟩
 
-instance : OrderedCancelAddCommMonoid NatOrdinal where
-  add_assoc := nadd_assoc
-  add_le_add_left _ _ := nadd_le_nadd_left
-  le_of_add_le_add_left a b c h := by
-    by_contra! h'
-    exact h.not_gt (add_lt_add_left h' a)
-
 instance : AddCommMonoid NatOrdinal where
   add_assoc := nadd_assoc
   zero_add := zero_nadd
@@ -363,8 +356,10 @@ instance : AddCommMonoid NatOrdinal where
   nsmul := nsmulRec
 
 instance : IsOrderedCancelAddMonoid NatOrdinal where
-  add_le_add_left _ _ := add_le_add_left
-  le_of_add_le_add_left _ _ _ := le_of_add_le_add_left
+  add_le_add_left _ _ := nadd_le_nadd_left
+  le_of_add_le_add_left a b c h := by
+    by_contra! h'
+    exact h.not_gt (nadd_lt_nadd_left h' a)
 
 instance : AddMonoidWithOne NatOrdinal :=
   AddMonoidWithOne.unary
