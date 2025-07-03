@@ -519,10 +519,6 @@ infix:50 " ≈ " => AntisymmRel (· ≤ ·)
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 
-/-
-TODO: use `annotateGoToSyntaxDef` from
-`Mathlib.Lean.PrettyPrinter.Delaborator` once mathlib is updated
--/
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.AntisymmRel]
 def delabEquiv : Delab := do
@@ -534,7 +530,12 @@ def delabEquiv : Delab := do
   _ ← assertDefEqQ q(($le).le) q($r)
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
-  `($x ≈ $y)
+  let stx : Term ← do
+    let info ← Lean.MonadRef.mkInfoFromRefPos
+    pure {
+      raw := Lean.Syntax.node3 info ``IGame.«term_≈_» x.raw (Lean.Syntax.atom info "≈") y.raw
+    }
+  annotateGoToSyntaxDef stx
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.IncompRel]
@@ -547,7 +548,12 @@ def delabFuzzy : Delab := do
   _ ← assertDefEqQ q(($le).le) q($r)
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
-  `($x ‖ $y)
+  let stx : Term ← do
+    let info ← Lean.MonadRef.mkInfoFromRefPos
+    pure {
+      raw := Lean.Syntax.node3 info ``IGame.«term_‖_» x.raw (Lean.Syntax.atom info "‖") y.raw
+    }
+  annotateGoToSyntaxDef stx
 
 -- TODO: this seems like the kind of goal that could be simplified through `aesop`.
 theorem equiv_of_exists {x y : IGame}
