@@ -695,3 +695,49 @@ theorem Surreal.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 := by
 
 theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : toIGame (x * y) ≈ toIGame x * toIGame y := by
   simp [← Surreal.mk_eq_mk]
+
+theorem minimal_iff' {α : Type*} [LinearOrder α] {p : α → Prop} {a : α} :
+    Minimal p a ↔ p a ∧ ∀ b < a, ¬ p b := by
+  apply and_congr_right_iff.2 fun h ↦ ?_
+  use fun H b hb h ↦ (H h hb.le).not_lt hb
+  intro H b h hb
+  obtain rfl | hb := hb.eq_or_lt
+  · rfl
+  · cases H b hb h
+
+theorem maximal_iff' {α : Type*} [LinearOrder α] {p : α → Prop} {a : α} :
+    Maximal p a ↔ p a ∧ ∀ b > a, ¬ p b :=
+  @minimal_iff' αᵒᵈ _ p a
+
+example {α : Type*} [LinearOrder α] [DenselyOrdered α] [NoMaxOrder α] [NoMinOrder α] [Nonempty α]
+    {s t : Set α} (hs : s.Finite) (ht : t.Finite) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :
+    ∃ b, (∀ x ∈ s, x < b) ∧ (∀ y ∈ t, b < y) := by
+  obtain rfl | ⟨d, hd⟩ := s.eq_empty_or_nonempty <;>
+  obtain rfl | ⟨e, he⟩ := t.eq_empty_or_nonempty
+  · simp
+  · obtain ⟨a, ha⟩ := Set.Finite.exists_ge ht
+    obtain ⟨b, hb⟩ := exists_lt a
+    use b
+    simpa using fun c hc ↦ hb.trans_le (ha c hc)
+  · obtain ⟨a, ha⟩ := Set.Finite.exists_le hs
+    obtain ⟨b, hb⟩ := exists_gt a
+    use b
+    simpa using fun c hc ↦ (ha c hc).trans_lt hb
+  · obtain ⟨a, -, ha⟩ := hs.exists_le_maximal hd
+    obtain ⟨b, -, hb⟩ := ht.exists_minimal_le he
+    rw [maximal_iff'] at ha
+    rw [minimal_iff'] at hb
+    have := H a ha.1 b hb.1
+    obtain ⟨c, hc₁, hc₂⟩ := exists_between (H a ha.1 b hb.1)
+    use c
+    constructor <;> intro x hx <;> by_contra! hc
+    · exact ha.2 _ (hc₁.trans_le hc) hx
+    · exact hb.2 _ (hc.trans_lt hc₂) hx
+
+
+
+#exit
+
+/-- Every `Short` and `Numeric` game is equivalent to a dyadic number. -/
+theorem IGame.equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
+  have := (Short.finite_leftMoves x
