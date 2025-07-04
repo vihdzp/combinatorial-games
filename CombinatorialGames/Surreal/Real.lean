@@ -40,7 +40,8 @@ namespace Real
 
 /-! ### `ℝ` to `IGame` -/
 
-/-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut. -/
+/-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
+rationals. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame :=
   {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴵ
 
@@ -118,71 +119,69 @@ theorem toIGame_neg (x : ℝ) : toIGame (-x) = -toIGame x := by
   simp_rw [toIGame, neg_ofSets, ofSets_inj, Set.neg_image (fun _ _ ↦ Dyadic.toIGame_neg _)]
   aesop (add simp [lt_neg, neg_lt])
 
-theorem toIGame_ratCast_equiv (q : Dyadic) : toIGame q ≈ q := by
+theorem toIGame_dyadic_equiv (q : Dyadic) : toIGame q ≈ q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
   refine ⟨⟨?_, fun x hx ↦ ?_⟩, ⟨fun x hx ↦ ?_, ?_⟩⟩
-  · simp
-  · obtain ⟨r, hr, hx⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hx
-    rw [hx.le_congr_left]
+  · aesop
+  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hx
     apply lf_rightMove
-    simpa
-  · obtain ⟨r, hr, hx⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
-    rw [hx.le_congr_right]
+    simp
+  · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hx
     apply leftMove_lf
-    simpa
-  · simp
+    simp
+  · aesop
 
 theorem toIGame_natCast_equiv (n : ℕ) : toIGame n ≈ n := by
   rw [← Rat.cast_natCast]
-  exact (toIGame_ratCast_equiv n).trans (ratCast_natCast_equiv n)
+  simpa using toIGame_dyadic_equiv n
 
 theorem toIGame_intCast_equiv (n : ℤ) : toIGame n ≈ n := by
   rw [← Rat.cast_intCast]
-  exact (toIGame_ratCast_equiv n).trans (ratCast_intCast_equiv n)
+  simpa using toIGame_dyadic_equiv n
 
 theorem toIGame_zero_equiv : toIGame 0 ≈ 0 := by simpa using toIGame_natCast_equiv 0
 theorem toIGame_one_equiv : toIGame 1 ≈ 1 := by simpa using toIGame_natCast_equiv 1
 
 @[simp]
-theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < (x : IGame) ↔ q < x := by
+theorem dyadic_lt_toIGame {q : Dyadic} {x : ℝ} : q < (x : IGame) ↔ q < x := by
   obtain h | rfl | h := lt_trichotomy (q : ℝ) x
   · exact iff_of_true (Numeric.leftMove_lt (mem_leftMoves_toIGame_of_lt h)) h
-  · simpa using (toIGame_ratCast_equiv q).not_gt
+  · simpa using (toIGame_dyadic_equiv q).not_gt
   · exact iff_of_false (Numeric.lt_rightMove (mem_rightMoves_toIGame_of_lt h)).asymm h.asymm
 
 @[simp]
-theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : (x : IGame) < q ↔ x < q := by
+theorem toIGame_lt_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) < q ↔ x < q := by
   obtain h | rfl | h := lt_trichotomy (q : ℝ) x
   · exact iff_of_false (Numeric.leftMove_lt (mem_leftMoves_toIGame_of_lt h)).asymm h.asymm
-  · simpa using (toIGame_ratCast_equiv q).not_lt
+  · simpa using (toIGame_dyadic_equiv q).not_lt
   · exact iff_of_true (Numeric.lt_rightMove (mem_rightMoves_toIGame_of_lt h)) h
 
 @[simp]
-theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
+theorem dyadic_le_toIGame {q : Dyadic} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
   simp [← not_lt, ← Numeric.not_lt]
 
 @[simp]
-theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
+theorem toIGame_le_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
   simp [← not_lt, ← Numeric.not_lt]
 
 @[simp]
-theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
+theorem dyadic_equiv_toIGame {q : Dyadic} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
   simp [AntisymmRel, le_antisymm_iff]
 
 @[simp]
-theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
+theorem toIGame_equiv_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
-theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
+theorem toIGame_add_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x + q) ≈ x + q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩ ,⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
-  · rw [← IGame.sub_lt_iff_lt_add, ← (IGame.ratCast_sub_equiv ..).lt_congr_left]
+  refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩, ⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
+  · rw [← IGame.sub_lt_iff_lt_add, ← (Dyadic.toIGame_sub_equiv ..).lt_congr_left]
     simpa [sub_lt_iff_lt_add]
-  · rw [← (IGame.ratCast_add_equiv ..).lt_congr_right]
+  · rw [← (Dyadic.toIGame_add_equiv ..).lt_congr_right]
     simpa
   · intro y hy
-    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
+    obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hy
     rw [(add_congr_right hy).le_congr_left]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
@@ -190,7 +189,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
     · simpa
     · rw [← IGame.sub_lt_iff_lt_add, ← (IGame.ratCast_sub_equiv ..).lt_congr_left]
       simpa [sub_lt_iff_lt_add]
-  · rw [← (IGame.ratCast_add_equiv ..).lt_congr_left]
+  · rw [← (Dyadic.toIGame_add_equiv ..).lt_congr_left]
     simpa
   · intro y hy
     obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
@@ -204,6 +203,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
   · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
     simpa [lt_sub_iff_add_lt]
 
+#exit
 theorem toIGame_ratCast_add_equiv (q : ℚ) (x : ℝ) : toIGame (q + x) ≈ q + x := by
   simpa [add_comm] using toIGame_add_ratCast_equiv x q
 

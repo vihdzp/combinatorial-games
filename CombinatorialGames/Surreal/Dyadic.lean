@@ -433,11 +433,13 @@ theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 
 theorem upper_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : upper x = x.num + 1 := by
   simp [upper, h]
 
+@[simp]
 theorem lower_lt (x : Dyadic) : lower x < x := by
   conv_rhs => rw [← x.mkRat_self]
   rw [lower, mkRat_lt_mkRat]
   exact sub_one_lt x.num
 
+@[simp]
 theorem lt_upper (x : Dyadic) : x < upper x := by
   simpa using lower_lt (-x)
 
