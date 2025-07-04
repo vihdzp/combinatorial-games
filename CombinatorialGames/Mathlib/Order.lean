@@ -1,4 +1,6 @@
+import Mathlib.Data.Finset.Max
 import Mathlib.Order.Antisymmetrization
+import Mathlib.Order.Preorder.Finite
 
 /-! ### Basic order theorems -/
 
@@ -27,6 +29,10 @@ theorem not_antisymmRel_of_gt {α} [Preorder α] {x y : α} : y < x → ¬ Antis
 
 alias LT.lt.not_antisymmRel := not_antisymmRel_of_lt
 alias LT.lt.not_antisymmRel_symm := not_antisymmRel_of_gt
+
+/-! ### `exists_between` for Finsets -/
+
+-- Written by Kenny Lau: https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/.60exists_between.60.20for.20finite.20sets/near/526965677
 
 theorem Finset.exists_between {α : Type*} [LinearOrder α] [DenselyOrdered α] {s t : Finset α}
     (hs : s.Nonempty) (ht : t.Nonempty) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :

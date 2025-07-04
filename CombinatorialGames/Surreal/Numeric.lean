@@ -149,6 +149,9 @@ abbrev Dyadic := Subtype IsDyadic
 
 namespace Dyadic
 
+theorem le_def {x y : Dyadic} : x ≤ y ↔ x.1 ≤ y.1 := .rfl
+theorem lt_def {x y : Dyadic} : x < y ↔ x.1 < y.1 := .rfl
+
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.1.num
 /-- Denominator of a dyadic number. -/
@@ -193,6 +196,8 @@ instance : IntCast Dyadic where
 
 instance : Zero Dyadic where
   zero := (0 : ℕ)
+
+instance : Inhabited Dyadic := ⟨0⟩
 
 @[simp] theorem val_zero : (0 : Dyadic).val = 0 := rfl
 @[simp] theorem mk_zero (h : IsDyadic 0) : (⟨0, h⟩ : Dyadic) = 0 := rfl
@@ -313,6 +318,16 @@ instance : IsStrictOrderedRing Dyadic where
   mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
   zero_le_one := by decide
 
+instance : DenselyOrdered Dyadic where
+  dense x y h := by
+    use half * (x + y)
+    simp_rw [lt_def]
+    constructor
+    · convert (left_lt_add_div_two (α := ℚ)).2 h
+      simp [inv_mul_eq_div]
+    · convert (add_div_two_lt_right (α := ℚ)).2 h
+      simp [inv_mul_eq_div]
+
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
@@ -366,7 +381,7 @@ theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den 
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
 
-/-! ### Dyadic games -/
+/-! ### Dyadic numbers to games -/
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
 def lower (x : Dyadic) : Dyadic :=
@@ -686,48 +701,53 @@ theorem Surreal.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 := by
 theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : toIGame (x * y) ≈ toIGame x * toIGame y := by
   simp [← Surreal.mk_eq_mk]
 
-theorem minimal_iff' {α : Type*} [LinearOrder α] {p : α → Prop} {a : α} :
-    Minimal p a ↔ p a ∧ ∀ b < a, ¬ p b := by
-  apply and_congr_right_iff.2 fun h ↦ ?_
-  use fun H b hb h ↦ (H h hb.le).not_lt hb
-  intro H b h hb
-  obtain rfl | hb := hb.eq_or_lt
-  · rfl
-  · cases H b hb h
+/-! ### Dyadic games as numbers -/
 
-theorem maximal_iff' {α : Type*} [LinearOrder α] {p : α → Prop} {a : α} :
-    Maximal p a ↔ p a ∧ ∀ b > a, ¬ p b :=
-  @minimal_iff' αᵒᵈ _ p a
+namespace IGame
 
-example {α : Type*} [LinearOrder α] [DenselyOrdered α] [NoMaxOrder α] [NoMinOrder α] [Nonempty α]
-    {s t : Set α} (hs : s.Finite) (ht : t.Finite) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :
-    ∃ b, (∀ x ∈ s, x < b) ∧ (∀ y ∈ t, b < y) := by
-  obtain rfl | ⟨d, hd⟩ := s.eq_empty_or_nonempty <;>
-  obtain rfl | ⟨e, he⟩ := t.eq_empty_or_nonempty
-  · simp
-  · obtain ⟨a, ha⟩ := Set.Finite.exists_ge ht
-    obtain ⟨b, hb⟩ := exists_lt a
-    use b
-    simpa using fun c hc ↦ hb.trans_le (ha c hc)
-  · obtain ⟨a, ha⟩ := Set.Finite.exists_le hs
-    obtain ⟨b, hb⟩ := exists_gt a
-    use b
-    simpa using fun c hc ↦ (ha c hc).trans_lt hb
-  · obtain ⟨a, -, ha⟩ := hs.exists_le_maximal hd
-    obtain ⟨b, -, hb⟩ := ht.exists_minimal_le he
-    rw [maximal_iff'] at ha
-    rw [minimal_iff'] at hb
-    have := H a ha.1 b hb.1
-    obtain ⟨c, hc₁, hc₂⟩ := exists_between (H a ha.1 b hb.1)
-    use c
-    constructor <;> intro x hx <;> by_contra! hc
-    · exact ha.2 _ (hc₁.trans_le hc) hx
-    · exact hb.2 _ (hc.trans_lt hc₂) hx
+private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
+  have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+    have := Numeric.of_mem_leftMoves y.2
+    have := Short.of_mem_leftMoves y.2
+    exact IGame.equiv_dyadic _
+  have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+    have := Numeric.of_mem_rightMoves y.2
+    have := Short.of_mem_rightMoves y.2
+    exact IGame.equiv_dyadic _
+  choose f hf using H₁
+  choose g hg using H₂
+  obtain ⟨y, hy₁, hy₂⟩ := by
+    refine (Set.finite_range f).exists_between' (Set.finite_range g) (fun x hx y hy ↦ ?_)
+    obtain ⟨a, rfl⟩ := hx
+    obtain ⟨b, rfl⟩ := hy
+    rw [← Dyadic.toIGame_lt_toIGame, ← (hf _).lt_congr_left, ← (hg _).lt_congr_right]
+    exact Numeric.leftMove_lt_rightMove a.2 b.2
+  have : ∃ y, Fits (Dyadic.toIGame y) x := by
+    use y
+    constructor <;> intro z hz
+    · have := hy₁ _ (Set.mem_range_self ⟨z, hz⟩)
+      rw [← Dyadic.toIGame_lt_toIGame, ← (hf _).lt_congr_left] at this
+      exact this.not_ge
+    · have := hy₂ _ (Set.mem_range_self ⟨z, hz⟩)
+      rw [← Dyadic.toIGame_lt_toIGame, ← (hg _).lt_congr_right] at this
+      exact this.not_ge
+  obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic.toIGame) this
+  use z
+  apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
+  · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
+    have hz' := birthday_lt_of_mem_leftMoves hz'
+    exact (H.2 hz hz'.le).not_gt hz'
+  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
+    have hz' := birthday_lt_of_mem_rightMoves hz'
+    exact (H.2 hz hz'.le).not_gt hz'
+termination_by x
+decreasing_by igame_wf
 
+/-- Any dyadic game (meaning a game that is `Short` and `Numeric`) is equivalent to a `Dyadic`
+rational number.
 
+-/
+noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
+  Classical.choose x.equiv_dyadic
 
-#exit
-
-/-- Every `Short` and `Numeric` game is equivalent to a dyadic number. -/
-theorem IGame.equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
-  have := (Short.finite_leftMoves x
+end IGame
