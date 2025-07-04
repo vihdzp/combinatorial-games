@@ -635,12 +635,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
       use toIGame x + toIGame (lower y)
       have hy := toIGame_of_den_ne_one hy
       have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
+      rw [← (toIGame_add_equiv ..).le_congr_right, hy]
       simpa using lower_add_le_of_den_le h
     · use toIGame (lower x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hx]
+      rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
   · intro z hz
     obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
