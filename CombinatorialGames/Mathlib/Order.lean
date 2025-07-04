@@ -9,10 +9,10 @@ theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : �
   fun h ↦ h₁ (h₂.trans h)
 
 theorem not_lt_of_antisymmRel {α} [Preorder α] {x y : α} (h : AntisymmRel (· ≤ ·) x y) : ¬ x < y :=
-  h.ge.not_lt
+  h.ge.not_gt
 
 theorem not_gt_of_antisymmRel {α} [Preorder α] {x y : α} (h : AntisymmRel (· ≤ ·) x y) : ¬ y < x :=
-  h.le.not_lt
+  h.le.not_gt
 
 alias AntisymmRel.not_lt := not_lt_of_antisymmRel
 alias AntisymmRel.not_gt := not_gt_of_antisymmRel

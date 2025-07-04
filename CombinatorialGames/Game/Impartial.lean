@@ -5,7 +5,6 @@ Authors: Fox Thomson, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Special
-import CombinatorialGames.Mathlib.Comparable
 
 /-!
 # Basic definitions about impartial games
