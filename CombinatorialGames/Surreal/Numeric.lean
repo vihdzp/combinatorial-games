@@ -630,38 +630,34 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     rw [not_fits_iff]
     left
-    obtain h | h | h := lt_trichotomy x.den y.den
-    on_goal 2 => by_cases hy : y.den = 1; simp_all
-    on_goal 3 =>
-      use toIGame (lower x) + toIGame y
+    obtain h | h := le_or_gt x.den y.den
+    · by_cases hy : y.den = 1; simp_all
+      use toIGame x + toIGame (lower y)
+      have hy := toIGame_of_den_ne_one hy
+      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
+      simpa using lower_add_le_of_den_le h
+    · use toIGame (lower x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hx]
       simpa using lower_add_le_of_den_ge h.le
-    all_goals
-      use toIGame x + toIGame (lower y)
-      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
-      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
-      simpa using lower_add_le_of_den_le h.le
   · intro z hz
     obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
     rw [not_fits_iff]
     right
-    obtain h | h | h := lt_trichotomy x.den y.den
-    on_goal 2 => by_cases hy : y.den = 1; simp_all
-    on_goal 3 =>
-      use toIGame (upper x) + toIGame y
+    obtain h | h := le_or_gt x.den y.den
+    · by_cases hy : y.den = 1; simp_all
+      use toIGame x + toIGame (upper y)
+      have hy := toIGame_of_den_ne_one hy
+      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
+      simpa using le_upper_add_of_den_le h
+    · use toIGame (upper x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
       simpa using le_upper_add_of_den_ge h.le
-    all_goals
-      use toIGame x + toIGame (upper y)
-      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
-      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
-      simpa using le_upper_add_of_den_le h.le
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
 
