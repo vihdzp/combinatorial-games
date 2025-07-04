@@ -326,12 +326,10 @@ instance : IsStrictOrderedRing Dyadic where
 instance : DenselyOrdered Dyadic where
   dense x y h := by
     use half * (x + y)
-    simp_rw [lt_def]
+    simp_rw [lt_def] at *
     constructor
-    · convert (left_lt_add_div_two (α := ℚ)).2 h
-      simp [inv_mul_eq_div]
-    · convert (add_div_two_lt_right (α := ℚ)).2 h
-      simp [inv_mul_eq_div]
+    · simpa [inv_mul_eq_div] using left_lt_add_div_two.2 h
+    · simpa [inv_mul_eq_div] using add_div_two_lt_right.2 h
 
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
