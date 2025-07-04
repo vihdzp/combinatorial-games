@@ -671,7 +671,7 @@ theorem toIGame_sub_equiv (x y : Dyadic) : toIGame (x - y) ≈ toIGame x - toIGa
 theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
-      Rat.intCast_num_eq_self_of_den_eq_one h]
+      Rat.coe_int_num_of_den_eq_one h]
   · have := den_add_self_lt h
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv_ratCast (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
