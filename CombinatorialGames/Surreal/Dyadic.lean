@@ -757,11 +757,11 @@ noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
 
 @[simp]
-theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic.toIGame :=
+theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic :=
   Classical.choose_spec x.equiv_dyadic
 
 @[simp]
-theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : x.toDyadic.toIGame ≈ x :=
+theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : (x.toDyadic : IGame) ≈ x :=
   (equiv_toIGame_toDyadic x).symm
 
 @[simp]
@@ -775,7 +775,7 @@ theorem _root_.Surreal.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
   simpa using Surreal.mk_eq (toIGame_toDyadic_equiv x)
 
 theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
-    x ≈ y.toIGame ↔ x.toDyadic = y := by
+    x ≈ y ↔ x.toDyadic = y := by
   constructor
   · intro h
     simpa using (equiv_toIGame_toDyadic x).symm.trans h
@@ -783,11 +783,11 @@ theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dya
     exact equiv_toIGame_toDyadic x
 
 theorem toIGame_equiv_iff_eq_toDyadic {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
-    y.toIGame ≈ x ↔ y = x.toDyadic := by
+    (y : IGame) ≈ x ↔ y = x.toDyadic := by
   rw [antisymmRel_comm, eq_comm, equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
-theorem toDyadic_toIGame (x : Dyadic) : x.toIGame.toDyadic = x := by
+theorem toDyadic_toIGame (x : Dyadic) : toDyadic x = x := by
   simp [← equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
@@ -807,7 +807,7 @@ theorem toDyadic_natCast (n : ℕ) : toDyadic n = n := by
   simp [← equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
-theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic (ofNat(n)) = n :=
+theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic ofNat(n) = n :=
   toDyadic_natCast n
 
 @[simp]
