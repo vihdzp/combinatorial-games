@@ -361,7 +361,7 @@ theorem eq_mkRat_of_den_le {x : Dyadic} {n : ℕ} (h : x.den ≤ n) (hn : n ∈ 
 instance : CanLift Dyadic Int Int.cast (·.1.den = 1) where
   prf x hx := ⟨x.1.num, Dyadic.ext (x.1.den_eq_one_iff.mp hx)⟩
 
-theorem den_add_le {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den ≤ y.den := by
+theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den ≤ y.den := by
   obtain ⟨n, hn⟩ := eq_mkRat_of_den_le h y.den_mem_powers
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
@@ -437,7 +437,7 @@ theorem lower_add_le_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
   rw [Subtype.mk_le_mk]
   suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [val_lower, add_assoc, sub_eq_add_neg]
   rw [inv_le_inv₀ (mod_cast y.den_pos) (mod_cast den_pos _)]
-  exact_mod_cast den_add_le h
+  exact_mod_cast den_add_le_den_right h
 
 theorem lower_add_le_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     lower (x + y) ≤ lower x + y := by
