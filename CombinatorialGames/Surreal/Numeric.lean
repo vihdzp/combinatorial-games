@@ -328,7 +328,7 @@ theorem odd_num {x : Dyadic} (hx : x.den ≠ 1) : Odd x.num := by
   rw [← Int.natAbs_dvd_natAbs]
   exact (Nat.not_coprime_of_dvd_of_dvd one_lt_two · hd x.1.reduced)
 
-theorem coe_int_num_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
+theorem intCast_num_eq_self_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
   ext
   exact Rat.coe_int_num_of_den_eq_one hx
 
@@ -561,7 +561,7 @@ private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
     toIGame.{u} x < toIGame y := by
   by_cases H : x.den = 1 ∧ y.den = 1
   · rwa [toIGame_of_den_eq_one H.1, toIGame_of_den_eq_one H.2, intCast_lt,
-      ← Int.cast_lt (R := Dyadic), coe_int_num_of_den_eq_one H.1, coe_int_num_of_den_eq_one H.2]
+      ← Int.cast_lt (R := Dyadic), intCast_num_eq_self_of_den_eq_one H.1, intCast_num_eq_self_of_den_eq_one H.2]
   · obtain hd | hd := le_total x.den y.den
     · have := numeric_lower y
       have hy := lower_lt_aux y
@@ -613,7 +613,7 @@ theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
 
 theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + toIGame y := by
   by_cases H : x.den = 1 ∧ y.den = 1
-  · rw [← coe_int_num_of_den_eq_one H.1, ← coe_int_num_of_den_eq_one H.2]
+  · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
   · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
@@ -671,7 +671,7 @@ theorem toIGame_sub_equiv (x y : Dyadic) : toIGame (x - y) ≈ toIGame x - toIGa
 theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
-      Rat.coe_int_num_of_den_eq_one h]
+      Rat.intCast_num_eq_self_of_den_eq_one h]
   · have := den_add_self_lt h
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv_ratCast (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
