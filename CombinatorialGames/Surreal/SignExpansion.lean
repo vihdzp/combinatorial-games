@@ -17,11 +17,11 @@ This sign expansion uniquely identifies the number.
 universe u
 
 noncomputable section
-open IGame
 
 namespace Surreal
+open IGame
 
-def signApprox (x : Surreal.{u}) (o : NatOrdinal.{u}) : Surreal :=
+def signApprox (o : NatOrdinal.{u}) (x : Surreal.{u}) : Surreal :=
   @Surreal.mk {{s : IGame.{u} | s.birthday < o} ∩ {s | ∃ _ : s.Numeric, .mk s < x} |
     {s : IGame.{u} | s.birthday < o} ∩ {s | ∃ _ : s.Numeric, x < .mk s}}ᴵ <| by
       rw [numeric_def]
@@ -39,8 +39,8 @@ def signApprox (x : Surreal.{u}) (o : NatOrdinal.{u}) : Surreal :=
         rw [rightMoves_ofSets] at hy
         exact hy.2.1
 
-theorem birthday_signApprox_le (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    (signApprox x o).toGame.birthday ≤ o := by
+theorem birthday_signApprox_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
+    (signApprox o x).toGame.birthday ≤ o := by
   rw [signApprox, Surreal.toGame_mk]
   apply (Game.birthday_mk_le _).trans
   rw [birthday_le_iff, leftMoves_ofSets, rightMoves_ofSets]
@@ -49,6 +49,15 @@ theorem birthday_signApprox_le (x : Surreal.{u}) (o : NatOrdinal.{u}) :
     exact hy.left
   · intro y hy
     exact hy.left
+
+theorem monotone_signApprox {o : NatOrdinal.{u}} : Monotone (signApprox o) := by
+  intro x y hxy
+  rw [signApprox, signApprox, @Surreal.mk_le_mk, le_iff_forall_lf]
+  refine ⟨fun z hz => lf_of_le_leftMove le_rfl ?_, fun z hz => lf_of_rightMove_le le_rfl ?_⟩
+  · rw [leftMoves_ofSets] at hz ⊢
+    exact ⟨hz.1, hz.2.1, lt_of_lt_of_le hz.2.2 hxy⟩
+  · rw [rightMoves_ofSets] at hz ⊢
+    exact ⟨hz.1, hz.2.1, lt_of_le_of_lt hxy hz.2.2⟩
 
 end Surreal
 
@@ -88,6 +97,18 @@ instance : FunLike SignExpansion.{u} NatOrdinal.{u} SignType where
       decide
     rw [cx uu]
 
+@[ext]
+protected theorem ext {x y : SignExpansion.{u}} (hxy : ∀ o, x o = y o) : x = y :=
+  DFunLike.coe_injective (funext hxy)
+
+def restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) : SignExpansion.{u} where
+  size := min x.size o
+  sign i := x.sign ⟨i, i.prop.trans_le (min_le_left x.size o)⟩
+
+@[simp]
+theorem size_restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) :
+    (x.restrict o).size = min x.size o := rfl
+
 instance : LinearOrder SignExpansion.{u} :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
@@ -97,12 +118,17 @@ theorem coe_lt_coe {a b : SignExpansion.{u}} : toLex ⇑a < toLex ⇑b ↔ a < b
 def ofSurreal (x : Surreal.{u}) : SignExpansion where
   size := x.toGame.birthday
   sign i :=
-    match h : compare (x.signApprox i) x with
-    | .lt => 1
-    | .eq => False.elim <| by
+    haveI h : compare (x.signApprox i) x ≠ .eq := by
+      intro h
       rw [compare_eq_iff_eq] at h
       refine ne_of_lt ?_ congr(($h).toGame.birthday)
       exact (x.birthday_signApprox_le i).trans_lt i.prop
-    | .gt => -1
+    match compare (x.signApprox i) x, h with
+    | .lt, _ => 1
+    | .gt, _ => -1
+
+@[simp]
+theorem size_ofSurreal (x : Surreal.{u}) :
+    (SignExpansion.ofSurreal x).size = x.toGame.birthday := rfl
 
 end SignExpansion
