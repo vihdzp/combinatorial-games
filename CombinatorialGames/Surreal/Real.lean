@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Division
+import CombinatorialGames.Surreal.Dyadic
 import Mathlib.Algebra.Order.Hom.Ring
 import Mathlib.Data.Real.Archimedean
 
@@ -38,7 +38,7 @@ namespace Real
 
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame :=
-  {(↑) '' {q : ℚ | q < x} | (↑) '' {q : ℚ | x < q}}ᴵ
+  {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴵ
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
@@ -51,15 +51,15 @@ instance Numeric.toIGame (x : ℝ) : Numeric x := by
   all_goals infer_instance
 
 @[simp]
-theorem leftMoves_toIGame (x : ℝ) : leftMoves x = (↑) '' {q : ℚ | q < x} :=
+theorem leftMoves_toIGame (x : ℝ) : leftMoves x = (↑) '' {q : Dyadic | q < x} :=
   leftMoves_ofSets ..
 
 @[simp]
-theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : ℚ | x < q} :=
+theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : Dyadic | x < q} :=
   rightMoves_ofSets ..
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ leftMoves x, P y) ↔ ∀ q : ℚ, q < x → P q := by
+    (∀ y ∈ leftMoves x, P y) ↔ ∀ q : Dyadic, q < x → P q := by
   simp
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
