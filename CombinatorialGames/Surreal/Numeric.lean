@@ -646,12 +646,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
       use toIGame x + toIGame (lower y)
       have hy := toIGame_of_den_ne_one hy
       have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
+      rw [← (toIGame_add_equiv ..).le_congr_right, hy]
       simpa using lower_add_le_of_den_le h
     · use toIGame (lower x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hx]
+      rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
   · intro z hz
     obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
@@ -662,12 +662,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
       use toIGame x + toIGame (upper y)
       have hy := toIGame_of_den_ne_one hy
       have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
+      rw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
     · use toIGame (upper x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
+      rw [← (toIGame_add_equiv ..).le_congr_left, hx]
       simpa using le_upper_add_of_den_ge h.le
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
@@ -779,6 +779,30 @@ theorem toIGame_equiv_iff_eq_toDyadic {x : IGame} [Short x] [Numeric x] {y : Dya
 
 @[simp]
 theorem toDyadic_toIGame (x : Dyadic) : x.toIGame.toDyadic = x := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_zero : toDyadic 0 = 0 := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_one : toDyadic 1 = 1 := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_half : toDyadic ½ = .half := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_natCast (n : ℕ) : toDyadic n = n := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic (ofNat(n)) = n :=
+  toDyadic_natCast n
+
+@[simp]
+theorem toDyadic_intCast (n : ℤ) : toDyadic n = n := by
   simp [← equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
