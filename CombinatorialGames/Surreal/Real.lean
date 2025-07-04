@@ -26,6 +26,10 @@ open IGame
 
 noncomputable section
 
+theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
+    [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic, x < q ∧ q < y := by
+  sorry
+
 -- TODO: upstream
 open Pointwise in
 theorem Set.neg_image {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
@@ -47,7 +51,7 @@ instance Numeric.toIGame (x : ℝ) : Numeric x := by
   apply Numeric.mk' <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
   · intro x hx y hy
     dsimp at *
-    exact_mod_cast hx.trans hy
+    simpa using hx.trans hy
   all_goals infer_instance
 
 @[simp]
@@ -60,31 +64,33 @@ theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : Dyadic | x <
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
     (∀ y ∈ leftMoves x, P y) ↔ ∀ q : Dyadic, q < x → P q := by
-  simp
+  aesop
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ leftMoves x, P y) ↔ ∃ q : ℚ, q < x ∧ P q := by
-  simp
+    (∃ y ∈ leftMoves x, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
+  aesop
 
 theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ rightMoves x, P y) ↔ ∀ q : ℚ, x < q → P q := by
-  simp
+    (∀ y ∈ rightMoves x, P y) ↔ ∀ q : Dyadic, x < q → P q := by
+  aesop
 
 theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ rightMoves x, P y) ↔ ∃ q : ℚ, x < q ∧ P q := by
-  simp
+    (∃ y ∈ rightMoves x, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
+  aesop
 
-theorem mem_leftMoves_toIGame_of_lt {q : ℚ} {x : ℝ} (h : q < x) : (q : IGame) ∈ leftMoves x := by
+theorem mem_leftMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : q < x) :
+    (q : IGame) ∈ leftMoves x := by
   simpa
 
-theorem mem_rightMoves_toIGame_of_lt {q : ℚ} {x : ℝ} (h : x < q) : (q : IGame) ∈ rightMoves x := by
+theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q) :
+    (q : IGame) ∈ rightMoves x := by
   simpa
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
 def toIGameEmbedding : ℝ ↪o IGame := by
   refine .ofStrictMono toIGame fun x y h ↦ ?_
-  obtain ⟨q, hx, hy⟩ := exists_rat_btwn h
+  obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
   trans (q : IGame)
   · apply Numeric.lt_rightMove
     simpa [toIGame]
@@ -109,10 +115,10 @@ theorem toIGame_inj {x y : ℝ} : (x : IGame) = y ↔ x = y :=
 
 @[simp]
 theorem toIGame_neg (x : ℝ) : toIGame (-x) = -toIGame x := by
-  simp_rw [toIGame, neg_ofSets, ofSets_inj, Set.neg_image (fun _ _ ↦ ratCast_neg _)]
+  simp_rw [toIGame, neg_ofSets, ofSets_inj, Set.neg_image (fun _ _ ↦ Dyadic.toIGame_neg _)]
   aesop (add simp [lt_neg, neg_lt])
 
-theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
+theorem toIGame_ratCast_equiv (q : Dyadic) : toIGame q ≈ q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
   refine ⟨⟨?_, fun x hx ↦ ?_⟩, ⟨fun x hx ↦ ?_, ?_⟩⟩
   · simp
