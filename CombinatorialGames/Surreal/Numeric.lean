@@ -306,18 +306,12 @@ instance : CommRing Dyadic where
   npow n x := x ^ n
   npow_succ n x := by ext; simp [pow_succ]
 
-instance : LinearOrderedRing Dyadic where
+instance : IsStrictOrderedRing Dyadic where
   add_le_add_left x y h z := add_le_add_left (α := ℚ) h z
+  le_of_add_le_add_left x y z := le_of_add_le_add_left (α := ℚ)
+  mul_lt_mul_of_pos_left x y z := mul_lt_mul_of_pos_left (α := ℚ)
+  mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
   zero_le_one := by decide
-  mul_pos x y := mul_pos (α := ℚ)
-  le_total x y := le_total (α := ℚ) x y
-  decidableLE x y := inferInstanceAs (Decidable (x.1 ≤ y.1))
-  min_def x y := by ext; rw [min_def]
-  max_def x y := by ext; rw [max_def]
-  compare_eq_compareOfLessAndEq x y := by
-    change compare x.1 y.1 = _
-    rw [LinearOrder.compare_eq_compareOfLessAndEq]
-    simp [compareOfLessAndEq, Dyadic.ext_iff]
 
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
@@ -334,7 +328,7 @@ theorem odd_num {x : Dyadic} (hx : x.den ≠ 1) : Odd x.num := by
   rw [← Int.natAbs_dvd_natAbs]
   exact (Nat.not_coprime_of_dvd_of_dvd one_lt_two · hd x.1.reduced)
 
-theorem coe_int_num_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
+theorem intCast_num_eq_self_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
   ext
   exact Rat.coe_int_num_of_den_eq_one hx
 
@@ -367,7 +361,7 @@ theorem eq_mkRat_of_den_le {x : Dyadic} {n : ℕ} (h : x.den ≤ n) (hn : n ∈ 
 instance : CanLift Dyadic Int Int.cast (·.1.den = 1) where
   prf x hx := ⟨x.1.num, Dyadic.ext (x.1.den_eq_one_iff.mp hx)⟩
 
-theorem den_add_le {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den ≤ y.den := by
+theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den ≤ y.den := by
   obtain ⟨n, hn⟩ := eq_mkRat_of_den_le h y.den_mem_powers
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
@@ -416,10 +410,10 @@ theorem upper_le_of_lt {x y : Dyadic} (hd : y.den ≤ x.den) (h : x < y) : x.upp
   simpa using le_lower_of_lt hd' (neg_lt_neg h)
 
 theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 1 := by
-  simp [lower, h, Dyadic.ext_iff]
+  simp [lower, h]
 
 theorem upper_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : upper x = x.num + 1 := by
-  simp [upper, h, Dyadic.ext_iff]
+  simp [upper, h]
 
 theorem lower_lt (x : Dyadic) : lower x < x := by
   conv_rhs => rw [← x.mkRat_self]
@@ -443,7 +437,7 @@ theorem lower_add_le_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
   rw [Subtype.mk_le_mk]
   suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [val_lower, add_assoc, sub_eq_add_neg]
   rw [inv_le_inv₀ (mod_cast y.den_pos) (mod_cast den_pos _)]
-  exact_mod_cast den_add_le h
+  exact_mod_cast den_add_le_den_right h
 
 theorem lower_add_le_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     lower (x + y) ≤ lower x + y := by
@@ -567,7 +561,7 @@ private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
     toIGame.{u} x < toIGame y := by
   by_cases H : x.den = 1 ∧ y.den = 1
   · rwa [toIGame_of_den_eq_one H.1, toIGame_of_den_eq_one H.2, intCast_lt,
-      ← Int.cast_lt (R := Dyadic), coe_int_num_of_den_eq_one H.1, coe_int_num_of_den_eq_one H.2]
+      ← Int.cast_lt (R := Dyadic), intCast_num_eq_self_of_den_eq_one H.1, intCast_num_eq_self_of_den_eq_one H.2]
   · obtain hd | hd := le_total x.den y.den
     · have := numeric_lower y
       have hy := lower_lt_aux y
@@ -619,7 +613,7 @@ theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
 
 theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + toIGame y := by
   by_cases H : x.den = 1 ∧ y.den = 1
-  · rw [← coe_int_num_of_den_eq_one H.1, ← coe_int_num_of_den_eq_one H.2]
+  · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
   · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
@@ -636,38 +630,34 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     rw [not_fits_iff]
     left
-    obtain h | h | h := lt_trichotomy x.den y.den
-    on_goal 2 => by_cases hy : y.den = 1; simp_all
-    on_goal 3 =>
-      use toIGame (lower x) + toIGame y
+    obtain h | h := le_or_gt x.den y.den
+    · by_cases hy : y.den = 1; simp_all
+      use toIGame x + toIGame (lower y)
+      have hy := toIGame_of_den_ne_one hy
+      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
+      simpa using lower_add_le_of_den_le h
+    · use toIGame (lower x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hx]
       simpa using lower_add_le_of_den_ge h.le
-    all_goals
-      use toIGame x + toIGame (lower y)
-      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
-      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, toIGame_le_toIGame, hy]
-      simpa using lower_add_le_of_den_le h.le
   · intro z hz
     obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
     rw [not_fits_iff]
     right
-    obtain h | h | h := lt_trichotomy x.den y.den
-    on_goal 2 => by_cases hy : y.den = 1; simp_all
-    on_goal 3 =>
-      use toIGame (upper x) + toIGame y
+    obtain h | h := le_or_gt x.den y.den
+    · by_cases hy : y.den = 1; simp_all
+      use toIGame x + toIGame (upper y)
+      have hy := toIGame_of_den_ne_one hy
+      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
+      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
+      simpa using le_upper_add_of_den_le h
+    · use toIGame (upper x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
       simpa using le_upper_add_of_den_ge h.le
-    all_goals
-      use toIGame x + toIGame (upper y)
-      have hy := toIGame_of_den_ne_one (by first | exact hy | exact den_ne_one_of_den_lt h)
-      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
-      simpa using le_upper_add_of_den_le h.le
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
 

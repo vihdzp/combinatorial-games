@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
 -/
 import CombinatorialGames.Game.IGame
+import Mathlib.Algebra.Order.Ring.Cast
 import Mathlib.Tactic.Abel
 
 /-!
@@ -81,17 +82,17 @@ instance : Neg Game := ⟨Quotient.map _ @neg_congr⟩
 instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrization ..))
 instance : Inhabited Game := ⟨0⟩
 
-instance : OrderedAddCommGroup Game where
+instance : AddCommGroupWithOne Game where
   zero_add := by rintro ⟨x⟩; change mk (0 + _) = mk _; rw [zero_add]
   add_zero := by rintro ⟨x⟩; change mk (_ + 0) = mk _; rw [add_zero]
   add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (_ + _) = mk (_ + _); rw [add_comm]
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (_ + _ + _) = mk (_ + (_ + _)); rw [add_assoc]
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
   nsmul := nsmulRec
   zsmul := zsmulRec
 
-instance : AddCommGroupWithOne Game where
+instance : IsOrderedAddMonoid Game where
+  add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
 
 instance : RatCast Game where
   ratCast q := mk q
@@ -130,14 +131,8 @@ instance : ZeroLEOneClass Game where
 instance : NeZero (1 : Game) where
   out := by apply ne_of_gt; exact IGame.zero_lt_one
 
-instance : Nontrivial Game :=
-  ⟨_, _, zero_ne_one⟩
-
--- https://github.com/leanprover-community/mathlib4/pull/23034
-instance {α : Type*} [AddMonoidWithOne α] [PartialOrder α] [ZeroLEOneClass α] [NeZero (1 : α)]
-    [AddLeftStrictMono α] : CharZero α where
-  cast_injective :=
-    (strictMono_nat_of_lt_succ fun n ↦ by rw [Nat.cast_succ]; apply lt_add_one).injective
+instance : Nontrivial Game := ⟨_, _, zero_ne_one⟩
+instance : CharZero Game := AddMonoidWithOne.toCharZero
 
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq (x * y), mul_eq]
@@ -258,9 +253,6 @@ instance : CharZero IGame where
 @[simp, norm_cast]
 theorem natCast_equiv {m n : ℕ} : (m : IGame) ≈ n ↔ m = n := by
   simp [AntisymmRel, le_antisymm_iff]
-
-theorem natCast_add_equiv (m n : ℕ) : ((m + n : ℕ) : IGame) ≈ m + n := by
-  simp [← Game.mk_eq_mk]
 
 @[simp, norm_cast]
 theorem intCast_le {m n : ℤ} : (m : IGame) ≤ n ↔ m ≤ n := by

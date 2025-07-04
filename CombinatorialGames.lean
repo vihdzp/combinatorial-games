@@ -12,7 +12,6 @@ import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.Tactic
-import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic

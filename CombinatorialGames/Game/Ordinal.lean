@@ -71,47 +71,6 @@ theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
   change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
   simp [NatOrdinal.Iio_natCast]
 
-instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.toOrdinal))
-
-@[simp]
-theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
-  Ordinal.zero_le o
-
-theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 := by simp
-
-@[simp]
-theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
-  Ordinal.lt_one_iff_zero
-
-theorem lt_add_iff {a b c : NatOrdinal} :
-    a < b + c ↔ (∃ b' < b, a ≤ b' + c) ∨ ∃ c' < c, a ≤ b + c' :=
-  Ordinal.lt_nadd_iff
-
-theorem add_le_iff {a b c : NatOrdinal} :
-     b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b + c' < a :=
-  Ordinal.nadd_le_iff
-
-theorem lt_mul_iff {a b c : NatOrdinal} :
-    c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' :=
-  Ordinal.lt_nmul_iff
-
-theorem mul_le_iff {a b c : NatOrdinal} :
-    a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' :=
-  Ordinal.nmul_le_iff
-
-theorem mul_add_lt {a b a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
-    a' * b + a * b' < a * b + a' * b' :=
-  Ordinal.nmul_nadd_lt ha hb
-
-theorem nmul_nadd_le {a b a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
-    a' * b + a * b' ≤ a * b + a' * b' :=
-  Ordinal.nmul_nadd_le ha hb
-
-instance : CharZero NatOrdinal where
-  cast_injective m n h := by
-    apply_fun toOrdinal at h
-    simpa using h
-
 /-! ### `NatOrdinal` to `IGame` -/
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
@@ -119,7 +78,7 @@ private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
   {.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}ᴵ
 termination_by o
 
-theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
+private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
   rw [toIGame']; simp [image_eq_range]
 
 private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
@@ -129,10 +88,10 @@ private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'.rightMoves = �
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
-  refine fun a b h ↦ lt_of_le_not_le ?_ (leftMove_lf ?_)
+  refine fun a b h ↦ lt_of_le_not_ge ?_ (leftMove_lf ?_)
   · rw [le_iff_forall_lf]
     simpa [leftMoves_toIGame', rightMoves_toIGame'] using
-      fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_le
+      fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_ge
   · rw [leftMoves_toIGame']
     exact ⟨a, h, rfl⟩
 termination_by a => a
@@ -220,7 +179,7 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
     · rw [← toIGame.le_iff_le] at hd
-      apply (hd.trans_lt _).not_le
+      apply (hd.trans_lt _).not_ge
       rw [(toIGame_add ..).lt_congr_left]
       simpa
   · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
@@ -287,7 +246,7 @@ theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove
   refine ⟨n + 1, lt_of_le_of_lt ?_ (IGame.natCast_lt.2 (Nat.lt_succ_self _))⟩
   rw [le_iff_forall_lf]
-  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_le
+  simpa using fun y hy ↦ ((hf ⟨y, hy⟩).trans_le (mod_cast hn ⟨⟨y, hy⟩, rfl⟩)).not_ge
 termination_by x
 decreasing_by igame_wf
 

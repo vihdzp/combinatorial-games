@@ -180,7 +180,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
     rw [(add_congr_right hy).le_congr_left]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
-    apply (lt_trans (b := (s : IGame)) _ _).not_le
+    apply (lt_trans (b := (s : IGame)) _ _).not_ge
     · simpa
     · rw [← IGame.sub_lt_iff_lt_add, ← (IGame.ratCast_sub_equiv ..).lt_congr_left]
       simpa [sub_lt_iff_lt_add]
@@ -191,7 +191,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
     rw [(add_congr_right hy).le_congr_right]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
-    apply (lt_trans (b := (s : IGame)) _ _).not_le
+    apply (lt_trans (b := (s : IGame)) _ _).not_ge
     · rw [← IGame.lt_sub_iff_add_lt, ← (IGame.ratCast_sub_equiv ..).lt_congr_right]
       simpa [lt_sub_iff_add_lt]
     · simpa
@@ -432,28 +432,28 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have := Numeric.of_mem_rightMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₄ hy).le_congr_left]
-    apply (toIGame_lt_mulOption _).not_le
+    apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
     have := Numeric.of_mem_leftMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₄ hy).le_congr_left]
-    apply (toIGame_lt_mulOption _).not_le
+    apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
     have := Numeric.of_mem_leftMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₄ hy).le_congr_right]
-    apply (mulOption_lt_toIGame _).not_le
+    apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r hr y hy
     have := Numeric.of_mem_rightMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₄ hy).le_congr_right]
-    apply (mulOption_lt_toIGame _).not_le
+    apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r h
