@@ -22,6 +22,15 @@ games are in correspondence with the `Dyadic` rationals, in the sense that there
 - `Dyadic.toIGame x` is always a dyadic game.
 - For any dyadic game `y`, there exists `x` with `Dyadic.toIGame x ≈ y`.
 - The game `Dyadic.toGame x` is equivalent to the `RatCast` of `x`.
+
+## Future projects
+
+Since dyadic rationals are easy to do computations with, there are some projects we could pursue in
+the future:
+
+- Define the birthday of a dyadic number computably, prove that `x.birthday = x.toIGame.birthday`.
+- Define the simplest dyadic number between two others computably, use that to define
+  `IGame.toDyadic`.
 -/
 
 universe u
