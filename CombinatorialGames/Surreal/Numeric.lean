@@ -22,10 +22,6 @@ games are in correspondence with the `Dyadic` rationals, in the sense that there
 - `Dyadic.toIGame x` is always a dyadic game.
 - For any dyadic game `y`, there exists `x` with `Dyadic.toIGame x ≈ y`.
 - The game `Dyadic.toGame x` is equivalent to the `RatCast` of `x`.
-
-## Todo
-
-Prove the second bullet point.
 -/
 
 universe u
@@ -746,8 +742,65 @@ decreasing_by igame_wf
 /-- Any dyadic game (meaning a game that is `Short` and `Numeric`) is equivalent to a `Dyadic`
 rational number.
 
--/
+TODO: it should be possible to compute this value explicitly, given the finsets of `Dyadic`
+rationals corresponding to the left and right moves. -/
 noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
+
+@[simp]
+theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic.toIGame :=
+  Classical.choose_spec x.equiv_dyadic
+
+@[simp]
+theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : x.toDyadic.toIGame ≈ x :=
+  (equiv_toIGame_toDyadic x).symm
+
+@[simp]
+theorem _root_.Game.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
+    x.toDyadic = Game.mk x := by
+  simpa using Game.mk_eq (toIGame_toDyadic_equiv x)
+
+@[simp]
+theorem _root_.Surreal.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
+    x.toDyadic = Surreal.mk x := by
+  simpa using Surreal.mk_eq (toIGame_toDyadic_equiv x)
+
+theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
+    x ≈ y.toIGame ↔ x.toDyadic = y := by
+  constructor
+  · intro h
+    simpa using (equiv_toIGame_toDyadic x).symm.trans h
+  · rintro rfl
+    exact equiv_toIGame_toDyadic x
+
+theorem toIGame_equiv_iff_eq_toDyadic {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
+    y.toIGame ≈ x ↔ y = x.toDyadic := by
+  rw [antisymmRel_comm, eq_comm, equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_toIGame (x : Dyadic) : x.toIGame.toDyadic = x := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_neg (x : IGame) [Short x] [Numeric x] : toDyadic (-x) = -toDyadic x := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_add (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x + y) = toDyadic x + toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
+
+@[simp]
+theorem toDyadic_sub (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x - y) = toDyadic x - toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
+
+@[simp]
+theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x * y) = toDyadic x * toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
 
 end IGame
