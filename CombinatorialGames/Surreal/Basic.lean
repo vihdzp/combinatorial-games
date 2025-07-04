@@ -95,6 +95,10 @@ protected instance zero : Numeric 0 := by
 protected instance one : Numeric 1 := by
   rw [numeric_def]; simp
 
+@[simp]
+protected instance half : Numeric ½ := by
+  rw [numeric_def]; simp
+
 protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
