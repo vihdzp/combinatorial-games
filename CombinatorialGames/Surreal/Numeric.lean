@@ -657,7 +657,7 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
-      simpa using le_upper_add_of_den_ge h.le
+      rw [← (toIGame_add_equiv ..).le_congr_left, hx]
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
 
