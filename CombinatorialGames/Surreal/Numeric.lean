@@ -651,13 +651,13 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
       use toIGame x + toIGame (upper y)
       have hy := toIGame_of_den_ne_one hy
       have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hy]
+      rw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
     · use toIGame (upper x) + toIGame y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, toIGame_le_toIGame, hx]
       rw [← (toIGame_add_equiv ..).le_congr_left, hx]
+      simpa using le_upper_add_of_den_ge h.le
 termination_by (toIGame.{u} x, toIGame.{u} y)
 decreasing_by igame_wf
 
