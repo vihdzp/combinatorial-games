@@ -479,26 +479,28 @@ noncomputable def toIGame (x : Dyadic) : IGame :=
 termination_by x.den
 decreasing_by dyadic_wf
 
-theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : toIGame x = x.num := by
+noncomputable instance : Coe Dyadic IGame := ⟨toIGame⟩
+
+theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.num := by
   rw [toIGame, dif_pos hx]
 
-@[simp] theorem toIGame_intCast (n : ℤ) : toIGame n = n := toIGame_of_den_eq_one rfl
-@[simp] theorem toIGame_natCast (n : ℕ) : toIGame n = n := toIGame_intCast n
+@[simp] theorem toIGame_intCast (n : ℤ) : ((n : Dyadic) : IGame) = n := toIGame_of_den_eq_one rfl
+@[simp] theorem toIGame_natCast (n : ℕ) : ((n : Dyadic) : IGame) = n := toIGame_intCast n
 
-@[simp] theorem toIGame_zero : toIGame 0 = 0 := toIGame_natCast 0
-@[simp] theorem toIGame_one : toIGame 1 = 1 := by simpa using toIGame_natCast 1
+@[simp] theorem toIGame_zero : ((0 : Dyadic) : IGame) = 0 := toIGame_natCast 0
+@[simp] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by simpa using toIGame_natCast 1
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
-    toIGame x = {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ :=
+    x = {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ :=
   by rw [toIGame, dif_neg hx]
 
 @[simp]
-theorem toIGame_half : toIGame half = ½ := by
+theorem toIGame_half : half = ½ := by
   have : mkRat 2 2 = 1 := rfl
   rw [toIGame_of_den_ne_one] <;> aesop (add simp [lower, upper, Dyadic.mkRat])
 
 @[simp]
-theorem toIGame_neg (x : Dyadic) : toIGame (-x) = -toIGame x := by
+theorem toIGame_neg (x : Dyadic) : (-x : Dyadic) = -(x : IGame) := by
   unfold toIGame
   dsimp
   split_ifs with h
@@ -507,23 +509,23 @@ theorem toIGame_neg (x : Dyadic) : toIGame (-x) = -toIGame x := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame}
-    (h : y ∈ (toIGame x).leftMoves) : y = toIGame (lower x) := by
+theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ leftMoves x) :
+    y = lower x := by
   by_cases hx : x.den = 1
   · rw [toIGame_of_den_eq_one hx] at h
     rw [lower_eq_of_den_eq_one hx, eq_sub_one_of_mem_leftMoves_intCast h,
       ← Int.cast_one (R := Dyadic), ← Int.cast_sub, toIGame_intCast]
   · simpa [toIGame_of_den_ne_one hx] using h
 
-theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame}
-    (h : y ∈ (toIGame x).rightMoves) : y = toIGame (upper x) := by
-  have : -y ∈ (toIGame (-x)).leftMoves := by simpa
+theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ rightMoves x) :
+    y = upper x := by
+  have : -y ∈ leftMoves (-x : Dyadic) := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
 
 /-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
 necessarily be the canonical form. -/
 theorem toIGame_equiv_lower_upper (x : Dyadic) :
-    toIGame x ≈ {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ := by
+    (x : IGame) ≈ {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ := by
   rw [toIGame]
   split_ifs with h
   · unfold lower upper
@@ -538,7 +540,7 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
       simp_all [Fits, Int.lt_add_one_iff]
   · rfl
 
-instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
+instance _root_.IGame.Short.dyadic (x : Dyadic) : Short x := by
   rw [toIGame]
   split_ifs with h
   · exact .intCast _
@@ -547,21 +549,21 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short (toIGame x) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-private theorem numeric_lower (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
-    Numeric (toIGame.{u} (lower x)) := by
+private theorem numeric_lower (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
+    Numeric (lower x : IGame.{u}) := by
   by_cases h : x.den = 1
   · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast]
     infer_instance
   · apply hx.of_mem_leftMoves
     simp [toIGame_of_den_ne_one h]
 
-private theorem numeric_upper (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
+private theorem numeric_upper (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
     Numeric (toIGame.{u} (upper x)) := by
-  have : Numeric (toIGame.{u} (-x)) := by simpa
+  have : Numeric (-x : Dyadic) := by simpa
   simpa using numeric_lower (-x)
 
-private theorem lower_lt_aux (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
-    toIGame.{u} (lower x) < toIGame x := by
+private theorem lower_lt_aux (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
+    (lower x : IGame.{u}) < x := by
   by_cases h : x.den = 1
   · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast,
       toIGame_of_den_eq_one h]
@@ -569,17 +571,17 @@ private theorem lower_lt_aux (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
   · apply hx.leftMove_lt
     simp [toIGame_of_den_ne_one h]
 
-private theorem lt_upper_aux (x : Dyadic) [hx : Numeric (toIGame.{u} x)] :
-    toIGame.{u} (x) < toIGame (upper x) := by
-  have : Numeric (toIGame.{u} (-x)) := by simpa
+private theorem lt_upper_aux (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
+    x < (upper x : IGame.{u}) := by
+  have : Numeric (-x : Dyadic) := by simpa
   simpa using lower_lt_aux (-x)
 
 private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
-    [Numeric (toIGame.{u} x)] [Numeric (toIGame.{u} y)] (h : x < y) :
-    toIGame.{u} x < toIGame y := by
+    [Numeric (x : IGame.{u})] [Numeric (toIGame.{u} y)] (h : x < y) : (x : IGame.{u}) < y := by
   by_cases H : x.den = 1 ∧ y.den = 1
   · rwa [toIGame_of_den_eq_one H.1, toIGame_of_den_eq_one H.2, intCast_lt,
-      ← Int.cast_lt (R := Dyadic), intCast_num_eq_self_of_den_eq_one H.1, intCast_num_eq_self_of_den_eq_one H.2]
+      ← Int.cast_lt (R := Dyadic), intCast_num_eq_self_of_den_eq_one H.1,
+      intCast_num_eq_self_of_den_eq_one H.2]
   · obtain hd | hd := le_total x.den y.den
     · have := numeric_lower y
       have hy := lower_lt_aux y
@@ -596,7 +598,7 @@ private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
 termination_by (x.den, y.den)
 decreasing_by dyadic_wf
 
-instance _root_.IGame.Numeric.dyadic (x : Dyadic) : Numeric (toIGame x) := by
+instance _root_.IGame.Numeric.dyadic (x : Dyadic) : Numeric x := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h]
     infer_instance
@@ -614,22 +616,22 @@ noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
   .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
 
 @[simp]
-theorem toIGame_le_toIGame {x y : Dyadic} : toIGame x ≤ toIGame y ↔ x ≤ y :=
+theorem toIGame_le_toIGame {x y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y :=
   toIGameEmbedding.le_iff_le
 
 @[simp]
-theorem toIGame_lt_toIGame {x y : Dyadic} : toIGame x < toIGame y ↔ x < y :=
+theorem toIGame_lt_toIGame {x y : Dyadic} : (x : IGame) < y ↔ x < y :=
   toIGameEmbedding.lt_iff_lt
 
 @[simp]
-theorem toIGame_equiv_toIGame {x y : Dyadic} : toIGame x ≈ toIGame y ↔ x = y := by
+theorem toIGame_equiv_toIGame {x y : Dyadic} :  (x : IGame) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 
 @[simp]
-theorem toIGame_inj {x y : Dyadic} : toIGame x = toIGame y ↔ x = y :=
+theorem toIGame_inj {x y : Dyadic} : (x : IGame) = y ↔ x = y :=
   toIGameEmbedding.inj
 
-theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + toIGame y := by
+theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x + y := by
   by_cases H : x.den = 1 ∧ y.den = 1
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
@@ -650,14 +652,14 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
     left
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; simp_all
-      use toIGame x + toIGame (lower y)
+      use x + lower y
       have hy := toIGame_of_den_ne_one hy
-      have : toIGame (lower y) ∈ (toIGame y).leftMoves := by rw [hy]; simp
+      have : (lower y : IGame) ∈ leftMoves y := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hy]
       simpa using lower_add_le_of_den_le h
-    · use toIGame (lower x) + toIGame y
+    · use lower x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : toIGame (lower x) ∈ (toIGame x).leftMoves := by rw [hx]; simp
+      have : (lower x : IGame) ∈ leftMoves x := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
   · intro z hz
@@ -666,23 +668,23 @@ theorem toIGame_add_equiv (x y : Dyadic) : toIGame.{u} (x + y) ≈ toIGame x + t
     right
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; simp_all
-      use toIGame x + toIGame (upper y)
+      use x + upper y
       have hy := toIGame_of_den_ne_one hy
-      have : toIGame (upper y) ∈ (toIGame y).rightMoves := by rw [hy]; simp
+      have : (upper y : IGame) ∈ rightMoves y := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
-    · use toIGame (upper x) + toIGame y
+    · use upper x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : toIGame (upper x) ∈ (toIGame x).rightMoves := by rw [hx]; simp
+      have : (upper x : IGame) ∈ rightMoves x := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hx]
       simpa using le_upper_add_of_den_ge h.le
-termination_by (toIGame.{u} x, toIGame.{u} y)
+termination_by ((x : IGame.{u}), (y : IGame.{u}))
 decreasing_by igame_wf
 
-theorem toIGame_sub_equiv (x y : Dyadic) : toIGame (x - y) ≈ toIGame x - toIGame y := by
+theorem toIGame_sub_equiv (x y : Dyadic) : ((x - y : Dyadic) : IGame) ≈ x - y := by
   simpa [sub_eq_add_neg] using toIGame_add_equiv x (-y)
 
-theorem toIGame_equiv_ratCast (x : Dyadic) : toIGame x ≈ x.val := by
+theorem toIGame_equiv_ratCast (x : Dyadic) : (x : IGame) ≈ x.val := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
       Rat.coe_int_num_of_den_eq_one h]
@@ -694,14 +696,14 @@ termination_by x.den
 end Dyadic
 
 @[simp]
-theorem Game.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 :=
+theorem Game.mk_dyadic (x : Dyadic) : mk x = x.1 :=
   Game.mk_eq x.toIGame_equiv_ratCast
 
 @[simp]
-theorem Surreal.mk_dyadic (x : Dyadic) : mk x.toIGame = x.1 := by
+theorem Surreal.mk_dyadic (x : Dyadic) : mk x = x.1 := by
   simpa using Surreal.mk_eq x.toIGame_equiv_ratCast
 
-theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : toIGame (x * y) ≈ toIGame x * toIGame y := by
+theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : ((x * y : Dyadic) : IGame) ≈ x * y := by
   simp [← Surreal.mk_eq_mk]
 
 /-! ### Dyadic games as numbers -/
@@ -755,11 +757,11 @@ noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
 
 @[simp]
-theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic.toIGame :=
+theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic :=
   Classical.choose_spec x.equiv_dyadic
 
 @[simp]
-theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : x.toDyadic.toIGame ≈ x :=
+theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : (x.toDyadic : IGame) ≈ x :=
   (equiv_toIGame_toDyadic x).symm
 
 @[simp]
@@ -773,7 +775,7 @@ theorem _root_.Surreal.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
   simpa using Surreal.mk_eq (toIGame_toDyadic_equiv x)
 
 theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
-    x ≈ y.toIGame ↔ x.toDyadic = y := by
+    x ≈ y ↔ x.toDyadic = y := by
   constructor
   · intro h
     simpa using (equiv_toIGame_toDyadic x).symm.trans h
@@ -781,11 +783,11 @@ theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dya
     exact equiv_toIGame_toDyadic x
 
 theorem toIGame_equiv_iff_eq_toDyadic {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
-    y.toIGame ≈ x ↔ y = x.toDyadic := by
+    (y : IGame) ≈ x ↔ y = x.toDyadic := by
   rw [antisymmRel_comm, eq_comm, equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
-theorem toDyadic_toIGame (x : Dyadic) : x.toIGame.toDyadic = x := by
+theorem toDyadic_toIGame (x : Dyadic) : toDyadic x = x := by
   simp [← equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
@@ -805,7 +807,7 @@ theorem toDyadic_natCast (n : ℕ) : toDyadic n = n := by
   simp [← equiv_toIGame_iff_toDyadic_eq]
 
 @[simp]
-theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic (ofNat(n)) = n :=
+theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic ofNat(n) = n :=
   toDyadic_natCast n
 
 @[simp]
