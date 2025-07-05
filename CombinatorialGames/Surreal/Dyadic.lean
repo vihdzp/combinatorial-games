@@ -23,9 +23,14 @@ games are in correspondence with the `Dyadic` rationals, in the sense that there
 - For any dyadic game `y`, there exists `x` with `Dyadic.toIGame x ≈ y`.
 - The game `Dyadic.toGame x` is equivalent to the `RatCast` of `x`.
 
-## Todo
+## Future projects
 
-Prove the second bullet point.
+Since dyadic rationals are easy to do computations with, there are some projects we could pursue in
+the future:
+
+- Define the birthday of a dyadic number computably, prove that `x.birthday = x.toIGame.birthday`.
+- Define the simplest dyadic number between two others computably, use that to define
+  `IGame.toDyadic`.
 -/
 
 universe u
@@ -149,6 +154,9 @@ abbrev Dyadic := Subtype IsDyadic
 
 namespace Dyadic
 
+theorem le_def {x y : Dyadic} : x ≤ y ↔ x.1 ≤ y.1 := .rfl
+theorem lt_def {x y : Dyadic} : x < y ↔ x.1 < y.1 := .rfl
+
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.1.num
 /-- Denominator of a dyadic number. -/
@@ -193,6 +201,8 @@ instance : IntCast Dyadic where
 
 instance : Zero Dyadic where
   zero := (0 : ℕ)
+
+instance : Inhabited Dyadic := ⟨0⟩
 
 @[simp] theorem val_zero : (0 : Dyadic).val = 0 := rfl
 @[simp] theorem mk_zero (h : IsDyadic 0) : (⟨0, h⟩ : Dyadic) = 0 := rfl
@@ -313,6 +323,14 @@ instance : IsStrictOrderedRing Dyadic where
   mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
   zero_le_one := by decide
 
+instance : DenselyOrdered Dyadic where
+  dense x y h := by
+    use half * (x + y)
+    simp_rw [lt_def] at *
+    constructor
+    · simpa [inv_mul_eq_div] using left_lt_add_div_two.2 h
+    · simpa [inv_mul_eq_div] using add_div_two_lt_right.2 h
+
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
@@ -366,7 +384,7 @@ theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den 
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
 
-/-! ### Dyadic games -/
+/-! ### Dyadic numbers to games -/
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
 def lower (x : Dyadic) : Dyadic :=
@@ -687,3 +705,135 @@ theorem Surreal.mk_dyadic (x : Dyadic) : mk x = x.1 := by
 
 theorem Dyadic.toIGame_mul_equiv (x y : Dyadic) : ((x * y : Dyadic) : IGame) ≈ x * y := by
   simp [← Surreal.mk_eq_mk]
+
+/-! ### Dyadic games as numbers -/
+
+namespace IGame
+
+private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
+  have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+    have := Numeric.of_mem_leftMoves y.2
+    have := Short.of_mem_leftMoves y.2
+    exact IGame.equiv_dyadic _
+  have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+    have := Numeric.of_mem_rightMoves y.2
+    have := Short.of_mem_rightMoves y.2
+    exact IGame.equiv_dyadic _
+  choose f hf using H₁
+  choose g hg using H₂
+  obtain ⟨y, hy₁, hy₂⟩ := by
+    refine (Set.finite_range f).exists_between' (Set.finite_range g) (fun x hx y hy ↦ ?_)
+    obtain ⟨a, rfl⟩ := hx
+    obtain ⟨b, rfl⟩ := hy
+    rw [← Dyadic.toIGame_lt_toIGame, ← (hf _).lt_congr_left, ← (hg _).lt_congr_right]
+    exact Numeric.leftMove_lt_rightMove a.2 b.2
+  have : ∃ y, Fits (Dyadic.toIGame y) x := by
+    use y
+    constructor <;> intro z hz
+    · have := hy₁ _ (Set.mem_range_self ⟨z, hz⟩)
+      rw [← Dyadic.toIGame_lt_toIGame, ← (hf _).lt_congr_left] at this
+      exact this.not_ge
+    · have := hy₂ _ (Set.mem_range_self ⟨z, hz⟩)
+      rw [← Dyadic.toIGame_lt_toIGame, ← (hg _).lt_congr_right] at this
+      exact this.not_ge
+  obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic.toIGame) this
+  use z
+  apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
+  · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
+    have hz' := birthday_lt_of_mem_leftMoves hz'
+    exact (H.2 hz hz'.le).not_gt hz'
+  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
+    have hz' := birthday_lt_of_mem_rightMoves hz'
+    exact (H.2 hz hz'.le).not_gt hz'
+termination_by x
+decreasing_by igame_wf
+
+/-- Any dyadic game (meaning a game that is `Short` and `Numeric`) is equivalent to a `Dyadic`
+rational number.
+
+TODO: it should be possible to compute this value explicitly, given the finsets of `Dyadic`
+rationals corresponding to the left and right moves. -/
+noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
+  Classical.choose x.equiv_dyadic
+
+@[simp]
+theorem equiv_toIGame_toDyadic (x : IGame) [Short x] [Numeric x] : x ≈ x.toDyadic :=
+  Classical.choose_spec x.equiv_dyadic
+
+@[simp]
+theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : (x.toDyadic : IGame) ≈ x :=
+  (equiv_toIGame_toDyadic x).symm
+
+@[simp]
+theorem _root_.Game.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
+    x.toDyadic = Game.mk x := by
+  simpa using Game.mk_eq (toIGame_toDyadic_equiv x)
+
+@[simp]
+theorem _root_.Surreal.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
+    x.toDyadic = Surreal.mk x := by
+  simpa using Surreal.mk_eq (toIGame_toDyadic_equiv x)
+
+theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
+    x ≈ y ↔ x.toDyadic = y := by
+  constructor
+  · intro h
+    simpa using (equiv_toIGame_toDyadic x).symm.trans h
+  · rintro rfl
+    exact equiv_toIGame_toDyadic x
+
+theorem toIGame_equiv_iff_eq_toDyadic {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
+    (y : IGame) ≈ x ↔ y = x.toDyadic := by
+  rw [antisymmRel_comm, eq_comm, equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_toIGame (x : Dyadic) : toDyadic x = x := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_zero : toDyadic 0 = 0 := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_one : toDyadic 1 = 1 := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_half : toDyadic ½ = .half := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_natCast (n : ℕ) : toDyadic n = n := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_ofNat (n : ℕ) [n.AtLeastTwo] : toDyadic ofNat(n) = n :=
+  toDyadic_natCast n
+
+@[simp]
+theorem toDyadic_intCast (n : ℤ) : toDyadic n = n := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_neg (x : IGame) [Short x] [Numeric x] : toDyadic (-x) = -toDyadic x := by
+  simp [← equiv_toIGame_iff_toDyadic_eq]
+
+@[simp]
+theorem toDyadic_add (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x + y) = toDyadic x + toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
+
+@[simp]
+theorem toDyadic_sub (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x - y) = toDyadic x - toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
+
+@[simp]
+theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
+    toDyadic (x * y) = toDyadic x * toDyadic y := by
+  rw [← equiv_toIGame_iff_toDyadic_eq, ← Surreal.mk_eq_mk]
+  simp
+
+end IGame
