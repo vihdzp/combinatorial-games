@@ -193,5 +193,70 @@ protected instance mulOption (x y a b : IGame) [Short x] [Short y] [Short a] [Sh
     Short (mulOption x y a b) :=
   inferInstanceAs (Short (_ - _))
 
+/-- Undominating a game. This returns garbage values on non-Short games. -/
+noncomputable def undominate (x : IGame) : IGame :=
+  {{y ∈ {y ∈ x.leftMoves | ∃ (_ : y ∈ x.leftMoves), ∃ z, undominate y = z} |
+      ∀ z ∈ x.leftMoves, ¬y < z} |
+    {y ∈ {y ∈ x.rightMoves | ∃ (_ : y ∈ x.rightMoves), ∃ z, undominate y = z} |
+        ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem undominate_leftMoves {x : IGame} :
+    (undominate x).leftMoves = {y ∈ x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} := by
+  unfold undominate
+  simp
+
+@[simp]
+theorem undominate_rightMoves {x : IGame} :
+    (undominate x).rightMoves = {y ∈ x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y} := by
+  unfold undominate
+  simp
+
+theorem undominate_def {x : IGame} :
+    undominate x = {
+      {y ∈ x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} |
+      {y ∈ x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ := by
+  unfold undominate
+  simp
+
+instance {x : IGame} [Short x] : Short (undominate x) := by
+  rw [undominate_def, short_def]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  rotate_left 2
+  · intro y hy
+    rw [leftMoves_ofSets] at hy
+    exact Short.of_mem_leftMoves hy.1
+  · intro y hy
+    rw [rightMoves_ofSets] at hy
+    exact Short.of_mem_rightMoves hy.1
+  all_goals simp [
+    Set.setOf_and,
+    Set.Finite.inter_of_left (finite_leftMoves x),
+    Set.Finite.inter_of_left (finite_rightMoves x),
+  ]
+
+theorem exists_ge_in_undominate_of_in_leftMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.leftMoves) :
+    ∃ z ∈ (undominate x).leftMoves, y ≤ z := by
+  have : Fintype x.leftMoves := Fintype.ofFinite _
+  obtain ⟨z, ⟨hyz, hz⟩⟩ := Finset.exists_le_maximal _ (Set.mem_toFinset.mpr hy₁)
+  simp_rw [undominate_leftMoves, Set.mem_setOf_eq]
+  refine ⟨z, ⟨(Set.mem_toFinset.mp hz.1), fun a ha ↦ ?_⟩, hyz⟩
+  exact Maximal.not_gt hz (Set.mem_toFinset.mpr ha)
+
+theorem exists_gt_in_undominate_of_in_rightMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.rightMoves) :
+    ∃ z ∈ (undominate x).rightMoves, z ≤ y := by
+  sorry
+
+theorem undominate_equiv {x : IGame} [Short x] : x ≈ undominate x := by
+  constructor <;> dsimp <;> rw [le_def]
+  · rw [undominate_rightMoves]
+    exact ⟨fun a ha ↦ .inl (exists_ge_in_undominate_of_in_leftMoves ha),
+      fun a ha ↦ .inr ⟨a, ha.1, Preorder.le_refl a⟩⟩
+  · rw [undominate_leftMoves]
+    refine ⟨fun a ha ↦ .inl ⟨a, ha.1, Preorder.le_refl a⟩,
+      fun a ha ↦ .inr (exists_gt_in_undominate_of_in_rightMoves ha)⟩
+
 end Short
 end IGame
