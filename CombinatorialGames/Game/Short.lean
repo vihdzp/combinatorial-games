@@ -237,7 +237,7 @@ instance {x : IGame} [Short x] : Short (undominate x) := by
     Set.Finite.inter_of_left (finite_rightMoves x),
   ]
 
-theorem exists_ge_in_undominate_of_in_leftMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.leftMoves) :
+theorem exists_ge_in_undominate_of_leftMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.leftMoves) :
     ∃ z ∈ (undominate x).leftMoves, y ≤ z := by
   have : Fintype x.leftMoves := Fintype.ofFinite _
   obtain ⟨z, ⟨hyz, hz⟩⟩ := Finset.exists_le_maximal _ (Set.mem_toFinset.mpr hy₁)
@@ -245,18 +245,18 @@ theorem exists_ge_in_undominate_of_in_leftMoves {x y : IGame} [Short x] (hy₁ :
   refine ⟨z, ⟨(Set.mem_toFinset.mp hz.1), fun a ha ↦ ?_⟩, hyz⟩
   exact Maximal.not_gt hz (Set.mem_toFinset.mpr ha)
 
-theorem exists_gt_in_undominate_of_in_rightMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.rightMoves) :
+theorem exists_gt_in_undominate_of_rightMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.rightMoves) :
     ∃ z ∈ (undominate x).rightMoves, z ≤ y := by
   sorry
 
 theorem undominate_equiv {x : IGame} [Short x] : x ≈ undominate x := by
-  constructor <;> dsimp <;> rw [le_def]
+  constructor <;> dsimp only <;> rw [le_def]
   · rw [undominate_rightMoves]
-    exact ⟨fun a ha ↦ .inl (exists_ge_in_undominate_of_in_leftMoves ha),
+    exact ⟨fun a ha ↦ .inl (exists_ge_in_undominate_of_leftMoves ha),
       fun a ha ↦ .inr ⟨a, ha.1, Preorder.le_refl a⟩⟩
   · rw [undominate_leftMoves]
-    refine ⟨fun a ha ↦ .inl ⟨a, ha.1, Preorder.le_refl a⟩,
-      fun a ha ↦ .inr (exists_gt_in_undominate_of_in_rightMoves ha)⟩
+    exact ⟨fun a ha ↦ .inl ⟨a, ha.1, Preorder.le_refl a⟩,
+      fun a ha ↦ .inr (exists_gt_in_undominate_of_rightMoves ha)⟩
 
 end Short
 end IGame
