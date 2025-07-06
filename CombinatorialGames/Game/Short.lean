@@ -237,6 +237,20 @@ instance {x : IGame} [Short x] : Short (undominate x) := by
     Set.Finite.inter_of_left (finite_rightMoves x),
   ]
 
+theorem neg_undominate_mem_leftMoves {x y : IGame} [Short x] :
+    y ∈ (undominate x).leftMoves ↔ -y ∈ (undominate (-x)).rightMoves := by
+  simp only [undominate_leftMoves, Set.mem_setOf_eq, undominate_rightMoves, rightMoves_neg,
+    Set.mem_neg, neg_neg, and_congr_right_iff]
+  refine fun h ↦ ⟨fun hx z hzx hzy ↦ hx (-z) hzx (IGame.lt_neg.mp hzy), fun hx z hzx hyz ↦ ?_⟩
+  have := hx (-z) (by rwa [neg_neg])
+  rw [IGame.neg_lt_neg_iff] at this
+  exact this hyz
+
+theorem neg_undominate_mem_rightMoves {x y : IGame} [Short x] :
+    y ∈ (undominate x).rightMoves ↔ -y ∈ (undominate (-x)).leftMoves := by
+  have := neg_undominate_mem_leftMoves (x := -x) (y := -y)
+  simp_all
+
 theorem exists_ge_in_undominate_of_leftMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.leftMoves) :
     ∃ z ∈ (undominate x).leftMoves, y ≤ z := by
   have : Fintype x.leftMoves := Fintype.ofFinite _
@@ -247,7 +261,11 @@ theorem exists_ge_in_undominate_of_leftMoves {x y : IGame} [Short x] (hy₁ : y 
 
 theorem exists_gt_in_undominate_of_rightMoves {x y : IGame} [Short x] (hy₁ : y ∈ x.rightMoves) :
     ∃ z ∈ (undominate x).rightMoves, z ≤ y := by
-  sorry
+  have : -y ∈ (-x).leftMoves := by simp_all
+  obtain ⟨z, ⟨hz, hzy⟩⟩ := exists_ge_in_undominate_of_leftMoves this
+  refine ⟨-z, ?_, IGame.neg_le.mp hzy⟩
+  have := neg_undominate_mem_leftMoves.mp hz
+  rwa [neg_neg] at this
 
 theorem undominate_equiv {x : IGame} [Short x] : x ≈ undominate x := by
   constructor <;> dsimp only <;> rw [le_def]
