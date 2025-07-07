@@ -9,10 +9,10 @@ import CombinatorialGames.Game.Birthday
 /-!
 # Canonical games
 
-For any game G, its canonical game G' is the game such that G'.Fits G, and is the (non-uniquely
-under IGame) birthday that fits.
-From the literature, this file provides an explicit
-(though noncomputable) construction of canonical games through undominating and unreversing games.
+For any game G, its canonical game G' is the (non-unique under IGame) game with
+smallest birthday such that G'.Fits G.
+From the literature, this file provides an explicit (though noncomputable) construction of canonical
+games through undominating and unreversing games.
 
 ## Todo
 - Define (un)reversibility
