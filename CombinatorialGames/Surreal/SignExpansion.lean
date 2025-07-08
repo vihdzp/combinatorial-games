@@ -150,8 +150,8 @@ theorem size_restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) :
 instance : LinearOrder SignExpansion.{u} :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
-theorem coe_le_coe {a b : SignExpansion.{u}} : toLex ⇑a ≤ toLex ⇑b ↔ a ≤ b := Iff.rfl
-theorem coe_lt_coe {a b : SignExpansion.{u}} : toLex ⇑a < toLex ⇑b ↔ a < b := Iff.rfl
+theorem le_iff_toLex_le {a b : SignExpansion.{u}} : a ≤ b ↔ toLex ⇑a ≤ toLex ⇑b := Iff.rfl
+theorem lt_iff_toLex_lt {a b : SignExpansion.{u}} : a < b ↔ toLex ⇑a < toLex ⇑b := Iff.rfl
 
 def ofSurreal (x : Surreal.{u}) : SignExpansion where
   size := x.birthday
