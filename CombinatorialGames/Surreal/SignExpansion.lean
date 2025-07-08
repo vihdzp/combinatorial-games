@@ -43,7 +43,7 @@ private instance signApproxIGameNumeric (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     exact hy.2.1
 
 def signApprox (o : NatOrdinal.{u}) (x : Surreal.{u}) : Surreal.{u} :=
-  Surreal.mk (x.signApproxIGame o)
+  mk (x.signApproxIGame o)
 
 theorem birthday_signApprox_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     (signApprox o x).birthday ≤ o := by
@@ -139,6 +139,24 @@ instance : FunLike SignExpansion.{u} NatOrdinal.{u} SignType where
 protected theorem ext {x y : SignExpansion.{u}} (hxy : ∀ o, x o = y o) : x = y :=
   DFunLike.coe_injective (funext hxy)
 
+theorem apply_def (e : SignExpansion.{u}) (o : NatOrdinal.{u}) :
+    e o = if h : o < e.size then .sign (e.sign ⟨o, h⟩ : ℤ) else 0 := rfl
+
+theorem apply_of_size_le {x : SignExpansion.{u}} {o : NatOrdinal.{u}} (h : x.size ≤ o) :
+    x o = 0 :=
+  dif_neg (not_lt_of_ge h)
+
+@[simp]
+theorem apply_eq_zero {x : SignExpansion.{u}} {o : NatOrdinal.{u}} :
+    x o = 0 ↔ x.size ≤ o := by
+  refine ⟨fun h => ?_, apply_of_size_le⟩
+  rw [apply_def] at h
+  split_ifs at h with ho
+  · absurd h
+    generalize x.sign ⟨o, ho⟩ = u
+    decide +revert
+  · exact le_of_not_gt ho
+
 def restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) : SignExpansion.{u} where
   size := min x.size o
   sign i := x.sign ⟨i, i.prop.trans_le (min_le_left x.size o)⟩
@@ -146,6 +164,15 @@ def restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) : SignExpansion.{u} wh
 @[simp]
 theorem size_restrict (x : SignExpansion.{u}) (o : NatOrdinal.{u}) :
     (x.restrict o).size = min x.size o := rfl
+
+theorem restrict_apply_of_lt {x : SignExpansion.{u}} {o₁ o₂ : NatOrdinal.{u}}
+    (h : o₂ < o₁) : x.restrict o₁ o₂ = x o₂ := by
+  simp [apply_def, h, restrict]
+
+theorem restrict_apply_of_le {x : SignExpansion.{u}} {o₁ o₂ : NatOrdinal.{u}}
+    (h : o₁ ≤ o₂) : x.restrict o₁ o₂ = 0 := by
+  apply apply_of_size_le
+  simp [h]
 
 instance : LinearOrder SignExpansion.{u} :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
