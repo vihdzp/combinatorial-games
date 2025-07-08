@@ -198,6 +198,13 @@ def ofSurreal (x : Surreal.{u}) : SignExpansion where
 
 @[simp]
 theorem size_ofSurreal (x : Surreal.{u}) :
-    (SignExpansion.ofSurreal x).size = x.birthday := rfl
+    (ofSurreal x).size = x.birthday := rfl
+
+theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
+    ofSurreal x o = .sign (x - x.signApprox o) := by
+  obtain ho | ho := le_or_gt x.birthday o
+  · simp [Surreal.signApprox_of_birthday_le, ho]
+  · rw [apply_def, dif_pos (ho.trans_eq (size_ofSurreal x).symm)]
+    aesop (add simp [compare_lt_iff_lt, compare_gt_iff_gt, ofSurreal])
 
 end SignExpansion
