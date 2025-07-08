@@ -21,11 +21,11 @@ noncomputable section
 namespace Surreal
 open IGame
 
-def signApproxIGame (o : NatOrdinal.{u}) (x : Surreal.{u}) : IGame.{u} :=
+private def signApproxIGame (o : NatOrdinal.{u}) (x : Surreal.{u}) : IGame.{u} :=
   {{s : IGame.{u} | s.birthday < o} ∩ {s | ∃ _ : s.Numeric, .mk s < x} |
     {s : IGame.{u} | s.birthday < o} ∩ {s | ∃ _ : s.Numeric, x < .mk s}}ᴵ
 
-instance signApproxIGameNumeric (o : NatOrdinal.{u}) (x : Surreal.{u}) :
+private instance signApproxIGameNumeric (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     Numeric (x.signApproxIGame o) := by
   rw [numeric_def, signApproxIGame]
   refine ⟨?_, ?_, ?_⟩
