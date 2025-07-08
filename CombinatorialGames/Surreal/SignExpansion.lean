@@ -3,7 +3,7 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Birthday
 import Mathlib.Data.Sign
 import Mathlib.Data.Fintype.Units
 
@@ -19,7 +19,7 @@ universe u
 noncomputable section
 
 namespace Surreal
-open IGame Game
+open IGame
 
 def signApproxIGame (o : NatOrdinal.{u}) (x : Surreal.{u}) : IGame.{u} :=
   {{s : IGame.{u} | s.birthday < o} ∩ {s | ∃ _ : s.Numeric, .mk s < x} |
@@ -46,10 +46,10 @@ def signApprox (o : NatOrdinal.{u}) (x : Surreal.{u}) : Surreal.{u} :=
   Surreal.mk (x.signApproxIGame o)
 
 theorem birthday_signApprox_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
-    (signApprox o x).toGame.birthday ≤ o := by
-  rw [signApprox, toGame_mk, signApproxIGame]
-  apply (Game.birthday_mk_le _).trans
-  rw [birthday_le_iff, leftMoves_ofSets, rightMoves_ofSets]
+    (signApprox o x).birthday ≤ o := by
+  rw [signApprox]
+  apply (birthday_mk_le _).trans
+  rw [signApproxIGame, birthday_le_iff, leftMoves_ofSets, rightMoves_ofSets]
   constructor
   · intro y hy
     exact hy.left
@@ -57,19 +57,35 @@ theorem birthday_signApprox_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     exact hy.left
 
 theorem signApprox_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
-    (h : x.toGame.birthday ≤ o) : x.signApprox o = x := by
-  obtain ⟨k, hkg, hkb⟩ := x.toGame.birthday_eq_iGameBirthday
-  rw [← hkb] at h
-  rw [signApprox, ← x.out_eq, Surreal.mk_eq_mk, ← Game.mk_eq_mk,
-    game_out_eq, ← hkg, Game.mk_eq_mk, x.out_eq]
+    (h : x.birthday ≤ o) : x.signApprox o = x := by
+  obtain ⟨k, nk, rfl, hk⟩ := x.birthday_eq_iGameBirthday
+  rw [← hk] at h
+  rw [signApprox, Surreal.mk_eq_mk]
+  symm
   apply Fits.equiv_of_forall_birthday_le
-  · rw [signApproxIGame]
-    constructor
+  · constructor
     · intro z hz
-
-      sorry
-    · sorry
-  · sorry
+      rw [signApproxIGame, leftMoves_ofSets] at hz
+      obtain ⟨hz, nz, hzk⟩ := hz
+      rwa [← not_le, mk_le_mk] at hzk
+    · intro z hz
+      rw [signApproxIGame, rightMoves_ofSets] at hz
+      obtain ⟨hz, nz, hkz⟩ := hz
+      rwa [← not_le, mk_le_mk] at hkz
+  · intro z nz hz
+    apply le_of_not_gt
+    intro hbb
+    have hne : mk z ≠ mk k := by
+      intro eq
+      rw [hk, ← eq] at hbb
+      exact not_le_of_gt hbb (birthday_mk_le z)
+    obtain hzk | hkz := lt_or_gt_of_ne hne
+    · refine hz.left z ?_ le_rfl
+      rw [signApproxIGame, leftMoves_ofSets]
+      exact ⟨hbb.trans_le h, nz, hzk⟩
+    · refine hz.right z ?_ le_rfl
+      rw [signApproxIGame, rightMoves_ofSets]
+      exact ⟨hbb.trans_le h, nz, hkz⟩
 
 theorem monotone_signApprox {o : NatOrdinal.{u}} : Monotone (signApprox o) := by
   intro x y hxy
@@ -138,12 +154,12 @@ theorem coe_le_coe {a b : SignExpansion.{u}} : toLex ⇑a ≤ toLex ⇑b ↔ a �
 theorem coe_lt_coe {a b : SignExpansion.{u}} : toLex ⇑a < toLex ⇑b ↔ a < b := Iff.rfl
 
 def ofSurreal (x : Surreal.{u}) : SignExpansion where
-  size := x.toGame.birthday
+  size := x.birthday
   sign i :=
     haveI h : compare (x.signApprox i) x ≠ .eq := by
       intro h
       rw [compare_eq_iff_eq] at h
-      refine ne_of_lt ?_ congr(($h).toGame.birthday)
+      refine ne_of_lt ?_ congr(($h).birthday)
       exact (x.birthday_signApprox_le i).trans_lt i.prop
     match compare (x.signApprox i) x, h with
     | .lt, _ => 1
@@ -151,6 +167,6 @@ def ofSurreal (x : Surreal.{u}) : SignExpansion where
 
 @[simp]
 theorem size_ofSurreal (x : Surreal.{u}) :
-    (SignExpansion.ofSurreal x).size = x.toGame.birthday := rfl
+    (SignExpansion.ofSurreal x).size = x.birthday := rfl
 
 end SignExpansion
