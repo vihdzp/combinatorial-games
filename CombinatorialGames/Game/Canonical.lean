@@ -20,6 +20,18 @@ games through undominating and unreversing games.
 
 universe u
 
+/-! ### For Mathlib -/
+
+theorem _root_.Set.neg_setOf {α : Type*} [InvolutiveNeg α] (p : α → Prop) :
+    -{x | p x} = {x | p (-x)} :=
+  rfl
+
+theorem _root_.Set.image_neg_of_apply_neg {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
+    {s : Set α} {f : α → β} (H : ∀ x ∈ s, f (-x) = -f x) : f '' (-s) = -f '' s := by
+  ext
+  rw [Set.mem_image, ← (Equiv.neg _).exists_congr_right]
+  aesop
+
 namespace IGame
 
 /-- Undominating a game. This returns garbage values on non-short games -/
@@ -57,16 +69,6 @@ theorem rightMoves_undominate {x : IGame} :
 instance {x : IGame} [hx : Short x] : Short (undominate x) := by
   rw [short_iff_birthday_finite] at hx ⊢
   exact (birthday_undominate_le x).trans_lt hx
-
-theorem _root_.Set.neg_setOf {α : Type*} [InvolutiveNeg α] (p : α → Prop) :
-    -{x | p x} = {x | p (-x)} :=
-  rfl
-
-theorem _root_.Set.image_neg_of_apply_neg {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
-    {s : Set α} {f : α → β} (H : ∀ x ∈ s, f (-x) = -f x) : f '' (-s) = -f '' s := by
-  ext
-  rw [Set.mem_image, ← (Equiv.neg _).exists_congr_right]
-  aesop
 
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
