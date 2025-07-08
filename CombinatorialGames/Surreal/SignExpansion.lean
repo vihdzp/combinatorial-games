@@ -87,6 +87,14 @@ theorem signApprox_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
       rw [signApproxIGame, rightMoves_ofSets]
       exact ⟨hbb.trans_le h, nz, hkz⟩
 
+@[simp]
+theorem signApprox_eq_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    x.signApprox o = x ↔ x.birthday ≤ o := by
+  refine ⟨fun h => ?_, signApprox_of_birthday_le⟩
+  refine le_of_not_gt fun ho => ?_
+  refine ne_of_lt ?_ (congrArg birthday h)
+  exact (x.birthday_signApprox_le o).trans_lt ho
+
 theorem monotone_signApprox {o : NatOrdinal.{u}} : Monotone (signApprox o) := by
   intro x y hxy
   simp_rw [signApprox, Surreal.mk_le_mk, signApproxIGame]
@@ -183,11 +191,7 @@ theorem lt_iff_toLex_lt {a b : SignExpansion.{u}} : a < b ↔ toLex ⇑a < toLex
 def ofSurreal (x : Surreal.{u}) : SignExpansion where
   size := x.birthday
   sign i :=
-    haveI h : compare (x.signApprox i) x ≠ .eq := by
-      intro h
-      rw [compare_eq_iff_eq] at h
-      refine ne_of_lt ?_ congr(($h).birthday)
-      exact (x.birthday_signApprox_le i).trans_lt i.prop
+    haveI h : compare (x.signApprox i) x ≠ .eq := by simp [compare_eq_iff_eq, Set.mem_Iio.1 i.prop]
     match compare (x.signApprox i) x, h with
     | .lt, _ => 1
     | .gt, _ => -1
