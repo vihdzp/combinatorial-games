@@ -12,6 +12,9 @@ noncomputable section
 namespace Surreal
 open IGame NatOrdinal Order Set
 
+/--
+The birthday of a surreal number is defined as the least birthday
+among all *numeric* pre-games that define it. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
 
