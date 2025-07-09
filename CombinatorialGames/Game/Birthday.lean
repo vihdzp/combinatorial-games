@@ -236,30 +236,29 @@ theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
   rw [← neg_tiny, birthday_neg, birthday_tiny]
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} := by
-  have (y : Iio o) := have := y.2; small_setOf_birthday_le y.1
-  have : Small.{u} {x // birthday x < o} := by
-    convert @small_iUnion _ _ _ _ fun y : Iio o ↦ have := y.2; small_setOf_birthday_le y.1
-    change _ ↔ _ ∈ ⋃ y : Iio o, {x : IGame | x.birthday ≤ y.1}
-    simpa using ⟨fun hy ↦ ⟨_, hy, le_rfl⟩, fun ⟨a, ha, ha'⟩ ↦  ha'.trans_lt ha⟩
-  let f (y : Set {x // birthday x < o} × Set {x // birthday x < o}) : {x // birthday x ≤ o} := by
-    refine ⟨{Subtype.val '' y.1 | Subtype.val '' y.2}ᴵ, ?_⟩
-    rw [birthday_ofSets, max_le_iff,
-      csSup_le_iff' (Ordinal.bddAbove_of_small _), csSup_le_iff' (Ordinal.bddAbove_of_small _)]
-    aesop
-  have hl (x : {x // birthday x ≤ o}) (y : x.1.leftMoves) : birthday y.1 < o :=
-    (birthday_lt_of_mem_leftMoves y.2).trans_le x.2
-  have hr (x : {x // birthday x ≤ o}) (y : x.1.rightMoves) : birthday y.1 < o :=
-    (birthday_lt_of_mem_rightMoves y.2).trans_le x.2
-  refine small_of_surjective (f := f) fun x ↦
-    ⟨⟨range fun y : x.1.leftMoves ↦ ⟨y, hl x y⟩, range fun y : x.1.rightMoves ↦ ⟨y, hr x y⟩⟩, ?_⟩
-  aesop
-termination_by o
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
+  induction o using SuccOrder.prelimitRecOn with
+  | succ o _ ih =>
+    convert inferInstanceAs (Small.{u} <| Set.range
+      fun s : Set {x : IGame.{u} | x.birthday < o} × Set {x : IGame.{u} | x.birthday < o} =>
+        {s.fst | s.snd}ᴵ)
+    refine Set.ext fun i => ⟨fun hi => ?_, fun ⟨⟨l, r⟩, hlr⟩ => ?_⟩
+    · refine ⟨((↑) ⁻¹' i.leftMoves, (↑) ⁻¹' i.rightMoves), ?_⟩
+      rw [mem_setOf, lt_succ_iff, birthday_le_iff] at hi
+      convert ofSets_leftMoves_rightMoves i <;> apply image_preimage_eq_iff.2
+      · simpa using hi.left
+      · simpa using hi.right
+    · rw [mem_setOf, lt_succ_iff, birthday_le_iff, ← hlr]
+      simp +contextual
+  | isSuccPrelimit o ho ih =>
+    convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih
+    ext x
+    simpa using ho.lt_iff_exists_lt
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
-  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
-  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
+  convert small_setOf_birthday_lt (succ o) using 1
+  simp
 
 /-! #### Short games -/
 
@@ -430,19 +429,15 @@ theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birth
 See https://mathoverflow.net/a/476829/147705. -/
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} := by
-  have : Small.{u} (mk '' {x | IGame.birthday x ≤ o}) :=
-    @small_image _ _ _ _ (IGame.small_setOf_birthday_le o)
-  refine @small_subset _ _ _ ?_ this
-  change {x | birthday x ≤ o} ⊆ mk '' {x | IGame.birthday x ≤ o}
+instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
+  refine small_subset (?_ : {x | birthday x ≤ o} ⊆ mk '' {x | IGame.birthday x ≤ o})
   intro x hx
-  obtain ⟨y, hy, hy'⟩ := birthday_eq_iGameBirthday x
-  use y
-  simp_all
+  obtain ⟨y, rfl, hy⟩ := birthday_eq_iGameBirthday x
+  exact mem_image_of_mem mk (hy.trans_le hx)
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} := by
-  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
-  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
+  apply small_subset (?_ : {x | birthday x < o} ⊆ {x | birthday x ≤ o})
+  exact setOf_subset_setOf.2 fun _ => le_of_lt
 
 end Game
