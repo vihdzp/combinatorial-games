@@ -8,14 +8,23 @@ import CombinatorialGames.Surreal.Basic
 /-!
 # Dedekind cuts of Surreals
 
-TODO: write docstring
+TODO: write module docstring
 -/
 
 namespace Surreal
 open Set
 
+/--
+The type of Dedekind sections of surreals.
+-/
 structure Cut where
+  /--
+  The lower set of a Dedekind section.
+  -/
   left : Set Surreal
+  /--
+  The upper set of a Dedekind section.
+  -/
   right : Set Surreal
   left_lf_right' : ∀ l ∈ left, ∀ r ∈ right, l ⧏ r
   codisjoint' : Codisjoint left right
@@ -197,7 +206,7 @@ noncomputable instance : CompleteLinearOrder Cut where
       specialize hr i hi
       exact left_lf_right hl hr
     codisjoint' := by
-      simp_rw [codisjoint_iff_le_sup, top_eq_univ, sup_eq_union]
+      simp_rw [codisjoint_iff_le_sup, sup_eq_union]
       rw [union_iInter₂]
       conv =>
         enter [2, 1, i, 1, hi]
@@ -219,7 +228,7 @@ noncomputable instance : CompleteLinearOrder Cut where
       specialize hl i hi
       exact left_lf_right hl hr
     codisjoint' := by
-      simp_rw [codisjoint_iff_le_sup, top_eq_univ, sup_eq_union]
+      simp_rw [codisjoint_iff_le_sup, sup_eq_union]
       rw [iInter₂_union]
       conv =>
         enter [2, 1, i, 1, hi]
