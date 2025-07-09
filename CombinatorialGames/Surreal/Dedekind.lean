@@ -11,8 +11,10 @@ import CombinatorialGames.Surreal.Basic
 TODO: write module docstring
 -/
 
+universe u
+
 namespace Surreal
-open Set
+open Set IGame
 
 /--
 The type of Dedekind sections of surreals.
@@ -33,7 +35,7 @@ namespace Cut
 
 noncomputable instance : DecidableEq Cut := Classical.decEq Cut
 
-theorem ext {c d : Cut} (hl : c.left = d.left) (hr : c.right = d.right) : c = d := by
+protected theorem ext {c d : Cut} (hl : c.left = d.left) (hr : c.right = d.right) : c = d := by
   cases c; cases d; cases hl; cases hr; rfl
 
 theorem left_lf_right {c : Cut} {l r : Surreal} (hl : l ∈ c.left) (hr : r ∈ c.right) : l ⧏ r :=
@@ -74,11 +76,11 @@ theorem compl_right {c : Cut} : c.rightᶜ = c.left :=
   c.isCompl.symm.compl_eq
 
 theorem ext_left {c d : Cut} (h : c.left = d.left) : c = d := by
-  refine ext h ?_
+  refine Cut.ext h ?_
   rwa [← compl_inj_iff, c.compl_right, d.compl_right]
 
 theorem ext_right {c d : Cut} (h : c.right = d.right) : c = d := by
-  refine ext ?_ h
+  refine Cut.ext ?_ h
   rwa [← compl_inj_iff, c.compl_left, d.compl_left]
 
 theorem isLowerSet_left {c : Cut} : IsLowerSet c.left := by
@@ -131,7 +133,7 @@ instance : Preorder Cut where
 
 instance : PartialOrder Cut where
   le_antisymm _ _ hab hba :=
-    ext (subset_antisymm hab.left hba.left) (subset_antisymm hba.right hab.right)
+    Cut.ext (subset_antisymm hab.left hba.left) (subset_antisymm hba.right hab.right)
 
 instance : BoundedOrder Cut where
   top := {
@@ -193,9 +195,7 @@ noncomputable instance : LinearOrder Cut :=
     exact Cut.le_of_lt (Cut.not_le.1 h)
   Lattice.toLinearOrder Cut
 
-noncomputable instance : CompleteLinearOrder Cut where
-  __ := inferInstanceAs (LinearOrder Cut)
-  __ := (inferInstanceAs (LinearOrder Cut)).toBiheytingAlgebra
+instance : SupSet Cut where
   sSup s := {
     left := ⋃ i ∈ s, i.left
     right := ⋂ i ∈ s, i.right
@@ -216,8 +216,15 @@ noncomputable instance : CompleteLinearOrder Cut where
           exact subset_biUnion_of_mem hi
       simp
   }
-  le_sSup s i hi := le_iff_left.2 (subset_biUnion_of_mem hi)
-  sSup_le := by simp +contextual [le_iff_subset]
+
+@[simp] theorem left_sSup (s : Set Cut) : (sSup s).left = ⋃ i ∈ s, i.left := rfl
+@[simp] theorem right_sSup (s : Set Cut) : (sSup s).right = ⋂ i ∈ s, i.right := rfl
+@[simp] theorem left_iSup {ι} (f : ι → Cut) : (iSup f).left = ⋃ i, (f i).left := by
+  simp [← sSup_range]
+@[simp] theorem right_iSup {ι} (f : ι → Cut) : (iSup f).right = ⋂ i, (f i).right := by
+  simp [← sSup_range]
+
+instance : InfSet Cut where
   sInf s := {
     left := ⋂ i ∈ s, i.left
     right := ⋃ i ∈ s, i.right
@@ -238,5 +245,159 @@ noncomputable instance : CompleteLinearOrder Cut where
           exact subset_biUnion_of_mem hi
       simp
   }
+
+@[simp] theorem left_sInf (s : Set Cut) : (sInf s).left = ⋂ i ∈ s, i.left := rfl
+@[simp] theorem right_sInf (s : Set Cut) : (sInf s).right = ⋃ i ∈ s, i.right := rfl
+@[simp] theorem left_iInf {ι} (f : ι → Cut) : (iInf f).left = ⋂ i, (f i).left := by
+  simp [← sInf_range]
+@[simp] theorem right_iInf {ι} (f : ι → Cut) : (iInf f).right = ⋃ i, (f i).right := by
+  simp [← sInf_range]
+
+instance : CompleteLattice Cut where
+  __ := inferInstanceAs (BoundedOrder Cut)
+  le_sSup s i hi := le_iff_left.2 (subset_biUnion_of_mem hi)
+  sSup_le := by simp +contextual [le_iff_subset]
   sInf_le s i hi := le_iff_right.2 (subset_biUnion_of_mem hi)
   le_sInf := by simp +contextual [le_iff_subset]
+
+noncomputable instance : CompleteLinearOrder Cut where
+  __ := inferInstanceAs (LinearOrder Cut)
+  __ := inferInstanceAs (CompleteLattice Cut)
+  __ := (inferInstanceAs (LinearOrder Cut)).toBiheytingAlgebra
+
+/--
+The cut just to the left of a surreal number.
+-/
+def leftSurreal : Surreal ↪o Cut where
+  toFun x := {
+    left := Set.Iio x
+    right := Set.Ici x
+    left_lf_right' l hl r hr := (hl.trans_le hr).not_ge
+    codisjoint' := codisjoint_iff_le_sup.2 (by simp)
+  }
+  inj' x y hxy := by
+    apply le_antisymm
+    · simpa using congr(y ∈ ($hxy).right)
+    · simpa using congr(x ∈ ($hxy).right)
+  map_rel_iff' := by simp [le_iff_subset]
+
+/--
+The cut just to the right of a surreal number.
+-/
+def rightSurreal : Surreal ↪o Cut where
+  toFun x := {
+    left := Set.Iic x
+    right := Set.Ioi x
+    left_lf_right' l hl r hr := (hl.trans_lt hr).not_ge
+    codisjoint' := codisjoint_iff_le_sup.2 (by simp)
+  }
+  inj' x y hxy := by
+    apply le_antisymm
+    · simpa using congr(x ∈ ($hxy).left)
+    · simpa using congr(y ∈ ($hxy).right)
+  map_rel_iff' := by simp [le_iff_subset]
+
+@[simp] theorem left_leftSurreal {x : Surreal} : (leftSurreal x).left = Set.Iio x := rfl
+@[simp] theorem right_leftSurreal {x : Surreal} : (leftSurreal x).right = Set.Ici x := rfl
+@[simp] theorem left_rightSurreal {x : Surreal} : (rightSurreal x).left = Set.Iic x := rfl
+@[simp] theorem right_rightSurreal {x : Surreal} : (rightSurreal x).right = Set.Ioi x := rfl
+
+theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x :=
+  ⟨x, le_refl x, le_refl x⟩
+
+theorem leftSurreal_le_rightSurreal (x : Surreal) : leftSurreal x ≤ rightSurreal x :=
+  (leftSurreal_lt_rightSurreal x).le
+
+/--
+The cut to the left of a game.
+-/
+def leftGame : Game →o Cut where
+  toFun x := {
+    left := {y | y.toGame ⧏ x}
+    right := {y | x ≤ y.toGame}
+    left_lf_right' l hl r hr := mt toGame.le_iff_le.2 (not_le_of_not_le_of_le hl hr)
+    codisjoint' := codisjoint_iff_le_sup.2 (by simp [union_def, (em (x ≤ toGame _)).symm])
+  }
+  monotone' x y hxy := le_iff_right.2 (by simp +contextual [hxy.trans])
+
+/--
+The cut to the right of a game.
+-/
+def rightGame : Game →o Cut where
+  toFun x := {
+    left := {y | y.toGame ≤ x}
+    right := {y | x ⧏ y.toGame}
+    left_lf_right' l hl r hr := mt toGame.le_iff_le.2 (not_le_of_le_of_not_le hl hr)
+    codisjoint' := codisjoint_iff_le_sup.2 (by simp [union_def, em (toGame _ ≤ x)])
+  }
+  monotone' x y hxy := le_iff_left.2 (by simp +contextual [hxy.trans'])
+
+@[simp]
+theorem mem_left_leftGame {x : Game} {y : Surreal} :
+    y ∈ (leftGame x).left ↔ y.toGame ⧏ x := Iff.rfl
+
+@[simp]
+theorem mem_right_leftGame {x : Game} {y : Surreal} :
+    y ∈ (leftGame x).right ↔ x ≤ y.toGame := Iff.rfl
+
+@[simp]
+theorem mem_left_rightGame {x : Game} {y : Surreal} :
+    y ∈ (rightGame x).left ↔ y.toGame ≤ x := Iff.rfl
+
+@[simp]
+theorem mem_right_rightGame {x : Game} {y : Surreal} :
+    y ∈ (rightGame x).right ↔ x ⧏ y.toGame := Iff.rfl
+
+@[simp]
+theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
+  apply Cut.ext <;> apply Set.ext <;> simp
+
+@[simp]
+theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
+  apply Cut.ext <;> apply Set.ext <;> simp
+
+/--
+Auxiliary definition for computing the `leftGame` of an explicitly given game.
+-/
+abbrev iGameLeft (x : IGame) : Cut :=
+  ⨆ i ∈ x.leftMoves, rightGame (.mk i)
+/--
+Auxiliary definition for computing the `rightGame` of an explicitly given game.
+-/
+abbrev iGameRight (x : IGame) : Cut :=
+  ⨅ i ∈ x.rightMoves, leftGame (.mk i)
+
+theorem equiv_of_mem_iGameLeft_of_mem_iGameRight {x y : IGame} [y.Numeric]
+    (hyl : .mk y ∈ (iGameLeft x).right) (hyr : .mk y ∈ (iGameRight x).left)
+    (hol : ∀ z ∈ y.leftMoves, ∀ (_ : z.Numeric), .mk z ∈ (iGameLeft x).left)
+    (hor : ∀ z ∈ y.rightMoves, ∀ (_ : z.Numeric), .mk z ∈ (iGameRight x).right) :
+    x ≈ y := by
+  refine ⟨le_iff_forall_lf.2 ⟨?_, ?_⟩, le_iff_forall_lf.2 ⟨?_, ?_⟩⟩
+  · intro z hz
+    simp_rw [right_iSup, mem_iInter] at hyl
+    simpa using hyl z hz
+  · intro z hz
+    have nz := Numeric.of_mem_rightMoves hz
+    specialize hor z hz nz
+    simp_rw [iGameRight, right_iInf, mem_iUnion] at hor
+    obtain ⟨i, hi, hor⟩ := hor
+    refine lf_of_rightMove_le ?_ hi
+    simpa using hor
+  · intro z hz
+    have nz := Numeric.of_mem_leftMoves hz
+    specialize hol z hz nz
+    simp_rw [iGameLeft, left_iSup, mem_iUnion] at hol
+    obtain ⟨i, hi, hol⟩ := hol
+    refine lf_of_le_leftMove ?_ hi
+    simpa using hol
+  · intro z hz
+    simp_rw [left_iInf, mem_iInter] at hyr
+    simpa using hyr z hz
+
+theorem leftGame_eq_iGameLeft_of_le {x : IGame} (h : iGameRight x ≤ iGameLeft x) :
+    leftGame (.mk x) = iGameLeft x := by
+  sorry
+
+theorem rightGame_eq_iGameRight_of_le {x : IGame} (h : iGameRight x ≤ iGameLeft x) :
+    rightGame (.mk x) = iGameRight x := by
+  sorry
