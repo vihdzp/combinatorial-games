@@ -9,6 +9,7 @@ import CombinatorialGames.Surreal.Basic
 # Dedekind cuts of Surreals
 
 TODO: write module docstring
+TODO: generalize to dedekind cuts of arbitrary preorders
 -/
 
 universe u
@@ -356,6 +357,14 @@ theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
 theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Cut.ext <;> apply Set.ext <;> simp
 
+theorem leftGame_lt_rightGame_iff {x : Game} :
+    leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
+  constructor
+  · rintro ⟨y, hyl, hyr⟩
+    exact ⟨y, le_antisymm hyl hyr⟩
+  · rintro ⟨x, rfl⟩
+    simp [leftSurreal_lt_rightSurreal]
+
 /--
 Auxiliary definition for computing the `leftGame` of an explicitly given game.
 -/
@@ -396,8 +405,46 @@ theorem equiv_of_mem_iGameLeft_of_mem_iGameRight {x y : IGame} [y.Numeric]
 
 theorem leftGame_eq_iGameLeft_of_le {x : IGame} (h : iGameRight x ≤ iGameLeft x) :
     leftGame (.mk x) = iGameLeft x := by
-  sorry
+  refine ext_right (Set.ext fun y => ⟨fun hy => ?_, fun hy => ?_⟩)
+  · rw [mem_right_leftGame] at hy
+    simp_rw [right_iSup, mem_iInter, mem_right_rightGame]
+    intro i hi
+    refine not_le_of_not_le_of_le ?_ hy
+    exact mt Game.mk_le_mk.1 (lf_of_le_leftMove le_rfl hi)
+  · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
+    constructor
+    · intro i hi
+      simp_rw [right_iSup, mem_iInter, mem_right_rightGame] at hy
+      rw [← Game.mk_le_mk, ← toGame_mk, y.out_eq]
+      exact hy i hi
+    · intro z hz
+      rw [le_iff_right] at h
+      apply h at hy
+      simp_rw [right_iInf, mem_iUnion, mem_right_leftGame] at hy
+      obtain ⟨i, hi, hy⟩ := hy
+      refine lf_of_rightMove_le ?_ hi
+      rw [← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
+      exact hy.trans (Numeric.lt_rightMove hz).le
 
 theorem rightGame_eq_iGameRight_of_le {x : IGame} (h : iGameRight x ≤ iGameLeft x) :
     rightGame (.mk x) = iGameRight x := by
-  sorry
+  refine ext_left (Set.ext fun y => ⟨fun hy => ?_, fun hy => ?_⟩)
+  · rw [mem_left_rightGame] at hy
+    simp_rw [left_iInf, mem_iInter, mem_left_leftGame]
+    intro i hi
+    apply not_le_of_le_of_not_le hy
+    exact mt Game.mk_le_mk.1 (lf_of_rightMove_le le_rfl hi)
+  · rw [mem_left_rightGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
+    constructor
+    · intro z hz
+      rw [le_iff_left] at h
+      apply h at hy
+      simp_rw [left_iSup, mem_iUnion, mem_left_rightGame] at hy
+      obtain ⟨i, hi, hy⟩ := hy
+      refine lf_of_le_leftMove ?_ hi
+      rw [← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
+      exact (Numeric.leftMove_lt hz).le.trans hy
+    · intro i hi
+      simp_rw [left_iInf, mem_iInter, mem_left_leftGame] at hy
+      rw [← Game.mk_le_mk, ← toGame_mk y.out, y.out_eq]
+      exact hy i hi
