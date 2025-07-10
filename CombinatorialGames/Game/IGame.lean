@@ -527,7 +527,7 @@ def delabEquiv : Delab := do
   have α : Q(Type u) := α
   have r : Q($α → $α → Prop) := r
   let .some le ← trySynthInstanceQ q(LE $α) | failure -- fail over to the default delaborator
-  _ ← assertDefEqQ q(($le).le) q($r)
+  if let .notDefEq ← isDefEqQ q(($le).le) q($r) then failure -- fail over to the default delaborator
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
   let stx : Term ← do
@@ -545,7 +545,7 @@ def delabFuzzy : Delab := do
   have α : Q(Type u) := α
   have r : Q($α → $α → Prop) := r
   let .some le ← trySynthInstanceQ q(LE $α) | failure -- fail over to the default delaborator
-  _ ← assertDefEqQ q(($le).le) q($r)
+  if let .notDefEq ← isDefEqQ q(($le).le) q($r) then failure -- fail over to the default delaborator
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
   let stx : Term ← do
