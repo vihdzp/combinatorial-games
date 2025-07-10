@@ -526,7 +526,7 @@ def delabEquiv : Delab := do
   have u := f.constLevels![0]!
   have α : Q(Type u) := α
   have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
+  let .some le ← trySynthInstanceQ q(LE $α) | failure -- fail over to the default delaborator
   _ ← assertDefEqQ q(($le).le) q($r)
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
@@ -544,7 +544,7 @@ def delabFuzzy : Delab := do
   have u := f.constLevels![0]!
   have α : Q(Type u) := α
   have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
+  let .some le ← trySynthInstanceQ q(LE $α) | failure -- fail over to the default delaborator
   _ ← assertDefEqQ q(($le).le) q($r)
   let x ← withNaryArg 2 delab
   let y ← withNaryArg 3 delab
