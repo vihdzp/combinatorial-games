@@ -1,6 +1,7 @@
 import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Canonical
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
@@ -24,4 +25,4 @@ import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
-import CombinatorialGames.Test
+import CombinatorialGames.Test.GameCmp
