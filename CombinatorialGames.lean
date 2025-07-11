@@ -18,7 +18,9 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
-import CombinatorialGames.Surreal.Birthday
+import CombinatorialGames.Surreal.Birthday.Basic
+import CombinatorialGames.Surreal.Birthday.Equal
+import CombinatorialGames.Surreal.Dedekind
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication
