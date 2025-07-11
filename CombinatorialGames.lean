@@ -4,6 +4,7 @@ import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
