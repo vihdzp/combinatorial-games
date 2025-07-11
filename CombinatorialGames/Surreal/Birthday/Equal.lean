@@ -19,8 +19,7 @@ theorem RelHomClass.map_antisymmRel {α β F : Type*} {r : α → α → Prop} {
 
 universe u
 
-namespace Surreal
-open Set Order
+open Surreal Set Order
 
 private inductive Reps : Type (u + 1) where
   | left (x : Surreal.{u}) : Reps
@@ -127,12 +126,6 @@ private theorem toGame_simplestBtwn_of_lt {x : IGame} (h : Cut.iGameLeft x < Cut
     apply Cut.isUpperSet_right hzy.le
     rw [hy]
     exact (simplestBtwn_btwn h).right
-
-private noncomputable def mb (s : Surreal.{u}) : IGame.{u} :=
-  (birthday_eq_iGameBirthday s).choose
-
-private theorem mb_i (s : Surreal.{u}) : (mb s).Numeric :=
-  (birthday_eq_iGameBirthday s).choose_spec.1
 
 private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) :
     birthday (simplestBtwn h) ≤ max (repsBirthdays l) (repsBirthdays r) := by
@@ -243,3 +236,52 @@ private noncomputable def iGameRepRight (x : IGame.{u}) :
 termination_by (x, 1)
 
 end
+
+theorem Surreal.birthday_toGame_eq (x : Surreal) :
+    x.toGame.birthday = x.birthday := by
+  apply x.birthday_toGame_le.antisymm
+  obtain ⟨i, hi, hbb⟩ := x.toGame.birthday_eq_iGameBirthday
+  obtain ⟨j, nj, rfl, hj⟩ := x.birthday_eq_iGameBirthday
+  rw [← hbb]
+  have h₁ := (iGameRepLeft i).prop.right
+  simp_rw [iGameRepLeft, (iGameRepsLeft i).prop.left, (iGameRepsRight i).prop.left] at h₁
+  have h : Cut.iGameLeft i < Cut.iGameRight i := by
+    by_contra! h
+    have u₁ := Cut.leftGame_eq_iGameLeft_of_le h
+    have u₂ := Cut.rightGame_eq_iGameRight_of_le h
+    rw [← u₁, ← u₂, ← not_lt, Cut.leftGame_lt_rightGame_iff] at h
+    apply h
+    rw [mem_range]
+    exact ⟨.mk j, hi.symm⟩
+  rw [dif_pos h, repsBirthday, WithTop.coe_le_coe] at h₁
+  apply h₁.trans_eq'
+  obtain ⟨k, nk, hk, uu⟩ := (simplestBtwn h).birthday_eq_iGameBirthday
+  apply congrArg birthday
+  rw [toGame_mk, Game.mk_eq_mk] at hi
+  rw [← hk, Surreal.mk_eq_mk]
+  apply hi.symm.trans
+  apply Cut.equiv_of_mem_iGameLeft_of_mem_iGameRight
+  · rw [hk]
+    exact (simplestBtwn_btwn h).right
+  · rw [hk]
+    exact (simplestBtwn_btwn h).left
+  · intro z hz nz
+    by_contra hu
+    rw [← mem_compl_iff, Cut.compl_left] at hu
+    have hv : mk z ∈ (Cut.iGameRight i).left := by
+      apply (Cut.iGameRight i).isLowerSet_left (mk_le_mk.2 (IGame.Numeric.leftMove_lt hz).le)
+      rw [hk]
+      exact (simplestBtwn_btwn h).left
+    have hc := simplestBtwn_simplest h ⟨hv, hu⟩
+    rw [← uu] at hc
+    exact (IGame.birthday_lt_of_mem_leftMoves hz).not_ge (hc.trans (birthday_mk_le z))
+  · intro z hz nz
+    by_contra hu
+    rw [← mem_compl_iff, Cut.compl_right] at hu
+    have hv : mk z ∈ (Cut.iGameLeft i).right := by
+      apply (Cut.iGameLeft i).isUpperSet_right (mk_le_mk.2 (IGame.Numeric.lt_rightMove hz).le)
+      rw [hk]
+      exact (simplestBtwn_btwn h).right
+    have hc := simplestBtwn_simplest h ⟨hu, hv⟩
+    rw [← uu] at hc
+    exact (IGame.birthday_lt_of_mem_rightMoves hz).not_ge (hc.trans (birthday_mk_le z))
