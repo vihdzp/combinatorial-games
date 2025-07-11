@@ -104,12 +104,20 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
     intro x hx
     exact x.birthday_toGame_le.trans hx
   have h₂ := Set.restrictPreimage_injective {x | x.birthday ≤ o} toGame.injective
-  have : Small.{u} (toGame ⁻¹' {x | x.birthday ≤ o}):= small_of_injective h₂
+  have : Small.{u} (toGame ⁻¹' {x | x.birthday ≤ o}) := small_of_injective h₂
   exact small_subset h₁
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+
+/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
+instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
+  small_setOf_birthday_le o
+
+/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
+instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
+  small_setOf_birthday_lt o
 
 end Surreal
