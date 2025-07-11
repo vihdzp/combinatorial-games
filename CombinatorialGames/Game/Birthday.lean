@@ -239,17 +239,11 @@ theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   induction o using SuccOrder.prelimitRecOn with
   | succ o _ ih =>
-    convert inferInstanceAs (Small.{u} <| Set.range
-      fun s : Set {x : IGame.{u} | x.birthday < o} × Set {x : IGame.{u} | x.birthday < o} =>
-        {s.fst | s.snd}ᴵ)
-    refine Set.ext fun i => ⟨fun hi => ?_, fun ⟨⟨l, r⟩, hlr⟩ => ?_⟩
-    · refine ⟨((↑) ⁻¹' i.leftMoves, (↑) ⁻¹' i.rightMoves), ?_⟩
-      rw [mem_setOf, lt_succ_iff, birthday_le_iff] at hi
-      convert ofSets_leftMoves_rightMoves i <;> apply image_preimage_eq_iff.2
-      · simpa using hi.left
-      · simpa using hi.right
-    · rw [mem_setOf, lt_succ_iff, birthday_le_iff, ← hlr]
-      simp +contextual
+    apply small_subset
+      (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦ {s.1 | s.2}ᴵ)
+    refine fun x hx ↦ ⟨((↑) ⁻¹' x.leftMoves, (↑) ⁻¹' x.rightMoves), ?_⟩
+    simp_rw [lt_succ_iff, birthday_le_iff] at hx
+    ext <;> simp_all
   | isSuccPrelimit o ho ih =>
     convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih
     ext x
