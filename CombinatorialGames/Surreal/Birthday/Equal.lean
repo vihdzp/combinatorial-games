@@ -165,9 +165,9 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
       apply (birthday_ofSets_le _).trans
       rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
       simp
-    | iInf R r =>
+    | iInf R r ihr =>
       sorry
-    | iSup R r =>
+    | iSup R r ihr =>
       sorry
   | right l =>
     induction r with
@@ -200,11 +200,11 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
       apply (birthday_ofSets_le _).trans
       rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
       simp
-    | iInf R r => sorry
-    | iSup R r => sorry
-  | iInf L l =>
+    | iInf R r ihr => sorry
+    | iSup R r ihr => sorry
+  | iInf L l ihl =>
     sorry
-  | iSup L l =>
+  | iSup L l ihl =>
     sorry
 
 mutual
