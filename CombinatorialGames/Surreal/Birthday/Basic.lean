@@ -112,4 +112,45 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
   exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
 
+theorem birthday_ofSets_le {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    (H : ∀ l ∈ s, ∀ r ∈ t, l < r) :
+    birthday (ofSets s t H) ≤ max (⨆ l ∈ s, succ (birthday l)) (⨆ r ∈ t, succ (birthday r)) := by
+  let u (s : Surreal) := (birthday_eq_iGameBirthday s).choose
+  have nu (s : Surreal) : Numeric (u s) := (birthday_eq_iGameBirthday s).choose_spec.1
+  have nk (s : Surreal) : mk (u s) = s := (birthday_eq_iGameBirthday s).choose_spec.2.1
+  have nc (s : Surreal) : (u s).birthday = s.birthday :=
+    (birthday_eq_iGameBirthday s).choose_spec.2.2
+  have nn : Numeric {u '' s | u '' t}ᴵ := by
+    rw [numeric_def]
+    simp +contextual [nu, ← Surreal.mk_lt_mk, nk, H]
+  have h : mk {u '' s | u '' t}ᴵ = {s | t}ˢ := by
+    rw [mk_ofSets]
+    congr
+    · ext x
+      constructor
+      · rintro ⟨⟨_, ⟨x, hx, rfl⟩⟩, rfl⟩
+        simp [nk, hx]
+      · intro hx
+        exact ⟨⟨u x, mem_image_of_mem u hx⟩, nk x⟩
+    · ext x
+      constructor
+      · rintro ⟨⟨_, ⟨x, hx, rfl⟩⟩, rfl⟩
+        simp [nk, hx]
+      · intro hx
+        exact ⟨⟨u x, mem_image_of_mem u hx⟩, nk x⟩
+  rw [← h]
+  apply (birthday_mk_le _).trans
+  rw [birthday_le_iff]
+  simp only [leftMoves_ofSets, mem_image, lt_sup_iff, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂, rightMoves_ofSets]
+  constructor
+  · intro z hz
+    left
+    rw [← Ordinal.NatOrdinal.iSup_subtype, NatOrdinal.lt_iSup_iff]
+    exact ⟨⟨z, hz⟩, by simp [nc]⟩
+  · intro z hz
+    right
+    rw [← Ordinal.NatOrdinal.iSup_subtype, NatOrdinal.lt_iSup_iff]
+    exact ⟨⟨z, hz⟩, by simp [nc]⟩
+
 end Surreal
