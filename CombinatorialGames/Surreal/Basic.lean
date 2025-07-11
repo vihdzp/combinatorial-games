@@ -303,8 +303,8 @@ theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Surreal → Prop} (mk : ∀ y [Numeric y], P (mk y)) (x : Surreal) : P x :=
-  Quotient.ind (fun h ↦ @mk _ h.2) x
+theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
+    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Surreal) : IGame := (Quotient.out x).1
