@@ -147,16 +147,22 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
       rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
       simp
     | right r =>
-      stop
       simp_rw [repsBirthdays, ← WithTop.coe_sup, WithTop.coe_le_coe]
       have h' := h
-      simp_rw [repsCut, OrderEmbedding.lt_iff_lt] at h'
+      simp_rw [repsCut] at h'
+      obtain ⟨u, hur, hlu⟩ := h'
+      simp at hlu hur
+      obtain hlr | h' := eq_or_lt_of_le (hlu.trans hur)
+      · have hhl : simplestBtwn h = l := by
+          simpa [← le_antisymm_iff, repsCut, hlr] using simplestBtwn_btwn h
+        rw [hhl, hlr]
+        simp [le_succ]
       let c := {{l} | {r}}ˢ
       have hl : l < c := left_lt_ofSets (mem_singleton l) _
-      have hr : c < r := ofSets_lt_right (mem_singleton r) _
+      have hr : c ≤ r := (ofSets_lt_right (mem_singleton r) _).le
       apply le_of_lt at hl
       rw [← Set.mem_Ici, ← Cut.right_leftSurreal] at hl
-      rw [← Set.mem_Iio, ← Cut.left_leftSurreal] at hr
+      rw [← Set.mem_Iic, ← Cut.left_rightSurreal] at hr
       apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
       apply (birthday_ofSets_le _).trans
       rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
@@ -166,7 +172,11 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
     | iSup R r =>
       sorry
   | right l =>
-    sorry
+    induction r with
+    | left r => sorry
+    | right r => sorry
+    | iInf R r => sorry
+    | iSup R r => sorry
   | iInf L l =>
     sorry
   | iSup L l =>
