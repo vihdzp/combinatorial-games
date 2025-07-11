@@ -260,6 +260,14 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   convert small_setOf_birthday_lt (succ o) using 1
   simp
 
+/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
+instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
+  small_setOf_birthday_le o
+
+/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
+instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
+  small_setOf_birthday_lt o
+
 /-! #### Short games -/
 
 /-- The finset of all games with birthday ≤ n. -/
@@ -439,5 +447,13 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   apply small_subset (?_ : {x | birthday x < o} ⊆ {x | birthday x ≤ o})
   exact setOf_subset_setOf.2 fun _ => le_of_lt
+
+/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
+instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
+  small_setOf_birthday_le o
+
+/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
+instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
+  small_setOf_birthday_lt o
 
 end Game
