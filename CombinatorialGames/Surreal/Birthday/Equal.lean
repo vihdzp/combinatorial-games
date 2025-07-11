@@ -137,9 +137,8 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
       have h' := h
       simp_rw [repsCut, OrderEmbedding.lt_iff_lt] at h'
       let c := {{l} | {r}}ˢ
-      have hl : l < c := left_lt_ofSets (mem_singleton l) _
+      have hl : l ≤ c := (left_lt_ofSets (mem_singleton l) _).le
       have hr : c < r := ofSets_lt_right (mem_singleton r) _
-      apply le_of_lt at hl
       rw [← Set.mem_Ici, ← Cut.right_leftSurreal] at hl
       rw [← Set.mem_Iio, ← Cut.left_leftSurreal] at hr
       apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
@@ -158,9 +157,8 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
         rw [hhl, hlr]
         simp [le_succ]
       let c := {{l} | {r}}ˢ
-      have hl : l < c := left_lt_ofSets (mem_singleton l) _
+      have hl : l ≤ c := (left_lt_ofSets (mem_singleton l) _).le
       have hr : c ≤ r := (ofSets_lt_right (mem_singleton r) _).le
-      apply le_of_lt at hl
       rw [← Set.mem_Ici, ← Cut.right_leftSurreal] at hl
       rw [← Set.mem_Iic, ← Cut.left_rightSurreal] at hr
       apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
@@ -173,8 +171,35 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
       sorry
   | right l =>
     induction r with
-    | left r => sorry
-    | right r => sorry
+    | left r =>
+      simp_rw [repsBirthdays, ← WithTop.coe_sup, WithTop.coe_le_coe]
+      have h' := h
+      simp_rw [repsCut] at h'
+      obtain ⟨u, hur, hlu⟩ := h'
+      simp at hlu hur
+      have h' := hlu.trans hur
+      let c := {{l} | {r}}ˢ
+      have hl : l < c := left_lt_ofSets (mem_singleton l) _
+      have hr : c < r := ofSets_lt_right (mem_singleton r) _
+      rw [← Set.mem_Ioi, ← Cut.right_rightSurreal] at hl
+      rw [← Set.mem_Iio, ← Cut.left_leftSurreal] at hr
+      apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
+      apply (birthday_ofSets_le _).trans
+      rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
+      simp
+    | right r =>
+      simp_rw [repsBirthdays, ← WithTop.coe_sup, WithTop.coe_le_coe]
+      have h' := h
+      simp_rw [repsCut, OrderEmbedding.lt_iff_lt] at h'
+      let c := {{l} | {r}}ˢ
+      have hl : l < c := left_lt_ofSets (mem_singleton l) _
+      have hr : c ≤ r := (ofSets_lt_right (mem_singleton r) _).le
+      rw [← Set.mem_Ioi, ← Cut.right_rightSurreal] at hl
+      rw [← Set.mem_Iic, ← Cut.left_rightSurreal] at hr
+      apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
+      apply (birthday_ofSets_le _).trans
+      rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
+      simp
     | iInf R r => sorry
     | iSup R r => sorry
   | iInf L l =>
