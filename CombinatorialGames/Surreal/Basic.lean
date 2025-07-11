@@ -480,5 +480,19 @@ theorem ofSets_lt_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
 
+instance : DenselyOrdered Surreal.{u} where
+  dense a b hab := by
+    induction a using Surreal.ind with | @mk a na =>
+    induction b using Surreal.ind with | @mk b nb =>
+    rw [mk_lt_mk] at hab
+    have nab : {{a} | {b}}ᴵ.Numeric := by
+      rw [numeric_def]
+      simp [hab, na, nb]
+    refine ⟨mk {{a} | {b}}ᴵ, ?_, ?_⟩
+    · rw [mk_lt_mk]
+      exact Numeric.leftMove_lt (by simp)
+    · rw [mk_lt_mk]
+      exact Numeric.lt_rightMove (by simp)
+
 end Surreal
 end
