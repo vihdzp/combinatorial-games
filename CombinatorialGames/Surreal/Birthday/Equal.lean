@@ -17,6 +17,19 @@ theorem RelHomClass.map_antisymmRel {α β F : Type*} {r : α → α → Prop} {
     AntisymmRel s (f x) (f y) := by
   exact ⟨RelHomClass.map_rel f h.left, RelHomClass.map_rel f h.right⟩
 
+theorem WithTop.coe_iSup_le_iSup_coe {α : Type*} {ι : Sort*} [Preorder α] [SupSet α]
+    (f : ι → α) : some (⨆ i, f i) ≤ ⨆ i, some (f i) := by
+  by_cases h : BddAbove (Set.range f)
+  · rw [coe_iSup f h]
+  · have h : ¬BddAbove (some ⁻¹' Set.range fun i ↦ some (f i)) := by
+      convert h
+      ext
+      simp
+    classical
+    change some (⨆ i, f i) ≤ ite _ _ _
+    rw [if_neg (by simp), if_neg h]
+    apply le_top
+
 universe u
 
 open Surreal Set Order
@@ -319,47 +332,75 @@ private lemma auxAuxAux (x : Reps.{u}) :
 
 private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) :
     birthday (simplestBtwn h) ≤ max (repsBirthdays l) (repsBirthdays r) := by
-  induction l generalizing r with
-  | left l =>
+  obtain ⟨ll, hlc, hlb⟩ := auxAuxAux l
+  obtain ⟨rr, hrc, hrb⟩ := auxAuxAux r
+  revert h
+  simp_rw [← hlc, ← hrc]
+  intro h
+  apply (max_le_max hlb hrb).trans'
+  cases ll with
+  | iInf L ll =>
+    have h' := h
+    rw [reptCut, iInf_lt_iff] at h'
+    obtain ⟨c, hc⟩ := h'
     apply le_max_of_le_left
-    rw [repsBirthdays, WithTop.coe_le_coe]
-    refine (simplestBtwn_simplest h ⟨?_, by simp [repsCut]⟩).trans (le_succ l.birthday)
-    obtain ⟨c, hcr, hcl⟩ := h
-    simp only [repsCut, Cut.right_leftSurreal, mem_Ici] at hcl
-    exact Cut.isLowerSet_left hcl hcr
-  | right l =>
-    induction r with
-    | left r =>
-      simp_rw [repsBirthdays, ← WithTop.coe_sup, WithTop.coe_le_coe]
+    rw [reptBirthdays]
+    apply le_iSup_of_le c
+    rw [WithTop.succ_coe, WithTop.coe_le_coe]
+    apply (le_succ (ll c).birthday).trans'
+    apply simplestBtwn_simplest h
+    constructor
+    · obtain ⟨i, hil, hir⟩ := hc
+      exact (reptCut rr).isLowerSet_left (by simpa using hir) hil
+    · simp only [reptCut, Cut.right_iInf, Cut.right_leftSurreal, mem_iUnion, mem_Ici]
+      use c
+  | iSup L ll =>
+    cases rr with
+    | iSup R rr =>
       have h' := h
-      simp_rw [repsCut] at h'
-      obtain ⟨u, hur, hlu⟩ := h'
-      simp at hlu hur
-      have h' := hlu.trans hur
-      let c := {{l} | {r}}ˢ
-      have hl : l < c := left_lt_ofSets (mem_singleton l) _
-      have hr : c < r := ofSets_lt_right (mem_singleton r) _
-      rw [← Set.mem_Ioi, ← Cut.right_rightSurreal] at hl
-      rw [← Set.mem_Iio, ← Cut.left_leftSurreal] at hr
-      apply (simplestBtwn_simplest h ⟨hr, hl⟩).trans
-      apply (birthday_ofSets_le _).trans
-      rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype]
-      simp
-    | right r =>
+      rw [reptCut, reptCut, lt_iSup_iff] at h'
+      obtain ⟨c, hc⟩ := h'
       apply le_max_of_le_right
-      rw [repsBirthdays, WithTop.coe_le_coe]
-      refine (simplestBtwn_simplest h ⟨by simp [repsCut], ?_⟩).trans (le_succ r.birthday)
-      obtain ⟨c, hcr, hcl⟩ := h
-      simp only [repsCut, Cut.left_rightSurreal, mem_Iic] at hcr
-      exact Cut.isUpperSet_right hcr hcl
-    | iInf R r ihr =>
-
-      sorry
-    | iSup R r ihr => sorry
-  | iInf L l ihl =>
-    sorry
-  | iSup L l ihl =>
-    sorry
+      rw [reptBirthdays]
+      apply le_iSup_of_le c
+      rw [WithTop.succ_coe, WithTop.coe_le_coe]
+      apply (le_succ (rr c).birthday).trans'
+      apply simplestBtwn_simplest h
+      constructor
+      · simp only [reptCut, Cut.left_iSup, Cut.left_rightSurreal, mem_iUnion, mem_Iic]
+        use c
+      · obtain ⟨i, hil, hir⟩ := hc
+        exact (reptCut (.iSup L ll)).isUpperSet_right (by simpa using hil) hir
+    | iInf R rr =>
+      have hlr (ul : L) (ur : R) : ll ul < rr ur := by
+        apply le_of_lt at h
+        simp_rw [reptCut, iSup_le_iff, le_iInf_iff] at h
+        simpa using (Cut.leftSurreal_lt_rightSurreal (ll ul)).trans_le (h ul ur)
+      let c : Surreal.{u} := {range ll | range rr}ˢ
+      generalize_proofs _ _ H at c
+      rw [reptBirthdays, reptBirthdays]
+      have uu := birthday_ofSets_le H
+      rw [← Ordinal.NatOrdinal.iSup_subtype, ← Ordinal.NatOrdinal.iSup_subtype] at uu
+      rw [iSup_range' (fun i => succ (birthday i)) ll,
+        iSup_range' (fun i => succ (birthday i)) rr] at uu
+      simp_rw [WithTop.succ_coe]
+      calc WithTop.some (simplestBtwn h).birthday
+        _ ≤ WithTop.some (birthday c) := by
+          rw [WithTop.coe_le_coe]
+          apply simplestBtwn_simplest h
+          simp [reptCut, c, left_lt_ofSets, ofSets_lt_right]
+        _ ≤ WithTop.some (max
+            (⨆ i, succ (ll i).birthday)
+            (⨆ i, succ (rr i).birthday)) :=
+          WithTop.coe_le_coe.2 uu
+        _ = max
+            (WithTop.some (⨆ i, succ (ll i).birthday))
+            (WithTop.some (⨆ i, succ (rr i).birthday)) :=
+          WithTop.coe_max ..
+        _ ≤ max
+            (⨆ i, WithTop.some (succ (ll i).birthday))
+            (⨆ i, WithTop.some (succ (rr i).birthday)) :=
+          max_le_max (WithTop.coe_iSup_le_iSup_coe _) (WithTop.coe_iSup_le_iSup_coe _)
 
 mutual
 
