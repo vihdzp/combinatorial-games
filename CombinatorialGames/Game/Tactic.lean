@@ -37,7 +37,7 @@ stuck in a goal that it can't solve.
 -/
 macro "game_cmp" : tactic =>
   `(tactic| {
-    try simp only [lt_iff_le_not_le, AntisymmRel, CompRel, IncompRel]
+    try simp only [lt_iff_le_not_ge, AntisymmRel, CompRel, IncompRel]
     repeat
       rw [IGame.le_iff_forall_lf]
       simp only [game_cmp]})

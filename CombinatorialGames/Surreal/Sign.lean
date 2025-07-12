@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Basic
+import Mathlib.Algebra.Order.Ring.Int
+import Mathlib.Order.PiLex
+import Mathlib.SetTheory.Ordinal.Arithmetic
 import Mathlib.Tactic.DeriveFintype
 
 /-!
@@ -164,16 +166,16 @@ instance : Append SignSeq where
       (s.length + t.length) fun a ↦ ?_
     dsimp
     split <;> rename_i h
-    · simp [h.not_le, (h.trans_le (Ordinal.le_add_right ..)).not_le]
+    · simp [h.not_ge, (h.trans_le (Ordinal.le_add_right ..)).not_ge]
     · rw [get_eq_zero_iff, ← add_le_add_iff_left s.length,
-        Ordinal.add_sub_cancel_of_le (le_of_not_lt h)]
+        Ordinal.add_sub_cancel_of_le (le_of_not_gt h)]
 
 theorem get_append_of_lt (s t : SignSeq) {o : Ordinal} (h : o < s.length) : (s ++ t)[o] = s[o] :=
   if_pos h
 
 theorem get_append_of_le (s t : SignSeq) {o : Ordinal} (h : s.length ≤ o) :
     (s ++ t)[o] = t[o - s.length] :=
-  if_neg h.not_lt
+  if_neg h.not_gt
 
 @[simp]
 theorem get_append_add (s t : SignSeq) (o : Ordinal) : (s ++ t)[s.length + o] = t[o] := by

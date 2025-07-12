@@ -95,6 +95,10 @@ protected instance zero : Numeric 0 := by
 protected instance one : Numeric 1 := by
   rw [numeric_def]; simp
 
+@[simp]
+protected instance half : Numeric ½ := by
+  rw [numeric_def]; simp
+
 protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
@@ -102,8 +106,8 @@ protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ 
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
   · have := Numeric.of_mem_leftMoves hz; have := Numeric.of_mem_leftMoves ha
     exact (leftMove_lf_of_le h' hz) (Numeric.le_of_not_le (leftMove_lf_of_le h ha))
-  · exact (leftMove_lt_rightMove hz ha).not_le (h'.trans h)
-  · exact (leftMove_lt_rightMove ha hz).not_le (h.trans h')
+  · exact (leftMove_lt_rightMove hz ha).not_ge (h'.trans h)
+  · exact (leftMove_lt_rightMove ha hz).not_ge (h.trans h')
   · have := Numeric.of_mem_rightMoves hz; have := Numeric.of_mem_rightMoves ha
     exact (lf_rightMove_of_le h' hz) (Numeric.le_of_not_le (lf_rightMove_of_le h ha))
 termination_by x
@@ -114,11 +118,11 @@ protected theorem le_total (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y
   exact Numeric.le_of_not_le
 
 protected theorem lt_of_not_le [Numeric x] [Numeric y] (h : ¬ x ≤ y) : y < x :=
-  (Numeric.le_of_not_le h).lt_of_not_le h
+  (Numeric.le_of_not_le h).lt_of_not_ge h
 
 @[simp]
 protected theorem not_le [Numeric x] [Numeric y] : ¬ x ≤ y ↔ y < x :=
-  ⟨Numeric.lt_of_not_le, not_le_of_lt⟩
+  ⟨Numeric.lt_of_not_le, not_le_of_gt⟩
 
 @[simp]
 protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
@@ -266,8 +270,8 @@ fits within `y`, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits y)
     (H : ∀ z, Numeric z → z.Fits y → x.birthday ≤ z.birthday) : x ≈ y := by
   apply hx.equiv_of_forall_not_fits
-  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_le <| H z (.of_mem_leftMoves hz) h
-  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_le <| H z (.of_mem_rightMoves hz) h
+  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_ge <| H z (.of_mem_leftMoves hz) h
+  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_ge <| H z (.of_mem_rightMoves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
@@ -326,20 +330,23 @@ instance : Neg Surreal where
 instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))
 
-instance : LinearOrderedAddCommGroup Surreal where
+instance : LinearOrder Surreal where
+  le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
+  toDecidableLE := Classical.decRel _
+
+instance : AddCommGroup Surreal where
   zero_add := by rintro ⟨x⟩; change mk (0 + x) = mk x; simp_rw [zero_add]
   add_zero := by rintro ⟨x⟩; change mk (x + 0) = mk x; simp_rw [add_zero]
   add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x + y) = mk (y + x); simp_rw [add_comm]
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (x + y + z) = mk (x + (y + z)); simp_rw [add_assoc]
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
-  le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
-  decidableLE := Classical.decRel _
   nsmul := nsmulRec
   zsmul := zsmulRec
 
 instance : AddGroupWithOne Surreal where
-  __ := Surreal.instLinearOrderedAddCommGroup
+
+instance : IsOrderedAddMonoid Surreal where
+  add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
 @[simp] theorem mk_one : mk 1 = 1 := rfl
@@ -446,8 +453,22 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
 
+theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) : x < ofSets s t H := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
+
+theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) : ofSets s t H < x := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
+
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
+
+instance : DenselyOrdered Surreal.{u} where
+  dense a b hab := ⟨{{a} | {b}}ˢ,
+    lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
 end Surreal
 end

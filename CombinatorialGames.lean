@@ -1,6 +1,7 @@
 import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Canonical
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
@@ -13,7 +14,6 @@ import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.Tactic
-import CombinatorialGames.Mathlib.Comparable
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
@@ -21,9 +21,9 @@ import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Division
+import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication
-import CombinatorialGames.Surreal.Numeric
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
-import CombinatorialGames.Test
+import CombinatorialGames.Test.GameCmp

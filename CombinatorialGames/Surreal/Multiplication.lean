@@ -367,12 +367,12 @@ lemma mul_right_le_of_equiv [Numeric x₁] [Numeric x₂]
   constructor
   · rw [forall_leftMoves_mul']
     constructor <;> intro a ha b hb
-    · exact (mulOption_lt_mul_of_equiv ih₁₂ he ha hb).not_le
-    · simpa using (mulOption_lt_mul_of_equiv (IH24_neg <| (IH24_neg ih₂₁).1).2 he' ha hb).not_le
+    · exact (mulOption_lt_mul_of_equiv ih₁₂ he ha hb).not_ge
+    · simpa using (mulOption_lt_mul_of_equiv (IH24_neg <| (IH24_neg ih₂₁).1).2 he' ha hb).not_ge
   · rw [forall_rightMoves_mul']
     constructor <;> intro a ha b hb
-    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₂₁).2 he.symm ha hb).not_le
-    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₁₂).1 he'.symm ha hb).not_le
+    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₂₁).2 he.symm ha hb).not_ge
+    · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₁₂).1 he'.symm ha hb).not_ge
 
 /-- `P2` follows from the induction hypothesis. -/
 lemma P2_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) [Numeric x₁] [Numeric x₂]
@@ -407,7 +407,7 @@ lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ �
 hypothesis. -/
 lemma P3_of_IH3 {y₁ y₂} (h : ∀ i ∈ x₂.leftMoves, IH3 x₁ i x₂ y₁ y₂)
     (hs : ∀ i ∈ (-x₁).leftMoves, IH3 (-x₂) i (-x₁) y₁ y₂) (hl : x₁ < x₂) : P3 x₁ x₂ y₁ y₂ := by
-  obtain (⟨i, hi, hi'⟩ | ⟨i, hi, hi'⟩) := lf_iff_exists_le.1 hl.not_le
+  obtain (⟨i, hi, hi'⟩ | ⟨i, hi, hi'⟩) := lf_iff_exists_le.1 hl.not_ge
   · exact P3_of_le_left i (h i hi) hi'
   · refine P3_neg.1 <| P3_of_le_left _ (hs (-i) ?_) ?_ <;> simpa
 
@@ -500,9 +500,7 @@ end IGame.Numeric
 
 namespace Surreal
 
-noncomputable instance : LinearOrderedCommRing Surreal where
-  __ := Surreal.instLinearOrderedAddCommGroup
-  __ := Surreal.instZeroLEOneClass
+noncomputable instance : CommRing Surreal where
   mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h _ _ ↦ Numeric.mul_congr h
   zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
   mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
@@ -512,8 +510,9 @@ noncomputable instance : LinearOrderedCommRing Surreal where
   right_distrib := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (add_mul_equiv ..)
   mul_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x * y) = mk (y * x); simp_rw [mul_comm]
   mul_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact mk_eq (mul_assoc_equiv ..)
-  mul_pos := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.mul_pos
-  le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
+
+instance : IsStrictOrderedRing Surreal :=
+  .of_mul_pos (by rintro ⟨x⟩ ⟨y⟩; exact Numeric.mul_pos)
 
 @[simp]
 theorem mk_mul (x y : IGame) [Numeric x] [Numeric y] :
@@ -526,11 +525,11 @@ namespace IGame.Numeric
 
 protected theorem mul_neg_of_pos_of_neg {x y : IGame} [Numeric x] [Numeric y]
     (hx : 0 < x) (hy : y < 0) : x * y < 0 :=
-  @mul_neg_of_pos_of_neg Surreal (.mk x) (.mk y) _ _ _ hx hy
+  @mul_neg_of_pos_of_neg Surreal _ (.mk x) (.mk y) _ _ hx hy
 
 protected theorem mul_neg_of_neg_of_pos {x y : IGame} [Numeric x] [Numeric y]
     (hx : x < 0) (hy : 0 < y) : x * y < 0 :=
-  @mul_neg_of_neg_of_pos Surreal (.mk x) (.mk y) _ _ _ hx hy
+  @mul_neg_of_neg_of_pos Surreal _ (.mk x) (.mk y) _ _ hx hy
 
 protected theorem mul_pos_of_neg_of_neg {x y : IGame} [Numeric x] [Numeric y]
     (hx : x < 0) (hy : y < 0) : 0 < x * y :=
@@ -538,15 +537,15 @@ protected theorem mul_pos_of_neg_of_neg {x y : IGame} [Numeric x] [Numeric y]
 
 protected theorem mul_nonneg {x y : IGame} [Numeric x] [Numeric y]
     (hx : 0 ≤ x) (hy : 0 ≤ y) : 0 ≤ x * y :=
-  @mul_nonneg Surreal (.mk x) (.mk y) _ _ _ hx hy
+  @mul_nonneg Surreal _ (.mk x) (.mk y) _ _ hx hy
 
 protected theorem mul_nonpos_of_nonneg_of_nonpos {x y : IGame} [Numeric x] [Numeric y]
     (hx : 0 ≤ x) (hy : y ≤ 0) : x * y ≤ 0 :=
-  @mul_nonpos_of_nonneg_of_nonpos Surreal (.mk x) (.mk y) _ _ _ hx hy
+  @mul_nonpos_of_nonneg_of_nonpos Surreal _ (.mk x) (.mk y) _ _ hx hy
 
 protected theorem mul_nonpos_of_nonpos_of_nonneg {x y : IGame} [Numeric x] [Numeric y]
     (hx : x ≤ 0) (hy : 0 ≤ y) : x * y ≤ 0 :=
-  @mul_nonpos_of_nonpos_of_nonneg Surreal (.mk x) (.mk y) _ _ _ hx hy
+  @mul_nonpos_of_nonpos_of_nonneg Surreal _ (.mk x) (.mk y) _ _ hx hy
 
 protected theorem mul_nonneg_of_nonpos_of_nonpos {x y : IGame} [Numeric x] [Numeric y]
     (hx : x ≤ 0) (hy : y ≤ 0) : 0 ≤ x * y :=
