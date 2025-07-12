@@ -55,7 +55,7 @@ theorem le_miny_of_neg_of_forall_le_neg {x a : IGame} (hx : x < 0)
 theorem lt_miny_toIGame_birthday {x : IGame.{u}} (hx : x < 0) : x < ⧿x.birthday.toIGame :=by
   simpa using IGame.lt_neg.2 (tiny_toIGame_birthday_lt (IGame.zero_lt_neg.2 hx))
 
-instance : DenselyOrdered IGame.{u} where
+instance : DenselyOrdered IGame where
   dense a b hab := by
     refine ⟨a + ⧾(b - a).birthday.toIGame, ?_, ?_⟩
     · simp [tiny_pos]
