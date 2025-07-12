@@ -17,37 +17,27 @@ universe u
 noncomputable section
 namespace IGame
 
-theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) :
-    ⧾x.birthday.toIGame < x := by
+theorem tiny_lf_of_nonneg_of_forall_neg_le {x a : IGame} (hx : 0 ⧏ x)
+    (ha : ∀ y ∈ x.rightMoves, -a ≤ y) : ⧾a ⧏ x := by
+  refine lf_of_rightMove_le ?_ (rightMoves_tiny _ ▸ Set.mem_singleton _)
+  rw [le_iff_forall_lf]
+  simpa using ⟨hx, fun z hz ↦ lf_of_rightMove_le (ha z hz) (by simp)⟩
+
+theorem tiny_le_of_pos_of_forall_neg_le {x a : IGame} (hx : 0 < x)
+    (ha : ∀ y ∈ x.rightMoves, ∀ z ∈ y.rightMoves, -a ≤ z) : ⧾a ≤ x := by
+  rw [le_iff_forall_lf]
+  constructor
+  · simpa using hx.not_ge
+  · exact fun y hy ↦ tiny_lf_of_nonneg_of_forall_neg_le (lf_rightMove_of_le hx.le hy) (ha y hy)
+
+theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.toIGame < x := by
   apply lt_of_le_not_ge
-  · rw [le_iff_forall_lf]
-    constructor
-    · simp [hx.not_ge]
-    · intro y hy
-      rw [lf_iff_exists_le]
-      right
-      simp only [rightMoves_tiny, Set.mem_singleton_iff, exists_eq_left]
-      rw [le_iff_forall_lf]
-      simp only [leftMoves_ofSets, Set.mem_singleton_iff, forall_eq]
-      have h := hx.le
-      rw [le_iff_forall_lf] at h
-      refine ⟨h.right y hy, fun z hz => ?_⟩
-      rw [lf_iff_exists_le]
-      right
-      simp only [rightMoves_ofSets, Set.mem_singleton_iff, exists_eq_left]
-      apply (neg_toIGame_birthday_le z).trans'
-      simpa using (birthday_lt_of_mem_rightMoves hz).le.trans (birthday_lt_of_mem_rightMoves hy).le
-  · rw [lf_iff_exists_le]
-    right
-    simp only [rightMoves_tiny, Set.mem_singleton_iff, exists_eq_left]
-    rw [le_iff_forall_lf]
-    simp only [leftMoves_ofSets, Set.mem_singleton_iff, forall_eq]
-    refine ⟨hx.not_ge, fun z hz => ?_⟩
-    rw [lf_iff_exists_le]
-    right
-    simp only [rightMoves_ofSets, Set.mem_singleton_iff, exists_eq_left]
-    apply (neg_toIGame_birthday_le z).trans'
-    simpa using (birthday_lt_of_mem_rightMoves hz).le
+  · refine tiny_le_of_pos_of_forall_neg_le hx
+      fun y hy z hz ↦ (neg_toIGame_birthday_le z).trans' ?_
+    simpa using ((birthday_lt_of_mem_rightMoves hz).trans (birthday_lt_of_mem_rightMoves hy)).le
+  · refine tiny_lf_of_nonneg_of_forall_neg_le hx.not_ge
+      fun y hy ↦ (neg_toIGame_birthday_le y).trans' ?_
+    simpa using (birthday_lt_of_mem_rightMoves hy).le
 
 instance : DenselyOrdered IGame.{u} where
   dense a b hab := by
