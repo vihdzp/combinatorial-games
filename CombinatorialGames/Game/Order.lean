@@ -62,7 +62,7 @@ instance : DenselyOrdered IGame.{u} where
     · rw [add_comm, ← IGame.lt_sub_iff_add_lt]
       exact tiny_toIGame_birthday_lt (IGame.sub_pos.2 hab)
 
-instance : DenselyOrdered Game.{u} where
+instance : DenselyOrdered Game where
   dense a b hab := by
     induction a using Game.ind with | mk a =>
     induction b using Game.ind with | mk b =>
