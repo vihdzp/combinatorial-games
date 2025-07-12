@@ -136,6 +136,11 @@ private def reptT (x : Rept.{u}) : Type u :=
   | .iInf ι _
   | .iSup ι _ => ι
 
+private def reptA (x : Rept.{u}) : reptT x → Surreal.{u} :=
+  match x with
+  | .iInf _ f
+  | .iSup _ f => f
+
 private def reptCut (x : Rept.{u}) : Cut.{u} :=
   match x with
   | .iInf ι f => ⨅ i : ι, .leftSurreal (f i)
@@ -175,14 +180,142 @@ private lemma auxAuxAux (x : Reps.{u}) :
           exact iInf_le (fun i => repsCut (f i)) k
       · rw [repsBirthdays]
         exact le_iSup_of_le k (hb k)
-    · simp only [mem_range, Function.comp_apply, not_exists] at hmin
-      simp_rw [Minimal] at hmin
-      simp only [forall_exists_index, forall_apply_eq_imp_iff,
-        not_and, not_forall, not_le, exists_prop, and_iff_right_of_imp le_of_lt] at hmin
-      choose dec decw wl wr using hmin
-      sorry
+    · have hh (i : ι) : ∃ j : ι, ∃ c : reptT (g j),
+          reptA (g j) c ∈ (reptCut (g i)).left ∧ ∃ w, reptA (g j) c ∈ (reptCut (g w)).right := by
+        simp only [mem_range, Function.comp_apply, not_exists] at hmin
+        simp_rw [Minimal] at hmin
+        simp only [forall_exists_index, forall_apply_eq_imp_iff,
+          not_and, not_forall, not_le, exists_prop, and_iff_right_of_imp le_of_lt] at hmin
+        obtain ⟨k, hk⟩ := hmin i
+        obtain ⟨l, hl⟩ := hmin k
+        refine ⟨k, ?_⟩
+        generalize huu : g k = uu at hk hl ⊢
+        cases uu with
+        | iInf κ n =>
+          rw [reptCut, iInf_lt_iff] at hk
+          peel hk with o ho
+          obtain ⟨p, hpl, hpr⟩ := ho
+          refine ⟨(reptCut (g i)).isLowerSet_left hpr hpl, k, ?_⟩
+          rw [huu]
+          simp only [reptCut, Cut.right_iInf, Cut.right_leftSurreal, reptA, mem_iUnion, mem_Ici]
+          use o
+        | iSup κ n =>
+          rw [reptCut, lt_iSup_iff] at hl
+          peel hl with o ho
+          obtain ⟨p, hpl, hpr⟩ := ho
+          obtain ⟨q, hql, hqr⟩ := hk
+          rw [reptA]
+          simp only [reptCut, Cut.right_iSup, Cut.right_rightSurreal, mem_iInter, mem_Ioi] at hqr
+          refine ⟨(reptCut (g i)).isLowerSet_left (hqr o).le hql, l, ?_⟩
+          exact (reptCut (g l)).isUpperSet_right (by simpa using hpl) hpr
+      choose u m c w hw using hh
+      refine ⟨.iInf ι fun i => reptA (g (u i)) (m i), ?_, ?_⟩
+      · rw [repsCut, reptCut]
+        simp_rw [← hc]
+        apply le_antisymm
+        · rw [le_iInf_iff]
+          intro i
+          apply iInf_le_of_le i
+          rw [Cut.le_iff_left]
+          intro j hj
+          simp only [Cut.left_leftSurreal, mem_Iio] at hj
+          exact (reptCut (g i)).isLowerSet_left hj.le (c i)
+        · rw [le_iInf_iff]
+          intro i
+          apply iInf_le_of_le (w i)
+          rw [Cut.le_iff_right]
+          intro j hj
+          simp only [Cut.right_leftSurreal, mem_Ici] at hj
+          exact (reptCut (g (w i))).isUpperSet_right hj (hw i)
+      · simp only [reptBirthdays, WithTop.succ_coe, repsBirthdays, iSup_le_iff]
+        intro i
+        apply le_iSup_of_le (u i)
+        apply (hb (u i)).trans'
+        generalize m i = j
+        revert j
+        generalize g (u i) = cc
+        intro j
+        cases cc with | _ =>
+        rw [reptBirthdays]
+        apply le_iSup_of_le j
+        simp [reptA]
   | iSup ι f ih =>
-    sorry
+    choose g hc hb using ih
+    by_cases hmin : ∃ k, Maximal (· ∈ range (reptCut ∘ g)) k
+    · obtain ⟨_, ⟨k, rfl⟩, hk⟩ := hmin
+      refine ⟨g k, ?_, ?_⟩
+      · simp only [mem_range, Function.comp_apply, forall_exists_index,
+          forall_apply_eq_imp_iff] at hk
+        rw [repsCut]
+        apply le_antisymm
+        · rw [hc]
+          exact le_iSup (fun i => repsCut (f i)) k
+        · apply iSup_le
+          peel hk with i hi
+          rw [← hc]
+          by_contra! hik
+          exact hik.not_ge (hi hik.le)
+      · rw [repsBirthdays]
+        exact le_iSup_of_le k (hb k)
+    · have hh (i : ι) : ∃ j : ι, ∃ c : reptT (g j),
+          reptA (g j) c ∈ (reptCut (g i)).right ∧ ∃ w, reptA (g j) c ∈ (reptCut (g w)).left := by
+        simp only [mem_range, Function.comp_apply, not_exists] at hmin
+        simp_rw [Maximal] at hmin
+        simp only [forall_exists_index, forall_apply_eq_imp_iff,
+          not_and, not_forall, not_le, exists_prop, and_iff_right_of_imp le_of_lt] at hmin
+        obtain ⟨k, hk⟩ := hmin i
+        obtain ⟨l, hl⟩ := hmin k
+        refine ⟨k, ?_⟩
+        generalize huu : g k = uu at hk hl ⊢
+        cases uu with
+        | iInf κ n =>
+          rw [reptCut, iInf_lt_iff] at hl
+          peel hl with o ho
+          obtain ⟨p, hpl, hpr⟩ := ho
+          obtain ⟨q, hql, hqr⟩ := hk
+          rw [reptA]
+          simp only [reptCut, Cut.left_iInf, Cut.left_leftSurreal, mem_iInter, mem_Iio] at hql
+          refine ⟨(reptCut (g i)).isUpperSet_right (hql o).le hqr, l, ?_⟩
+          exact (reptCut (g l)).isLowerSet_left (by simpa using hpr) hpl
+        | iSup κ n =>
+          rw [reptCut, lt_iSup_iff] at hk
+          peel hk with o ho
+          obtain ⟨p, hpl, hpr⟩ := ho
+          refine ⟨(reptCut (g i)).isUpperSet_right hpl hpr, k, ?_⟩
+          rw [huu]
+          simp only [reptCut, Cut.left_iSup, Cut.left_rightSurreal, reptA, mem_iUnion, mem_Iic]
+          use o
+      choose u m c w hw using hh
+      refine ⟨.iSup ι fun i => reptA (g (u i)) (m i), ?_, ?_⟩
+      · rw [repsCut, reptCut]
+        simp_rw [← hc]
+        apply le_antisymm
+        · rw [iSup_le_iff]
+          intro i
+          apply le_iSup_of_le (w i)
+          rw [Cut.le_iff_left]
+          intro j hj
+          simp only [Cut.left_rightSurreal, mem_Iic] at hj
+          exact (reptCut (g (w i))).isLowerSet_left hj (hw i)
+        · rw [iSup_le_iff]
+          intro i
+          apply le_iSup_of_le i
+          rw [Cut.le_iff_right]
+          intro j hj
+          simp only [Cut.right_rightSurreal, mem_Ioi] at hj
+          exact (reptCut (g i)).isUpperSet_right hj.le (c i)
+      · simp only [reptBirthdays, WithTop.succ_coe, repsBirthdays, iSup_le_iff]
+        intro i
+        apply le_iSup_of_le (u i)
+        apply (hb (u i)).trans'
+        generalize m i = j
+        revert j
+        generalize g (u i) = cc
+        intro j
+        cases cc with | _ =>
+        rw [reptBirthdays]
+        apply le_iSup_of_le j
+        simp [reptA]
 
 private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) :
     birthday (simplestBtwn h) ≤ max (repsBirthdays l) (repsBirthdays r) := by
