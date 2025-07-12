@@ -5,6 +5,7 @@ import CombinatorialGames.Game.Canonical
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
@@ -19,6 +20,9 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Birthday.Basic
+import CombinatorialGames.Surreal.Birthday.Equal
+import CombinatorialGames.Surreal.Dedekind
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication

@@ -303,8 +303,8 @@ theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Surreal → Prop} (H : ∀ y [Numeric y], P (mk y)) (x : Surreal) : P x :=
-  Quotient.ind (fun h ↦ @H _ h.2) x
+theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
+    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Surreal) : IGame := (Quotient.out x).1
@@ -453,8 +453,46 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
 
+theorem left_lt_ofSets {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {l : Surreal.{u}} (hl : l ∈ s) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :
+    l < ofSets s t H := by
+  induction l using Surreal.ind with | @mk l nl
+  rw [ofSets]
+  generalize_proofs
+  rw [mk_lt_mk]
+  apply (mk_out_equiv l).ge.trans_lt
+  apply Numeric.leftMove_lt
+  rw [leftMoves_ofSets]
+  exact Set.mem_image_of_mem out hl
+
+theorem ofSets_lt_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {r : Surreal.{u}} (hl : r ∈ t) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :
+    ofSets s t H < r := by
+  induction r using Surreal.ind with | @mk r nr
+  rw [ofSets]
+  generalize_proofs
+  rw [mk_lt_mk]
+  apply (mk_out_equiv r).le.trans_lt'
+  apply Numeric.lt_rightMove
+  rw [rightMoves_ofSets]
+  exact Set.mem_image_of_mem out hl
+
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
+
+instance : DenselyOrdered Surreal.{u} where
+  dense a b hab := by
+    induction a using Surreal.ind with | @mk a na =>
+    induction b using Surreal.ind with | @mk b nb =>
+    rw [mk_lt_mk] at hab
+    have nab : {{a} | {b}}ᴵ.Numeric := by
+      rw [numeric_def]
+      simp [hab, na, nb]
+    refine ⟨mk {{a} | {b}}ᴵ, ?_, ?_⟩
+    · rw [mk_lt_mk]
+      exact Numeric.leftMove_lt (by simp)
+    · rw [mk_lt_mk]
+      exact Numeric.lt_rightMove (by simp)
 
 end Surreal
 end

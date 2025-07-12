@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import Mathlib.SetTheory.Ordinal.Family
 import Mathlib.Tactic.Abel
+import Mathlib.Tactic.Peel
 
 /-!
 # Natural operations on ordinals
@@ -743,5 +744,21 @@ theorem mul_le_nmul (a b : Ordinal.{u}) : a * b ≤ a ⨳ b := by
     · rw [(isNormal_mul_right ha).apply_of_isLimit hc, Ordinal.iSup_le_iff]
       rintro ⟨i, hi⟩
       exact (H i hi).trans (nmul_le_nmul_left hi.le a)
+
+theorem NatOrdinal.iSup_subtype {ι : Type*} (s : Set ι) (f : ι → Ordinal) :
+    ⨆ i : s, f i = ⨆ i ∈ s, f i := by
+  obtain hι | hι := isEmpty_or_nonempty ι
+  · simp
+  obtain rfl | hs := eq_empty_or_nonempty s
+  · simp
+  by_cases h : BddAbove (range fun i : s ↦ f i)
+  · exact ciSup_subtype'' hs h (by simp)
+  · suffices hh : ¬BddAbove (range fun i : ι ↦ ⨆ (_ : i ∈ s), f i) by
+      simp [ciSup_of_not_bddAbove, h, hh]
+    rw [not_bddAbove_iff] at h ⊢
+    peel h with x y hy
+    apply hy.imp_left
+    rintro ⟨⟨z, hz⟩, rfl⟩
+    exact ⟨z, by simp [hz]⟩
 
 end Ordinal
