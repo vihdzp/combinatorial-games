@@ -7,7 +7,7 @@ import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Special
 
 /-!
-# Games are Densely Ordered
+# Games are densely ordered
 
 We provide instances of `DenselyOrdered` for `IGame` and `Game`.
 -/
