@@ -453,22 +453,22 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
 
+theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) : x < ofSets s t H := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
+
+theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) : ofSets s t H < x := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
+
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
 
-instance : DenselyOrdered Surreal.{u} where
-  dense a b hab := by
-    induction a using Surreal.ind with | @mk a na =>
-    induction b using Surreal.ind with | @mk b nb =>
-    rw [mk_lt_mk] at hab
-    have nab : {{a} | {b}}ᴵ.Numeric := by
-      rw [numeric_def]
-      simp [hab, na, nb]
-    refine ⟨mk {{a} | {b}}ᴵ, ?_, ?_⟩
-    · rw [mk_lt_mk]
-      exact Numeric.leftMove_lt (by simp)
-    · rw [mk_lt_mk]
-      exact Numeric.lt_rightMove (by simp)
+instance : DenselyOrdered Surreal where
+  dense a b hab := ⟨{{a} | {b}}ˢ,
+    lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
 end Surreal
 end

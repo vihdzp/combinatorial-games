@@ -522,54 +522,63 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.AntisymmRel]
 def delabEquiv : Delab := do
-  let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
-  have u := f.constLevels![0]!
-  have α : Q(Type u) := α
-  have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
-  _ ← assertDefEqQ q(($le).le) q($r)
-  let x ← withNaryArg 2 delab
-  let y ← withNaryArg 3 delab
-  let stx : Term ← do
-    let info ← Lean.MonadRef.mkInfoFromRefPos
-    pure {
-      raw := Lean.Syntax.node3 info ``IGame.«term_≈_» x.raw (Lean.Syntax.atom info "≈") y.raw
-    }
-  annotateGoToSyntaxDef stx
+  try
+    let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
+    have u := f.constLevels![0]!
+    have α : Q(Type u) := α
+    have r : Q($α → $α → Prop) := r
+    let le ← synthInstanceQ q(LE $α)
+    _ ← assertDefEqQ q(($le).le) q($r)
+    let x ← withNaryArg 2 delab
+    let y ← withNaryArg 3 delab
+    let stx : Term ← do
+      let info ← Lean.MonadRef.mkInfoFromRefPos
+      pure {
+        raw := Lean.Syntax.node3 info ``IGame.«term_≈_» x.raw (Lean.Syntax.atom info "≈") y.raw
+      }
+    annotateGoToSyntaxDef stx
+  catch _ => failure -- fail over to the default delaborator
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.IncompRel]
 def delabFuzzy : Delab := do
-  let_expr f@IncompRel α r _ _ := ← getExpr | failure
-  have u := f.constLevels![0]!
-  have α : Q(Type u) := α
-  have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
-  _ ← assertDefEqQ q(($le).le) q($r)
-  let x ← withNaryArg 2 delab
-  let y ← withNaryArg 3 delab
-  let stx : Term ← do
-    let info ← Lean.MonadRef.mkInfoFromRefPos
-    pure {
-      raw := Lean.Syntax.node3 info ``IGame.«term_‖_» x.raw (Lean.Syntax.atom info "‖") y.raw
-    }
-  annotateGoToSyntaxDef stx
+  try
+    let_expr f@IncompRel α r _ _ := ← getExpr | failure
+    have u := f.constLevels![0]!
+    have α : Q(Type u) := α
+    have r : Q($α → $α → Prop) := r
+    let le ← synthInstanceQ q(LE $α)
+    _ ← assertDefEqQ q(($le).le) q($r)
+    let x ← withNaryArg 2 delab
+    let y ← withNaryArg 3 delab
+    let stx : Term ← do
+      let info ← Lean.MonadRef.mkInfoFromRefPos
+      pure {
+        raw := Lean.Syntax.node3 info ``IGame.«term_‖_» x.raw (Lean.Syntax.atom info "‖") y.raw
+      }
+    annotateGoToSyntaxDef stx
+  catch _ => failure -- fail over to the default delaborator
 
--- TODO: this seems like the kind of goal that could be simplified through `aesop`.
+theorem equiv_of_forall_lf {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ¬y ≤ a)
+    (hr₁ : ∀ a ∈ x.rightMoves, ¬a ≤ y)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ¬x ≤ b)
+    (hr₂ : ∀ b ∈ y.rightMoves, ¬b ≤ x) : x ≈ y := by
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
+
+theorem equiv_of_exists_le {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≤ b)
+    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, b ≤ a)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  b ≤ a)
+    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≤ b) : x ≈ y := by
+  apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
+
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
     (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
     (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
-  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i hi
-  · obtain ⟨j, hj, hj'⟩ := hl₁ i hi
-    exact Or.inl ⟨j, hj, hj'.le⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₂ i hi
-    exact Or.inr ⟨j, hj, hj'.le⟩
-  · obtain ⟨j, hj, hj'⟩ := hl₂ i hi
-    exact Or.inl ⟨j, hj, hj'.ge⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
-    exact Or.inr ⟨j, hj, hj'.ge⟩
+  apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
 theorem zero_lt_one : (0 : IGame) < 1 := by
