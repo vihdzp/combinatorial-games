@@ -9,7 +9,7 @@ import CombinatorialGames.Surreal.Dedekind
 /-!
 # Surreal Birthday equals Game Birthday
 
-TODO: write module docstring
+We show that the birthday of a surreal number equals the birthday of the corresponding game.
 -/
 
 theorem RelHomClass.map_antisymmRel {α β F : Type*} {r : α → α → Prop} {s : β → β → Prop}
