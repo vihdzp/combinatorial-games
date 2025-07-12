@@ -482,7 +482,7 @@ termination_by (x, 1)
 
 end
 
-theorem Surreal.birthday_toGame_eq (x : Surreal) :
+theorem Surreal.birthday_toGame (x : Surreal) :
     x.toGame.birthday = x.birthday := by
   apply x.birthday_toGame_le.antisymm
   obtain ⟨i, hi, hbb⟩ := x.toGame.birthday_eq_iGameBirthday
