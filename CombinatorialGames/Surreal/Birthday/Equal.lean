@@ -127,18 +127,73 @@ private theorem toGame_simplestBtwn_of_lt {x : IGame} (h : Cut.iGameLeft x < Cut
     rw [hy]
     exact (simplestBtwn_btwn h).right
 
+private inductive Rept : Type (u + 1) where
+  | iInf (ι : Type u) (f : ι → Surreal.{u}) : Rept
+  | iSup (ι : Type u) (f : ι → Surreal.{u}) : Rept
+
+private def reptT (x : Rept.{u}) : Type u :=
+  match x with
+  | .iInf ι _
+  | .iSup ι _ => ι
+
+private def reptCut (x : Rept.{u}) : Cut.{u} :=
+  match x with
+  | .iInf ι f => ⨅ i : ι, .leftSurreal (f i)
+  | .iSup ι f => ⨆ i : ι, .rightSurreal (f i)
+
+private noncomputable def reptBirthdays (x : Rept.{u}) : WithTop NatOrdinal.{u} :=
+  match x with
+  | .iInf ι f => ⨆ i : ι, succ (f i).birthday
+  | .iSup ι f => ⨆ i : ι, succ (f i).birthday
+
+private lemma auxAuxAux (x : Reps.{u}) :
+    ∃ (y : Rept.{u}), reptCut y = repsCut x ∧ reptBirthdays y ≤ repsBirthdays x := by
+  induction x with
+  | left l =>
+    refine ⟨.iInf PUnit fun _ => l, ?_, ?_⟩
+    · simp [repsCut, reptCut]
+    · simp [repsBirthdays, reptBirthdays]
+  | right r =>
+    refine ⟨.iSup PUnit fun _ => r, ?_, ?_⟩
+    · simp [repsCut, reptCut]
+    · simp [repsBirthdays, reptBirthdays]
+  | iInf ι f ih =>
+    choose g hc hb using ih
+    by_cases hmin : ∃ k, Minimal (· ∈ range (reptCut ∘ g)) k
+    · obtain ⟨_, ⟨k, rfl⟩, hk⟩ := hmin
+      refine ⟨g k, ?_, ?_⟩
+      · simp only [mem_range, Function.comp_apply, forall_exists_index,
+          forall_apply_eq_imp_iff] at hk
+        rw [repsCut]
+        apply le_antisymm
+        · apply le_iInf
+          peel hk with i hi
+          rw [← hc]
+          by_contra! hik
+          exact hik.not_ge (hi hik.le)
+        · rw [hc]
+          exact iInf_le (fun i => repsCut (f i)) k
+      · rw [repsBirthdays]
+        exact le_iSup_of_le k (hb k)
+    · simp only [mem_range, Function.comp_apply, not_exists] at hmin
+      simp_rw [Minimal] at hmin
+      simp only [forall_exists_index, forall_apply_eq_imp_iff,
+        not_and, not_forall, not_le, exists_prop, and_iff_right_of_imp le_of_lt] at hmin
+      choose dec decw wl wr using hmin
+      sorry
+  | iSup ι f ih =>
+    sorry
+
 private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) :
     birthday (simplestBtwn h) ≤ max (repsBirthdays l) (repsBirthdays r) := by
   induction l generalizing r with
   | left l =>
     apply le_max_of_le_left
     rw [repsBirthdays, WithTop.coe_le_coe]
-    refine (simplestBtwn_simplest h ?_).trans (le_succ l.birthday)
-    constructor
-    · obtain ⟨c, hcr, hcl⟩ := h
-      simp only [repsCut, Cut.right_leftSurreal, mem_Ici] at hcl
-      exact Cut.isLowerSet_left hcl hcr
-    · simp [repsCut]
+    refine (simplestBtwn_simplest h ⟨?_, by simp [repsCut]⟩).trans (le_succ l.birthday)
+    obtain ⟨c, hcr, hcl⟩ := h
+    simp only [repsCut, Cut.right_leftSurreal, mem_Ici] at hcl
+    exact Cut.isLowerSet_left hcl hcr
   | right l =>
     induction r with
     | left r =>
@@ -160,13 +215,13 @@ private theorem simplestBtwnIndAux {l r : Reps.{u}} (h : repsCut l < repsCut r) 
     | right r =>
       apply le_max_of_le_right
       rw [repsBirthdays, WithTop.coe_le_coe]
-      refine (simplestBtwn_simplest h ?_).trans (le_succ r.birthday)
-      constructor
-      · simp [repsCut]
-      · obtain ⟨c, hcr, hcl⟩ := h
-        simp only [repsCut, Cut.left_rightSurreal, mem_Iic] at hcr
-        exact Cut.isUpperSet_right hcr hcl
-    | iInf R r ihr => sorry
+      refine (simplestBtwn_simplest h ⟨by simp [repsCut], ?_⟩).trans (le_succ r.birthday)
+      obtain ⟨c, hcr, hcl⟩ := h
+      simp only [repsCut, Cut.left_rightSurreal, mem_Iic] at hcr
+      exact Cut.isUpperSet_right hcr hcl
+    | iInf R r ihr =>
+
+      sorry
     | iSup R r ihr => sorry
   | iInf L l ihl =>
     sorry
