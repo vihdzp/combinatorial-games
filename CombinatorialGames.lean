@@ -19,6 +19,8 @@ import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
+import CombinatorialGames.SignExpansion.Basic
+import CombinatorialGames.SignExpansion.Surreal
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
