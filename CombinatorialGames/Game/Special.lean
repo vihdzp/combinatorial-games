@@ -144,8 +144,8 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
 instance (x : IGame) [Short x] : Short (⧿x) := by
   rw [← neg_tiny]; infer_instance
 
-theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
-theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
+@[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
+@[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
 
 /-! ### Switches -/
 
