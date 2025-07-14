@@ -105,19 +105,12 @@ theorem monotone_signApprox {o : NatOrdinal.{u}} : Monotone (signApprox o) := by
     exact ⟨hz.1, hz.2.1, lt_of_le_of_lt hxy hz.2.2⟩
 
 def ofSurreal (x : Surreal.{u}) : SignExpansion where
-  sign i :=
-    if hi : i < x.birthday then
-      haveI h : compare (x.signApprox i) x ≠ .eq := by simp [compare_eq_iff_eq, hi]
-      match compare (x.signApprox i) x, h with
-      | .lt, _ => 1
-      | .gt, _ => -1
-    else 0
+  sign i := .sign (x - x.signApprox i)
   isUpperSet_sign_preimage_singleton_zero := by
     intro a b hab ha
-    simp only [ne_eq, Set.mem_preimage, Set.mem_singleton_iff, dite_eq_right_iff] at ha ⊢
-    intro h
-    specialize ha (hab.trans_lt h)
-    split at ha <;> cases ha
+    rw [Set.mem_preimage, Set.mem_singleton_iff,
+      sign_eq_zero_iff, sub_eq_zero, eq_comm, signApprox_eq_iff] at ha ⊢
+    exact ha.trans hab
 
 @[simp]
 theorem size_ofSurreal (x : Surreal.{u}) :
@@ -127,17 +120,10 @@ theorem size_ofSurreal (x : Surreal.{u}) :
   cases c with
   | top => simp
   | coe c =>
-    rw [← apply_eq_zero, WithTop.coe_le_coe, ofSurreal, coe_mk]
-    split_ifs with hc
-    · split <;> simp [hc]
-    · simpa using hc
+    rw [← apply_eq_zero, WithTop.coe_le_coe, ofSurreal, coe_mk,
+      sign_eq_zero_iff, sub_eq_zero, eq_comm, signApprox_eq_iff]
 
 theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    ofSurreal x o = .sign (x - x.signApprox o) := by
-  rw [ofSurreal, coe_mk]
-  split_ifs with ho
-  · split <;>
-      simp_all [compare_lt_iff_lt, compare_gt_iff_gt]
-  · simp [signApprox_of_birthday_le (not_lt.1 ho)]
+    ofSurreal x o = .sign (x - x.signApprox o) := rfl
 
 end Surreal
