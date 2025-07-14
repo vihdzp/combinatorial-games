@@ -91,7 +91,33 @@ theorem restrict_apply_of_le {x : SignExpansion.{u}} {o₁ o₂ : NatOrdinal.{u}
 instance : LinearOrder SignExpansion.{u} :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
-theorem le_iff_toLex_le {a b : SignExpansion.{u}} : a ≤ b ↔ toLex ⇑a ≤ toLex ⇑b := Iff.rfl
-theorem lt_iff_toLex_lt {a b : SignExpansion.{u}} : a < b ↔ toLex ⇑a < toLex ⇑b := Iff.rfl
+theorem le_iff_toLex {a b : SignExpansion.{u}} : a ≤ b ↔ toLex ⇑a ≤ toLex ⇑b := Iff.rfl
+theorem lt_iff_toLex {a b : SignExpansion.{u}} : a < b ↔ toLex ⇑a < toLex ⇑b := Iff.rfl
+
+instance : Bot SignExpansion.{u} where
+  bot := {
+    sign _ := -1
+    isUpperSet_sign_preimage_singleton_zero := by simp [isUpperSet_empty]
+  }
+
+@[simp]
+theorem coe_bot : ⇑(⊥ : SignExpansion.{u}) = ⊥ := rfl
+
+theorem bot_apply (o : NatOrdinal.{u}) : (⊥ : SignExpansion.{u}) o = -1 := rfl
+
+instance : Top SignExpansion.{u} where
+  top := {
+    sign _ := 1
+    isUpperSet_sign_preimage_singleton_zero := by simp [isUpperSet_empty]
+  }
+
+@[simp]
+theorem coe_top : ⇑(⊤ : SignExpansion.{u}) = ⊤ := rfl
+
+theorem top_apply (o : NatOrdinal.{u}) : (⊤ : SignExpansion.{u}) o = 1 := rfl
+
+instance : BoundedOrder SignExpansion.{u} where
+  le_top _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp)
+  bot_le _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp)
 
 end SignExpansion
