@@ -259,6 +259,7 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp] theorem neg_rightSurreal (x : Surreal) : -rightSurreal x = leftSurreal (-x) := by
   ext; simp [lt_neg]
 
+@[simp]
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x :=
   lt_iff_nonempty_inter.2 ⟨x, by simp⟩
 
@@ -266,10 +267,8 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
   constructor
   · rw [lt_iff_nonempty_inter]
-    intro ⟨y, hyr, hyl⟩
-    exact ⟨y, le_antisymm hyl hyr⟩
-  · rintro ⟨x, rfl⟩
-    simpa using leftSurreal_lt_rightSurreal x
+    exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
+  · aesop
 
 /-- The supremum of all right cuts of left options of `x`.
 
@@ -370,14 +369,19 @@ theorem equiv_of_mem_supLeft_inter_infRight {x y : IGame} [y.Numeric]
     simpa
   · simp_all
 
-theorem simplestBtwn_game {x : Game} (h : leftGame x < rightGame x) :
+theorem simplestBtwn_leftGame_rightGame {x : Game} (h : leftGame x < rightGame x) :
     (simplestBtwn h).toGame = x := by
   rw [leftGame_lt_rightGame_iff] at h
   obtain ⟨x, rfl⟩ := h
   have hs := simplestBtwn_mem h
   simp_all [le_antisymm_iff]
 
-theorem simplestBtwn_iGame {x : IGame} (h : supLeft x < infRight x) :
+@[simp]
+theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
+    simplestBtwn (leftSurreal_lt_rightSurreal x) = x := by
+  convert simplestBtwn_leftGame_rightGame (x := x.toGame) _ <;> simp
+
+theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
     (simplestBtwn h).toGame = .mk x := by
   have H := simplestBtwn_mem h
   obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn h)
