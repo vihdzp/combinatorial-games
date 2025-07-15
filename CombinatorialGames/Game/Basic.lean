@@ -193,6 +193,18 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
 termination_by (x, y, z)
 decreasing_by igame_wf
 
+theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ s) : x ⧏ {s | t}ᴳ := by
+  rw [ofSets]
+  have : x.out ∈ {out '' s | out '' t}ᴵ.leftMoves := by simpa using mem_image_of_mem _ h
+  simpa [← mk_le_mk] using leftMove_lf this
+
+theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ t) : {s | t}ᴳ ⧏ x := by
+  rw [ofSets]
+  have : x.out ∈ {out '' s | out '' t}ᴵ.rightMoves := by simpa using mem_image_of_mem _ h
+  simpa [← mk_le_mk] using lf_rightMove this
+
 end Game
 
 namespace IGame
