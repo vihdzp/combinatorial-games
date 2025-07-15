@@ -40,6 +40,8 @@ instance : PredOrder SignType where
 @[simp] theorem pred_neg_one : Order.pred (-1 : SignType) = -1 := rfl
 @[simp] theorem pred_zero : Order.pred (0 : SignType) = -1 := rfl
 @[simp] theorem pred_one : Order.pred (1 : SignType) = 0 := rfl
+
+@[simp] theorem neg_eq_zero : ∀ a : SignType, -a = 0 ↔ a = 0 := by decide
 end SignType
 
 theorem OrderIso.isSuccPreimit_apply {α β : Type*} [Preorder α] [Preorder β] {e : α ≃o β} {a : α} :
@@ -351,5 +353,18 @@ instance completeLinearOrder : CompleteLinearOrder SignExpansion.{u} where
   __ := completeLatticeOfCompleteSemilatticeSup SignExpansion
 
 end CompleteLattice
+
+instance : Neg SignExpansion.{u} where
+  neg e := {
+    sign := -e
+    isUpperSet_sign_preimage_singleton_zero a b hab ha := by
+      simp only [mem_preimage, Pi.neg_apply, mem_singleton_iff, SignType.neg_eq_zero,
+        apply_eq_zero] at ha ⊢
+      exact ha.trans (WithTop.coe_le_coe.2 hab)
+  }
+
+@[simp] theorem coe_neg (e : SignExpansion) : ⇑(-e) = -⇑e := rfl
+
+theorem neg_apply (e : SignExpansion) (o : Ordinal) : (-e) o = -e o := rfl
 
 end SignExpansion
