@@ -554,3 +554,4 @@ protected instance infRight (x : IGame) : IsSmall (infRight x) := by
 
 end IsSmall
 end Cut
+end Surreal
