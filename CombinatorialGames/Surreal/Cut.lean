@@ -125,8 +125,8 @@ def rightSurreal : Surreal ↪o Cut where
 
 @[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
 @[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : left (rightGame x) = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : right (rightGame x) = {y | x ⧏ y.toGame} := rfl
+@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
 @[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
 @[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
