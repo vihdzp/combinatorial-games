@@ -180,13 +180,13 @@ def rightSurreal : Surreal ↪o Cut where
 
 @[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
 @[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : left (rightGame x) = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : right (rightGame x) = {y | x ⧏ y.toGame} := rfl
+@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
-@[simp] theorem left_leftSurreal (x : Surreal) : left (leftSurreal x) = Iio x := rfl
-@[simp] theorem right_leftSurreal (x : Surreal) : right (leftSurreal x) = Ici x := rfl
-@[simp] theorem left_rightSurreal (x : Surreal) : left (rightSurreal x) = Iic x := rfl
-@[simp] theorem right_rightSurreal (x : Surreal) : right (rightSurreal x) = Ioi x := rfl
+@[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
+@[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
+@[simp] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
+@[simp] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
 
 theorem mem_left_leftGame {x y} : y ∈ (leftGame x).left ↔ y.toGame ⧏ x := .rfl
 theorem mem_right_leftGame {x y} : y ∈ (leftGame x).right ↔ x ≤ y.toGame := .rfl
@@ -223,7 +223,7 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
   constructor
   · rw [lt_iff_nonempty_inter]
-    rintro ⟨y, hyr, hyl⟩
+    intro ⟨y, hyr, hyl⟩
     exact ⟨y, le_antisymm hyl hyr⟩
   · rintro ⟨x, rfl⟩
     simpa using leftSurreal_lt_rightSurreal x
