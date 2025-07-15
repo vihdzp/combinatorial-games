@@ -160,3 +160,5 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     exact ⟨y, le_antisymm hyl hyr⟩
   · rintro ⟨x, rfl⟩
     simpa using leftSurreal_lt_rightSurreal x
+
+end Cut
