@@ -260,6 +260,16 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
   ext; simp [lt_neg]
 
 @[simp]
+theorem neg_leftSurreal_image (s : Set Surreal) : -leftSurreal '' s = rightSurreal '' (-s) := by
+  ext
+  rw [mem_image, ← (Equiv.neg _).exists_congr_right]
+  simp [← neg_leftSurreal, neg_eq_iff_eq_neg]
+
+@[simp]
+theorem neg_rightSurreal_image (s : Set Surreal) : -rightSurreal '' s = leftSurreal '' (-s) := by
+  conv_lhs => rw [← neg_neg s, ← neg_leftSurreal_image, neg_neg]
+
+@[simp]
 theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
   rw [← left_subset_left_iff, left_leftSurreal, ← compl_left, mem_compl_iff]
   constructor
@@ -448,18 +458,8 @@ theorem IsSmall.iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
 
 protected theorem IsSmall.neg {x : Cut} (hx : x.IsSmall) : (-x).IsSmall := by
   cases hx with
-  | sInf' s =>
-    rw [neg_sInf]
-    convert IsSmall.sSup' (-s)
-    ext
-    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
-    simp [image_eq_range, neg_range]
-  | sSup' s =>
-    rw [neg_sSup]
-    convert IsSmall.sInf' (-s)
-    ext
-    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
-    simp [image_eq_range, neg_range]
+  | sInf' s => simpa using .sSup' (-s)
+  | sSup' s => simpa using .sInf' (-s)
 
 @[simp]
 theorem IsSmall.neg_iff {x : Cut} : IsSmall (-x) ↔ IsSmall x := by
