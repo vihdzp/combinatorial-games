@@ -19,11 +19,9 @@ def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
 
 theorem birthday_eq_iGameBirthday (x : Surreal) :
     ∃ (y : IGame) (_ : Numeric y), mk y = x ∧ y.birthday = birthday x := by
-  have h : (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x}).Nonempty := by
-    rw [image_nonempty]
-    exact ⟨_, _, x.out_eq⟩
-  obtain ⟨c, ⟨cn, rfl⟩, hc⟩ := csInf_mem h
-  exact ⟨c, cn, rfl, hc⟩
+  simp_rw [exists_and_right]
+  refine csInf_mem (image_nonempty.2 ?_)
+  exact ⟨_, _, x.out_eq⟩
 
 theorem birthday_mk_le (x : IGame) [Numeric x] : birthday (mk x) ≤ x.birthday :=
   csInf_le' ⟨x, ⟨_, rfl⟩, rfl⟩
@@ -38,10 +36,9 @@ theorem birthday_eq_zero {x : Surreal} : birthday x = 0 ↔ x = 0 := by
   refine ⟨fun _ ↦ ?_, ?_⟩ <;> simp_all
 
 private theorem birthday_neg_le (x : Surreal) : (-x).birthday ≤ x.birthday := by
-  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday x
-  rw [← hy', ← hy]
-  apply (birthday_mk_le _).trans
-  rw [IGame.birthday_neg]
+  obtain ⟨y, _, rfl, hy'⟩ := birthday_eq_iGameBirthday x
+  rw [← hy', ← IGame.birthday_neg]
+  exact birthday_mk_le _
 
 @[simp]
 theorem birthday_neg (x : Surreal) : (-x).birthday = x.birthday := by
@@ -49,8 +46,8 @@ theorem birthday_neg (x : Surreal) : (-x).birthday = x.birthday := by
   simpa using birthday_neg_le (-x)
 
 theorem le_toSurreal_birthday (x : Surreal) : x ≤ x.birthday.toSurreal := by
-  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday x
-  rw [← hy', ← hy]
+  obtain ⟨y, _, rfl, hy'⟩ := birthday_eq_iGameBirthday x
+  rw [← hy']
   exact y.le_toIGame_birthday
 
 theorem neg_toSurreal_birthday_le (x : Surreal) : -x.birthday.toSurreal ≤ x := by
@@ -83,8 +80,8 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa using birthday_add_le x (-y)
 
-/- The bound `(x * y).birthday ≤ x.birthday * y.birthday` on surreals is currently an open problem.
-See https://mathoverflow.net/a/476829/147705. -/
+/- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
+proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
 
 /--
 The birthday of a surreal number is at least the birthday of the corresponding game.
