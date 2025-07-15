@@ -260,8 +260,29 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
   ext; simp [lt_neg]
 
 @[simp]
-theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x :=
-  lt_iff_nonempty_inter.2 ⟨x, by simp⟩
+theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
+  rw [← left_subset_left_iff, left_leftSurreal, ← compl_left, mem_compl_iff]
+  constructor
+  · intro h hy
+    simpa using h hy
+  · intro hy z hz
+    rw [mem_Iio]
+    contrapose! hy
+    exact isLowerSet_left x hy hz
+
+@[simp]
+theorem leftSurreal_lt_iff {x : Surreal} {y : Cut} : leftSurreal x < y ↔ x ∈ y.left := by
+  rw [← compl_right, mem_compl_iff, ← le_leftSurreal_iff, ← not_le]
+
+@[simp]
+theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x ∈ y.left := by
+  simpa [← neg_rightSurreal] using @le_leftSurreal_iff (-y) (-x)
+
+@[simp]
+theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
+  simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
+
+theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by simp
 
 theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
@@ -400,5 +421,95 @@ theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
     apply (birthday_simplestBtwn_le_of_mem ..).trans (birthday_mk_le z)
     refine ⟨isUpperSet_right _ (mk_lt_mk.2 <| Numeric.lt_rightMove hz).le ?_, hz'⟩
     aesop
+
+/-! ### Small cuts -/
+
+/-- A "small cut" is defined as either the infimum of a small set of left cuts of surreals,
+or the supremum of a small set of right cuts of surreals.
+
+Equivalently, small cuts are the closure of left and right cuts of surreals under small infima and
+suprema.
+
+This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
+those of their associated games. -/
+protected inductive Small : Cut.{u} → Prop
+  | sInf' (s : Set Surreal) [Small.{u} s] : (sInf (leftSurreal '' s)).Small
+  | sSup' (s : Set Surreal) [Small.{u} s] : (sSup (rightSurreal '' s)).Small
+
+protected theorem Small.iInf' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    (⨅ i, leftSurreal (f i)).Small := by
+  rw [iInf, range_comp']
+  exact .sInf' _
+
+protected theorem Small.iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    (⨆ i, rightSurreal (f i)).Small := by
+  rw [iSup, range_comp']
+  exact .sSup' _
+
+theorem Small.neg {x : Cut} (hx : x.Small) : (-x).Small := by
+  cases hx with
+  | sInf' s =>
+    rw [neg_sInf]
+    convert Small.sSup' (-s)
+    ext
+    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
+    simp [image_eq_range, neg_range]
+  | sSup' s =>
+    rw [neg_sSup]
+    convert Small.sInf' (-s)
+    ext
+    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
+    simp [image_eq_range, neg_range]
+
+@[simp]
+theorem Small.neg_iff {x : Cut} : (-x).Small ↔ x.Small := by
+  refine ⟨?_, Small.neg⟩
+  convert Small.neg
+  rw [neg_neg]
+
+theorem small_bot : Cut.Small ⊥ := by
+  simpa using Small.sSup' ∅
+
+theorem small_top : Cut.Small ⊤ := by
+  simpa using Small.sInf' ∅
+
+theorem small_leftSurreal (x : Surreal) : (leftSurreal x).Small := by
+  simpa using Small.sInf' {x}
+
+theorem small_rightSurreal (x : Surreal) : (rightSurreal x).Small := by
+  simpa using Small.sSup' {x}
+
+theorem Small.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, (f i).Small) :
+    (⨅ i, f i).Small := by
+  obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f) ·)
+  · obtain ⟨i, rfl⟩ := hx.1
+    convert H i
+    exact hx.csInf_eq
+  · have (i : ι) : ∃ x, leftSurreal x ∈ Ico (⨅ i, f i) (f i) := by
+      obtain ⟨j, x, hx₁, hx₂⟩ : ∃ j, ∃ x, x ∈ (f j).right ∩ (f i).left := by
+        simpa [IsLeast, lowerBounds, lt_iff_nonempty_inter] using hx (f i)
+      aesop
+    choose g hg using this
+    convert Small.iInf' g using 1
+    apply le_antisymm
+    · aesop
+    · rw [le_iInf_iff]
+      exact fun i ↦ (iInf_le ..).trans (hg i).2.le
+
+theorem Small.iSup {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, (f i).Small) :
+    (⨆ i, f i).Small := by
+  rw [← Small.neg_iff, neg_iSup]
+  apply Small.iInf
+  simpa
+
+theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.Small) : (sInf s).Small := by
+  rw [sInf_eq_iInf']
+  apply Small.iInf
+  simpa
+
+theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.Small) : (sSup s).Small := by
+  rw [sSup_eq_iSup']
+  apply Small.iSup
+  simpa
 
 end Cut
