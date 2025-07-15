@@ -473,9 +473,11 @@ theorem small_bot : Cut.Small ⊥ := by
 theorem small_top : Cut.Small ⊤ := by
   simpa using Small.sInf' ∅
 
+@[simp]
 theorem small_leftSurreal (x : Surreal) : (leftSurreal x).Small := by
   simpa using Small.sInf' {x}
 
+@[simp]
 theorem small_rightSurreal (x : Surreal) : (rightSurreal x).Small := by
   simpa using Small.sSup' {x}
 
@@ -486,7 +488,7 @@ theorem Small.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, 
     convert H i
     exact hx.csInf_eq
   · have (i : ι) : ∃ x, leftSurreal x ∈ Ico (⨅ i, f i) (f i) := by
-      obtain ⟨j, x, hx₁, hx₂⟩ : ∃ j, ∃ x, x ∈ (f j).right ∩ (f i).left := by
+      have : ∃ j, ∃ x, x ∈ (f j).right ∩ (f i).left := by
         simpa [IsLeast, lowerBounds, lt_iff_nonempty_inter] using hx (f i)
       aesop
     choose g hg using this
@@ -511,5 +513,23 @@ theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.Small) : 
   rw [sSup_eq_iSup']
   apply Small.iSup
   simpa
+
+private theorem small_game (x : IGame) : (leftGame (.mk x)).Small ∧ (rightGame (.mk x)).Small := by
+  obtain h | h := lt_or_ge (supLeft x) (infRight x)
+  · rw [← simplestBtwn_supLeft_infRight h]
+    simp
+  · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h, supLeft, infRight,
+      iSup_subtype', iInf_subtype']
+    constructor
+    · exact .iSup fun ⟨y, hy⟩ ↦ (small_game _).2
+    · exact .iInf fun ⟨y, hy⟩ ↦ (small_game _).1
+termination_by x
+decreasing_by igame_wf
+
+theorem small_leftGame (x : Game) : (leftGame x).Small := by
+  simpa using (small_game x.out).1
+
+theorem small_rightGame (x : Game) : (rightGame x).Small := by
+  simpa using (small_game x.out).2
 
 end Cut
