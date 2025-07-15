@@ -97,7 +97,7 @@ instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
   inferInstanceAs (Small (Iio o.toOrdinal))
 
 @[simp]
-theorem bot_eq_zero : ⊥ = 0 :=
+theorem bot_eq_zero : (⊥ : NatOrdinal) = 0 :=
   rfl
 
 @[simp]
@@ -140,8 +140,9 @@ theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
 
 /-- A recursor for `NatOrdinal`. Use as `induction x`. -/
 @[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : NatOrdinal → Sort*} (h : ∀ a, β (toNatOrdinal a)) : ∀ a, β a := fun a =>
-  h (toOrdinal a)
+protected def rec {motive : NatOrdinal → Sort*} (toNatOrdinal : ∀ a, motive (toNatOrdinal a))
+    (t : NatOrdinal) : motive t :=
+  toNatOrdinal (toOrdinal t)
 
 /-- `Ordinal.induction` but for `NatOrdinal`. -/
 theorem induction {p : NatOrdinal → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
