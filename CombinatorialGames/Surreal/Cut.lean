@@ -132,6 +132,27 @@ instance : Neg Cut where
 instance : InvolutiveNeg Cut where
   neg_neg x := by ext; simp
 
+@[simp] theorem neg_bot : -(⊥ : Cut) = ⊤ := by ext; simp
+@[simp] theorem neg_top : -(⊤ : Cut) = ⊥ := by ext; simp
+
+@[simp] theorem neg_min (x y : Cut) : -min x y = max (-x) (-y) := by ext; simp
+@[simp] theorem neg_max (x y : Cut) : -max x y = min (-x) (-y) := by ext; simp
+
+@[simp]
+theorem neg_sInf (s : Set Cut) : -sInf s = sSup (-s) := by
+  ext
+  rw [left_neg, right_sInf, mem_neg, mem_iUnion, ← (Equiv.neg _).exists_congr_right]
+  simp
+
+@[simp]
+theorem neg_sSup (s : Set Cut) : -sSup s = sInf (-s) := by
+  rw [← neg_neg (sInf _), neg_sInf, neg_neg]
+
+@[simp] theorem neg_iInf {ι} (f : ι → Cut) : - ⨅ i, f i = ⨆ i, - f i := by
+  simp [iInf, iSup, neg_range]
+@[simp] theorem neg_iSup {ι} (f : ι → Cut) : - ⨆ i, f i = ⨅ i, - f i := by
+  simp [iInf, iSup, neg_range]
+
 /-- The left cut of a game `x` is such that its right set consists of surreals
 equal or larger to it. -/
 def leftGame : Game →o Cut where
