@@ -469,18 +469,8 @@ theorem IsSmall.iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
 
 protected theorem IsSmall.neg {x : Cut} (hx : x.IsSmall) : (-x).IsSmall := by
   cases hx with
-  | sInf' s =>
-    rw [neg_sInf]
-    convert IsSmall.sSup' (-s)
-    ext
-    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
-    simp [image_eq_range, neg_range]
-  | sSup' s =>
-    rw [neg_sSup]
-    convert IsSmall.sInf' (-s)
-    ext
-    rw [mem_image, ← (Equiv.neg _).exists_congr_right]
-    simp [image_eq_range, neg_range]
+  | sInf' s => simpa using .sSup' (-s)
+  | sSup' s => simpa using .sInf' (-s)
 
 @[simp]
 theorem IsSmall.neg_iff {x : Cut} : IsSmall (-x) ↔ IsSmall x := by
