@@ -12,7 +12,7 @@ import Mathlib.Order.PiLex
 /-!
 # Sign Expansions
 
-We define the type of sign expansions.
+We define the type of sign expansions and prove they for a complete lattice.
 -/
 
 namespace SignType
