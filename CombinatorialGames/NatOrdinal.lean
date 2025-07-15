@@ -116,11 +116,9 @@ theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 :=
 theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 :=
   Iff.rfl
 
-@[simp]
 theorem toOrdinal_max (a b : NatOrdinal) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
   rfl
 
-@[simp]
 theorem toOrdinal_min (a b : NatOrdinal) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
   rfl
 
@@ -177,12 +175,10 @@ theorem toNatOrdinal_eq_zero (a) : toNatOrdinal a = 0 ↔ a = 0 :=
 theorem toNatOrdinal_eq_one (a) : toNatOrdinal a = 1 ↔ a = 1 :=
   Iff.rfl
 
-@[simp]
 theorem toNatOrdinal_max (a b : Ordinal) :
     toNatOrdinal (max a b) = max (toNatOrdinal a) (toNatOrdinal b) :=
   rfl
 
-@[simp]
 theorem toNatOrdinal_min (a b : Ordinal) :
     toNatOrdinal (min a b) = min (toNatOrdinal a) (toNatOrdinal b) :=
   rfl
