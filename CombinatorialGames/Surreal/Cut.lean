@@ -5,7 +5,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import Mathlib.Order.UpperLower.CompleteLattice
 import CombinatorialGames.Mathlib.Concept
-import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Birthday
 
 /-!
 # Surreal cuts
@@ -52,7 +52,7 @@ alias codisjoint_left_right := Concept.codisjoint_extent_intent
 alias isCompl_left_right := Concept.isCompl_extent_intent
 
 alias isLowerSet_left := Concept.isLowerSet_extent'
-alias isUpperSet_left := Concept.isUpperSet_intent'
+alias isUpperSet_right := Concept.isUpperSet_intent'
 
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
@@ -333,6 +333,23 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
   simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
     @leftGame_eq_supLeft_of_le (-x)
 
+/-- The simplest surreal number (in terms of birthday) lying between two cuts. -/
+noncomputable def simplestBtwn {x y : Cut} (h : x < y) : Surreal :=
+  Classical.choose <|
+    exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h)
+
+private theorem simplestBtwn_spec {x y : Cut} (h : x < y) :
+    MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn h) :=
+  Classical.choose_spec _
+
+theorem simplestBtwn_mem {x y : Cut} (h : x < y) : simplestBtwn h ∈ x.right ∩ y.left :=
+  (simplestBtwn_spec h).1
+
+theorem birthday_simplestBtwn_le_of_mem {x y : Cut} {z : Surreal} (h : x < y)
+    (hz : z ∈ x.right ∩ y.left) : (simplestBtwn h).birthday ≤ z.birthday := by
+  by_contra! H
+  exact H.not_ge <| (simplestBtwn_spec h).2 hz H.le
+
 theorem equiv_of_mem_supLeft_inter_infRight {x y : IGame} [y.Numeric]
     (hy : .mk y ∈ (supLeft x).right ∩ (infRight x).left)
     (hol : ∀ z (h : z ∈ y.leftMoves),
@@ -352,5 +369,32 @@ theorem equiv_of_mem_supLeft_inter_infRight {x y : IGame} [y.Numeric]
     refine lf_of_le_leftMove ?_ hi
     simpa
   · simp_all
+
+theorem simplestBtwn_game {x : Game} (h : leftGame x < rightGame x) :
+    (simplestBtwn h).toGame = x := by
+  rw [leftGame_lt_rightGame_iff] at h
+  obtain ⟨x, rfl⟩ := h
+  have hs := simplestBtwn_mem h
+  simp_all [le_antisymm_iff]
+
+theorem simplestBtwn_iGame {x : IGame} (h : supLeft x < infRight x) :
+    (simplestBtwn h).toGame = .mk x := by
+  have H := simplestBtwn_mem h
+  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn h)
+  rw [← hy, toGame_mk, Game.mk_eq_mk]
+  apply (equiv_of_mem_supLeft_inter_infRight ..).symm
+  · simp_all
+  · rw [← compl_right]
+    intro z hz _ hz'
+    apply (hy' ▸ birthday_lt_of_mem_leftMoves hz).not_ge
+    apply (birthday_simplestBtwn_le_of_mem ..).trans (birthday_mk_le z)
+    refine ⟨hz', isLowerSet_left _ (mk_lt_mk.2 <| Numeric.leftMove_lt hz).le ?_⟩
+    aesop
+  · rw [← compl_left]
+    intro z hz _ hz'
+    apply (hy' ▸ birthday_lt_of_mem_rightMoves hz).not_ge
+    apply (birthday_simplestBtwn_le_of_mem ..).trans (birthday_mk_le z)
+    refine ⟨isUpperSet_right _ (mk_lt_mk.2 <| Numeric.lt_rightMove hz).le ?_, hz'⟩
+    aesop
 
 end Cut
