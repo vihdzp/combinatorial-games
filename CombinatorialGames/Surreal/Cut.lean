@@ -156,7 +156,7 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
   constructor
   · rw [lt_iff_nonempty_inter]
-    rintro ⟨y, hyr, hyl⟩
+    intro ⟨y, hyr, hyl⟩
     exact ⟨y, le_antisymm hyl hyr⟩
   · rintro ⟨x, rfl⟩
     simpa using leftSurreal_lt_rightSurreal x
