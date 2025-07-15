@@ -21,7 +21,6 @@ import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.SignExpansion.Basic
 import CombinatorialGames.SignExpansion.Small
-import CombinatorialGames.SignExpansion.Surreal
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
