@@ -20,6 +20,7 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.SignExpansion.Basic
+import CombinatorialGames.SignExpansion.Small
 import CombinatorialGames.SignExpansion.Surreal
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Cut
@@ -28,5 +29,4 @@ import CombinatorialGames.Surreal.Dyadic
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
-import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Test.GameCmp
