@@ -432,57 +432,57 @@ suprema.
 
 This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
 those of their associated games. -/
-protected inductive Small : Cut.{u} → Prop
-  | sInf' (s : Set Surreal) [Small.{u} s] : (sInf (leftSurreal '' s)).Small
-  | sSup' (s : Set Surreal) [Small.{u} s] : (sSup (rightSurreal '' s)).Small
+inductive IsSmall : Cut.{u} → Prop
+  | sInf' (s : Set Surreal) [Small.{u} s] : (sInf (leftSurreal '' s)).IsSmall
+  | sSup' (s : Set Surreal) [Small.{u} s] : (sSup (rightSurreal '' s)).IsSmall
 
-protected theorem Small.iInf' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
-    (⨅ i, leftSurreal (f i)).Small := by
+theorem IsSmall.iInf' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    (⨅ i, leftSurreal (f i)).IsSmall := by
   rw [iInf, range_comp']
   exact .sInf' _
 
-protected theorem Small.iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
-    (⨆ i, rightSurreal (f i)).Small := by
+theorem IsSmall.iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    (⨆ i, rightSurreal (f i)).IsSmall := by
   rw [iSup, range_comp']
   exact .sSup' _
 
-theorem Small.neg {x : Cut} (hx : x.Small) : (-x).Small := by
+protected theorem IsSmall.neg {x : Cut} (hx : x.IsSmall) : (-x).IsSmall := by
   cases hx with
   | sInf' s =>
     rw [neg_sInf]
-    convert Small.sSup' (-s)
+    convert IsSmall.sSup' (-s)
     ext
     rw [mem_image, ← (Equiv.neg _).exists_congr_right]
     simp [image_eq_range, neg_range]
   | sSup' s =>
     rw [neg_sSup]
-    convert Small.sInf' (-s)
+    convert IsSmall.sInf' (-s)
     ext
     rw [mem_image, ← (Equiv.neg _).exists_congr_right]
     simp [image_eq_range, neg_range]
 
 @[simp]
-theorem Small.neg_iff {x : Cut} : (-x).Small ↔ x.Small := by
-  refine ⟨?_, Small.neg⟩
-  convert Small.neg
+theorem IsSmall.neg_iff {x : Cut} : IsSmall (-x) ↔ IsSmall x := by
+  refine ⟨?_, IsSmall.neg⟩
+  convert IsSmall.neg
   rw [neg_neg]
 
-theorem small_bot : Cut.Small ⊥ := by
-  simpa using Small.sSup' ∅
+theorem isSmall_bot : IsSmall ⊥ := by
+  simpa using IsSmall.sSup' ∅
 
-theorem small_top : Cut.Small ⊤ := by
-  simpa using Small.sInf' ∅
-
-@[simp]
-theorem small_leftSurreal (x : Surreal) : (leftSurreal x).Small := by
-  simpa using Small.sInf' {x}
+theorem isSmall_top : IsSmall ⊤ := by
+  simpa using IsSmall.sInf' ∅
 
 @[simp]
-theorem small_rightSurreal (x : Surreal) : (rightSurreal x).Small := by
-  simpa using Small.sSup' {x}
+theorem small_leftSurreal (x : Surreal) : (leftSurreal x).IsSmall := by
+  simpa using IsSmall.sInf' {x}
 
-theorem Small.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, (f i).Small) :
-    (⨅ i, f i).Small := by
+@[simp]
+theorem small_rightSurreal (x : Surreal) : (rightSurreal x).IsSmall := by
+  simpa using IsSmall.sSup' {x}
+
+protected theorem IsSmall.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι]
+    (H : ∀ i, (f i).IsSmall) : (⨅ i, f i).IsSmall := by
   obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f))
   · obtain ⟨i, rfl⟩ := hx.1
     convert H i
@@ -492,50 +492,53 @@ theorem Small.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, 
         simpa [IsLeast, lowerBounds, lt_iff_nonempty_inter] using hx (f i)
       aesop
     choose g hg using this
-    convert Small.iInf' g using 1
+    convert IsSmall.iInf' g using 1
     apply le_antisymm
     · aesop
     · rw [le_iInf_iff]
       exact fun i ↦ (iInf_le ..).trans (hg i).2.le
 
-theorem Small.iSup {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, (f i).Small) :
-    (⨆ i, f i).Small := by
-  rw [← Small.neg_iff, neg_iSup]
-  apply Small.iInf
+protected theorem IsSmall.iSup {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι]
+    (H : ∀ i, (f i).IsSmall) : (⨆ i, f i).IsSmall := by
+  rw [← IsSmall.neg_iff, neg_iSup]
+  apply IsSmall.iInf
   simpa
 
-theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.Small) : (sInf s).Small := by
+protected theorem IsSmall.sInf {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.IsSmall) :
+    (sInf s).IsSmall := by
   rw [sInf_eq_iInf']
-  apply Small.iInf
+  apply IsSmall.iInf
   simpa
 
-theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.Small) : (sSup s).Small := by
+protected theorem IsSmall.sSup {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, x.IsSmall) :
+    (sSup s).IsSmall := by
   rw [sSup_eq_iSup']
-  apply Small.iSup
+  apply IsSmall.iSup
   simpa
 
-private theorem small_game (x : IGame) : (leftGame (.mk x)).Small ∧ (rightGame (.mk x)).Small := by
+private theorem isSmall_game (x : IGame) :
+    IsSmall (leftGame (.mk x)) ∧ IsSmall (rightGame (.mk x)) := by
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h]
     simp
   · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h,
       supLeft, infRight, iSup_subtype', iInf_subtype']
-    exact ⟨.iSup fun _ ↦ (small_game _).2, .iInf fun _ ↦ (small_game _).1⟩
+    exact ⟨.iSup fun _ ↦ (isSmall_game _).2, .iInf fun _ ↦ (isSmall_game _).1⟩
 termination_by x
 decreasing_by igame_wf
 
-theorem small_leftGame (x : Game) : (leftGame x).Small := by
-  simpa using (small_game x.out).1
+theorem isSmall_leftGame (x : Game) : IsSmall (leftGame x) := by
+  simpa using (isSmall_game x.out).1
 
-theorem small_rightGame (x : Game) : (rightGame x).Small := by
-  simpa using (small_game x.out).2
+theorem isSmall_rightGame (x : Game) : IsSmall (rightGame x) := by
+  simpa using (isSmall_game x.out).2
 
-theorem small_supLeft (x : IGame) : (supLeft x).Small := by
+theorem isSmall_supLeft (x : IGame) : IsSmall (supLeft x) := by
   rw [supLeft, iSup_subtype']
-  exact .iSup fun _ ↦ small_rightGame _
+  exact .iSup fun _ ↦ isSmall_rightGame _
 
-theorem small_infRight (x : IGame) : (infRight x).Small := by
+theorem isSmall_infRight (x : IGame) : IsSmall (infRight x) := by
   rw [infRight, iInf_subtype']
-  exact .iInf fun _ ↦ small_leftGame _
+  exact .iInf fun _ ↦ isSmall_leftGame _
 
 end Cut
