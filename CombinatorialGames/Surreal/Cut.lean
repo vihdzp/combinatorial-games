@@ -116,12 +116,12 @@ instance : Neg Cut where
     intent := -x.extent
     upperPolar_extent := by
       ext
-      simp only [← Concept.lowerPolar_intent, upperPolar, lowerPolar, mem_setOf]
+      simp_rw [← Concept.lowerPolar_intent, upperPolar, lowerPolar, mem_setOf]
       rw [← (Equiv.neg _).forall_congr_right]
       simp [neg_lt]
     lowerPolar_intent := by
       ext
-      simp only [← Concept.upperPolar_extent, upperPolar, lowerPolar, mem_setOf]
+      simp_rw [← Concept.upperPolar_extent, upperPolar, lowerPolar, mem_setOf]
       rw [← (Equiv.neg _).forall_congr_right]
       simp [lt_neg]
   }
