@@ -483,7 +483,7 @@ theorem small_rightSurreal (x : Surreal) : (rightSurreal x).Small := by
 
 theorem Small.iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] (H : ∀ i, (f i).Small) :
     (⨅ i, f i).Small := by
-  obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f) ·)
+  obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f))
   · obtain ⟨i, rfl⟩ := hx.1
     convert H i
     exact hx.csInf_eq
