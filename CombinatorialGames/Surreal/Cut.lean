@@ -518,11 +518,9 @@ private theorem small_game (x : IGame) : (leftGame (.mk x)).Small ∧ (rightGame
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h]
     simp
-  · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h, supLeft, infRight,
-      iSup_subtype', iInf_subtype']
-    constructor
-    · exact .iSup fun ⟨y, hy⟩ ↦ (small_game _).2
-    · exact .iInf fun ⟨y, hy⟩ ↦ (small_game _).1
+  · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h,
+      supLeft, infRight, iSup_subtype', iInf_subtype']
+    exact ⟨.iSup fun _ ↦ (small_game _).2, .iInf fun _ ↦ (small_game _).1⟩
 termination_by x
 decreasing_by igame_wf
 
@@ -531,5 +529,13 @@ theorem small_leftGame (x : Game) : (leftGame x).Small := by
 
 theorem small_rightGame (x : Game) : (rightGame x).Small := by
   simpa using (small_game x.out).2
+
+theorem small_supLeft (x : IGame) : (supLeft x).Small := by
+  rw [supLeft, iSup_subtype']
+  exact .iSup fun _ ↦ small_rightGame _
+
+theorem small_infRight (x : IGame) : (infRight x).Small := by
+  rw [infRight, iInf_subtype']
+  exact .iInf fun _ ↦ small_leftGame _
 
 end Cut
