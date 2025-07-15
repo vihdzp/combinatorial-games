@@ -39,6 +39,8 @@ abbrev Cut := Concept Surreal Surreal (· < ·)
 
 namespace Cut
 
+/-! ### Basic definitions -/
+
 /-- The left set in a cut. This is an alias for `Concept.extent`. -/
 def left (x : Cut) := x.extent
 /-- The right set in a cut. This is an alias for `Concept.intent`. -/
@@ -153,6 +155,26 @@ theorem neg_sSup (s : Set Cut) : -sSup s = sInf (-s) := by
 @[simp] theorem neg_iSup {ι} (f : ι → Cut) : - ⨆ i, f i = ⨅ i, - f i := by
   simp [iInf, iSup, neg_range]
 
+@[simp]
+protected theorem neg_le_neg_iff {x y : Cut} : -x ≤ -y ↔ y ≤ x := by
+  rw [← left_subset_left_iff, left_neg, left_neg, neg_subset_neg, right_subset_right_iff]
+
+protected theorem neg_le {x y : Cut} : -x ≤ y ↔ -y ≤ x := by
+  simpa using @Cut.neg_le_neg_iff x (-y)
+protected theorem le_neg {x y : Cut} : x ≤ -y ↔ y ≤ -x := by
+  simpa using @Cut.neg_le_neg_iff (-x) y
+
+@[simp]
+protected theorem neg_lt_neg_iff {x y : Cut} : -x < -y ↔ y < x := by
+  simp [← not_le]
+
+protected theorem neg_lt {x y : Cut} : -x < y ↔ -y < x := by
+  simpa using @Cut.neg_lt_neg_iff x (-y)
+protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
+  simpa using @Cut.neg_lt_neg_iff (-x) y
+
+/-! ### Cuts from games -/
+
 /-- The left cut of a game `x` is such that its right set consists of surreals
 equal or larger to it. -/
 def leftGame : Game →o Cut where
@@ -248,5 +270,87 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     exact ⟨y, le_antisymm hyl hyr⟩
   · rintro ⟨x, rfl⟩
     simpa using leftSurreal_lt_rightSurreal x
+
+/-- The supremum of all right cuts of left options of `x`.
+
+If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
+`x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
+def supLeft (x : IGame) : Cut :=
+  ⨆ i ∈ x.leftMoves, rightGame (.mk i)
+
+theorem left_supLeft (x : IGame) :
+    (supLeft x).left = ⋃ i ∈ x.leftMoves, {y | y.toGame ≤ .mk i} := by
+  simp [supLeft]
+
+theorem right_supLeft (x : IGame) :
+    (supLeft x).right = ⋂ i ∈ x.leftMoves, {y | .mk i ⧏ y.toGame} := by
+  simp [supLeft]
+
+/-- The infimum of all left cuts of right options of `x`.
+
+If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
+`x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
+def infRight (x : IGame) : Cut :=
+  ⨅ i ∈ x.rightMoves, leftGame (.mk i)
+
+theorem left_infRight (x : IGame) :
+    (infRight x).left = ⋂ i ∈ x.rightMoves, {y | y.toGame ⧏ .mk i} := by
+  simp [infRight]
+
+theorem right_infRight (x : IGame) :
+    (infRight x).right = ⋃ i ∈ x.rightMoves, {y | .mk i ≤ y.toGame} := by
+  simp [infRight]
+
+@[simp]
+theorem neg_supLeft (x : IGame) : -supLeft x = infRight (-x) := by
+  refine eq_of_forall_le_iff fun y ↦ ?_
+  rw [supLeft, infRight, le_iInf_iff, ← (Equiv.neg _).forall_congr_right]
+  simp
+
+@[simp]
+theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by
+  rw [← neg_neg (supLeft _), neg_supLeft, neg_neg]
+
+theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
+    leftGame (.mk x) = supLeft x := by
+  refine ext' (Set.ext fun y ↦ ⟨fun hy ↦ ?_, fun hy ↦ ?_⟩)
+  · simp_rw [right_supLeft, mem_iInter]
+    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (leftMove_lf hi)) hy
+  · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
+    constructor <;> intro z hz
+    · rw [right_supLeft, mem_iInter₂] at hy
+      rw [← Game.mk_le_mk, ← toGame_mk, y.out_eq]
+      exact hy z hz
+    · rw [← right_subset_right_iff] at h
+      apply h at hy
+      rw [right_infRight, mem_iUnion₂] at hy
+      obtain ⟨i, hi, hy⟩ := hy
+      rw [mem_setOf, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
+      exact lf_of_rightMove_le (hy.trans (Numeric.lt_rightMove hz).le) hi
+
+theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
+    rightGame (.mk x) = infRight x := by
+  simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
+    @leftGame_eq_supLeft_of_le (-x)
+
+theorem equiv_of_mem_supLeft_inter_infRight {x y : IGame} [y.Numeric]
+    (hy : .mk y ∈ (supLeft x).right ∩ (infRight x).left)
+    (hol : ∀ z (h : z ∈ y.leftMoves),
+      have := Numeric.of_mem_leftMoves h; .mk z ∈ (supLeft x).left)
+    (hor : ∀ z (h : z ∈ y.rightMoves),
+      have := Numeric.of_mem_rightMoves h; .mk z ∈ (infRight x).right) :
+    x ≈ y := by
+  unfold supLeft infRight at *
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> intro z hz
+  · simp_all
+  · simp_rw [right_iInf, mem_iUnion] at hor
+    obtain ⟨i, hi, hor⟩ := hor z hz
+    refine lf_of_rightMove_le ?_ hi
+    simpa
+  · simp_rw [left_iSup, mem_iUnion] at hol
+    obtain ⟨i, hi, hol⟩ := hol z hz
+    refine lf_of_le_leftMove ?_ hi
+    simpa
+  · simp_all
 
 end Cut
