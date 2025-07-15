@@ -314,7 +314,7 @@ theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by
 theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
   refine ext' (Set.ext fun y ↦ ⟨fun hy ↦ ?_, fun hy ↦ ?_⟩)
-  · simp_rw [right_supLeft, mem_iInter]
+  · rw [right_supLeft, mem_iInter₂]
     exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (leftMove_lf hi)) hy
   · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
     constructor <;> intro z hz
