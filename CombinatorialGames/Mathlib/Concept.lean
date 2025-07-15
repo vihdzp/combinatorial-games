@@ -153,6 +153,31 @@ theorem extent_injective : Injective (@extent α β r) := fun _ _ => ext
 
 theorem intent_injective : Injective (@intent α β r) := fun _ _ => ext'
 
+/-- Copy a concept, adjusting definitional equalities. -/
+def copy (c : Concept α β r) (e : Set α) (he : e = c.extent) (i : Set β) (hi : i = c.intent) :
+    Concept α β r where
+  extent := e
+  intent := i
+  upperPolar_extent := by simp_all
+  lowerPolar_intent := by simp_all
+
+@[simp]
+theorem extent_copy (c : Concept α β r)
+    (e : Set α) (he : e = c.extent) (i : Set β) (hi : i = c.intent) :
+    (c.copy e he i hi).extent = e :=
+  rfl
+
+@[simp]
+theorem intent_copy (c : Concept α β r)
+    (e : Set α) (he : e = c.extent) (i : Set β) (hi : i = c.intent) :
+    (c.copy e he i hi).intent = i :=
+  rfl
+
+theorem copy_eq (c : Concept α β r)
+    (e : Set α) (he : e = c.extent) (i : Set β) (hi : i = c.intent) :
+    c.copy e he i hi = c := by
+  ext; simp_all
+
 theorem rel_extent_intent {x y} (hx : x ∈ c.extent) (hy : y ∈ c.intent) : r x y := by
   rw [← c.upperPolar_extent] at hy
   exact hy hx
@@ -187,7 +212,7 @@ theorem codisjoint_extent_intent [IsTrichotomous α r'] [IsTrans α r'] (c' : Co
 
 theorem isCompl_extent_intent [IsStrictTotalOrder α r'] (c' : Concept α α r') :
     IsCompl c'.extent c'.intent :=
-  ⟨c'.disjoint_extent_intent, c'.codisjoint_extent_intent⟩ 
+  ⟨c'.disjoint_extent_intent, c'.codisjoint_extent_intent⟩
 
 /-- See `isLowerSet_extent'` for the theorem on a `<`-concept. -/
 theorem isLowerSet_extent {α : Type*} [Preorder α] (c : Concept α α (· ≤ ·)) :
