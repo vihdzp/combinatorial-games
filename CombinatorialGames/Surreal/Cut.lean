@@ -51,8 +51,8 @@ alias disjoint_left_right := Concept.disjoint_extent_intent
 alias codisjoint_left_right := Concept.codisjoint_extent_intent
 alias isCompl_left_right := Concept.isCompl_extent_intent
 
-alias isLowerSet_left := Concept.isLowerSet_extent'
-alias isUpperSet_right := Concept.isUpperSet_intent'
+theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := c.isLowerSet_extent'
+theorem isUpperSet_right (c : Cut) : IsUpperSet c.right := c.isUpperSet_intent'
 
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
@@ -260,6 +260,16 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
   ext; simp [lt_neg]
 
 @[simp]
+theorem neg_leftSurreal_image (s : Set Surreal) : -leftSurreal '' s = rightSurreal '' (-s) := by
+  ext
+  rw [mem_image, ← (Equiv.neg _).exists_congr_right]
+  simp [← neg_leftSurreal, neg_eq_iff_eq_neg]
+
+@[simp]
+theorem neg_rightSurreal_image (s : Set Surreal) : -rightSurreal '' s = leftSurreal '' (-s) := by
+  conv_lhs => rw [← neg_neg s, ← neg_leftSurreal_image, neg_neg]
+
+@[simp]
 theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
   rw [← left_subset_left_iff, left_leftSurreal, ← compl_left, mem_compl_iff]
   constructor
@@ -290,6 +300,17 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
   · rw [lt_iff_nonempty_inter]
     exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
   · aesop
+
+theorem sInf_leftSurreal_right (x : Cut) : sInf (leftSurreal '' x.right) = x := by
+  ext y
+  simp_rw [left_sInf, mem_image, iInter_exists, biInter_and', iInter_iInter_eq_right,
+    left_leftSurreal, mem_iInter, mem_Iio]
+  refine ⟨fun H ↦ ?_, fun hy z ↦ left_lt_right hy⟩
+  rw [← compl_right]
+  exact fun hy ↦ (H y hy).false
+
+theorem sSup_rightSurreal_left (x : Cut) : sSup (rightSurreal '' x.left) = x := by
+  rw [← neg_inj, neg_sSup, neg_rightSurreal_image, ← right_neg, sInf_leftSurreal_right]
 
 /-- The supremum of all right cuts of left options of `x`.
 
@@ -537,5 +558,61 @@ theorem small_supLeft (x : IGame) : (supLeft x).Small := by
 theorem small_infRight (x : IGame) : (infRight x).Small := by
   rw [infRight, iInf_subtype']
   exact .iInf fun _ ↦ small_leftGame _
+
+/-! ### Birthday of cuts -/
+
+/-- The birthday of a small cut is defined as the infimum of `⨆ a ∈ s, a.birthday + 1`, over all
+sets `s` of surreals which serve as witnesses for the smallness of `x`. For a non-small cut, we
+default `birthday x = ⊤`.
+
+This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
+those of their associated games. -/
+noncomputable def birthday (x : Cut) : WithTop NatOrdinal :=
+  sInf <| (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
+     {s : Set Surreal | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
+
+theorem birthday_eq_sSup_birthday (x : Cut) :
+    ∃ s : Set Surreal, (sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x) ∧
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x := by
+  rw [birthday]
+  apply csInf_mem (image_nonempty.2 _)
+
+    #exit
+
+theorem birthday_sInf_leftSurreal_le (s : Set Surreal) :
+    (sInf (leftSurreal '' s)).birthday ≤
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s)  :=
+  csInf_le' ⟨s, by simp⟩
+
+theorem birthday_sSup_rightSurreal_le (s : Set Surreal) :
+    (sSup (rightSurreal '' s)).birthday ≤
+      (sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s)) :=
+  csInf_le' ⟨s, by simp⟩
+
+theorem birthday_iInf_leftSurreal_le {ι : Type*} (f : ι → Surreal) :
+    (⨅ i, leftSurreal (f i)).birthday ≤ ⨆ i, ((f i).birthday : WithTop _) + 1 := by
+  convert birthday_sInf_leftSurreal_le (range f) <;>
+  simp [iInf, iSup, ← range_comp']
+
+theorem birthday_iSup_rightSurreal_le {ι : Type*} (f : ι → Surreal) :
+    (⨆ i, rightSurreal (f i)).birthday ≤ ⨆ i, ((f i).birthday : WithTop _) + 1 := by
+  convert birthday_sSup_rightSurreal_le (range f) <;>
+  simp [iSup, ← range_comp']
+
+@[simp]
+theorem birthday_bot : birthday ⊥ = 0 := by
+  simpa using birthday_sSup_rightSurreal_le ∅
+
+@[simp]
+theorem birthday_top : birthday ⊤ = 0 := by
+  simpa using birthday_sInf_leftSurreal_le ∅
+
+-- TODO: is this an equality?
+theorem birthday_leftSurreal_le (x : Surreal) : (leftSurreal x).birthday ≤ x.birthday + 1 := by
+  simpa using birthday_sInf_leftSurreal_le {x}
+
+-- TODO: is this an equality?
+theorem birthday_rightSurreal_le (x : Surreal) : (rightSurreal x).birthday ≤ x.birthday + 1 := by
+  simpa using birthday_sSup_rightSurreal_le {x}
 
 end Cut
