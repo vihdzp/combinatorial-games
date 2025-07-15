@@ -36,8 +36,8 @@ theorem birthday_eq_zero {x : Surreal} : birthday x = 0 ↔ x = 0 := by
   refine ⟨fun _ ↦ ?_, ?_⟩ <;> simp_all
 
 private theorem birthday_neg_le (x : Surreal) : (-x).birthday ≤ x.birthday := by
-  obtain ⟨y, _, rfl, hy'⟩ := birthday_eq_iGameBirthday x
-  rw [← hy', ← IGame.birthday_neg]
+  obtain ⟨y, _, rfl, hy⟩ := birthday_eq_iGameBirthday x
+  rw [← hy, ← IGame.birthday_neg]
   exact birthday_mk_le _
 
 @[simp]
@@ -46,8 +46,8 @@ theorem birthday_neg (x : Surreal) : (-x).birthday = x.birthday := by
   simpa using birthday_neg_le (-x)
 
 theorem le_toSurreal_birthday (x : Surreal) : x ≤ x.birthday.toSurreal := by
-  obtain ⟨y, _, rfl, hy'⟩ := birthday_eq_iGameBirthday x
-  rw [← hy']
+  obtain ⟨y, _, rfl, hy⟩ := birthday_eq_iGameBirthday x
+  rw [← hy]
   exact y.le_toIGame_birthday
 
 theorem neg_toSurreal_birthday_le (x : Surreal) : -x.birthday.toSurreal ≤ x := by
@@ -83,15 +83,13 @@ theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.bi
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
 
-/--
-The birthday of a surreal number is at least the birthday of the corresponding game.
--/
+/-- The birthday of a surreal number is at least the birthday of the corresponding game. -/
 theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := by
   obtain ⟨c, _, rfl, h⟩ := birthday_eq_iGameBirthday x
   rw [← h, toGame_mk]
   exact Game.birthday_mk_le c
 
--- See https://mathoverflow.net/q/497321
+-- See https://mathoverflow.net/a/497645
 proof_wanted birthday_toGame (x : Surreal) : x.toGame.birthday = x.birthday
 
 /-- Surreals with a bounded birthday form a small set. -/
@@ -105,8 +103,8 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
-  apply @small_subset _ _ _ _ (small_setOf_birthday_le o)
-  exact fun x (hx : x.birthday < _) ↦ le_of_lt hx
+  refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
+  simp +contextual [le_of_lt]
 
 /-- A variant of `small_setOf_birthday_le` in simp-normal form -/
 instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
