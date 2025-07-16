@@ -21,7 +21,6 @@ games through undominating and unreversing games.
 
 universe u
 
-/-! ### For Mathlib -/
 
 namespace IGame
 
