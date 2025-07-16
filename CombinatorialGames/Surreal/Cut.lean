@@ -5,7 +5,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import Mathlib.Order.UpperLower.CompleteLattice
 import CombinatorialGames.Mathlib.Concept
-import CombinatorialGames.Surreal.Basic
+import CombinatorialGames.Surreal.Birthday
 
 /-!
 # Surreal cuts
@@ -52,7 +52,7 @@ alias codisjoint_left_right := Concept.codisjoint_extent_intent
 alias isCompl_left_right := Concept.isCompl_extent_intent
 
 alias isLowerSet_left := Concept.isLowerSet_extent'
-alias isUpperSet_left := Concept.isUpperSet_intent'
+alias isUpperSet_right := Concept.isUpperSet_intent'
 
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
@@ -265,17 +265,39 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp] theorem neg_rightSurreal (x : Surreal) : -rightSurreal x = leftSurreal (-x) := by
   ext; simp [lt_neg]
 
-theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x :=
-  lt_iff_nonempty_inter.2 ⟨x, by simp⟩
+@[simp]
+theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
+  rw [← left_subset_left_iff, left_leftSurreal, ← compl_left, mem_compl_iff]
+  constructor
+  · intro h hy
+    simpa using h hy
+  · intro hy z hz
+    rw [mem_Iio]
+    contrapose! hy
+    exact isLowerSet_left x hy hz
+
+@[simp]
+theorem leftSurreal_lt_iff {x : Surreal} {y : Cut} : leftSurreal x < y ↔ x ∈ y.left := by
+  rw [← compl_right, mem_compl_iff, ← le_leftSurreal_iff, ← not_le]
+
+@[simp]
+theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x ∈ y.left := by
+  simpa [← neg_rightSurreal] using @le_leftSurreal_iff (-y) (-x)
+
+@[simp]
+theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
+  simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
+
+theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by simp
 
 theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
   constructor
   · rw [lt_iff_nonempty_inter]
-    intro ⟨y, hyr, hyl⟩
-    exact ⟨y, le_antisymm hyl hyr⟩
-  · rintro ⟨x, rfl⟩
-    simpa using leftSurreal_lt_rightSurreal x
+    exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
+  · aesop
+
+/-! ### Calculating cuts -/
 
 /-- The supremum of all right cuts of left options of `x`.
 
@@ -338,5 +360,70 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
   simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
     @leftGame_eq_supLeft_of_le (-x)
+
+/-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
+def Fits (x : Surreal) (y z : Cut) : Prop :=
+  x ∈ y.right ∩ z.left
+
+theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z :=
+  lt_iff_nonempty_inter.mpr ⟨x, h⟩
+
+@[simp]
+theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
+    Fits x (leftSurreal y) (rightSurreal y) ↔ x = y := by
+  simp [Fits, le_antisymm_iff, and_comm]
+
+theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x :=
+  le_leftSurreal_iff.mpr h.1
+
+theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z :=
+  rightSurreal_le_iff.mpr h.2
+
+theorem not_fits_iff {x : Surreal} {y z : Cut} : ¬ Fits x y z ↔ x ∈ y.left ∪ z.right := by
+  rw [Fits, ← mem_compl_iff, compl_inter, compl_left, compl_right]
+
+/-- The simplest surreal number (in terms of birthday) that fits between two cuts. -/
+noncomputable def simplestBtwn {x y : Cut} (h : x < y) : Surreal :=
+  Classical.choose <|
+    exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h)
+
+private theorem simplestBtwn_spec {x y : Cut} (h : x < y) :
+    MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn h) :=
+  Classical.choose_spec _
+
+theorem fits_simplestBtwn {x y : Cut} (h : x < y) : Fits (simplestBtwn h) x y :=
+  (simplestBtwn_spec h).1
+
+theorem birthday_simplestBtwn_le_of_fits {x y : Cut} {z : Surreal}
+    (hz : Fits z x y) : (simplestBtwn hz.lt).birthday ≤ z.birthday := by
+  by_contra! H
+  exact H.not_ge <| (simplestBtwn_spec hz.lt).2 hz H.le
+
+theorem fits_supLeft_infRight {x y : IGame} [x.Numeric] :
+    Fits (.mk x) (supLeft y) (infRight y) ↔ x.Fits y := by
+  simp [Fits, supLeft, infRight, IGame.Fits]
+
+theorem simplestBtwn_leftGame_rightGame {x : Game} (h : leftGame x < rightGame x) :
+    (simplestBtwn h).toGame = x := by
+  rw [leftGame_lt_rightGame_iff] at h
+  obtain ⟨x, rfl⟩ := h
+  simpa [le_antisymm_iff] using fits_simplestBtwn h
+
+@[simp]
+theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
+    simplestBtwn (leftSurreal_lt_rightSurreal x) = x := by
+  convert simplestBtwn_leftGame_rightGame (x := x.toGame) _ <;> simp
+
+/-- If `x` is a game with `supLeft x < infRight x`, then the simplest number between those two cuts
+is equal to `x`. -/
+theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
+    (simplestBtwn h).toGame = .mk x := by
+  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn h)
+  have H := fits_simplestBtwn h
+  rw [← hy, fits_supLeft_infRight] at H
+  rw [← hy, toGame_mk, Game.mk_eq_mk]
+  refine H.equiv_of_forall_birthday_le fun z hz hzx ↦ ?_
+  rw [← fits_supLeft_infRight] at hzx
+  exact (hy' ▸ birthday_simplestBtwn_le_of_fits hzx).trans (birthday_mk_le z)
 
 end Cut
