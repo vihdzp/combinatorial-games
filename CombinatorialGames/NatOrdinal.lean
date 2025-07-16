@@ -96,6 +96,9 @@ instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
   inferInstanceAs (Small (Iio o.toOrdinal))
 
+theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
+  Ordinal.bddAbove_of_small s
+
 @[simp]
 theorem bot_eq_zero : ⊥ = 0 :=
   rfl

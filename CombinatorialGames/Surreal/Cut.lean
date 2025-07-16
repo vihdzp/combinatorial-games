@@ -5,6 +5,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import Mathlib.Order.UpperLower.CompleteLattice
 import CombinatorialGames.Mathlib.Concept
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Surreal.Birthday.Basic
 
 /-!
@@ -261,13 +262,13 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 
 @[simp]
 theorem neg_leftSurreal_image (s : Set Surreal) : -leftSurreal '' s = rightSurreal '' (-s) := by
-  ext
-  rw [mem_image, ← (Equiv.neg _).exists_congr_right]
-  simp [← neg_leftSurreal, neg_eq_iff_eq_neg]
+  rw [← image_neg_of_apply_neg_eq_neg]
+  simp
 
 @[simp]
 theorem neg_rightSurreal_image (s : Set Surreal) : -rightSurreal '' s = leftSurreal '' (-s) := by
-  conv_lhs => rw [← neg_neg s, ← neg_leftSurreal_image, neg_neg]
+  rw [← image_neg_of_apply_neg_eq_neg]
+  simp
 
 @[simp]
 theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
@@ -442,116 +443,6 @@ theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
     apply (birthday_simplestBtwn_le_of_mem ..).trans (birthday_mk_le z)
     refine ⟨isUpperSet_right _ (mk_lt_mk.2 <| Numeric.lt_rightMove hz).le ?_, hz'⟩
     aesop
-
-/-! ### Small cuts -/
-
-/-- A "small cut" is defined as either the infimum of a small set of left cuts of surreals,
-or the supremum of a small set of right cuts of surreals.
-
-Equivalently, small cuts are the closure of left and right cuts of surreals under small infima and
-suprema.
-
-This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
-those of their associated games. -/
-class inductive IsSmall : Cut.{u} → Prop
-  | sInf' (s : Set Surreal) [Small.{u} s] : (sInf (leftSurreal '' s)).IsSmall
-  | sSup' (s : Set Surreal) [Small.{u} s] : (sSup (rightSurreal '' s)).IsSmall
-
-namespace IsSmall
-
-theorem iInf' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
-    (⨅ i, leftSurreal (f i)).IsSmall := by
-  rw [iInf, range_comp']
-  exact .sInf' _
-
-theorem iSup' {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
-    (⨆ i, rightSurreal (f i)).IsSmall := by
-  rw [iSup, range_comp']
-  exact .sSup' _
-
-protected instance neg (x : Cut) [hx : x.IsSmall] : (-x).IsSmall := by
-  cases hx with
-  | sInf' s => simpa using .sSup' (-s)
-  | sSup' s => simpa using .sInf' (-s)
-
-@[simp]
-theorem neg_iff {x : Cut} : IsSmall (-x) ↔ IsSmall x := by
-  refine ⟨?_, @IsSmall.neg x⟩
-  convert @IsSmall.neg (-x)
-  rw [neg_neg]
-
-protected instance bot : IsSmall ⊥ := by
-  simpa using IsSmall.sSup' ∅
-
-protected instance top : IsSmall ⊤ := by
-  simpa using IsSmall.sInf' ∅
-
-@[simp]
-protected instance leftSurreal (x : Surreal) : (leftSurreal x).IsSmall := by
-  simpa using IsSmall.sInf' {x}
-
-@[simp]
-protected instance rightSurreal (x : Surreal) : (rightSurreal x).IsSmall := by
-  simpa using IsSmall.sSup' {x}
-
-protected instance iInf {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] [H : ∀ i, IsSmall (f i)] :
-    IsSmall (⨅ i, f i) := by
-  obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f))
-  · obtain ⟨i, rfl⟩ := hx.1
-    convert H i
-    exact hx.csInf_eq
-  · have (i : ι) : ∃ x, leftSurreal x ∈ Ico (⨅ i, f i) (f i) := by
-      have : ∃ j, ∃ x, x ∈ (f j).right ∩ (f i).left := by
-        simpa [IsLeast, lowerBounds, lt_iff_nonempty_inter] using hx (f i)
-      aesop
-    choose g hg using this
-    convert IsSmall.iInf' g using 1
-    apply le_antisymm
-    · aesop
-    · rw [le_iInf_iff]
-      exact fun i ↦ (iInf_le ..).trans (hg i).2.le
-
-protected instance iSup {ι : Type*} {f : ι → Cut.{u}} [Small.{u} ι] [∀ i, IsSmall (f i)] :
-    (⨆ i, f i).IsSmall := by
-  rw [← IsSmall.neg_iff, neg_iSup]
-  infer_instance
-
-protected theorem sInf {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, IsSmall x) :
-    (sInf s).IsSmall := by
-  rw [sInf_eq_iInf']
-  rw [Subtype.forall'] at H
-  infer_instance
-
-protected theorem sSup {s : Set Cut.{u}} [Small.{u} s] (H : ∀ x ∈ s, IsSmall x) :
-    (sSup s).IsSmall := by
-  rw [sSup_eq_iSup']
-  rw [Subtype.forall'] at H
-  infer_instance
-
-private theorem game (x : IGame) : IsSmall (leftGame (.mk x)) ∧ IsSmall (rightGame (.mk x)) := by
-  obtain h | h := lt_or_ge (supLeft x) (infRight x)
-  · rw [← simplestBtwn_supLeft_infRight h]
-    simp
-  · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h,
-      supLeft, infRight, iSup_subtype', iInf_subtype']
-    exact ⟨@IsSmall.iSup _ _ _ fun _ ↦ (game _).2, @IsSmall.iInf _ _ _ fun _ ↦ (game _).1⟩
-termination_by x
-decreasing_by igame_wf
-
-protected instance leftGame (x : Game) : IsSmall (leftGame x) := by
-  simpa using (game x.out).1
-
-protected instance rightGame (x : Game) : IsSmall (rightGame x) := by
-  simpa using (game x.out).2
-
-protected instance supLeft (x : IGame) : IsSmall (supLeft x) := by
-  rw [supLeft, iSup_subtype']
-  infer_instance
-
-protected instance infRight (x : IGame) : IsSmall (infRight x) := by
-  rw [infRight, iInf_subtype']
-  infer_instance
-
-end IsSmall
+    
 end Cut
 end Surreal
