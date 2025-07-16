@@ -57,7 +57,13 @@ universe u
 
 noncomputable section
 
+/--
+A sign expansion is a an ordinal indexed sequence of `1`s and `-1`s, followed by `0`s.
+-/
 structure SignExpansion : Type (u + 1) where
+  /--
+  The sequence defining the sign expansion
+  -/
   sign : NatOrdinal.{u} → SignType
   isUpperSet_sign_preimage_singleton_zero : IsUpperSet (sign ⁻¹' {0})
 
@@ -84,6 +90,8 @@ theorem sign_eq_coe (e : SignExpansion.{u}) : e.sign = ⇑e := rfl
 theorem apply_eq_zero_of_le {e : SignExpansion} {o o' : Ordinal.{u}}
     (hoo' : o ≤ o') (ho : e o = 0) : e o' = 0 := e.isUpperSet_sign_preimage_singleton_zero hoo' ho
 
+/-- The length of a sign expansion is the smallest ordinal at which it equals zero,
+or `⊤` is no such ordinal exists. -/
 noncomputable def length (e : SignExpansion.{u}) : WithTop NatOrdinal.{u} :=
   ⨅ (i : NatOrdinal.{u}) (_ : e i = 0), WithTop.some i
 
@@ -98,11 +106,16 @@ theorem apply_of_length_le {e : SignExpansion.{u}} {o : NatOrdinal.{u}} (h : e.l
     obtain ⟨i, hi, hio⟩ := h
     exact e.apply_eq_zero_of_le hio hi
 
-@[simp]
 theorem apply_eq_zero {x : SignExpansion.{u}} {o : NatOrdinal.{u}} :
     x o = 0 ↔ x.length ≤ o :=
   ⟨fun h => iInf₂_le o h, apply_of_length_le⟩
 
+theorem length_eq_top {x : SignExpansion.{u}} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
+  simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
+
+/--
+Cut off the part of a sign expansion after an ordinal `o`, by filling it in with `0`.
+-/
 def restrict (x : SignExpansion.{u}) (o : WithTop NatOrdinal.{u}) : SignExpansion.{u} where
   sign i := if i < o then x.sign i else 0
   isUpperSet_sign_preimage_singleton_zero := by
@@ -121,7 +134,7 @@ theorem length_restrict (x : SignExpansion.{u}) (o : WithTop NatOrdinal.{u}) :
   | top => simp
   | coe c =>
     rw [← apply_eq_zero, restrict]
-    simp [imp_iff_or_not]
+    simp [imp_iff_or_not, apply_eq_zero]
 
 theorem restrict_apply_of_coe_lt {x : SignExpansion.{u}} {o₁ : WithTop NatOrdinal.{u}}
     {o₂ : NatOrdinal.{u}} (h : o₂ < o₁) : x.restrict o₁ o₂ = x o₂ := by
@@ -153,7 +166,7 @@ instance : Zero SignExpansion.{u} where
 theorem zero_apply (o : NatOrdinal.{u}) : (0 : SignExpansion.{u}) o = 0 := rfl
 
 theorem restrict_zero (e : SignExpansion.{u}) : e.restrict 0 = 0 := by
-  ext; simp
+  ext; simp [apply_eq_zero]
 
 @[simp]
 theorem length_zero : length 0 = 0 := by
