@@ -373,8 +373,8 @@ theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
     Fits x (leftSurreal y) (rightSurreal y) ↔ x = y := by
   simp [Fits, le_antisymm_iff, and_comm]
 
-theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x := by
-  simpa using h.1
+theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x :=
+  le_leftSurreal_iff.mpr h.1
 
 theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z := by
   simpa using h.2
