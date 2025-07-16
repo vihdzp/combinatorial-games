@@ -26,6 +26,16 @@ namespace Cut
 
 /-! ### Birthday of cuts -/
 
+-- TODO: PR to Mathlib
+noncomputable instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α]
+    [NoMaxOrder α] [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where
+  succ_eq_add_one := by
+    rintro (x | x)
+    · rfl
+    · apply WithTop.succ_coe.trans
+      rw [Order.succ_eq_add_one]
+      rfl
+
 /-- The birthday of a cut `x` is defined as the infimum of `⨆ a ∈ s, a.birthday + 1` over all
 sets `s` of surreals where either the infimum of the left cuts or the supremum of right cuts of `s`
 equals `x`.
@@ -88,6 +98,13 @@ theorem birthday_iSup_rightSurreal_le' {ι : Type*} (f : ι → Surreal.{u}) [Sm
   convert birthday_sSup_rightSurreal_le' (range f) <;>
   simp [iSup, ← range_comp']
 
+theorem birthday_lt_sSup_birthday {a : Surreal} {s : Set Surreal} (ha : a ∈ s) :
+    a.birthday < sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) := by
+  rw [lt_sSup_iff]
+  refine ⟨a.birthday + 1, ?_, ?_⟩
+  · use a
+  · exact WithTop.coe_lt_coe.2 <| lt_add_one a.birthday
+
 @[simp]
 theorem birthday_bot : birthday ⊥ = 0 := by
   simpa using birthday_sSup_rightSurreal_le ∅
@@ -121,17 +138,40 @@ theorem birthday_neg (x : Cut) : (-x).birthday = x.birthday := by
   simpa using birthday_neg_le (-x)
 
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
-    ∃ a : Surreal
-
-
-  #exit
+    ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
+  obtain ⟨y, rfl | rfl, hy⟩ := birthday_eq_sSup_birthday y
+  · have hz := h.2
+    simp_rw [sInf_lt_iff, mem_image, exists_exists_and_eq_and, leftSurreal_lt_iff] at hz
+    obtain ⟨a, ⟨hay, haz⟩⟩ := hz
+    refine ⟨a, hy ▸ birthday_lt_sSup_birthday hay, ⟨?_, haz⟩⟩
+    rw [← le_leftSurreal_iff]
+    apply h.1.le.trans
+    aesop
+  · have hz := h.1
+    simp_rw [lt_sSup_iff, mem_image, exists_exists_and_eq_and, lt_rightSurreal_iff] at hz
+    obtain ⟨a, ⟨hay, hax⟩⟩ := hz
+    refine ⟨a, hy ▸ birthday_lt_sSup_birthday hay, ⟨hax, ?_⟩⟩
+    rw [← rightSurreal_le_iff]
+    apply h.2.le.trans'
+    aesop
 
 theorem birthday_iInf_le {ι : Type*} (f : ι → Cut) : (⨅ i, f i).birthday ≤ ⨆ i, (f i).birthday := by
   obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f))
   · obtain ⟨i, rfl⟩ := hx.1
     convert le_iSup _ i
     exact congrArg _ hx.csInf_eq
-  · simp [IsLeast, lowerBounds] at hx
+  · have : ∀ i, ∃ j, f j < f i := by simpa [IsLeast, lowerBounds] using hx
+    choose g hg using this
+    have (i : ι) : f (g i) ∈ Ioo (iInf f) (f i) := ⟨(hg _).trans_le' (iInf_le ..), hg i⟩
+    choose t ht using fun i ↦ exists_birthday_lt_of_mem_Ioo (this i)
+    trans (⨅ i, leftSurreal (t i)).birthday
+    · apply (congrArg ..).le
+      apply le_antisymm <;> rw [le_iInf_iff] <;> intro i
+      · exact (ht i).2.le_leftSurreal
+      · exact iInf_le_of_le i <| (leftSurreal_lt_rightSurreal _).le.trans (ht i).2.rightSurreal_le
+    · apply (birthday_iInf_leftSurreal_le _).trans
+      rw [iSup_le_iff]
+      exact fun i ↦ (Order.add_one_le_of_lt (ht i).1).trans (le_iSup (birthday ∘ f) _)
 
 theorem birthday_iSup_le {ι : Type*} (f : ι → Cut) : (⨆ i, f i).birthday ≤ ⨆ i, (f i).birthday := by
   rw [← birthday_neg, neg_iSup]
@@ -145,7 +185,6 @@ theorem birthday_sSup_le (s : Set Cut) : (sSup s).birthday ≤ sSup (birthday ''
   rw [sSup_eq_iSup', sSup_image']
   exact birthday_iSup_le _
 
-#exit
 /-! ### Small cuts -/
 
 /-- A "small cut" is defined as either the infimum of a small set of left cuts of surreals,
@@ -208,8 +247,7 @@ theorem birthday_lt_top_iff {x : Cut.{u}} : x.birthday < ⊤ ↔ x.IsSmall := by
       rw [mem_setOf, ← WithTop.coe_lt_coe, ho, lt_sSup_iff]
       refine ⟨x.birthday + 1, ⟨?_, ?_⟩⟩
       · use x
-      · convert WithTop.coe_lt_coe.2 <| Order.lt_succ x.birthday
-        simp [Order.succ_eq_add_one]
+      · exact WithTop.coe_lt_coe.2 <| lt_add_one x.birthday
   · rintro (s | s)
     · exact (birthday_sInf_leftSurreal_le' s).trans_lt (WithTop.coe_lt_top _)
     · exact (birthday_sSup_rightSurreal_le' s).trans_lt (WithTop.coe_lt_top _)
