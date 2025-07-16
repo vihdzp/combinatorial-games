@@ -100,3 +100,13 @@ theorem coe_birthday' {e : SignExpansion.{u}} (he : e.IsSmall) :
   cases h : e.birthday with
   | top => rw [birthday_eq_top] at h; contradiction
   | coe _ => rw [WithTop.untopD_coe]
+
+theorem birthday_le_size (e : SignExpansion.{u}) : e.birthday ≤ e.size := by
+  cases h : e.size with
+  | top => simp
+  | coe x =>
+    rw [birthday_le_coe_iff]
+    intro o ho
+    apply WithTop.coe_lt_coe.2 at ho
+    rw [← h] at ho
+    rw [apply_of_size_le h.le, apply_of_size_le ho.le]
