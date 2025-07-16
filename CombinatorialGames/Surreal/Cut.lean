@@ -365,9 +365,8 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
 def Fits (x : Surreal) (y z : Cut) : Prop :=
   x ∈ y.right ∩ z.left
 
-theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z := by
-  rw [lt_iff_nonempty_inter]
-  exact ⟨x, h⟩
+theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z :=
+  lt_iff_nonempty_inter.mpr ⟨x, h⟩
 
 @[simp]
 theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
