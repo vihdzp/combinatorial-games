@@ -303,8 +303,8 @@ theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Surreal → Prop} (H : ∀ y [Numeric y], P (mk y)) (x : Surreal) : P x :=
-  Quotient.ind (fun h ↦ @H _ h.2) x
+theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
+    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Surreal) : IGame := (Quotient.out x).1
@@ -469,7 +469,7 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
 
-instance : DenselyOrdered Surreal.{u} where
+instance : DenselyOrdered Surreal where
   dense a b hab := ⟨{{a} | {b}}ˢ,
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 

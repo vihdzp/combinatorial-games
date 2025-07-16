@@ -58,6 +58,12 @@ theorem isUpperSet_right (c : Cut) : IsUpperSet c.right := c.isUpperSet_intent'
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
 
+theorem left_injective : Function.Injective left := Concept.extent_injective
+theorem right_injective : Function.Injective right := Concept.intent_injective
+
+@[simp] theorem left_inj {c d : Cut} : c.left = d.left ↔ c = d := left_injective.eq_iff
+@[simp] theorem right_inj {c d : Cut} : c.right = d.right ↔ c = d := right_injective.eq_iff
+
 @[simp] theorem left_subset_left_iff {c d : Cut}: c.left ⊆ d.left ↔ c ≤ d := .rfl
 @[simp] theorem left_ssubset_left_iff {c d : Cut} : c.left ⊂ d.left ↔ c < d := .rfl
 
@@ -404,20 +410,19 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
 def Fits (x : Surreal) (y z : Cut) : Prop :=
   x ∈ y.right ∩ z.left
 
-theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z := by
-  rw [lt_iff_nonempty_inter]
-  exact ⟨x, h⟩
+theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z :=
+  lt_iff_nonempty_inter.mpr ⟨x, h⟩
 
 @[simp]
 theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
     Fits x (leftSurreal y) (rightSurreal y) ↔ x = y := by
   simp [Fits, le_antisymm_iff, and_comm]
 
-theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x := by
-  simpa using h.1
+theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x :=
+  le_leftSurreal_iff.mpr h.1
 
-theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z := by
-  simpa using h.2
+theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z :=
+  rightSurreal_le_iff.mpr h.2
 
 theorem not_fits_iff {x : Surreal} {y z : Cut} : ¬ Fits x y z ↔ x ∈ y.left ∪ z.right := by
   rw [Fits, ← mem_compl_iff, compl_inter, compl_left, compl_right]
@@ -447,8 +452,7 @@ theorem simplestBtwn_leftGame_rightGame {x : Game} (h : leftGame x < rightGame x
     (simplestBtwn h).toGame = x := by
   rw [leftGame_lt_rightGame_iff] at h
   obtain ⟨x, rfl⟩ := h
-  have hs := fits_simplestBtwn h
-  simp_all [le_antisymm_iff]
+  simpa [le_antisymm_iff] using fits_simplestBtwn h
 
 @[simp]
 theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
@@ -463,7 +467,7 @@ theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
   have H := fits_simplestBtwn h
   rw [← hy, fits_supLeft_infRight] at H
   rw [← hy, toGame_mk, Game.mk_eq_mk]
-  apply H.equiv_of_forall_birthday_le fun z hz hzx ↦ ?_
+  refine H.equiv_of_forall_birthday_le fun z hz hzx ↦ ?_
   rw [← fits_supLeft_infRight] at hzx
   exact (hy' ▸ birthday_simplestBtwn_le_of_fits hzx).trans (birthday_mk_le z)
 
