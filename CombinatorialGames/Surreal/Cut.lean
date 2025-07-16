@@ -332,7 +332,25 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
   simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
     @leftGame_eq_supLeft_of_le (-x)
 
-/-- The simplest surreal number (in terms of birthday) lying between two cuts. -/
+/-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
+def Fits (x : Surreal) (y z : Cut) : Prop :=
+  x ∈ y.right ∩ z.left
+
+theorem Fits.lt {x : Surreal} {y z : Cut} (h : Fits x y z) : y < z := by
+  rw [lt_iff_nonempty_inter]
+  exact ⟨x, h⟩
+
+@[simp]
+theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
+    Fits x (leftSurreal y) (rightSurreal y) ↔ x = y := by
+  simp [Fits, le_antisymm_iff, and_comm]
+
+theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x := by
+  simp
+  sorry
+
+#exit
+/-- The simplest surreal number (in terms of birthday) that fits between two cuts. -/
 noncomputable def simplestBtwn {x y : Cut} (h : x < y) : Surreal :=
   Classical.choose <|
     exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h)
@@ -341,7 +359,7 @@ private theorem simplestBtwn_spec {x y : Cut} (h : x < y) :
     MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn h) :=
   Classical.choose_spec _
 
-theorem simplestBtwn_mem {x y : Cut} (h : x < y) : simplestBtwn h ∈ x.right ∩ y.left :=
+theorem fits_simplestBtwn {x y : Cut} (h : x < y) : Fits (simplestBtwn h) x y :=
   (simplestBtwn_spec h).1
 
 theorem birthday_simplestBtwn_le_of_mem {x y : Cut} {z : Surreal} (h : x < y)
