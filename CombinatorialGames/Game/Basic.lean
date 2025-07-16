@@ -47,8 +47,8 @@ theorem mk_eq_mk {x y : IGame} : mk x = mk y ↔ x ≈ y := Quotient.eq
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Game → Prop} (H : ∀ y, P (mk y)) (x : Game) : P x :=
-  Quotient.ind H x
+theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : motive x :=
+  Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Game) : IGame := Quotient.out x
