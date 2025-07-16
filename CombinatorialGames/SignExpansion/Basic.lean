@@ -150,7 +150,6 @@ instance : Zero SignExpansion.{u} where
   }
 
 @[simp]
-theorem coe_zero : ⇑(0 : SignExpansion.{u}) = 0 := rfl
 theorem zero_apply (o : NatOrdinal.{u}) : (0 : SignExpansion.{u}) o = 0 := rfl
 
 theorem restrict_zero (e : SignExpansion.{u}) : e.restrict 0 = 0 := by
@@ -174,8 +173,6 @@ instance : Bot SignExpansion.{u} where
   }
 
 @[simp]
-theorem coe_bot : ⇑(⊥ : SignExpansion.{u}) = ⊥ := rfl
-
 theorem bot_apply (o : NatOrdinal.{u}) : (⊥ : SignExpansion.{u}) o = -1 := rfl
 
 instance : Top SignExpansion.{u} where
@@ -185,13 +182,11 @@ instance : Top SignExpansion.{u} where
   }
 
 @[simp]
-theorem coe_top : ⇑(⊤ : SignExpansion.{u}) = ⊤ := rfl
-
 theorem top_apply (o : NatOrdinal.{u}) : (⊤ : SignExpansion.{u}) o = 1 := rfl
 
 instance : BoundedOrder SignExpansion.{u} where
-  le_top _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp)
-  bot_le _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp)
+  le_top _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
+  bot_le _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
 
 section CompleteLattice
 
@@ -393,8 +388,7 @@ instance : Neg SignExpansion.{u} where
       exact ha.trans (WithTop.coe_le_coe.2 hab)
   }
 
-@[simp] theorem coe_neg (e : SignExpansion) : ⇑(-e) = -⇑e := rfl
-
+@[simp]
 theorem neg_apply (e : SignExpansion) (o : Ordinal) : (-e) o = -e o := rfl
 
 end SignExpansion
