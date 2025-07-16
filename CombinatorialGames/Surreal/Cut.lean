@@ -303,7 +303,20 @@ theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x
 theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
   simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
 
-theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by simp
+theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by
+  simp
+
+theorem leftSurreal_lt_rightSurreal_iff {x y : Surreal} :
+    leftSurreal x < rightSurreal y ↔ x ≤ y := by
+  simp
+
+@[simp]
+theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
+    rightSurreal x < leftSurreal y ↔ x < y := by
+  rw [← left_ssubset_left_iff, left_rightSurreal, left_leftSurreal]
+  constructor <;> intro h
+  · exact h.1 (mem_Iic.2 le_rfl)
+  · constructor <;> simpa
 
 theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by

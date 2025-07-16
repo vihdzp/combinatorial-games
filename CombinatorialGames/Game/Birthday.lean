@@ -418,6 +418,16 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
 
+theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
+    birthday {s | t}ᴳ ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+  choose f hf using birthday_eq_iGameBirthday
+  trans {f '' s | f '' t}ᴵ.birthday
+  · convert birthday_mk_le {f '' s | f '' t}ᴵ using 2
+    simp_rw [mk_ofSets, image_image]
+    aesop
+  · simp_rw [IGame.birthday_ofSets, image_comp]
+    congr! <;> aesop
+
 theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, ha, ha'⟩ := birthday_eq_iGameBirthday x
   obtain ⟨b, hb, hb'⟩ := birthday_eq_iGameBirthday y

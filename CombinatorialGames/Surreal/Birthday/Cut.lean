@@ -105,6 +105,21 @@ theorem birthday_lt_sSup_birthday {a : Surreal} {s : Set Surreal} (ha : a ∈ s)
   · use a
   · exact WithTop.coe_lt_coe.2 <| lt_add_one a.birthday
 
+theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
+    sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) < ⊤ ↔ Small.{u} s := by
+  constructor <;> intro hs
+  · obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hs.ne
+    refine small_subset (s := {x : Surreal | x.birthday < a}) fun x hx ↦ ?_
+    rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
+    exact birthday_lt_sSup_birthday hx
+  · simp_rw [← WithTop.coe_one, ← WithTop.coe_add, ← image_image]
+    rw [← WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _)]
+    exact WithTop.coe_lt_top _
+
+theorem sSup_birthday_eq_top_iff {s : Set Surreal.{u}} :
+    sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) = ⊤ ↔ ¬ Small.{u} s := by
+  simpa using sSup_birthday_lt_top_iff.not
+
 @[simp]
 theorem birthday_bot : birthday ⊥ = 0 := by
   simpa using birthday_sSup_rightSurreal_le ∅
@@ -184,6 +199,43 @@ theorem birthday_sInf_le (s : Set Cut) : (sInf s).birthday ≤ sSup (birthday ''
 theorem birthday_sSup_le (s : Set Cut) : (sSup s).birthday ≤ sSup (birthday '' s) := by
   rw [sSup_eq_iSup', sSup_image']
   exact birthday_iSup_le _
+
+theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
+    (simplestBtwn h).birthday ≤ max x.birthday y.birthday := by
+  obtain ⟨s, rfl | rfl, hx⟩ := birthday_eq_sSup_birthday x
+  · simp_rw [sInf_lt_iff, mem_image, exists_exists_and_eq_and, leftSurreal_lt_iff] at h
+    obtain ⟨a, ha, hay⟩ := h
+    apply (WithTop.coe_le_coe.2 <| birthday_simplestBtwn_le_of_fits _).trans
+    · exact le_max_of_le_left (hx ▸ (birthday_lt_sSup_birthday ha).le)
+    · refine ⟨?_, hay⟩
+      aesop
+  obtain ⟨t, rfl | rfl, hy⟩ := birthday_eq_sSup_birthday y; swap
+  · simp_rw [lt_sSup_iff, mem_image, exists_exists_and_eq_and, lt_rightSurreal_iff] at h
+    obtain ⟨a, ha, hay⟩ := h
+    apply (WithTop.coe_le_coe.2 <| birthday_simplestBtwn_le_of_fits _).trans
+    · exact le_max_of_le_right (hy ▸ (birthday_lt_sSup_birthday ha).le)
+    · refine ⟨hay, ?_⟩
+      aesop
+  · rw [← hx, ← hy]
+    by_cases hs : Small.{u} s; swap
+    · rw [← sSup_birthday_eq_top_iff] at hs
+      simp [hs]
+    by_cases ht : Small.{u} t; swap
+    · rw [← sSup_birthday_eq_top_iff] at ht
+      simp [ht]
+    have : ∀ x ∈ s, ∀ y ∈ t, x < y := by
+      intro x hx y hy
+      have H₁ := le_sSup (mem_image_of_mem rightSurreal hx)
+      have H₂ := sInf_le (mem_image_of_mem leftSurreal hy)
+      simpa using (H₁.trans_lt h).trans_le H₂
+    trans ({s | t}ˢ.birthday : WithTop NatOrdinal)
+    · rw [WithTop.coe_le_coe]
+      apply birthday_simplestBtwn_le_of_fits
+      unfold Fits
+      aesop
+    · apply (WithTop.coe_le_coe.2 <| birthday_ofSets_le ..).trans_eq
+      simp [Order.succ_eq_add_one, WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _), image_image]
+ #exit
 
 /-! ### Small cuts -/
 
