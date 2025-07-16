@@ -15,6 +15,7 @@ From the literature, this file provides an explicit (though noncomputable) const
 games through undominating and unreversing games.
 
 ## Todo
+
 - Define (un)reversibility
 -/
 

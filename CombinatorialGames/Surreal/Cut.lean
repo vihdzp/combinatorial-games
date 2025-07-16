@@ -52,6 +52,15 @@ alias isCompl_left_right := Concept.isCompl_extent_intent
 alias isLowerSet_left := Concept.isLowerSet_extent'
 alias isUpperSet_left := Concept.isUpperSet_intent'
 
+@[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
+theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
+
+theorem left_injective : Function.Injective left := Concept.extent_injective
+theorem right_injective : Function.Injective right := Concept.intent_injective
+
+@[simp] theorem left_inj {c d : Cut} : c.left = d.left ↔ c = d := left_injective.eq_iff
+@[simp] theorem right_inj {c d : Cut} : c.right = d.right ↔ c = d := right_injective.eq_iff
+
 @[simp] theorem left_subset_left_iff {c d : Cut}: c.left ⊆ d.left ↔ c ≤ d := .rfl
 @[simp] theorem left_ssubset_left_iff {c d : Cut} : c.left ⊂ d.left ↔ c < d := .rfl
 
@@ -59,6 +68,15 @@ alias isUpperSet_left := Concept.isUpperSet_intent'
   Concept.intent_subset_intent_iff
 @[simp] theorem right_ssubset_right_iff {c d : Cut} : c.right ⊂ d.right ↔ d < c :=
   Concept.intent_ssubset_intent_iff
+
+@[simp] theorem compl_left (x : Cut) : x.leftᶜ = x.right := (isCompl_left_right x).compl_eq
+@[simp] theorem compl_right (x : Cut) : x.rightᶜ = x.left := (isCompl_left_right x).eq_compl.symm
+
+@[simp] theorem right_bot : (⊥ : Cut).right = univ := rfl
+@[simp] theorem left_bot : (⊥ : Cut).left = ∅ := by simpa using (compl_right ⊥).symm
+
+@[simp] theorem left_top : (⊤ : Cut).left = univ := rfl
+@[simp] theorem right_top : (⊤ : Cut).right = ∅ := by simpa using (compl_left ⊤).symm
 
 instance : IsTotal Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
@@ -71,11 +89,75 @@ noncomputable instance : CompleteLinearOrder Cut where
   __ := Concept.instCompleteLattice
   __ := LinearOrder.toBiheytingAlgebra
 
-@[simp] theorem compl_left (x : Cut) : x.leftᶜ = x.right := (isCompl_left_right x).compl_eq
-@[simp] theorem compl_right (x : Cut) : x.rightᶜ = x.left := (isCompl_left_right x).eq_compl.symm
+@[simp] theorem left_min (x y : Cut) : (min x y).left = x.left ∩ y.left := rfl
+@[simp] theorem right_min (x y : Cut) : (min x y).right = x.right ∪ y.right := by
+  simpa [compl_inter] using (compl_left (min x y)).symm
+
+@[simp] theorem right_max (x y : Cut) : (max x y).right = x.right ∩ y.right := rfl
+@[simp] theorem left_max (x y : Cut) : (max x y).left = x.left ∪ y.left := by
+  simpa [compl_inter] using (compl_right (max x y)).symm
+
+@[simp] theorem left_sInf (s : Set Cut) : (sInf s).left = ⋂ x ∈ s, x.left := rfl
+@[simp] theorem right_sInf (s : Set Cut) : (sInf s).right = ⋃ x ∈ s, x.right := by
+  simpa using (compl_left (sInf s)).symm
+
+@[simp] theorem right_sSup (s : Set Cut) : (sSup s).right = ⋂ x ∈ s, x.right := rfl
+@[simp] theorem left_sSup (s : Set Cut) : (sSup s).left = ⋃ x ∈ s, x.left := by
+  simpa using (compl_right (sSup s)).symm
+
+-- TODO: PR the iInf/iSup versions for concepts to Mathlib
+
+@[simp] theorem left_iInf {ι} (f : ι → Cut) : (⨅ i, f i).left = ⋂ i, (f i).left := by simp [iInf]
+@[simp] theorem right_iInf {ι} (f : ι → Cut) : (⨅ i, f i).right = ⋃ i, (f i).right := by simp [iInf]
+
+@[simp] theorem right_iSup {ι} (f : ι → Cut) : (⨆ i, f i).right = ⋂ i, (f i).right := by simp [iSup]
+@[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
   rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
+
+instance : Neg Cut where
+  neg x := {
+    extent := -x.intent
+    intent := -x.extent
+    upperPolar_extent := by
+      ext
+      simp_rw [← Concept.lowerPolar_intent, upperPolar, lowerPolar, mem_setOf]
+      rw [← (Equiv.neg _).forall_congr_right]
+      simp [neg_lt]
+    lowerPolar_intent := by
+      ext
+      simp_rw [← Concept.upperPolar_extent, upperPolar, lowerPolar, mem_setOf]
+      rw [← (Equiv.neg _).forall_congr_right]
+      simp [lt_neg]
+  }
+
+@[simp] theorem left_neg (x : Cut) : (-x).left = -x.right := rfl
+@[simp] theorem right_neg (x : Cut) : (-x).right = -x.left := rfl
+
+instance : InvolutiveNeg Cut where
+  neg_neg x := by ext; simp
+
+@[simp] theorem neg_bot : -(⊥ : Cut) = ⊤ := by ext; simp
+@[simp] theorem neg_top : -(⊤ : Cut) = ⊥ := by ext; simp
+
+@[simp] theorem neg_min (x y : Cut) : -min x y = max (-x) (-y) := by ext; simp
+@[simp] theorem neg_max (x y : Cut) : -max x y = min (-x) (-y) := by ext; simp
+
+@[simp]
+theorem neg_sInf (s : Set Cut) : -sInf s = sSup (-s) := by
+  ext
+  rw [left_neg, right_sInf, mem_neg, mem_iUnion, ← (Equiv.neg _).exists_congr_right]
+  simp
+
+@[simp]
+theorem neg_sSup (s : Set Cut) : -sSup s = sInf (-s) := by
+  rw [← neg_neg (sInf _), neg_sInf, neg_neg]
+
+@[simp] theorem neg_iInf {ι} (f : ι → Cut) : - ⨅ i, f i = ⨆ i, - f i := by
+  simp [iInf, iSup, neg_range]
+@[simp] theorem neg_iSup {ι} (f : ι → Cut) : - ⨆ i, f i = ⨅ i, - f i := by
+  simp [iInf, iSup, neg_range]
 
 /-- The left cut of a game `x` is such that its right set consists of surreals
 equal or larger to it. -/
@@ -84,11 +166,11 @@ def leftGame : Game →o Cut where
     extent := {y | y.toGame ⧏ x}
     intent := {y | x ≤ y.toGame}
     upperPolar_extent := by
-      refine ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
+      refine Set.ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
       · simp_all [upperPolar, not_imp_comm]
       · simpa using not_le_of_not_le_of_le hz hy
     lowerPolar_intent := by
-      refine ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
+      refine Set.ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
       simpa using not_le_of_not_le_of_le hy hz
   }
   monotone' x y hy z hz := not_le_of_not_le_of_le hz hy
@@ -100,10 +182,10 @@ def rightGame : Game →o Cut where
     extent := {y | y.toGame ≤ x}
     intent := {y | x ⧏ y.toGame}
     upperPolar_extent := by
-      refine ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
+      refine Set.ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
       simpa using not_le_of_le_of_not_le hz hy
     lowerPolar_intent := by
-      refine ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
+      refine Set.ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
       · simp_all [lowerPolar, not_imp_comm]
       · simpa using not_le_of_le_of_not_le hy hz
   }
@@ -148,6 +230,18 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 
 @[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
+
+@[simp] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
+  ext; simp [le_neg]
+
+@[simp] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
+  ext; simp [neg_le]
+
+@[simp] theorem neg_leftSurreal (x : Surreal) : -leftSurreal x = rightSurreal (-x) := by
+  ext; simp [le_neg]
+
+@[simp] theorem neg_rightSurreal (x : Surreal) : -rightSurreal x = leftSurreal (-x) := by
+  ext; simp [lt_neg]
 
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x :=
   lt_iff_nonempty_inter.2 ⟨x, by simp⟩
