@@ -475,11 +475,10 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
     supLeft x < infRight x := by
   replace h := Game.mk_eq h
   by_contra! hx
-  have H₁ := leftGame_eq_supLeft_of_le hx
-  have H₂ := rightGame_eq_infRight_of_le hx
-  rw [h, ← toGame_mk] at H₁ H₂
-  rw [← H₁, ← H₂, leftGame_toGame, rightGame_toGame] at hx
-  simp at hx
+  have hx' := hx
+  simp_rw [← leftGame_eq_supLeft_of_le hx, ← rightGame_eq_infRight_of_le hx, h, ← toGame_mk,
+    leftGame_toGame, rightGame_toGame] at hx'
+  simp at hx'
 
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
