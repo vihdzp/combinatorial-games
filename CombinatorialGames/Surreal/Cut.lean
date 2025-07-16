@@ -376,8 +376,8 @@ theorem fits_leftSurreal_rightSurreal {x y : Surreal} :
 theorem Fits.le_leftSurreal {x : Surreal} {y z : Cut} (h : Fits x y z) : y ≤ leftSurreal x :=
   le_leftSurreal_iff.mpr h.1
 
-theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z := by
-  simpa using h.2
+theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightSurreal x ≤ z :=
+  rightSurreal_le_iff.mpr h.2
 
 theorem not_fits_iff {x : Surreal} {y z : Cut} : ¬ Fits x y z ↔ x ∈ y.left ∪ z.right := by
   rw [Fits, ← mem_compl_iff, compl_inter, compl_left, compl_right]
@@ -407,8 +407,7 @@ theorem simplestBtwn_leftGame_rightGame {x : Game} (h : leftGame x < rightGame x
     (simplestBtwn h).toGame = x := by
   rw [leftGame_lt_rightGame_iff] at h
   obtain ⟨x, rfl⟩ := h
-  have hs := fits_simplestBtwn h
-  simp_all [le_antisymm_iff]
+  simpa [le_antisymm_iff] using fits_simplestBtwn h
 
 @[simp]
 theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
@@ -423,7 +422,7 @@ theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
   have H := fits_simplestBtwn h
   rw [← hy, fits_supLeft_infRight] at H
   rw [← hy, toGame_mk, Game.mk_eq_mk]
-  apply H.equiv_of_forall_birthday_le fun z hz hzx ↦ ?_
+  refine H.equiv_of_forall_birthday_le fun z hz hzx ↦ ?_
   rw [← fits_supLeft_infRight] at hzx
   exact (hy' ▸ birthday_simplestBtwn_le_of_fits hzx).trans (birthday_mk_le z)
 
