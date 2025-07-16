@@ -144,8 +144,8 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
 instance (x : IGame) [Short x] : Short (⧿x) := by
   rw [← neg_tiny]; infer_instance
 
-/-- **Tiny is tiny**. The tiny games are among the smallest of the infinitesimals. -/
-proof_wanted exists_tiny_lt_of_pos {x : IGame} [Short x] (hx : 0 < x) : ∃ n : ℕ, ⧾n < x
+@[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
+@[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
 
 /-! ### Switches -/
 

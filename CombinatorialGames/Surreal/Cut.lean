@@ -57,6 +57,12 @@ alias isUpperSet_left := Concept.isUpperSet_intent'
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
 
+theorem left_injective : Function.Injective left := Concept.extent_injective
+theorem right_injective : Function.Injective right := Concept.intent_injective
+
+@[simp] theorem left_inj {c d : Cut} : c.left = d.left ↔ c = d := left_injective.eq_iff
+@[simp] theorem right_inj {c d : Cut} : c.right = d.right ↔ c = d := right_injective.eq_iff
+
 @[simp] theorem left_subset_left_iff {c d : Cut}: c.left ⊆ d.left ↔ c ≤ d := .rfl
 @[simp] theorem left_ssubset_left_iff {c d : Cut} : c.left ⊂ d.left ↔ c < d := .rfl
 
@@ -332,25 +338,5 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
   simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
     @leftGame_eq_supLeft_of_le (-x)
-
-theorem equiv_of_mem_supLeft_inter_infRight {x y : IGame} [y.Numeric]
-    (hy : .mk y ∈ (supLeft x).right ∩ (infRight x).left)
-    (hol : ∀ z (h : z ∈ y.leftMoves),
-      have := Numeric.of_mem_leftMoves h; .mk z ∈ (supLeft x).left)
-    (hor : ∀ z (h : z ∈ y.rightMoves),
-      have := Numeric.of_mem_rightMoves h; .mk z ∈ (infRight x).right) :
-    x ≈ y := by
-  unfold supLeft infRight at *
-  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> intro z hz
-  · simp_all
-  · simp_rw [right_iInf, mem_iUnion] at hor
-    obtain ⟨i, hi, hor⟩ := hor z hz
-    refine lf_of_rightMove_le ?_ hi
-    simpa
-  · simp_rw [left_iSup, mem_iUnion] at hol
-    obtain ⟨i, hi, hol⟩ := hol z hz
-    refine lf_of_le_leftMove ?_ hi
-    simpa
-  · simp_all
 
 end Cut
