@@ -131,6 +131,7 @@ theorem restrict_apply_of_le_coe {x : SignExpansion.{u}} {o₁ : WithTop NatOrdi
     {o₂ : NatOrdinal.{u}} (h : o₁ ≤ o₂) : x.restrict o₁ o₂ = 0 := by
   simp [restrict, h]
 
+@[simp]
 theorem restrict_of_length_le {e : SignExpansion.{u}} {o : WithTop NatOrdinal.{u}}
     (ho : e.length ≤ o) : e.restrict o = e := by
   ext o'
@@ -139,6 +140,8 @@ theorem restrict_of_length_le {e : SignExpansion.{u}} {o : WithTop NatOrdinal.{u
   · rw [apply_of_length_le ho']
     apply apply_of_length_le
     simp [ho']
+
+theorem restrict_top_right {e : SignExpansion.{u}} : e.restrict ⊤ = e := by simp
 
 instance : Zero SignExpansion.{u} where
   zero := {
