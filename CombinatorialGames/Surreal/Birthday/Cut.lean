@@ -279,6 +279,8 @@ theorem birthday_rightGame_le (x : Game) : (rightGame x).birthday ≤ x.birthday
   apply (birthday_game_le x).2.2.2.trans
   rw [hx]
 
+/-- The smallest birthday among *numeric* games equivalent to a surreal, is also the smallest
+birthday among *all* games in general. -/
 @[simp]
 theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.birthday := by
   apply (birthday_toGame_le x).antisymm
