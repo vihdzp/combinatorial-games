@@ -140,6 +140,24 @@ theorem restrict_of_length_le {e : SignExpansion.{u}} {o : WithTop NatOrdinal.{u
     apply apply_of_length_le
     simp [ho']
 
+instance : Zero SignExpansion.{u} where
+  zero := {
+    sign _ := 0
+    isUpperSet_sign_preimage_singleton_zero := by simp [isUpperSet_univ]
+  }
+
+@[simp]
+theorem coe_zero : ⇑(0 : SignExpansion.{u}) = 0 := rfl
+theorem zero_apply (o : NatOrdinal.{u}) : (0 : SignExpansion.{u}) o = 0 := rfl
+
+theorem restrict_zero (e : SignExpansion.{u}) : e.restrict 0 = 0 := by
+  ext; simp
+
+@[simp]
+theorem length_zero : length 0 = 0 := by
+  rw [← restrict_zero 0, length_restrict, ← WithTop.coe_zero,
+    ← NatOrdinal.bot_eq_zero, WithTop.coe_bot, min_bot_right]
+
 instance linearOrder : LinearOrder SignExpansion.{u} :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
