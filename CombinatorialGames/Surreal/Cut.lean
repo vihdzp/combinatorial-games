@@ -355,8 +355,6 @@ theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
   simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
     @leftGame_eq_supLeft_of_le (-x)
 
-/-! ### Simplicity theorem -/
-
 /-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
 def Fits (x : Surreal) (y z : Cut) : Prop :=
   x ∈ y.right ∩ z.left
@@ -412,8 +410,8 @@ theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
     simplestBtwn (leftSurreal_lt_rightSurreal x) = x := by
   convert simplestBtwn_leftGame_rightGame (x := x.toGame) _ <;> simp
 
-/-- A variant of the **simplicity theorem**: if `x` is a game with `supLeft x < infRight x`, then
-the simplest number between those two cuts is equal to `x`. -/
+/-- If `x` is a game with `supLeft x < infRight x`, then the simplest number between those two cuts
+is equal to `x`. -/
 theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
     (simplestBtwn h).toGame = .mk x := by
   obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn h)
