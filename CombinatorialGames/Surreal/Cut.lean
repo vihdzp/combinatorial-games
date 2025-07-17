@@ -75,6 +75,11 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem compl_left (x : Cut) : x.leftᶜ = x.right := (isCompl_left_right x).compl_eq
 @[simp] theorem compl_right (x : Cut) : x.rightᶜ = x.left := (isCompl_left_right x).eq_compl.symm
 
+@[simp] theorem notMem_left_iff {x : Cut} {y : Surreal} : y ∉ x.left ↔ y ∈ x.right := by
+  simp [← mem_compl_iff]
+@[simp] theorem notMem_right_iff {x : Cut} {y : Surreal} : y ∉ x.right ↔ y ∈ x.left := by
+  simp [← mem_compl_iff]
+
 @[simp] theorem right_bot : (⊥ : Cut).right = univ := rfl
 @[simp] theorem left_bot : (⊥ : Cut).left = ∅ := by simpa using (compl_right ⊥).symm
 
@@ -288,7 +293,7 @@ theorem neg_rightSurreal_image (s : Set Surreal) : -rightSurreal '' s = leftSurr
 
 @[simp]
 theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y ∈ x.right := by
-  rw [← left_subset_left_iff, left_leftSurreal, ← compl_left, mem_compl_iff]
+  rw [← left_subset_left_iff, left_leftSurreal, ← notMem_left_iff]
   constructor
   · intro h hy
     simpa using h hy
@@ -299,7 +304,7 @@ theorem le_leftSurreal_iff {x : Cut} {y : Surreal} : x ≤ leftSurreal y ↔ y �
 
 @[simp]
 theorem leftSurreal_lt_iff {x : Surreal} {y : Cut} : leftSurreal x < y ↔ x ∈ y.left := by
-  rw [← compl_right, mem_compl_iff, ← le_leftSurreal_iff, ← not_le]
+  rw [← notMem_right_iff, ← le_leftSurreal_iff, ← not_le]
 
 @[simp]
 theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x ∈ y.left := by
@@ -326,7 +331,7 @@ theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
 
 theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
   refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
-  simp [← mem_compl_iff]
+  simp 
 
 @[simp]
 theorem leftSurreal_ne_rightSurreal (x y : Surreal) : leftSurreal x ≠ rightSurreal y := by
