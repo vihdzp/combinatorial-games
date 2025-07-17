@@ -324,6 +324,19 @@ theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
   · exact h.1 (mem_Iic.2 le_rfl)
   · constructor <;> simpa
 
+theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
+  refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
+  simp [← mem_compl_iff]
+
+@[simp]
+theorem leftSurreal_ne_rightSurreal (x y : Surreal) : leftSurreal x ≠ rightSurreal y := by
+  refine fun h ↦ h.not_gt ?_
+  simpa using h.ge
+
+@[simp]
+theorem rightSurreal_ne_leftSurreal (x y : Surreal) : rightSurreal x ≠ leftSurreal y :=
+  (leftSurreal_ne_rightSurreal y x).symm
+
 theorem leftGame_lt_rightGame_iff {x : Game} :
     leftGame x < rightGame x ↔ x ∈ range Surreal.toGame := by
   constructor
@@ -341,6 +354,38 @@ theorem sInf_leftSurreal_right (x : Cut) : sInf (leftSurreal '' x.right) = x := 
 
 theorem sSup_rightSurreal_left (x : Cut) : sSup (rightSurreal '' x.left) = x := by
   rw [← neg_inj, neg_sSup, neg_rightSurreal_image, ← right_neg, sInf_leftSurreal_right]
+
+theorem leftSurreal_mem_of_sInf_eq {s : Set Cut} {x : Surreal}
+    (hs : sInf s = leftSurreal x) : leftSurreal x ∈ s := by
+  have hs' := hs ▸ leftSurreal_lt_rightSurreal x
+  obtain ⟨y, hy, hy'⟩ := sInf_lt_iff.1 hs'
+  convert hy
+  exact (hs ▸ sInf_le hy).antisymm ((leftSurreal_covBy_rightSurreal x).le_of_lt hy')
+
+theorem rightSurreal_mem_of_sInf_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s]
+    (hs : sInf s = rightSurreal x) : rightSurreal x ∈ s := by
+  by_contra hx
+  have (a : s) : ∃ y, leftSurreal y ∈ Ioo (sInf s) a := by
+    have : sInf s < a := (sInf_le a.2).lt_of_ne <| by aesop
+    obtain ⟨y, hy⟩ := lt_iff_nonempty_inter.1 this
+    use y
+    simp_all
+  choose f hf using this
+  suffices rightSurreal {{x} | range f}ˢ ≤ sInf s by
+    apply this.not_gt
+    simp_all [lt_ofSets_of_mem_left]
+  simp_rw [le_sInf_iff, rightSurreal_le_iff, ← leftSurreal_lt_iff]
+  intro y hy
+  apply (leftSurreal.lt_iff_lt.2 <| ofSets_lt_of_mem_right (mem_range_self ⟨y, hy⟩)).trans
+  simp_all
+
+theorem rightSurreal_mem_of_sSup_eq {s : Set Cut} {x : Surreal} :
+    sSup s = rightSurreal x → rightSurreal x ∈ s := by
+  simpa [← neg_sSup, ← neg_rightSurreal] using @leftSurreal_mem_of_sInf_eq (-s) (-x)
+
+theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s] :
+    sSup s = leftSurreal x → leftSurreal x ∈ s := by
+  simpa [← neg_sSup, ← neg_leftSurreal] using @rightSurreal_mem_of_sInf_eq (-s) (-x)
 
 /-! ### Calculating cuts -/
 

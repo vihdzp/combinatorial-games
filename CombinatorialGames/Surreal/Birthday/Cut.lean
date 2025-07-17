@@ -128,14 +128,6 @@ theorem birthday_bot : birthday ⊥ = 0 := by
 theorem birthday_top : birthday ⊤ = 0 := by
   simpa using birthday_sInf_leftSurreal_le ∅
 
--- TODO: is this an equality?
-theorem birthday_leftSurreal_le (x : Surreal) : (leftSurreal x).birthday ≤ x.birthday + 1 := by
-  simpa using birthday_sInf_leftSurreal_le {x}
-
--- TODO: is this an equality?
-theorem birthday_rightSurreal_le (x : Surreal) : (rightSurreal x).birthday ≤ x.birthday + 1 := by
-  simpa using birthday_sSup_rightSurreal_le {x}
-
 private theorem birthday_neg_le (x : Cut) : (-x).birthday ≤ x.birthday := by
   obtain ⟨x, rfl | rfl, hx⟩ := birthday_eq_sSup_birthday x
   · rw [← hx, neg_sInf, neg_leftSurreal_image]
@@ -151,6 +143,24 @@ private theorem birthday_neg_le (x : Cut) : (-x).birthday ≤ x.birthday := by
 theorem birthday_neg (x : Cut) : (-x).birthday = x.birthday := by
   apply (birthday_neg_le x).antisymm
   simpa using birthday_neg_le (-x)
+
+@[simp]
+theorem birthday_leftSurreal (x : Surreal) : (leftSurreal x).birthday = x.birthday + 1 := by
+  apply le_antisymm
+  · simpa using birthday_sInf_leftSurreal_le {x}
+  · by_contra! hx
+    obtain ⟨y, hy | hy, hy'⟩ := birthday_eq_sSup_birthday (leftSurreal x)
+    · have := leftSurreal_mem_of_sInf_eq hy
+      simp_rw [mem_image, EmbeddingLike.apply_eq_iff_eq, exists_eq_right] at this
+      apply (Order.add_one_le_of_lt <| birthday_lt_sSup_birthday this).not_gt
+      rwa [hy']
+    · rw [← hy', ← WithTop.coe_one, ← WithTop.coe_add] at hx
+      have := sSup_birthday_lt_top_iff.1 (hx.trans (WithTop.coe_lt_top _))
+      simpa using leftSurreal_mem_of_sSup_eq hy
+
+@[simp]
+theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birthday + 1 := by
+  simpa [← neg_rightSurreal] using birthday_leftSurreal (-x)
 
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
@@ -252,14 +262,11 @@ private theorem birthday_game_le (x : IGame) :
   use H₁, H₂
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
-    constructor
-    on_goal 1 => apply (birthday_leftSurreal_le _).trans
-    on_goal 2 => apply (birthday_rightSurreal_le _).trans
-    all_goals exact add_le_add_right ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
+    constructor <;>
+      simpa using add_le_add_right ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
   · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h]
-    constructor
-    · exact H₁.trans (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le
-    · exact H₂.trans (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le
+    refine ⟨H₁.trans ?_, H₂.trans ?_⟩ <;>
+      exact (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le
 termination_by x
 decreasing_by igame_wf
 
