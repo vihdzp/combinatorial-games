@@ -16,6 +16,7 @@ We define the type of sign expansions and show some basic properties.
 -/
 
 namespace SignType
+-- TODO: PR to mathlib
 noncomputable instance : CompleteLinearOrder SignType := Fintype.toCompleteLinearOrder SignType
 instance : SuccOrder SignType where
   succ
@@ -61,10 +62,9 @@ noncomputable section
 A sign expansion is a an ordinal indexed sequence of `1`s and `-1`s, followed by `0`s.
 -/
 structure SignExpansion : Type (u + 1) where
-  /--
-  The sequence defining the sign expansion
-  -/
+  /-- The sequence defining the sign expansion -/
   sign : NatOrdinal.{u} → SignType
+  /-- Every sign after the first `0` is also `0` -/
   isUpperSet_sign_preimage_singleton_zero : IsUpperSet (sign ⁻¹' {0})
 
 namespace SignExpansion
@@ -197,7 +197,7 @@ instance : Top SignExpansion.{u} where
 @[simp]
 theorem top_apply (o : NatOrdinal.{u}) : (⊤ : SignExpansion.{u}) o = 1 := rfl
 
-instance boundedOrder : BoundedOrder SignExpansion.{u} where
+instance : BoundedOrder SignExpansion.{u} where
   le_top _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
   bot_le _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
 
