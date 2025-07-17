@@ -23,7 +23,7 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
-* `PGame.Poset.impartial_toPGame`: poset games are impartial
+* `PGame.Poset.impartial_toIGame`: poset games are impartial
 * `PGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second player,
   shown via a strategy stealing argument
 -/
@@ -72,10 +72,9 @@ theorem posetRel_univ_of_posetRel_top_compl {α : Type*} [PartialOrder α] [Orde
 theorem wellFounded_posetRel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
   rw [WellFounded.wellFounded_iff_no_descending_seq]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
-  have hf' := hf -- Is there a way to make `choose` not delete my hypothesis?
-  choose g hg using hf
+  choose g hg using id hf
   obtain ⟨m, n, h, h'⟩ := wellQuasiOrdered_le g
-  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_posetRel (hf' n)
+  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_posetRel (hf n)
   have : g n ∈ f (m + 1) := by
     obtain rfl | h := h.nat_succ_le.eq_or_lt
     · exact (hg _).1

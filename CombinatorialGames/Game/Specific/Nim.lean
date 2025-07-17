@@ -116,7 +116,7 @@ theorem nim_injective : Function.Injective nim := by
   intro a b h'
   obtain h | rfl | h := lt_trichotomy a b
   on_goal 2 => rfl
-  all_goals cases self_not_mem_leftMoves _ <| h' ▸ mem_leftMoves_nim_of_lt h
+  all_goals cases self_notMem_leftMoves _ <| h' ▸ mem_leftMoves_nim_of_lt h
 
 @[simp] theorem nim_inj {a b : Nimber} : nim a = nim b ↔ a = b := nim_injective.eq_iff
 
