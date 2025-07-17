@@ -20,7 +20,6 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Register
 import CombinatorialGames.SignExpansion.Basic
-import CombinatorialGames.SignExpansion.Small
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
