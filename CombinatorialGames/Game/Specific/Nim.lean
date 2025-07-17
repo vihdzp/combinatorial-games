@@ -5,7 +5,7 @@ Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Impartial
-import CombinatorialGames.Nimber.Basic
+import CombinatorialGames.Nimber.Field
 
 /-!
 # Nim and the Sprague-Grundy theorem
@@ -142,14 +142,40 @@ theorem neg_nim (o : Nimber) : -nim o = nim o := by
     rw [neg_nim]
 termination_by o
 
-instance impartial_nim (o : Nimber) : Impartial (nim o) := by
+theorem forall_leftMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
+    (∀ x ∈ (nim a * nim b).leftMoves, P x) ↔
+      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
+  simp_rw [forall_leftMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
+
+theorem forall_rightMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
+    (∀ x ∈ (nim a * nim b).rightMoves, P x) ↔
+      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
+  simp_rw [forall_rightMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
+
+protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
   apply Impartial.mk' (by simp)
   all_goals
     intro x hx
     simp only [leftMoves_nim, rightMoves_nim] at hx
     obtain ⟨a, ha, rfl⟩ := hx
-    exact impartial_nim a
+    exact Impartial.nim a
 termination_by o
+
+instance Impartial.nim_mul_nim (a b : Nimber) : Impartial (nim a * nim b) := by
+  apply Impartial.mk' (by simp [← mul_neg])
+  all_goals
+    simp only [forall_leftMoves_mul_nim, forall_rightMoves_mul_nim]
+    intro c hc d hd
+    unfold mulOption
+    have := Impartial.nim_mul_nim c b
+    have := Impartial.nim_mul_nim a d
+    have := Impartial.nim_mul_nim c d
+    infer_instance
+termination_by (a, b)
+
+instance Impartial.mulOption_nim (a b c d : Nimber) :
+    Impartial (mulOption (nim a) (nim b) (nim c) (nim d)) :=
+  .sub ..
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
   Impartial.leftMove_fuzzy (mem_leftMoves_nim_of_lt h)
@@ -165,25 +191,78 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
   rw [← Impartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
 
-theorem nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b) := by
-  rw [Impartial.equiv_iff_forall_fuzzy, forall_leftMoves_add,
-    forall_leftMoves_nim, forall_leftMoves_nim, forall_rightMoves_nim]
-  refine ⟨⟨?_, ?_⟩, ?_⟩ <;> intro c hc
-  · rw [(nim_add_equiv c b).incompRel_congr_left, nim_fuzzy_iff, ne_eq, add_left_inj]
-    exact hc.ne
-  · rw [(nim_add_equiv a c).incompRel_congr_left, nim_fuzzy_iff, ne_eq, add_right_inj]
-    exact hc.ne
+theorem nim_add_equiv (a b : Nimber) : nim (a + b) ≈ nim a + nim b := by
+  rw [Impartial.equiv_iff_forall_fuzzy, forall_rightMoves_add]
+  simp_rw [forall_leftMoves_nim, forall_rightMoves_nim]
+  refine ⟨?_, ⟨?_, ?_⟩⟩ <;> intro c hc
   · obtain h | h := Nimber.lt_add_cases hc
     · have := nim_add_equiv (c + b) b
       rw [add_cancel_right] at this
-      rw [← this.incompRel_congr_right, add_fuzzy_add_iff_right, nim_fuzzy_iff]
-      exact h.ne'
+      rw [this.incompRel_congr_left, add_fuzzy_add_iff_right, nim_fuzzy_iff]
+      exact h.ne
     · rw [add_comm] at h
       have := nim_add_equiv a (c + a)
       rw [add_comm c, add_cancel_left] at this
-      rw [← this.incompRel_congr_right, add_fuzzy_add_iff_left, nim_fuzzy_iff]
-      exact h.ne'
+      rw [this.incompRel_congr_left, add_fuzzy_add_iff_left, nim_fuzzy_iff]
+      exact h.ne
+  · rw [← (nim_add_equiv c b).incompRel_congr_right, nim_fuzzy_iff, ne_eq, add_left_inj]
+    exact hc.ne'
+  · rw [← (nim_add_equiv a c).incompRel_congr_right, nim_fuzzy_iff, ne_eq, add_right_inj]
+    exact hc.ne'
 termination_by (a, b)
+
+@[simp]
+theorem mk_nim_add (a b : Nimber) : Game.mk (nim (a + b)) = .mk (nim a) + .mk (nim b) :=
+  Game.mk_eq (nim_add_equiv a b)
+
+-- TODO: upstream
+@[simp]
+theorem _root_.IncompRel.irrefl {α r} [IsRefl α r] (x) : ¬ IncompRel r x x := by
+  rw [not_incompRel_iff]
+
+@[simp]
+theorem nim_mul_equiv_zero {a b : Nimber} : nim a * nim b ≈ 0 ↔ a = 0 ∨ b = 0 := by
+  refine ⟨fun H ↦ ?_, ?_⟩
+  · rw [Impartial.equiv_zero, forall_leftMoves_mul_nim] at H
+    by_contra! h
+    simp_rw [← Nimber.pos_iff_ne_zero] at h
+    simpa [mulOption] using H _ h.1 _ h.2
+  · rintro (rfl | rfl) <;> simp
+
+@[simp]
+theorem nim_mul_eq_zero {a b : Nimber} : nim a * nim b = 0 ↔ a = 0 ∨ b = 0 := by
+  refine ⟨fun H ↦ nim_mul_equiv_zero.1 H.antisymmRel, ?_⟩
+  rintro (rfl | rfl) <;> simp
+
+@[simp]
+theorem nim_mul_fuzzy_zero {a b : Nimber} : nim a * nim b ‖ 0 ↔ a ≠ 0 ∧ b ≠ 0 := by
+  rw [← Impartial.not_equiv_iff, nim_mul_equiv_zero, not_or]
+
+theorem nim_mul_equiv (a b : Nimber) : nim (a * b) ≈ nim a * nim b := by
+  rw [Impartial.equiv_iff_forall_fuzzy, forall_rightMoves_mul]
+  simp_rw [forall_leftMoves_nim, forall_rightMoves_nim]
+  refine ⟨?_, ⟨?_, ?_⟩⟩
+  · intro c hc
+    obtain ⟨c, hc, d, hd, rfl⟩ := exists_of_lt_mul hc
+    rw [Impartial.fuzzy_iff_exists_equiv]
+    left
+    use mulOption (nim a) (nim b) (nim c) (nim d)
+    constructor
+    · apply mulOption_left_right_mem_rightMoves_mul <;> simpa
+    · rw [← Game.mk_eq_mk, Game.mk_mulOption, ← Game.mk_eq (nim_mul_equiv c b),
+        ← Game.mk_eq (nim_mul_equiv a d), ← Game.mk_eq (nim_mul_equiv c d),
+        mk_nim_add, Impartial.sub_mk, mk_nim_add]
+  all_goals
+    intro c hc d hd
+    rw [← Game.mk_fuzzy_mk, Game.mk_mulOption, ← Game.mk_eq (nim_mul_equiv c d),
+      ← Game.mk_eq (nim_mul_equiv c b), ← Game.mk_eq (nim_mul_equiv a d),
+      ← mk_nim_add, Impartial.sub_mk, ← mk_nim_add, Game.mk_fuzzy_mk, nim_fuzzy_iff]
+    exact (Nimber.mul_ne_of_lt hc hd).symm
+termination_by (a, b)
+
+@[simp]
+theorem mk_nim_mul (a b : Nimber) : Game.mk (nim (a * b)) = .mk (nim a * nim b) :=
+  Game.mk_eq (nim_mul_equiv a b)
 
 /-! ### Grundy value -/
 
@@ -259,6 +338,12 @@ theorem grundy_eq_iff_equiv {x y : IGame} [Impartial x] [Impartial y] :
 @[simp] theorem grundy_zero : grundy 0 = 0 := by simpa using grundy_nim 0
 @[simp] theorem grundy_star : grundy ⋆ = 1 := by simpa using grundy_nim 1
 
+theorem grundy_nim_add (a b : Nimber) : grundy (nim a + nim b) = a + b :=
+  grundy_eq_iff_equiv_nim.2 (nim_add_equiv a b).symm
+
+theorem grundy_nim_mul (a b : Nimber) : grundy (nim a * nim b) = a * b :=
+  grundy_eq_iff_equiv_nim.2 (nim_mul_equiv a b).symm
+
 @[simp]
 theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
   rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
@@ -266,7 +351,7 @@ theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
 @[simp]
 theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
     grundy (x + y) = grundy x + grundy y := by
-  rw [grundy_eq_iff_equiv_nim, ← (nim_add_equiv _ _).antisymmRel_congr_right]
+  rw [grundy_eq_iff_equiv_nim, (nim_add_equiv _ _).antisymmRel_congr_right]
   exact add_congr (equiv_nim_grundy x) (equiv_nim_grundy y)
 
 private theorem grundy_image_neg_rightMoves (x : IGame) [Impartial x] :
