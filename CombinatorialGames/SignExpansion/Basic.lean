@@ -201,9 +201,6 @@ instance : BoundedOrder SignExpansion.{u} where
   le_top _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
   bot_le _ := le_iff_toLex.2 <| Pi.toLex_monotone (by simp [Pi.le_def])
 
-instance biheytingAlgebra : BiheytingAlgebra SignExpansion.{u} :=
-  linearOrder.toBiheytingAlgebra
-
 instance : Neg SignExpansion.{u} where
   neg e := {
     sign := -e
