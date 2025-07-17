@@ -333,8 +333,7 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
 
 theorem sInf_leftSurreal_right (x : Cut) : sInf (leftSurreal '' x.right) = x := by
   ext y
-  simp_rw [left_sInf, mem_image, iInter_exists, biInter_and', iInter_iInter_eq_right,
-    left_leftSurreal, mem_iInter, mem_Iio]
+  suffices (∀ i ∈ x.right, y < i) ↔ y ∈ x.left by simpa
   refine ⟨fun H ↦ ?_, fun hy z ↦ left_lt_right hy⟩
   rw [← compl_right]
   exact fun hy ↦ (H y hy).false
