@@ -472,12 +472,9 @@ theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
 
 theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x ≈ y) :
     supLeft x < infRight x := by
-  replace h := Game.mk_eq h
   by_contra! hx
-  have hx' := hx
-  simp_rw [← leftGame_eq_supLeft_of_le hx, ← rightGame_eq_infRight_of_le hx, h, ← toGame_mk,
-    leftGame_toGame, rightGame_toGame] at hx'
-  simp at hx'
+  simp [← leftGame_eq_supLeft_of_le hx, ← rightGame_eq_infRight_of_le hx,
+    Game.mk_eq h, ← toGame_mk] at hx
 
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
