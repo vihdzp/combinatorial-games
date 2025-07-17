@@ -71,6 +71,35 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
+theorem birthday_ofSets_le {s t : Set Surreal.{u}}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
+    (ofSets s t H).birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+  choose f hf using birthday_eq_iGameBirthday
+  have : Numeric {f '' s | f '' t}ᴵ := by
+    rw [numeric_def]
+    simp_rw [leftMoves_ofSets, rightMoves_ofSets]
+    refine ⟨?_, ?_, ?_⟩
+    · rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩
+      obtain ⟨a, hx', _⟩ := hf x
+      obtain ⟨b, hy', _⟩ := hf y
+      rw [← mk_lt_mk, hx', hy']
+      exact H x hx y hy
+    all_goals
+      rintro _ ⟨y, hy, rfl⟩
+      obtain ⟨hy, _, _⟩ := hf y
+      exact hy
+  have : ofSets s t H = mk {f '' s | f '' t}ᴵ := by
+    rw [← toGame_inj, toGame_ofSets, toGame_mk, Game.mk_ofSets]
+    simp_rw [image_image]
+    congr! with a ha a ha
+    all_goals
+    · obtain ⟨_, ha', _⟩ := hf a
+      rw [← toGame_mk, toGame_inj, ha']
+  rw [this]
+  apply (birthday_mk_le _).trans
+  simp_rw [IGame.birthday_ofSets, image_comp]
+  congr! <;> aesop
+
 theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, _, ha, ha'⟩ := birthday_eq_iGameBirthday x
   obtain ⟨b, _, hb, hb'⟩ := birthday_eq_iGameBirthday y

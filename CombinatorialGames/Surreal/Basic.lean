@@ -441,8 +441,9 @@ def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
 
 @[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
 
+@[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
-    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : toGame {s | t}ˢ = {toGame '' s | toGame '' t}ᴳ := by
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} : toGame (ofSets s t H) = {toGame '' s | toGame '' t}ᴳ := by
   simp_rw [ofSets, toGame_mk, Game.mk_ofSets, Set.image_image, game_out_eq]
 
 theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric {s | t}ᴵ} :
@@ -453,14 +454,16 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
 
+@[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) : x < ofSets s t H := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
 
+@[aesop apply unsafe]
 theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) : ofSets s t H < x := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp

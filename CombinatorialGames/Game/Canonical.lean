@@ -3,8 +3,8 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
-
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Mathlib.Neg
 
 /-!
 # Canonical games
@@ -21,17 +21,6 @@ games through undominating and unreversing games.
 
 universe u
 
-/-! ### For Mathlib -/
-
-theorem _root_.Set.neg_setOf {α : Type*} [InvolutiveNeg α] (p : α → Prop) :
-    -{x | p x} = {x | p (-x)} :=
-  rfl
-
-theorem _root_.Set.image_neg_of_apply_neg {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
-    {s : Set α} {f : α → β} (H : ∀ x ∈ s, f (-x) = -f x) : f '' (-s) = -f '' s := by
-  ext
-  rw [Set.mem_image, ← (Equiv.neg _).exists_congr_right]
-  aesop
 
 namespace IGame
 
@@ -73,8 +62,8 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
-  have H₁ := leftMoves_neg x ▸ Set.image_neg_of_apply_neg fun y _ ↦ undominate_neg y
-  have H₂ := rightMoves_neg x ▸ Set.image_neg_of_apply_neg fun y _ ↦ undominate_neg y
+  have H₁ := leftMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  have H₂ := rightMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
   rw [undominate_def, undominate_def, neg_ofSets]
   simp_rw [H₁, H₂, Set.neg_setOf]
   congr! 3 <;> rw [← (Equiv.neg _).forall_congr_right] <;> simp [IGame.lt_neg, IGame.neg_lt]
