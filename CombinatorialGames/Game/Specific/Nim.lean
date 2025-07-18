@@ -32,7 +32,7 @@ namespace IGame
 
 /-- The definition of single-heap nim, which can be viewed as a pile of stones where each player can
 take a positive number of stones from it on their turn. -/
-noncomputable def nim (o : Nimber.{u}) : IGame.{u} :=
+def nim (o : Nimber.{u}) : IGame.{u} :=
   {.range fun (⟨x, _⟩ : Iio o) ↦ nim x | .range fun (⟨x, _⟩ : Iio o) ↦ nim x}ᴵ
 termination_by o
 
@@ -183,7 +183,7 @@ theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
 
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
-noncomputable def leftGrundy (x : IGame.{u}) : Nimber.{u} :=
+def leftGrundy (x : IGame.{u}) : Nimber.{u} :=
   sInf (Set.range fun y : x.leftMoves ↦ leftGrundy y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
@@ -243,7 +243,7 @@ decreasing_by igame_wf
 
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
-noncomputable def rightGrundy (x : IGame.{u}) : Nimber.{u} :=
+def rightGrundy (x : IGame.{u}) : Nimber.{u} :=
   sInf (Set.range fun y : x.rightMoves ↦ rightGrundy y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
@@ -378,158 +378,6 @@ theorem grundy_rightMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.rightMoves
     have := Impartial.of_mem_rightMoves hy; grundy y ≠ grundy x :=
   rightGrundy_ne hy
 
-private theorem of_leftGrundy_eq_rightGrundy' {x : IGame}
-    (hl : ∀ y ∈ x.leftMoves, Impartial y) (hr : ∀ y ∈ x.rightMoves, Impartial y)
-    (H : leftGrundy x = rightGrundy x) : nim (rightGrundy x) ≈ x := by
-  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_leftMoves_nim]
-    intro a ha
-    rw [← H] at ha
-    obtain ⟨y, hy, rfl⟩ := mem_leftGrundy_image_of_lt ha
-    have := hl y hy
-    rw [leftGrundy_eq_grundy]
-    exact lf_of_le_leftMove (nim_grundy_equiv y).le hy
-  · intro y hy
-    have := hr y hy
-    rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff, ← rightGrundy_eq_grundy]
-    exact (rightGrundy_ne hy).symm
-  · intro y hy
-    have := hl y hy
-    rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff, ← leftGrundy_eq_grundy]
-    exact H ▸ leftGrundy_ne hy
-  · rw [forall_rightMoves_nim]
-    intro a ha
-    obtain ⟨y, hy, rfl⟩ := mem_rightGrundy_image_of_lt ha
-    have := hr y hy
-    exact lf_of_rightMove_le (nim_grundy_equiv y).ge hy
-
-/-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
-value, then it's impartial. -/
-theorem of_leftGrundy_eq_rightGrundy {x : IGame}
-    (hl : ∀ y ∈ x.leftMoves, Impartial y) (hr : ∀ y ∈ x.rightMoves, Impartial y)
-    (H : leftGrundy x = rightGrundy x) : Impartial x :=
-  have H := of_leftGrundy_eq_rightGrundy' hl hr H
-  .mk' ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) hl hr
-
-/-! ### Multiplication -/
-
-set_option maxHeartbeats 500000 in
-private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
-    Impartial (x * y) ∧ rightGrundy (x * y) = grundy x * grundy y := by
-  have h₁ : leftGrundy (x * y) = grundy x * grundy y := by
-    apply le_antisymm
-    · apply leftGrundy_le_of_notMem
-      rintro ⟨z, hz, hz'⟩
-      rw [leftMoves_mul] at hz
-      obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
-      all_goals
-        first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-        first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
-        have := (mul' a y).1
-        have := (mul' x b).1
-        have := (mul' a b).1
-        simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
-          leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
-        repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;>
-          solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
-    · rw [le_leftGrundy_iff]
-      intro a h
-      obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      rw [← leftGrundy_eq_grundy] at ha hb
-      obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
-      obtain ⟨b, hb', rfl⟩ := mem_leftGrundy_image_of_lt hb
-      refine ⟨_, mulOption_left_left_mem_leftMoves_mul ha' hb', ?_⟩
-      have := Impartial.of_mem_leftMoves ha'
-      have := Impartial.of_mem_leftMoves hb'
-      have := (mul' a y).1
-      have := (mul' x b).1
-      have := (mul' a b).1
-      simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
-        leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
-      repeat rw [(mul' ..).2]
-      simp
-  have h₂ : rightGrundy (x * y) = grundy x * grundy y := by
-    apply le_antisymm
-    · apply rightGrundy_le_of_notMem
-      rintro ⟨z, hz, hz'⟩
-      rw [rightMoves_mul] at hz
-      obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
-      all_goals
-        first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-        first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
-        have := (mul' a y).1
-        have := (mul' x b).1
-        have := (mul' a b).1
-        simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
-          leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
-        repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;>
-          solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
-    · rw [le_rightGrundy_iff]
-      intro a h
-      obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      simp_rw [← leftGrundy_eq_grundy] at ha
-      obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
-      obtain ⟨b, hb', rfl⟩ := mem_rightGrundy_image_of_lt hb
-      refine ⟨_, mulOption_left_right_mem_rightMoves_mul ha' hb', ?_⟩
-      have := Impartial.of_mem_leftMoves ha'
-      have := Impartial.of_mem_rightMoves hb'
-      have := (mul' a y).1
-      have := (mul' x b).1
-      have := (mul' a b).1
-      simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
-        leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
-      repeat rw [(mul' ..).2]
-      simp
-  refine ⟨of_leftGrundy_eq_rightGrundy ?_ ?_ (h₁.trans h₂.symm), h₂⟩
-  all_goals
-    simp only [forall_leftMoves_mul, forall_rightMoves_mul, mulOption]
-    constructor
-    all_goals
-      intro a ha b hb
-      first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-      first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
-      have := (mul' a y).1
-      have := (mul' x b).1
-      have := (mul' a b).1
-      infer_instance
-termination_by (x, y)
-decreasing_by igame_wf
-
-protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x * y) :=
-  (mul' x y).1
-
-@[simp]
-theorem grundy_mul (x y : IGame) [Impartial x] [Impartial y] :
-    grundy (x * y) = grundy x * grundy y :=
-  (mul' x y).2
-
-theorem _root_.IGame.nim_mul_equiv (a b : Nimber) : nim a * nim b ≈ nim (a * b) := by
-  conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_mul]
-  exact (nim_grundy_equiv _).symm
-
-theorem mul_equiv_zero {x y : IGame} [Impartial x] [Impartial y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
-  rw [← grundy_eq_zero_iff, grundy_mul, mul_eq_zero, grundy_eq_zero_iff, grundy_eq_zero_iff]
-
-protected instance mulOption (x y a b : IGame)
-    [Impartial x] [Impartial y] [Impartial a] [Impartial b] :
-    Impartial (mulOption x y a b) :=
-  .sub ..
-
-theorem mul_congr_left {x₁ x₂ y : IGame} [Impartial x₁] [Impartial x₂] [Impartial y]
-    (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y := by
-  rw [← Game.mk_eq_mk, ← sub_eq_zero] at he ⊢
-  rw [← Game.mk_sub_mul]
-  exact Game.mk_eq (mul_equiv_zero.2 <| .inl (Game.mk_eq_mk.1 he))
-
-theorem mul_congr_right {x y₁ y₂ : IGame} [Impartial x] [Impartial y₁] [Impartial y₂]
-    (he : y₁ ≈ y₂) : x * y₁ ≈ x * y₂ := by
-  rw [mul_comm, mul_comm x]; exact mul_congr_left he
-
-theorem mul_congr {x₁ x₂ y₁ y₂ : IGame} [Impartial x₁] [Impartial x₂] [Impartial y₁] [Impartial y₂]
-    (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
-  (mul_congr_left hx).trans (mul_congr_right hy)
-
 end Impartial
 end IGame
+end
