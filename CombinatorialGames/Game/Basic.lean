@@ -107,8 +107,9 @@ theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
   rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
+@[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
