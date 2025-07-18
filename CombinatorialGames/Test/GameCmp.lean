@@ -27,6 +27,9 @@ example : (2 : IGame) + 2 ≈ 4 := by game_cmp
 example : (3 : IGame) - 2 ≈ 1 := by game_cmp
 example : (2 : IGame) * 2 ≈ 4 := by game_cmp
 
+-- Natural decidability
+example : (200 : IGame) < 400 := by game_cmp
+
 -- Ordinals and nimbers
 example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp
 example : nim 1 + nim (∗2) ≈ nim (∗3) := by game_cmp

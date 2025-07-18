@@ -40,7 +40,8 @@ macro "game_cmp" : tactic =>
     try simp only [lt_iff_le_not_ge, ge_iff_le, gt_iff_lt, AntisymmRel, CompRel, IncompRel]
     repeat
       rw [IGame.le_iff_forall_lf]
-      simp only [game_cmp]})
+      simp only [game_cmp]
+      try decide})
 
 /-! ### Extra tagged lemmas -/
 

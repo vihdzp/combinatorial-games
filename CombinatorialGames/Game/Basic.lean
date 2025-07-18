@@ -248,11 +248,11 @@ theorem sub_mul_equiv (x y z : IGame) : (x - y) * z ≈ x * z - y * z :=
 theorem mul_assoc_equiv (x y z : IGame) : x * y * z ≈ x * (y * z) :=
   Game.mk_eq_mk.1 (Game.mk_mul_assoc x y z)
 
-@[simp, norm_cast]
+@[simp, norm_cast, game_cmp]
 theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n := by
   simp [← Game.mk_le_mk]
 
-@[simp, norm_cast]
+@[simp, norm_cast, game_cmp]
 theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n := by
   simp [← Game.mk_lt_mk]
 
