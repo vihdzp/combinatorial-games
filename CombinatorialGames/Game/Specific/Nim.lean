@@ -143,23 +143,13 @@ theorem neg_nim (o : Nimber) : -nim o = nim o := by
     rw [neg_nim]
 termination_by o
 
-theorem forall_leftMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
-    (∀ x ∈ (nim a * nim b).leftMoves, P x) ↔
-      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
-  simp_rw [forall_leftMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
-
-theorem forall_rightMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
-    (∀ x ∈ (nim a * nim b).rightMoves, P x) ↔
-      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
-  simp_rw [forall_rightMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
-
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
   apply Impartial.mk' (by simp)
   all_goals
     intro x hx
     simp only [leftMoves_nim, rightMoves_nim] at hx
     obtain ⟨a, ha, rfl⟩ := hx
-    exact Impartial.nim a
+    exact .nim a
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
@@ -354,6 +344,14 @@ theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
   rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
 
 @[simp]
+theorem leftGrundy_eq_grundy (x : IGame) [Impartial x] : leftGrundy x = grundy x := by
+  rw [← grundy_neg, grundy, rightGrundy_neg]
+
+@[simp]
+theorem rightGrundy_eq_grundy (x : IGame) [Impartial x] : rightGrundy x = grundy x :=
+  rfl
+
+@[simp]
 theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
     grundy (x + y) = grundy x + grundy y :=
   rightGrundy_add x y
@@ -361,13 +359,6 @@ theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
 theorem _root_.IGame.nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b) := by
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_add]
   exact (nim_grundy_equiv _).symm
-
-@[simp]
-theorem leftGrundy_eq_grundy (x : IGame) [Impartial x] : leftGrundy x = grundy x := by
-  rw [← grundy_neg, grundy, rightGrundy_neg]
-
-@[simp]
-theorem rightGrundy_eq_grundy (x : IGame) [Impartial x] : rightGrundy x = grundy x := rfl
 
 theorem grundy_leftMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.leftMoves) :
     have := Impartial.of_mem_leftMoves hy; grundy y ≠ grundy x := by
