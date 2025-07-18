@@ -1019,14 +1019,14 @@ instance : IntCast IGame where
   | .ofNat n => n
   | .negSucc n => -(n + 1)
 
-@[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
-@[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
+@[simp, game_cmp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
+@[simp, game_cmp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
 
-theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
-theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
+@[game_cmp] theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
+@[game_cmp] theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
 
-@[simp]
+@[simp, game_cmp]
 theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
   cases n with
   | ofNat n =>
