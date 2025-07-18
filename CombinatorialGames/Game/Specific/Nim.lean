@@ -322,6 +322,7 @@ theorem equiv_nim_grundy (x : IGame) [Impartial x] : x ≈ nim (grundy x) := by
 termination_by x
 decreasing_by igame_wf
 
+#exit
 theorem grundy_eq_iff_equiv_nim {x : IGame} [Impartial x] {o : Nimber} :
     grundy x = o ↔ x ≈ nim o := by
   rw [(Impartial.equiv_nim_grundy x).antisymmRel_congr_left, nim_equiv_iff]
