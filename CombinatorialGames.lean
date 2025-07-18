@@ -7,6 +7,7 @@ import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Reductions
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
