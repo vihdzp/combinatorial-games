@@ -318,7 +318,7 @@ instance : AddCommGroupWithOne Nimber where
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 
-@[simp, game_cmp]
+@[game_cmp]
 theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
   simp [natCast_eq_if, Nat.even_iff]
 

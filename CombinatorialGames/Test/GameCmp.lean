@@ -11,15 +11,16 @@ import CombinatorialGames.Game.Tactic
 Tests for the `game_cmp` tactic.
 -/
 
-open Nimber
+open IGame Nimber
 
--- Basic order operations
+-- Basic order relations
 example : (0 : IGame) < 1 := by game_cmp
 example : (-3 : ℤ) ≤ (3 : IGame) := by game_cmp
 example : 1 ≥ ½ := by game_cmp
 example : ↑ > 0 := by game_cmp
-example : 0 ⧏ ⋆ := by game_cmp
+example : ⋆ ⧏ ⧾⋆ := by game_cmp
 example : {{1} | {2}}ᴵ ≈ {{0, 1} | {2, 3}}ᴵ := by game_cmp
+example : ⋆ ‖ 0 := by game_cmp
 
 -- Arithmetic
 example : (2 : IGame) + 2 ≈ 4 := by game_cmp
@@ -28,5 +29,5 @@ example : (2 : IGame) * 2 ≈ 4 := by game_cmp
 
 -- Ordinals and nimbers
 example : NatOrdinal.toIGame 3 ≈ 3 := by game_cmp
-example : IGame.nim 1 + IGame.nim (∗2) ≈ IGame.nim (∗3) := by game_cmp
-example : IGame.nim 2 ≈ IGame.nim 0 := by game_cmp -- Be careful, `↑2` is not the same as `∗2`.
+example : nim 1 + nim (∗2) ≈ nim (∗3) := by game_cmp
+example : nim 2 ≈ nim 0 := by game_cmp -- Be careful, `↑2` is not the same as `∗2`.
