@@ -344,6 +344,14 @@ theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
   rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
 
 @[simp]
+theorem leftGrundy_eq_grundy (x : IGame) [Impartial x] : leftGrundy x = grundy x := by
+  rw [← grundy_neg, grundy, rightGrundy_neg]
+
+@[simp]
+theorem rightGrundy_eq_grundy (x : IGame) [Impartial x] : rightGrundy x = grundy x :=
+  rfl
+
+@[simp]
 theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
     grundy (x + y) = grundy x + grundy y :=
   rightGrundy_add x y
@@ -351,13 +359,6 @@ theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
 theorem _root_.IGame.nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b) := by
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_add]
   exact (nim_grundy_equiv _).symm
-
-@[simp]
-theorem leftGrundy_eq_grundy (x : IGame) [Impartial x] : leftGrundy x = grundy x := by
-  rw [← grundy_neg, grundy, rightGrundy_neg]
-
-@[simp]
-theorem rightGrundy_eq_grundy (x : IGame) [Impartial x] : rightGrundy x = grundy x := rfl
 
 theorem grundy_leftMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.leftMoves) :
     have := Impartial.of_mem_leftMoves hy; grundy y ≠ grundy x := by
