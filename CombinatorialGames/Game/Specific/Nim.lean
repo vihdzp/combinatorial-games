@@ -6,7 +6,7 @@ Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Impartial
 import CombinatorialGames.Mathlib.Neg
-import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Nimber.Basic
 
 /-!
 # Nim and the Sprague-Grundy theorem
@@ -143,23 +143,13 @@ theorem neg_nim (o : Nimber) : -nim o = nim o := by
     rw [neg_nim]
 termination_by o
 
-theorem forall_leftMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
-    (∀ x ∈ (nim a * nim b).leftMoves, P x) ↔
-      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
-  simp_rw [forall_leftMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
-
-theorem forall_rightMoves_mul_nim {a b : Nimber} {P : IGame → Prop} :
-    (∀ x ∈ (nim a * nim b).rightMoves, P x) ↔
-      (∀ x < a, ∀ y < b, P (mulOption (nim a) (nim b) (nim x) (nim y))) := by
-  simp_rw [forall_rightMoves_mul, leftMoves_nim, rightMoves_nim, and_self, forall_mem_image, mem_Iio]
-
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
   apply Impartial.mk' (by simp)
   all_goals
     intro x hx
     simp only [leftMoves_nim, rightMoves_nim] at hx
     obtain ⟨a, ha, rfl⟩ := hx
-    exact Impartial.nim a
+    exact .nim a
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
