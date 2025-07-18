@@ -93,7 +93,7 @@ instance : MulZeroClass Nimber where
     rw [← Nimber.le_zero]
     exact mul_le_of_forall_ne fun _ h ↦ (Nimber.not_lt_zero _ h).elim
 
-theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
+private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
     a' * b + a * b' + a' * b' ≠ a * b := by
   revert b' a'
   have H := csInf_mem (mul_nonempty a b)
@@ -223,6 +223,13 @@ instance : CommRing Nimber where
 
 instance : IsDomain Nimber where
 instance : CancelMonoidWithZero Nimber where
+
+theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
+    a' * b + a * b' + a' * b' ≠ a * b := by
+  rw [ne_eq, ← add_eq_zero] at ha hb
+  rw [ne_eq, ← add_left_inj (a * b), add_self]
+  convert mul_ne_zero ha hb using 2
+  ring
 
 /-! ### Nimber division -/
 
