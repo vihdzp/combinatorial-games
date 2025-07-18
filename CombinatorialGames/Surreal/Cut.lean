@@ -331,7 +331,7 @@ theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
 
 theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
   refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
-  simp 
+  simp
 
 @[simp]
 theorem leftSurreal_ne_rightSurreal (x y : Surreal) : leftSurreal x ≠ rightSurreal y := by
