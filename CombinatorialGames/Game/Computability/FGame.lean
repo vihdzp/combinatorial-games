@@ -245,12 +245,22 @@ theorem ext {x y : FGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
   cases y with | H y =>
   dsimp at hl hr
   refine (SGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
-  · have : x.moveLeft i ∈ Finset.univ.image x.moveLeft := by
-      simp_rw [Finset.mem_image, Finset.mem_univ, true_and, exists_apply_eq_apply]
-    have := Finset.mem_image_of_mem mk this
-    dsimp
-    sorry
-  all_goals sorry
+  · have := Finset.mem_image_of_mem mk (show x.moveLeft i ∈ Finset.univ.image x.moveLeft by simp)
+    rw [Finset.image_image, hl] at this
+    obtain ⟨b, -, hb⟩ := Finset.mem_image.mp this
+    exact ⟨b, mk_eq_mk.mp hb.symm⟩
+  · have := Finset.mem_image_of_mem mk (show y.moveLeft i ∈ Finset.univ.image y.moveLeft by simp)
+    rw [Finset.image_image, ← hl] at this
+    obtain ⟨b, -, hb⟩ := Finset.mem_image.mp this
+    exact ⟨b, mk_eq_mk.mp hb⟩
+  · have := Finset.mem_image_of_mem mk (show x.moveRight i ∈ Finset.univ.image x.moveRight by simp)
+    rw [Finset.image_image, hr] at this
+    obtain ⟨b, -, hb⟩ := Finset.mem_image.mp this
+    exact ⟨b, mk_eq_mk.mp hb.symm⟩
+  · have := Finset.mem_image_of_mem mk (show y.moveRight i ∈ Finset.univ.image y.moveRight by simp)
+    rw [Finset.image_image, ← hr] at this
+    obtain ⟨b, -, hb⟩ := Finset.mem_image.mp this
+    exact ⟨b, mk_eq_mk.mp hb⟩
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
