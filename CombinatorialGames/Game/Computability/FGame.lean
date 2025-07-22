@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios, Kim Morrison
 -/
 import Mathlib.Data.Countable.Small
 import Mathlib.Data.Fintype.Quotient
+import Mathlib.Data.Multiset.Sort
 
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Mathlib.Finlift
@@ -377,7 +378,7 @@ macro "fgame_wf" : tactic =>
 /-- The game `0 = {∅ | ∅}ᴵ`. -/
 instance : Zero FGame := ⟨{∅ | ∅}ꟳ⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
+theorem zero_def : 0 = {∅ | ∅}ꟳ := rfl
 
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofFinsets ..
@@ -385,14 +386,30 @@ theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
 /-- The game `1 = {{0} | ∅}ᴵ`. -/
 instance : One FGame := ⟨{{0} | ∅}ꟳ⟩
 
-theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
+theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
 
-/-! ### Results on IGames -/
+/-! ### Repr -/
+
+-- Allows us to recursively represent `FGame`s. This doesn't seem very idiomatic,
+-- so we avoid putting it to publib space.
+private instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
+
+private unsafe def Multiset.repr_or_none {α : Type*} [Repr α] : Repr (Multiset α) where
+  reprPrec g n := if g.card = 0 then "" else Multiset.instRepr.reprPrec g n
+
+-- TODO: can we hook into delab?
+private unsafe def instRepr_aux : FGame → Std.Format :=
+  fun g ↦ "{" ++
+    Multiset.repr_or_none.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ "|" ++
+    Multiset.repr_or_none.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
+
+unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
+
+/-! ### Results on `IGame`s -/
 
 /-- The computable `toIGame`. -/
 def toIGame (x : FGame) : IGame :=
-  Quotient.liftOn x (.mk <| SGame.toPGame ·) fun _ _ h ↦
-    IGame.mk_eq_mk.mpr (SGame.toPGame_identical h)
+  x.liftOn (.mk <| SGame.toPGame ·) fun _ _ h ↦ IGame.mk_eq_mk.mpr (SGame.toPGame_identical h)
