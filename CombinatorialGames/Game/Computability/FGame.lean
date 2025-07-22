@@ -1,0 +1,325 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios, Kim Morrison
+-/
+import Mathlib.Data.Countable.Small
+import Mathlib.Data.Fintype.Quotient
+
+import CombinatorialGames.Game.Short
+import CombinatorialGames.Mathlib.Finlift
+
+/-!
+# Computably short games
+
+A combinatorial game is `Short` if it has only finitely many subpositions. In particular, this means
+there is a finite set of moves at every point. The theorem proving definition of this is available
+at `IGame.Short`, but its associated definitions are noncomputable. Here, we provide a computable
+short games.
+
+We define `FGame` and its auxiliary backing type `SGame` as data, providing data for the left and
+right moves of a game in the form of an auxiliary `SGame` type. This makes us capable of performing
+some basic computations on `IGame`. Since we would like to use the same standard interface for
+theorem proving in combinatorial games, we restrict this file only for computability usage and
+FGame generation. Since some of `IGame`'s basic definitions are computable, these theorems
+suffice for most of the computability we need.
+
+In general, **You should not build any substantial theory based off of this file.** The theorems
+here are intended to check for definitional correctness over theory building.
+-/
+
+universe u
+
+/-- The type of "short pre-games", before we have quotiented by equivalence (`identicalSetoid`).
+
+This serves the exact purpose that `PGame` does for `IGame`. However, unlike `PGame`'s relatively
+short construction, we must prove some extra definitions for computing on top of `SGame`.
+
+This could perfectly well have been in `Type 0`, but we make it universe polymorphic for
+convenience when building quotient types. However, conversions from computable games to their
+noncomputable counterparts are squeezed to `Type 0`. -/
+inductive SGame : Type u
+  | mk (m n : ℕ) (f : Fin m → SGame) (g : Fin n → SGame) : SGame
+compile_inductive% SGame
+
+namespace SGame
+
+/-- The number of left moves on a `SGame`. -/
+def LeftMoves : SGame → ℕ
+  | mk m _ _ _ => m
+
+/-- The number of right moves on a `SGame`. -/
+def RightMoves : SGame → ℕ
+  | mk _ n _ _ => n
+
+/-- Perform a left move. -/
+def moveLeft : ∀ g : SGame, Fin g.LeftMoves → SGame
+  | mk _ _ f _ => f
+
+/-- Perform a right move. -/
+def moveRight : ∀ g : SGame, Fin g.RightMoves → SGame
+  | mk _ _ _ g => g
+
+@[simp] theorem leftMoves_mk (m n f g) : (mk m n f g).LeftMoves = m := rfl
+@[simp] theorem rightMoves_mk (m n f g) : (mk m n f g).RightMoves = n := rfl
+@[simp] theorem moveLeft_mk (m n f g) : (mk m n f g).moveLeft = f := rfl
+@[simp] theorem moveRight_mk (m n f g) : (mk m n f g).moveRight = g := rfl
+
+/-- A well-founded relation on `SGame`.
+While this doesn't have an equivalent in `PGame`, this is necessary to do
+nice well-defined recursion in `SGame`. -/
+inductive IsOption : SGame → SGame → Prop
+  | moveLeft {x : SGame} (n : Fin x.LeftMoves) : IsOption (x.moveLeft n) x
+  | moveRight {x : SGame} (n : Fin x.RightMoves) : IsOption (x.moveRight n) x
+
+theorem isOption_wf : WellFounded IsOption := by
+  refine ⟨rec fun s t f g IHl IHr ↦ .intro _ ?_⟩
+  rintro y (h | h)
+  · exact IHl _
+  · exact IHr _
+
+instance : WellFoundedRelation SGame := ⟨_, isOption_wf⟩
+
+macro "sgame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    IsOption.moveLeft, IsOption.moveRight] )
+
+instance instDecidableEq : ∀ x y : SGame, Decidable (x = y)
+  | mk m n f g, mk m' n' f' g' => if h : m = m' ∧ n = n' then by
+    have : ∀ a b, Decidable (f a = f' b) := fun a b ↦ instDecidableEq ..
+    have : ∀ a b, Decidable (g a = g' b) := fun a b ↦ instDecidableEq ..
+    rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
+    infer_instance
+  else .isFalse (by simp_all)
+
+/-- The identical relation on short games. See `SGame.Identical`. -/
+def Identical : SGame.{u} → SGame.{u} → Prop
+  | mk _ _ xL xR, mk _ _ yL yR =>
+      Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
+      Relator.BiTotal (fun i j ↦ Identical (xR i) (yR j))
+
+@[inherit_doc] scoped infix:50 " ≡ " => SGame.Identical
+
+theorem identical_iff : ∀ {x y : SGame}, x ≡ y ↔
+    Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
+  | mk .., mk .. => Iff.rfl
+
+@[refl]
+protected theorem Identical.refl (x) : x ≡ x :=
+  x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
+
+@[symm]
+protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
+  | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
+
+@[trans]
+protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
+  | mk .., mk .., mk .., ⟨hL₁, hR₁⟩, ⟨hL₂, hR₂⟩ =>
+    ⟨hL₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hL₂, hR₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hR₂⟩
+
+/-- `Identical` as a `Setoid`. -/
+def identicalSetoid : Setoid SGame :=
+  ⟨Identical, .refl, .symm, .trans⟩
+
+/-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
+theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
+  | mk .., mk .., ⟨hl, _⟩ => hl.1
+
+/-- If `x ≡ y`, then a left move of `y` is identical to some left move of `x`. -/
+theorem Identical.moveLeft_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft j ≡ y.moveLeft i
+  | mk .., mk .., ⟨hl, _⟩ => hl.2
+
+/-- If `x ≡ y`, then a right move of `x` is identical to some right move of `y`. -/
+theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i ≡ y.moveRight j
+  | mk .., mk .., ⟨_, hr⟩ => hr.1
+
+/-- If `x ≡ y`, then a right move of `y` is identical to some right move of `x`. -/
+theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
+  | mk .., mk .., ⟨_, hr⟩ => hr.2
+
+instance Identical.instDecidable (a b) : Decidable (a ≡ b) := by
+  have : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
+  have : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
+  have : DecidableRel (a.moveRight · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
+  have : DecidableRel (a.moveRight · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
+  rw [identical_iff]
+  unfold Relator.BiTotal Relator.LeftTotal Relator.RightTotal
+  infer_instance
+termination_by (a, b)
+decreasing_by sgame_wf
+
+/-- Converts an SGame to a PGame -/
+def toPGame (x : SGame) : PGame := .mk _ _ (toPGame <| x.moveLeft ·) (toPGame <| x.moveRight ·)
+termination_by x
+decreasing_by sgame_wf
+
+@[simp]
+theorem toPGame_leftMoves {x : SGame} : x.toPGame.LeftMoves = Fin x.LeftMoves := by
+  unfold toPGame; rfl
+
+@[simp]
+theorem toPGame_rightMoves {x : SGame} : x.toPGame.RightMoves = Fin x.RightMoves := by
+  unfold toPGame; rfl
+
+theorem toPGame_identical {x y : SGame} (h : x ≡ y) : (toPGame x).Identical (toPGame y) := by
+  rw [identical_iff] at h
+  rw [PGame.identical_iff]
+  constructor
+  · constructor
+    · obtain ⟨⟨h, -⟩, -⟩ := h
+      intro y
+      obtain ⟨b, hb⟩ := h (toPGame_leftMoves.mp y)
+      use toPGame_leftMoves.mpr b
+      dsimp
+      sorry
+    · sorry
+  · sorry
+
+end SGame
+
+/-! ### Game moves -/
+
+/-- Short games up to identity.
+
+`FGame` uses the set-theoretic notion of equality on short games,
+similarly to how `IGame` is defined on top of `PGame`.
+
+Here, we have the distinct advantage of being able to use finsets as our
+backing left and right sets over `IGame`'s small sets.
+-/
+def FGame : Type (u + 1) :=
+  Quotient SGame.identicalSetoid
+
+namespace FGame
+open scoped SGame
+
+/-- The quotient map from `SGame` into `FGame`. -/
+def mk (x : SGame) : FGame := Quotient.mk _ x
+theorem mk_eq_mk {x y : SGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
+
+alias ⟨_, mk_eq⟩ := mk_eq_mk
+alias _root_.SGame.Identical.mk_eq := mk_eq
+
+@[cases_eliminator]
+theorem ind {motive : FGame → Prop} (H : ∀ y, motive (mk y)) (x : FGame) : motive x :=
+  Quotient.ind H x
+
+instance : DecidableEq FGame := Quotient.decidableEq (d := SGame.Identical.instDecidable)
+
+/-- Choose an element of the equivalence class using the axiom of choice. -/
+noncomputable def out (x : FGame) : SGame := Quotient.out x
+@[simp] theorem out_eq (x : FGame) : mk x.out = x := Quotient.out_eq x
+
+/-- The finset of left moves of the game. -/
+def leftMoves : FGame → Finset FGame :=
+  Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveLeft y)) fun x y h ↦ by
+    ext z
+    simp_rw [Finset.mem_image, Finset.mem_univ, true_and]
+    constructor <;> rintro ⟨i, rfl⟩
+    · obtain ⟨j, hj⟩ := h.moveLeft i
+      exact ⟨j, hj.mk_eq.symm⟩
+    · obtain ⟨j, hj⟩ := h.moveLeft_symm i
+      exact ⟨j, hj.mk_eq⟩
+
+/-- The finset of right moves of the game. -/
+def rightMoves : FGame → Finset FGame :=
+  Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveRight y)) fun x y h ↦ by
+    ext z
+    simp_rw [Finset.mem_image, Finset.mem_univ, true_and]
+    constructor <;> rintro ⟨i, rfl⟩
+    · obtain ⟨j, hj⟩ := h.moveRight i
+      exact ⟨j, hj.mk_eq.symm⟩
+    · obtain ⟨j, hj⟩ := h.moveRight_symm i
+      exact ⟨j, hj.mk_eq⟩
+
+@[simp] theorem leftMoves_mk (x : SGame) :
+    leftMoves (mk x) = Finset.univ.image (mk ∘ x.moveLeft) := rfl
+@[simp] theorem rightMoves_mk (x : SGame) :
+    rightMoves (mk x) = Finset.univ.image (mk ∘ x.moveRight) := rfl
+
+@[ext]
+theorem ext {x y : FGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
+    x = y := by
+  cases x with | H x =>
+  cases y with | H y =>
+  dsimp at hl hr
+  refine (SGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
+  · have : x.moveLeft i ∈ Finset.univ.image x.moveLeft := by
+      simp_rw [Finset.mem_image, Finset.mem_univ, true_and, exists_apply_eq_apply]
+    have := Finset.mem_image_of_mem mk this
+    dsimp
+    sorry
+  all_goals sorry
+
+/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
+@[aesop simp]
+def IsOption (x y : FGame) : Prop :=
+  x ∈ y.leftMoves ∨ x ∈ y.rightMoves
+
+theorem IsOption.of_mem_leftMoves {x y : FGame} : x ∈ y.leftMoves → IsOption x y := .inl
+theorem IsOption.of_mem_rightMoves {x y : FGame} : x ∈ y.rightMoves → IsOption x y := .inr
+
+theorem isOption_wf : WellFounded IsOption := by
+  refine ⟨ind fun x ↦ ?_⟩
+  induction x with
+  | mk x _ _ _ hl hr =>
+    constructor
+    rintro ⟨y⟩ (h | h)
+    · rw [leftMoves_mk, Finset.mem_image] at h
+      exact h.choose_spec.2 ▸ hl h.choose
+    · rw [rightMoves_mk, Finset.mem_image] at h
+      exact h.choose_spec.2 ▸ hr h.choose
+
+instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
+
+theorem IsOption.irrefl (x : FGame) : ¬ IsOption x x := _root_.irrefl x
+
+theorem self_notMem_leftMoves (x : FGame) : x ∉ x.leftMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
+
+theorem self_notMem_rightMoves (x : FGame) : x ∉ x.rightMoves :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
+
+/-- Construct a `FGame` from its left and right lists. This is an auxiliary definition
+used to define the more general `FGame.ofFinsets`. -/
+def ofLists (s t : List FGame.{u}) : FGame.{u} :=
+  Quotient.finLiftOn₂ s.get t.get (fun i j ↦ .mk <| .mk _ _ i j) fun a₁ b₁ a₂ b₂ ha hb ↦ by
+    have := fun i ↦ (ha i).symm
+    have := fun i ↦ (hb i).symm
+    ext x <;> aesop (add simp [mk_eq_mk])
+
+private theorem ofLists_moves {s t : List FGame} :
+    (ofLists s t).leftMoves = s.toFinset ∧ (ofLists s t).rightMoves = t.toFinset := by
+  unfold ofLists leftMoves rightMoves FGame.mk
+  generalize hs : s.get = sf
+  generalize ht : t.get = tf
+  induction sf using Quotient.induction_on_pi
+  induction tf using Quotient.induction_on_pi
+  rw [Quotient.finLiftOn₂_mk, Quotient.lift_mk]
+  aesop (add simp [hs.symm, ht.symm])
+
+@[simp]
+theorem ofLists_leftMoves {s t : List FGame} : (ofLists s t).leftMoves = s.toFinset :=
+  ofLists_moves.1
+
+@[simp]
+theorem ofLists_rightMoves {s t : List FGame} : (ofLists s t).rightMoves = t.toFinset :=
+  ofLists_moves.2
+
+/-- Construct a `FGame` from its left and right finsets.
+
+This is given notation `{s | t}ꟳ`, where the superscript `F` is to disambiguate from set builder
+notation, and from the analogous constructors on `IGame`, `Game`, and `Surreal`. -/
+def ofFinsets (s t : Finset FGame) : FGame :=
+  Quotient.liftOn₂ s.1 t.1 ofLists fun a₁ b₁ a₂ b₂ ha hb ↦ by
+    rw [← Quotient.eq_iff_equiv, Multiset.quot_mk_to_coe, Multiset.quot_mk_to_coe] at ha hb
+    simp_rw [FGame.ext_iff, ofLists_leftMoves, ofLists_rightMoves, ← List.toFinset_coe]
+    exact ⟨congrArg Multiset.toFinset ha, congrArg Multiset.toFinset hb⟩
+
+@[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
+
+/-- The computable `toIGame`. -/
+def toIGame (x : FGame) : IGame :=
+  Quotient.liftOn x (.mk <| SGame.toPGame ·) fun _ _ h ↦
+    IGame.mk_eq_mk.mpr (SGame.toPGame_identical h)
