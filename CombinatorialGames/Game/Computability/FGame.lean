@@ -329,7 +329,7 @@ def ofFinsets (s t : Finset FGame) : FGame :=
 
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
 
-private def ofFinsets_moves {s t : Finset FGame} :
+private def moves_ofFinsets {s t : Finset FGame} :
     {s|t}ꟳ.leftMoves = s ∧ {s|t}ꟳ.rightMoves = t := by
   unfold ofFinsets
   generalize hs : s.val = sf
@@ -340,10 +340,57 @@ private def ofFinsets_moves {s t : Finset FGame} :
   simp [List.toFinset, ← hs, ← ht]
 
 @[simp]
-theorem ofFinsets_leftMoves {s t : Finset FGame} : {s|t}ꟳ.leftMoves = s := ofFinsets_moves.1
+theorem leftMoves_ofFinsets {s t : Finset FGame} : {s|t}ꟳ.leftMoves = s := moves_ofFinsets.1
 
 @[simp]
-theorem ofFinsets_rightMoves {s t : Finset FGame} : {s|t}ꟳ.rightMoves = t := ofFinsets_moves.2
+theorem rightMoves_ofFinsets {s t : Finset FGame} : {s|t}ꟳ.rightMoves = t := moves_ofFinsets.2
+
+/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+def Subposition : FGame → FGame → Prop :=
+  Relation.TransGen IsOption
+
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_leftMoves {x y : FGame} (h : x ∈ y.leftMoves) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_leftMoves h)
+
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_rightMoves {x y : FGame} (h : x ∈ y.rightMoves) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_rightMoves h)
+
+theorem Subposition.trans {x y z : FGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
+    Subposition x z :=
+  Relation.TransGen.trans h₁ h₂
+
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
+instance : WellFoundedRelation FGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
+
+/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
+of definitions using well-founded recursion on `FGame`. -/
+macro "fgame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
+
+/-! ### Basic Games -/
+
+/-- The game `0 = {∅ | ∅}ᴵ`. -/
+instance : Zero FGame := ⟨{∅ | ∅}ꟳ⟩
+
+theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
+
+@[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofFinsets ..
+@[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofFinsets ..
+
+/-- The game `1 = {{0} | ∅}ᴵ`. -/
+instance : One FGame := ⟨{{0} | ∅}ꟳ⟩
+
+theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
+
+@[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
+@[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
+
+/-! ### Results on IGames -/
 
 /-- The computable `toIGame`. -/
 def toIGame (x : FGame) : IGame :=
