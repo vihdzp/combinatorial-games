@@ -329,6 +329,22 @@ def ofFinsets (s t : Finset FGame) : FGame :=
 
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
 
+private def ofFinsets_moves {s t : Finset FGame} :
+    {s|t}ꟳ.leftMoves = s ∧ {s|t}ꟳ.rightMoves = t := by
+  unfold ofFinsets
+  generalize hs : s.val = sf
+  generalize ht : t.val = tf
+  induction sf, tf using Quotient.inductionOn₂
+  rw [Multiset.quot_mk_to_coe] at hs ht
+  simp_rw [Multiset.quot_mk_to_coe, Multiset.lift_coe]
+  simp [List.toFinset, ← hs, ← ht]
+
+@[simp]
+theorem ofFinsets_leftMoves {s t : Finset FGame} : {s|t}ꟳ.leftMoves = s := ofFinsets_moves.1
+
+@[simp]
+theorem ofFinsets_rightMoves {s t : Finset FGame} : {s|t}ꟳ.rightMoves = t := ofFinsets_moves.2
+
 /-- The computable `toIGame`. -/
 def toIGame (x : FGame) : IGame :=
   Quotient.liftOn x (.mk <| SGame.toPGame ·) fun _ _ h ↦
