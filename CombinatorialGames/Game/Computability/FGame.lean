@@ -370,7 +370,7 @@ macro "fgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
 
-/-! ### Basic Games -/
+/-! ### Basic games -/
 
 /-- The game `0 = {∅ | ∅}ꟳ`. -/
 instance : Zero FGame := ⟨{∅ | ∅}ꟳ⟩
