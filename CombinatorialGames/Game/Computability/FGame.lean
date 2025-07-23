@@ -164,17 +164,15 @@ theorem toPGame_rightMoves {x : SGame} : x.toPGame.RightMoves = Fin x.RightMoves
 
 theorem toPGame_identical {x y : SGame} (h : x ≡ y) : (toPGame x).Identical (toPGame y) := by
   rw [identical_iff] at h
-  rw [PGame.identical_iff]
-  constructor
-  · constructor
-    · obtain ⟨⟨h, -⟩, -⟩ := h
-      intro y
-      obtain ⟨b, hb⟩ := h (toPGame_leftMoves.mp y)
-      use toPGame_leftMoves.mpr b
-      dsimp
-      sorry
-    · sorry
-  · sorry
+  rw [toPGame, toPGame, PGame.identical_iff]
+  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro k
+  on_goal 1 => obtain ⟨b, hb⟩ := h.1.1 k
+  on_goal 2 => obtain ⟨b, hb⟩ := h.1.2 k
+  on_goal 3 => obtain ⟨b, hb⟩ := h.2.1 k
+  on_goal 4 => obtain ⟨b, hb⟩ := h.2.2 k
+  all_goals exact ⟨b, toPGame_identical hb⟩
+termination_by (x, y)
+decreasing_by sgame_wf
 
 end SGame
 
