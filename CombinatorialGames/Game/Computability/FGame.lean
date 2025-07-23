@@ -402,7 +402,7 @@ private unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Mult
 -- TODO: can we hook into delab?
 private unsafe def instRepr_aux : FGame → Std.Format :=
   fun g ↦ "{" ++
-    Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ "|" ++
+    Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
     Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
 
 /-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
