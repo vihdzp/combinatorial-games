@@ -32,7 +32,7 @@ namespace IGame
 
 /-- The definition of single-heap nim, which can be viewed as a pile of stones where each player can
 take a positive number of stones from it on their turn. -/
-noncomputable def nim (o : Nimber.{u}) : IGame.{u} :=
+def nim (o : Nimber.{u}) : IGame.{u} :=
   {.range fun (⟨x, _⟩ : Iio o) ↦ nim x | .range fun (⟨x, _⟩ : Iio o) ↦ nim x}ᴵ
 termination_by o
 
@@ -173,7 +173,7 @@ theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
 
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
-noncomputable def leftGrundy (x : IGame.{u}) : Nimber.{u} :=
+def leftGrundy (x : IGame.{u}) : Nimber.{u} :=
   sInf (Set.range fun y : x.leftMoves ↦ leftGrundy y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
@@ -233,7 +233,7 @@ decreasing_by igame_wf
 
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
-noncomputable def rightGrundy (x : IGame.{u}) : Nimber.{u} :=
+def rightGrundy (x : IGame.{u}) : Nimber.{u} :=
   sInf (Set.range fun y : x.rightMoves ↦ rightGrundy y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
@@ -524,3 +524,4 @@ theorem mul_congr {x₁ x₂ y₁ y₂ : IGame} [Impartial x₁] [Impartial x₂
 
 end Impartial
 end IGame
+end
