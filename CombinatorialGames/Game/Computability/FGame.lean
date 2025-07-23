@@ -94,7 +94,7 @@ instance instDecidableEq : ∀ x y : SGame, Decidable (x = y)
     infer_instance
   else .isFalse (by simp_all)
 
-/-- The identical relation on short games. See `SGame.Identical`. -/
+/-- The identical relation on short games. See `PGame.Identical`. -/
 def Identical : SGame.{u} → SGame.{u} → Prop
   | mk _ _ xL xR, mk _ _ yL yR =>
       Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
