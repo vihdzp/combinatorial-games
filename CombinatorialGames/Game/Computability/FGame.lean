@@ -374,7 +374,7 @@ macro "fgame_wf" : tactic =>
 
 /-! ### Basic Games -/
 
-/-- The game `0 = {∅ | ∅}ᴵ`. -/
+/-- The game `0 = {∅ | ∅}ꟳ`. -/
 instance : Zero FGame := ⟨{∅ | ∅}ꟳ⟩
 
 theorem zero_def : 0 = {∅ | ∅}ꟳ := rfl
