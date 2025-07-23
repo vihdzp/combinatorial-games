@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios, Kim Morrison
+Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Mathlib.Finlift
@@ -65,9 +65,8 @@ def moveRight : ∀ g : SGame, Fin g.RightMoves → SGame
 @[simp] theorem moveLeft_mk (m n f g) : (mk m n f g).moveLeft = f := rfl
 @[simp] theorem moveRight_mk (m n f g) : (mk m n f g).moveRight = g := rfl
 
-/-- A well-founded relation on `SGame`.
-While this doesn't have an equivalent in `PGame`, this is necessary to do
-nice well-defined recursion in `SGame`. -/
+/-- A well-founded relation on `SGame`. While this goes against minimizing
+`SGame` code, this enables well-defined recursion in `SGame`. -/
 inductive IsOption : SGame → SGame → Prop
   | moveLeft {x : SGame} (n : Fin x.LeftMoves) : IsOption (x.moveLeft n) x
   | moveRight {x : SGame} (n : Fin x.RightMoves) : IsOption (x.moveRight n) x
