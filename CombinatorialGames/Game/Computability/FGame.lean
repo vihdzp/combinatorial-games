@@ -330,7 +330,7 @@ def ofFinsets (s t : Finset FGame) : FGame :=
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
 
 private def moves_ofFinsets {s t : Finset FGame} :
-    {s|t}ꟳ.leftMoves = s ∧ {s|t}ꟳ.rightMoves = t := by
+    {s | t}ꟳ.leftMoves = s ∧ {s | t}ꟳ.rightMoves = t := by
   unfold ofFinsets
   generalize hs : s.val = sf
   generalize ht : t.val = tf
