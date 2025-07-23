@@ -340,7 +340,7 @@ private def moves_ofFinsets {s t : Finset FGame} :
   simp [List.toFinset, ← hs, ← ht]
 
 @[simp]
-theorem leftMoves_ofFinsets {s t : Finset FGame} : {s|t}ꟳ.leftMoves = s := moves_ofFinsets.1
+theorem leftMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.leftMoves = s := moves_ofFinsets.1
 
 @[simp]
 theorem rightMoves_ofFinsets {s t : Finset FGame} : {s|t}ꟳ.rightMoves = t := moves_ofFinsets.2
