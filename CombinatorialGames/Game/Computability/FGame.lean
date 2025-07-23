@@ -343,7 +343,7 @@ private def moves_ofFinsets {s t : Finset FGame} :
 theorem leftMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.leftMoves = s := moves_ofFinsets.1
 
 @[simp]
-theorem rightMoves_ofFinsets {s t : Finset FGame} : {s|t}ꟳ.rightMoves = t := moves_ofFinsets.2
+theorem rightMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.rightMoves = t := moves_ofFinsets.2
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : FGame → FGame → Prop :=
