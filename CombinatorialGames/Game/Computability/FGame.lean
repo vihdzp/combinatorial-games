@@ -157,31 +157,6 @@ instance Identical.instDecidable (a b) : Decidable (a ≡ b) :=
 termination_by (a, b)
 decreasing_by sgame_wf
 
-/-- Converts an SGame to a PGame -/
-def toPGame (x : SGame) : PGame := .mk _ _ (toPGame <| x.moveLeft ·) (toPGame <| x.moveRight ·)
-termination_by x
-decreasing_by sgame_wf
-
-@[simp]
-theorem leftMoves_toPGame {x : SGame} : x.toPGame.LeftMoves = Fin x.LeftMoves := by
-  unfold toPGame; rfl
-
-@[simp]
-theorem rightMoves_toPGame {x : SGame} : x.toPGame.RightMoves = Fin x.RightMoves := by
-  unfold toPGame; rfl
-
-theorem toPGame_identical {x y : SGame} (h : x ≡ y) : (toPGame x).Identical (toPGame y) := by
-  rw [identical_iff] at h
-  rw [toPGame, toPGame, PGame.identical_iff]
-  refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro k
-  on_goal 1 => obtain ⟨b, hb⟩ := h.1.1 k
-  on_goal 2 => obtain ⟨b, hb⟩ := h.1.2 k
-  on_goal 3 => obtain ⟨b, hb⟩ := h.2.1 k
-  on_goal 4 => obtain ⟨b, hb⟩ := h.2.2 k
-  all_goals exact ⟨b, toPGame_identical hb⟩
-termination_by (x, y)
-decreasing_by sgame_wf
-
 end SGame
 
 /-! ### Game moves -/
@@ -415,9 +390,3 @@ private unsafe def instRepr_aux : FGame → Std.Format :=
 and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
 {a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
 unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
-
-/-! ### Results on `IGame`s -/
-
-/-- The computable `toIGame`. -/
-def toIGame (x : FGame) : IGame :=
-  x.liftOn (.mk <| SGame.toPGame ·) fun _ _ h ↦ IGame.mk_eq_mk.mpr (SGame.toPGame_identical h)
