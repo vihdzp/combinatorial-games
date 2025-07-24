@@ -3,6 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Surreal.Dyadic
 import Mathlib.Algebra.Order.Hom.Ring
 import Mathlib.Data.Real.Archimedean
@@ -26,15 +27,27 @@ open IGame
 
 noncomputable section
 
+-- TODO: PR to Mathlib
+theorem exists_div_btwn_of_lt {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
+    [Archimedean K] {x y : K} {n : ℕ} (h : x < y) (nh : (y - x)⁻¹ < n) :
+    ∃ z : ℤ, x < (z : K) / n ∧ (z : K) / n < y := by
+  obtain ⟨z, zh⟩ := exists_floor (x * n)
+  refine ⟨z + 1, ?_⟩
+  have n0' := (inv_pos.2 (sub_pos.2 h)).trans nh
+  have n0 := Nat.cast_pos.1 n0'
+  rw [div_lt_iff₀ n0']
+  refine ⟨(lt_div_iff₀ n0').2 <| (lt_iff_lt_of_le_iff_le (zh _)).1 (lt_add_one _), ?_⟩
+  rw [Int.cast_add, Int.cast_one]
+  refine lt_of_le_of_lt (add_le_add_right ((zh _).1 le_rfl) _) ?_
+  rwa [← lt_sub_iff_add_lt', ← sub_mul, ← div_lt_iff₀' (sub_pos.2 h), one_div]
+
 theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic, x < q ∧ q < y := by
-  sorry
-
--- TODO: upstream
-open Pointwise in
-theorem Set.neg_image {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
-    {s : Set β} {f : β → α} (h : ∀ x ∈ s, f (-x) = -f x) : -f '' s = f '' (-s) := by
-  simp_all [← Set.image_neg_eq_neg, Set.image_image]
+  obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
+  have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
+  obtain ⟨z, hz, hz'⟩ := exists_div_btwn_of_lt h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
+  use .mkRat z ⟨n, rfl⟩
+  simp_all [Rat.mkRat_eq_div]
 
 namespace Real
 
@@ -116,7 +129,8 @@ theorem toIGame_inj {x y : ℝ} : (x : IGame) = y ↔ x = y :=
 
 @[simp]
 theorem toIGame_neg (x : ℝ) : toIGame (-x) = -toIGame x := by
-  simp_rw [toIGame, neg_ofSets, ofSets_inj, Set.neg_image (fun _ _ ↦ Dyadic.toIGame_neg _)]
+  simp_rw [toIGame, neg_ofSets, ofSets_inj,
+    ← Set.image_neg_of_apply_neg_eq_neg (fun _ _ ↦ Dyadic.toIGame_neg _)]
   aesop (add simp [lt_neg, neg_lt])
 
 theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
@@ -282,6 +296,12 @@ theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x - q) ≈ x - 
 
 theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : toIGame (q - x) ≈ q - x := by
   simpa using toIGame_ratCast_add_equiv q (-x)
+
+theorem toIGame_sub_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x - q) ≈ x - q := by
+  simpa using toIGame_add_dyadic_equiv x (-q)
+
+theorem toIGame_dyadic_sub_equiv (q : Dyadic) (x : ℝ) : toIGame (q - x) ≈ q - x := by
+  simpa using toIGame_dyadic_add_equiv q (-x)
 
 theorem toIGame_sub_equiv (x y : ℝ) : toIGame (x - y) ≈ x - y := by
   simpa using toIGame_add_equiv x (-y)
@@ -464,9 +484,11 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
   refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
   · intro r h
+    rw [r.toIGame_equiv_ratCast.lt_congr_left]
     obtain hq | rfl | hq := lt_trichotomy q 0
     · rw [← lt_div_iff_of_neg (mod_cast hq)] at h
-      rw [← Numeric.lt_div_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_right]
+      rw [← Numeric.lt_div_iff_of_neg (by simpa),
+        ← (ratCast_div_equiv ..).lt_congr_right]
       simpa
     · simp_all
     · rw [← div_lt_iff₀ (mod_cast hq)] at h
@@ -475,32 +497,37 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
   · intro r hr y hy
     have := Numeric.of_mem_rightMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
-    rw [(Numeric.mulOption_congr₄ hy).le_congr_left]
+    rw [(Numeric.mulOption_congr₃ r.toIGame_equiv_ratCast).le_congr_left,
+      (Numeric.mulOption_congr₄ hy).le_congr_left]
     apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
     have := Numeric.of_mem_leftMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
-    rw [(Numeric.mulOption_congr₄ hy).le_congr_left]
+    rw [(Numeric.mulOption_congr₃ r.toIGame_equiv_ratCast).le_congr_left,
+      (Numeric.mulOption_congr₄ hy).le_congr_left]
     apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
     have := Numeric.of_mem_leftMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
-    rw [(Numeric.mulOption_congr₄ hy).le_congr_right]
+    rw [(Numeric.mulOption_congr₃ r.toIGame_equiv_ratCast).le_congr_right,
+      (Numeric.mulOption_congr₄ hy).le_congr_right]
     apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r hr y hy
     have := Numeric.of_mem_rightMoves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
-    rw [(Numeric.mulOption_congr₄ hy).le_congr_right]
+    rw [(Numeric.mulOption_congr₃ r.toIGame_equiv_ratCast).le_congr_right,
+      (Numeric.mulOption_congr₄ hy).le_congr_right]
     apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r h
+    rw [r.toIGame_equiv_ratCast.lt_congr_right]
     obtain hq | rfl | hq := lt_trichotomy q 0
     · rw [← div_lt_iff_of_neg (mod_cast hq)] at h
       rw [← Numeric.div_lt_iff_of_neg (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
