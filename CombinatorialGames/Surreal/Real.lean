@@ -14,13 +14,6 @@ import Mathlib.Data.Real.Archimedean
 We define the function `Real.toIGame`, casting a real number to its Dedekind cut, and prove that
 it's an order embedding. We then define the `Game` and `Surreal` versions of this map, and prove
 that they are ring and field homomorphisms respectively.
-
-## TODO
-
-Every real number has birthday at most `ω`. This can be proven by showing that a real number is
-equivalent to its Dedekind cut where only dyadic rationals are considered. At a later point, after
-we have the necessary API on dyadic numbers, we might want to prove this equivalence, or even
-re-define real numbers as Dedekind cuts of dyadic numbers specifically.
 -/
 
 open IGame
