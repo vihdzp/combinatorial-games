@@ -189,7 +189,7 @@ like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. How
 can be proven over the 'identical' equivalence relation, and the literature may occasionally
 specifically use the 'identical' equivalence relation for this reason.
 
-For the more common game equivalence from literature, see `Game.Basic`. -/
+For the more common game equivalence from the literature, see `Game.Basic`. -/
 def IGame : Type (u + 1) :=
   Quotient PGame.identicalSetoid
 
@@ -212,26 +212,26 @@ def out (x : IGame) : PGame := Quotient.out x
 @[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The set of left moves of the game. -/
-def leftMoves : IGame → Set IGame := by
-  refine Quotient.lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ ?_
-  ext z
-  simp_rw [mem_image, mem_range, exists_exists_eq_and]
-  constructor <;> rintro ⟨i, rfl⟩
-  · obtain ⟨j, hj⟩ := h.moveLeft i
-    exact ⟨j, hj.mk_eq.symm⟩
-  · obtain ⟨j, hj⟩ := h.moveLeft_symm i
-    exact ⟨j, hj.mk_eq⟩
+def leftMoves : IGame → Set IGame :=
+  Quotient.lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ by
+    ext z
+    simp_rw [mem_image, mem_range, exists_exists_eq_and]
+    constructor <;> rintro ⟨i, rfl⟩
+    · obtain ⟨j, hj⟩ := h.moveLeft i
+      exact ⟨j, hj.mk_eq.symm⟩
+    · obtain ⟨j, hj⟩ := h.moveLeft_symm i
+      exact ⟨j, hj.mk_eq⟩
 
 /-- The set of right moves of the game. -/
-def rightMoves : IGame → Set IGame := by
-  refine Quotient.lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ ?_
-  ext z
-  simp_rw [mem_image, mem_range, exists_exists_eq_and]
-  constructor <;> rintro ⟨i, rfl⟩
-  · obtain ⟨j, hj⟩ := h.moveRight i
-    exact ⟨j, hj.mk_eq.symm⟩
-  · obtain ⟨j, hj⟩ := h.moveRight_symm i
-    exact ⟨j, hj.mk_eq⟩
+def rightMoves : IGame → Set IGame :=
+  Quotient.lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ by
+    ext z
+    simp_rw [mem_image, mem_range, exists_exists_eq_and]
+    constructor <;> rintro ⟨i, rfl⟩
+    · obtain ⟨j, hj⟩ := h.moveRight i
+      exact ⟨j, hj.mk_eq.symm⟩
+    · obtain ⟨j, hj⟩ := h.moveRight_symm i
+      exact ⟨j, hj.mk_eq⟩
 
 @[simp] theorem leftMoves_mk (x : PGame) : leftMoves (mk x) = mk '' range x.moveLeft := rfl
 @[simp] theorem rightMoves_mk (x : PGame) : rightMoves (mk x) = mk '' range x.moveRight := rfl
@@ -273,11 +273,8 @@ theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOpti
 instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
   inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
--- TODO: is there some more general theorem about well-founded relations on quotients
--- that we could use here?
 theorem isOption_wf : WellFounded IsOption := by
-  suffices ∀ x, Acc IsOption (mk x) from ⟨ind this⟩
-  intro x
+  refine ⟨ind fun x ↦ ?_⟩
   induction x with
   | mk x _ _ _ hl hr =>
     constructor
@@ -289,25 +286,27 @@ instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
 theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
 
-theorem self_not_mem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
+theorem self_notMem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
 
-theorem self_not_mem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
+theorem self_notMem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
-left and right sets.
+left and right sets. You rarely need to use this explicitly, as the termination checker will handle
+things for you.
 
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
-def moveRecOn {P : IGame → Sort*} (x)
-    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) : P x :=
+def moveRecOn {motive : IGame → Sort*} (x)
+    (mk : Π x, (Π y ∈ x.leftMoves, motive y) → (Π y ∈ x.rightMoves, motive y) → motive x) :
+    motive x :=
   isOption_wf.recursion x fun x IH ↦
-    H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
+    mk x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
 
-theorem moveRecOn_eq {P : IGame → Sort*} (x)
-    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
-    moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
+theorem moveRecOn_eq {motive : IGame → Sort*} (x)
+    (mk : Π x, (Π y ∈ x.leftMoves, motive y) → (Π y ∈ x.rightMoves, motive y) → motive x) :
+    moveRecOn x mk = mk x (fun y _ ↦ moveRecOn y mk) (fun y _ ↦ moveRecOn y mk) :=
   isOption_wf.fix_eq ..
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
@@ -368,19 +367,25 @@ theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Smal
   simp [IGame.ext_iff]
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
-left and right sets.
+left and right sets. You rarely need to use this explicitly, as the termination checker will handle
+things for you.
 
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
-def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) : P x :=
-  cast (by simp) <| moveRecOn (P := fun x ↦ P {x.leftMoves | x.rightMoves}ᴵ) x fun x IHl IHr ↦
-    H _ _ (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
+def ofSetsRecOn {motive : IGame.{u} → Sort*} (x)
+    (mk : Π (s t : Set _) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
+    motive x :=
+  cast (by simp) <| moveRecOn (motive := fun x ↦ motive {x.leftMoves | x.rightMoves}ᴵ) x
+    fun x IHl IHr ↦ mk _ _
+      (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
 
 @[simp]
-theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) :
-    ofSetsRecOn {s | t}ᴵ H = H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
+theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
+    (s t : Set IGame) [Small.{u} s] [Small.{u} t]
+    (mk : Π (s t : Set _) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
+    ofSetsRecOn {s | t}ᴵ mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   congr
   any_goals simp
@@ -522,54 +527,63 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.AntisymmRel]
 def delabEquiv : Delab := do
-  let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
-  have u := f.constLevels![0]!
-  have α : Q(Type u) := α
-  have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
-  _ ← assertDefEqQ q(($le).le) q($r)
-  let x ← withNaryArg 2 delab
-  let y ← withNaryArg 3 delab
-  let stx : Term ← do
-    let info ← Lean.MonadRef.mkInfoFromRefPos
-    pure {
-      raw := Lean.Syntax.node3 info ``IGame.«term_≈_» x.raw (Lean.Syntax.atom info "≈") y.raw
-    }
-  annotateGoToSyntaxDef stx
+  try
+    let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
+    have u := f.constLevels![0]!
+    have α : Q(Type u) := α
+    have r : Q($α → $α → Prop) := r
+    let le ← synthInstanceQ q(LE $α)
+    _ ← assertDefEqQ q(($le).le) q($r)
+    let x ← withNaryArg 2 delab
+    let y ← withNaryArg 3 delab
+    let stx : Term ← do
+      let info ← Lean.MonadRef.mkInfoFromRefPos
+      pure {
+        raw := Lean.Syntax.node3 info ``IGame.«term_≈_» x.raw (Lean.Syntax.atom info "≈") y.raw
+      }
+    annotateGoToSyntaxDef stx
+  catch _ => failure -- fail over to the default delaborator
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.IncompRel]
 def delabFuzzy : Delab := do
-  let_expr f@IncompRel α r _ _ := ← getExpr | failure
-  have u := f.constLevels![0]!
-  have α : Q(Type u) := α
-  have r : Q($α → $α → Prop) := r
-  let le ← synthInstanceQ q(LE $α)
-  _ ← assertDefEqQ q(($le).le) q($r)
-  let x ← withNaryArg 2 delab
-  let y ← withNaryArg 3 delab
-  let stx : Term ← do
-    let info ← Lean.MonadRef.mkInfoFromRefPos
-    pure {
-      raw := Lean.Syntax.node3 info ``IGame.«term_‖_» x.raw (Lean.Syntax.atom info "‖") y.raw
-    }
-  annotateGoToSyntaxDef stx
+  try
+    let_expr f@IncompRel α r _ _ := ← getExpr | failure
+    have u := f.constLevels![0]!
+    have α : Q(Type u) := α
+    have r : Q($α → $α → Prop) := r
+    let le ← synthInstanceQ q(LE $α)
+    _ ← assertDefEqQ q(($le).le) q($r)
+    let x ← withNaryArg 2 delab
+    let y ← withNaryArg 3 delab
+    let stx : Term ← do
+      let info ← Lean.MonadRef.mkInfoFromRefPos
+      pure {
+        raw := Lean.Syntax.node3 info ``IGame.«term_‖_» x.raw (Lean.Syntax.atom info "‖") y.raw
+      }
+    annotateGoToSyntaxDef stx
+  catch _ => failure -- fail over to the default delaborator
 
--- TODO: this seems like the kind of goal that could be simplified through `aesop`.
+theorem equiv_of_forall_lf {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ¬y ≤ a)
+    (hr₁ : ∀ a ∈ x.rightMoves, ¬a ≤ y)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ¬x ≤ b)
+    (hr₂ : ∀ b ∈ y.rightMoves, ¬b ≤ x) : x ≈ y := by
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
+
+theorem equiv_of_exists_le {x y : IGame}
+    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≤ b)
+    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, b ≤ a)
+    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  b ≤ a)
+    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≤ b) : x ≈ y := by
+  apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
+
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
     (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
     (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
-  constructor <;> refine le_def.2 ⟨?_, ?_⟩ <;> intro i hi
-  · obtain ⟨j, hj, hj'⟩ := hl₁ i hi
-    exact Or.inl ⟨j, hj, hj'.le⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₂ i hi
-    exact Or.inr ⟨j, hj, hj'.le⟩
-  · obtain ⟨j, hj, hj'⟩ := hl₂ i hi
-    exact Or.inl ⟨j, hj, hj'.ge⟩
-  · obtain ⟨j, hj, hj'⟩ := hr₁ i hi
-    exact Or.inr ⟨j, hj, hj'.ge⟩
+  apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
 theorem zero_lt_one : (0 : IGame) < 1 := by
@@ -961,7 +975,7 @@ theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
-For that, use `Ordinal.toIGame`. -/
+For that, use `NatOrdinal.toIGame`. -/
 instance : AddMonoidWithOne IGame where
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
@@ -1010,14 +1024,14 @@ instance : IntCast IGame where
   | .ofNat n => n
   | .negSucc n => -(n + 1)
 
-@[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
-@[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
+@[simp, game_cmp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
+@[simp, game_cmp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
 
-theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
-theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
+@[game_cmp] theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
+@[game_cmp] theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
 
-@[simp]
+@[simp, game_cmp]
 theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
   cases n with
   | ofNat n =>
@@ -1356,7 +1370,6 @@ theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (h
   use InvTy.right₂ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val', invOption_eq hy]
 
-set_option linter.unnecessarySimpa false in
 private theorem invRec' {x : IGame} (hx : 0 < x)
     {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
     (zero : P 0 (zero_mem_leftMoves_inv hx))
@@ -1375,12 +1388,10 @@ private theorem invRec' {x : IGame} (hx : 0 < x)
     constructor <;> intro y hy
     · rw [inv_eq hx, leftMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
-      have hi := this false i
-      simp_all
+      simpa using this false i
     · rw [inv_eq hx, rightMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
-      have hi := this true i
-      simp_all
+      simpa using this true i
   intro b i
   induction i
   · simpa
@@ -1389,8 +1400,9 @@ private theorem invRec' {x : IGame} (hx : 0 < x)
   on_goal 5 => apply left₂
   on_goal 9 => apply right₁
   on_goal 13 => apply right₂
-  any_goals simpa [inv_eq hx, InvTy.val]
+  any_goals simp [inv_eq hx, InvTy.val]
   all_goals first |
+    exact by assumption |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.1 |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.2
 

@@ -47,8 +47,8 @@ theorem mk_eq_mk {x y : IGame} : mk x = mk y ↔ x ≈ y := Quotient.eq
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Game → Prop} (H : ∀ y, P (mk y)) (x : Game) : P x :=
-  Quotient.ind H x
+theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : motive x :=
+  Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Game) : IGame := Quotient.out x
@@ -107,8 +107,9 @@ theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
   rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
+@[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
@@ -192,6 +193,18 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
       abel_nf
 termination_by (x, y, z)
 decreasing_by igame_wf
+
+theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ s) : x ⧏ {s | t}ᴳ := by
+  rw [ofSets]
+  have : x.out ∈ {out '' s | out '' t}ᴵ.leftMoves := by simpa using mem_image_of_mem _ h
+  simpa [← mk_le_mk] using leftMove_lf this
+
+theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ t) : {s | t}ᴳ ⧏ x := by
+  rw [ofSets]
+  have : x.out ∈ {out '' s | out '' t}ᴵ.rightMoves := by simpa using mem_image_of_mem _ h
+  simpa [← mk_le_mk] using lf_rightMove this
 
 end Game
 
