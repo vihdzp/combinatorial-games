@@ -12,10 +12,9 @@ import Mathlib.Data.Multiset.Sort
 /-!
 # Computably short games
 
-A combinatorial game is `Short` if it has only finitely many subpositions. In particular, this means
-there is a finite set of moves at every point. The theorem proving definition of this is available
-at `IGame.Short`, but its associated definitions are noncomputable. Here, we provide a computable
-short games.
+We already have a definition of short games at `IGame.Short`, but it is, regrettably, noncomputable.
+Here, we provide a computable definition of short games from the ground up, following a similar
+construction method presented in `IGame.lean`.
 
 We define `FGame` and its auxiliary backing type `SGame` as data, providing data for the left and
 right moves of a game in the form of an auxiliary `SGame` type. This makes us capable of performing
@@ -27,6 +26,18 @@ suffice for most of the computability we need.
 In general, **You should not build any substantial theory based off of this file.** The theorems
 here are intended to check for definitional correctness over theory building.
 -/
+
+/-! ### For Mathlib -/
+
+instance {α β : Type*} (r : α → β → Prop) [H : Decidable (∀ a, ∃ b, r a b)] :
+    Decidable (Relator.LeftTotal r) := H
+instance {α β : Type*} (r : α → β → Prop) [H : Decidable (∀ b, ∃ a, r a b)] :
+    Decidable (Relator.RightTotal r) := H
+
+instance {α β : Type*} (r : α → β → Prop)
+    [H₁ : Decidable (∀ a, ∃ b, r a b)] [H : Decidable (∀ b, ∃ a, r a b)] :
+    Decidable (Relator.BiTotal r) :=
+  inferInstanceAs (Decidable (_ ∧ _))
 
 universe u
 
@@ -84,12 +95,12 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
-instance instDecidableEq : ∀ x y : SGame, Decidable (x = y)
-  | mk m n f g, mk m' n' f' g' => if h : m = m' ∧ n = n' then by
-    have : ∀ a b, Decidable (f a = f' b) := fun a b ↦ instDecidableEq ..
-    have : ∀ a b, Decidable (g a = g' b) := fun a b ↦ instDecidableEq ..
-    rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
-    infer_instance
+instance : DecidableEq SGame
+  | mk m n f g, mk m' n' f' g' => if h : m = m' ∧ n = n' then
+    let : ∀ a b, Decidable (f a = f' b) := fun a b ↦ instDecidableEq ..
+    let : ∀ a b, Decidable (g a = g' b) := fun a b ↦ instDecidableEq ..
+    decidable_of_iff ((m = m' ∧ n = n' ∧ (∀ i, f i = f' ⟨i, _⟩) ∧ ∀ i, g i = g' ⟨i, _⟩)) <| by
+      rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
   else .isFalse (by simp_all)
 
 /-- The identical relation on short games. See `PGame.Identical`. -/
@@ -137,14 +148,12 @@ theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i
 theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
   | mk .., mk .., ⟨_, hr⟩ => hr.2
 
-instance Identical.instDecidable (a b) : Decidable (a ≡ b) := by
-  have : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
-  have : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
-  have : DecidableRel (a.moveRight · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
-  have : DecidableRel (a.moveRight · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
-  rw [identical_iff]
-  unfold Relator.BiTotal Relator.LeftTotal Relator.RightTotal
-  infer_instance
+instance Identical.instDecidable (a b) : Decidable (a ≡ b) :=
+  let : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
+  let : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
+  let : DecidableRel (a.moveRight · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
+  let : DecidableRel (a.moveRight · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
+  decidable_of_iff' _ identical_iff
 termination_by (a, b)
 decreasing_by sgame_wf
 
@@ -154,11 +163,11 @@ termination_by x
 decreasing_by sgame_wf
 
 @[simp]
-theorem toPGame_leftMoves {x : SGame} : x.toPGame.LeftMoves = Fin x.LeftMoves := by
+theorem leftMoves_toPGame {x : SGame} : x.toPGame.LeftMoves = Fin x.LeftMoves := by
   unfold toPGame; rfl
 
 @[simp]
-theorem toPGame_rightMoves {x : SGame} : x.toPGame.RightMoves = Fin x.RightMoves := by
+theorem rightMoves_toPGame {x : SGame} : x.toPGame.RightMoves = Fin x.RightMoves := by
   unfold toPGame; rfl
 
 theorem toPGame_identical {x y : SGame} (h : x ≡ y) : (toPGame x).Identical (toPGame y) := by
@@ -185,7 +194,7 @@ similarly to how `IGame` is defined on top of `PGame`.
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.
 -/
-def FGame : Type (u + 1) :=
+def FGame : Type u :=
   Quotient SGame.identicalSetoid
 
 namespace FGame
@@ -307,11 +316,11 @@ private theorem ofLists_moves {s t : List FGame} :
   aesop (add simp [hs.symm, ht.symm])
 
 @[simp]
-theorem ofLists_leftMoves {s t : List FGame} : (ofLists s t).leftMoves = s.toFinset :=
+theorem leftMoves_ofLists {s t : List FGame} : (ofLists s t).leftMoves = s.toFinset :=
   ofLists_moves.1
 
 @[simp]
-theorem ofLists_rightMoves {s t : List FGame} : (ofLists s t).rightMoves = t.toFinset :=
+theorem rightMoves_ofLists {s t : List FGame} : (ofLists s t).rightMoves = t.toFinset :=
   ofLists_moves.2
 
 /-- Construct a `FGame` from its left and right finsets.
@@ -321,7 +330,7 @@ notation, and from the analogous constructors on `IGame`, `Game`, and `Surreal`.
 def ofFinsets (s t : Finset FGame) : FGame :=
   Quotient.liftOn₂ s.1 t.1 ofLists fun a₁ b₁ a₂ b₂ ha hb ↦ by
     rw [← Quotient.eq_iff_equiv, Multiset.quot_mk_to_coe, Multiset.quot_mk_to_coe] at ha hb
-    simp_rw [FGame.ext_iff, ofLists_leftMoves, ofLists_rightMoves, ← List.toFinset_coe]
+    simp_rw [FGame.ext_iff, leftMoves_ofLists, rightMoves_ofLists, ← List.toFinset_coe]
     exact ⟨congrArg Multiset.toFinset ha, congrArg Multiset.toFinset hb⟩
 
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
@@ -379,7 +388,7 @@ theorem zero_def : 0 = {∅ | ∅}ꟳ := rfl
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofFinsets ..
 
-/-- The game `1 = {{0} | ∅}ᴵ`. -/
+/-- The game `1 = {{0} | ∅}ꟳ`. -/
 instance : One FGame := ⟨{{0} | ∅}ꟳ⟩
 
 theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
