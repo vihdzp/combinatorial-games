@@ -406,11 +406,11 @@ theorem of_leftGrundy_eq_rightGrundy {x : IGame}
 
 set_option maxHeartbeats 500000 in
 private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
-    Impartial (x * y) ∧ rightGrundy (x * y) = grundy x * grundy y := by
-  have h₁ : leftGrundy (x * y) = grundy x * grundy y := by
+    Impartial (x * y) ∧ rightGrundy (x * y) = rightGrundy x * rightGrundy y := by
+  have h₁ : leftGrundy (x * y) = leftGrundy x * leftGrundy y := by
     apply le_antisymm
     · apply leftGrundy_le_of_notMem
-      rintro ⟨z, hz, hz'⟩
+      intro ⟨z, hz, hz'⟩
       rw [leftMoves_mul] at hz
       obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
       all_goals
@@ -418,16 +418,13 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
         first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
         have := (mul' a y).1
         have := (mul' x b).1
-        have := (mul' a b).1
         simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
           leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
         repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;>
-          solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
+        apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
     · rw [le_leftGrundy_iff]
       intro a h
       obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      rw [← leftGrundy_eq_grundy] at ha hb
       obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
       obtain ⟨b, hb', rfl⟩ := mem_leftGrundy_image_of_lt hb
       refine ⟨_, mulOption_left_left_mem_leftMoves_mul ha' hb', ?_⟩
@@ -435,44 +432,37 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
       have := Impartial.of_mem_leftMoves hb'
       have := (mul' a y).1
       have := (mul' x b).1
-      have := (mul' a b).1
       simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
         leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
       repeat rw [(mul' ..).2]
-      simp
-  have h₂ : rightGrundy (x * y) = grundy x * grundy y := by
+  have h₂ : rightGrundy (x * y) = rightGrundy x * rightGrundy y := by
     apply le_antisymm
     · apply rightGrundy_le_of_notMem
-      rintro ⟨z, hz, hz'⟩
+      intro ⟨z, hz, hz'⟩
       rw [rightMoves_mul] at hz
       obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
       all_goals
         first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
         first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
-        have := (mul' a y).1
-        have := (mul' x b).1
         have := (mul' a b).1
         simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
           leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
         repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;>
-          solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
+        apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
     · rw [le_rightGrundy_iff]
       intro a h
       obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      simp_rw [← leftGrundy_eq_grundy] at ha
+      rw [rightGrundy_eq_grundy, ← leftGrundy_eq_grundy] at ha
       obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
       obtain ⟨b, hb', rfl⟩ := mem_rightGrundy_image_of_lt hb
       refine ⟨_, mulOption_left_right_mem_rightMoves_mul ha' hb', ?_⟩
       have := Impartial.of_mem_leftMoves ha'
       have := Impartial.of_mem_rightMoves hb'
-      have := (mul' a y).1
-      have := (mul' x b).1
       have := (mul' a b).1
       simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
         leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
       repeat rw [(mul' ..).2]
-      simp
+  simp_rw [leftGrundy_eq_grundy, rightGrundy_eq_grundy] at h₁ h₂
   refine ⟨of_leftGrundy_eq_rightGrundy ?_ ?_ (h₁.trans h₂.symm), h₂⟩
   all_goals
     simp only [forall_leftMoves_mul, forall_rightMoves_mul, mulOption]
