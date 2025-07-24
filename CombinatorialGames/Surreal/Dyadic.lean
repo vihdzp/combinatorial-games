@@ -209,12 +209,12 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
 @[simp] theorem den_zero : (0 : Dyadic).den = 1 := rfl
 
-@[simp] theorem val_pos_iff {x : Dyadic} : 0 < x.1 ↔ 0 < x := .rfl
-@[simp] theorem val_nonneg_iff {x : Dyadic} : 0 ≤ x.1 ↔ 0 ≤ x := .rfl
-@[simp] theorem val_neg_iff {x : Dyadic} : x.1 < 0 ↔ x < 0 := .rfl
-@[simp] theorem val_nonpos_iff {x : Dyadic} : x.1 ≤ 0 ↔ x ≤ 0 := .rfl
-@[simp] theorem val_eq_zero_iff {x : Dyadic} : x.1 = 0 ↔ x = 0 := @Subtype.val_inj _ _ x 0
-@[simp] theorem zero_eq_val_iff {x : Dyadic} : 0 = x.1 ↔ 0 = x := by simp [eq_comm]
+@[simp] theorem zero_lt_val {x : Dyadic} : 0 < x.1 ↔ 0 < x := .rfl
+@[simp] theorem zero_le_val {x : Dyadic} : 0 ≤ x.1 ↔ 0 ≤ x := .rfl
+@[simp] theorem val_lt_zero {x : Dyadic} : x.1 < 0 ↔ x < 0 := .rfl
+@[simp] theorem val_le_zero {x : Dyadic} : x.1 ≤ 0 ↔ x ≤ 0 := .rfl
+@[simp] theorem val_eq_zero {x : Dyadic} : x.1 = 0 ↔ x = 0 := @Subtype.val_inj _ _ x 0
+@[simp] theorem zero_eq_val {x : Dyadic} : 0 = x.1 ↔ 0 = x := by simp [eq_comm]
 
 instance : One Dyadic where
   one := (1 : ℕ)
