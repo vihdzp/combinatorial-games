@@ -28,7 +28,7 @@ open IGame
 noncomputable section
 
 -- TODO: PR to Mathlib
-theorem exists_div_btwn_of_lt {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
+theorem exists_div_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     [Archimedean K] {x y : K} {n : ℕ} (h : x < y) (nh : (y - x)⁻¹ < n) :
     ∃ z : ℤ, x < (z : K) / n ∧ (z : K) / n < y := by
   obtain ⟨z, zh⟩ := exists_floor (x * n)
@@ -45,7 +45,7 @@ theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrdere
     [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic, x < q ∧ q < y := by
   obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
   have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
-  obtain ⟨z, hz, hz'⟩ := exists_div_btwn_of_lt h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
+  obtain ⟨z, hz, hz'⟩ := exists_div_btwn h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
   use .mkRat z ⟨n, rfl⟩
   simp_all [Rat.mkRat_eq_div]
 
