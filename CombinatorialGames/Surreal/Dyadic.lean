@@ -643,11 +643,11 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_right]
-      simpa using lower_lt _
+      simp
     all_goals
       obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_left]
-      simpa using lt_upper _
+      simp
   · intro z hz
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     rw [not_fits_iff]

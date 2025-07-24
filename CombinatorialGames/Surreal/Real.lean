@@ -175,14 +175,16 @@ theorem toIGame_equiv_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) ≈ q ↔ x = 
 theorem toIGame_add_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x + q) ≈ x + q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩, ⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
+  refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, fun y hy ↦ ?_⟩⟩,
+    ⟨⟨fun r hr ↦ ?_, fun y hy ↦ ?_⟩, fun r hr ↦ ?_⟩⟩
   · rw [← IGame.sub_lt_iff_lt_add, ← (Dyadic.toIGame_sub_equiv ..).lt_congr_left]
     simpa [sub_lt_iff_lt_add]
   · rw [← (Dyadic.toIGame_add_equiv ..).lt_congr_right]
     simpa
-  · intro y hy
-    obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hy
-    rw [(add_congr_right hy).le_congr_left]
+  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hy
+    rw [(add_congr_right (Dyadic.toIGame_equiv_ratCast q.upper)).le_congr_left]
+    simp
+    rw [Numeric.not_le]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
     apply (lt_trans (b := (s : IGame)) _ _).not_ge
@@ -191,8 +193,7 @@ theorem toIGame_add_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x + q) ≈ x 
       simpa [sub_lt_iff_lt_add]
   · rw [← (Dyadic.toIGame_add_equiv ..).lt_congr_left]
     simpa
-  · intro y hy
-    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
+  · obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(add_congr_right hy).le_congr_right]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
