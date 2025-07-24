@@ -209,6 +209,13 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
 @[simp] theorem den_zero : (0 : Dyadic).den = 1 := rfl
 
+@[simp] theorem val_pos_iff {x : Dyadic} : 0 < x.1 ↔ 0 < x := .rfl
+@[simp] theorem val_nonneg_iff {x : Dyadic} : 0 ≤ x.1 ↔ 0 ≤ x := .rfl
+@[simp] theorem val_neg_iff {x : Dyadic} : x.1 < 0 ↔ x < 0 := .rfl
+@[simp] theorem val_nonpos_iff {x : Dyadic} : x.1 ≤ 0 ↔ x ≤ 0 := .rfl
+@[simp] theorem val_eq_zero_iff {x : Dyadic} : x.1 = 0 ↔ x = 0 := @Subtype.val_inj _ _ x 0
+@[simp] theorem zero_eq_val_iff {x : Dyadic} : 0 = x.1 ↔ 0 = x := by simp [eq_comm]
+
 instance : One Dyadic where
   one := (1 : ℕ)
 
@@ -695,6 +702,26 @@ theorem toIGame_equiv_ratCast (x : Dyadic) : (x : IGame) ≈ x.val := by
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv_ratCast (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
 termination_by x.den
+
+@[simp] theorem zero_lt_toIGame {x : Dyadic} : 0 < (x : IGame) ↔ 0 < x := by
+  simp [x.toIGame_equiv_ratCast.lt_congr_right]
+@[simp] theorem zero_le_toIGame {x : Dyadic} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by
+  simp [x.toIGame_equiv_ratCast.le_congr_right]
+
+@[simp] theorem toIGame_lt_zero {x : Dyadic} : (x : IGame) < 0 ↔ x < 0 := by
+  simp [x.toIGame_equiv_ratCast.lt_congr_left]
+@[simp] theorem toIGame_le_zero {x : Dyadic} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by
+  simp [x.toIGame_equiv_ratCast.le_congr_left]
+
+@[simp] theorem toIGame_equiv_zero {x : Dyadic} : (x : IGame) ≈ 0 ↔ x = 0 := by
+  simp [AntisymmRel, le_antisymm_iff]
+@[simp] theorem zero_equiv_toIGame {x : Dyadic} : 0 ≈ (x : IGame) ↔ 0 = x := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp] theorem toIGame_eq_zero {x : Dyadic} : (x : IGame) = 0 ↔ x = 0 :=
+  ⟨fun h ↦ toIGame_equiv_zero.1 h.antisymmRel, by simp_all⟩
+@[simp] theorem zero_eq_toIGame {x : Dyadic} : 0 = (x : IGame) ↔ 0 = x := by
+  simp [eq_comm]
 
 @[simp]
 theorem toIGame_le_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) ≤ y ↔ x.1 ≤ y := by

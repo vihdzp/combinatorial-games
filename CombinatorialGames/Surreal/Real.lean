@@ -14,6 +14,13 @@ import Mathlib.Data.Real.Archimedean
 We define the function `Real.toIGame`, casting a real number to its Dedekind cut, and prove that
 it's an order embedding. We then define the `Game` and `Surreal` versions of this map, and prove
 that they are ring and field homomorphisms respectively.
+
+## TODO
+
+Every real number has birthday at most `ω`. This can be proven by showing that a real number is
+equivalent to its Dedekind cut where only dyadic rationals are considered. At a later point, after
+we have the necessary API on dyadic numbers, we might want to prove this equivalence, or even
+re-define real numbers as Dedekind cuts of dyadic numbers specifically.
 -/
 
 open IGame
@@ -533,7 +540,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
 theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
-private theorem ratCast_lt_mul_toIGame' {x y : ℝ} {q : ℚ}
+private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic}
     (hx : 0 < x) (hy : 0 < y) (h : q < x * y) : (q : IGame) < x * y := by
   rw [← div_lt_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn (max_lt h hx)
@@ -541,14 +548,15 @@ private theorem ratCast_lt_mul_toIGame' {x y : ℝ} {q : ℚ}
   rw [div_lt_comm₀ hy hr₀] at hr
   obtain ⟨s, hs, hs'⟩ := exists_rat_btwn (max_lt hr hy)
   trans r * s
-  · rw [mul_comm, ← IGame.Numeric.div_lt_iff, ← (ratCast_div_equiv ..).lt_congr_left] <;>
+  · rw [mul_comm, q.toIGame_equiv_ratCast.lt_congr_left, ← IGame.Numeric.div_lt_iff,
+      ← (ratCast_div_equiv ..).lt_congr_left] <;>
       simp_all [← Rat.cast_div]
   · simp_rw [← Surreal.mk_lt_mk]
     dsimp
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
 
-private theorem mul_toIGame_lt_ratCast' {x y : ℝ} {q : ℚ}
+private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
     (hx : 0 < x) (hy : 0 < y) (h : x * y < q) : x * y < (q : IGame) := by
   rw [← lt_div_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn h
@@ -560,42 +568,45 @@ private theorem mul_toIGame_lt_ratCast' {x y : ℝ} {q : ℚ}
     dsimp
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
-  · rw [mul_comm, ← IGame.Numeric.lt_div_iff, ← (ratCast_div_equiv ..).lt_congr_right] <;>
+  · rw [mul_comm,q.toIGame_equiv_ratCast.lt_congr_right,  ← IGame.Numeric.lt_div_iff,
+      ← (ratCast_div_equiv ..).lt_congr_right] <;>
       simp_all [← Rat.cast_div]
 
-private theorem ratCast_lt_mul_toIGame {x y : ℝ} (q : ℚ) (h : q < x * y) : (q : IGame) < x * y := by
+private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic) (h : q < x * y) :
+    (q : IGame) < x * y := by
   obtain hx | rfl | hx := lt_trichotomy x 0
   · obtain hy | rfl | hy := lt_trichotomy y 0
-    · have := @ratCast_lt_mul_toIGame' (-x) (-y) q
+    · have := @dyadic_lt_mul_toIGame' (-x) (-y) q
       simp_all
     · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
       simp_all
-    · have := @mul_toIGame_lt_ratCast' (-x) y (-q)
+    · have := @mul_toIGame_lt_dyadic' (-x) y (-q)
       simp_all
   · rw [(Numeric.mul_congr_left toIGame_zero_equiv).lt_congr_right]
     simp_all
   · obtain hy | rfl | hy := lt_trichotomy y 0
-    · have := @mul_toIGame_lt_ratCast' x (-y) (-q)
+    · have := @mul_toIGame_lt_dyadic' x (-y) (-q)
       simp_all
     · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
       simp_all
-    · exact ratCast_lt_mul_toIGame' hx hy h
+    · exact dyadic_lt_mul_toIGame' hx hy h
 
-private theorem mul_toIGame_lt_ratCast {x y : ℝ} (q : ℚ) (h : x * y < q) : x * y < (q : IGame) := by
-  have := @ratCast_lt_mul_toIGame (-x) y (-q)
+private theorem mul_toIGame_lt_dyadic {x y : ℝ} (q : Dyadic) (h : x * y < q) :
+    x * y < (q : IGame) := by
+  have := @dyadic_lt_mul_toIGame (-x) y (-q)
   simp_all
 
 private theorem toSurreal_mul_ratCast (x : ℝ) (q : ℚ) : toSurreal (x * q) = x * q := by
   simpa using Surreal.mk_eq (toIGame_mul_ratCast_equiv x q)
 
-private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : ℚ} :
+private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : Dyadic} :
     mulOption (toIGame x) (toIGame y) q r ≈ toIGame (q * y + x * r - q * r) := by
   simp [← Surreal.mk_eq_mk, mulOption, mul_comm, toSurreal_mul_ratCast]
 
 theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x * y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨ratCast_lt_mul_toIGame, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, mul_toIGame_lt_ratCast⟩⟩ <;>
+  refine ⟨⟨dyadic_lt_mul_toIGame, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, mul_toIGame_lt_dyadic⟩⟩ <;>
     intro q hq r hr
   · rw [mulOption_toIGame_equiv.lt_congr_right, toIGame_lt_iff]
     have : 0 < (x - q) * (r - y) := by apply mul_pos <;> simpa [sub_pos]
