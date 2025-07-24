@@ -113,7 +113,7 @@ def Identical : SGame.{u} → SGame.{u} → Prop
 
 theorem identical_iff : ∀ {x y : SGame}, x ≡ y ↔
     Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
-  | mk .., mk .. => Iff.rfl
+  | mk .., mk .. => .rfl
 
 @[refl]
 protected theorem Identical.refl (x) : x ≡ x :=
