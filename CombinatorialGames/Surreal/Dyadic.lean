@@ -476,6 +476,7 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
 * If `x : ℤ`, then `toIGame x = ↑x`.
 * Otherwise, if `x = m / n` with `n` even, then `toIGame x = {(m - 1) / n | (m + 1) / n}ᴵ`. Note
   that both options will have smaller denominators. -/
+@[coe]
 noncomputable def toIGame (x : Dyadic) : IGame :=
   if _ : x.den = 1 then x.num else {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
 termination_by x.den
@@ -694,6 +695,30 @@ theorem toIGame_equiv_ratCast (x : Dyadic) : (x : IGame) ≈ x.val := by
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv_ratCast (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
 termination_by x.den
+
+@[simp]
+theorem toIGame_le_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) ≤ y ↔ x.1 ≤ y := by
+  simp [(toIGame_equiv_ratCast x).le_congr_left]
+
+@[simp]
+theorem toIGame_lt_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) < y ↔ x.1 < y := by
+  simp [(toIGame_equiv_ratCast x).lt_congr_left]
+
+@[simp]
+theorem ratCast_le_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y.1 := by
+  simp [(toIGame_equiv_ratCast y).le_congr_right]
+
+@[simp]
+theorem ratCast_lt_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) < y ↔ x < y.1 := by
+  simp [(toIGame_equiv_ratCast y).lt_congr_right]
+
+@[simp]
+theorem toIGame_equiv_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) ≈ y ↔ x.1 = y := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp]
+theorem ratCast_equiv_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) ≈ y ↔ x = y.1 := by
+  simp [AntisymmRel, le_antisymm_iff]
 
 end Dyadic
 
