@@ -97,12 +97,14 @@ theorem opow_zero : ω^ 0 = 1 := by
 
 private theorem opow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
     [Numeric (ω^ x)] [Numeric (ω^ y)] :
-    (x < y → ∀ r : ℝ, 0 < r → (r : IGame) * ω^ x < ω^ y) ∧ (x ≤ y → ω^ x ≤ ω^ y) := by
+    (x < y → ∀ r : ℝ, 0 < r → r * ω^ x < ω^ y) ∧ (x ≤ y → ω^ x ≤ ω^ y) := by
   refine ⟨fun hxy r hr ↦ ?_, fun hxy ↦ ?_⟩
   · obtain (⟨z, hz, hxz⟩ | ⟨z, hz, hzy⟩) := lf_iff_exists_le.1 hxy.not_ge
     · have := Numeric.of_mem_leftMoves hz
-      have hz' := opow_mem_leftMoves_opow hz
-      have := Numeric.of_mem_leftMoves hz'
+      have := Numeric.of_mem_leftMoves (opow_mem_leftMoves_opow hz)
+      obtain ⟨n, hn⟩ := exists_nat_gt r
+      have : (r : IGame) < (n : IGame) := by simp
+      have := mul_lt_mul
       exact (opow_strictMono_aux.2 hxz).trans_lt (Numeric.leftMove_lt hz')
     · have := Numeric.of_mem_rightMoves hz
       have hz' := opow_mem_rightMoves_opow hz
