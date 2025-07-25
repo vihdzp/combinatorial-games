@@ -183,20 +183,23 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 instance : NatCast Dyadic where
   natCast n := ⟨n, .natCast n⟩
 
-@[simp] theorem val_natCast (n : ℕ) : (n : Dyadic).val = n := rfl
-@[simp] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := rfl
-@[simp] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 := rfl
+@[simp, norm_cast] theorem val_natCast (n : ℕ) : (n : Dyadic).val = n := rfl
+@[simp, norm_cast] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := rfl
+@[simp, norm_cast] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 := rfl
 
 @[simp] theorem val_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).val = n := rfl
 @[simp] theorem num_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).num = n := rfl
 @[simp] theorem den_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).den = 1 := rfl
 
-@[simp] theorem natCast_lt_val {x : ℕ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
-@[simp] theorem natCast_le_val {x : ℕ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
-@[simp] theorem val_lt_natCast {x : Dyadic} {y : ℕ} : x.1 < y ↔ x < y := .rfl
-@[simp] theorem val_le_natCast {x : Dyadic} {y : ℕ} : x.1 ≤ y ↔ x ≤ y := .rfl
-@[simp] theorem val_eq_natCast {x : Dyadic} {y : ℕ} : x.1 = y ↔ x = y := @Subtype.val_inj _ _ x y
-@[simp] theorem natCast_eq_val {x : ℕ} {y : Dyadic} : x = y.1 ↔ x = y := by simp [eq_comm]
+@[simp, norm_cast] theorem natCast_lt_val {x : ℕ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
+@[simp, norm_cast] theorem natCast_le_val {x : ℕ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
+@[simp, norm_cast] theorem val_lt_natCast {x : Dyadic} {y : ℕ} : x.1 < y ↔ x < y := .rfl
+@[simp, norm_cast] theorem val_le_natCast {x : Dyadic} {y : ℕ} : x.1 ≤ y ↔ x ≤ y := .rfl
+
+@[simp, norm_cast] theorem val_eq_natCast {x : Dyadic} {y : ℕ} : x.1 = y ↔ x = y :=
+  @Subtype.val_inj _ _ x y
+@[simp, norm_cast] theorem natCast_eq_val {x : ℕ} {y : Dyadic} : x = y.1 ↔ x = y := by
+  simp [eq_comm]
 
 instance : IntCast Dyadic where
   intCast n := ⟨n, .intCast n⟩
@@ -206,19 +209,21 @@ instance : IntCast Dyadic where
 @[simp] theorem num_intCast (n : ℤ) : (n : Dyadic).num = n := rfl
 @[simp] theorem den_intCast (n : ℤ) : (n : Dyadic).den = 1 := rfl
 
-@[simp] theorem intCast_lt_val {x : ℤ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
-@[simp] theorem intCast_le_val {x : ℤ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
-@[simp] theorem val_lt_intCast {x : Dyadic} {y : ℤ} : x.1 < y ↔ x < y := .rfl
-@[simp] theorem val_le_intCast {x : Dyadic} {y : ℤ} : x.1 ≤ y ↔ x ≤ y := .rfl
-@[simp] theorem val_eq_intCast {x : Dyadic} {y : ℤ} : x.1 = y ↔ x = y := @Subtype.val_inj _ _ x y
-@[simp] theorem intCast_eq_val {x : ℤ} {y : Dyadic} : x = y.1 ↔ x = y := by simp [eq_comm]
+@[simp, norm_cast] theorem intCast_lt_val {x : ℤ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
+@[simp, norm_cast] theorem intCast_le_val {x : ℤ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
+@[simp, norm_cast] theorem val_lt_intCast {x : Dyadic} {y : ℤ} : x.1 < y ↔ x < y := .rfl
+@[simp, norm_cast] theorem val_le_intCast {x : Dyadic} {y : ℤ} : x.1 ≤ y ↔ x ≤ y := .rfl
+@[simp, norm_cast] theorem val_eq_intCast {x : Dyadic} {y : ℤ} : x.1 = y ↔ x = y :=
+  @Subtype.val_inj _ _ x y
+@[simp, norm_cast] theorem intCast_eq_val {x : ℤ} {y : Dyadic} : x = y.1 ↔ x = y := by
+  simp [eq_comm]
 
 instance : Zero Dyadic where
   zero := (0 : ℕ)
 
 instance : Inhabited Dyadic := ⟨0⟩
 
-@[simp] theorem val_zero : (0 : Dyadic).val = 0 := rfl
+@[simp, norm_cast] theorem val_zero : (0 : Dyadic).val = 0 := rfl
 @[simp] theorem mk_zero (h : IsDyadic 0) : (⟨0, h⟩ : Dyadic) = 0 := rfl
 @[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
 @[simp] theorem den_zero : (0 : Dyadic).den = 1 := rfl
@@ -233,7 +238,7 @@ instance : Inhabited Dyadic := ⟨0⟩
 instance : One Dyadic where
   one := (1 : ℕ)
 
-@[simp] theorem val_one : (1 : Dyadic).val = 1 := rfl
+@[simp, norm_cast] theorem val_one : (1 : Dyadic).val = 1 := rfl
 @[simp] theorem mk_one (h : IsDyadic 1) : (⟨1, h⟩ : Dyadic) = 1 := rfl
 @[simp] theorem num_one : (1 : Dyadic).num = 1 := rfl
 @[simp] theorem den_one : (1 : Dyadic).den = 1 := rfl
