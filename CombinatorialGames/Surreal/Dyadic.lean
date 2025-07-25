@@ -209,6 +209,13 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
 @[simp] theorem den_zero : (0 : Dyadic).den = 1 := rfl
 
+@[simp] theorem zero_lt_val {x : Dyadic} : 0 < x.1 ↔ 0 < x := .rfl
+@[simp] theorem zero_le_val {x : Dyadic} : 0 ≤ x.1 ↔ 0 ≤ x := .rfl
+@[simp] theorem val_lt_zero {x : Dyadic} : x.1 < 0 ↔ x < 0 := .rfl
+@[simp] theorem val_le_zero {x : Dyadic} : x.1 ≤ 0 ↔ x ≤ 0 := .rfl
+@[simp] theorem val_eq_zero {x : Dyadic} : x.1 = 0 ↔ x = 0 := @Subtype.val_inj _ _ x 0
+@[simp] theorem zero_eq_val {x : Dyadic} : 0 = x.1 ↔ 0 = x := by simp [eq_comm]
+
 instance : One Dyadic where
   one := (1 : ℕ)
 
@@ -433,11 +440,13 @@ theorem lower_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : lower x = x.num - 
 theorem upper_eq_of_den_eq_one {x : Dyadic} (h : x.den = 1) : upper x = x.num + 1 := by
   simp [upper, h]
 
+@[simp]
 theorem lower_lt (x : Dyadic) : lower x < x := by
   conv_rhs => rw [← x.mkRat_self]
   rw [lower, mkRat_lt_mkRat]
   exact sub_one_lt x.num
 
+@[simp]
 theorem lt_upper (x : Dyadic) : x < upper x := by
   simpa using lower_lt (-x)
 
@@ -474,6 +483,7 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
 * If `x : ℤ`, then `toIGame x = ↑x`.
 * Otherwise, if `x = m / n` with `n` even, then `toIGame x = {(m - 1) / n | (m + 1) / n}ᴵ`. Note
   that both options will have smaller denominators. -/
+@[coe]
 noncomputable def toIGame (x : Dyadic) : IGame :=
   if _ : x.den = 1 then x.num else {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
 termination_by x.den
@@ -641,11 +651,11 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_right]
-      simpa using lower_lt _
+      simp
     all_goals
       obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_left]
-      simpa using lt_upper _
+      simp
   · intro z hz
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     rw [not_fits_iff]
@@ -692,6 +702,50 @@ theorem toIGame_equiv_ratCast (x : Dyadic) : (x : IGame) ≈ x.val := by
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv_ratCast (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
 termination_by x.den
+
+@[simp] theorem zero_lt_toIGame {x : Dyadic} : 0 < (x : IGame) ↔ 0 < x := by
+  simp [x.toIGame_equiv_ratCast.lt_congr_right]
+@[simp] theorem zero_le_toIGame {x : Dyadic} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by
+  simp [x.toIGame_equiv_ratCast.le_congr_right]
+
+@[simp] theorem toIGame_lt_zero {x : Dyadic} : (x : IGame) < 0 ↔ x < 0 := by
+  simp [x.toIGame_equiv_ratCast.lt_congr_left]
+@[simp] theorem toIGame_le_zero {x : Dyadic} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by
+  simp [x.toIGame_equiv_ratCast.le_congr_left]
+
+@[simp] theorem toIGame_equiv_zero {x : Dyadic} : (x : IGame) ≈ 0 ↔ x = 0 := by
+  simp [AntisymmRel, le_antisymm_iff]
+@[simp] theorem zero_equiv_toIGame {x : Dyadic} : 0 ≈ (x : IGame) ↔ 0 = x := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp] theorem toIGame_eq_zero {x : Dyadic} : (x : IGame) = 0 ↔ x = 0 :=
+  ⟨fun h ↦ toIGame_equiv_zero.1 h.antisymmRel, by simp_all⟩
+@[simp] theorem zero_eq_toIGame {x : Dyadic} : 0 = (x : IGame) ↔ 0 = x := by
+  simp [eq_comm]
+
+@[simp]
+theorem toIGame_le_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) ≤ y ↔ x.1 ≤ y := by
+  simp [(toIGame_equiv_ratCast x).le_congr_left]
+
+@[simp]
+theorem toIGame_lt_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) < y ↔ x.1 < y := by
+  simp [(toIGame_equiv_ratCast x).lt_congr_left]
+
+@[simp]
+theorem ratCast_le_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y.1 := by
+  simp [(toIGame_equiv_ratCast y).le_congr_right]
+
+@[simp]
+theorem ratCast_lt_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) < y ↔ x < y.1 := by
+  simp [(toIGame_equiv_ratCast y).lt_congr_right]
+
+@[simp]
+theorem toIGame_equiv_ratCast_iff {x : Dyadic} {y : ℚ} : (x : IGame) ≈ y ↔ x.1 = y := by
+  simp [AntisymmRel, le_antisymm_iff]
+
+@[simp]
+theorem ratCast_equiv_toIGame_iff {x : ℚ} {y : Dyadic} : (x : IGame) ≈ y ↔ x = y.1 := by
+  simp [AntisymmRel, le_antisymm_iff]
 
 end Dyadic
 
