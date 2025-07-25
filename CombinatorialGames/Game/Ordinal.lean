@@ -255,7 +255,7 @@ theorem Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x 
   use n
   rwa [IGame.neg_lt]
 
-notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+local notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
 
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
