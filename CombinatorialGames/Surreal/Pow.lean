@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Dyadic
+import CombinatorialGames.Surreal.Real
 
 /-!
 # Surreal exponentiation
@@ -32,7 +32,7 @@ noncomputable def opow (x : IGame) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
-prefix:max "ω^ " => opow
+prefix:75 "ω^ " => opow
 
 theorem leftMoves_opow (x : IGame) : leftMoves (ω^ x) =
     insert 0 (image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) x.leftMoves) := by
@@ -69,11 +69,48 @@ theorem exists_rightMoves_opow {x : IGame} {P : IGame → Prop} : (∃ y ∈ rig
 theorem zero_mem_leftMoves_opow (x : IGame) : 0 ∈ leftMoves (ω^ x) := by
   simp [leftMoves_opow]
 
+theorem mem_leftMoves_opow {x y : IGame} {r : Dyadic} (hy : y ∈ x.leftMoves) (hr : 0 < r) :
+    r * ω^ y ∈ leftMoves (ω^ x) := by
+  rw [leftMoves_opow]
+  apply mem_insert_of_mem
+  use r, hr, y, hy
+
+theorem mem_rightMoves_opow {x y : IGame} {r : Dyadic} (hy : y ∈ x.rightMoves) (hr : 0 < r) :
+    r * ω^ y ∈ rightMoves (ω^ x) := by
+  rw [rightMoves_opow]
+  use r, hr, y, hy
+
+theorem opow_mem_leftMoves_opow {x y : IGame} (hy : y ∈ x.leftMoves) :
+    ω^ y ∈ leftMoves (ω^ x) := by
+  simpa using mem_leftMoves_opow hy one_pos
+
+theorem opow_mem_rightMoves_opow {x y : IGame} (hy : y ∈ x.rightMoves) :
+    ω^ y ∈ rightMoves (ω^ x) := by
+  simpa using mem_rightMoves_opow hy one_pos
+
 theorem zero_lf_opow (x : IGame) : 0 ⧏ ω^ x :=
   leftMove_lf (zero_mem_leftMoves_opow x)
 
 @[simp]
 theorem opow_zero : ω^ 0 = 1 := by
   ext <;> simp [leftMoves_opow, rightMoves_opow]
+
+private theorem opow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
+    [Numeric (ω^ x)] [Numeric (ω^ y)] :
+    (x < y → ∀ r : ℝ, 0 < r → (r : IGame) * ω^ x < ω^ y) ∧ (x ≤ y → ω^ x ≤ ω^ y) := by
+  refine ⟨fun hxy r hr ↦ ?_, fun hxy ↦ ?_⟩
+  · obtain (⟨z, hz, hxz⟩ | ⟨z, hz, hzy⟩) := lf_iff_exists_le.1 hxy.not_ge
+    · have := Numeric.of_mem_leftMoves hz
+      have hz' := opow_mem_leftMoves_opow hz
+      have := Numeric.of_mem_leftMoves hz'
+      exact (opow_strictMono_aux.2 hxz).trans_lt (Numeric.leftMove_lt hz')
+    · have := Numeric.of_mem_rightMoves hz
+      have hz' := opow_mem_rightMoves_opow hz
+      have := Numeric.of_mem_rightMoves hz'
+      exact (Numeric.lt_rightMove hz').trans_le (opow_strictMono_aux.2 hzy)
+  · rw [le_iff_forall_lf, forall_leftMoves_opow, forall_rightMoves_opow]
+    refine ⟨⟨zero_lf_opow _, fun r hr ↦ ?_⟩, ?_⟩
+
+
 
 end IGame
