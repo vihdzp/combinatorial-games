@@ -1243,6 +1243,14 @@ theorem mulOption_neg_right (x y a b : IGame) : mulOption x (-y) a b = -mulOptio
 theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x y (-a) (-b) := by
   simp [mulOption, sub_eq_neg_add, add_comm]
 
+@[simp]
+theorem mulOption_zero_left (x y a : IGame) : mulOption x y 0 a = x * a := by
+  simp [mulOption]
+
+@[simp]
+theorem mulOption_zero_right (x y a : IGame) : mulOption x y a 0 = a * y := by
+  simp [mulOption]
+
 /-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/
 

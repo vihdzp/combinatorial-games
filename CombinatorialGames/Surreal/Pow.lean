@@ -171,6 +171,7 @@ protected instance opow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
 theorem opow_pos (x : IGame) [Numeric x] : 0 < ω^ x := opow_pos' x
 
 theorem mul_opow_lt_opow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
@@ -179,10 +180,18 @@ theorem mul_opow_lt_opow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
     simpa
   · exact opow_strictMono_aux.1 h hr
 
+theorem mul_opow_lt_opow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
+  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_left]
+  exact mul_opow_lt_opow r h
+
 theorem opow_lt_mul_opow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm,
     ← (Numeric.mul_congr_left (Real.toIGame_inv_equiv r)).lt_congr_left]
   exact mul_opow_lt_opow _ h
+
+theorem opow_lt_mul_opow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
+  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_right]
+  exact opow_lt_mul_opow (mod_cast hr) h
 
 theorem mul_opow_lt_mul_opow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hs), ← Surreal.mk_lt_mk]
@@ -190,14 +199,19 @@ theorem mul_opow_lt_mul_opow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
   rw [div_eq_mul_inv, mul_comm, ← mul_assoc, ← Real.toSurreal_inv, ← Real.toSurreal_mul]
   exact mul_opow_lt_opow _ h
 
+theorem mul_opow_lt_mul_opow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
+    r * ω^ x < s * ω^ y := by
+  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_left,
+    ← (mul_congr_left (Real.toIGame_dyadic_equiv s)).lt_congr_right]
+  exact mul_opow_lt_mul_opow r (mod_cast hs) h
+
 @[simp]
 theorem opow_lt_opow : ω^ x < ω^ y ↔ x < y := by
   constructor
   · contrapose
     simp_rw [Numeric.not_lt]
     exact opow_strictMono_aux.2
-  · intro h
-    simpa [← Surreal.mk_lt_mk] using mul_opow_lt_opow 1 h
+  · simpa using mul_opow_lt_opow' 1
 
 @[simp]
 theorem opow_le_opow : ω^ x ≤ ω^ y ↔ x ≤ y := by
@@ -206,7 +220,45 @@ theorem opow_le_opow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 theorem opow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simp_all [AntisymmRel]
 
-theorem opow_mul_opow (x y : IGame) [Numeric x] [Numeric y]
+theorem opow_add (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x * ω^ y := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  simp only [forall_leftMoves_opow, forall_rightMoves_opow, forall_and,
+    forall_leftMoves_add, forall_rightMoves_add, forall_leftMoves_mul, forall_rightMoves_mul]
+  repeat any_goals constructor
+  on_goal 1 => exact (mul_pos (opow_pos _) (opow_pos _)).not_ge
+  on_goal 7 => simp
+  all_goals
+    intro r hr z hz
+    first | have := Numeric.of_mem_leftMoves hz | have := Numeric.of_mem_rightMoves hz
+  · rw [(mul_congr_right (opow_add z y)).le_congr_right, ← (mul_assoc_equiv ..).le_congr_right,
+      Numeric.mul_le_mul_right (opow_pos _), Numeric.not_le]
+    exact mul_opow_lt_opow' r (Numeric.leftMove_lt hz)
+  · rw [(mul_congr_right (opow_add x z)).le_congr_right, mul_comm (r : IGame),
+      (mul_assoc_equiv ..).le_congr_right, Numeric.mul_le_mul_left (opow_pos _), mul_comm]
+    exact (mul_opow_lt_opow' r (Numeric.leftMove_lt hz)).not_ge
+  · rw [mulOption_zero_left, mul_comm (r : IGame), ← (mul_assoc_equiv ..).le_congr_left, mul_comm,
+      ← (mul_congr_right (opow_add x z)).le_congr_left]
+    exact (opow_lt_mul_opow' hr (add_left_strictMono (Numeric.lt_rightMove hz))).not_ge
+  · intro s hs w hw
+    have := Numeric.of_mem_rightMoves hw
+    rw [mulOption, Numeric.not_le]
+    apply add_lt_add
+    · rw [(mul_assoc_equiv ..).lt_congr_right, ← (mul_congr_right (opow_add z y)).lt_congr_right]
+      apply opow_lt_mul_opow' hr (add_right_strictMono _)
+      exact (Numeric.leftMove_lt hz)
+    · sorry
+  · simp [mulOption]
+    sorry
+  · intro s hs w hw
+    sorry
+  · simp [mulOption]
+    sorry
+  · simp [mulOption]
+    sorry
+  · intro s hs w hw
+    sorry
+termination_by (x, y)
+decreasing_by igame_wf
 
 end Numeric
 end IGame
