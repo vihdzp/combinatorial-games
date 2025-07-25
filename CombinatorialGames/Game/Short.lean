@@ -191,7 +191,7 @@ decreasing_by igame_wf
 
 protected instance mulOption (x y a b : IGame) [Short x] [Short y] [Short a] [Short b] :
     Short (mulOption x y a b) :=
-  inferInstanceAs (Short (_ - _))
+  .sub ..
 
 end Short
 end IGame
