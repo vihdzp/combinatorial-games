@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Mathlib.Neg
+import CombinatorialGames.Surreal.Birthday.Cut
 import CombinatorialGames.Surreal.Dyadic
 import Mathlib.Algebra.Order.Hom.Ring
 import Mathlib.Data.Real.Archimedean
@@ -649,5 +650,30 @@ theorem toIGame_inv_equiv (x : ℝ) : x⁻¹.toIGame ≈ x.toIGame⁻¹ := by
 theorem toIGame_div_equiv (x y : ℝ) : (x / y).toIGame ≈ x / y := by
   simp [← Surreal.mk_eq_mk]
 
+/-! ### Birthdays -/
+
+theorem not_short_toIGame (x : ℝ) : ¬ Short x := by
+  intro hx
+  have h := leftMoves_toIGame x ▸ Short.finite_leftMoves x
+  obtain ⟨n, hn⟩ := exists_int_lt x
+  apply ((h.of_finite_image _).subset _).not_infinite (Set.Iio_infinite (↑n))
+  · simp
+  · refine fun y hy ↦ hn.trans' ?_
+    simpa
+
 end Real
+
+@[simp]
+theorem IGame.birthday_real (x : ℝ) : birthday x = Ordinal.omega0.toNatOrdinal := by
+  rw [birthday_eq_omega0_iff]
+  use x.not_short_toIGame
+  aesop (add apply safe [Short.dyadic])
+
+theorem Surreal.birthday_real_lt_omega0_iff {x : ℝ} :
+    birthday x < Ordinal.omega0.toNatOrdinal ↔ x ∈ Set.range ((↑) : Dyadic → ℝ) := by
+  constructor
+  · obtain ⟨y
+  · rintro ⟨q, rfl⟩
+    simpa using birthday_dyadic_lt_omega0 q
+
 end

@@ -343,6 +343,9 @@ theorem short_iff_birthday_finite {x : IGame} :
 termination_by x
 decreasing_by igame_wf
 
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < Ordinal.omega0.toNatOrdinal :=
+  short_iff_birthday_finite.1 ‹_›
+
 theorem not_short_iff_omega0_le_birthday {x : IGame} :
     ¬ x.Short ↔ Ordinal.omega0.toNatOrdinal ≤ x.birthday := by
   simpa using short_iff_birthday_finite.not
