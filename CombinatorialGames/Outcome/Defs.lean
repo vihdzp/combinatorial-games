@@ -68,7 +68,7 @@ instance : PartialOrder Outcome where
   le_antisymm a b _ _ := by
     cases a <;> cases b <;> simp [LE.le, LT.lt] at *
 
-def PlayerOutcomesToGameOutcome : PlayerOutcome → PlayerOutcome → Outcome
+def PlayerOutcome.toOutcome : PlayerOutcome → PlayerOutcome → Outcome
   | PlayerOutcome.L, PlayerOutcome.L => Outcome.L
   | PlayerOutcome.R, PlayerOutcome.R => Outcome.R
   | PlayerOutcome.R, PlayerOutcome.L => Outcome.P

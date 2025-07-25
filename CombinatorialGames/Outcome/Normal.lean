@@ -1,6 +1,8 @@
 import CombinatorialGames.Outcome.Defs
 import CombinatorialGames.Game.IGame
 
+namespace Outcome.Normal
+
 mutual
 
 def LeftWinsGoingFirst (g : IGame) : Prop := ¬(∀ gl ∈ g.leftMoves, RightWinsGoingFirst gl)
@@ -44,7 +46,7 @@ noncomputable def RightOutcome (g : IGame) : PlayerOutcome :=
   if RightWinsGoingFirst g then PlayerOutcome.R else PlayerOutcome.L
 
 noncomputable def NormalOutcome : IGame → Outcome :=
-  fun g => PlayerOutcomesToGameOutcome (LeftOutcome g) (RightOutcome g)
+  fun g => PlayerOutcome.toOutcome (LeftOutcome g) (RightOutcome g)
 
 theorem eq_zero_outcome_P (g : IGame) (h1 : g = 0) : NormalOutcome g = Outcome.P := by
   rw [h1]
@@ -53,3 +55,5 @@ theorem eq_zero_outcome_P (g : IGame) (h1 : g = 0) : NormalOutcome g = Outcome.P
   simp only [IGame.leftMoves_zero, Set.mem_empty_iff_false, false_and, exists_const, reduceIte,
              IGame.rightMoves_zero]
   rfl
+
+end Outcome.Normal

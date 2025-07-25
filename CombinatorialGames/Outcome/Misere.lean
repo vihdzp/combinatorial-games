@@ -8,6 +8,8 @@ import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Outcome.Defs
 
+namespace Outcome.Misere
+
 mutual
 
 -- NOTE: We define these using ∀ instead of ∃ like the literature does because ∃ desugares to
@@ -65,7 +67,7 @@ noncomputable def RightOutcome (g : IGame) : PlayerOutcome :=
   if RightWinsGoingFirst g then PlayerOutcome.R else PlayerOutcome.L
 
 noncomputable def MisereOutcome : IGame → Outcome :=
-  fun g => PlayerOutcomesToGameOutcome (LeftOutcome g) (RightOutcome g)
+  fun g => PlayerOutcome.toOutcome (LeftOutcome g) (RightOutcome g)
 
 def MisereEq (A : IGame → Prop) (g h : IGame) : Prop :=
   ∀ (x : IGame), A x → MisereOutcome (g + x) = MisereOutcome (h + x)
@@ -125,20 +127,20 @@ theorem not_MisereEq_of_not_MisereGe {A : IGame → Prop} {g h : IGame} (h1 : ¬
 
 theorem not_leftWinsGoingFirst_le_P {g : IGame} (h1 : ¬LeftWinsGoingFirst g) :
     MisereOutcome g ≤ Outcome.P := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome LeftOutcome
+  unfold MisereOutcome PlayerOutcome.toOutcome LeftOutcome
   cases h2 : LeftOutcome g <;> cases h3 : RightOutcome g
   all_goals simp only [h1, reduceIte, Outcome.ge_R, le_refl]
 
 /-- `o(G) ≥ P` is equivalent to "Left can win playing second on `G`" -/
 theorem not_rightWinsGoingFirst_ge_P {g : IGame} (h1 : ¬RightWinsGoingFirst g) :
     MisereOutcome g ≥ Outcome.P := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome RightOutcome
+  unfold MisereOutcome PlayerOutcome.toOutcome RightOutcome
   cases h2 : LeftOutcome g
   all_goals simp only [h1, reduceIte, ge_iff_le, le_refl, Outcome.L_ge]
 
 theorem outcome_eq_P_leftWinsGoingFirst {g gl : IGame} (h1 : gl ∈ g.leftMoves)
     (h2 : MisereOutcome gl = Outcome.P) : LeftWinsGoingFirst g := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome LeftOutcome RightOutcome at h2
+  unfold MisereOutcome PlayerOutcome.toOutcome LeftOutcome RightOutcome at h2
   by_cases h3 : LeftWinsGoingFirst gl
     <;> by_cases h4 : RightWinsGoingFirst gl
     <;> simp only [h3, h4, reduceIte, reduceCtorEq] at h2
@@ -147,7 +149,7 @@ theorem outcome_eq_P_leftWinsGoingFirst {g gl : IGame} (h1 : gl ∈ g.leftMoves)
 
 theorem outcome_eq_P_rightWinsGoingFirst {g gr : IGame} (h1 : gr ∈ g.rightMoves)
     (h2 : MisereOutcome gr = Outcome.P) : RightWinsGoingFirst g := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome LeftOutcome RightOutcome at h2
+  unfold MisereOutcome PlayerOutcome.toOutcome LeftOutcome RightOutcome at h2
   by_cases h3 : RightWinsGoingFirst gr
     <;> by_cases h4 : LeftWinsGoingFirst gr
     <;> simp only [h3, h4, reduceIte, reduceCtorEq] at h2
@@ -164,26 +166,26 @@ theorem add_rightEnd_RightWinsGoingFirst {g h : IGame} (h1 : IGame.IsRightEnd g)
 
 theorem leftWinsGoingFirst_outcome_ge_N {g : IGame} (h1 : LeftWinsGoingFirst g) :
     MisereOutcome g ≥ Outcome.N := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome LeftOutcome
+  unfold MisereOutcome PlayerOutcome.toOutcome LeftOutcome
   cases h2 : RightOutcome g
   all_goals simp only [h1, reduceIte, ge_iff_le, le_refl, Outcome.L_ge]
 
 theorem rightWinsGoingFirst_outcome_le_N {g : IGame} (h1 : RightWinsGoingFirst g) :
     MisereOutcome g ≤ Outcome.N := by
-  unfold MisereOutcome PlayerOutcomesToGameOutcome RightOutcome
+  unfold MisereOutcome PlayerOutcome.toOutcome RightOutcome
   cases h2 : LeftOutcome g
   all_goals simp only [h1, reduceIte, le_refl, Outcome.ge_R]
 
 theorem outcome_eq_P_not_leftWinsGoingFirst {g : IGame} (h1 : MisereOutcome g = Outcome.P) :
     ¬LeftWinsGoingFirst g := by
   intro h2
-  unfold MisereOutcome PlayerOutcomesToGameOutcome LeftOutcome at h1
+  unfold MisereOutcome PlayerOutcome.toOutcome LeftOutcome at h1
   cases h3 : RightOutcome g <;> simp only [h2, h3, reduceIte, reduceCtorEq] at h1
 
 theorem outcome_eq_P_not_rightWinsGoingFirst {g : IGame} (h1 : MisereOutcome g = Outcome.P) :
     ¬RightWinsGoingFirst g := by
   intro h2
-  unfold MisereOutcome PlayerOutcomesToGameOutcome RightOutcome at h1
+  unfold MisereOutcome PlayerOutcome.toOutcome RightOutcome at h1
   cases h3 : LeftOutcome g <;> simp only [h2, h3, reduceIte, reduceCtorEq] at h1
 
 @[simp]
@@ -389,10 +391,10 @@ end
 
 @[simp]
 theorem conjugate_of_conjugates {g : IGame} :
-    PlayerOutcomesToGameOutcome (RightOutcome g).Conjugate (LeftOutcome g).Conjugate
+    PlayerOutcome.toOutcome (RightOutcome g).Conjugate (LeftOutcome g).Conjugate
     = (MisereOutcome g).Conjugate := by
   cases h1 : RightOutcome g <;> cases h2 : LeftOutcome g
-  all_goals simp only [h1, h2, PlayerOutcomesToGameOutcome, PlayerOutcome.Conjugate,
+  all_goals simp only [h1, h2, PlayerOutcome.toOutcome, PlayerOutcome.Conjugate,
                        Outcome.Conjugate, MisereOutcome]
 
 @[simp]
@@ -467,3 +469,5 @@ private theorem proposition6_1 (g h : IGame) :
       have h5 := h3 (Outcome.L_ge Outcome.N)
       have h6 := Outcome.ge_P_ge_N_eq_L h4 h5
       exact le_of_eq (Eq.symm h6)
+
+end Outcome.Misere
