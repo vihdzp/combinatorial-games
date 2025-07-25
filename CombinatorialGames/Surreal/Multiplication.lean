@@ -601,6 +601,14 @@ protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y
     (hz : z < 0) : x * z < y * z ↔ y < x :=
   mul_lt_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
 
+protected theorem mul_le_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a ≤ b → c ≤ d → 0 ≤ c → 0 ≤ b → a * c ≤ b * d :=
+  mul_le_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+protected theorem mul_lt_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a < b → c ≤ d → 0 < c → 0 ≤ b → a * c < b * d :=
+  mul_lt_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
