@@ -35,24 +35,28 @@ theorem rightMoves_toMisere {x : IGame} : rightMoves (toMisere x) =
   rw [toMisere]
   simp [image_eq_range]
 
-private theorem toMisere_le' {x : IGame} :
-    (toMisere x ≤ 0 ↔ x.leftMoves ≠ ∅ ∧ ∀ y ∈ x.leftMoves, toMisere y ⧏ 0) ∧
-    (0 ≤ toMisere x ↔ x.rightMoves ≠ ∅ ∧ ∀ y ∈ x.rightMoves, 0 ⧏ toMisere y) := by
-  rw [le_zero, zero_le, leftMoves_toMisere, rightMoves_toMisere]
+theorem toMisere_le_zero {x : IGame} :
+    toMisere x ≤ 0 ↔ x.leftMoves ≠ ∅ ∧ ∀ y ∈ x.leftMoves, toMisere y ⧏ 0 := by
+  rw [le_zero, leftMoves_toMisere]
+  split_ifs <;> simp_all
+
+theorem zero_le_toMisere {x : IGame} :
+    0 ≤ toMisere x ↔ x.rightMoves ≠ ∅ ∧ ∀ y ∈ x.rightMoves, 0 ⧏ toMisere y := by
+  rw [zero_le, rightMoves_toMisere]
   split_ifs <;> simp_all
 
 /-- Left wins as the first player iff they run out of moves, or if there's some move that right
 can't win as the first player. -/
 theorem zero_lf_toMisere {x : IGame} :
     0 ⧏ toMisere x ↔ x.leftMoves = ∅ ∨ ∃ y ∈ x.leftMoves, 0 ≤ toMisere y := by
-  rw [toMisere_le'.1, not_and_or]
+  rw [toMisere_le_zero, not_and_or]
   simp
 
 /-- Right wins as the first player iff they run out of moves, or if there's some move that left
 can't win as the first player. -/
 theorem toMisere_lf_zero {x : IGame} :
     toMisere x ⧏ 0 ↔ x.rightMoves = ∅ ∨ ∃ y ∈ x.rightMoves, toMisere y ≤ 0 := by
-  rw [toMisere_le'.2, not_and_or]
+  rw [zero_le_toMisere, not_and_or]
   simp
 
 end IGame
