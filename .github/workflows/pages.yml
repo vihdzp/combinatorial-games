@@ -1,8 +1,9 @@
-name: CI
+name: Pages CI
 
 on:
   push:
     branches: ["master"]
+  pull_request:
   workflow_dispatch:
 
 # Bestows GITHUB_TOKEN permission to deploy to GitHub Pages
@@ -39,6 +40,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
 
     permissions:
       pages: write
