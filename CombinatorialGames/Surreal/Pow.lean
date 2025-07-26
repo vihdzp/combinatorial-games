@@ -291,7 +291,7 @@ private theorem wpow_lt_mulOption {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
 
-theorem wpow_add (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x * ω^ y := by
+theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x * ω^ y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
   simp only [forall_leftMoves_wpow, forall_rightMoves_wpow, forall_and,
     forall_leftMoves_add, forall_rightMoves_add, forall_leftMoves_mul, forall_rightMoves_mul]
@@ -305,41 +305,49 @@ theorem wpow_add (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x *
     intro s hs w hw
     first | have := Numeric.of_mem_leftMoves hw | have := Numeric.of_mem_rightMoves hw
   all_goals apply not_le_of_gt
-  · rw [(mul_congr_right (wpow_add ..)).lt_congr_left, ← (mul_assoc_equiv ..).lt_congr_left,
+  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_left, ← (mul_assoc_equiv ..).lt_congr_left,
       Numeric.mul_lt_mul_right (wpow_pos _)]
     exact mul_wpow_lt_wpow' r (Numeric.leftMove_lt hz)
-  · rw [(mul_congr_right (wpow_add ..)).lt_congr_left, mul_comm (r : IGame),
+  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_left, mul_comm (r : IGame),
       (mul_assoc_equiv ..).lt_congr_left, Numeric.mul_lt_mul_left (wpow_pos _), mul_comm]
     exact mul_wpow_lt_wpow' r (Numeric.leftMove_lt hz)
   · rw [mulOption_zero_left, mul_comm (r : IGame), ← (mul_assoc_equiv ..).lt_congr_right, mul_comm,
-      ← (mul_congr_right (wpow_add ..)).lt_congr_right]
+      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
     exact wpow_lt_mul_wpow' hr (add_left_strictMono (Numeric.lt_rightMove hz))
   · rw [mulOption_comm, add_comm]
     apply wpow_lt_mulOption hs hr (Numeric.lt_rightMove hw) (Numeric.leftMove_lt hz) <;>
-      rw [add_comm, mul_comm] <;> exact wpow_add ..
+      rw [add_comm, mul_comm] <;> exact wpow_add_equiv ..
   · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_right,
-      ← (mul_congr_right (wpow_add ..)).lt_congr_right]
+      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
     exact wpow_lt_mul_wpow' hr (add_right_strictMono (Numeric.lt_rightMove hz))
   · exact wpow_lt_mulOption hr hs (Numeric.lt_rightMove hz) (Numeric.leftMove_lt hw)
-      (wpow_add ..) (wpow_add ..)
+      (wpow_add_equiv ..) (wpow_add_equiv ..)
   · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_left,
-      ← (mul_congr_right (wpow_add ..)).lt_congr_left]
+      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
     exact mul_wpow_lt_wpow' r (add_right_strictMono (Numeric.leftMove_lt hz))
   · rw [mulOption_zero_left, mul_comm, (mul_assoc_equiv ..).lt_congr_left, mul_comm (ω^ z),
-      ← (mul_congr_right (wpow_add ..)).lt_congr_left]
+      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
     exact mul_wpow_lt_wpow' _ (add_left_strictMono (Numeric.leftMove_lt hz))
   · exact mulOption_lt_wpow' hr hs (Numeric.leftMove_lt hz) (Numeric.leftMove_lt hw)
-      (wpow_add ..) (wpow_add ..) (wpow_add ..)
+      (wpow_add_equiv ..) (wpow_add_equiv ..) (wpow_add_equiv ..)
   · exact mulOption_lt_wpow hr hs (Numeric.lt_rightMove hz) (Numeric.lt_rightMove hw)
-      (wpow_add ..) (wpow_add ..) (wpow_add ..)
-  · rw [(mul_congr_right (wpow_add ..)).lt_congr_right, ← (mul_assoc_equiv ..).lt_congr_right,
+      (wpow_add_equiv ..) (wpow_add_equiv ..) (wpow_add_equiv ..)
+  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_right, ← (mul_assoc_equiv ..).lt_congr_right,
       Numeric.mul_lt_mul_right (wpow_pos _)]
     exact wpow_lt_mul_wpow' hr (Numeric.lt_rightMove hz)
-  · rw [(mul_congr_right (wpow_add ..)).lt_congr_right, mul_comm (r : IGame),
+  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_right, mul_comm (r : IGame),
       (mul_assoc_equiv ..).lt_congr_right, Numeric.mul_lt_mul_left (wpow_pos _), mul_comm]
     exact wpow_lt_mul_wpow' hr (Numeric.lt_rightMove hz)
 termination_by (x, y)
 decreasing_by igame_wf
+
+theorem wpow_neg_equiv (x : IGame) [Numeric x] : ω^ -x ≈ (ω^ x)⁻¹ := by
+  apply equiv_inv_of_mul_eq_one ((wpow_add_equiv ..).symm.trans _)
+  rw [← wpow_zero]
+  exact wpow_congr (neg_add_equiv x)
+
+theorem wpow_sub_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x - y) ≈ ω^ x / ω^ y :=
+  (wpow_add_equiv ..).trans (mul_congr_right (wpow_neg_equiv _))
 
 end Numeric
 end IGame
@@ -373,7 +381,17 @@ theorem wpow_inj {x y : Surreal} : ω^ x = ω^ y ↔ x = y :=
 @[simp]
 theorem wpow_add : ∀ x y : Surreal, ω^ (x + y) = ω^ x * ω^ y := by
   rintro ⟨x, _⟩ ⟨y, _⟩
-  exact Surreal.mk_eq (Numeric.wpow_add x y)
+  exact Surreal.mk_eq (Numeric.wpow_add_equiv x y)
+
+@[simp]
+theorem wpow_neg : ∀ x : Surreal, ω^ -x = (ω^ x)⁻¹ := by
+  rintro ⟨x, _⟩
+  exact Surreal.mk_eq (Numeric.wpow_neg_equiv x)
+
+@[simp]
+theorem wpow_sub : ∀ x y : Surreal, ω^ (x - y) = ω^ x / ω^ y := by
+  rintro ⟨x, _⟩ ⟨y, _⟩
+  exact Surreal.mk_eq (Numeric.wpow_sub_equiv x y)
 
 end Surreal
 end
