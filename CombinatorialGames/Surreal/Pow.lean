@@ -10,11 +10,16 @@ import CombinatorialGames.Surreal.Real
 
 We define here the ω-map on games and on surreal numbers, representing exponentials with base `ω`.
 
-TODO: define the normal form of a surreal number.
+## Todo
+
+- Prove that `ω^ x` matches ordinal exponentiation for ordinal `x`.
+- Define commensurate surreals and prove properties relating to `ω^ x`.
+- Define the normal form of a surreal number.
 -/
 
 open Set
 
+-- TOOD: upstream
 theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set α) (t : Set β) :
     Set.image2 f s t = Set.range (fun x : s × t ↦ f x.1 x.2) := by
   aesop
