@@ -244,12 +244,6 @@ instance (x : IGame.{u}) : Small.{u} x.rightMoves := by
   rw [rightMoves_mk]
   infer_instance
 
-/-- A game is a Left end if Left has no immediate moves -/
-def IsLeftEnd (g : IGame) : Prop := g.leftMoves = ∅
-
-/-- A game is a Right end if Right has no immediate moves -/
-def IsRightEnd (g : IGame) : Prop := g.rightMoves = ∅
-
 @[ext]
 theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
@@ -1075,13 +1069,9 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ r
   simp [eq_add_one_of_mem_rightMoves_intCast hx]
 
 /-- A game with no Left and Right options is zero -/
-theorem leftEnd_rightEnd_eq_zero {g : IGame} (hl : IsLeftEnd g) (hr : IsRightEnd g) : g = 0 := by
-  rw [zero_def]
-  rw [IsLeftEnd] at hl
-  rw [IsRightEnd] at hr
-  ext
-  · simp only [hl, Set.mem_empty_iff_false, leftMoves_ofSets]
-  · simp only [hr, Set.mem_empty_iff_false, rightMoves_ofSets]
+theorem leftEnd_rightEnd_eq_zero {g : IGame} (hl : g.leftMoves = ∅) (hr : g.rightMoves = ∅) :
+    g = 0 := by
+ simp_all [IGame.ext_iff]
 
 /-- A game with Left options is not zero -/
 theorem mem_leftMoves_ne_zero {g gl : IGame} (h1 : gl ∈ g.leftMoves) : g ≠ 0 := by
@@ -1094,48 +1084,38 @@ theorem mem_rightMoves_ne_zero {g gr : IGame} (h1 : gr ∈ g.rightMoves) : g ≠
   simp only [h2, rightMoves_zero, Set.mem_empty_iff_false] at h1
 
 /-- A game with Left options is not zero -/
-theorem not_leftEnd_ne_zero {g : IGame} (h1 : ¬(IsLeftEnd g)) : g ≠ 0 := by
+theorem not_leftEnd_ne_zero {g : IGame} (h1 : g.leftMoves ≠ ∅) : g ≠ 0 := by
   intro h2
-  simp only [h2, IsLeftEnd, leftMoves_zero, not_true_eq_false] at h1
+  simp only [h2, leftMoves_zero] at h1
+  exact h1 rfl
 
 /-- A game with Right options is not zero -/
-theorem not_rightEnd_ne_zero {g : IGame} (h1 : ¬(IsRightEnd g)) : g ≠ 0 := by
+theorem not_rightEnd_ne_zero {g : IGame} (h1 : g.rightMoves ≠ ∅) : g ≠ 0 := by
   intro h2
-  simp only [h2, IsRightEnd, rightMoves_zero, not_true_eq_false] at h1
+  simp only [h2, rightMoves_zero] at h1
+  exact h1 rfl
 
-theorem leftEnd_neg_iff_rightEnd {g : IGame} : IsLeftEnd (-g) ↔ IsRightEnd g := by
-  constructor
-  all_goals
-  · intro h1
-    simp only [IsLeftEnd, leftMoves_neg, Set.neg_eq_empty] at *
-    exact h1
+theorem leftEnd_neg_iff_rightEnd {g : IGame} : (-g).leftMoves = ∅ ↔ g.rightMoves = ∅ := by
+  simp only [leftMoves_neg, neg_eq_empty]
 
-theorem rightEnd_neg_iff_leftEnd {g : IGame} : IsRightEnd (-g) ↔ IsLeftEnd g := by
-  constructor
-  all_goals
-  · intro h1
-    simp only [IsRightEnd, rightMoves_neg, Set.neg_eq_empty] at *
-    exact h1
+theorem rightEnd_neg_iff_leftEnd {g : IGame} : (-g).rightMoves = ∅ ↔ g.leftMoves = ∅ := by
+  simp only [rightMoves_neg, neg_eq_empty]
 
 /-- Non-zero game has either Left or Right options -/
 theorem ne_zero_not_leftEnd_or_not_rightEnd {g : IGame} (h1 : g ≠ 0) :
-    ¬(IsLeftEnd g) ∨ ¬(IsRightEnd g) := by
-  by_contra h2
-  simp only [not_or, not_not] at h2
-  obtain ⟨h2, h3⟩ := h2
-  exact h1 (leftEnd_rightEnd_eq_zero h2 h3)
+    g.leftMoves ≠ ∅ ∨ g.rightMoves ≠ ∅ := by
+  contrapose! h1
+  simpa [IGame.ext_iff]
 
 /-- Sum of Left ends is a Left end -/
-theorem add_leftEnd_leftEnd {g h : IGame} (h1 : IsLeftEnd g) (h2 : IsLeftEnd h) :
-    IsLeftEnd (g + h) := by
-  unfold IsLeftEnd at h1 h2
-  simp [h1, h2, IsLeftEnd]
+theorem add_leftEnd_leftEnd {g h : IGame} (h1 : g.leftMoves = ∅) (h2 : h.leftMoves = ∅) :
+    (g + h).leftMoves = ∅ := by
+  simp only [h1, h2, leftMoves_add, image_empty, union_self]
 
 /-- Sum of Right ends is a Right end -/
-theorem add_rightEnd_rightEnd {g h : IGame} (h1 : IsRightEnd g) (h2 : IsRightEnd h) :
-    IsRightEnd (g + h) := by
-  unfold IsRightEnd at h1 h2
-  simp [h1, h2, IsRightEnd]
+theorem add_rightEnd_rightEnd {g h : IGame} (h1 : g.rightMoves = ∅) (h2 : h.rightMoves = ∅) :
+    (g + h).rightMoves = ∅ := by
+  simp only [h1, h2, rightMoves_add, image_empty, union_self]
 
 /-! ### Multiplication -/
 
