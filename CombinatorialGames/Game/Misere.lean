@@ -59,5 +59,11 @@ theorem toMisere_lf_zero {x : IGame} :
   rw [zero_le_toMisere, not_and_or]
   simp
 
+def MisereEQ (A : IGame → Prop) (g h : IGame) : Prop :=
+  ∀ x, A x → toMisere (g + x) ≈ toMisere (h + x)
+
+def MisereLE (A : IGame → Prop) (g h : IGame) : Prop :=
+  ∀ x, A x → toMisere (g + x) ≤ toMisere (h + x)
+
 end IGame
 end
