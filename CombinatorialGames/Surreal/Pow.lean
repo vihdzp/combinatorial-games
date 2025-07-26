@@ -362,6 +362,15 @@ instance : Wpow Surreal where
 theorem mk_wpow (x : IGame) [Numeric x] : mk (ω^ x) = ω^ (mk x) :=
   rfl
 
+@[simp]
+theorem wpow_zero : ω^ (0 : Surreal) = 1 :=
+  Surreal.mk_eq IGame.wpow_zero.antisymmRel
+
+@[simp]
+theorem wpow_pos : ∀ x : Surreal, 0 < ω^ x := by
+  rintro ⟨x, _⟩
+  exact Numeric.wpow_pos x
+
 theorem strictMono_wpow : StrictMono (ω^ · : Surreal → _) := by
   rintro ⟨x, _⟩ ⟨y, _⟩
   exact Numeric.wpow_lt_wpow.2
