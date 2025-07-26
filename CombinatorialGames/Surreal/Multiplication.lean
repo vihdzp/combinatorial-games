@@ -609,6 +609,16 @@ protected theorem mul_lt_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric 
     a < b → c ≤ d → 0 < c → 0 ≤ b → a * c < b * d :=
   mul_lt_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
 
+@[simp]
+protected theorem mul_pos_iff_of_pos_left {a b : IGame} [Numeric a] [Numeric b] :
+    0 < a → (0 < a * b ↔ 0 < b) :=
+  mul_pos_iff_of_pos_left (a := Surreal.mk a) (b := Surreal.mk b)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_right {a b : IGame} [Numeric a] [Numeric b] :
+    0 < b → (0 < a * b ↔ 0 < a) :=
+  mul_pos_iff_of_pos_right (a := Surreal.mk a) (b := Surreal.mk b)
+
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
