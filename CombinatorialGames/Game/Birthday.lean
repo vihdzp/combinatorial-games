@@ -320,18 +320,10 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
-private theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
-    (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | Subposition y x}.Finite := by
-  simp_rw [NatOrdinal.lt_omega0] at hx
-  obtain ⟨n, hn⟩ := hx
-  apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
-  simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
-
 theorem short_iff_birthday_finite {x : IGame} :
     x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
-  constructor
-  · intro h
-    have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
+  refine ⟨fun h ↦ ?_, ?_⟩
+  · have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
       exact h.isOption y.2
     choose f hf using this
@@ -340,12 +332,14 @@ theorem short_iff_birthday_finite {x : IGame} :
     rw [birthday_le_iff', Nat.cast_add_one, ← succ_eq_add_one]
     aesop
   · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
-    rintro ⟨n, hn⟩
-    apply finite_setOf_subposition_of_birthday_lt_omega0
-    rw [hn]
-    exact NatOrdinal.nat_lt_omega0 n
+    intro ⟨n, hn⟩
+    apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
+    simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
 termination_by x
 decreasing_by igame_wf
+
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < Ordinal.omega0.toNatOrdinal :=
+  short_iff_birthday_finite.1 ‹_›
 
 end IGame
 
@@ -436,9 +430,6 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa using birthday_add_le x (-y)
-
-/- The bound `(x * y).birthday ≤ x.birthday * y.birthday` on surreals is currently an open problem.
-See https://mathoverflow.net/a/476829/147705. -/
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
