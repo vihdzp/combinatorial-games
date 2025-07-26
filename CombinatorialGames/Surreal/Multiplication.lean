@@ -493,8 +493,8 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-theorem mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
+protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
+  simpa [P3] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 

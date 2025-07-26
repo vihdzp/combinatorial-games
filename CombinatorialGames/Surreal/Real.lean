@@ -380,6 +380,8 @@ theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
 
 @[simp, norm_cast] theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
+@[simp] theorem toSurreal_ofNat (n : ℕ) [n.AtLeastTwo] : toSurreal ofNat(n) = n :=
+  toSurreal_natCast n
 @[simp, norm_cast] theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
 

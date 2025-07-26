@@ -587,12 +587,12 @@ theorem equiv_of_exists {x y : IGame}
   apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
-theorem zero_lt_one : (0 : IGame) < 1 := by
+protected theorem zero_lt_one : (0 : IGame) < 1 := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf, le_iff_forall_lf]
   simp
 
 instance : ZeroLEOneClass IGame where
-  zero_le_one := zero_lt_one.le
+  zero_le_one := IGame.zero_lt_one.le
 
 /-! ### Negation -/
 

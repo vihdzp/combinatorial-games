@@ -111,7 +111,7 @@ theorem opow_zero : ω^ 0 = 1 := by
 
 namespace Numeric
 
-variable {x y : IGame} [Numeric x] [Numeric y]
+variable {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
 
 private theorem opow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
     [Numeric (ω^ x)] [Numeric (ω^ y)] :
@@ -122,7 +122,7 @@ private theorem opow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       have := Numeric.of_mem_leftMoves (opow_mem_leftMoves_opow hz)
       apply ((Numeric.mul_le_mul_left (mod_cast hr)).2 (opow_strictMono_aux.2 hxz)).trans_lt
       obtain ⟨n, hn⟩ := exists_nat_gt r
-      exact ((Numeric.mul_lt_mul_right (opow_pos' z)).2 (Real.toIGame_lt_natCast.2 hn)).trans
+      exact ((Numeric.mul_lt_mul_right (opow_pos' z)).2 (mod_cast hn)).trans
         (Numeric.leftMove_lt (natCast_mul_opow_mem_leftMoves_opow n hz))
     · have := Numeric.of_mem_rightMoves hz
       have := Numeric.of_mem_rightMoves (opow_mem_rightMoves_opow hz)
@@ -141,12 +141,10 @@ private theorem opow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       exact (opow_strictMono_aux.1 ((Numeric.leftMove_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := Numeric.of_mem_rightMoves hz
       have := Numeric.of_mem_rightMoves (opow_mem_rightMoves_opow hz)
-      apply not_le_of_gt
-      rw [← (Numeric.mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_right,
-        ← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm,
-        ← (Numeric.mul_congr_left (Real.toIGame_inv_equiv _)).lt_congr_left]
-      apply opow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_rightMove hz))
-      simpa
+      have hr' : 0 < (r : ℝ)⁻¹ := by simpa
+      rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
+      simpa [← Surreal.mk_lt_mk] using
+        opow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_rightMove hz)) hr'
 termination_by (x, y)
 decreasing_by igame_wf
 
@@ -163,10 +161,9 @@ protected instance opow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
     have := Numeric.opow z
     rw [← Numeric.div_lt_iff' (mod_cast hs), ← Surreal.mk_lt_mk]
     dsimp
-    simp_rw [div_eq_inv_mul, ← mul_assoc, Surreal.mk_dyadic, ← Real.toSurreal_ratCast,
-      ← Real.toSurreal_inv, ← Real.toSurreal_mul]
-    apply opow_strictMono_aux.1 (Numeric.leftMove_lt_rightMove hy hz) (_root_.mul_pos ..) <;>
-      simpa
+    simp_rw [div_eq_inv_mul, ← mul_assoc, Surreal.mk_dyadic,
+      ← Real.toSurreal_ratCast, ← Real.toSurreal_inv, ← Real.toSurreal_mul]
+    apply opow_strictMono_aux.1 (Numeric.leftMove_lt_rightMove hy hz) (mul_pos ..) <;> simpa
   all_goals infer_instance
 termination_by x
 decreasing_by igame_wf
@@ -180,18 +177,18 @@ theorem mul_opow_lt_opow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
     simpa
   · exact opow_strictMono_aux.1 h hr
 
+/-- A version of `mul_opow_lt_opow` stated using dyadic rationals. -/
 theorem mul_opow_lt_opow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
-  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_left]
-  exact mul_opow_lt_opow r h
+  simpa [← Surreal.mk_lt_mk] using mul_opow_lt_opow r h
 
 theorem opow_lt_mul_opow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm,
-    ← (Numeric.mul_congr_left (Real.toIGame_inv_equiv r)).lt_congr_left]
-  exact mul_opow_lt_opow _ h
+  rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
+  simpa [← Surreal.mk_lt_mk] using mul_opow_lt_opow (r⁻¹) h
 
+/-- A version of `opow_lt_mul_opow` stated using dyadic rationals. -/
 theorem opow_lt_mul_opow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_right]
-  exact opow_lt_mul_opow (mod_cast hr) h
+  have hr : (0 : ℝ) < r := by simpa
+  simpa [← Surreal.mk_lt_mk] using opow_lt_mul_opow hr h
 
 theorem mul_opow_lt_mul_opow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hs), ← Surreal.mk_lt_mk]
@@ -199,11 +196,22 @@ theorem mul_opow_lt_mul_opow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
   rw [div_eq_mul_inv, mul_comm, ← mul_assoc, ← Real.toSurreal_inv, ← Real.toSurreal_mul]
   exact mul_opow_lt_opow _ h
 
+/-- A version of `mul_opow_lt_mul_opow` stated using dyadic rationals. -/
 theorem mul_opow_lt_mul_opow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  rw [← (mul_congr_left (Real.toIGame_dyadic_equiv r)).lt_congr_left,
-    ← (mul_congr_left (Real.toIGame_dyadic_equiv s)).lt_congr_right]
-  exact mul_opow_lt_mul_opow r (mod_cast hs) h
+  have hs : (0 : ℝ) < s := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_opow_lt_mul_opow r hs h
+
+theorem mul_opow_add_mul_opow_lt_mul_opow (r s : ℝ) {t : ℝ} (ht : 0 < t) (hx : x < z) (hy : y < z) :
+    r * ω^ x + s * ω^ y < t * ω^ z := by
+  have h : 0 < t / 2 := by simpa
+  apply (add_lt_add (mul_opow_lt_mul_opow r h hx) (mul_opow_lt_mul_opow s h hy)).trans_le
+  simp [← Surreal.mk_le_mk, ← add_mul]
+
+theorem mul_opow_add_mul_opow_lt_opow (r s : ℝ) (hx : x < z) (hy : y < z) :
+    r * ω^ x + s * ω^ y < ω^ z := by
+  apply (mul_opow_add_mul_opow_lt_mul_opow r s zero_lt_one hx hy).trans_le
+  simp [← Surreal.mk_le_mk]
 
 @[simp]
 theorem opow_lt_opow : ω^ x < ω^ y ↔ x < y := by
@@ -225,7 +233,7 @@ theorem opow_add (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x *
   simp only [forall_leftMoves_opow, forall_rightMoves_opow, forall_and,
     forall_leftMoves_add, forall_rightMoves_add, forall_leftMoves_mul, forall_rightMoves_mul]
   repeat any_goals constructor
-  on_goal 1 => exact (mul_pos (opow_pos _) (opow_pos _)).not_ge
+  on_goal 1 => exact (Numeric.mul_pos (opow_pos _) (opow_pos _)).not_ge
   on_goal 7 => simp
   all_goals
     intro r hr z hz
