@@ -28,8 +28,7 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
   · intro h
     obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
-    use IGame.toDyadic x
-    simp
+    exact ⟨_, ratCast_toDyadic _⟩`
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
 
