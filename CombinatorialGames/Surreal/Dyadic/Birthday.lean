@@ -24,8 +24,7 @@ theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < ω
 
 theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
     x.birthday < ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
-  constructor
-  · intro h
+  refine ⟨fun h ↦ ?_, ?_⟩
     obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
     exact ⟨_, ratCast_toDyadic _⟩`
