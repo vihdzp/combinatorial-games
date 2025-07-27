@@ -30,6 +30,7 @@ import CombinatorialGames.Surreal.Birthday.Cut
 import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Dyadic.Basic
+import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
