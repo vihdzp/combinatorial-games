@@ -155,7 +155,6 @@ theorem exists_add_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) : ∃ y < x, �
 /-- A version of `IsGroup.mul_add_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) (z : Ordinal) :
     ∗(x * z + y) = ∗(x * z) + ∗y := by
-  obtain rfl | hx₀ := eq_or_ne x 0; simp
   apply le_antisymm
   · apply le_of_forall_ne
     simp_rw [← toNimber.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
