@@ -14,10 +14,10 @@ The nim product `a * b` is recursively defined as the least nimber not equal to 
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. When endowed with this operation, the nimbers
 form a field.
 
-It's possible to show the existence of the nimber inverse implicitly via the simplicity theorem.
-Instead, we employ the explicit formula given in [On Numbers And Games][conway2001] (p. 56), which
-uses mutual induction and mimicks the definition for the surreal inverse. This definition `invAux`
-"accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
+It's possible to show the existence of the nimber inverse implicitly via the simplest extension
+theorem. Instead, we employ the explicit formula given in [On Numbers And Games][conway2001]
+(p. 56), which uses mutual induction and mimics the definition for the surreal inverse. This
+definition `invAux` "accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
 
 ## Todo
 

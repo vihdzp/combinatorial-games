@@ -15,10 +15,10 @@ arithmetical operations. The nim sum `a + b` is recursively defined as the least
 to any `a' + b` or `a + b'` for `a' < a` and `b' < b`. There is also a nim product, defined in the
 `CombinatorialGames.Nimber.Field` file.
 
-Nim addition arises within the context of impartial games. By the Sprague-Grundy theorem, each
+Nim arithmetic arises within the context of impartial games. By the Sprague-Grundy theorem, each
 impartial game is equivalent to some game of nim. If `x ≈ nim o₁` and `y ≈ nim o₂`, then
-`x + y ≈ nim (o₁ + o₂)`, where the ordinals are summed together as nimbers. Unfortunately, the
-nim product admits no such characterization.
+`x + y ≈ nim (o₁ + o₂)` and `x * y ≈ nim (o₁ * o₂)`, where the ordinals are summed or multiplied
+together as nimbers.
 
 ## Notation
 
