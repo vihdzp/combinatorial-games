@@ -181,7 +181,7 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
 termination_by (z, y)
 
 theorem IsGroup.mul_add_eq_of_lt {x y : Nimber} (h : IsGroup x) (hy : y < x) (z : Ordinal) :
-    ∗(toOrdinal x * z + toOrdinal y) = ∗(toOrdinal x * z) + ∗y :=
+    ∗(toOrdinal x * z + toOrdinal y) = ∗(toOrdinal x * z) + y :=
   h.mul_add_eq_of_lt' hy z
 
 theorem IsGroup.add_eq_of_lt {x y : Nimber} (h : IsGroup x) (hy : y < x) : x +ₒ y = x + y := by
