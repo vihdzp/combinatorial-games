@@ -1068,6 +1068,55 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ r
   use n + 1
   simp [eq_add_one_of_mem_rightMoves_intCast hx]
 
+/-- A game with no Left and Right options is zero -/
+theorem leftEnd_rightEnd_eq_zero {g : IGame} (hl : g.leftMoves = ∅) (hr : g.rightMoves = ∅) :
+    g = 0 := by
+ simp_all [IGame.ext_iff]
+
+/-- A game with Left options is not zero -/
+theorem mem_leftMoves_ne_zero {g gl : IGame} (h1 : gl ∈ g.leftMoves) : g ≠ 0 := by
+  intro h2
+  simp only [h2, leftMoves_zero, Set.mem_empty_iff_false] at h1
+
+/-- A game with Right options is not zero -/
+theorem mem_rightMoves_ne_zero {g gr : IGame} (h1 : gr ∈ g.rightMoves) : g ≠ 0 := by
+  intro h2
+  simp only [h2, rightMoves_zero, Set.mem_empty_iff_false] at h1
+
+/-- A game with Left options is not zero -/
+theorem not_leftEnd_ne_zero {g : IGame} (h1 : g.leftMoves ≠ ∅) : g ≠ 0 := by
+  intro h2
+  simp only [h2, leftMoves_zero] at h1
+  exact h1 rfl
+
+/-- A game with Right options is not zero -/
+theorem not_rightEnd_ne_zero {g : IGame} (h1 : g.rightMoves ≠ ∅) : g ≠ 0 := by
+  intro h2
+  simp only [h2, rightMoves_zero] at h1
+  exact h1 rfl
+
+theorem leftEnd_neg_iff_rightEnd {g : IGame} : (-g).leftMoves = ∅ ↔ g.rightMoves = ∅ := by
+  simp only [leftMoves_neg, neg_eq_empty]
+
+theorem rightEnd_neg_iff_leftEnd {g : IGame} : (-g).rightMoves = ∅ ↔ g.leftMoves = ∅ := by
+  simp only [rightMoves_neg, neg_eq_empty]
+
+/-- Non-zero game has either Left or Right options -/
+theorem ne_zero_not_leftEnd_or_not_rightEnd {g : IGame} (h1 : g ≠ 0) :
+    g.leftMoves ≠ ∅ ∨ g.rightMoves ≠ ∅ := by
+  contrapose! h1
+  simpa [IGame.ext_iff]
+
+/-- Sum of Left ends is a Left end -/
+theorem add_leftEnd_leftEnd {g h : IGame} (h1 : g.leftMoves = ∅) (h2 : h.leftMoves = ∅) :
+    (g + h).leftMoves = ∅ := by
+  simp only [h1, h2, leftMoves_add, image_empty, union_self]
+
+/-- Sum of Right ends is a Right end -/
+theorem add_rightEnd_rightEnd {g h : IGame} (h1 : g.rightMoves = ∅) (h2 : h.rightMoves = ∅) :
+    (g + h).rightMoves = ∅ := by
+  simp only [h1, h2, rightMoves_add, image_empty, union_self]
+
 /-! ### Multiplication -/
 
 -- TODO: upstream

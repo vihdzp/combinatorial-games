@@ -23,6 +23,9 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Outcome.Defs
+import CombinatorialGames.Outcome.Misere
+import CombinatorialGames.Outcome.Normal
 import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
