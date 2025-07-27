@@ -31,6 +31,52 @@ open Ordinal Polynomial Set
 
 /-! ### Mathlib lemmas -/
 
+theorem le_of_forall_ne {α : Type*} [LinearOrder α] {x y : α} (h : ∀ z < x, z ≠ y) : x ≤ y := by
+  contrapose! h
+  use y
+
+theorem lt_add_iff_lt_or_exists_lt {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftReflectLT α] [IsLeftCancelAdd α] {a b c : α} :
+    a < b + c ↔ a < b ∨ ∃ d < c, a = b + d := by
+  obtain h | h := lt_or_ge a b
+  · have : a < b + c := h.trans_le (le_self_add ..)
+    tauto
+  · obtain ⟨a, rfl⟩ := exists_add_of_le h
+    simp
+
+theorem forall_lt_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftReflectLT α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
+    (∀ a < b + c, P a) ↔ (∀ a < b, P a) ∧ (∀ a < c, P (b + a)) := by
+  simp_rw [lt_add_iff_lt_or_exists_lt]
+  aesop
+
+theorem exists_lt_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftReflectLT α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
+    (∃ a < b + c, P a) ↔ (∃ a < b, P a) ∨ (∃ a < c, P (b + a)) := by
+  simp_rw [lt_add_iff_lt_or_exists_lt]
+  aesop
+
+theorem le_add_iff_lt_or_exists_le {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftMono α] [IsLeftCancelAdd α] {a b c : α} :
+    a ≤ b + c ↔ a < b ∨ ∃ d ≤ c, a = b + d := by
+  obtain h | h := lt_or_ge a b
+  · have : a ≤ b + c := h.le.trans (le_self_add ..)
+    tauto
+  · obtain ⟨a, rfl⟩ := exists_add_of_le h
+    simp
+
+theorem forall_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftMono α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
+    (∀ a ≤ b + c, P a) ↔ (∀ a < b, P a) ∧ (∀ a ≤ c, P (b + a)) := by
+  simp_rw [le_add_iff_lt_or_exists_le]
+  aesop
+
+theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
+    [AddLeftMono α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
+    (∃ a ≤ b + c, P a) ↔ (∃ a < b, P a) ∨ (∃ a ≤ c, P (b + a)) := by
+  simp_rw [le_add_iff_lt_or_exists_le]
+  aesop
+
 namespace Ordinal
 
 theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
@@ -44,6 +90,34 @@ theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : 2 ^ log 2 o + o % 2 ^ lo
 
 protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
   rw [← one_add_one_eq_two, mul_add, mul_one]
+
+theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
+  obtain rfl | hb₀ := eq_or_ne b 0; simp
+  refine ⟨fun h ↦ ⟨_, (Ordinal.div_lt hb₀).2 h, _, mod_lt a hb₀, (div_add_mod ..).symm⟩, ?_⟩
+  rintro ⟨q, hq, r, hr, rfl⟩
+  apply (add_left_strictMono hr).trans_le
+  simp_rw [← mul_succ]
+  apply mul_le_mul_left'
+  simpa
+
+theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
+    (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
+  simp_rw [lt_mul_iff]
+  aesop
+
+theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
+    (∃ a < b * c, P a) ↔ ∃ q < c, ∃ r < b, P (b * q + r) := by
+  simp_rw [lt_mul_iff]
+  aesop
+
+theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
+  apply lt_of_lt_of_le (b := a * (Order.succ b))
+  · rwa [mul_succ, add_lt_add_iff_left]
+  · apply mul_le_mul_left'
+    rwa [Order.succ_le_iff]
+
+instance : CanonicallyOrderedAdd Ordinal where
+  le_self_add := le_add_right
 
 end Ordinal
 
@@ -83,23 +157,27 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
     ∗(x * z + y) = ∗(x * z) + ∗y := by
   obtain rfl | hx₀ := eq_or_ne x 0; simp
   apply le_antisymm
-  · sorry
-  · apply add_le_of_forall_ne
-    all_goals
-      intro a ha
-      induction' a with a
-      rw [toNimber.lt_iff_lt] at ha
-    · have hx : a % x < x := mod_lt _ hx₀
-      have hx' : toOrdinal (∗(a % x) + ∗y) < x := h.add_lt hx hy
-      have IH : a / toOrdinal x < z := (Ordinal.div_lt hx₀).2 ha
-      rw [← div_add_mod a, h.mul_add_eq_of_lt' hx, add_assoc, ← toNimber_toOrdinal (_ + ∗y),
-        ← h.mul_add_eq_of_lt' hx', ne_eq, toNimber.eq_iff_eq]
-      apply ((add_left_strictMono hx').trans_le ((le_add_right .. ).trans' _)).ne
-      simp_rw [← mul_succ]
-      apply mul_le_mul_left'
-      simpa
-    · rw [← h.mul_add_eq_of_lt' (ha.trans hy)]
+  · apply le_of_forall_ne
+    simp_rw [← toNimber.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
+    rw [forall_lt_add, forall_lt_mul]
+    refine ⟨fun a ha b hb ↦ ?_, fun a ha ↦ ?_⟩
+    · have hx : toOrdinal (∗b + ∗y) < x := h.add_lt hb hy
+      rw [ne_eq, h.mul_add_eq_of_lt' hb, ← CharTwo.add_eq_iff_eq_add, add_assoc,
+        ← toNimber_toOrdinal (∗b + _), ← h.mul_add_eq_of_lt' hx]
+      exact (mul_add_lt hx ha).ne
+    · rw [h.mul_add_eq_of_lt' (ha.trans hy)]
       simpa using ha.ne
+  · apply add_le_of_forall_ne <;>
+      simp_rw [← toNimber.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
+    · rw [forall_lt_mul]
+      intro a ha b hb
+      have hx : toOrdinal (∗b + ∗y) < x := h.add_lt hb hy
+      rw [ne_eq, h.mul_add_eq_of_lt' hb, add_assoc, ← toNimber_toOrdinal (∗b + _),
+        ← h.mul_add_eq_of_lt' hx]
+      exact ((mul_add_lt hx ha).trans_le (Ordinal.le_add_right ..)).ne
+    · intro b hb
+      rw [ne_eq, ← h.mul_add_eq_of_lt' (hb.trans hy)]
+      simpa using hb.ne
 termination_by (z, y)
 
 theorem IsGroup.mul_add_eq_of_lt {x y : Nimber} (h : IsGroup x) (hy : y < x) (z : Ordinal) :
