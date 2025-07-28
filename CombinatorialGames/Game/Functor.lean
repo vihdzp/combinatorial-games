@@ -18,13 +18,14 @@ inductive IGame : Type (u + 1)
 ```
 
 However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
-occurence of `IGame` (meaning that it appears to the left of an arrow). We can get around this
-technical limitation using the machinery of `QPF`s (quotients of polynomial functors). We define a
-functor `GameFunctor` by
+occurence of `IGame` (see [counterexamples.org](https://counterexamples.org/strict-positivity.html)
+for an explanation of what this is and why it's disallowed). We can get around this technical
+limitation using the machinery of `QPF`s (quotients of polynomial functors). We define a functor
+`GameFunctor` by
 
 ```
-def GameFunctor : Type (u + 1) → Type (u + 1) :=
-  fun α => {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
+  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
 ```
 
 We can prove that this is a `QPF`, which then allows us to build its initial algebra through

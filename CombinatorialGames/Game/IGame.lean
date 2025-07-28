@@ -164,6 +164,9 @@ theorem isOption_wf : WellFounded IsOption := by
     obtain ⟨⟨_, h⟩, _, rfl⟩ := hy
     exact h
 
+-- We make no use of `IGame`'s definition from a `QPF` after this point.
+attribute [irreducible] IGame
+
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
 theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
