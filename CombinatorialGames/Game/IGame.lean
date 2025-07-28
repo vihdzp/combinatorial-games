@@ -99,9 +99,8 @@ More precisely, `IGame` is the inductive type for the single constructor
   | ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u}
 ```
 
-(though for technical reasons it's not defined as such). A consequence of this is that there is no
-infinite line of play. See `LGame` for a definition of loopy games.
--/
+(though for technical reasons it's not literally defined as such). A consequence of this is that
+there is no infinite line of play. See `LGame` for a definition of loopy games. -/
 def IGame : Type (u + 1) :=
   QPF.Fix GameFunctor
 
