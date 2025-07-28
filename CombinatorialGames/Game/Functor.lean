@@ -1,5 +1,37 @@
+/-
+Copyright (c) 2025 Aaron Liu. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Aaron Liu, Violeta Hernández Palacios
+-/
 import Mathlib.Data.QPF.Univariate.Basic
 import Mathlib.Logic.Small.Set
+
+/-!
+# Game functor
+
+The type of games `IGame` is an inductive type, with a single constructor `ofSets` taking in two
+small sets of games and outputting a new game. This suggests the definition:
+
+```
+inductive IGame : Type (u + 1)
+  | ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : IGame
+```
+
+However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
+occurence of `IGame` (meaning that it appears to the left of an arrow). We can get around this
+technical limitation using the machinery of `QPF`s (quotients of polynomial functors). We define a
+functor `GameFunctor` by
+
+```
+def GameFunctor : Type (u + 1) → Type (u + 1) :=
+  fun α => {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+```
+
+We can prove that this is a `QPF`, which then allows us to build its initial algebra through
+`QPF.Fix`, which is exactly the inductive type `IGame`. As a bonus, we're able to describe the
+coinductive type of loopy games `LGame` as the cofinal algebra `QPF.Cofix` of the exact same
+functor.
+-/
 
 universe u
 
@@ -7,7 +39,7 @@ universe u
 
 This is the quotient of a polynomial functor. The type `IGame` of well-founded games is defined as
 the initial algebra of that `QPF`, while the type `LGame` of loopy games is defined as its final
-algebra.
+coalgebra.
 
 In other words, `IGame` and `LGame` have the following descriptions (which don't work verbatim due
 to various Lean limitations):
