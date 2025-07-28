@@ -5,6 +5,7 @@ Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Impartial.Basic
+import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 
 /-!
@@ -150,6 +151,11 @@ protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
     simp only [leftMoves_nim, rightMoves_nim] at hx
     obtain ⟨a, ha, rfl⟩ := hx
     exact .nim a
+termination_by o
+
+protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
+  rw [dicotic_def]
+  simpa using fun a ha ↦ .nim a
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
