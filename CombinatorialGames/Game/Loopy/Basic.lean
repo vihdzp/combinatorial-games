@@ -172,8 +172,7 @@ private theorem unique (f g : Subtype (Reachable leftMoves rightMoves init) → 
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
       Functor.map (f ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init)
     (hg : QPF.Cofix.dest ∘ g ∘ (equivShrink _).symm =
-      Functor.map (g ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init) (x) :
-    f x = g x :=
+      Functor.map (g ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init) (x) : f x = g x :=
   congrFun ((equivShrink _).symm.surjective.right_cancellable.1 <|
     QPF.Cofix.unique (dest leftMoves rightMoves init) _ _ hf hg) x
 
@@ -265,8 +264,7 @@ theorem corec_comp_hom {α : Type v} {β : Type w}
     (leftMovesα : α → Set α) (rightMovesα : α → Set α)
     (leftMovesβ : β → Set β) (rightMovesβ : β → Set β)
     [∀ a, Small.{u} (leftMovesα a)] [∀ a, Small.{u} (rightMovesα a)]
-    [∀ b, Small.{u} (leftMovesβ b)] [∀ b, Small.{u} (rightMovesβ b)]
-    (f : α → β)
+    [∀ b, Small.{u} (leftMovesβ b)] [∀ b, Small.{u} (rightMovesβ b)] (f : α → β)
     (hlf : leftMovesβ ∘ f = Set.image f ∘ leftMovesα)
     (hrf : rightMovesβ ∘ f = Set.image f ∘ rightMovesα) :
     corec leftMovesβ rightMovesβ ∘ f = corec leftMovesα rightMovesα := by
