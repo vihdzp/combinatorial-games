@@ -289,7 +289,7 @@ theorem corec_leftMoves_rightMoves : corec leftMoves.{u} rightMoves.{u} = id :=
 This is given notation `{s | t}ᴸ`, where the superscript `L` is to disambiguate from set builder
 notation, and from the analogous constructors on other game types.
 
-It's not possible to create a loopy game through this constructor alone. For that,
+It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
 noncomputable def ofSets (l : Set LGame.{u}) (r : Set LGame.{u})
     [Small.{u} l] [Small.{u} r] : LGame.{u} := by
