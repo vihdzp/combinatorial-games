@@ -19,6 +19,10 @@ open Set
 
 universe u v w
 
+-- This is problematic as an instance.
+theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
+  small_lift.{u, v + 1, v} α
+
 -- TODO: PR to Mathlib, together with the analogous `QPF.Fix.unique`.
 theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
     (a : α → F α) (f g : α → QPF.Cofix F)
@@ -139,11 +143,8 @@ private def Reachable (leftMoves : α → Set α) (rightMoves : α → Set α) (
 variable (leftMoves : α → Set α) (rightMoves : α → Set α)
   [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (init : α)
 
--- This instance is problematic if made global.
-private local instance (priority := 100) small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
-  small_lift.{u, v + 1, v} α
-
-private local instance : Small.{u + 1} (Subtype (Reachable leftMoves rightMoves init)) :=
+attribute [local instance] small_succ' in
+private instance : Small.{u + 1} (Subtype (Reachable leftMoves rightMoves init)) :=
   @small_lift.{_, u, u + 1} _ <| small_reflTransGen' ..
 
 /-- Destructor for the subtype of reachable positions. -/
@@ -192,6 +193,7 @@ private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {
     use .single ha
     simp [corec'_trans _ _ _ (.single ha)]
 
+@[simp]
 theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
     corec leftMoves rightMoves '' leftMoves init := by
   rw [LGame.leftMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
@@ -199,6 +201,7 @@ theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
   simpa [← (equivShrink (Subtype (Reachable _ _ _))).exists_congr_right]
     using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inl ha)
 
+@[simp]
 theorem rightMoves_corec : (corec leftMoves rightMoves init).rightMoves =
     corec leftMoves rightMoves '' rightMoves init := by
   rw [LGame.rightMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
@@ -240,6 +243,9 @@ theorem hom_unique (leftMoves : α → Set α) (rightMoves : α → Set α)
     rw [gRightMoves]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
+
+-- We make no use of `LGame`'s definition from a `QPF` after this point.
+attribute [irreducible] LGame
 
 end corec
 
@@ -298,52 +304,28 @@ theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ
 
 /-! ### Basic games -/
 
+/-- The game `on = {on | }`. -/
 def on : LGame.{u} :=
   corec ⊤ ⊥ ()
 
-@[simp]
-theorem leftMoves_on : leftMoves on = {on} := by
-  apply (leftMoves_corec ..).trans
-  simpa using fun x ↦ x.eq_punit ▸ rfl
+@[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
+@[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
+theorem on_eq : on = {{on} | ∅}ᴸ := by ext <;> simp
 
-@[simp]
-theorem rightMoves_on : rightMoves on = ∅ := by
-  apply (rightMoves_corec ..).trans
-  simp
-
-theorem on_eq : on = {{on} | ∅}ᴸ := by
-  ext <;> simp
-
+/-- The game `off = { | off}`. -/
 def off : LGame.{u} :=
   corec ⊥ ⊤ ()
 
-@[simp]
-theorem leftMoves_off : leftMoves off = ∅ := by
-  apply (leftMoves_corec ..).trans
-  simp
+@[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
+@[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
+theorem off_eq : off = {∅ | {off}}ᴸ := by ext <;> simp
 
-@[simp]
-theorem rightMoves_off : rightMoves off = {off} := by
-  apply (rightMoves_corec ..).trans
-  simpa using fun x ↦ x.eq_punit ▸ rfl
-
-theorem off_eq : off = {∅ | {off}}ᴸ := by
-  ext <;> simp
-
+/-- The game `dud = {dud | dud}`. -/
 def dud : LGame.{u} :=
   corec ⊤ ⊤ ()
 
-@[simp]
-theorem leftMoves_dud : leftMoves dud = {dud} := by
-  apply (leftMoves_corec ..).trans
-  simpa using fun x ↦ x.eq_punit ▸ rfl
-
-@[simp]
-theorem rightMoves_dud : rightMoves dud = {dud} := by
-  apply (rightMoves_corec ..).trans
-  simpa using fun x ↦ x.eq_punit ▸ rfl
-
-theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by
-  ext <;> simp
+@[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
+@[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
+theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by ext <;> simp
 
 end LGame
