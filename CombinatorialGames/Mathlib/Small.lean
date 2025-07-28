@@ -25,7 +25,7 @@ private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x
   · exact small_range ..
   · simp [small_level]
 
-theorem small_setOf_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
+theorem small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
   refine @small_subset _ _ _ (fun y hy ↦ ?_) (small_sUnion_level r x)
   simp_rw [mem_sUnion, mem_range, exists_exists_eq_and]
   induction hy with
@@ -40,7 +40,7 @@ theorem small_setOf_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y}
     exact ⟨_, hn, hr⟩
 
 omit H in
-theorem small_setOf_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+theorem small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.TransGen r y x} := by
   simp_rw [← Relation.transGen_swap (r := r)]
-  exact small_setOf_transGen _ x
+  exact small_transGen _ x

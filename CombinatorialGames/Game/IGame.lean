@@ -328,7 +328,7 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
   Relation.TransGen.trans h₁ h₂
 
 instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_setOf_transGen' _ x
+  small_transGen' _ x
 
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
