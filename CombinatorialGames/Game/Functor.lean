@@ -77,6 +77,4 @@ noncomputable instance : QPF GameFunctor where
     Sum.rec (fun y ↦ ((equivShrink _).symm y.1).1) (fun y ↦ ((equivShrink _).symm y.1).1)⟩
   abs_repr x := by ext <;> simp [← (equivShrink _).exists_congr_right]
   abs_map f := by intro ⟨x, f⟩; ext <;> simp [PFunctor.map, map_def]
-  __ := instFunctor
-
 end GameFunctor
