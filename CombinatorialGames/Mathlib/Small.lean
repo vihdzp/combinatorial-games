@@ -25,7 +25,7 @@ private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x
   · exact small_range ..
   · simp [small_level]
 
-instance small_setOf_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
+instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
   refine @small_subset _ _ _ (fun y hy ↦ ?_) (small_sUnion_level r x)
   simp_rw [mem_sUnion, mem_range, exists_exists_eq_and]
   induction hy with
@@ -39,16 +39,16 @@ instance small_setOf_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y
     simp_rw [mem_sUnion, mem_image, exists_exists_and_eq_and]
     exact ⟨_, hn, hr⟩
 
-instance small_setOf_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.TransGen r y x} := by
   simp_rw [← Relation.transGen_swap (r := r)]
   infer_instance
 
-instance small_setOf_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
+instance small_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
   simp_rw [Relation.reflTransGen_iff_eq_or_transGen]
-  exact @small_insert _ _ _ (small_setOf_transGen ..)
+  exact @small_insert _ _ _ (small_transGen ..)
 
-instance small_setOf_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+instance small_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.ReflTransGen r y x} := by
   simp_rw [← Relation.reflTransGen_swap (r := r)]
   infer_instance

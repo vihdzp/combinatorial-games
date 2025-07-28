@@ -19,16 +19,7 @@ open Set
 
 universe u v w
 
-noncomputable section
-
--- mathlib4 PR #27546
-instance small_quot {α : Type u} [Small.{v} α] (r : α → α → Prop) : Small.{v} (Quot r) :=
-  small_of_surjective Quot.mk_surjective
-instance small_quotient {α : Type u} [Small.{v} α] (s : Setoid α) : Small.{v} (Quotient s) :=
-  small_of_surjective Quotient.mk_surjective
-instance (priority := 100) small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
-  small_lift.{u, v + 1, v} α
-
+-- TODO: PR to Mathlib, together with the analogous `QPF.Fix.unique`.
 theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
     (a : α → F α) (f g : α → QPF.Cofix F)
     (hf : QPF.Cofix.dest ∘ f = Functor.map f ∘ a)
@@ -41,8 +32,26 @@ theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
   rw [hf, hg, ← QPF.comp_map, ← QPF.comp_map]
   exact ⟨rfl, rfl⟩
 
+noncomputable section
+
 /-! ### Game moves -/
 
+/-- The type of loopy games.
+
+Most games studied within game theory are terminating, which means that the `IsOption` relation is
+well-founded. A loopy game relaxes this constraint. Thus, `LGame` contains all normal `IGame`s, but
+it also contains games such as `on = {on | }`, `off = { | off}`, and `dud = {dud | dud}`.
+
+In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
+it's simpler to define `LGame` as the coinductive type for the single constructor:
+
+```
+  | ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : LGame.{u}
+```
+
+This gives us a powerful corecursion principle `LGame.corec`, which can be interpreted as saying
+"for any graph we can draw on a type `α`, as long as the amount of branches per node is `u`-small,
+there's an `LGame` isomorphic to it". -/
 def LGame := QPF.Cofix GameFunctor
 
 namespace LGame
@@ -84,8 +93,12 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
   Relation.TransGen.trans h₁ h₂
 
 instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_setOf_transGen' _ x
+  small_transGen' _ x
 
+/-- Two loopy games are equal when there exists a bisimulation between them.
+
+A way to think about this is that `r` defines a pairing between nodes of the game trees, which then
+shows that the trees are isomorphic. -/
 theorem eq_of_bisim (r : LGame → LGame → Prop)
     (hl : ∀ x y, r x y → ∃ e : leftMoves x ≃ leftMoves y, ∀ i, r i.1 (e i).1)
     (hr : ∀ x y, r x y → ∃ e : rightMoves x ≃ rightMoves y, ∀ i, r i.1 (e i).1)
@@ -99,6 +112,11 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   · ext <;> simp <;> rfl
   · ext <;> simp [el.exists_congr_left, er.exists_congr_left] <;> rfl
 
+/-- Two `LGame`s are equal when their move sets are.
+
+This is not always sufficient to prove that two games are equal. For instance, if `x = {x | x}ᴸ` and
+`y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to prove this just leads to a cyclic
+argument. For these situations, you can use `eq_of_bisim` instead. -/
 @[ext]
 protected theorem ext {x y : LGame.{u}}
     (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) : x = y :=
@@ -108,30 +126,36 @@ protected theorem ext {x y : LGame.{u}}
     (fun _ _ hij => hij.right ▸ ⟨.refl _, fun _ => ⟨rfl, rfl⟩⟩)
     x y ⟨hl, hr⟩
 
--- The default corecursion principle we get from `QPF` has type inconvenient universes, so we prove
+-- The default corecursion principle we get from `QPF` has inconvenient type universes, so we prove
 -- a more general version.
 section corec
 variable {α : Type v}
 
-private def IsReachable (leftMoves : α → Set α) (rightMoves : α → Set α) (init : α) (a : α) : Prop :=
+/-- A node `α` is reachable from `init` when it can be formed by applying
+`leftMoves` and `rightMoves` finitely many times. -/
+private def Reachable (leftMoves : α → Set α) (rightMoves : α → Set α) (init : α) (a : α) : Prop :=
   Relation.ReflTransGen (fun x y ↦ x ∈ leftMoves y ∪ rightMoves y) a init
 
 variable (leftMoves : α → Set α) (rightMoves : α → Set α)
   [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (init : α)
 
-private instance : Small.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) :=
-  @small_lift.{_, u, u + 1} _ <| small_setOf_reflTransGen' ..
+-- This instance is problematic if made global.
+private local instance (priority := 100) small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
+  small_lift.{u, v + 1, v} α
+
+private local instance : Small.{u + 1} (Subtype (Reachable leftMoves rightMoves init)) :=
+  @small_lift.{_, u, u + 1} _ <| small_reflTransGen' ..
 
 /-- Destructor for the subtype of reachable positions. -/
 @[simp]
-private def dest (x : Shrink (Subtype (IsReachable leftMoves rightMoves init))) :
-    GameFunctor (Shrink (Subtype (IsReachable leftMoves rightMoves init))) :=
+private def dest (x : Shrink (Subtype (Reachable leftMoves rightMoves init))) :
+    GameFunctor (Shrink (Subtype (Reachable leftMoves rightMoves init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨⟨equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx),
     equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx)⟩,
     inferInstance, inferInstance⟩
 
-private theorem unique (f g : Subtype (IsReachable leftMoves rightMoves init) → LGame.{u})
+private theorem unique (f g : Subtype (Reachable leftMoves rightMoves init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
       Functor.map (f ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init)
     (hg : QPF.Cofix.dest ∘ g ∘ (equivShrink _).symm =
@@ -140,20 +164,25 @@ private theorem unique (f g : Subtype (IsReachable leftMoves rightMoves init) �
   congrFun ((equivShrink _).symm.surjective.right_cancellable.1 <|
     QPF.Cofix.unique (dest leftMoves rightMoves init) _ _ hf hg) x
 
-private noncomputable def corec' (x : Subtype (IsReachable leftMoves rightMoves init)) :=
+/-- The corecursor on the subtype of reachable nodes. -/
+private noncomputable def corec' (x : Subtype (Reachable leftMoves rightMoves init)) :=
   QPF.Cofix.corec (dest _ _ _) (equivShrink _ x)
 
+/-- The corecursor on `LGame`.
+
+You can use this in order to define an arbitrary `LGame` by "drawing" its move graph on some other
+type. As an example, `on = {on | }ᴸ` is defined as `corec ⊤ ⊥ ()`. -/
 noncomputable def corec : LGame.{u} :=
   corec' leftMoves rightMoves init ⟨_, .refl⟩
 
-private theorem corec'_trans {x} (hx : IsReachable leftMoves rightMoves init x)
-  (y : Subtype (IsReachable leftMoves rightMoves x)) :
+private theorem corec'_trans {x} (hx : Reachable leftMoves rightMoves init x)
+  (y : Subtype (Reachable leftMoves rightMoves x)) :
     corec' _ _ x y = corec' _ _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
 private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {x : LGame} :
-    (∃ ha : IsReachable leftMoves rightMoves init a, corec' _ _ init ⟨a, ha⟩ = x) ↔
+    (∃ ha : Reachable leftMoves rightMoves init a, corec' _ _ init ⟨a, ha⟩ = x) ↔
     corec leftMoves rightMoves a = x := by
   unfold corec
   constructor
@@ -167,14 +196,14 @@ theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
     corec leftMoves rightMoves '' leftMoves init := by
   rw [LGame.leftMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
-  simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
+  simpa [← (equivShrink (Subtype (Reachable _ _ _))).exists_congr_right]
     using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inl ha)
 
 theorem rightMoves_corec : (corec leftMoves rightMoves init).rightMoves =
     corec leftMoves rightMoves '' rightMoves init := by
   rw [LGame.rightMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
-  simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
+  simpa [← (equivShrink (Subtype (Reachable _ _ _))).exists_congr_right]
     using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inr ha)
 
 theorem leftMoves_comp_corec :
@@ -185,15 +214,15 @@ theorem rightMoves_comp_corec :
     LGame.rightMoves ∘ corec leftMoves rightMoves = image (corec leftMoves rightMoves) ∘ rightMoves :=
   funext (rightMoves_corec leftMoves rightMoves)
 
-theorem hom_unique {α : Type v} (leftMoves : α → Set α) (rightMoves : α → Set α)
+theorem hom_unique (leftMoves : α → Set α) (rightMoves : α → Set α)
     [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
     (fLeftMoves : LGame.leftMoves ∘ f = image f ∘ leftMoves)
     (fRightMoves : LGame.rightMoves ∘ f = image f ∘ rightMoves)
     (gLeftMoves : LGame.leftMoves ∘ g = image g ∘ leftMoves)
     (gRightMoves : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g := by
   funext x
-  change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (IsReachable leftMoves rightMoves x)) =
-    (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (IsReachable leftMoves rightMoves x))
+  change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x)) =
+    (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x))
   apply unique <;> ext z
   · change _ ∈ (LGame.leftMoves ∘ f) _ ↔ _
     rw [fLeftMoves]
@@ -237,47 +266,84 @@ theorem corec_leftMoves_rightMoves : corec leftMoves.{u} rightMoves.{u} = id :=
     (rightMoves_comp_corec leftMoves rightMoves)
     (Set.image_id_eq ▸ rfl) (Set.image_id_eq ▸ rfl)
 
+/-- Construct an `LGame` from its left and right sets.
+
+This is given notation `{s | t}ᴸ`, where the superscript `L` is to disambiguate from set builder
+notation, and from the analogous constructors on other game types.
+
+It's not possible to create a loopy game through this constructor alone. For that,
+see `LGame.corec`. -/
 noncomputable def ofSets (l : Set LGame.{u}) (r : Set LGame.{u})
-    [Small.{u} l] [Small.{u} r] : LGame.{u} :=
-  @corec (Option LGame.{u})
+    [Small.{u} l] [Small.{u} r] : LGame.{u} := by
+  refine @corec (Option LGame.{u})
     (Option.elim · (some '' l) (some '' leftMoves ·))
-    (Option.elim · (some '' r) (some '' rightMoves ·))
-    (by
-      simp only [Option.forall, Option.elim_none, Option.elim_some]
-      exact ⟨inferInstance, inferInstance⟩)
-    (by
-      simp only [Option.forall, Option.elim_none, Option.elim_some]
-      exact ⟨inferInstance, inferInstance⟩)
-    none
+    (Option.elim · (some '' r) (some '' rightMoves ·)) ?_ ?_ none <;>
+  simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
 
-theorem leftMoves_ofSets (l : Set LGame.{u}) (r : Set LGame.{u})
-    [Small.{u} l] [Small.{u} r] : (ofSets l r).leftMoves = l := by
-  rw [ofSets]
-  generalize_proofs hl hr
-  rw [leftMoves_corec, Option.elim_none, Set.image_image]
-  refine Eq.trans ?_ (Set.image_id l)
-  apply congrFun
-  apply congrArg Set.image
-  rw [← corec_leftMoves_rightMoves]
-  exact corec_comp_hom
-    leftMoves rightMoves
-    (Option.elim · (some '' l) (some '' leftMoves ·))
-    (Option.elim · (some '' r) (some '' rightMoves ·))
-    some rfl rfl
+@[inherit_doc] notation "{" s " | " t "}ᴸ" => ofSets s t
 
-theorem rightMoves_ofSets (l : Set LGame.{u}) (r : Set LGame.{u})
-    [Small.{u} l] [Small.{u} r] : (ofSets l r).rightMoves = r := by
-  rw [ofSets]
-  generalize_proofs hl hr
-  rw [rightMoves_corec, Option.elim_none, Set.image_image]
-  refine Eq.trans ?_ (Set.image_id r)
-  apply congrFun
-  apply congrArg Set.image
-  rw [← corec_leftMoves_rightMoves]
-  exact corec_comp_hom
-    leftMoves rightMoves
-    (Option.elim · (some '' l) (some '' leftMoves ·))
-    (Option.elim · (some '' r) (some '' rightMoves ·))
-    some rfl rfl
+@[simp]
+theorem leftMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.leftMoves = l := by
+  rw [ofSets, leftMoves_corec, Option.elim_none, Set.image_image]
+  conv_rhs => rw [← Set.image_id l, ← corec_leftMoves_rightMoves]
+  generalize_proofs
+  exact congrFun (congrArg _ (corec_comp_hom _ _ _ _ some rfl rfl)) _
+
+@[simp]
+theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.rightMoves = r := by
+  rw [ofSets, rightMoves_corec, Option.elim_none, Set.image_image]
+  conv_rhs => rw [← Set.image_id r, ← corec_leftMoves_rightMoves]
+  generalize_proofs
+  exact congrFun (congrArg _ (corec_comp_hom _ _ _ _ some rfl rfl)) _
+
+/-! ### Basic games -/
+
+def on : LGame.{u} :=
+  corec ⊤ ⊥ ()
+
+@[simp]
+theorem leftMoves_on : leftMoves on = {on} := by
+  apply (leftMoves_corec ..).trans
+  simpa using fun x ↦ x.eq_punit ▸ rfl
+
+@[simp]
+theorem rightMoves_on : rightMoves on = ∅ := by
+  apply (rightMoves_corec ..).trans
+  simp
+
+theorem on_eq : on = {{on} | ∅}ᴸ := by
+  ext <;> simp
+
+def off : LGame.{u} :=
+  corec ⊥ ⊤ ()
+
+@[simp]
+theorem leftMoves_off : leftMoves off = ∅ := by
+  apply (leftMoves_corec ..).trans
+  simp
+
+@[simp]
+theorem rightMoves_off : rightMoves off = {off} := by
+  apply (rightMoves_corec ..).trans
+  simpa using fun x ↦ x.eq_punit ▸ rfl
+
+theorem off_eq : off = {∅ | {off}}ᴸ := by
+  ext <;> simp
+
+def dud : LGame.{u} :=
+  corec ⊤ ⊤ ()
+
+@[simp]
+theorem leftMoves_dud : leftMoves dud = {dud} := by
+  apply (leftMoves_corec ..).trans
+  simpa using fun x ↦ x.eq_punit ▸ rfl
+
+@[simp]
+theorem rightMoves_dud : rightMoves dud = {dud} := by
+  apply (rightMoves_corec ..).trans
+  simpa using fun x ↦ x.eq_punit ▸ rfl
+
+theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by
+  ext <;> simp
 
 end LGame

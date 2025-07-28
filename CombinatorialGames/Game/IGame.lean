@@ -82,7 +82,7 @@ noncomputable section
 
 /-! ### Game moves -/
 
-/-- Games up to identity.
+/-- Well-founded games up to identity.
 
 `IGame` uses the set-theoretic notion of equality on games, meaning that two `IGame`s are equal
 exactly when their left and right sets of options are.
@@ -90,9 +90,18 @@ exactly when their left and right sets of options are.
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
 like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
 can be proven over the 'identical' equivalence relation, and the literature may occasionally
-specifically use the 'identical' equivalence relation for this reason.
+specifically use the 'identical' equivalence relation for this reason. The quotient `Game` of games
+up to equality is defined in `CombinatorialGames.Game.Basic`.
 
-For the more common game equivalence from the literature, see `Game.Basic`. -/
+More precisely, `IGame` is the inductive type for the single constructor
+
+```
+  | ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u}
+```
+
+(though for technical reasons it's not defined as such). A consequence of this is that there is no
+infinite line of play. See `LGame` for a definition of loopy games.
+-/
 def IGame : Type (u + 1) :=
   QPF.Fix GameFunctor
 
@@ -101,7 +110,7 @@ namespace IGame
 /-- Construct an `IGame` from its left and right sets.
 
 This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructors on `Game` and `Surreal`.
+notation, and from the analogous constructors on other game types.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
@@ -131,6 +140,10 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x :=
   x.mk_dest
 
+/-- Two `IGame`s are equal when their move sets are.
+
+For the weaker but more common notion of equivalence where `x = y` if `x ≤ y` and `y ≤ x`,
+use `Game`. -/
 @[ext]
 theorem ext {x y : IGame.{u}} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
@@ -239,7 +252,7 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
   Relation.TransGen.trans h₁ h₂
 
 instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_setOf_transGen' _ x
+  small_transGen' _ x
 
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
