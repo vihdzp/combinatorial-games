@@ -116,79 +116,66 @@ variable {α : Type v}
 private def IsReachable (leftMoves : α → Set α) (rightMoves : α → Set α) (init : α) (a : α) : Prop :=
   Relation.ReflTransGen (fun x y ↦ x ∈ leftMoves y ∪ rightMoves y) a init
 
-variable {leftMoves : α → Set α} {rightMoves : α → Set α}
-  [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] {init : α}
+variable (leftMoves : α → Set α) (rightMoves : α → Set α)
+  [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (init : α)
 
 private instance : Small.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) :=
   @small_lift.{_, u, u + 1} _ <| small_setOf_reflTransGen' ..
 
-/-- The initial element is reachable. -/
+/-- Destructor for the subtype of reachable positions. -/
 @[simp]
-private def Reachable.refl : Shrink (Subtype (IsReachable leftMoves rightMoves init)) :=
-  equivShrink _ ⟨init, .refl⟩
-
-/-- The reachable relation is transitive. -/
-@[simp]
-private def Reachable.trans (x : Subtype (IsReachable leftMoves rightMoves init))
-    (y : Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves x.1))) :
-    Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) :=
-  let y := (equivShrink _).symm y
-  equivShrink _ ⟨y.1, .trans y.2 x.2⟩
-
-/-- Destructor for `Reachable`. -/
-@[simp]
-private def Reachable.dest (x : Shrink (Subtype (IsReachable leftMoves rightMoves init))) :
+private def dest (x : Shrink (Subtype (IsReachable leftMoves rightMoves init))) :
     GameFunctor (Shrink (Subtype (IsReachable leftMoves rightMoves init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨⟨equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx),
     equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx)⟩,
     inferInstance, inferInstance⟩
 
-variable (init) in
-private noncomputable def corec' (x : Subtype (IsReachable leftMoves rightMoves init)) :=
-  QPF.Cofix.corec Reachable.dest (equivShrink _ x)
+private theorem unique (f g : Subtype (IsReachable leftMoves rightMoves init) → LGame.{u})
+    (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
+      Functor.map (f ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init)
+    (hg : QPF.Cofix.dest ∘ g ∘ (equivShrink _).symm =
+      Functor.map (g ∘ (equivShrink _).symm) ∘ dest leftMoves rightMoves init) (x) :
+    f x = g x :=
+  congrFun ((equivShrink _).symm.surjective.right_cancellable.1 <|
+    QPF.Cofix.unique (dest leftMoves rightMoves init) _ _ hf hg) x
 
-variable (leftMoves rightMoves init) in
+private noncomputable def corec' (x : Subtype (IsReachable leftMoves rightMoves init)) :=
+  QPF.Cofix.corec (dest _ _ _) (equivShrink _ x)
+
 noncomputable def corec : LGame.{u} :=
-  corec' _ ⟨_, (.refl : IsReachable leftMoves rightMoves init init)⟩
+  corec' leftMoves rightMoves init ⟨_, .refl⟩
 
 private theorem corec'_trans {x} (hx : IsReachable leftMoves rightMoves init x)
   (y : Subtype (IsReachable leftMoves rightMoves x)) :
-    corec' x y = corec' init ⟨y, .trans y.2 hx⟩ := by
-  conv_rhs =>
-    rw [← (equivShrink _).symm_apply_apply y]
-    change (corec' init ∘ fun y ↦
-      let y := (equivShrink (Subtype (IsReachable leftMoves rightMoves x))).symm y
-      ⟨y, .trans y.2 hx⟩) _
-  apply congrFun (QPF.Cofix.unique Reachable.dest ..) <;> ext <;>
+    corec' _ _ x y = corec' _ _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
+  apply unique <;> ext <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
 private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {x : LGame} :
-    (∃ ha : IsReachable leftMoves rightMoves init a, corec' init ⟨a, ha⟩ = x) ↔
+    (∃ ha : IsReachable leftMoves rightMoves init a, corec' _ _ init ⟨a, ha⟩ = x) ↔
     corec leftMoves rightMoves a = x := by
   unfold corec
   constructor
   · rintro ⟨hx, rfl⟩
-    simp [corec'_trans hx]
+    simp [corec'_trans _ _ _ hx]
   · rintro rfl
     use .single ha
-    simp [corec'_trans (.single ha)]
+    simp [corec'_trans _ _ _ (.single ha)]
 
-variable (leftMoves rightMoves init) in
 theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
     corec leftMoves rightMoves '' leftMoves init := by
   rw [LGame.leftMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
-    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux (.inl ha)
+    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inl ha)
 
-variable (leftMoves rightMoves init) in
 theorem rightMoves_corec : (corec leftMoves rightMoves init).rightMoves =
     corec leftMoves rightMoves '' rightMoves init := by
   rw [LGame.rightMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
-    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux (.inr ha)
+    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inr ha)
 
 theorem leftMoves_comp_corec :
     LGame.leftMoves ∘ corec leftMoves rightMoves = image (corec leftMoves rightMoves) ∘ leftMoves :=
@@ -198,77 +185,32 @@ theorem rightMoves_comp_corec :
     LGame.rightMoves ∘ corec leftMoves rightMoves = image (corec leftMoves rightMoves) ∘ rightMoves :=
   funext (rightMoves_corec leftMoves rightMoves)
 
-#exit
 theorem hom_unique {α : Type v} (leftMoves : α → Set α) (rightMoves : α → Set α)
-    [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] {f g : α → LGame.{u}}
-    (fLeftMoves : LGame.leftMoves ∘ f = Set.image f ∘ leftMoves)
-    (fRightMoves : LGame.rightMoves ∘ f = Set.image f ∘ rightMoves)
-    (gLeftMoves : LGame.leftMoves ∘ g = Set.image g ∘ leftMoves)
-    (gRightMoves : LGame.rightMoves ∘ g = Set.image g ∘ rightMoves) :
-    f = g := by
+    [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
+    (fLeftMoves : LGame.leftMoves ∘ f = image f ∘ leftMoves)
+    (fRightMoves : LGame.rightMoves ∘ f = image f ∘ rightMoves)
+    (gLeftMoves : LGame.leftMoves ∘ g = image g ∘ leftMoves)
+    (gRightMoves : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g := by
   funext x
   change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (IsReachable leftMoves rightMoves x)) =
     (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (IsReachable leftMoves rightMoves x))
-  rw [← (equivShrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves x))).symm_apply_apply ⟨x, _⟩]
-  change (f ∘ Subtype.val ∘ (equivShrink (T _ _ _)).symm) (T_init leftMoves rightMoves x) =
-    (g ∘ Subtype.val ∘ (equivShrink (T _ _ _)).symm) (T_init leftMoves rightMoves x)
-  apply congrFun
-
-
-#exit
-private noncomputable def T_initi {n : Nat} {i : α} (r : reachable leftMoves rightMoves init n i) :
-    Shrink.{u + 1} (T leftMoves rightMoves init) :=
-  equivShrink _ ⟨i, n, ⟨r⟩⟩
-
-private noncomputable def T_init : Shrink.{u + 1} (T leftMoves rightMoves init) :=
-  T_initi leftMoves rightMoves init .init
-
-private noncomputable def coreci : (i : Shrink.{u + 1} (T leftMoves rightMoves init)) → LGame.{u} :=
-  QPF.Cofix.corec (T_coeval leftMoves rightMoves init)
-
-noncomputable def corec : LGame.{u} :=
-  coreci leftMoves rightMoves init (T_init leftMoves rightMoves init)
-
-theorem hom_unique {α : Type v} (leftMoves : α → Set α) (rightMoves : α → Set α)
-    [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] {f g : α → LGame.{u}}
-    (fLeftMoves : LGame.leftMoves ∘ f = Set.image f ∘ leftMoves)
-    (fRightMoves : LGame.rightMoves ∘ f = Set.image f ∘ rightMoves)
-    (gLeftMoves : LGame.leftMoves ∘ g = Set.image g ∘ leftMoves)
-    (gRightMoves : LGame.rightMoves ∘ g = Set.image g ∘ rightMoves) :
-    f = g := by
-  funext x
-  change (f ∘ Subtype.val) (⟨x, 0, ⟨.init⟩⟩ : T leftMoves rightMoves x) =
-    (g ∘ Subtype.val) (⟨x, 0, ⟨.init⟩⟩ : T leftMoves rightMoves x)
-  rw [← (equivShrink.{u + 1} (T _ _ _)).symm_apply_apply ⟨x, _⟩]
-  change (f ∘ Subtype.val ∘ (equivShrink (T _ _ _)).symm) (T_init leftMoves rightMoves x) =
-    (g ∘ Subtype.val ∘ (equivShrink (T _ _ _)).symm) (T_init leftMoves rightMoves x)
-  apply congrFun
-  refine QPF.Cofix.unique (T_coeval leftMoves rightMoves x) _ _
-    (funext fun i => Subtype.ext (Prod.ext ?_ ?_))
-    (funext fun i => Subtype.ext (Prod.ext ?_ ?_))
-  · apply (congrFun fLeftMoves ((equivShrink (T _ _ _)).symm i).1).trans
-    simp_rw [Functor.map, Function.comp_apply, T_coeval, Set.image_image,
-      Equiv.symm_apply_apply, Subtype.map_coe, id_def]
-    rw [← Function.comp_def f, Set.image_comp]
-    simp
-  · apply (congrFun fRightMoves ((equivShrink (T _ _ _)).symm i).1).trans
-    simp_rw [Functor.map, Function.comp_apply, T_coeval, Set.image_image,
-      Equiv.symm_apply_apply, Subtype.map_coe, id_def]
-    rw [← Function.comp_def f, Set.image_comp]
-    simp
-  · apply (congrFun gLeftMoves ((equivShrink (T _ _ _)).symm i).1).trans
-    simp_rw [Functor.map, Function.comp_apply, T_coeval, Set.image_image,
-      Equiv.symm_apply_apply, Subtype.map_coe, id_def]
-    rw [← Function.comp_def g, Set.image_comp]
-    simp
-  · apply (congrFun gRightMoves ((equivShrink (T _ _ _)).symm i).1).trans
-    simp_rw [Functor.map, Function.comp_apply, T_coeval, Set.image_image,
-      Equiv.symm_apply_apply, Subtype.map_coe, id_def]
-    rw [← Function.comp_def g, Set.image_comp]
-    simp
-
-
-
+  apply unique <;> ext z
+  · change _ ∈ (LGame.leftMoves ∘ f) _ ↔ _
+    rw [fLeftMoves]
+    simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
+      fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
+  · change _ ∈ (LGame.rightMoves ∘ f) _ ↔ _
+    rw [fRightMoves]
+    simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
+      fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
+  · change _ ∈ (LGame.leftMoves ∘ g) _ ↔ _
+    rw [gLeftMoves]
+    simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
+      fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
+  · change _ ∈ (LGame.rightMoves ∘ g) _ ↔ _
+    rw [gRightMoves]
+    simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
+      fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
 
 end corec
 
@@ -282,15 +224,15 @@ theorem corec_comp_hom {α : Type v} {β : Type w}
     (hrf : rightMovesβ ∘ f = Set.image f ∘ rightMovesα) :
     corec leftMovesβ rightMovesβ ∘ f = corec leftMovesα rightMovesα := by
   refine hom_unique leftMovesα rightMovesα _ _ ?_ ?_
-    (leftMoves_comp_corec leftMovesα rightMovesα)
-    (rightMoves_comp_corec leftMovesα rightMovesα)
+    (leftMoves_comp_corec ..) (rightMoves_comp_corec ..)
   · rw [Set.image_comp_eq, Function.comp_assoc, ← hlf,
       ← Function.comp_assoc, leftMoves_comp_corec, Function.comp_assoc]
   · rw [Set.image_comp_eq, Function.comp_assoc, ← hrf,
       ← Function.comp_assoc, rightMoves_comp_corec, Function.comp_assoc]
 
+@[simp]
 theorem corec_leftMoves_rightMoves : corec leftMoves.{u} rightMoves.{u} = id :=
-  hom_unique leftMoves rightMoves (corec leftMoves rightMoves) id
+  hom_unique leftMoves rightMoves _ _
     (leftMoves_comp_corec leftMoves rightMoves)
     (rightMoves_comp_corec leftMoves rightMoves)
     (Set.image_id_eq ▸ rfl) (Set.image_id_eq ▸ rfl)
