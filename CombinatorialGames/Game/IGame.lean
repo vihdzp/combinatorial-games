@@ -77,8 +77,6 @@ universe u
 
 -- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
 set_option linter.dupNamespace false
--- Computations can be performed through the `game_cmp` tactic.
-noncomputable section
 
 open Set Pointwise
 
@@ -140,7 +138,7 @@ def Identical : PGame.{u} → PGame.{u} → Prop
 
 theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
     Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
-  | mk .., mk .. => Iff.rfl
+  | mk .., mk .. => .rfl
 
 @[refl]
 protected theorem Identical.refl (x) : x ≡ x :=
@@ -208,7 +206,7 @@ theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
   Quotient.ind H x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : IGame) : PGame := Quotient.out x
+noncomputable def out (x : IGame) : PGame := Quotient.out x
 @[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The set of left moves of the game. -/
@@ -279,7 +277,7 @@ theorem isOption_wf : WellFounded IsOption := by
   | mk x _ _ _ hl hr =>
     constructor
     rintro ⟨y⟩ (h | h) <;>
-    obtain ⟨_, ⟨i, rfl⟩, (hi : _ = Quot.mk _ _)⟩ := h
+    obtain ⟨_, ⟨i, rfl⟩, hi⟩ := h
     exacts [hi ▸ hl i, hi ▸ hr i]
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
@@ -291,6 +289,9 @@ theorem self_notMem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
 
 theorem self_notMem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
+
+-- Computations can be performed through the `game_cmp` tactic.
+noncomputable section
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -1434,5 +1435,5 @@ theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
 @[simp] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
 @[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
 
-end IGame
 end
+end IGame

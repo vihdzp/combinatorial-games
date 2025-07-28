@@ -481,7 +481,7 @@ instance mul (x y : IGame) [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :
 
 protected instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
-  inferInstanceAs (Numeric (_ - _))
+  .sub ..
 
 theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
   Game.mk_eq_mk.1 ((main_P24 ..).1 he)

@@ -2,9 +2,11 @@ import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Canonical
+import CombinatorialGames.Game.Computability.FGame
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Impartial.Basic
+import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Loopy.Defs
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
@@ -16,6 +18,8 @@ import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.Tactic
 import CombinatorialGames.Mathlib.Concept
+import CombinatorialGames.Mathlib.Dyadic
+import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.NatOrdinal
@@ -27,7 +31,8 @@ import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut
 import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
-import CombinatorialGames.Surreal.Dyadic
+import CombinatorialGames.Surreal.Dyadic.Basic
+import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
