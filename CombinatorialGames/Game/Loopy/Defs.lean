@@ -42,11 +42,25 @@ def LGame := QPF.Cofix GameFunctor
 
 namespace LGame
 
+/-- The set of left moves of the game. -/
 def leftMoves (x : LGame.{u}) : Set LGame.{u} := x.dest.1.1
+
+/-- The set of right moves of the game. -/
 def rightMoves (x : LGame.{u}) : Set LGame.{u} := x.dest.1.2
 
 instance small_leftMoves (x : LGame.{u}) : Small.{u} (leftMoves x) := x.dest.2.1
 instance small_rightMoves (x : LGame.{u}) : Small.{u} (rightMoves x) := x.dest.2.2
+
+/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
+@[aesop simp]
+def IsOption (x y : LGame) : Prop :=
+  x ∈ y.leftMoves ∪ y.rightMoves
+
+theorem IsOption.of_mem_leftMoves {x y : LGame} : x ∈ y.leftMoves → IsOption x y := .inl
+theorem IsOption.of_mem_rightMoves {x y : LGame} : x ∈ y.rightMoves → IsOption x y := .inr
+
+instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
+  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
 theorem eq_of_bisim (r : LGame → LGame → Prop)
     (hl : ∀ x y, r x y → ∃ e : leftMoves x ≃ leftMoves y, ∀ i, r i.1 (e i).1)
@@ -70,10 +84,6 @@ protected theorem ext {x y : LGame.{u}}
     (fun _ _ hij => hij.right ▸ ⟨.refl _, fun _ => ⟨rfl, rfl⟩⟩)
     x y ⟨hl, hr⟩
 
-example : False :=
-  LGame.f
-
-#exit
 section corec
 variable {α : Type v} (leftMoves : α → Set α) (rightMoves : α → Set α)
   [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (init : α)
@@ -125,6 +135,7 @@ private local instance small_T : Small.{u} (T leftMoves rightMoves init) := by
   refine Equiv.trans ?_ (Equiv.Set.image Quotient.mk'' _ fun _ _ => Quotient.exact)
   exact Equiv.subtypeEquivRight (by simp)
 
+#exit
 section
 omit [∀ a, Small.{u, v} (leftMoves a)] [∀ a, Small.{u, v} (rightMoves a)]
 
