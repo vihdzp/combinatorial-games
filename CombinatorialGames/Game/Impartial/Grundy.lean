@@ -233,6 +233,16 @@ theorem grundy_rightMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.rightMoves
     have := Impartial.of_mem_rightMoves hy; grundy y ≠ grundy x :=
   rightGrundy_ne hy
 
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+  rw [← (nim_grundy_equiv x).lt_congr_left]
+  exact Dicotic.lt_of_numeric_of_pos _ hy
+
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
+  rw [← (nim_grundy_equiv x).lt_congr_right]
+  exact Dicotic.lt_of_numeric_of_neg _ hy
+
 private theorem of_leftGrundy_eq_rightGrundy' {x : IGame}
     (hl : ∀ y ∈ x.leftMoves, Impartial y) (hr : ∀ y ∈ x.rightMoves, Impartial y)
     (H : leftGrundy x = rightGrundy x) : nim (rightGrundy x) ≈ x := by
