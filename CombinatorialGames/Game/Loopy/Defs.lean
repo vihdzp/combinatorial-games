@@ -113,94 +113,81 @@ protected theorem ext {x y : LGame.{u}}
 section corec
 variable {α : Type v}
 
-/-- The type of reachable states in `α`. -/
-@[reducible]
-private def Reachable (leftMoves : α → Set α) (rightMoves : α → Set α) (init : α) : Type v :=
-  {a : α // Relation.ReflTransGen (fun x y ↦ x ∈ leftMoves y ∪ rightMoves y) a init}
+def IsReachable (leftMoves : α → Set α) (rightMoves : α → Set α) (init : α) (a : α) : Prop :=
+  Relation.ReflTransGen (fun x y ↦ x ∈ leftMoves y ∪ rightMoves y) a init
 
-variable {leftMoves : α → Set α} {rightMoves : α → Set α} {init : α}
+variable {leftMoves : α → Set α} {rightMoves : α → Set α}
+  [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] {init : α}
 
-variable [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)]
-
-private instance : Small.{u} (Reachable leftMoves rightMoves init) :=
+private instance : Small.{u} (Subtype (IsReachable leftMoves rightMoves init)) :=
   small_setOf_reflTransGen' ..
 
 /-- The initial element is reachable. -/
 @[simp]
-private def Reachable.refl : Shrink.{u + 1} (Reachable leftMoves rightMoves init) :=
+private def Reachable.refl : Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) :=
   equivShrink _ ⟨init, .refl⟩
 
 /-- The reachable relation is transitive. -/
 @[simp]
-private def Reachable.trans (x : Reachable leftMoves rightMoves init)
-    (y : Shrink.{u + 1} (Reachable leftMoves rightMoves x.1)) :
-    Shrink.{u + 1} (Reachable leftMoves rightMoves init) :=
+private def Reachable.trans (x : Subtype (IsReachable leftMoves rightMoves init))
+    (y : Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves x.1))) :
+    Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) :=
   let y := (equivShrink _).symm y
   equivShrink _ ⟨y.1, .trans y.2 x.2⟩
 
 /-- Destructor for `Reachable`. -/
 @[simp]
-private def Reachable.dest (x : Shrink.{u + 1} (Reachable leftMoves rightMoves init)) :
-    GameFunctor (Shrink.{u + 1} (Reachable leftMoves rightMoves init)) :=
+private def Reachable.dest (x : Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init))) :
+    GameFunctor (Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨⟨equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx),
     equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx)⟩,
     inferInstance, inferInstance⟩
 
 variable (leftMoves rightMoves init) in
-private noncomputable def corec' : Shrink.{u + 1} (Reachable leftMoves rightMoves init) → LGame.{u} :=
+private noncomputable def corec' :
+    Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves init)) → LGame.{u} :=
   QPF.Cofix.corec Reachable.dest
 
 variable (leftMoves rightMoves init) in
 noncomputable def corec : LGame.{u} :=
-  corec' leftMoves rightMoves init (equivShrink _ ⟨init, .refl⟩)
+  corec' leftMoves rightMoves init Reachable.refl
 
 private theorem dest_corec : (corec leftMoves rightMoves init).dest =
     corec' leftMoves rightMoves init <$> Reachable.dest Reachable.refl :=
   QPF.Cofix.dest_corec ..
 
-private theorem corec'_trans (x : Reachable leftMoves rightMoves init)
-    (y : Shrink.{u + 1} (Reachable leftMoves rightMoves x.1)) :
-    corec' leftMoves rightMoves init (x.trans y) = corec' leftMoves rightMoves x.1 y := by
+private theorem corec'_trans {x} (hx : IsReachable leftMoves rightMoves init x)
+  (y : Shrink.{u + 1} (Subtype (IsReachable leftMoves rightMoves x))) :
+    corec' leftMoves rightMoves x y = corec' leftMoves rightMoves init (Reachable.trans ⟨x, hx⟩ y) := by
   apply congrFun (QPF.Cofix.unique Reachable.dest ..) y <;> ext <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
-      #exit
-
-theorem leftMoves_corec :
-    (corec leftMoves rightMoves init).leftMoves = corec leftMoves rightMoves '' leftMoves init := by
-  rw [LGame.leftMoves, dest_corec, GameFunctor.map_def]
-  ext
-  simp [corec, Reachable.dest, ← Reachable.coe_inj]
-  rw [← (equivShrink _).exists_congr_right]
-  simp
+private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {f : LGame} :
+    (∃ ha : IsReachable leftMoves rightMoves init a,
+      corec' leftMoves rightMoves init ((equivShrink _) ⟨a, ha⟩) = f) ↔
+    corec leftMoves rightMoves a = f := by
+  unfold corec
   constructor
-  · rintro ⟨x, h, rfl⟩
-    use x.1, h
-    rfl
-  --rw [(equivShrink _).exists_congr_left]
+  · rintro ⟨hx, rfl⟩
+    simp [corec'_trans hx]
+  · rintro rfl
+    use .single ha
+    simp [corec'_trans (.single ha)]
 
+theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
+    corec leftMoves rightMoves '' leftMoves init := by
+  rw [LGame.leftMoves, dest_corec, GameFunctor.map_def]
+  ext f
+  simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
+    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux (.inl ha)
 
-  /-simp_rw [LGame.leftMoves, dest_corec, Functor.map, T_coeval, corec, Set.image_image,
-    T_init, T_initi]
-  generalize_proofs _ _ h
-  revert h
-  rw [Equiv.symm_apply_apply]
-  intro h
-  conv =>
-    enter [1, 1, x, 4]
-    change (equivShrink (T leftMoves rightMoves init))
-      (Subtype.map id h ⟨(⟨x.1, 0, ⟨.init⟩⟩ : T leftMoves rightMoves x).1, x.2⟩)
-    conv =>
-      enter [2, 3, 1, 1]
-      exact ((equivShrink.{u + 1} (T _ _ _)).symm_apply_apply _).symm
-    change T_trans leftMoves rightMoves init (.ofLeftMoves x.1 init x.2 .init)
-      (T_init leftMoves rightMoves x.1)
-  simp_rw [coreci_trans]
-  change (fun a ↦ coreci leftMoves rightMoves a
-    (T_init leftMoves rightMoves a)) ∘ Subtype.val '' Set.univ =
-    (fun a ↦ coreci leftMoves rightMoves a (T_init leftMoves rightMoves a)) '' leftMoves init
-  rw [Set.image_comp, Set.image_univ, Subtype.range_coe]-/
+theorem rightMoves_corec : (corec leftMoves rightMoves init).rightMoves =
+    corec leftMoves rightMoves '' rightMoves init := by
+  rw [LGame.rightMoves, dest_corec, GameFunctor.map_def]
+  ext f
+  simpa [← (equivShrink (Subtype (IsReachable _ _ _))).exists_congr_right]
+    using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux (.inr ha)
 
 #exit
 private noncomputable def T_initi {n : Nat} {i : α} (r : reachable leftMoves rightMoves init n i) :
@@ -253,12 +240,6 @@ theorem hom_unique {α : Type v} (leftMoves : α → Set α) (rightMoves : α �
       Equiv.symm_apply_apply, Subtype.map_coe, id_def]
     rw [← Function.comp_def g, Set.image_comp]
     simp
-
-private theorem dest_corec :
-    (corec leftMoves rightMoves init).dest =
-      coreci leftMoves rightMoves init <$>
-        (T_coeval leftMoves rightMoves init (T_init leftMoves rightMoves init)) := by
-  simp_rw [corec, coreci, T_init, QPF.Cofix.dest_corec]
 
 theorem leftMoves_corec :
     (corec leftMoves rightMoves init).leftMoves = corec leftMoves rightMoves '' leftMoves init := by
