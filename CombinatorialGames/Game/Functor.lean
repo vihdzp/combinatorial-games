@@ -53,8 +53,8 @@ coinductive LGame : Type (u + 1)
   | ofSets (s t : Set LGame) [Small.{u} s] [Small.{u} t] : LGame
 ```
 -/
-def GameFunctor : Type (u + 1) → Type (u + 1) :=
-  fun α => {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
+  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
 
 namespace GameFunctor
 
