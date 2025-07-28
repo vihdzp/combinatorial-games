@@ -317,27 +317,67 @@ theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ
 /-! ### Basic games -/
 
 /-- The game `on = {on | }`. -/
-def on : LGame.{u} :=
-  corec ⊤ ⊥ ()
+def on : LGame := corec ⊤ ⊥ ()
 
 @[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
 @[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
 theorem on_eq : on = {{on} | ∅}ᴸ := by ext <;> simp
 
+instance : Unique on.leftMoves := by refine ⟨⟨on, ?_⟩, ?_⟩ <;> simp
+
+theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
+  refine ⟨?_, fun hx ↦ ?_⟩
+  · simp_all
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ ?_ _ _ ⟨rfl, rfl⟩
+    · rintro a b ⟨rfl, rfl⟩
+      let : Unique a.leftMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
+      use Equiv.ofUnique _ _
+      simp_all
+      rfl
+    · simp_all
+      infer_instance
+
 /-- The game `off = { | off}`. -/
-def off : LGame.{u} :=
-  corec ⊥ ⊤ ()
+def off : LGame := corec ⊥ ⊤ ()
 
 @[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
 @[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
 theorem off_eq : off = {∅ | {off}}ᴸ := by ext <;> simp
 
+instance : Unique off.rightMoves := by refine ⟨⟨off, ?_⟩, ?_⟩ <;> simp
+
+theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
+  refine ⟨?_, fun hx ↦ ?_⟩
+  · simp_all
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ ?_ _ _ ⟨rfl, rfl⟩
+    · simp_all
+      infer_instance
+    · rintro a b ⟨rfl, rfl⟩
+      let : Unique a.rightMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
+      use Equiv.ofUnique _ _
+      simp_all
+      rfl
+
 /-- The game `dud = {dud | dud}`. -/
-def dud : LGame.{u} :=
-  corec ⊤ ⊤ ()
+def dud : LGame := corec ⊤ ⊤ ()
 
 @[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
 @[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
 theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by ext <;> simp
+
+instance : Unique dud.leftMoves := by refine ⟨⟨dud, ?_⟩, ?_⟩ <;> simp
+instance : Unique dud.rightMoves := by refine ⟨⟨dud, ?_⟩, ?_⟩ <;> simp
+
+theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
+  refine ⟨?_, fun hx ↦ ?_⟩
+  · simp_all
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ ?_ _ _ ⟨rfl, rfl⟩
+    all_goals
+    · rintro a b ⟨rfl, rfl⟩
+      let : Unique a.leftMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
+      let : Unique a.rightMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
+      use Equiv.ofUnique _ _
+      simp_all
+      rfl
 
 end LGame
