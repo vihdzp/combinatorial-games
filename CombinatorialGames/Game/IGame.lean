@@ -1286,5 +1286,5 @@ theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
 @[simp] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
 @[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
 
-end
 end IGame
+end
