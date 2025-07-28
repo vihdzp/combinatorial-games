@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Aaron Liu
+Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
@@ -9,10 +9,31 @@ import Mathlib.Data.Setoid.Basic
 import Mathlib.Logic.Small.Set
 
 /-!
-# Loopy Games
+# Loopy games
 
-We define loopy games and prove some basic properties.
-TODO: documentation
+The standard notion of a game studied in combinatorial game theory is that of a terminating game,
+meaning that there exists no infinite sequence of moves. Loopy games relax this condition, and thus
+allow "self-refential" games, with the basic examples being `on = {on | }`, `off = { | off}`, and
+`dud = {dud | dud}`.
+
+In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
+it's simpler to define `LGame` as the coinductive type for the single constructor:
+
+```
+  | ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : LGame.{u}
+```
+
+(The inductive type for this same constructor would be `IGame`.) This gives us a powerful
+corecursion principle `LGame.corec`, which can be interpreted as saying "for any graph we can draw
+on a type `α`, as long as the amount of branches per node is `u`-small, there's an `LGame`
+isomorphic to it".
+
+Although extensionality still holds, it's not always sufficient to prove two games equal. For
+instance, if `x = {x | x}ᴸ` and `y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to
+prove this just leads to a cyclic argument. Instead, we can use `LGame.eq_of_bisim`, which can
+roughly be interpreted as saying "if two games have the same shape, they're equal". In this case,
+the relation `r a b ↔ a = x ∧ b = y` is a bisimulation between both games, which proves their
+equality.
 -/
 
 open Set
@@ -46,16 +67,7 @@ Most games studied within game theory are terminating, which means that the `IsO
 well-founded. A loopy game relaxes this constraint. Thus, `LGame` contains all normal `IGame`s, but
 it also contains games such as `on = {on | }`, `off = { | off}`, and `dud = {dud | dud}`.
 
-In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
-it's simpler to define `LGame` as the coinductive type for the single constructor:
-
-```
-  | ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : LGame.{u}
-```
-
-This gives us a powerful corecursion principle `LGame.corec`, which can be interpreted as saying
-"for any graph we can draw on a type `α`, as long as the amount of branches per node is `u`-small,
-there's an `LGame` isomorphic to it". -/
+See the module docstring for guidance on how to make use of this type. -/
 def LGame := QPF.Cofix GameFunctor
 
 namespace LGame
