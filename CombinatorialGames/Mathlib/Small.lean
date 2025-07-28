@@ -35,9 +35,7 @@ instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := b
   | tail hy hr IH =>
     obtain ⟨n, hn⟩ := IH
     use n + 1
-    rw [level]
-    simp_rw [mem_sUnion, mem_image, exists_exists_and_eq_and]
-    exact ⟨_, hn, hr⟩
+    simpa [level] using ⟨_, hn, hr⟩
 
 omit H in
 instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
