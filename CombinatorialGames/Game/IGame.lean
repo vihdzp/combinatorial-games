@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
@@ -325,6 +326,9 @@ theorem Subposition.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : S
 theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
   Relation.TransGen.trans h₁ h₂
+
+instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
+  small_setOf_transGen' _ x
 
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
