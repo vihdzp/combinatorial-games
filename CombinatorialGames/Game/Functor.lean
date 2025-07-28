@@ -30,7 +30,7 @@ def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
 
 We can prove that this is a `QPF`, which then allows us to build its initial algebra through
 `QPF.Fix`, which is exactly the inductive type `IGame`. As a bonus, we're able to describe the
-coinductive type of loopy games `LGame` as the cofinal algebra `QPF.Cofix` of the exact same
+coinductive type of loopy games `LGame` as the final coalgebra `QPF.Cofix` of the exact same
 functor.
 -/
 
