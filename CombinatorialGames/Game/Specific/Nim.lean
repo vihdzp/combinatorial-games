@@ -155,7 +155,7 @@ termination_by o
 
 protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
   rw [dicotic_def]
-  simpa using fun a ha ↦ Dicotic.nim a
+  simpa using fun a ha ↦ .nim a
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
