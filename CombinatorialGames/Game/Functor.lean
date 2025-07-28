@@ -18,18 +18,19 @@ inductive IGame : Type (u + 1)
 ```
 
 However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
-occurence of `IGame` (meaning that it appears to the left of an arrow). We can get around this
-technical limitation using the machinery of `QPF`s (quotients of polynomial functors). We define a
-functor `GameFunctor` by
+occurence of `IGame` (see [counterexamples.org](https://counterexamples.org/strict-positivity.html)
+for an explanation of what this is and why it's disallowed). We can get around this technical
+limitation using the machinery of `QPF`s (quotients of polynomial functors). We define a functor
+`GameFunctor` by
 
 ```
-def GameFunctor : Type (u + 1) → Type (u + 1) :=
-  fun α => {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
+  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
 ```
 
 We can prove that this is a `QPF`, which then allows us to build its initial algebra through
 `QPF.Fix`, which is exactly the inductive type `IGame`. As a bonus, we're able to describe the
-coinductive type of loopy games `LGame` as the cofinal algebra `QPF.Cofix` of the exact same
+coinductive type of loopy games `LGame` as the final coalgebra `QPF.Cofix` of the exact same
 functor.
 -/
 
@@ -52,8 +53,8 @@ coinductive LGame : Type (u + 1)
   | ofSets (s t : Set LGame) [Small.{u} s] [Small.{u} t] : LGame
 ```
 -/
-def GameFunctor : Type (u + 1) → Type (u + 1) :=
-  fun α => {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
+  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
 
 namespace GameFunctor
 
@@ -77,6 +78,5 @@ noncomputable instance : QPF GameFunctor where
     Sum.rec (fun y ↦ ((equivShrink _).symm y.1).1) (fun y ↦ ((equivShrink _).symm y.1).1)⟩
   abs_repr x := by ext <;> simp [← (equivShrink _).exists_congr_right]
   abs_map f := by intro ⟨x, f⟩; ext <;> simp [PFunctor.map, map_def]
-  __ := instFunctor
 
 end GameFunctor
