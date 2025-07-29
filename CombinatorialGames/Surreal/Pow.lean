@@ -19,7 +19,7 @@ We define here the ω-map on games and on surreal numbers, representing exponent
 
 open Set
 
--- TOOD: upstream
+-- TODO: upstream
 theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set α) (t : Set β) :
     Set.image2 f s t = Set.range (fun x : s × t ↦ f x.1 x.2) := by
   aesop
@@ -97,12 +97,12 @@ theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 ≤ r)
   · simp
   · rw [leftMoves_wpow]
     apply mem_insert_of_mem
-    use r, hr, y, hy
+    use r, hr, y
 
 theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 < r)
     (hy : y ∈ x.rightMoves) : r * ω^ y ∈ rightMoves (ω^ x) := by
   rw [rightMoves_wpow]
-  use r, hr, y, hy
+  use r, hr, y
 
 theorem natCast_mul_wpow_mem_leftMoves_wpow {x y : IGame} (n : ℕ) (hy : y ∈ x.leftMoves) :
     n * ω^ y ∈ leftMoves (ω^ x) := by
@@ -195,7 +195,7 @@ theorem wpow_pos (x : IGame) [Numeric x] : 0 < ω^ x := wpow_pos' x
 theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
   obtain hr | hr := le_or_gt r 0
   · apply (Numeric.mul_nonpos_of_nonpos_of_nonneg _ (wpow_pos x).le).trans_lt (wpow_pos y)
-    simpa
+    exact Real.toIGame_le_zero.mpr hr
   · exact wpow_strictMono_aux.1 h hr
 
 /-- A version of `mul_wpow_lt_wpow` stated using dyadic rationals. -/
@@ -251,7 +251,7 @@ theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic) {s t : Dyadic} (hs : 0 <
 theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := by
   constructor
   · contrapose
-    simp_rw [Numeric.not_lt]
+    repeat rw [Numeric.not_lt]
     exact wpow_strictMono_aux.2
   · simpa using mul_wpow_lt_wpow' 1
 
@@ -260,7 +260,7 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
   rw [← Numeric.not_lt, wpow_lt_wpow, Numeric.not_lt]
 
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
-  simp_all [AntisymmRel]
+  simpa [AntisymmRel] using h
 
 private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
