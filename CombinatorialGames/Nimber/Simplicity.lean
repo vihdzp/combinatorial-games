@@ -305,6 +305,9 @@ theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
 
+-- TODO: characterize nim arithmetic on the naturals.
+proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
+
 /-! ### Fields -/
 
 /-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
@@ -322,6 +325,9 @@ theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x
 
 theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
   h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+
+-- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
+proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 /-! ### Algebraically closed fields -/
 
