@@ -121,7 +121,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
         (∃ t : Set (LGame × LGame),
       Prod.fst '' t = x.rightMoves ∧ Prod.snd '' t = y.rightMoves ∧ ∀ z ∈ t, r z.1 z.2))
     (x y : LGame.{u}) (hxy : r x y) : x = y := by
-  refine QPF.Cofix.bisim r (fun x y hxy => ?_) x y hxy
+  refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   obtain ⟨⟨s, hs₁, hs₂, hs⟩, ⟨t, ht₁, ht₂, ht⟩⟩ := H _ _ hxy
   simp only [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
   refine ⟨⟨⟨range (inclusion hs), range (inclusion ht)⟩, ⟨?_, ?_⟩⟩, ?_, ?_⟩
@@ -145,12 +145,11 @@ This is not always sufficient to prove that two games are equal. For instance, i
 argument. For these situations, you can use `eq_of_bisim` instead. -/
 @[ext]
 protected theorem ext {x y : LGame.{u}}
-    (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) : x = y :=
-  eq_of_bisim
-    (fun i j => i.leftMoves = j.leftMoves ∧ i.rightMoves = j.rightMoves)
-    (fun _ _ hij => hij.left ▸ ⟨.refl _, fun _ => ⟨rfl, rfl⟩⟩)
-    (fun _ _ hij => hij.right ▸ ⟨.refl _, fun _ => ⟨rfl, rfl⟩⟩)
-    x y ⟨hl, hr⟩
+    (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) : x = y := by
+  refine eq_of_bisim (fun i j ↦ i.leftMoves = j.leftMoves ∧ i.rightMoves = j.rightMoves)
+    (fun x y hxy ↦ ?_) x y ⟨hl, hr⟩
+  refine ⟨⟨(fun i ↦ (i, i)) '' x.leftMoves, ?_⟩, ⟨(fun i ↦ (i, i)) '' x.rightMoves, ?_⟩⟩ <;>
+    simp_all [image_image]
 
 -- The default corecursion principle we get from `QPF` has inconvenient type universes, so we prove
 -- a more general version.
