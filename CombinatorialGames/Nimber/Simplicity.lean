@@ -283,23 +283,27 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
     rw [forall_lt_mul]
     intro a ha b hb
     rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
-      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H]
-    dsimp
-    rw [add_comm, CharTwo.add_eq_iff_eq_add, ← mul_add]
+      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
+      toNimber_toOrdinal, ← mul_add]
     obtain hza | hza := eq_or_ne (∗z + ∗a) 0
-    · rw [add_eq_zero] at hza
-      cases ha.ne' hza
+    · cases ha.ne' (add_eq_zero.1 hza)
     · rw [← div_eq_iff hza]
       exact (hx.mul_lt hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
-  · sorry
+  · rw [toOrdinal_le_iff]
+    refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
+    rw [add_comm, ← add_assoc, ← mul_add, add_comm]
+    induction b with | h b =>
+    rw [toNimber.lt_iff_lt] at hb
+    have hx' : toOrdinal (a * (∗b + ∗z)) < x :=
+      hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
+    rw [← toNimber_toOrdinal (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
+      ← toNimber_toOrdinal (a * _), ← hx.toIsGroup.mul_add_eq_of_lt' hx']
+    exact (mul_add_lt hx' hb).ne
 termination_by z
 
 theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
-
-
-  #exit
 
 /-! ### Fields -/
 
@@ -318,8 +322,6 @@ theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x
 
 theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
   h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
-
-  #exit
 
 /-! ### Algebraically closed fields -/
 
