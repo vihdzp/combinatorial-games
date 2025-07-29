@@ -326,6 +326,11 @@ theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x
 theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
   h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
 
+  /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
+    x * y = toOrdinal (∗x * ∗y) :=
+  hx.mul_eq_of_lt hyx
+
 -- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
