@@ -52,7 +52,7 @@ namespace Nimber
 /-! ### Groups -/
 
 /-- Add two nimbers as ordinal numbers. -/
-scoped notation:65 x:arg "+ₒ" y:arg => ∗(toOrdinal x + toOrdinal y)
+scoped notation:65 x:65 "+ₒ" y:66 => ∗(toOrdinal x + toOrdinal y)
 
 /-- A nimber `x` is a group when `Iio x` is closed under addition. Note that `0` is a group under
 this definition. -/
@@ -164,6 +164,24 @@ structure IsRing (x : Nimber) extends IsGroup x where
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
   __ := IsGroup.zero
+
+/-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
+written as `y * z` for some `y, z < x`. -/
+theorem exists_add_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
+    ∃ y < x, ∃ z < x, y * z = x := by
+  simp_rw [isRing_iff, h', true_and, not_forall, not_lt] at h
+  obtain ⟨y, z, hy, hz, hx⟩ := h
+  obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
+    (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
+  refine ⟨y, hy, z, hz, H.1.antisymm' (mul_le_of_forall_ne ?_)⟩
+  · dsimp
+    intro a ha b hb hx
+    apply hx.not_lt (h'.add_lt (h'.add_lt ..) _) <;> by_contra! hx
+    · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
+    · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
+    · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+
+  #exit
 
 /-! ### Fields -/
 
