@@ -116,17 +116,27 @@ instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
 A way to think about this is that `r` defines a pairing between nodes of the game trees, which then
 shows that the trees are isomorphic. -/
 theorem eq_of_bisim (r : LGame → LGame → Prop)
-    (hl : ∀ x y, r x y → ∃ e : leftMoves x ≃ leftMoves y, ∀ i, r i.1 (e i).1)
-    (hr : ∀ x y, r x y → ∃ e : rightMoves x ≃ rightMoves y, ∀ i, r i.1 (e i).1)
+    (H : ∀ x y, r x y → (∃ s : Set (LGame × LGame),
+      Prod.fst '' s = x.leftMoves ∧ Prod.snd '' s = y.leftMoves ∧ ∀ z ∈ s, r z.1 z.2) ∧
+        (∃ t : Set (LGame × LGame),
+      Prod.fst '' t = x.rightMoves ∧ Prod.snd '' t = y.rightMoves ∧ ∀ z ∈ t, r z.1 z.2))
     (x y : LGame.{u}) (hxy : r x y) : x = y := by
   refine QPF.Cofix.bisim r (fun x y hxy => ?_) x y hxy
-  obtain ⟨el, hel⟩ := hl x y hxy
-  obtain ⟨er, her⟩ := hr x y hxy
-  refine ⟨⟨(range fun i ↦ ⟨(i.1, (el i).1), hel i⟩, range fun i ↦ ⟨(i.1, (er i).1), her i⟩),
-    inferInstance, inferInstance⟩, ?_, ?_⟩
-  all_goals simp_rw [GameFunctor.map_def, ← range_comp]
-  · ext <;> simp <;> rfl
-  · ext <;> simp [el.exists_congr_left, er.exists_congr_left] <;> rfl
+  obtain ⟨⟨s, hs₁, hs₂, hs⟩, ⟨t, ht₁, ht₂, ht⟩⟩ := H _ _ hxy
+  simp only [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
+  refine ⟨⟨⟨range (inclusion hs), range (inclusion ht)⟩, ⟨?_, ?_⟩⟩, ?_, ?_⟩
+  · have : Small.{u} s := small_subset (s := leftMoves x ×ˢ leftMoves y) fun z hz ↦
+      ⟨(hs₁ z.1).1 ⟨_, hz⟩, (hs₂ z.2).1 ⟨_, hz⟩⟩
+    infer_instance
+  · have : Small.{u} t := small_subset (s := rightMoves x ×ˢ rightMoves y) fun z hz ↦
+      ⟨(ht₁ z.1).1 ⟨_, hz⟩, (ht₂ z.2).1 ⟨_, hz⟩⟩
+    infer_instance
+  all_goals
+    ext z
+    all_goals
+      simp [GameFunctor.map_def, ← range_comp]
+      revert z
+      assumption
 
 /-- Two `LGame`s are equal when their move sets are.
 
@@ -321,19 +331,12 @@ def on : LGame := corec ⊤ ⊥ ()
 @[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
 theorem on_eq : on = {{on} | ∅}ᴸ := by ext <;> simp
 
-instance : Unique on.leftMoves := by refine ⟨⟨on, ?_⟩, ?_⟩ <;> simp
-
 theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ ?_ _ _ ⟨rfl, rfl⟩
-    · rintro a b ⟨rfl, rfl⟩
-      let : Unique a.leftMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
-      use Equiv.ofUnique _ _
-      simp_all
-      rfl
-    · simp_all
-      infer_instance
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ _ _ ⟨rfl, rfl⟩
+    rintro a b ⟨rfl, rfl⟩
+    refine ⟨⟨{(a, on)}, ?_⟩, ⟨∅, ?_⟩⟩ <;> simp_all
 
 /-- The game `off = { | off}`. -/
 def off : LGame := corec ⊥ ⊤ ()
@@ -342,19 +345,12 @@ def off : LGame := corec ⊥ ⊤ ()
 @[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
 theorem off_eq : off = {∅ | {off}}ᴸ := by ext <;> simp
 
-instance : Unique off.rightMoves := by refine ⟨⟨off, ?_⟩, ?_⟩ <;> simp
-
 theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ ?_ _ _ ⟨rfl, rfl⟩
-    · simp_all
-      infer_instance
-    · rintro a b ⟨rfl, rfl⟩
-      let : Unique a.rightMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
-      use Equiv.ofUnique _ _
-      simp_all
-      rfl
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ _ _ ⟨rfl, rfl⟩
+    rintro a b ⟨rfl, rfl⟩
+    refine ⟨⟨∅, ?_⟩, ⟨{(a, off)}, ?_⟩⟩ <;> simp_all
 
 /-- The game `dud = {dud | dud}`. -/
 def dud : LGame := corec ⊤ ⊤ ()
@@ -369,13 +365,8 @@ instance : Unique dud.rightMoves := by refine ⟨⟨dud, ?_⟩, ?_⟩ <;> simp
 theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ ?_ _ _ ⟨rfl, rfl⟩
-    all_goals
-    · rintro a b ⟨rfl, rfl⟩
-      let : Unique a.leftMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
-      let : Unique a.rightMoves := by refine ⟨⟨a, ?_⟩, ?_⟩ <;> simp_all
-      use Equiv.ofUnique _ _
-      simp_all
-      rfl
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ _ _ ⟨rfl, rfl⟩
+    rintro a b ⟨rfl, rfl⟩
+    refine ⟨⟨{(a, dud)}, ?_⟩, ⟨{(a, dud)}, ?_⟩⟩ <;> simp_all
 
 end LGame
