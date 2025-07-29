@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
+import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Logic.Hydra
@@ -23,10 +25,8 @@ players Left and Right. In Lean, we instead define the type of games `IGame` as 
 is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
 a given universe closely mimics the ZFC distinction between sets and proper classes.
 
-This definition requires some amount of setup, which we achieve through an auxiliary type `PGame`.
-This type was historically the foundation for game theory in Lean, but it has now been superseded by
-`IGame`, a quotient of it with the correct notion of equality. See the docstring on `PGame` for more
-information.
+This definition requires some amount of setup, since Lean's inductive types aren't powerful enough
+to express this on their own. See the docstring on `GameFunctor` for more information.
 
 We are also interested in further quotients of `IGame`. The quotient of games under equivalence
 `x ≈ y ↔ x ≤ y ∧ y ≤ x`, which in the literature is often what is meant by a "combinatorial game",
@@ -75,112 +75,17 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
--- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
-set_option linter.dupNamespace false
-
 open Set Pointwise
 
-/-! ### Pre-games -/
-
-/-- The type of "pre-games", before we have quotiented by equivalence (`identicalSetoid`).
-
-In ZFC, a combinatorial game is constructed from two sets of combinatorial games that have been
-constructed at an earlier stage. To do this in type theory, we say that a pre-game is built
-inductively from two families of pre-games indexed over any type in `Type u`. The resulting type
-`PGame.{u}` lives in `Type (u + 1)`, reflecting that it is a proper class in ZFC.
-
-This type was historically the foundation for game theory in Lean, but this led to many annoyances.
-Most impactfully, this type has a notion of equality that is too strict: two games `0 = { | }` could
-be distinct (and unprovably so!) if the indexed families of left and right sets were two distinct
-empty types. To get the correct notion of equality, we define `IGame` as the quotient of this type
-by the `Identical` relation, representing extensional equivalence.
-
-This type has thus been relegated to an auxiliary construction for `IGame`. **You should not build
-any substantial theory based on this type.** -/
-inductive PGame : Type (u + 1)
-  | mk : ∀ α β : Type u, (α → PGame) → (β → PGame) → PGame
-compile_inductive% PGame
-
-namespace PGame
-
-/-- The indexing type for allowable moves by Left. -/
-def LeftMoves : PGame → Type u
-  | mk l _ _ _ => l
-
-/-- The indexing type for allowable moves by Right. -/
-def RightMoves : PGame → Type u
-  | mk _ r _ _ => r
-
-/-- The new game after Left makes an allowed move. -/
-def moveLeft : ∀ g : PGame, LeftMoves g → PGame
-  | mk _l _ L _ => L
-
-/-- The new game after Right makes an allowed move. -/
-def moveRight : ∀ g : PGame, RightMoves g → PGame
-  | mk _ _r _ R => R
-
-@[simp] theorem leftMoves_mk {xl xr xL xR} : (mk xl xr xL xR).LeftMoves = xl := rfl
-@[simp] theorem moveLeft_mk {xl xr xL xR} : (mk xl xr xL xR).moveLeft = xL := rfl
-@[simp] theorem rightMoves_mk {xl xr xL xR} : (mk xl xr xL xR).RightMoves = xr := rfl
-@[simp] theorem moveRight_mk {xl xr xL xR} : (mk xl xr xL xR).moveRight = xR := rfl
-
-/-- Two pre-games are identical if their left and right sets are identical. That is, `Identical x y`
-if every left move of `x` is identical to some left move of `y`, every right move of `x` is
-identical to some right move of `y`, and vice versa.
-
-`IGame` is defined as a quotient of `PGame` under this relation. -/
-def Identical : PGame.{u} → PGame.{u} → Prop
-  | mk _ _ xL xR, mk _ _ yL yR =>
-      Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
-      Relator.BiTotal (fun i j ↦ Identical (xR i) (yR j))
-
-@[inherit_doc] scoped infix:50 " ≡ " => PGame.Identical
-
-theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
-    Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
-  | mk .., mk .. => .rfl
-
-@[refl]
-protected theorem Identical.refl (x) : x ≡ x :=
-  x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
-
-@[symm]
-protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
-  | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
-
-@[trans]
-protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
-  | mk .., mk .., mk .., ⟨hL₁, hR₁⟩, ⟨hL₂, hR₂⟩ =>
-    ⟨hL₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hL₂, hR₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hR₂⟩
-
-/-- `Identical` as a `Setoid`. -/
-def identicalSetoid : Setoid PGame :=
-  ⟨Identical, .refl, .symm, .trans⟩
-
-/-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
-theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
-  | mk .., mk .., ⟨hl, _⟩ => hl.1
-
-/-- If `x ≡ y`, then a left move of `y` is identical to some left move of `x`. -/
-theorem Identical.moveLeft_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft j ≡ y.moveLeft i
-  | mk .., mk .., ⟨hl, _⟩ => hl.2
-
-/-- If `x ≡ y`, then a right move of `x` is identical to some right move of `y`. -/
-theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i ≡ y.moveRight j
-  | mk .., mk .., ⟨_, hr⟩ => hr.1
-
-/-- If `x ≡ y`, then a right move of `y` is identical to some right move of `x`. -/
-theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
-  | mk .., mk .., ⟨_, hr⟩ => hr.2
-
-end PGame
+-- Computations can be performed through the `game_cmp` tactic.
+noncomputable section
 
 /-! ### Game moves -/
 
 /-- Games up to identity.
 
-`IGame` uses the set-theoretic notion of equality on games, compared to `PGame`'s 'type-theoretic'
-notion of equality.
+`IGame` uses the set-theoretic notion of equality on games, meaning that two `IGame`s are equal
+exactly when their left and right sets of options are.
 
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
 like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
@@ -189,76 +94,53 @@ specifically use the 'identical' equivalence relation for this reason.
 
 For the more common game equivalence from the literature, see `Game.Basic`. -/
 def IGame : Type (u + 1) :=
-  Quotient PGame.identicalSetoid
+  QPF.Fix GameFunctor
 
 namespace IGame
-open scoped PGame
 
-/-- The quotient map from `PGame` into `IGame`. -/
-def mk (x : PGame) : IGame := Quotient.mk _ x
-theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
+/-- Construct an `IGame` from its left and right sets.
 
-alias ⟨_, mk_eq⟩ := mk_eq_mk
-alias _root_.PGame.Identical.mk_eq := mk_eq
+This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
+notation, and from the analogous constructors on `Game` and `Surreal`.
 
-@[cases_eliminator]
-theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
-  Quotient.ind H x
+This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
+Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+def ofSets (s t : Set IGame.{u}) [hs : Small.{u} s] [ht : Small.{u} t] : IGame.{u} :=
+  QPF.Fix.mk ⟨⟨s, t⟩, ⟨hs, ht⟩⟩
 
-/-- Choose an element of the equivalence class using the axiom of choice. -/
-noncomputable def out (x : IGame) : PGame := Quotient.out x
-@[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
 /-- The set of left moves of the game. -/
-def leftMoves : IGame → Set IGame :=
-  Quotient.lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ by
-    ext z
-    simp_rw [mem_image, mem_range, exists_exists_eq_and]
-    constructor <;> rintro ⟨i, rfl⟩
-    · obtain ⟨j, hj⟩ := h.moveLeft i
-      exact ⟨j, hj.mk_eq.symm⟩
-    · obtain ⟨j, hj⟩ := h.moveLeft_symm i
-      exact ⟨j, hj.mk_eq⟩
+def leftMoves (x : IGame.{u}) : Set IGame.{u} := x.dest.1.1
 
 /-- The set of right moves of the game. -/
-def rightMoves : IGame → Set IGame :=
-  Quotient.lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ by
-    ext z
-    simp_rw [mem_image, mem_range, exists_exists_eq_and]
-    constructor <;> rintro ⟨i, rfl⟩
-    · obtain ⟨j, hj⟩ := h.moveRight i
-      exact ⟨j, hj.mk_eq.symm⟩
-    · obtain ⟨j, hj⟩ := h.moveRight_symm i
-      exact ⟨j, hj.mk_eq⟩
+def rightMoves (x : IGame.{u}) : Set IGame.{u} := x.dest.1.2
 
-@[simp] theorem leftMoves_mk (x : PGame) : leftMoves (mk x) = mk '' range x.moveLeft := rfl
-@[simp] theorem rightMoves_mk (x : PGame) : rightMoves (mk x) = mk '' range x.moveRight := rfl
+instance (x : IGame.{u}) : Small.{u} x.leftMoves := x.dest.2.1
+instance (x : IGame.{u}) : Small.{u} x.rightMoves := x.dest.2.2
 
-instance (x : IGame.{u}) : Small.{u} x.leftMoves := by
-  cases x
-  rw [leftMoves_mk]
-  infer_instance
+@[simp, game_cmp]
+theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
+  rw [leftMoves, ofSets, QPF.Fix.dest_mk]
 
-instance (x : IGame.{u}) : Small.{u} x.rightMoves := by
-  cases x
-  rw [rightMoves_mk]
-  infer_instance
+@[simp, game_cmp]
+theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
+  rw [rightMoves, ofSets, QPF.Fix.dest_mk]
+
+@[simp]
+theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x :=
+  x.mk_dest
 
 @[ext]
-theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
+theorem ext {x y : IGame.{u}} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
-  cases x with | H x =>
-  cases y with | H y =>
-  dsimp at hl hr
-  refine (PGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := x.moveLeft) i)
-    exact ⟨j, mk_eq_mk.1 hj.symm⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := y.moveLeft) i)
-    exact ⟨j, mk_eq_mk.1 hj⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := x.moveRight) i)
-    exact ⟨j, mk_eq_mk.1 hj.symm⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := y.moveRight) i)
-    exact ⟨j, mk_eq_mk.1 hj⟩
+  rw [← ofSets_leftMoves_rightMoves x, ← ofSets_leftMoves_rightMoves y]
+  simp_rw [hl, hr]
+
+@[simp]
+theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
+    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+  simp [IGame.ext_iff]
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
@@ -272,13 +154,19 @@ instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
   inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
 theorem isOption_wf : WellFounded IsOption := by
-  refine ⟨ind fun x ↦ ?_⟩
-  induction x with
-  | mk x _ _ _ hl hr =>
-    constructor
-    rintro ⟨y⟩ (h | h) <;>
-    obtain ⟨_, ⟨i, rfl⟩, hi⟩ := h
-    exacts [hi ▸ hl i, hi ▸ hr i]
+  refine ⟨fun x ↦ ?_⟩
+  apply QPF.Fix.ind
+  unfold IsOption leftMoves rightMoves
+  rintro _ ⟨⟨⟨s, t⟩, ⟨_, _⟩⟩, rfl⟩
+  constructor
+  rintro y (hy | hy)
+  all_goals
+    rw [QPF.Fix.dest_mk] at hy
+    obtain ⟨⟨_, h⟩, _, rfl⟩ := hy
+    exact h
+
+-- We make no use of `IGame`'s definition from a `QPF` after this point.
+attribute [irreducible] IGame
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
@@ -289,9 +177,6 @@ theorem self_notMem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
 
 theorem self_notMem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
-
--- Computations can be performed through the `game_cmp` tactic.
-noncomputable section
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -309,63 +194,6 @@ theorem moveRecOn_eq {motive : IGame → Sort*} (x)
     (mk : Π x, (Π y ∈ x.leftMoves, motive y) → (Π y ∈ x.rightMoves, motive y) → motive x) :
     moveRecOn x mk = mk x (fun y _ ↦ moveRecOn y mk) (fun y _ ↦ moveRecOn y mk) :=
   isOption_wf.fix_eq ..
-
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
-def Subposition : IGame → IGame → Prop :=
-  Relation.TransGen IsOption
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_leftMoves h)
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_rightMoves h)
-
-theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
-    Subposition x z :=
-  Relation.TransGen.trans h₁ h₂
-
-instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
-instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
-instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
-
-/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
-of definitions using well-founded recursion on `IGame`. -/
-macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim (maxDepth := 8)
-    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
-    Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
-
-/-- Construct an `IGame` from its left and right sets.
-
-This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructors on `Game` and `Surreal`.
-
-This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
-def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
-  mk <| .mk (Shrink s) (Shrink t)
-    (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
-
-@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
-
-@[simp, game_cmp]
-theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
-  ext; simp [ofSets, range_comp]
-
-@[simp, game_cmp]
-theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
-  ext; simp [ofSets, range_comp]
-
-@[simp]
-theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
-  ext <;> simp
-
-@[simp]
-theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
-    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
-  simp [IGame.ext_iff]
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -396,6 +224,36 @@ theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
     refine Function.hfunext ?_ fun _ _ _ ↦ ?_
     · simp
     · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
+
+/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+def Subposition : IGame → IGame → Prop :=
+  Relation.TransGen IsOption
+
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_leftMoves {x y : IGame} (h : x ∈ y.leftMoves) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_leftMoves h)
+
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_rightMoves {x y : IGame} (h : x ∈ y.rightMoves) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_rightMoves h)
+
+theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
+    Subposition x z :=
+  Relation.TransGen.trans h₁ h₂
+
+instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
+  small_transGen' _ x
+
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
+instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
+
+/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
+of definitions using well-founded recursion on `IGame`. -/
+macro "igame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
 
 /-! ### Basic games -/
 
@@ -1435,5 +1293,5 @@ theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
 @[simp] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
 @[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
 
-end
 end IGame
+end

@@ -433,15 +433,13 @@ theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birth
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
-  refine small_subset (?_ : {x | birthday x ≤ o} ⊆ mk '' {x | IGame.birthday x ≤ o})
-  intro x hx
+  refine small_subset (s := mk '' {x | IGame.birthday x ≤ o}) fun x hx ↦ ?_
   obtain ⟨y, rfl, hy⟩ := birthday_eq_iGameBirthday x
   exact mem_image_of_mem mk (hy.trans_le hx)
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
-  apply small_subset (?_ : {x | birthday x < o} ⊆ {x | birthday x ≤ o})
-  exact setOf_subset_setOf.2 fun _ => le_of_lt
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
+  small_subset (s := {x | birthday x ≤ o}) <| setOf_subset_setOf.2 fun _ => le_of_lt
 
 /-- A variant of `small_setOf_birthday_le` in simp-normal form -/
 instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Impartial.Basic
 
 /-!
 # Combinatorial games from a type of states
