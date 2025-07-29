@@ -166,7 +166,7 @@ variable (leftMoves : α → Set α) (rightMoves : α → Set α)
 
 attribute [local instance] small_succ' in
 private instance : Small.{u + 1} (Subtype (Reachable leftMoves rightMoves init)) :=
-  @small_lift.{_, u, u + 1} _ <| small_reflTransGen' ..
+  small_reflTransGen' ..
 
 /-- Destructor for the subtype of reachable positions. -/
 @[simp]
