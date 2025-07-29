@@ -276,7 +276,7 @@ theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x)
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
-    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (toNimber z)⁻¹ < toNimber x) :
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) :
     x * z = toOrdinal (∗x * ∗z) := by
   apply le_antisymm
   · apply le_of_forall_ne
