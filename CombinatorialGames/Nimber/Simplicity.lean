@@ -247,6 +247,9 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
 
 /-! ### Rings -/
 
+/-- Multiply two nimbers as ordinal numbers. -/
+scoped notation:70 x:70 "*ₒ" y:71 => ∗(toOrdinal x * toOrdinal y)
+
 /-- A nimber `x` is a ring when `Iio x` is closed under addition and multiplication. Note that `0`
 is a ring under this definition. -/
 @[mk_iff]
@@ -259,26 +262,49 @@ theorem IsRing.zero : IsRing 0 where
 
 /-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
 written as `y * z` for some `y, z < x`. -/
-theorem exists_add_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
+theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
     ∃ y < x, ∃ z < x, y * z = x := by
   simp_rw [isRing_iff, h', true_and, not_forall, not_lt] at h
   obtain ⟨y, z, hy, hz, hx⟩ := h
   obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
     (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
   refine ⟨y, hy, z, hz, H.1.antisymm' (mul_le_of_forall_ne ?_)⟩
-  · dsimp
-    intro a ha b hb hx
-    apply hx.not_lt (h'.add_lt (h'.add_lt ..) _) <;> by_contra! hx
-    · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
-    · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
-    · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+  refine fun a ha b hb hx ↦ hx.not_lt (h'.add_lt (h'.add_lt ?_ ?_) ?_) <;> by_contra! hx
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
+  · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+
+/-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (toNimber z)⁻¹ < toNimber x) :
+    x * z = toOrdinal (∗x * ∗z) := by
+  apply le_antisymm
+  · apply le_of_forall_ne
+    rw [forall_lt_mul]
+    intro a ha b hb
+    rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
+      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H]
+    dsimp
+    rw [add_comm, CharTwo.add_eq_iff_eq_add, ← mul_add]
+    obtain hza | hza := eq_or_ne (∗z + ∗a) 0
+    · rw [add_eq_zero] at hza
+      cases ha.ne' hza
+    · rw [← div_eq_iff hza]
+      exact (hx.mul_lt hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
+  · sorry
+termination_by z
+
+theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt' hy hyx hzy H
+
 
   #exit
 
 /-! ### Fields -/
 
 /-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
-Note that `0` is a field under this definition. -/
+Note that `0` and `1` are fields under this definition. -/
 @[mk_iff]
 structure IsField (x : Nimber) extends IsRing x where
   inv_lt {y} (hy : y < x) : y⁻¹ < x
@@ -289,6 +315,11 @@ theorem IsField.zero : IsField 0 where
 
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
+
+theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
+  h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+
+  #exit
 
 /-! ### Algebraically closed fields -/
 
