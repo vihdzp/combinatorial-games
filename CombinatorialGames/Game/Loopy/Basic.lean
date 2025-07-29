@@ -3,7 +3,7 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Functor
+import CombinatorialGames.Game.IGame
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Data.Setoid.Basic
 import Mathlib.Logic.Small.Set
@@ -39,6 +39,8 @@ equality.
 open Set
 
 universe u v w
+
+variable {α : Type v} {β : Type w}
 
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
@@ -269,9 +271,8 @@ attribute [irreducible] LGame
 
 end corec
 
-theorem corec_comp_hom {α : Type v} {β : Type w}
-    (leftMovesα : α → Set α) (rightMovesα : α → Set α)
-    (leftMovesβ : β → Set β) (rightMovesβ : β → Set β)
+theorem corec_comp_hom
+    {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
     [∀ a, Small.{u} (leftMovesα a)] [∀ a, Small.{u} (rightMovesα a)]
     [∀ b, Small.{u} (leftMovesβ b)] [∀ b, Small.{u} (rightMovesβ b)] (f : α → β)
     (hlf : leftMovesβ ∘ f = Set.image f ∘ leftMovesα)
@@ -285,7 +286,7 @@ theorem corec_comp_hom {α : Type v} {β : Type w}
       ← Function.comp_assoc, rightMoves_comp_corec, Function.comp_assoc]
 
 @[simp]
-theorem corec_leftMoves_rightMoves : corec leftMoves.{u} rightMoves.{u} = id :=
+theorem corec_leftMoves_rightMoves : corec leftMoves rightMoves = id :=
   hom_unique leftMoves rightMoves _ _
     (leftMoves_comp_corec leftMoves rightMoves)
     (rightMoves_comp_corec leftMoves rightMoves)
@@ -312,18 +313,36 @@ theorem leftMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.
   rw [ofSets, leftMoves_corec, Option.elim_none, Set.image_image]
   conv_rhs => rw [← Set.image_id l, ← corec_leftMoves_rightMoves]
   generalize_proofs
-  exact congrFun (congrArg _ (corec_comp_hom _ _ _ _ some rfl rfl)) _
+  exact congrFun (congrArg _ (corec_comp_hom some rfl rfl)) _
 
 @[simp]
 theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.rightMoves = r := by
   rw [ofSets, rightMoves_corec, Option.elim_none, Set.image_image]
   conv_rhs => rw [← Set.image_id r, ← corec_leftMoves_rightMoves]
   generalize_proofs
-  exact congrFun (congrArg _ (corec_comp_hom _ _ _ _ some rfl rfl)) _
+  exact congrFun (congrArg _ (corec_comp_hom some rfl rfl)) _
 
 /-! ### Basic games -/
 
-/-- The game `on = {on | }`. -/
+/-- The game `0 = {∅ | ∅}ᴸ`. -/
+instance : Zero LGame := ⟨{∅ | ∅}ᴸ⟩
+
+theorem zero_def : 0 = {∅ | ∅}ᴸ := rfl
+
+@[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
+@[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+
+instance : Inhabited LGame := ⟨0⟩
+
+/-- The game `1 = {{0} | ∅}ᴵ`. -/
+instance : One LGame := ⟨{{0} | ∅}ᴸ⟩
+
+theorem one_def : 1 = {{0} | ∅}ᴸ := rfl
+
+@[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
+
+/-- The game `on = {{on} | ∅}ᴸ`. -/
 def on : LGame := corec ⊤ ⊥ ()
 
 @[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
@@ -337,7 +356,7 @@ theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ 
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨{(a, on)}, ?_⟩, ⟨∅, ?_⟩⟩ <;> simp_all
 
-/-- The game `off = { | off}`. -/
+/-- The game `off = {∅ | {off}}ᴸ`. -/
 def off : LGame := corec ⊥ ⊤ ()
 
 @[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
@@ -351,7 +370,7 @@ theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨∅, ?_⟩, ⟨{(a, off)}, ?_⟩⟩ <;> simp_all
 
-/-- The game `dud = {dud | dud}`. -/
+/-- The game `dud = {{dud} | {dud}}ᴸ`. -/
 def dud : LGame := corec ⊤ ⊤ ()
 
 @[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
@@ -367,5 +386,65 @@ theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ _ _ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨{(a, dud)}, ?_⟩, ⟨{(a, dud)}, ?_⟩⟩ <;> simp_all
+
+/-! ### Negation -/
+
+/-- The negative of a game is defined by `-{s | t}ᴸ = {-t | -s}ᴸ`. -/
+instance : Neg LGame where
+  neg := corec rightMoves leftMoves
+
+@[simp]
+theorem corec_rightMoves_leftMoves : corec rightMoves leftMoves = (- ·) :=
+  rfl
+
+@[simp]
+theorem neg_corec (leftMoves rightMoves : α → Set α)
+    [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] (init : α) :
+    -corec leftMoves rightMoves init = corec rightMoves leftMoves init :=
+  congrFun (corec_comp_hom _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..)) _
+
+instance : InvolutiveNeg LGame where
+  neg_neg x := (neg_corec ..).trans (congrFun (corec_leftMoves_rightMoves ..) x)
+
+@[simp]
+theorem leftMoves_neg (x : LGame) : (-x).leftMoves = -x.rightMoves := by
+  rw [← Set.image_neg_eq_neg]
+  exact leftMoves_corec ..
+
+@[simp]
+private theorem rightMoves_neg (x : LGame) : (-x).rightMoves = -x.leftMoves := by
+  rw [← Set.image_neg_eq_neg]
+  exact rightMoves_corec ..
+
+@[simp]
+theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -{s | t}ᴸ = {-t | -s}ᴸ := by
+  ext <;> simp
+
+instance : NegZeroClass LGame where
+  neg_zero := by simp [zero_def]
+
+@[simp] theorem neg_on : -on = off := neg_corec ..
+@[simp] theorem neg_off : -off = on := neg_corec ..
+@[simp] theorem neg_dud : -dud = dud := neg_corec ..
+
+/-! ### Addition -/
+
+/-- The sum of `x = {s₁ | t₁}ᴸ` and `y = {s₂ | t₂}ᴸ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴸ`. -/
+instance : Add LGame where
+  add x y := corec
+    (fun x ↦ (fun y ↦ (y, x.2)) '' leftMoves x.1 ∪ (fun y ↦ (x.1, y)) '' leftMoves x.2)
+    (fun x ↦ (fun y ↦ (y, x.2)) '' rightMoves x.1 ∪ (fun y ↦ (x.1, y)) '' rightMoves x.2)
+    (x, y)
+
+theorem corec_add_corec
+    {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
+    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
+    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)] (initα : α) (initβ : β) :
+    corec leftMovesα rightMovesα initα + corec leftMovesβ rightMovesβ initβ =
+    corec
+      (fun x ↦ (fun y ↦ (y, x.2)) '' leftMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' leftMovesβ x.2)
+      (fun x ↦ (fun y ↦ (y, x.2)) '' rightMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' rightMovesβ x.2)
+      (initα, initβ) :=
+    sorry
 
 end LGame
