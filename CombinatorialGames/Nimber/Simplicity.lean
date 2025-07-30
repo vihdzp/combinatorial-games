@@ -407,7 +407,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
   · apply le_of_forall_ne
     rw [forall_lt_mul]
     intro a ha b hb
-    rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
+    rw [ne_eq, ← toNimber_eq_iff, hx.mul_add_eq_of_lt' hb,
       hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
       toNimber_toOrdinal, ← mul_add]
     obtain hza | hza := eq_or_ne (∗z + ∗a) 0
@@ -422,7 +422,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
     have hx' : toOrdinal (a * (∗b + ∗z)) < x :=
       hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
     rw [← toNimber_toOrdinal (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
-      ← toNimber_toOrdinal (a * _), ← hx.toIsGroup.mul_add_eq_of_lt' hx']
+      ← toNimber_toOrdinal (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by z
 
@@ -485,14 +485,15 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
   obtain ⟨a, ha, hxa⟩ := h
   have hsx : sInf s < x := (csInf_le' (s := s) hxa).trans_lt ha
   have hxs : x ≤ (sInf s)⁻¹ := csInf_mem (s := s) ⟨a, hxa⟩
-  have hs₀ : sInf s ≠ 0 := fun _ ↦ by simp_all
+  obtain ⟨y, hys, hy, hsy⟩ := exists_isGroup_add_lt (x := sInf s) fun _ ↦ by simp_all
   have Hs {y} (hy : y < sInf s) : y⁻¹ < x := lt_of_not_ge (notMem_of_lt_csInf' (s := s) hy)
-  obtain ⟨y, hys, hy, hsy⟩ := exists_isGroup_add_lt hs₀
+  have Hs' {z} (hy : z < y) : z⁻¹ < x := Hs (hy.trans_le hys)
   suffices x * y = x * (sInf s + y) + 1 by
     rw [add_comm, CharTwo.eq_add_iff_add_eq, ← mul_add, add_comm, add_cancel_right] at this
     rw [inv_eq_of_mul_eq_one_right this]
     exact ⟨hsx, @Hs⟩
-  rw [← h'.mul_eq_of_lt hy (hys.trans hsx.le) hsy, ← h'.toIsGroup.mul_add_eq_of_lt hx₁]
+  have hyx := hys.trans hsx.le
+  rw [← h'.mul_eq_of_lt hy hyx hsy @Hs', ← h'.mul_add_eq_of_lt hx₁]
   · apply le_antisymm
     · refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
       rw [add_comm, ← add_assoc, ← mul_add, add_comm]
@@ -500,17 +501,20 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
     · rw [← toOrdinal.le_iff_le]
       apply le_of_forall_ne
       simp_rw [toOrdinal_one, add_one_eq_succ, toOrdinal_toNimber, Order.lt_succ_iff,
-        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul]
-      constructor
-      · sorry
-      · intro a ha b hb
-        rw [ne_eq, ← toNimber_eq_iff]
-        refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (sInf s + y)) (b' := ∗a) ?_ ?_)
-        · sorry
-        · exact (h'.mul_lt hb (Hs (hsy.trans_le hys))).ne
-        · exact (ha.trans hsy).ne
-  · exact fun z hz ↦ Hs (hz.trans_le hys)
-
+        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← toNimber_eq_iff]
+      refine ⟨?_, fun a ha b hb ↦ ?_⟩
+      · rw [h'.mul_eq_of_lt hy hyx hsy @Hs', mul_right_inj' hx₁.ne_bot]
+        exact hsy.ne
+      · have hay : ∗a < y := ha.trans hsy
+        rw [← toNimber_lt_iff] at hb
+        refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (∗a + y)) (b' := ∗a) ?_ hay.ne)
+        · rw [add_comm, ← add_assoc, ← mul_add, div_mul_cancel₀ _ (add_ne_zero_iff.2 hay.ne),
+            ← toOrdinal_toNimber b, h'.mul_add_eq_of_lt hb, ← h'.mul_eq_of_lt hy hyx hay @Hs']
+          exact add_comm ..
+        · apply (h'.mul_lt hb (Hs _ )).ne
+          rw [← add_comm, ← hy.add_eq_of_lt hay, toNimber_lt_iff]
+          apply (add_lt_add_left ha _).trans_eq
+          rw [← toNimber_eq_iff, hy.add_eq_of_lt hsy, add_comm, add_cancel_right]
 
 #exit
 theorem inv_lt_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x) (hy : y < x⁻¹) :
