@@ -1,0 +1,12 @@
+{
+    "ignoreImport": [
+        "Aesop",
+        "CombinatorialGames.Game.Tactic",
+        "CombinatorialGames.Register",
+        "Init",
+        "Lean.Meta.Tactic.Simp.RegisterCommand",
+        "Mathlib.Tactic.DeriveFintype",
+        "Mathlib.Tactic.Ring",
+        "Mathlib.Tactic.Ring.Basic"
+    ]
+}
