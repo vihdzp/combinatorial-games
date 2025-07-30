@@ -27,6 +27,9 @@ import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Nimber.Simplicity
 import CombinatorialGames.Register
+import CombinatorialGames.SignExpansion.Basic
+import CombinatorialGames.SignExpansion.CompleteLattice
+import CombinatorialGames.SignExpansion.Small
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut
@@ -37,5 +40,4 @@ import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
-import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Test.GameCmp
