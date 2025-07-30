@@ -136,6 +136,9 @@ theorem lt_one_iff_zero {a : Nimber} : a < 1 ↔ a = 0 :=
 theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
 
+theorem le_one_iff {a : Nimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Ordinal.le_one_iff
+
 theorem eq_nat_of_le_nat {a : Nimber} {b : ℕ} (h : a ≤ ∗b) : ∃ c : ℕ, a = ∗c :=
   Ordinal.lt_omega0.1 (h.trans_lt (nat_lt_omega0 b))
 
