@@ -359,8 +359,8 @@ theorem IsAlgClosed.zero : IsAlgClosed 0 where
 
 theorem IsAlgClosed.one : IsAlgClosed 1 where
   has_root p hp hp' := by
-    have : p = 0 := by ext n; simpa using hp' n
-    simp_all
+    obtain rfl : p = 0 := by ext n; simpa using hp' n
+    simp
   __ := IsField.one
 
 end Nimber
