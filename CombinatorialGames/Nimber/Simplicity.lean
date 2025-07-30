@@ -98,8 +98,7 @@ theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_left_strictMono hr).trans_le
   simp_rw [← mul_succ]
-  apply mul_le_mul_left'
-  simpa
+  exact mul_le_mul_left' (Order.succ_le_iff.mpr hq) _
 
 theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
     (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
@@ -133,7 +132,7 @@ scoped notation:65 x:arg "+ₒ" y:arg => ∗(toOrdinal x + toOrdinal y)
 this definition. -/
 @[mk_iff]
 structure IsGroup (x : Nimber) where
-  add_lt {y z} (hy : y < x) (hz : z < x) : y + z < x
+  add_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y + z < x
 
 theorem IsGroup.zero : IsGroup 0 where
   add_lt := by simp
@@ -207,7 +206,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   have H {a b} (hab : log 2 a < log 2 b) (IH : log 2 b < x) :
       ∗(2 ^ log 2 b) + ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ x) := by
     have H' : ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ log 2 b) := by
-      apply (two_opow _).add_lt hm ((two_opow _).add_lt ..)
+      apply (two_opow _).add_lt hm ((two_opow _).add_lt _ _)
       · rwa [toNimber.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
       · exact hm.trans ((opow_lt_opow_iff_right one_lt_two).2 hab)
     rw [add_assoc]
@@ -236,7 +235,7 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
   constructor
   · by_contra! H
     obtain ⟨h, hx, hx'⟩ := H
-    apply ((h.add_lt (x := ∗x) ..).trans_eq (two_opow_log_add hx).symm).false
+    apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add hx).symm).false
     · rw [toNimber.lt_iff_lt]
       apply (opow_log_le_self _ hx).lt_of_ne
       contrapose! hx'
@@ -252,7 +251,7 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
 is a ring under this definition. -/
 @[mk_iff]
 structure IsRing (x : Nimber) extends IsGroup x where
-  mul_lt {y z} (hy : y < x) (hz : z < x) : y * z < x
+  mul_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y * z < x
 
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
@@ -264,7 +263,7 @@ theorem IsRing.zero : IsRing 0 where
 Note that `0` is a field under this definition. -/
 @[mk_iff]
 structure IsField (x : Nimber) extends IsRing x where
-  inv_lt {y} (hy : y < x) : y⁻¹ < x
+  inv_lt ⦃y⦄ (hy : y < x) : y⁻¹ < x
 
 theorem IsField.zero : IsField 0 where
   inv_lt := by simp
@@ -280,7 +279,7 @@ coefficients less than `x` has a root that's less than `x`. Note that `0` is alg
 under this definition. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root {p : Nimber[X]} (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
   has_root := by simp
