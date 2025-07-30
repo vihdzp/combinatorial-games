@@ -122,7 +122,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
       Prod.fst '' s = x.leftMoves ∧ Prod.snd '' s = y.leftMoves ∧ ∀ z ∈ s, r z.1 z.2) ∧
         (∃ t : Set (LGame × LGame),
       Prod.fst '' t = x.rightMoves ∧ Prod.snd '' t = y.rightMoves ∧ ∀ z ∈ t, r z.1 z.2))
-    (x y : LGame.{u}) (hxy : r x y) : x = y := by
+    {x y : LGame.{u}} (hxy : r x y) : x = y := by
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   obtain ⟨⟨s, hs₁, hs₂, hs⟩, ⟨t, ht₁, ht₂, ht⟩⟩ := H _ _ hxy
   simp only [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
@@ -149,7 +149,7 @@ argument. For these situations, you can use `eq_of_bisim` instead. -/
 protected theorem ext {x y : LGame.{u}}
     (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) : x = y := by
   refine eq_of_bisim (fun i j ↦ i.leftMoves = j.leftMoves ∧ i.rightMoves = j.rightMoves)
-    (fun x y hxy ↦ ?_) x y ⟨hl, hr⟩
+    (fun x y hxy ↦ ?_) ⟨hl, hr⟩
   refine ⟨⟨(fun i ↦ (i, i)) '' x.leftMoves, ?_⟩, ⟨(fun i ↦ (i, i)) '' x.rightMoves, ?_⟩⟩ <;>
     simp_all [image_image]
 
@@ -285,12 +285,23 @@ theorem corec_comp_hom
   · rw [Set.image_comp_eq, Function.comp_assoc, ← hrf,
       ← Function.comp_assoc, rightMoves_comp_corec, Function.comp_assoc]
 
+theorem corec_comp_hom_apply
+    {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
+    [∀ a, Small.{u} (leftMovesα a)] [∀ a, Small.{u} (rightMovesα a)]
+    [∀ b, Small.{u} (leftMovesβ b)] [∀ b, Small.{u} (rightMovesβ b)] (f : α → β)
+    (hlf : leftMovesβ ∘ f = Set.image f ∘ leftMovesα)
+    (hrf : rightMovesβ ∘ f = Set.image f ∘ rightMovesα) (x : α) :
+    corec leftMovesβ rightMovesβ (f x) = corec leftMovesα rightMovesα x :=
+  congrFun (corec_comp_hom f hlf hrf) x
+
 @[simp]
 theorem corec_leftMoves_rightMoves : corec leftMoves rightMoves = id :=
   hom_unique leftMoves rightMoves _ _
     (leftMoves_comp_corec leftMoves rightMoves)
     (rightMoves_comp_corec leftMoves rightMoves)
     (Set.image_id_eq ▸ rfl) (Set.image_id_eq ▸ rfl)
+
+theorem corec_leftMoves_rightMoves_apply (x : LGame) : corec leftMoves rightMoves x = x := by simp
 
 /-- Construct an `LGame` from its left and right sets.
 
@@ -352,7 +363,7 @@ theorem on_eq : on = {{on} | ∅}ᴸ := by ext <;> simp
 theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ _ _ ⟨rfl, rfl⟩
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨{(a, on)}, ?_⟩, ⟨∅, ?_⟩⟩ <;> simp_all
 
@@ -366,7 +377,7 @@ theorem off_eq : off = {∅ | {off}}ᴸ := by ext <;> simp
 theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ _ _ ⟨rfl, rfl⟩
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨∅, ?_⟩, ⟨{(a, off)}, ?_⟩⟩ <;> simp_all
 
@@ -377,13 +388,10 @@ def dud : LGame := corec ⊤ ⊤ ()
 @[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
 theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by ext <;> simp
 
-instance : Unique dud.leftMoves := by refine ⟨⟨dud, ?_⟩, ?_⟩ <;> simp
-instance : Unique dud.rightMoves := by refine ⟨⟨dud, ?_⟩, ?_⟩ <;> simp
-
 theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
-  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ _ _ ⟨rfl, rfl⟩
+  · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨{(a, dud)}, ?_⟩, ⟨{(a, dud)}, ?_⟩⟩ <;> simp_all
 
@@ -393,15 +401,14 @@ theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x
 instance : Neg LGame where
   neg := corec rightMoves leftMoves
 
-@[simp]
-theorem corec_rightMoves_leftMoves : corec rightMoves leftMoves = (- ·) :=
-  rfl
+@[simp] theorem corec_rightMoves_leftMoves : corec rightMoves leftMoves = (- ·) := rfl
+theorem corec_rightMoves_leftMoves_apply (x : LGame) : corec rightMoves leftMoves x = -x := rfl
 
 @[simp]
 theorem neg_corec (leftMoves rightMoves : α → Set α)
     [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] (init : α) :
     -corec leftMoves rightMoves init = corec rightMoves leftMoves init :=
-  congrFun (corec_comp_hom _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..)) _
+  corec_comp_hom_apply _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..) _
 
 instance : InvolutiveNeg LGame where
   neg_neg x := (neg_corec ..).trans (congrFun (corec_leftMoves_rightMoves ..) x)
@@ -444,7 +451,66 @@ theorem corec_add_corec
     corec
       (fun x ↦ (fun y ↦ (y, x.2)) '' leftMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' leftMovesβ x.2)
       (fun x ↦ (fun y ↦ (y, x.2)) '' rightMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' rightMovesβ x.2)
-      (initα, initβ) :=
-    sorry
+      (initα, initβ) := by
+  refine corec_comp_hom_apply
+    (f := Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
+    (initα, initβ)
+  all_goals
+    refine funext fun ⟨a, b⟩ ↦ ?_
+    simp [Set.image_image, Set.image_union, leftMoves_corec, rightMoves_corec]
+
+@[simp]
+theorem leftMoves_add (x y : LGame) :
+    (x + y).leftMoves = (· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves := by
+  apply (leftMoves_corec ..).trans
+  aesop
+
+@[simp]
+theorem rightMoves_add (x y : LGame) :
+    (x + y).rightMoves = (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves := by
+  apply (rightMoves_corec ..).trans
+  aesop
+
+@[simp]
+theorem add_eq_zero_iff {x y : LGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
+  constructor <;> simp_all [LGame.ext_iff]
+
+private theorem add_zero' (x : LGame) : x + 0 = x := by
+  refine eq_of_bisim (fun x y ↦ x = y + 0) ?_ rfl
+  rintro a b rfl
+  refine
+    ⟨⟨(fun x ↦ (x + 0, x)) '' b.leftMoves, ?_, ?_⟩, ⟨(fun x ↦ (x + 0, x)) '' b.rightMoves, ?_, ?_⟩⟩
+  all_goals simp [image_image]
+
+private theorem add_comm' (x y : LGame) : x + y = y + x := by
+  apply eq_of_bisim (fun x y ↦ ∃ a b, x = a + b ∧ y = b + a) ?_ ⟨x, y, rfl, rfl⟩
+  rintro _ _ ⟨a, b, rfl, rfl⟩
+  refine
+    ⟨⟨(fun x ↦ (x + b, b + x)) '' a.leftMoves ∪ (fun x ↦ (a + x, x + a)) '' b.leftMoves, ?_, ?_⟩,
+    ⟨(fun x ↦ (x + b, b + x)) '' a.rightMoves ∪ (fun x ↦ (a + x, x + a)) '' b.rightMoves, ?_, ?_⟩⟩
+  all_goals aesop
+
+private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
+  apply eq_of_bisim (fun x y ↦ ∃ a b c, x = a + b + c ∧ y = a + (b + c)) ?_ ⟨x, y, z, rfl, rfl⟩
+  rintro _ _ ⟨a, b, c, rfl, rfl⟩
+  refine
+    ⟨⟨(fun x ↦ (x + b + c, x + (b + c))) '' a.leftMoves ∪
+    (fun x ↦ (a + x + c, a + (x + c))) '' b.leftMoves ∪
+    (fun x ↦ (a + b + x, a + (b + x))) '' c.leftMoves, ?_, ?_⟩,
+    ⟨(fun x ↦ (x + b + c, x + (b + c))) '' a.rightMoves ∪
+    (fun x ↦ (a + x + c, a + (x + c))) '' b.rightMoves ∪
+    (fun x ↦ (a + b + x, a + (b + x))) '' c.rightMoves, ?_, ?_⟩⟩
+  all_goals aesop (add simp [image_union])
+
+instance : AddCommMonoid LGame where
+  add_zero := add_zero'
+  zero_add _ := add_comm' .. ▸ add_zero' _
+  add_comm := add_comm'
+  add_assoc := add_assoc'
+  nsmul := nsmulRec
+
+/-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
+instance : SubNegMonoid IGame where
+  zsmul := zsmulRec
 
 end LGame
