@@ -267,7 +267,7 @@ theorem IsRing.one : IsRing 1 where
   mul_lt := by simp
   __ := IsGroup.one
 
-/-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
+/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
     ∃ y < x, ∃ z < x, y * z = x := by
