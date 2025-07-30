@@ -32,6 +32,8 @@ open Ordinal Polynomial Set
 
 /-! ### Mathlib lemmas -/
 
+/-! ### Order lemmas -/
+
 theorem le_of_forall_ne {α : Type*} [LinearOrder α] {x y : α} (h : ∀ z < x, z ≠ y) : x ≤ y := by
   contrapose! h
   use y
@@ -78,6 +80,14 @@ theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrdered
   simp_rw [le_add_iff_lt_or_exists_le]
   aesop
 
+theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
+    IsGreatest {y | P y} x := by
+  refine ⟨h.1, fun y hy ↦ ?_⟩
+  by_contra! hx
+  exact (h.le_of_ge hy hx.le).not_gt hx
+
+/-! #### Ordinal lemmas-/
+
 namespace Ordinal
 
 theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
@@ -121,6 +131,31 @@ instance : CanonicallyOrderedAdd Ordinal where
 
 end Ordinal
 
+/-! #### Polynomial lemmas -/
+
+namespace Polynomial
+
+variable {R : Type*} [Semiring R] {p : R[X]}
+
+@[simp]
+theorem coeffs_nonempty_iff : p.coeffs.Nonempty ↔ p ≠ 0 := by
+  simp [Finset.nonempty_iff_ne_empty]
+
+theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
+  rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
+    WithBot.lt_coe_bot, p.degree_eq_bot]
+
+theorem coeff_eq_zero_of_degree_lt {n : ℕ} (h : p.degree < n) : p.coeff n = 0 := by
+  -- FIXME: why does this take explicit args?
+  apply (p.degree_lt_iff_coeff_zero n).1 h
+  rfl
+
+theorem coeff_eq_zero_of_natDegree_lt {n : ℕ} (h : p.natDegree < n) : p.coeff n = 0 := by
+  apply coeff_eq_zero_of_degree_lt (p.degree_le_natDegree.trans_lt _)
+  rwa [Nat.cast_lt]
+
+end Polynomial
+
 namespace Nimber
 
 /-! ### Groups -/
@@ -134,11 +169,31 @@ this definition. -/
 structure IsGroup (x : Nimber) where
   add_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y + z < x
 
+@[simp]
 theorem IsGroup.zero : IsGroup 0 where
   add_lt := by simp
 
+@[simp]
 theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
+
+protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x) :
+    IsGroup (sSup s) := by
+  have : IsGroup (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨fun x y hx hy ↦ ?_⟩
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  obtain ⟨b, hbs, hb⟩ := hy
+  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
+  · exact (H a has).add_lt ha (hb.trans_le hab)
+  · exact (H b hbs).add_lt (ha.trans_le hab) hb
+
+protected theorem IsGroup.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsGroup (f i)) :
+    IsGroup (⨆ i, f i) := by
+  apply IsGroup.sSup
+  simpa
 
 theorem IsGroup.le_add_self {x y : Nimber} (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
@@ -195,7 +250,7 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
   h.add_eq_of_lt hy
 
 theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
-  refine ⟨@fun y z hy hz ↦ ?_⟩
+  refine ⟨fun y z hy hz ↦ ?_⟩
   induction y with | h y =>
   induction z with | h z =>
   obtain rfl | hy₀ := eq_or_ne y 0; simpa
@@ -259,13 +314,33 @@ is a ring under this definition. -/
 structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y * z < x
 
+@[simp]
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
   __ := IsGroup.zero
 
+@[simp]
 theorem IsRing.one : IsRing 1 where
   mul_lt := by simp
   __ := IsGroup.one
+
+protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) :
+    IsRing (sSup s) := by
+  have : IsRing (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, fun x y hx hy ↦ ?_⟩
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  obtain ⟨b, hbs, hb⟩ := hy
+  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
+  · exact (H a has).mul_lt ha (hb.trans_le hab)
+  · exact (H b hbs).mul_lt (ha.trans_le hab) hb
+
+protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i)) :
+    IsRing (⨆ i, f i) := by
+  apply IsRing.sSup
+  simpa
 
 /-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
 written as `y * z` for some `y, z < x`. -/
@@ -322,13 +397,30 @@ Note that `0` and `1` are fields under this definition. -/
 structure IsField (x : Nimber) extends IsRing x where
   inv_lt ⦃y⦄ (hy : y < x) : y⁻¹ < x
 
+@[simp]
 theorem IsField.zero : IsField 0 where
   inv_lt := by simp
   __ := IsRing.zero
 
+@[simp]
 theorem IsField.one : IsField 1 where
   inv_lt := by simp
   __ := IsRing.one
+
+protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x) :
+    IsField (sSup s) := by
+  have : IsField (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun x hx ↦ ?_⟩
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  exact ⟨a, has, (H a has).inv_lt ha⟩
+
+protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i)) :
+    IsField (⨆ i, f i) := by
+  apply IsField.sSup
+  simpa
 
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
@@ -348,19 +440,58 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 /-- A nimber `x` is algebraically closed when `IsField x`, and every non-constant polynomial in the
 nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
-algebraically closed under this definition. -/
+algebraically closed under this definition.
+
+For simplicity, the constructor takes a redundant `p ≠ 0` assumption. The lemma
+`IsAlgClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root' ⦃p : Nimber[X]⦄ (hp₀ : p ≠ 0) (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) :
+    ∃ r < x, p.IsRoot r
 
+theorem IsAlgClosed.has_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
+    (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r := by
+  obtain rfl | hp₀ := eq_or_ne p 0
+  · aesop
+  · exact h.has_root' hp₀ hp hp'
+
+@[simp]
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
-  has_root := by simp
+  has_root' := by simp
   __ := IsField.zero
 
+@[simp]
 theorem IsAlgClosed.one : IsAlgClosed 1 where
-  has_root p hp hp' := by
-    obtain rfl : p = 0 := by ext n; simpa using hp' n
-    simp
+  has_root' p hp₀ hp hp' := by
+    apply (hp₀ _).elim
+    ext n
+    simpa using hp' n
   __ := IsField.one
+
+protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x) :
+    IsAlgClosed (sSup s) := by
+  have : IsAlgClosed (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hp hp' ↦ ?_⟩
+  simp_rw [lt_csSup_iff hs hs'] at *
+  choose f hf using hp'
+  obtain ⟨c, hc⟩ := ((Finset.range (p.natDegree + 1)).image f).exists_maximal (by simp)
+  have hc' := hc.1
+  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ] at hc'
+  obtain ⟨n, hn, rfl⟩ := hc'
+  have := (H _ (hf n).1).has_root hp fun m ↦ ?_
+  · obtain ⟨r, hr, hr'⟩ := this
+    exact ⟨r, ⟨_, (hf n).1, hr⟩, hr'⟩
+  · obtain hm | hm := le_or_gt m p.natDegree
+    · apply (hf m).2.trans_le (hc.isGreatest.2 _)
+      aesop (add simp [Nat.lt_succ])
+    · rw [coeff_eq_zero_of_natDegree_lt hm]
+      exact bot_le.trans_lt (hf n).2
+
+protected theorem IsAlgClosed.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsAlgClosed (f i)) :
+    IsAlgClosed (⨆ i, f i) := by
+  apply IsAlgClosed.sSup
+  simpa
 
 end Nimber
