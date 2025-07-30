@@ -27,7 +27,7 @@ The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 
 ## Todo
 
-We are currently at 2/4.
+We are currently at 3/4.
 -/
 
 open Ordinal Polynomial Set
