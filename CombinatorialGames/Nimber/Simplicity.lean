@@ -342,7 +342,7 @@ protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i))
   apply IsRing.sSup
   simpa
 
-/-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
+/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
     ∃ y < x, ∃ z < x, y * z = x := by
@@ -432,6 +432,14 @@ theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *�
 theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
     x * y = toOrdinal (∗x * ∗y) :=
   hx.mul_eq_of_lt hyx
+
+/-- The third **simplest extension theorem**: if `x` is a ring but not a field, then `x` can be
+written as `y⁻¹` for some `y < x`. -/
+theorem exists_inv_of_not_isRing {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
+    ∃ y < x, y ⁻¹ = x := by
+  sorry
+
+#exit
 
 -- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
