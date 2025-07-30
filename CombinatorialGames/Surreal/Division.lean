@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Theodore Hwa
 import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
-import Mathlib.Tactic.Ring.RingNF
+import Mathlib.Tactic.Ring
 
 /-!
 # Surreal division
