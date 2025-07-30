@@ -36,10 +36,12 @@ open Ordinal Polynomial Set
 
 /-! ### Order lemmas -/
 
+-- #27703
 theorem le_of_forall_ne {α : Type*} [LinearOrder α] {x y : α} (h : ∀ z < x, z ≠ y) : x ≤ y := by
   contrapose! h
   use y
 
+-- #27701
 theorem lt_add_iff_lt_or_exists_lt {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
     [AddLeftReflectLT α] [IsLeftCancelAdd α] {a b c : α} :
     a < b + c ↔ a < b ∨ ∃ d < c, a = b + d := by
