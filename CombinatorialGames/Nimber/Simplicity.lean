@@ -137,6 +137,9 @@ structure IsGroup (x : Nimber) where
 theorem IsGroup.zero : IsGroup 0 where
   add_lt := by simp
 
+theorem IsGroup.one : IsGroup 1 where
+  add_lt := by simp
+
 theorem IsGroup.le_add_self {x y : Nimber} (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
   simpa using h.add_lt this hy
@@ -260,6 +263,10 @@ theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
   __ := IsGroup.zero
 
+theorem IsRing.one : IsRing 1 where
+  mul_lt := by simp
+  __ := IsGroup.one
+
 /-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
@@ -319,6 +326,10 @@ structure IsField (x : Nimber) extends IsRing x where
 theorem IsField.zero : IsField 0 where
   inv_lt := by simp
   __ := IsRing.zero
+
+theorem IsField.one : IsField 1 where
+  inv_lt := by simp
+  __ := IsRing.one
 
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
