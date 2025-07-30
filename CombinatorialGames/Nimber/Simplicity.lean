@@ -23,9 +23,11 @@ This file aims to prove the four parts of the simplest extension theorem:
 - If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
   coefficients `< x`.
 
+The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
+
 ## Todo
 
-We are currently at 1/4.
+We are currently at 2/4.
 -/
 
 open Ordinal Polynomial Set
