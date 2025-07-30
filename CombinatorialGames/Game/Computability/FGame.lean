@@ -3,9 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Game.Short
 import CombinatorialGames.Mathlib.Finlift
-import Mathlib.Data.Countable.Small
+import CombinatorialGames.Game.Tactic
+import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Quotient
 import Mathlib.Data.Multiset.Sort
 

@@ -8,5 +8,10 @@
         "Mathlib.Tactic.DeriveFintype",
         "Mathlib.Tactic.Ring",
         "Mathlib.Tactic.Ring.Basic"
-    ]
+    ],
+    "ignore": {
+        "CombinatorialGames.Game.Tactic": [
+            "CombinatorialGames.Game.IGame"
+        ]
+    }
 }
