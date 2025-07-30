@@ -347,15 +347,21 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 /-! ### Algebraically closed fields -/
 
-/-- A nimber `x` is algebraically closed when `IsField x`, and every polynomial in the nimbers with
-coefficients less than `x` has a root that's less than `x`. Note that `0` is algebraically closed
-under this definition. -/
+/-- A nimber `x` is algebraically closed when `IsField x`, and every non-constant polynomial in the
+nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
+algebraically closed under this definition. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
   has_root := by simp
   __ := IsField.zero
+
+theorem IsAlgClosed.one : IsAlgClosed 1 where
+  has_root p hp hp' := by
+    have : p = 0 := by ext n; simpa using hp' n
+    simp_all
+  __ := IsField.one
 
 end Nimber
