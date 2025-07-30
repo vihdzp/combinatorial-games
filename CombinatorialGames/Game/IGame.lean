@@ -8,11 +8,11 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
+import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Logic.Small.Set
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
-import Mathlib.Lean.PrettyPrinter.Delaborator
 
 /-!
 # Combinatorial (pre-)games
