@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
 import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Degree.Definitions
 import Mathlib.SetTheory.Ordinal.Exponential
 
 /-!
@@ -341,7 +342,7 @@ coefficients less than `x` has a root that's less than `x`. Note that `0` is alg
 under this definition. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root {p : Nimber[X]} (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
   has_root := by simp
