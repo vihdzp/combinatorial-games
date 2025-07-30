@@ -74,7 +74,11 @@ namespace Nimber
 open Ordinal
 
 @[simp] theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber := rfl
-@[simp] theorem toOrdinal_toNimber (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
+@[simp] theorem toNimber_toOrdinal (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
+
+theorem toOrdinal_le_iff (a : Nimber) (b : Ordinal) : toOrdinal a ≤ b ↔ a ≤ ∗b := .rfl
+theorem toOrdinal_lt_iff (a : Nimber) (b : Ordinal) : toOrdinal a < b ↔ a < ∗b := .rfl
+theorem toOrdinal_eq_iff (a : Nimber) (b : Ordinal) : toOrdinal a = b ↔ a = ∗b := .rfl
 
 theorem lt_wf : @WellFounded Nimber (· < ·) :=
   Ordinal.lt_wf
@@ -110,8 +114,8 @@ protected def rec {β : Nimber → Sort*} (h : ∀ a, β (∗a)) : ∀ a, β a :
   h (toOrdinal a)
 
 /-- `Ordinal.induction` but for `Nimber`. -/
-theorem induction {p : Nimber → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
-  Ordinal.induction
+theorem induction {p : Nimber → Prop} (i) (h : ∀ j, (∀ k, k < j → p k) → p j) : p i :=
+  Ordinal.induction i h
 
 @[simp]
 protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
@@ -158,7 +162,11 @@ open Nimber
 namespace Ordinal
 
 @[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
-@[simp] theorem toNimber_toOrdinal (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
+@[simp] theorem toOrdinal_toNimber (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
+
+theorem toNimber_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.toOrdinal := .rfl
+theorem toNimber_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.toOrdinal := .rfl
+theorem toNimber_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.toOrdinal := .rfl
 
 @[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
 @[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl

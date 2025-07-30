@@ -25,6 +25,7 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Nimber.Simplicity
 import CombinatorialGames.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
