@@ -445,12 +445,12 @@ theorem equiv_of_exists {x y : IGame}
   apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
-theorem zero_lt_one : (0 : IGame) < 1 := by
+protected theorem zero_lt_one : (0 : IGame) < 1 := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf, le_iff_forall_lf]
   simp
 
 instance : ZeroLEOneClass IGame where
-  zero_le_one := zero_lt_one.le
+  zero_le_one := IGame.zero_lt_one.le
 
 /-! ### Negation -/
 
@@ -883,14 +883,14 @@ instance : IntCast IGame where
   | .ofNat n => n
   | .negSucc n => -(n + 1)
 
-@[simp, game_cmp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
+@[simp, game_cmp, norm_cast] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
 @[simp, game_cmp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
 
-@[game_cmp] theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
-@[game_cmp] theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
+@[game_cmp, norm_cast] theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
+@[game_cmp, norm_cast] theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
 
-@[simp, game_cmp]
+@[simp, game_cmp, norm_cast]
 theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
   cases n with
   | ofNat n =>
@@ -1100,6 +1100,14 @@ theorem mulOption_neg_right (x y a b : IGame) : mulOption x (-y) a b = -mulOptio
 
 theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x y (-a) (-b) := by
   simp [mulOption, sub_eq_neg_add, add_comm]
+
+@[simp]
+theorem mulOption_zero_left (x y a : IGame) : mulOption x y 0 a = x * a := by
+  simp [mulOption]
+
+@[simp]
+theorem mulOption_zero_right (x y a : IGame) : mulOption x y a 0 = a * y := by
+  simp [mulOption]
 
 /-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/

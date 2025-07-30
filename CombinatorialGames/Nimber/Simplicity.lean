@@ -206,7 +206,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   have H {a b} (hab : log 2 a < log 2 b) (IH : log 2 b < x) :
       ∗(2 ^ log 2 b) + ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ x) := by
     have H' : ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ log 2 b) := by
-      apply (two_opow _).add_lt hm ((two_opow _).add_lt ..)
+      apply (two_opow _).add_lt hm ((two_opow _).add_lt _ _)
       · rwa [toNimber.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
       · exact hm.trans ((opow_lt_opow_iff_right one_lt_two).2 hab)
     rw [add_assoc]
@@ -235,7 +235,7 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
   constructor
   · by_contra! H
     obtain ⟨h, hx, hx'⟩ := H
-    apply ((h.add_lt (x := ∗x) ..).trans_eq (two_opow_log_add hx).symm).false
+    apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add hx).symm).false
     · rw [toNimber.lt_iff_lt]
       apply (opow_log_le_self _ hx).lt_of_ne
       contrapose! hx'
