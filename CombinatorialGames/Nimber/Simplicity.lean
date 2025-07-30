@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 import CombinatorialGames.Nimber.Field
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
-import Mathlib.SetTheory.Ordinal.Exponential
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Simplest extension theorems
@@ -129,6 +129,26 @@ theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c
 instance : CanonicallyOrderedAdd Ordinal where
   le_self_add := le_add_right
 
+attribute [simp] principal_zero
+
+protected theorem Principal.sSup {op : Ordinal → Ordinal → Ordinal} {s : Set Ordinal}
+    (H : ∀ x ∈ s, Principal op x) : Principal op (sSup s) := by
+  have : Principal op (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine fun x y hx hy ↦ ?_
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  obtain ⟨b, hbs, hb⟩ := hy
+  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
+  · exact H a has ha (hb.trans_le hab)
+  · exact H b hbs (ha.trans_le hab) hb
+
+protected theorem Principal.iSup {op : Ordinal → Ordinal → Ordinal} {ι} {f : ι → Ordinal}
+    (H : ∀ i, Principal op (f i)) : Principal op (⨆ i, f i) := by
+  apply Principal.sSup
+  simpa
+
 end Ordinal
 
 /-! #### Polynomial lemmas -/
@@ -178,17 +198,8 @@ theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x) :
-    IsGroup (sSup s) := by
-  have : IsGroup (sSup ∅) := by simp
-  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
-  refine ⟨fun x y hx hy ↦ ?_⟩
-  rw [lt_csSup_iff hs hs'] at *
-  obtain ⟨a, has, ha⟩ := hx
-  obtain ⟨b, hbs, hb⟩ := hy
-  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
-  · exact (H a has).add_lt ha (hb.trans_le hab)
-  · exact (H b hbs).add_lt (ha.trans_le hab) hb
+    IsGroup (sSup s) :=
+  ⟨Principal.sSup (fun x hx ↦ (H x hx).add_lt)⟩
 
 protected theorem IsGroup.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsGroup (f i)) :
     IsGroup (⨆ i, f i) := by
@@ -325,17 +336,8 @@ theorem IsRing.one : IsRing 1 where
   __ := IsGroup.one
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) :
-    IsRing (sSup s) := by
-  have : IsRing (sSup ∅) := by simp
-  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
-  refine ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, fun x y hx hy ↦ ?_⟩
-  rw [lt_csSup_iff hs hs'] at *
-  obtain ⟨a, has, ha⟩ := hx
-  obtain ⟨b, hbs, hb⟩ := hy
-  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
-  · exact (H a has).mul_lt ha (hb.trans_le hab)
-  · exact (H b hbs).mul_lt (ha.trans_le hab) hb
+    IsRing (sSup s) :=
+  ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, Principal.sSup (fun x hx ↦ (H x hx).mul_lt)⟩
 
 protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i)) :
     IsRing (⨆ i, f i) := by
