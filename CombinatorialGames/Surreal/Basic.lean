@@ -425,7 +425,7 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 set are less than all the elements of the right set.
 
 This is given notation `{s | t}ˢ`, where the superscript `s` is to disambiguate from set builder
-notation, and from the analogous constructors on `IGame` and `Game`. This notation will attempt to
+notation, and from the analogous constructors on other game types. This notation will attempt to
 construct the relevant proof using `aesop`.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence

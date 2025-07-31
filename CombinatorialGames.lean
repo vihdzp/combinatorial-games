@@ -8,6 +8,7 @@ import CombinatorialGames.Game.Functor
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
+import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
@@ -22,6 +23,7 @@ import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
