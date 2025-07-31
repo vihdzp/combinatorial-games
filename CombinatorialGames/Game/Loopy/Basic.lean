@@ -570,4 +570,8 @@ theorem on_sub_on : on - on = dud := by
 theorem off_sub_off : off - off = dud := by
   simp [sub_eq_add_neg]
 
+@[simp]
+theorem sub_dud (x : LGame) : x - dud = dud := by
+  simp [sub_eq_add_neg]
+
 end LGame
