@@ -509,6 +509,28 @@ instance : AddCommMonoid LGame where
   add_assoc := add_assoc'
   nsmul := nsmulRec
 
+@[simp]
+theorem on_add_off : on + off = dud := by
+  rw [eq_dud]
+  simp
+
+@[simp]
+theorem off_add_on : off + on = dud := by
+  rw [add_comm, on_add_off]
+
+@[simp]
+theorem add_dud (x : LGame) : x + dud = dud := by
+  refine eq_of_bisim (fun x y ↦ (∃ b, x = b + dud) ∧ y = dud) ?_ ⟨⟨x, rfl⟩, rfl⟩
+  rintro _ _ ⟨⟨x, rfl⟩, rfl⟩
+  refine
+    ⟨⟨insert ((x + dud, dud)) ((fun y ↦ (y + dud, dud)) '' x.leftMoves), ?_, ?_⟩,
+    ⟨insert ((x + dud, dud)) ((fun y ↦ (y + dud, dud)) '' x.rightMoves), ?_, ?_⟩⟩
+  all_goals aesop
+
+@[simp]
+theorem dud_add (x : LGame) : dud + x = dud := by
+  rw [add_comm, add_dud]
+
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid LGame where
   zsmul := zsmulRec
@@ -540,6 +562,14 @@ instance : SubtractionCommMonoid IGame where
   neg_add_rev x y := by rw [neg_add', add_comm]
   neg_eq_of_add := by simp
   add_comm := add_comm
+
+@[simp]
+theorem on_sub_off : on + off = dud := by
+  simp [sub_eq_add_neg]
+
+@[simp]
+theorem off_sub_on : off - on = dud := by
+  simp [sub_eq_add_neg]
 
 
 end LGame
