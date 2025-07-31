@@ -12,8 +12,8 @@ import Mathlib.Logic.Small.Set
 # Loopy games
 
 The standard notion of a game studied in combinatorial game theory is that of a terminating game,
-meaning that there exists no infinite sequence of moves. Loopy games relax this condition, and thus
-allow "self-refential" games, with the basic examples being `on = {on | }`, `off = { | off}`, and
+meaning that there exists no infinite sequence of moves. Loopy games relax this condition by
+allowing "self-refential" games, with the basic examples being `on = {on | }`, `off = { | off}`, and
 `dud = {dud | dud}`.
 
 In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
@@ -41,6 +41,8 @@ open Set
 universe u v w
 
 variable {α : Type v} {β : Type w}
+
+/-! ### For Mathlib -/
 
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
@@ -125,7 +127,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
     {x y : LGame.{u}} (hxy : r x y) : x = y := by
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   obtain ⟨⟨s, hs₁, hs₂, hs⟩, ⟨t, ht₁, ht₂, ht⟩⟩ := H _ _ hxy
-  simp only [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
+  simp_rw [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
   refine ⟨⟨⟨range (inclusion hs), range (inclusion ht)⟩, ⟨?_, ?_⟩⟩, ?_, ?_⟩
   · have : Small.{u} s := small_subset (s := leftMoves x ×ˢ leftMoves y) fun z hz ↦
       ⟨(hs₁ z.1).1 ⟨_, hz⟩, (hs₂ z.2).1 ⟨_, hz⟩⟩
@@ -136,9 +138,8 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   all_goals
     ext z
     all_goals
-      simp [GameFunctor.map_def, ← range_comp]
       revert z
-      assumption
+      simpa [GameFunctor.map_def, ← range_comp]
 
 /-- Two `LGame`s are equal when their move sets are.
 
@@ -188,14 +189,14 @@ private theorem unique (f g : Subtype (Reachable leftMoves rightMoves init) → 
     QPF.Cofix.unique (dest leftMoves rightMoves init) _ _ hf hg) x
 
 /-- The corecursor on the subtype of reachable nodes. -/
-private noncomputable def corec' (x : Subtype (Reachable leftMoves rightMoves init)) :=
+private def corec' (x : Subtype (Reachable leftMoves rightMoves init)) :=
   QPF.Cofix.corec (dest _ _ _) (equivShrink _ x)
 
 /-- The corecursor on `LGame`.
 
 You can use this in order to define an arbitrary `LGame` by "drawing" its move graph on some other
 type. As an example, `on = {on | }ᴸ` is defined as `corec ⊤ ⊥ ()`. -/
-noncomputable def corec : LGame.{u} :=
+def corec : LGame.{u} :=
   corec' leftMoves rightMoves init ⟨_, .refl⟩
 
 private theorem corec'_trans {x} (hx : Reachable leftMoves rightMoves init x)
