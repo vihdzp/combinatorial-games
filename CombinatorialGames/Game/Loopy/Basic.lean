@@ -523,8 +523,8 @@ theorem add_dud (x : LGame) : x + dud = dud := by
   refine eq_of_bisim (fun x y ↦ (∃ b, x = b + dud) ∧ y = dud) ?_ ⟨⟨x, rfl⟩, rfl⟩
   rintro _ _ ⟨⟨x, rfl⟩, rfl⟩
   refine
-    ⟨⟨insert ((x + dud, dud)) ((fun y ↦ (y + dud, dud)) '' x.leftMoves), ?_, ?_⟩,
-    ⟨insert ((x + dud, dud)) ((fun y ↦ (y + dud, dud)) '' x.rightMoves), ?_, ?_⟩⟩
+    ⟨⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.leftMoves), ?_, ?_⟩,
+    ⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.rightMoves), ?_, ?_⟩⟩
   all_goals aesop
 
 @[simp]
@@ -546,30 +546,27 @@ theorem rightMoves_sub (x y : LGame) :
   simp [sub_eq_add_neg]
 
 private theorem neg_add' (x y : LGame) : -(x + y) = -x + -y := by
-  ext <;>
-  · simp
-    rw [← (Equiv.neg IGame).exists_congr_right]
-    nth_rewrite 2 [← (Equiv.neg IGame).exists_congr_right]
-    congr! 3 <;>
-    · refine and_congr_right_iff.2 fun _ ↦ ?_
-      rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
-termination_by (x, y)
-decreasing_by igame_wf
+  refine eq_of_bisim (fun x y ↦ ∃ a b, x = -(a + b) ∧ y = -a + -b) ?_ ⟨x, y, rfl, rfl⟩
+  rintro _ _ ⟨a, b, rfl, rfl⟩
+  refine
+    ⟨⟨(fun x ↦ (-(x + b), -x + -b)) '' a.rightMoves ∪
+    (fun x ↦ (-(a + x), -a + -x)) '' b.rightMoves, ?_, ?_⟩,
+    ⟨(fun x ↦ (-(x + b), -x + -b)) '' a.leftMoves ∪
+    (fun x ↦ (-(a + x), -a + -x)) '' b.leftMoves, ?_, ?_⟩⟩
+  all_goals aesop (add simp [image_union])
 
-  #exit
-instance : SubtractionCommMonoid IGame where
+instance : SubtractionCommMonoid LGame where
   neg_neg := neg_neg
   neg_add_rev x y := by rw [neg_add', add_comm]
   neg_eq_of_add := by simp
   add_comm := add_comm
 
 @[simp]
-theorem on_sub_off : on + off = dud := by
+theorem on_sub_on : on - on = dud := by
   simp [sub_eq_add_neg]
 
 @[simp]
-theorem off_sub_on : off - on = dud := by
+theorem off_sub_off : off - off = dud := by
   simp [sub_eq_add_neg]
-
 
 end LGame
