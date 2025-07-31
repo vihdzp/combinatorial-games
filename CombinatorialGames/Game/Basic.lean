@@ -257,6 +257,10 @@ theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n := by
 theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n := by
   simp [← Game.mk_lt_mk]
 
+@[simp]
+theorem natCast_nonneg (n : ℕ) : 0 ≤ (n : IGame) :=
+  natCast_le.2 n.zero_le
+
 theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) :=
   fun _ _ h ↦ natCast_lt.2 h
 

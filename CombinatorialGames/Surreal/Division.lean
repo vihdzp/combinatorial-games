@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Theodore Hwa
 import CombinatorialGames.Surreal.Multiplication
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
-import Mathlib.Tactic.Ring.RingNF
+import Mathlib.Tactic.Ring
 
 /-!
 # Surreal division
@@ -301,19 +301,19 @@ namespace IGame
 namespace Numeric
 
 @[simp]
-theorem inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
+protected theorem inv_pos {x : IGame} [Numeric x] : 0 < x⁻¹ ↔ 0 < x := by
   simp [← Surreal.mk_lt_mk]
 
 @[simp]
-theorem inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
+protected theorem inv_neg {x : IGame} [Numeric x] : x⁻¹ < 0 ↔ x < 0 := by
   simp [← Surreal.mk_lt_mk]
 
 @[simp]
-theorem inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
+protected theorem inv_nonneg {x : IGame} [Numeric x] : 0 ≤ x⁻¹ ↔ 0 ≤ x := by
   simp [← Surreal.mk_le_mk]
 
 @[simp]
-theorem inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
+protected theorem inv_nonpos {x : IGame} [Numeric x] : x⁻¹ ≤ 0 ↔ x ≤ 0 := by
   simp [← Surreal.mk_le_mk]
 
 theorem inv_equiv_of_mul_eq_one {x y : IGame} [Numeric x] [Numeric y]
@@ -329,9 +329,17 @@ protected theorem lt_div_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     x < y / z ↔ x * z < y := by
   simp_all [← Surreal.mk_lt_mk, lt_div_iff₀]
 
+protected theorem lt_div_iff' {x y z : IGame} [Numeric x] [Numeric y] [Numeric z] (hz : 0 < z) :
+    x < y / z ↔ z * x < y := by
+  simp_all [← Surreal.mk_lt_mk, lt_div_iff₀']
+
 protected theorem div_lt_iff {x y z : IGame} [Numeric x] [Numeric y] [Numeric z] (hy : 0 < y) :
     x / y < z ↔ x < z * y := by
   simp_all [← Surreal.mk_lt_mk, div_lt_iff₀]
+
+protected theorem div_lt_iff' {x y z : IGame} [Numeric x] [Numeric y] [Numeric z] (hz : 0 < y) :
+    x / y < z ↔ x < y * z := by
+  simp_all [← Surreal.mk_lt_mk, div_lt_iff₀']
 
 protected theorem lt_div_iff_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : z < 0) : x < y / z ↔ y < x * z := by

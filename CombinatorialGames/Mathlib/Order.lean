@@ -1,6 +1,6 @@
 import Mathlib.Data.Finset.Max
+import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Order.Antisymmetrization
-import Mathlib.Order.Preorder.Finite
 
 /-! ### Basic order theorems -/
 

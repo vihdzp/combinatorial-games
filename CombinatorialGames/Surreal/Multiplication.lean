@@ -493,8 +493,8 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-theorem mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
+protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
+  simpa [P3] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 
@@ -600,6 +600,24 @@ protected theorem mul_lt_mul_left_of_neg {x y z : IGame} [Numeric x] [Numeric y]
 protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : z < 0) : x * z < y * z ↔ y < x :=
   mul_lt_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+protected theorem mul_le_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a ≤ b → c ≤ d → 0 ≤ c → 0 ≤ b → a * c ≤ b * d :=
+  mul_le_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+protected theorem mul_lt_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a < b → c ≤ d → 0 < c → 0 ≤ b → a * c < b * d :=
+  mul_lt_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_left {a b : IGame} [Numeric a] [Numeric b] :
+    0 < a → (0 < a * b ↔ 0 < b) :=
+  mul_pos_iff_of_pos_left (a := Surreal.mk a) (b := Surreal.mk b)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_right {a b : IGame} [Numeric a] [Numeric b] :
+    0 < b → (0 < a * b ↔ 0 < a) :=
+  mul_pos_iff_of_pos_right (a := Surreal.mk a) (b := Surreal.mk b)
 
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]
