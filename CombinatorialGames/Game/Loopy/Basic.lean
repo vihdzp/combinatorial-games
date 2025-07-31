@@ -571,7 +571,74 @@ theorem off_sub_off : off - off = dud := by
 
 /-! ### Multiplication -/
 
-inductive
+/-- Given two game graphs drawn on types `α` and `β`, the graph for the product can be drawn on the
+type `Multiset (Bool × α × β)`. Each term corresponds to a sum `Σ ±aᵢ * bᵢ`, where `aᵢ` and `bᵢ` are
+terms of `α` and `β` respectively. -/
+@[reducible]
+def MulTy (α β : Type*) :=
+  Multiset (Bool × α × β)
+
+namespace MulTy
+
+/-- For a given `x : MulTy α β`, returns all possible pairs `(y, a)` where `a ::ₘ y = x`. -/
+def split (x : MulTy α β) : Set (MulTy α β × Bool × α × β) :=
+  {y | y.2 ::ₘ y.1 = x}
+
+private def mulOption (b : Bool) (x : α × β) (y : α × β) : MulTy α β :=
+  {(b, y.1, x.2), (b, x.1, y.2), (!b, y.1, y.2)}
+
+variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
+
+/-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are either
+both left moves or right moves of `aᵢ` and `bᵢ` respectively. -/
+private def leftMovesAux' (b : Bool) (x : α × β): Set (MulTy α β) :=
+  mulOption b x '' (leftMovesα x.1 ×ˢ leftMovesβ x.2 ∪ rightMovesα x.1 ×ˢ rightMovesβ x.2)
+
+/-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are a left
+and a right move or a right and a left move of `aᵢ` and `bᵢ` respectively. -/
+private def rightMovesAux' (b : Bool) (x : α × β) : Set (MulTy α β) :=
+  mulOption b x '' (leftMovesα x.1 ×ˢ rightMovesβ x.2 ∪ rightMovesα x.1 ×ˢ leftMovesβ x.2)
+
+/-- The left moves of `±aᵢ * bᵢ` are left moves of `aᵢ * bᵢ` if the sign is positive, or the
+negatives of right moves of `aᵢ * bᵢ` if the sign is negative. -/
+private def leftMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+  x.1.rec
+    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+
+/-- The right moves of `±aᵢ * bᵢ` are right moves of `aᵢ * bᵢ` if the sign is positive, or the
+negatives of left moves of `aᵢ * bᵢ` if the sign is negative. -/
+private def rightMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+  x.1.rec
+    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+
+/-- The set of left moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a left
+move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
+def leftMoves (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
+    (x : MulTy α β) : Set (MulTy α β) :=
+  ⋃₀ ((fun y ↦ (y.1 + ·) ''
+    leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' split x)
+
+/-- The set of right moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a right
+move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
+def rightMoves (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
+    (x : MulTy α β) : Set (MulTy α β) :=
+  ⋃₀ ((fun y ↦ (y.1 + ·) ''
+    rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' split x)
+
+variable
+    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
+    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
+
+#exit
+
+#exit
+variable
+    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
+    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
+
+end MulTy
 
 #exit
 /-
