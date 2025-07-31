@@ -510,7 +510,36 @@ instance : AddCommMonoid LGame where
   nsmul := nsmulRec
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
-instance : SubNegMonoid IGame where
+instance : SubNegMonoid LGame where
   zsmul := zsmulRec
+
+@[simp]
+theorem leftMoves_sub (x y : LGame) :
+    (x - y).leftMoves = (· - y) '' x.leftMoves ∪ (x + ·) '' (-y.rightMoves) := by
+  simp [sub_eq_add_neg]
+
+@[simp]
+theorem rightMoves_sub (x y : LGame) :
+    (x - y).rightMoves = (· - y) '' x.rightMoves ∪ (x + ·) '' (-y.leftMoves) := by
+  simp [sub_eq_add_neg]
+
+private theorem neg_add' (x y : LGame) : -(x + y) = -x + -y := by
+  ext <;>
+  · simp
+    rw [← (Equiv.neg IGame).exists_congr_right]
+    nth_rewrite 2 [← (Equiv.neg IGame).exists_congr_right]
+    congr! 3 <;>
+    · refine and_congr_right_iff.2 fun _ ↦ ?_
+      rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
+termination_by (x, y)
+decreasing_by igame_wf
+
+  #exit
+instance : SubtractionCommMonoid IGame where
+  neg_neg := neg_neg
+  neg_add_rev x y := by rw [neg_add', add_comm]
+  neg_eq_of_add := by simp
+  add_comm := add_comm
+
 
 end LGame
