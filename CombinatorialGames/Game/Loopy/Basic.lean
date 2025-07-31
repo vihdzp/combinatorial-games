@@ -569,4 +569,40 @@ theorem on_sub_on : on - on = dud := by
 theorem off_sub_off : off - off = dud := by
   simp [sub_eq_add_neg]
 
+/-! ### Multiplication -/
+
+inductive
+
+#exit
+/-
+
+def mul' (x y : IGame) : IGame :=
+  {(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
+    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
+  (range fun a : (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves :) ↦
+    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}ᴵ
+termination_by (x, y)
+decreasing_by all_goals aesop
+
+/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
+`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
+
+Using `IGame.mulOption`, this can alternatively be written as
+`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
+instance : Mul LGame where
+  mul x y := corec
+    (fun x ↦ (fun y ↦ (y, x.2)) '' leftMoves x.1 ∪ (fun y ↦ (x.1, y)) '' leftMoves x.2)
+    (fun x ↦ (fun y ↦ (y, x.2)) '' rightMoves x.1 ∪ (fun y ↦ (x.1, y)) '' rightMoves x.2)
+    (x, y)
+
+-/
+
+#exit
+/-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
+`x` and `y`, respectively. -/
+@[pp_nodot, game_cmp]
+def mulOption (x y a b : IGame) : IGame :=
+  a * y + x * b - a * b
+
 end LGame
