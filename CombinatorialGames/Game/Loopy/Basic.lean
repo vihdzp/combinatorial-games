@@ -635,7 +635,10 @@ def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
     rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
-variable {α₁ β₁ α₂ β₂ : Type*} (f : α₁ → α₂) (g : β₁ → β₂)
+variable {α₁ β₁ α₂ β₂ : Type*}
+  {leftMovesα₁ rightMovesα₁ : α₁ → Set α₁} {leftMovesβ₁ rightMovesβ₁ : β₁ → Set β₁}
+  {leftMovesα₂ rightMovesα₂ : α₂ → Set α₂} {leftMovesβ₂ rightMovesβ₂ : β₂ → Set β₂}
+  (f : α₁ → α₂) (g : β₁ → β₂)
 
 /-- Map `MulTy α₁ β₁` to `MulTy α₂ β₂` using `f : α₁ → α₂` and `g : β₁ → β₂` in the natural way. -/
 def map : MulTy α₁ β₁ → MulTy α₂ β₂ :=
@@ -654,8 +657,13 @@ theorem map_erase {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
     map f g (x.erase y) = (map f g x).erase (y.1, f y.2.1, g y.2.2) :=
   Multiset.map_erase_of_mem _ _ hy
 
+@[simp]
+theorem map_mulOption (b x y) :
+    map f g (mulOption b x y) = mulOption b (Prod.map f g x) (Prod.map f g y) := by
+  simp [mulOption, map, Prod.map]
+
 open Classical in
-theorem split_map' (f : Bool × α₁ × β₁ → Bool × α₂ × β₂) (x : MulTy α₁ β₁) :
+theorem split_multisetMap (f : Bool × α₁ × β₁ → Bool × α₂ × β₂) (x : MulTy α₁ β₁) :
     split (Multiset.map f x) = (split x).image (Prod.map (Multiset.map f) f) := by
   ext
   simp_rw [Finset.mem_image, mem_split, Multiset.mem_map]
@@ -672,7 +680,81 @@ open Classical in
 @[simp]
 theorem split_map (x) :
     split (map f g x) = (split x).image (Prod.map (map f g) ((Prod.map id (Prod.map f g)))) :=
-  split_map' ..
+  split_multisetMap ..
+
+variable {f g}
+
+set_option maxHeartbeats 500000 in
+theorem leftMovesAux'_comp_prodMap
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    leftMovesAux' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ leftMovesAux' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  simp_rw [funext_iff, Function.comp_apply, leftMovesAux'] at *
+  aesop
+
+set_option maxHeartbeats 500000 in
+theorem rightMovesAux'_comp_prodMap
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    rightMovesAux' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ rightMovesAux' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  simp_rw [funext_iff, Function.comp_apply, rightMovesAux'] at *
+  aesop
+
+theorem leftMovesAux_comp_prodMap
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    leftMovesAux leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ leftMovesAux leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  apply funext
+  rintro ⟨(_ | _), x⟩
+  · exact congrFun (rightMovesAux'_comp_prodMap hlf hrf hlg hrg) (false, x)
+  · exact congrFun (leftMovesAux'_comp_prodMap hlf hrf hlg hrg) (true, x)
+
+theorem rightMovesAux_comp_prodMap
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    rightMovesAux leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ rightMovesAux leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  apply funext
+  rintro ⟨(_ | _), x⟩
+  · exact congrFun (leftMovesAux'_comp_prodMap hlf hrf hlg hrg) (false, x)
+  · exact congrFun (rightMovesAux'_comp_prodMap hlf hrf hlg hrg) (true, x)
+
+theorem leftMoves_comp_map
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    leftMoves leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ map f g =
+    image (map f g) ∘ leftMoves leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  apply funext fun x ↦ ?_
+  simp_rw [Function.comp_apply, leftMoves, image_sUnion, split_map, Finset.coe_image, image_image,
+    Prod.map_fst, Prod.map_snd, ← Function.comp_apply (g := Prod.map id (Prod.map f g)),
+    leftMovesAux_comp_prodMap hlf hrf hlg hrg]
+  aesop
+
+theorem rightMoves_comp_map
+    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
+    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
+    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
+    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
+    rightMoves leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ map f g =
+    image (map f g) ∘ rightMoves leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  apply funext fun x ↦ ?_
+  simp_rw [Function.comp_apply, rightMoves, image_sUnion, split_map, Finset.coe_image, image_image,
+    Prod.map_fst, Prod.map_snd, ← Function.comp_apply (g := Prod.map id (Prod.map f g)),
+    rightMovesAux_comp_prodMap hlf hrf hlg hrg]
+  aesop
 
 variable
     [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
@@ -735,7 +817,8 @@ theorem corec_mul_corec [DecidableEq α] [DecidableEq β]
   refine corec_comp_hom_apply
     (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
     {(true, initα, initβ)} <;>
-  sorry
+  apply MulTy.leftMoves_comp_map
+  all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
