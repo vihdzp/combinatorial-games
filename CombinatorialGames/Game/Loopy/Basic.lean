@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.IGame
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Data.Setoid.Basic
 import Mathlib.Logic.Small.Set
@@ -334,6 +335,11 @@ theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some rfl rfl)) _
 
+@[simp]
+theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
+    {s₁ | t₁}ᴸ = {s₂ | t₂}ᴸ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+  simp [LGame.ext_iff]
+
 /-! ### Basic games -/
 
 /-- The game `0 = {∅ | ∅}ᴸ`. -/
@@ -575,3 +581,58 @@ theorem sub_dud (x : LGame) : x - dud = dud := by
   simp [sub_eq_add_neg]
 
 end LGame
+
+/-! ### `IGame` to `LGame` -/
+
+namespace IGame
+
+private def toLGame' (x : IGame) : LGame :=
+  {range fun y : x.leftMoves ↦ toLGame' y | range fun y : x.rightMoves ↦ toLGame' y}ᴸ
+termination_by x
+decreasing_by igame_wf
+
+private theorem toLGame'_def (x : IGame) : toLGame' x =
+    {toLGame' '' x.leftMoves | toLGame' '' x.rightMoves}ᴸ := by
+  rw [toLGame']
+  simp_rw [image_eq_range]
+
+private theorem toLGame'_inj {x y : IGame} (h : toLGame' x = toLGame' y) : x = y := by
+  rw [toLGame'_def, toLGame'_def, LGame.ofSets_inj] at h
+  ext z <;>
+  constructor <;> intro hz
+  all_goals first |
+    obtain ⟨w, hw, hw'⟩ := h.1 ▸ mem_image_of_mem _ hz |
+    obtain ⟨w, hw, hw'⟩ := h.2 ▸ mem_image_of_mem _ hz
+  on_goal 1 => obtain rfl := toLGame'_inj hw'.symm
+  on_goal 2 => obtain rfl := toLGame'_inj hw'
+  on_goal 3 => obtain rfl := toLGame'_inj hw'.symm
+  on_goal 4 => obtain rfl := toLGame'_inj hw'
+  assumption'
+termination_by (x, y)
+decreasing_by igame_wf
+
+/-- The inclusion map from games into loopy games. -/
+def toLGame : IGame ↪ LGame where
+  toFun := toLGame'
+  inj' _ _ := toLGame'_inj
+
+theorem toLGame_def (x : IGame) : toLGame x =
+    {toLGame '' x.leftMoves | toLGame '' x.rightMoves}ᴸ :=
+  toLGame'_def x
+
+@[simp]
+theorem toLGame_zero : toLGame 0 = 0 := by
+  rw [toLGame_def]; ext <;> simp
+
+@[simp]
+theorem toLGame_one : toLGame 1 = 1 := by
+  rw [toLGame_def]; ext <;> simp
+
+@[simp]
+theorem toLGame_neg (x : IGame) : toLGame (-x) = -toLGame x := by
+  rw [toLGame_def, toLGame_def, LGame.neg_ofSets, LGame.ofSets_inj, leftMoves_neg, rightMoves_neg]
+  constructor <;> exact image_neg_of_apply_neg_eq_neg (fun _ _ ↦ toLGame_neg _)
+termination_by x
+decreasing_by igame_wf
+
+end IGame
