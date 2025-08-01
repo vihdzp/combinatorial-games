@@ -592,48 +592,66 @@ open Classical in
 theorem mem_split {x : MulTy α β} {y} : y ∈ split x ↔ ∃ z ∈ x, (x.erase z, z) = y := by
   simp [split]
 
+/-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
+
+If the boolean argument is false, all signs are flipped. -/
 def mulOption (b : Bool) (x : α × β) (y : α × β) : MulTy α β :=
   {(b, y.1, x.2), (b, x.1, y.2), (!b, y.1, y.2)}
 
 variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
 
-/-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are either
-both left moves or right moves of `aᵢ` and `bᵢ` respectively. -/
-def leftMovesAux' (x : Bool × α × β) : Set (MulTy α β) :=
+/-- The left moves of `x * y` are `a * y + x * b - a * b`, where `a` and `b` are either both left
+moves or right moves of `x` and `y` respectively.
+
+If the boolean argument is false, all signs are flipped. -/
+private def leftMovesSingle' (x : Bool × α × β) : Set (MulTy α β) :=
   mulOption x.1 x.2 ''
     (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
 
-/-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are a left
-and a right move or a right and a left move of `aᵢ` and `bᵢ` respectively. -/
-def rightMovesAux' (x : Bool × α × β) : Set (MulTy α β) :=
+/-- The right moves of `x * y` are `a * y + x * b - a * b`, where `a` and `b` are a left and a right move or a right and a left move of `x` and `y` respectively.
+
+If the boolean argument is false, all signs are flipped. -/
+private def rightMovesSingle' (x : Bool × α × β) : Set (MulTy α β) :=
   mulOption x.1 x.2 ''
     (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
 
-/-- The left moves of `±aᵢ * bᵢ` are left moves of `aᵢ * bᵢ` if the sign is positive, or the
-negatives of right moves of `aᵢ * bᵢ` if the sign is negative. -/
-def leftMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+/-- The left moves of `±x * y` are left moves of `x * y` if the sign is positive, or the
+negatives of right moves of `x * y` if the sign is negative. -/
+def leftMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
   x.1.rec
-    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
-    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
 
-/-- The right moves of `±aᵢ * bᵢ` are right moves of `aᵢ * bᵢ` if the sign is positive, or the
-negatives of left moves of `aᵢ * bᵢ` if the sign is negative. -/
-def rightMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+/-- The right moves of `±x * y` are right moves of `x * y` if the sign is positive, or the
+negatives of left moves of `x * y` if the sign is negative. -/
+def rightMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
   x.1.rec
-    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
-    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+
+theorem leftMovesSingle_def (x : Bool × α × β) :
+    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' (x.1.rec
+      (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
+      (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)) := by
+  obtain ⟨(_ | _), _⟩ := x <;> rfl
+
+theorem rightMovesSingle_def (x : Bool × α × β) :
+    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' (x.1.rec
+      (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
+      (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)) := by
+  obtain ⟨(_ | _), _⟩ := x <;> rfl
 
 /-- The set of left moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a left
 move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def leftMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
-    leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
+    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 /-- The set of right moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a right
 move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
-    rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
+    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 variable {α₁ β₁ α₂ β₂ : Type*}
   {leftMovesα₁ rightMovesα₁ : α₁ → Set α₁} {leftMovesβ₁ rightMovesβ₁ : β₁ → Set β₁}
@@ -685,50 +703,50 @@ theorem split_map (x) :
 variable {f g}
 
 set_option maxHeartbeats 500000 in
-theorem leftMovesAux'_comp_prodMap
+theorem leftMovesSingle'_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
     (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    leftMovesAux' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ leftMovesAux' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  simp_rw [funext_iff, Function.comp_apply, leftMovesAux'] at *
+    leftMovesSingle' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ leftMovesSingle' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  simp_rw [funext_iff, Function.comp_apply, leftMovesSingle'] at *
   aesop
 
 set_option maxHeartbeats 500000 in
-theorem rightMovesAux'_comp_prodMap
+theorem rightMovesSingle'_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
     (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    rightMovesAux' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ rightMovesAux' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  simp_rw [funext_iff, Function.comp_apply, rightMovesAux'] at *
+    rightMovesSingle' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ rightMovesSingle' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+  simp_rw [funext_iff, Function.comp_apply, rightMovesSingle'] at *
   aesop
 
-theorem leftMovesAux_comp_prodMap
+theorem leftMovesSingle_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
     (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    leftMovesAux leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ leftMovesAux leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+    leftMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ leftMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   apply funext
   rintro ⟨(_ | _), x⟩
-  · exact congrFun (rightMovesAux'_comp_prodMap hlf hrf hlg hrg) (false, x)
-  · exact congrFun (leftMovesAux'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
 
-theorem rightMovesAux_comp_prodMap
+theorem rightMovesSingle_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
     (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    rightMovesAux leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ rightMovesAux leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
+    rightMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   apply funext
   rintro ⟨(_ | _), x⟩
-  · exact congrFun (leftMovesAux'_comp_prodMap hlf hrf hlg hrg) (false, x)
-  · exact congrFun (rightMovesAux'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
 
 theorem leftMoves_comp_map
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
@@ -740,7 +758,7 @@ theorem leftMoves_comp_map
   apply funext fun x ↦ ?_
   simp_rw [Function.comp_apply, leftMoves, image_sUnion, split_map, Finset.coe_image, image_image,
     Prod.map_fst, Prod.map_snd, ← Function.comp_apply (g := Prod.map id (Prod.map f g)),
-    leftMovesAux_comp_prodMap hlf hrf hlg hrg]
+    leftMovesSingle_comp_prodMap hlf hrf hlg hrg]
   aesop
 
 theorem rightMoves_comp_map
@@ -753,7 +771,7 @@ theorem rightMoves_comp_map
   apply funext fun x ↦ ?_
   simp_rw [Function.comp_apply, rightMoves, image_sUnion, split_map, Finset.coe_image, image_image,
     Prod.map_fst, Prod.map_snd, ← Function.comp_apply (g := Prod.map id (Prod.map f g)),
-    rightMovesAux_comp_prodMap hlf hrf hlg hrg]
+    rightMovesSingle_comp_prodMap hlf hrf hlg hrg]
   aesop
 
 variable
@@ -761,20 +779,20 @@ variable
     [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
 
 instance (x : Bool × α × β) :
-    Small.{u} (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
+    Small.{u} (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
 instance (x : Bool × α × β) :
-    Small.{u} (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
+    Small.{u} (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
 instance (x : Bool × α × β) :
-    Small.{u} (leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
-  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesAux, rightMovesAux] <;> infer_instance
+    Small.{u} (leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesSingle, rightMovesSingle] <;> infer_instance
 
 instance (x : Bool × α × β) :
-    Small.{u} (rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
-  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesAux, rightMovesAux] <;> infer_instance
+    Small.{u} (rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesSingle, rightMovesSingle] <;> infer_instance
 
 instance (x : MulTy α β) :
     Small.{u} (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
@@ -829,6 +847,9 @@ def mulOption (x y a b : LGame) : LGame :=
 theorem leftMoves_mul (x y : LGame) :
     (x * y).leftMoves = (fun a ↦ mulOption x y a.1 a.2) ''
       (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
+  apply (leftMoves_corec ..).trans
+  ext
+  simp
   sorry
 
 end LGame
