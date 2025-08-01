@@ -23,9 +23,11 @@ This file aims to prove the four parts of the simplest extension theorem:
 - If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
   coefficients `< x`.
 
+The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
+
 ## Todo
 
-We are currently at 1/4.
+We are currently at 2/4.
 -/
 
 open Ordinal Polynomial Set
@@ -126,7 +128,7 @@ namespace Nimber
 /-! ### Groups -/
 
 /-- Add two nimbers as ordinal numbers. -/
-scoped notation:65 x:arg "+ₒ" y:arg => ∗(toOrdinal x + toOrdinal y)
+scoped notation:65 x:65 "+ₒ" y:66 => ∗(toOrdinal x + toOrdinal y)
 
 /-- A nimber `x` is a group when `Iio x` is closed under addition. Note that `0` is a group under
 this definition. -/
@@ -135,6 +137,9 @@ structure IsGroup (x : Nimber) where
   add_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y + z < x
 
 theorem IsGroup.zero : IsGroup 0 where
+  add_lt := by simp
+
+theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
 
 theorem IsGroup.le_add_self {x y : Nimber} (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
@@ -247,6 +252,9 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
 
 /-! ### Rings -/
 
+/-- Multiply two nimbers as ordinal numbers. -/
+scoped notation:70 x:70 "*ₒ" y:71 => ∗(toOrdinal x * toOrdinal y)
+
 /-- A nimber `x` is a ring when `Iio x` is closed under addition and multiplication. Note that `0`
 is a ring under this definition. -/
 @[mk_iff]
@@ -257,10 +265,61 @@ theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
   __ := IsGroup.zero
 
+theorem IsRing.one : IsRing 1 where
+  mul_lt := by simp
+  __ := IsGroup.one
+
+/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
+written as `y * z` for some `y, z < x`. -/
+theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
+    ∃ y < x, ∃ z < x, y * z = x := by
+  simp_rw [isRing_iff, h', true_and, not_forall, not_lt] at h
+  obtain ⟨y, z, hy, hz, hx⟩ := h
+  obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
+    (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
+  refine ⟨y, hy, z, hz, H.1.antisymm' (mul_le_of_forall_ne ?_)⟩
+  refine fun a ha b hb hx ↦ hx.not_lt (h'.add_lt (h'.add_lt ?_ ?_) ?_) <;> by_contra! hx
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
+  · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+
+/-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = toOrdinal (∗x * ∗z) := by
+  apply le_antisymm
+  · apply le_of_forall_ne
+    rw [forall_lt_mul]
+    intro a ha b hb
+    rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
+      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
+      toNimber_toOrdinal, ← mul_add]
+    obtain hza | hza := eq_or_ne (∗z + ∗a) 0
+    · cases ha.ne' (add_eq_zero.1 hza)
+    · rw [← div_eq_iff hza]
+      exact (hx.mul_lt hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
+  · rw [toOrdinal_le_iff]
+    refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
+    rw [add_comm, ← add_assoc, ← mul_add, add_comm]
+    induction b with | h b =>
+    rw [toNimber.lt_iff_lt] at hb
+    have hx' : toOrdinal (a * (∗b + ∗z)) < x :=
+      hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
+    rw [← toNimber_toOrdinal (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
+      ← toNimber_toOrdinal (a * _), ← hx.toIsGroup.mul_add_eq_of_lt' hx']
+    exact (mul_add_lt hx' hb).ne
+termination_by z
+
+theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt' hy hyx hzy H
+
+-- TODO: characterize nim arithmetic on the naturals.
+proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
+
 /-! ### Fields -/
 
 /-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
-Note that `0` is a field under this definition. -/
+Note that `0` and `1` are fields under this definition. -/
 @[mk_iff]
 structure IsField (x : Nimber) extends IsRing x where
   inv_lt ⦃y⦄ (hy : y < x) : y⁻¹ < x
@@ -269,20 +328,41 @@ theorem IsField.zero : IsField 0 where
   inv_lt := by simp
   __ := IsRing.zero
 
+theorem IsField.one : IsField 1 where
+  inv_lt := by simp
+  __ := IsRing.one
+
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
 
+theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
+  h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+
+  /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
+    x * y = toOrdinal (∗x * ∗y) :=
+  hx.mul_eq_of_lt hyx
+
+-- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
+proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
 /-! ### Algebraically closed fields -/
 
-/-- A nimber `x` is algebraically closed when `IsField x`, and every polynomial in the nimbers with
-coefficients less than `x` has a root that's less than `x`. Note that `0` is algebraically closed
-under this definition. -/
+/-- A nimber `x` is algebraically closed when `IsField x`, and every non-constant polynomial in the
+nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
+algebraically closed under this definition. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
   has_root := by simp
   __ := IsField.zero
+
+theorem IsAlgClosed.one : IsAlgClosed 1 where
+  has_root p hp hp' := by
+    obtain rfl : p = 0 := by ext n; simpa using hp' n
+    simp
+  __ := IsField.one
 
 end Nimber
