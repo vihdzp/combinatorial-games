@@ -240,32 +240,39 @@ theorem rightMoves_comp_corec :
     LGame.rightMoves ∘ corec leftMoves rightMoves = image (corec leftMoves rightMoves) ∘ rightMoves :=
   funext (rightMoves_corec leftMoves rightMoves)
 
-theorem hom_unique (leftMoves : α → Set α) (rightMoves : α → Set α)
+theorem hom_unique_apply {leftMoves : α → Set α} {rightMoves : α → Set α}
     [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
-    (fLeftMoves : LGame.leftMoves ∘ f = image f ∘ leftMoves)
-    (fRightMoves : LGame.rightMoves ∘ f = image f ∘ rightMoves)
-    (gLeftMoves : LGame.leftMoves ∘ g = image g ∘ leftMoves)
-    (gRightMoves : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g := by
-  funext x
+    (hlf : LGame.leftMoves ∘ f = image f ∘ leftMoves)
+    (hrf : LGame.rightMoves ∘ f = image f ∘ rightMoves)
+    (hlg : LGame.leftMoves ∘ g = image g ∘ leftMoves)
+    (hrg : LGame.rightMoves ∘ g = image g ∘ rightMoves) (x) : f x = g x := by
   change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x)) =
     (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x))
   apply unique <;> ext z
   · change _ ∈ (LGame.leftMoves ∘ f) _ ↔ _
-    rw [fLeftMoves]
+    rw [hlf]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.rightMoves ∘ f) _ ↔ _
-    rw [fRightMoves]
+    rw [hrf]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.leftMoves ∘ g) _ ↔ _
-    rw [gLeftMoves]
+    rw [hlg]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.rightMoves ∘ g) _ ↔ _
-    rw [gRightMoves]
+    rw [hrg]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
+
+theorem hom_unique {leftMoves : α → Set α} {rightMoves : α → Set α}
+    [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
+    (hlf : LGame.leftMoves ∘ f = image f ∘ leftMoves)
+    (hrf : LGame.rightMoves ∘ f = image f ∘ rightMoves)
+    (hlg : LGame.leftMoves ∘ g = image g ∘ leftMoves)
+    (hrg : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g :=
+  funext (hom_unique_apply _ _ hlf hrf hlg hrg)
 
 -- We make no use of `LGame`'s definition from a `QPF` after this point.
 attribute [irreducible] LGame
@@ -279,7 +286,7 @@ theorem corec_comp_hom
     (hlf : leftMovesβ ∘ f = Set.image f ∘ leftMovesα)
     (hrf : rightMovesβ ∘ f = Set.image f ∘ rightMovesα) :
     corec leftMovesβ rightMovesβ ∘ f = corec leftMovesα rightMovesα := by
-  refine hom_unique leftMovesα rightMovesα _ _ ?_ ?_
+  refine hom_unique _ _ ?_ ?_
     (leftMoves_comp_corec ..) (rightMoves_comp_corec ..)
   · rw [Set.image_comp_eq, Function.comp_assoc, ← hlf,
       ← Function.comp_assoc, leftMoves_comp_corec, Function.comp_assoc]
@@ -297,9 +304,8 @@ theorem corec_comp_hom_apply
 
 @[simp]
 theorem corec_leftMoves_rightMoves : corec leftMoves rightMoves = id :=
-  hom_unique leftMoves rightMoves _ _
-    (leftMoves_comp_corec leftMoves rightMoves)
-    (rightMoves_comp_corec leftMoves rightMoves)
+  hom_unique _ _
+    (leftMoves_comp_corec leftMoves rightMoves) (rightMoves_comp_corec leftMoves rightMoves)
     (Set.image_id_eq ▸ rfl) (Set.image_id_eq ▸ rfl)
 
 theorem corec_leftMoves_rightMoves_apply (x : LGame) : corec leftMoves rightMoves x = x := by simp
@@ -535,6 +541,17 @@ theorem dud_add (x : LGame) : dud + x = dud := by
 instance : SubNegMonoid LGame where
   zsmul := zsmulRec
 
+theorem corec_sub_corec
+    {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
+    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
+    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)] (initα : α) (initβ : β) :
+    corec leftMovesα rightMovesα initα - corec leftMovesβ rightMovesβ initβ =
+    corec
+      (fun x ↦ (fun y ↦ (y, x.2)) '' leftMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' rightMovesβ x.2)
+      (fun x ↦ (fun y ↦ (y, x.2)) '' rightMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' leftMovesβ x.2)
+      (initα, initβ) := by
+  rw [sub_eq_add_neg, neg_corec, corec_add_corec]
+
 @[simp]
 theorem leftMoves_sub (x y : LGame) :
     (x - y).leftMoves = (· - y) '' x.leftMoves ∪ (x + ·) '' (-y.rightMoves) := by
@@ -592,6 +609,10 @@ open Classical in
 theorem mem_split {x : MulTy α β} {y} : y ∈ split x ↔ ∃ z ∈ x, (x.erase z, z) = y := by
   simp [split]
 
+@[simp]
+theorem split_singleton (x : Bool × α × β) : split {x} = {(0, x)} := by
+  simp [split]
+
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
 
 If the boolean argument is false, all signs are flipped. -/
@@ -641,14 +662,14 @@ theorem rightMovesSingle_def (x : Bool × α × β) :
       (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)) := by
   obtain ⟨(_ | _), _⟩ := x <;> rfl
 
-/-- The set of left moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a left
-move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
+/-- The set of left moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is a left
+move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def leftMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
     leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
-/-- The set of right moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a right
-move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
+/-- The set of right moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is a right
+move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
     rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
@@ -661,10 +682,6 @@ variable {α₁ β₁ α₂ β₂ : Type*}
 /-- Map `MulTy α₁ β₁` to `MulTy α₂ β₂` using `f : α₁ → α₂` and `g : β₁ → β₂` in the natural way. -/
 def map : MulTy α₁ β₁ → MulTy α₂ β₂ :=
   Multiset.map (Prod.map id (Prod.map f g))
-
-variable {f g} in
-theorem mem_map {x y} : y ∈ map f g x ↔ ∃ s a b, (s, a, b) ∈ x ∧ (s, f a, g b) = y := by
-  simp [map]
 
 @[simp]
 theorem map_add (x y) : map f g (x + y) = map f g x + map f g y :=
@@ -733,7 +750,7 @@ theorem leftMovesSingle_comp_prodMap
     image (map f g) ∘ leftMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   apply funext
   rintro ⟨(_ | _), x⟩
-  · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (false, x)
   · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
 
 theorem rightMovesSingle_comp_prodMap
@@ -745,7 +762,7 @@ theorem rightMovesSingle_comp_prodMap
     image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   apply funext
   rintro ⟨(_ | _), x⟩
-  · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (false, x)
   · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
 
 theorem leftMoves_comp_map
@@ -778,11 +795,11 @@ variable
     [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
     [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
 
-instance (x : Bool × α × β) :
+private instance (x : Bool × α × β) :
     Small.{u} (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
-instance (x : Bool × α × β) :
+private instance (x : Bool × α × β) :
     Small.{u} (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
@@ -849,7 +866,31 @@ theorem leftMoves_mul (x y : LGame) :
       (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
   apply (leftMoves_corec ..).trans
   ext
-  simp
+  constructor
+  · rintro ⟨z, hz, rfl⟩
+    simp [MulTy.leftMoves, MulTy.leftMovesSingle_def] at hz
+    obtain ⟨a, b, h, rfl⟩ := hz
+    refine ⟨⟨a, b⟩, h, ?_⟩
+    dsimp
+    rw [← corec_leftMoves_rightMoves_apply (mulOption ..)]
+    sorry
+  · sorry
+
+@[simp]
+theorem rightMoves_mul (x y : LGame) :
+    (x * y).rightMoves = (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves) := by
   sorry
+
+@[simp]
+theorem leftMoves_mulOption (x y a b : LGame) :
+    (mulOption x y a b).leftMoves = leftMoves (a * y + x * b - a * b) :=
+  rfl
+
+@[simp]
+theorem rightMoves_mulOption (x y a b : LGame) :
+    (mulOption x y a b).rightMoves = rightMoves (a * y + x * b - a * b) :=
+  rfl
+
 
 end LGame
