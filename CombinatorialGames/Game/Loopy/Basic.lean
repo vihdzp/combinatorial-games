@@ -454,8 +454,7 @@ theorem corec_add_corec
       (fun x ↦ (fun y ↦ (y, x.2)) '' rightMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' rightMovesβ x.2)
       (initα, initβ) := by
   refine corec_comp_hom_apply
-    (f := Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
-    (initα, initβ)
+    (Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_ (initα, initβ)
   all_goals
     refine funext fun ⟨a, b⟩ ↦ ?_
     simp [Set.image_image, Set.image_union, leftMoves_corec, rightMoves_corec]
@@ -585,40 +584,44 @@ def MulTy (α β : Type*) :=
 
 namespace MulTy
 
-variable [DecidableEq α] [DecidableEq β]
-
 /-- For a given `x : MulTy α β`, returns all possible pairs `(y, a)` where `a ::ₘ y = x`. -/
-def split (x : MulTy α β) : Finset (MulTy α β × Bool × α × β) :=
-  x.toFinset.map ⟨fun y ↦ (x.erase y, y), fun _ ↦ by simp⟩
+def split (x : MulTy α β) : Finset (MulTy α β × Bool × α × β) := by
+  classical exact x.toFinset.map ⟨fun y ↦ (x.erase y, y), fun _ ↦ by simp⟩
 
-private def mulOption (b : Bool) (x : α × β) (y : α × β) : MulTy α β :=
+open Classical in
+theorem mem_split {x : MulTy α β} {y} : y ∈ split x ↔ ∃ z ∈ x, (x.erase z, z) = y := by
+  simp [split]
+
+def mulOption (b : Bool) (x : α × β) (y : α × β) : MulTy α β :=
   {(b, y.1, x.2), (b, x.1, y.2), (!b, y.1, y.2)}
 
 variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
 
 /-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are either
 both left moves or right moves of `aᵢ` and `bᵢ` respectively. -/
-private def leftMovesAux' (b : Bool) (x : α × β) : Set (MulTy α β) :=
-  mulOption b x '' (leftMovesα x.1 ×ˢ leftMovesβ x.2 ∪ rightMovesα x.1 ×ˢ rightMovesβ x.2)
+def leftMovesAux' (x : Bool × α × β) : Set (MulTy α β) :=
+  mulOption x.1 x.2 ''
+    (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
 
 /-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are a left
 and a right move or a right and a left move of `aᵢ` and `bᵢ` respectively. -/
-private def rightMovesAux' (b : Bool) (x : α × β) : Set (MulTy α β) :=
-  mulOption b x '' (leftMovesα x.1 ×ˢ rightMovesβ x.2 ∪ rightMovesα x.1 ×ˢ leftMovesβ x.2)
+def rightMovesAux' (x : Bool × α × β) : Set (MulTy α β) :=
+  mulOption x.1 x.2 ''
+    (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
 
 /-- The left moves of `±aᵢ * bᵢ` are left moves of `aᵢ * bᵢ` if the sign is positive, or the
 negatives of right moves of `aᵢ * bᵢ` if the sign is negative. -/
-private def leftMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+def leftMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
   x.1.rec
-    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
-    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
 
 /-- The right moves of `±aᵢ * bᵢ` are right moves of `aᵢ * bᵢ` if the sign is positive, or the
 negatives of left moves of `aᵢ * bᵢ` if the sign is negative. -/
-private def rightMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
+def rightMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
   x.1.rec
-    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
-    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x.1 x.2)
+    (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
+    (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
 
 /-- The set of left moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a left
 move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
@@ -632,16 +635,55 @@ def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
     rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
+variable {α₁ β₁ α₂ β₂ : Type*} (f : α₁ → α₂) (g : β₁ → β₂)
+
+/-- Map `MulTy α₁ β₁` to `MulTy α₂ β₂` using `f : α₁ → α₂` and `g : β₁ → β₂` in the natural way. -/
+def map : MulTy α₁ β₁ → MulTy α₂ β₂ :=
+  Multiset.map (Prod.map id (Prod.map f g))
+
+variable {f g} in
+theorem mem_map {x y} : y ∈ map f g x ↔ ∃ s a b, (s, a, b) ∈ x ∧ (s, f a, g b) = y := by
+  simp [map]
+
+@[simp]
+theorem map_add (x y) : map f g (x + y) = map f g x + map f g y :=
+  Multiset.map_add ..
+
+open Classical in
+theorem map_erase {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
+    map f g (x.erase y) = (map f g x).erase (y.1, f y.2.1, g y.2.2) :=
+  Multiset.map_erase_of_mem _ _ hy
+
+open Classical in
+theorem split_map' (f : Bool × α₁ × β₁ → Bool × α₂ × β₂) (x : MulTy α₁ β₁) :
+    split (Multiset.map f x) = (split x).image (Prod.map (Multiset.map f) f) := by
+  ext
+  simp_rw [Finset.mem_image, mem_split, Multiset.mem_map]
+  constructor
+  · rintro ⟨_, ⟨s, hx, rfl⟩, rfl⟩
+    refine ⟨(x.erase s, s), ⟨_, hx, rfl⟩, ?_⟩
+    simpa using Multiset.map_erase_of_mem _ _ hx
+  · rintro ⟨_, ⟨y, hy, rfl⟩, rfl⟩
+    refine ⟨f y, ⟨_, hy, rfl⟩, ?_⟩
+    rw [← Multiset.map_erase_of_mem _ _ hy]
+    rfl
+
+open Classical in
+@[simp]
+theorem split_map (x) :
+    split (map f g x) = (split x).image (Prod.map (map f g) ((Prod.map id (Prod.map f g)))) :=
+  split_map' ..
+
 variable
     [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
     [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
 
-instance (b : Bool) (x : α × β) :
-    Small.{u} (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ b x) :=
+instance (x : Bool × α × β) :
+    Small.{u} (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
-instance (b : Bool) (x : α × β) :
-    Small.{u} (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ b x) :=
+instance (x : Bool × α × β) :
+    Small.{u} (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
 instance (x : Bool × α × β) :
@@ -666,6 +708,8 @@ instance (x : MulTy α β) :
 
 end MulTy
 
+instance : DecidableEq LGame := Classical.decEq _
+
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
@@ -673,19 +717,35 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
 instance : Mul LGame where
-  mul x y := by classical
-    exact corec
-      (MulTy.leftMoves leftMoves rightMoves leftMoves rightMoves)
-      (MulTy.rightMoves leftMoves rightMoves leftMoves rightMoves)
-      ({(true, x, y)})
+  mul x y := corec
+    (MulTy.leftMoves leftMoves rightMoves leftMoves rightMoves)
+    (MulTy.rightMoves leftMoves rightMoves leftMoves rightMoves)
+    ({(true, x, y)})
 
+theorem corec_mul_corec [DecidableEq α] [DecidableEq β]
+    {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
+    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
+    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)] (initα : α) (initβ : β) :
+    corec leftMovesα rightMovesα initα * corec leftMovesβ rightMovesβ initβ =
+    corec
+      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      {(true, initα, initβ)} := by
+  classical
+  refine corec_comp_hom_apply
+    (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
+    {(true, initα, initβ)} <;>
+  sorry
 
-
-#exit
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot, game_cmp]
-def mulOption (x y a b : IGame) : IGame :=
+@[pp_nodot]
+def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
+
+theorem leftMoves_mul (x y : LGame) :
+    (x * y).leftMoves = (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
+  sorry
 
 end LGame
