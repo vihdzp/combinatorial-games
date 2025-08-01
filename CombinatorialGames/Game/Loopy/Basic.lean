@@ -6,7 +6,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Data.Setoid.Basic
-import Mathlib.Logic.Small.Set
+import Mathlib.Data.Countable.Small
 
 /-!
 # Loopy games
@@ -585,9 +585,11 @@ def MulTy (α β : Type*) :=
 
 namespace MulTy
 
+variable [DecidableEq α] [DecidableEq β]
+
 /-- For a given `x : MulTy α β`, returns all possible pairs `(y, a)` where `a ::ₘ y = x`. -/
-def split (x : MulTy α β) : Set (MulTy α β × Bool × α × β) :=
-  {y | y.2 ::ₘ y.1 = x}
+def split (x : MulTy α β) : Finset (MulTy α β × Bool × α × β) :=
+  x.toFinset.map ⟨fun y ↦ (x.erase y, y), fun _ ↦ by simp⟩
 
 private def mulOption (b : Bool) (x : α × β) (y : α × β) : MulTy α β :=
   {(b, y.1, x.2), (b, x.1, y.2), (!b, y.1, y.2)}
@@ -596,7 +598,7 @@ variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : 
 
 /-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are either
 both left moves or right moves of `aᵢ` and `bᵢ` respectively. -/
-private def leftMovesAux' (b : Bool) (x : α × β): Set (MulTy α β) :=
+private def leftMovesAux' (b : Bool) (x : α × β) : Set (MulTy α β) :=
   mulOption b x '' (leftMovesα x.1 ×ˢ leftMovesβ x.2 ∪ rightMovesα x.1 ×ˢ rightMovesβ x.2)
 
 /-- The left moves of `aᵢ * bᵢ` are `cᵢ * bᵢ + aᵢ * dᵢ - cᵢ * dᵢ`, where `cᵢ` and `dᵢ` are a left
@@ -620,55 +622,64 @@ private def rightMovesAux (x : Bool × α × β) : Set (MulTy α β) :=
 
 /-- The set of left moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a left
 move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
-def leftMoves (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
-    (x : MulTy α β) : Set (MulTy α β) :=
+def leftMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
-    leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' split x)
+    leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 /-- The set of right moves of `Σ ±aᵢ * bᵢ` are `cᵢ + Σ ±aⱼ * bⱼ` for all `i`, where `cᵢ` is a right
 move of `±aᵢ * bᵢ`, and the summation is taken over indices `j ≠ i`. -/
-def rightMoves (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
-    (x : MulTy α β) : Set (MulTy α β) :=
+def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃₀ ((fun y ↦ (y.1 + ·) ''
-    rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' split x)
+    rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 variable
     [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
     [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
 
-#exit
+instance (b : Bool) (x : α × β) :
+    Small.{u} (leftMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ b x) :=
+  small_image ..
 
-#exit
-variable
-    [∀ x, Small.{u} (leftMovesα x)] [∀ x, Small.{u} (rightMovesα x)]
-    [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
+instance (b : Bool) (x : α × β) :
+    Small.{u} (rightMovesAux' leftMovesα rightMovesα leftMovesβ rightMovesβ b x) :=
+  small_image ..
+
+instance (x : Bool × α × β) :
+    Small.{u} (leftMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesAux, rightMovesAux] <;> infer_instance
+
+instance (x : Bool × α × β) :
+    Small.{u} (rightMovesAux leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesAux, rightMovesAux] <;> infer_instance
+
+instance (x : MulTy α β) :
+    Small.{u} (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  refine @small_sUnion _ _ _ ?_
+  rintro ⟨_, y, hy, rfl⟩
+  infer_instance
+
+instance (x : MulTy α β) :
+    Small.{u} (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  refine @small_sUnion _ _ _ ?_
+  rintro ⟨_, y, hy, rfl⟩
+  infer_instance
 
 end MulTy
-
-#exit
-/-
-
-def mul' (x y : IGame) : IGame :=
-  {(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
-    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
-  (range fun a : (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves :) ↦
-    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}ᴵ
-termination_by (x, y)
-decreasing_by all_goals aesop
 
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
-Using `IGame.mulOption`, this can alternatively be written as
+Using `LGame.mulOption`, this can alternatively be written as
 `x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
 instance : Mul LGame where
-  mul x y := corec
-    (fun x ↦ (fun y ↦ (y, x.2)) '' leftMoves x.1 ∪ (fun y ↦ (x.1, y)) '' leftMoves x.2)
-    (fun x ↦ (fun y ↦ (y, x.2)) '' rightMoves x.1 ∪ (fun y ↦ (x.1, y)) '' rightMoves x.2)
-    (x, y)
+  mul x y := by classical
+    exact corec
+      (MulTy.leftMoves leftMoves rightMoves leftMoves rightMoves)
+      (MulTy.rightMoves leftMoves rightMoves leftMoves rightMoves)
+      ({(true, x, y)})
 
--/
+
 
 #exit
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
