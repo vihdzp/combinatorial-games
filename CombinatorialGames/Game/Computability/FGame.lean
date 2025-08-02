@@ -301,7 +301,7 @@ theorem rightMoves_ofLists {s t : List FGame} : (ofLists s t).rightMoves = t.toF
 /-- Construct a `FGame` from its left and right finsets.
 
 This is given notation `{s | t}ꟳ`, where the superscript `F` is to disambiguate from set builder
-notation, and from the analogous constructors on `IGame`, `Game`, and `Surreal`. -/
+notation, and from the analogous constructors on other game types. -/
 def ofFinsets (s t : Finset FGame) : FGame :=
   Quotient.liftOn₂ s.1 t.1 ofLists fun a₁ b₁ a₂ b₂ ha hb ↦ by
     rw [← Quotient.eq_iff_equiv, Multiset.quot_mk_to_coe, Multiset.quot_mk_to_coe] at ha hb
