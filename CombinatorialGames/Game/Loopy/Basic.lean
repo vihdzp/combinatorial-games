@@ -537,6 +537,30 @@ theorem add_dud (x : LGame) : x + dud = dud := by
 theorem dud_add (x : LGame) : dud + x = dud := by
   rw [add_comm, add_dud]
 
+open Classical in
+theorem leftMoves_sum (m : Multiset LGame) : m.sum.leftMoves =
+    ⋃ y ∈ m, (· + (m.erase y).sum) '' y.leftMoves := by
+  induction m using Multiset.induction with
+  | empty => simp
+  | cons a m IH =>
+    simp only [leftMoves_add, IH, image_iUnion, image_image, Multiset.mem_cons, Multiset.sum_cons,
+      iUnion_iUnion_eq_or_left, Multiset.erase_cons_head]
+    congr! 5 with _ h
+    rw [Multiset.erase_cons_tail_of_mem h]
+    simp [← add_assoc, add_comm]
+
+open Classical in
+theorem rightMoves_sum (m : Multiset LGame) : m.sum.rightMoves =
+    ⋃ y ∈ m, (· + (m.erase y).sum) '' y.rightMoves := by
+  induction m using Multiset.induction with
+  | empty => simp
+  | cons a m IH =>
+    simp only [rightMoves_add, IH, image_iUnion, image_image, Multiset.mem_cons, Multiset.sum_cons,
+      iUnion_iUnion_eq_or_left, Multiset.erase_cons_head]
+    congr! 5 with _ h
+    rw [Multiset.erase_cons_tail_of_mem h]
+    simp [← add_assoc, add_comm]
+
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid LGame where
   zsmul := zsmulRec
@@ -601,16 +625,17 @@ def MulTy (α β : Type*) :=
 
 namespace MulTy
 
-/-- For a given `x : MulTy α β`, returns all possible pairs `(y, a)` where `a ::ₘ y = x`. -/
-def split (x : MulTy α β) : Finset (MulTy α β × Bool × α × β) := by
-  classical exact x.toFinset.map ⟨fun y ↦ (x.erase y, y), fun _ ↦ by simp⟩
+variable [Hα : DecidableEq α] [Hβ : DecidableEq β]
 
-open Classical in
-theorem mem_split {x : MulTy α β} {y} : y ∈ split x ↔ ∃ z ∈ x, (x.erase z, z) = y := by
+/-- For a given multiset `x`, returns all possible pairs `(y, a)` where `a ::ₘ y = x`. -/
+def split (x : Multiset α) : Finset (Multiset α × α) :=
+  x.toFinset.map ⟨fun y ↦ (x.erase y, y), fun _ ↦ by simp⟩
+
+theorem mem_split {x : Multiset α} {y} : y ∈ split x ↔ ∃ z ∈ x, (x.erase z, z) = y := by
   simp [split]
 
 @[simp]
-theorem split_singleton (x : Bool × α × β) : split {x} = {(0, x)} := by
+theorem split_singleton (x : α) : split {x} = {(0, x)} := by
   simp [split]
 
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
@@ -650,12 +675,14 @@ def rightMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
     (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
     (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x)
 
+omit Hα Hβ in
 theorem leftMovesSingle_def (x : Bool × α × β) :
     leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' (x.1.rec
       (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
       (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)) := by
   obtain ⟨(_ | _), _⟩ := x <;> rfl
 
+omit Hα Hβ in
 theorem rightMovesSingle_def (x : Bool × α × β) :
     rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' (x.1.rec
       (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
@@ -665,13 +692,13 @@ theorem rightMovesSingle_def (x : Bool × α × β) :
 /-- The set of left moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is a left
 move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def leftMoves (x : MulTy α β) : Set (MulTy α β) :=
-  ⋃₀ ((fun y ↦ (y.1 + ·) ''
+  ⋃₀ ((fun y ↦ (· + y.1) ''
     leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 /-- The set of right moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is a right
 move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
-  ⋃₀ ((fun y ↦ (y.1 + ·) ''
+  ⋃₀ ((fun y ↦ (· + y.1) ''
     rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y.2) '' (split x).toSet)
 
 variable {α₁ β₁ α₂ β₂ : Type*}
@@ -684,11 +711,12 @@ def map : MulTy α₁ β₁ → MulTy α₂ β₂ :=
   Multiset.map (Prod.map id (Prod.map f g))
 
 @[simp]
-theorem map_add (x y) : map f g (x + y) = map f g x + map f g y :=
+theorem map_add [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [DecidableEq β₂] (x y) :
+    map f g (x + y) = map f g x + map f g y :=
   Multiset.map_add ..
 
-open Classical in
-theorem map_erase {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
+theorem map_erase [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [DecidableEq β₂]
+    {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
     map f g (x.erase y) = (map f g x).erase (y.1, f y.2.1, g y.2.2) :=
   Multiset.map_erase_of_mem _ _ hy
 
@@ -697,8 +725,8 @@ theorem map_mulOption (b x y) :
     map f g (mulOption b x y) = mulOption b (Prod.map f g x) (Prod.map f g y) := by
   simp [mulOption, map, Prod.map]
 
-open Classical in
-theorem split_multisetMap (f : Bool × α₁ × β₁ → Bool × α₂ × β₂) (x : MulTy α₁ β₁) :
+theorem split_multisetMap [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [DecidableEq β₂]
+    (f : Bool × α₁ × β₁ → Bool × α₂ × β₂) (x : MulTy α₁ β₁) :
     split (Multiset.map f x) = (split x).image (Prod.map (Multiset.map f) f) := by
   ext
   simp_rw [Finset.mem_image, mem_split, Multiset.mem_map]
@@ -711,9 +739,8 @@ theorem split_multisetMap (f : Bool × α₁ × β₁ → Bool × α₂ × β₂
     rw [← Multiset.map_erase_of_mem _ _ hy]
     rfl
 
-open Classical in
 @[simp]
-theorem split_map (x) :
+theorem split_map [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [DecidableEq β₂] (x) :
     split (map f g x) = (split x).image (Prod.map (map f g) ((Prod.map id (Prod.map f g)))) :=
   split_multisetMap ..
 
@@ -823,21 +850,47 @@ instance (x : MulTy α β) :
   rintro ⟨_, y, hy, rfl⟩
   infer_instance
 
-end MulTy
-
-instance : DecidableEq LGame := Classical.decEq _
-
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
-instance : Mul LGame where
+instance _root_.LGame.instMul : Mul LGame where
   mul x y := corec
-    (MulTy.leftMoves leftMoves rightMoves leftMoves rightMoves)
-    (MulTy.rightMoves leftMoves rightMoves leftMoves rightMoves)
+    (leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
+    (rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
     ({(true, x, y)})
+
+/-- The game `Σ ±xᵢ * yᵢ`.-/
+def toLGame (x : MulTy α β) : LGame :=
+  (Multiset.map (fun y ↦
+    let z := corec leftMovesα rightMovesα y.2.1 * corec leftMovesβ rightMovesβ y.2.2
+    y.1.rec (-z) z) x).sum
+
+@[simp]
+theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
+  corec
+    (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+    (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) x =
+  (Multiset.map (fun y ↦ y.1.rec
+    (-corec leftMovesα rightMovesα y.2.1 * corec leftMovesβ rightMovesβ y.2.2)
+    (corec leftMovesα rightMovesα y.2.1 * corec leftMovesβ rightMovesβ y.2.2)) x).sum := by
+  refine eq_of_bisim (fun a b ↦ ∃ z,
+    a = corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) z ∧
+    b = (Multiset.map (fun y ↦ y.1.rec
+      (-corec leftMovesα rightMovesα y.2.1 * corec leftMovesβ rightMovesβ y.2.2)
+      (corec leftMovesα rightMovesα y.2.1 * corec leftMovesβ rightMovesβ y.2.2)) x).sum) ?_
+    ⟨x, rfl, rfl⟩
+  rintro a b ⟨c, rfl, rfl⟩
+  dsimp
+  constructor
+  · simp_rw [leftMoves_corec, leftMoves_sum]
+
+
+end MulTy
 
 theorem corec_mul_corec [DecidableEq α] [DecidableEq β]
     {leftMovesα rightMovesα : α → Set α} {leftMovesβ rightMovesβ : β → Set β}
@@ -855,12 +908,14 @@ theorem corec_mul_corec [DecidableEq α] [DecidableEq β]
   apply MulTy.leftMoves_comp_map
   all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
 
+
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
 @[pp_nodot]
 def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
 
+#exit
 theorem leftMoves_mul (x y : LGame) :
     (x * y).leftMoves = (fun a ↦ mulOption x y a.1 a.2) ''
       (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
