@@ -23,9 +23,11 @@ This file aims to prove the four parts of the simplest extension theorem:
 - If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
   coefficients `< x`.
 
+The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
+
 ## Todo
 
-We are currently at 1/4.
+We are currently at 2/4.
 -/
 
 open Ordinal Polynomial Set
@@ -344,7 +346,7 @@ protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i))
   apply IsRing.sSup
   simpa
 
-/-- The second **simplest extension theorem**: if `x` is a ring but not a group, then `x` can be
+/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
     ∃ y < x, ∃ z < x, y * z = x := by
