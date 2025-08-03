@@ -683,18 +683,6 @@ negatives of left moves of `x * y` if the sign is negative. -/
 def rightMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
   mulOption x.1 x.2 '' rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x
 
-theorem leftMovesSingle_def (x : Bool × α × β) :
-    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' x.1.rec
-      (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
-      (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2) := by
-  obtain ⟨(_ | _), _⟩ := x <;> rfl
-
-theorem rightMovesSingle_def (x : Bool × α × β) :
-    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x = mulOption x.1 x.2 '' x.1.rec
-      (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
-      (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2) := by
-  obtain ⟨(_ | _), _⟩ := x <;> rfl
-
 variable [Hα : DecidableEq α] [Hβ : DecidableEq β]
 
 /-- The set of left moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is a left
@@ -734,32 +722,6 @@ theorem map_mulOption (b x y) :
 
 variable {f g}
 
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
-set_option maxHeartbeats 500000 in
-theorem leftMovesSingle'_comp_prodMap
-    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
-    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
-    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
-    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    leftMovesSingle' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ leftMovesSingle' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  sorry
-  --simp_rw [funext_iff, Function.comp_apply, leftMovesSingle'] at *
-  --aesop
-
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
-set_option maxHeartbeats 500000 in
-theorem rightMovesSingle'_comp_prodMap
-    (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
-    (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
-    (hlg : leftMovesβ₂ ∘ g = Set.image g ∘ leftMovesβ₁)
-    (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
-    rightMovesSingle' leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ rightMovesSingle' leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  sorry
-  --simp_rw [funext_iff, Function.comp_apply, rightMovesSingle'] at *
-  --aesop
-
 set_option maxHeartbeats 1000000 in
 omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 theorem leftMovesSingle_comp_prodMap
@@ -769,12 +731,11 @@ theorem leftMovesSingle_comp_prodMap
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
     leftMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
     image (map f g) ∘ leftMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  simp_rw [funext_iff, Function.comp_apply, leftMovesSingle_def] at *
-  rintro ⟨(_ | _), x⟩
-  · simp [image_image, image_union]
-  -- <;> aesop
+  simp_rw [funext_iff, Function.comp_apply, leftMovesSingle, leftMovesSet] at *
+  rintro ⟨(_ | _), x⟩ <;> aesop
 
-#exit
+-- TODO: find a faster proof using the previous theorem?
+set_option maxHeartbeats 1000000 in
 omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 theorem rightMovesSingle_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
@@ -783,10 +744,8 @@ theorem rightMovesSingle_comp_prodMap
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
     rightMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
     image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  apply funext
-  rintro ⟨(_ | _), x⟩
-  · exact congrFun (leftMovesSingle'_comp_prodMap hlf hrf hlg hrg) (false, x)
-  · exact congrFun (rightMovesSingle'_comp_prodMap hlf hrf hlg hrg) (true, x)
+  simp_rw [funext_iff, Function.comp_apply, rightMovesSingle, rightMovesSet, leftMovesSet] at *
+  rintro ⟨(_ | _), x⟩ <;> aesop
 
 theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
     ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
@@ -826,20 +785,20 @@ variable
     [∀ x, Small.{u} (leftMovesβ x)] [∀ x, Small.{u} (rightMovesβ x)]
 
 private instance (x : Bool × α × β) :
-    Small.{u} (leftMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
-  small_image ..
+    Small.{u} (leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _⟩ := x <;> exact small_union ..
 
 private instance (x : Bool × α × β) :
-    Small.{u} (rightMovesSingle' leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
+    Small.{u} (rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
+  obtain ⟨(_ | _), _⟩ := x <;> exact small_union ..
+
+instance (x : Bool × α × β) :
+    Small.{u} (leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
   small_image ..
 
 instance (x : Bool × α × β) :
-    Small.{u} (leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
-  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesSingle, rightMovesSingle] <;> infer_instance
-
-instance (x : Bool × α × β) :
-    Small.{u} (rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
-  obtain ⟨(_ | _), _, _⟩ := x <;> dsimp only [leftMovesSingle, rightMovesSingle] <;> infer_instance
+    Small.{u} (rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x) :=
+  small_image ..
 
 instance (x : MulTy α β) :
     Small.{u} (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x) := by
@@ -872,10 +831,12 @@ theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
   classical
   refine corec_comp_hom_apply
     (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
-    {(true, initα, initβ)} <;>
-  apply MulTy.leftMoves_comp_map
+    {(true, initα, initβ)}
+  on_goal 1 => apply MulTy.leftMoves_comp_map
+  on_goal 5 => apply MulTy.rightMoves_comp_map
   all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
 
+#exit
 theorem _root_.LGame.corec_mulTy_neg (init : MulTy α β) :
     corec
       (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
