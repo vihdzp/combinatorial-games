@@ -732,7 +732,7 @@ theorem leftMovesSingle_comp_prodMap
     leftMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
     image (map f g) ∘ leftMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, leftMovesSingle, leftMovesSet] at *
-  rintro ⟨(_ | _), x⟩ <;> aesop
+  rintro ⟨(_ | _), x⟩ <;> sorry --aesop
 
 -- TODO: find a faster proof using the previous theorem?
 set_option maxHeartbeats 1000000 in
@@ -745,7 +745,7 @@ theorem rightMovesSingle_comp_prodMap
     rightMovesSingle leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ Prod.map id (Prod.map f g) =
     image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, rightMovesSingle, rightMovesSet, leftMovesSet] at *
-  rintro ⟨(_ | _), x⟩ <;> aesop
+  rintro ⟨(_ | _), x⟩ <;> sorry --aesop
 
 theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
     ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
@@ -836,7 +836,6 @@ theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
   on_goal 5 => apply MulTy.rightMoves_comp_map
   all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
 
-#exit
 theorem _root_.LGame.corec_mulTy_neg (init : MulTy α β) :
     corec
       (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
@@ -860,29 +859,28 @@ def toLGame (x : Bool × α × β) : LGame :=
   let y := corec leftMovesα rightMovesα x.2.1 * corec leftMovesβ rightMovesβ x.2.2
   x.1.rec (-y) y
 
-private theorem leftMoves_toLGame_false (x : Bool × α × β) :
+theorem leftMoves_toLGame (x : Bool × α × β) :
     (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ x).leftMoves =
-    (fun y ↦
-      corec (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (mulOption x.1 x.2 y)) ''
-    (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα fst✝ ×ˢ leftMovesβ snd✝) := by
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) ''
+    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   rw [toLGame]
-  obtain ⟨(_ | _), _, _⟩ := x
-  · simp [corec_mul_corec, rightMoves, rightMovesSingle_def, image_image]
-    sorry
-  · simp [corec_mul_corec, leftMoves, leftMovesSingle_def, image_image]
-    sorry
+  obtain ⟨(_ | _), _, _⟩ := x <;>
+    simp [corec_mul_corec, leftMovesSingle, rightMoves, rightMovesSingle, rightMovesSet,
+      image_image, ← corec_mulTy_neg']
+
+theorem rightMoves_toLGame (x : Bool × α × β) :
+    (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ x).rightMoves =
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) ''
+    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
+  rw [toLGame]
+  obtain ⟨(_ | _), _, _⟩ := x <;>
+    simp [corec_mul_corec, rightMovesSingle, rightMoves, rightMovesSingle, ← corec_mulTy_neg]
 
 #exit
-private theorem leftMoves_toLGame_true (x : α × β) :
-    (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (true, x)).leftMoves =  (fun z ↦
-      corec (leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-        (rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-        (mulOption true (corec leftMovesα rightMovesα x.1, corec leftMovesβ rightMovesβ x.2)
-          (Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ) z))) ''
-      (leftMovesα x.1 ×ˢ leftMovesβ x.2 ∪ rightMovesα x.1 ×ˢ rightMovesβ x.2) := by
-  rw [toLGame]
-  simp [mul_def, leftMoves, leftMovesSingle_def, ← prodMap_image_prod, image_image, image_union]
 
 @[simp]
 theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
