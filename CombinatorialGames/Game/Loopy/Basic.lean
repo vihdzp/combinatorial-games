@@ -637,6 +637,14 @@ instance : InvolutiveNeg (MulTy α β) where
   neg x := Multiset.map (fun y ↦ (!y.1, y.2)) x
   neg_neg x := by simp
 
+theorem neg_def (x : MulTy α β) : -x = Multiset.map (fun y ↦ (!y.1, y.2)) x :=
+  rfl
+
+@[simp]
+theorem mem_neg {x : Bool × α × β} {y : MulTy α β} : x ∈ -y ↔ (!x.1, x.2) ∈ y := by
+  convert Multiset.mem_map_of_injective (a := (!x.1, x.2)) _ <;>
+    simp [Function.Injective]
+
 @[simp]
 theorem neg_zero : -(0 : MulTy α β) = 0 :=
   rfl
@@ -648,6 +656,15 @@ theorem neg_single (a : Bool × α × β) : -({a} : MulTy α β) = {(!a.1, a.2)}
 @[simp]
 theorem neg_cons (a : Bool × α × β) (x : MulTy α β) : -(a ::ₘ x) = (!a.1, a.2) ::ₘ -x :=
   Multiset.map_cons ..
+
+@[simp]
+theorem neg_add (x y : MulTy α β) : -(x + y) = -x + -y :=
+  Multiset.map_add ..
+
+@[simp]
+theorem neg_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Bool × α × β) :
+    -x.erase a = (-x).erase (!a.1, a.2) :=
+  Multiset.map_erase _ (fun _ ↦ by simp) ..
 
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
 
@@ -662,16 +679,23 @@ theorem neg_mulOption (b : Bool) (x : α × β) (y : α × β) :
 
 variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
 
-private def leftMovesSet (x : Bool × α × β) : Set (α × β) :=
+def leftMovesSet (x : Bool × α × β) : Set (α × β) :=
   x.1.rec
     (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
     (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
 
-/-- The right moves of `x * y` are `a * y + x * b - a * b`, where `a` and `b` are a left and a right move or a right and a left move of `x` and `y` respectively.
-
-If the boolean argument is false, all signs are flipped. -/
-private def rightMovesSet (x : Bool × α × β) : Set (α × β) :=
+def rightMovesSet (x : Bool × α × β) : Set (α × β) :=
   leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2)
+
+theorem leftMovesSet_neg (x : Bool × α × β) :
+    leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) =
+    rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x :=
+  rfl
+
+theorem rightMovesSet_neg (x : Bool × α × β) :
+    rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) =
+    leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
+  obtain ⟨_ | _, _, _⟩ := x <;> rfl
 
 /-- The left moves of `±x * y` are left moves of `x * y` if the sign is positive, or the
 negatives of right moves of `x * y` if the sign is negative. -/
@@ -682,6 +706,18 @@ def leftMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
 negatives of left moves of `x * y` if the sign is negative. -/
 def rightMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
   mulOption x.1 x.2 '' rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x
+
+theorem leftMovesSingle_neg (x : Bool × α × β) :
+    -leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x =
+    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) := by
+  rw [leftMovesSingle, rightMovesSingle, rightMovesSet_neg]
+  simp [image_image, ← image_neg_eq_neg]
+
+theorem rightMovesSingle_neg (x : Bool × α × β) :
+    -rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x =
+    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) := by
+  rw [leftMovesSingle, rightMovesSingle, leftMovesSet_neg]
+  simp [image_image, ← image_neg_eq_neg]
 
 variable [Hα : DecidableEq α] [Hβ : DecidableEq β]
 
@@ -695,32 +731,47 @@ move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃ y ∈ x, (x.erase y + ·) '' rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y
 
+theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
+    ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
+  simp
+
+theorem neg_leftMoves (x : MulTy α β) :
+    -leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x =
+    rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) := by
+  rw [leftMoves, rightMoves, neg_def, Multiset.iUnion_map]
+  simp [← image_neg_eq_neg, image_iUnion, image_image, ← leftMovesSingle_neg, ← neg_def]
+
+theorem neg_rightMoves (x : MulTy α β) :
+    -rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x =
+    leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) := by
+  rw [leftMoves, rightMoves, neg_def, Multiset.iUnion_map]
+  simp [← image_neg_eq_neg, image_iUnion, image_image, ← rightMovesSingle_neg, ← neg_def]
+
 variable {α₁ β₁ α₂ β₂ : Type*}
   {leftMovesα₁ rightMovesα₁ : α₁ → Set α₁} {leftMovesβ₁ rightMovesβ₁ : β₁ → Set β₁}
   {leftMovesα₂ rightMovesα₂ : α₂ → Set α₂} {leftMovesβ₂ rightMovesβ₂ : β₂ → Set β₂}
   (f : α₁ → α₂) (g : β₁ → β₂)
-  [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
 /-- Map `MulTy α₁ β₁` to `MulTy α₂ β₂` using `f : α₁ → α₂` and `g : β₁ → β₂` in the natural way. -/
 def map : MulTy α₁ β₁ → MulTy α₂ β₂ :=
   Multiset.map (Prod.map id (Prod.map f g))
 
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 @[simp]
 theorem map_add (x y) : map f g (x + y) = map f g x + map f g y :=
   Multiset.map_add ..
 
-theorem map_erase {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
+theorem map_erase [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [DecidableEq β₂]
+    {x : MulTy α₁ β₁} {y} (hy : y ∈ x) :
     map f g (x.erase y) = (map f g x).erase (y.1, f y.2.1, g y.2.2) :=
   Multiset.map_erase_of_mem _ _ hy
 
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 @[simp]
 theorem map_mulOption (b x y) :
     map f g (mulOption b x y) = mulOption b (Prod.map f g x) (Prod.map f g y) := by
   simp [mulOption, map, Prod.map]
 
 variable {f g}
+  [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
 set_option maxHeartbeats 1000000 in
 omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
@@ -746,10 +797,6 @@ theorem rightMovesSingle_comp_prodMap
     image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, rightMovesSingle, rightMovesSet, leftMovesSet] at *
   rintro ⟨(_ | _), x⟩ <;> sorry --aesop
-
-theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
-    ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
-  simp
 
 theorem leftMoves_comp_map
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
@@ -843,7 +890,10 @@ theorem _root_.LGame.corec_mulTy_neg (init : MulTy α β) :
     corec
       (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
       (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init := by
-  sorry
+  apply corec_comp_hom_apply
+  all_goals
+  · ext
+    simp [← neg_leftMoves, ← neg_rightMoves]
 
 theorem _root_.LGame.corec_mulTy_neg' (init : MulTy α β) :
     corec
