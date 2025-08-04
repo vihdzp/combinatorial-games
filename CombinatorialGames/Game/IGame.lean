@@ -666,14 +666,13 @@ theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
   aesop
 
-instance : AddZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
-
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
+
+private theorem add_zero' : ∀ x : IGame, x + 0 = x := by
+  refine (moveRecOn · fun _ _ _ ↦ ?_)
+  aesop
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext <;>
@@ -695,10 +694,11 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
+  add_zero := add_zero'
+  zero_add _ := add_comm' .. ▸ add_zero' _
   add_comm := add_comm'
   add_assoc := add_assoc'
   nsmul := nsmulRec
-  __ : AddZeroClass IGame := inferInstance
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
