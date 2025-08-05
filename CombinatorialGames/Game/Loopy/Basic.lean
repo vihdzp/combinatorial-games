@@ -240,32 +240,39 @@ theorem rightMoves_comp_corec :
     LGame.rightMoves ∘ corec leftMoves rightMoves = image (corec leftMoves rightMoves) ∘ rightMoves :=
   funext (rightMoves_corec leftMoves rightMoves)
 
-theorem hom_unique (leftMoves : α → Set α) (rightMoves : α → Set α)
+theorem hom_unique_apply {leftMoves : α → Set α} {rightMoves : α → Set α}
     [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
-    (fLeftMoves : LGame.leftMoves ∘ f = image f ∘ leftMoves)
-    (fRightMoves : LGame.rightMoves ∘ f = image f ∘ rightMoves)
-    (gLeftMoves : LGame.leftMoves ∘ g = image g ∘ leftMoves)
-    (gRightMoves : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g := by
-  funext x
+    (hlf : LGame.leftMoves ∘ f = image f ∘ leftMoves)
+    (hrf : LGame.rightMoves ∘ f = image f ∘ rightMoves)
+    (hlg : LGame.leftMoves ∘ g = image g ∘ leftMoves)
+    (hrg : LGame.rightMoves ∘ g = image g ∘ rightMoves) (x) : f x = g x := by
   change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x)) =
     (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x))
   apply unique <;> ext z
   · change _ ∈ (LGame.leftMoves ∘ f) _ ↔ _
-    rw [fLeftMoves]
+    rw [hlf]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.rightMoves ∘ f) _ ↔ _
-    rw [fRightMoves]
+    rw [hrf]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.leftMoves ∘ g) _ ↔ _
-    rw [gLeftMoves]
+    rw [hlg]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inl ha)) ((equivShrink _).symm z).2
   · change _ ∈ (LGame.rightMoves ∘ g) _ ↔ _
-    rw [gRightMoves]
+    rw [hrg]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
       fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (.inr ha)) ((equivShrink _).symm z).2
+
+theorem hom_unique {leftMoves : α → Set α} {rightMoves : α → Set α}
+    [∀ a, Small.{u} (leftMoves a)] [∀ a, Small.{u} (rightMoves a)] (f g : α → LGame.{u})
+    (hlf : LGame.leftMoves ∘ f = image f ∘ leftMoves)
+    (hrf : LGame.rightMoves ∘ f = image f ∘ rightMoves)
+    (hlg : LGame.leftMoves ∘ g = image g ∘ leftMoves)
+    (hrg : LGame.rightMoves ∘ g = image g ∘ rightMoves) : f = g :=
+  funext (hom_unique_apply _ _ hlf hrf hlg hrg)
 
 -- We make no use of `LGame`'s definition from a `QPF` after this point.
 attribute [irreducible] LGame
@@ -279,7 +286,7 @@ theorem corec_comp_hom
     (hlf : leftMovesβ ∘ f = Set.image f ∘ leftMovesα)
     (hrf : rightMovesβ ∘ f = Set.image f ∘ rightMovesα) :
     corec leftMovesβ rightMovesβ ∘ f = corec leftMovesα rightMovesα := by
-  refine hom_unique leftMovesα rightMovesα _ _ ?_ ?_
+  refine hom_unique _ _ ?_ ?_
     (leftMoves_comp_corec ..) (rightMoves_comp_corec ..)
   · rw [Set.image_comp_eq, Function.comp_assoc, ← hlf,
       ← Function.comp_assoc, leftMoves_comp_corec, Function.comp_assoc]
@@ -297,9 +304,8 @@ theorem corec_comp_hom_apply
 
 @[simp]
 theorem corec_leftMoves_rightMoves : corec leftMoves rightMoves = id :=
-  hom_unique leftMoves rightMoves _ _
-    (leftMoves_comp_corec leftMoves rightMoves)
-    (rightMoves_comp_corec leftMoves rightMoves)
+  hom_unique _ _
+    (leftMoves_comp_corec leftMoves rightMoves) (rightMoves_comp_corec leftMoves rightMoves)
     (Set.image_id_eq ▸ rfl) (Set.image_id_eq ▸ rfl)
 
 theorem corec_leftMoves_rightMoves_apply (x : LGame) : corec leftMoves rightMoves x = x := by simp
@@ -405,14 +411,18 @@ instance : Neg LGame where
 @[simp] theorem corec_rightMoves_leftMoves : corec rightMoves leftMoves = (- ·) := rfl
 theorem corec_rightMoves_leftMoves_apply (x : LGame) : corec rightMoves leftMoves x = -x := rfl
 
-@[simp]
 theorem neg_corec (leftMoves rightMoves : α → Set α)
+    [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] :
+    -corec leftMoves rightMoves = corec rightMoves leftMoves :=
+  corec_comp_hom _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..)
+
+theorem neg_corec_apply (leftMoves rightMoves : α → Set α)
     [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] (init : α) :
     -corec leftMoves rightMoves init = corec rightMoves leftMoves init :=
-  corec_comp_hom_apply _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..) _
+  congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
-  neg_neg x := (neg_corec ..).trans (congrFun (corec_leftMoves_rightMoves ..) x)
+  neg_neg _ := (neg_corec_apply ..).trans (corec_leftMoves_rightMoves_apply ..)
 
 @[simp]
 theorem leftMoves_neg (x : LGame) : (-x).leftMoves = -x.rightMoves := by
@@ -431,9 +441,9 @@ theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -{s | t}�
 instance : NegZeroClass LGame where
   neg_zero := by simp [zero_def]
 
-@[simp] theorem neg_on : -on = off := neg_corec ..
-@[simp] theorem neg_off : -off = on := neg_corec ..
-@[simp] theorem neg_dud : -dud = dud := neg_corec ..
+@[simp] theorem neg_on : -on = off := neg_corec_apply ..
+@[simp] theorem neg_off : -off = on := neg_corec_apply ..
+@[simp] theorem neg_dud : -dud = dud := neg_corec_apply ..
 
 /-! ### Addition -/
 
@@ -454,8 +464,7 @@ theorem corec_add_corec
       (fun x ↦ (fun y ↦ (y, x.2)) '' rightMovesα x.1 ∪ (fun y ↦ (x.1, y)) '' rightMovesβ x.2)
       (initα, initβ) := by
   refine corec_comp_hom_apply
-    (f := Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
-    (initα, initβ)
+    (Prod.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_ (initα, initβ)
   all_goals
     refine funext fun ⟨a, b⟩ ↦ ?_
     simp [Set.image_image, Set.image_union, leftMoves_corec, rightMoves_corec]
