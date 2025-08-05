@@ -981,39 +981,13 @@ theorem corec_mulOption (b : Bool) (x y : α × β) :
   rw [← corec_neg, neg_singleton]
 
 theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
-  corec
-    (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-    (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) x =
-  (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) x).sum := by
-  refine eq_of_bisim (fun a b ↦ ∃ z,
-    a = corec
+    corec
       (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) z ∧
-    b = (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) z).sum) ?_
-    ⟨x, rfl, rfl⟩
-  rintro _ _ ⟨x, rfl, rfl⟩
-  let f (s : _ → _) := ⋃ y ∈ x, (fun z ↦
-    (corec
-      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (x.erase y + mulOption y.1 y.2 z),
-    (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (x.erase y + mulOption y.1 y.2 z)).sum)) '' s y
-  constructor
-  on_goal 1 => use f (leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ)
-  on_goal 2 => use f (rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ)
-  all_goals
-    simp only [f, toLGame, Multiset.map_add, image_iUnion, image_image, Multiset.iUnion_map,
-      Multiset.mem_singleton, iUnion_iUnion_eq_left, Multiset.erase_singleton, Multiset.zero_add,
-      leftMoves_sum, leftMoves_corec, leftMoves, leftMovesSingle,
-      rightMoves_sum, rightMoves_corec, rightMoves, rightMovesSingle, true_and]
-    constructor
-    · congr! 4 with y hy
-      rw [Multiset.map_erase_of_mem _ _ hy, corec_mulOption]
-      simp [mulOption, toLGame, sub_eq_add_neg, add_comm, add_assoc, ← corec_neg]
-    · rintro ⟨y, z⟩ ⟨a, ⟨⟨c, rfl⟩, ⟨d, ⟨e, rfl⟩, ⟨f, hf, h⟩⟩ ⟩⟩
-      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.1 h
-      exact ⟨_, rfl, by simp⟩
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) x =
+    (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) x).sum := by
+  induction x using Multiset.induction with
+  | empty => simp
+  | cons a x IH => simp [← Multiset.singleton_add, corec_add, toLGame, IH]
 
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
