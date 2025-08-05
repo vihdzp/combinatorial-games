@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Specific.Nim
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Nimber.Field
 
 /-!

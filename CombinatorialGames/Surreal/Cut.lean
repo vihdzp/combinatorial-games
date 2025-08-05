@@ -5,7 +5,6 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import Mathlib.Order.UpperLower.CompleteLattice
 import CombinatorialGames.Mathlib.Concept
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Surreal.Birthday.Basic
 
 /-!
