@@ -5,8 +5,8 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Mathlib.Small
-import Mathlib.Data.Setoid.Basic
 import Mathlib.Data.Countable.Small
+import Mathlib.Data.Setoid.Basic
 
 /-!
 # Loopy games
