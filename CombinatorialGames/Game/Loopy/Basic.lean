@@ -413,13 +413,11 @@ instance : Neg LGame where
 @[simp] theorem corec_rightMoves_leftMoves : corec rightMoves leftMoves = (- ·) := rfl
 theorem corec_rightMoves_leftMoves_apply (x : LGame) : corec rightMoves leftMoves x = -x := rfl
 
-@[simp]
 theorem neg_corec (leftMoves rightMoves : α → Set α)
     [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] :
     -corec leftMoves rightMoves = corec rightMoves leftMoves :=
   corec_comp_hom _ (rightMoves_comp_corec ..)  (leftMoves_comp_corec ..)
 
-@[simp]
 theorem neg_corec_apply (leftMoves rightMoves : α → Set α)
     [∀ x, Small.{u} (leftMoves x)] [∀ x, Small.{u} (rightMoves x)] (init : α) :
     -corec leftMoves rightMoves init = corec rightMoves leftMoves init :=
@@ -650,7 +648,7 @@ theorem neg_zero : -(0 : MulTy α β) = 0 :=
   rfl
 
 @[simp]
-theorem neg_single (a : Bool × α × β) : -({a} : MulTy α β) = {(!a.1, a.2)} :=
+theorem neg_singleton (a : Bool × α × β) : -({a} : MulTy α β) = {(!a.1, a.2)} :=
   rfl
 
 @[simp]
@@ -677,13 +675,19 @@ theorem neg_mulOption (b : Bool) (x : α × β) (y : α × β) :
     -mulOption b x y = mulOption (!b) x y := by
   simp [mulOption]
 
+theorem mulOption_eq_add (b : Bool) (x : α × β) (y : α × β) :
+    mulOption b x y = {(b, y.1, x.2)} + {(b, x.1, y.2)} + {(!b, y.1, y.2)} :=
+  rfl
+
 variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
 
+-- TODO: docstring
 def leftMovesSet (x : Bool × α × β) : Set (α × β) :=
   x.1.rec
     (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
     (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
 
+-- TODO: docstring
 def rightMovesSet (x : Bool × α × β) : Set (α × β) :=
   leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2)
 
@@ -708,15 +712,15 @@ def rightMovesSingle (x : Bool × α × β) : Set (MulTy α β) :=
   mulOption x.1 x.2 '' rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x
 
 theorem leftMovesSingle_neg (x : Bool × α × β) :
-    -leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x =
-    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) := by
-  rw [leftMovesSingle, rightMovesSingle, rightMovesSet_neg]
+    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) =
+    -rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
+  rw [leftMovesSingle, rightMovesSingle, leftMovesSet_neg]
   simp [image_image, ← image_neg_eq_neg]
 
 theorem rightMovesSingle_neg (x : Bool × α × β) :
-    -rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x =
-    leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) := by
-  rw [leftMovesSingle, rightMovesSingle, leftMovesSet_neg]
+    rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2) =
+    -leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
+  rw [leftMovesSingle, rightMovesSingle, rightMovesSet_neg]
   simp [image_image, ← image_neg_eq_neg]
 
 variable [Hα : DecidableEq α] [Hβ : DecidableEq β]
@@ -735,17 +739,17 @@ theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) 
     ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
   simp
 
-theorem neg_leftMoves (x : MulTy α β) :
-    -leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x =
-    rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) := by
+theorem leftMoves_neg (x : MulTy α β) :
+    leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) =
+    -rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   rw [leftMoves, rightMoves, neg_def, Multiset.iUnion_map]
-  simp [← image_neg_eq_neg, image_iUnion, image_image, ← leftMovesSingle_neg, ← neg_def]
+  simp [← image_neg_eq_neg, image_iUnion, image_image, leftMovesSingle_neg, ← neg_def]
 
-theorem neg_rightMoves (x : MulTy α β) :
-    -rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x =
-    leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) := by
+theorem rightMoves_neg (x : MulTy α β) :
+    rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ (-x) =
+    -leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   rw [leftMoves, rightMoves, neg_def, Multiset.iUnion_map]
-  simp [← image_neg_eq_neg, image_iUnion, image_image, ← rightMovesSingle_neg, ← neg_def]
+  simp [← image_neg_eq_neg, image_iUnion, image_image, rightMovesSingle_neg, ← neg_def]
 
 variable {α₁ β₁ α₂ β₂ : Type*}
   {leftMovesα₁ rightMovesα₁ : α₁ → Set α₁} {leftMovesβ₁ rightMovesβ₁ : β₁ → Set β₁}
@@ -857,57 +861,11 @@ instance (x : MulTy α β) :
   simp_rw [rightMoves, ← Multiset.mem_toFinset]
   exact small_biUnion.{u} (Multiset.toFinset x).toSet _
 
-/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
-`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
-and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
-
-Using `LGame.mulOption`, this can alternatively be written as
-`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
-instance _root_.LGame.instMul : Mul LGame where
-  mul x y := corec
-    (leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-    (rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-    ({(true, x, y)})
-
-theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
-    corec leftMovesα rightMovesα initα * corec leftMovesβ rightMovesβ initβ =
-    corec
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      {(true, initα, initβ)} := by
-  classical
-  refine corec_comp_hom_apply
-    (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
-    {(true, initα, initβ)}
-  on_goal 1 => apply MulTy.leftMoves_comp_map
-  on_goal 5 => apply MulTy.rightMoves_comp_map
-  all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
-
-theorem _root_.LGame.corec_mulTy_neg (init : MulTy α β) :
-    corec
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (-init) =
-    corec
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init := by
-  apply corec_comp_hom_apply
-  all_goals
-  · ext
-    simp [← neg_leftMoves, ← neg_rightMoves]
-
-theorem _root_.LGame.corec_mulTy_neg' (init : MulTy α β) :
-    corec
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (-init) =
-    corec
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init := by
-  rw [← corec_mulTy_neg, neg_neg]
-
 /-- The game `±xᵢ * yᵢ`. -/
 def toLGame (x : Bool × α × β) : LGame :=
-  let y := corec leftMovesα rightMovesα x.2.1 * corec leftMovesβ rightMovesβ x.2.2
-  x.1.rec (-y) y
+  corec
+    (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+    (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) {x}
 
 theorem leftMoves_toLGame (x : Bool × α × β) :
     (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ x).leftMoves =
@@ -915,10 +873,8 @@ theorem leftMoves_toLGame (x : Bool × α × β) :
       (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
       (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) ''
     leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
-  rw [toLGame]
-  obtain ⟨(_ | _), _, _⟩ := x <;>
-    simp [corec_mul_corec, leftMovesSingle, rightMoves, rightMovesSingle, rightMovesSet,
-      image_image, ← corec_mulTy_neg']
+  apply (leftMoves_corec ..).trans
+  simp [leftMoves]
 
 theorem rightMoves_toLGame (x : Bool × α × β) :
     (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ x).rightMoves =
@@ -926,11 +882,105 @@ theorem rightMoves_toLGame (x : Bool × α × β) :
       (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
       (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) ''
     rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
-  rw [toLGame]
-  obtain ⟨(_ | _), _, _⟩ := x <;>
-    simp [corec_mul_corec, rightMovesSingle, rightMoves, rightMovesSingle, ← corec_mulTy_neg]
+  apply (rightMoves_corec ..).trans
+  simp [rightMoves]
 
-#exit
+@[simp]
+theorem corec_zero :
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) 0 = 0 := by
+  ext <;> simp [leftMoves, rightMoves]
+
+theorem corec_neg (init : MulTy α β) :
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (-init) =
+    -corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init := by
+  rw [neg_corec_apply]
+  apply corec_comp_hom_apply
+  all_goals
+  · ext
+    simp [leftMoves_neg, rightMoves_neg]
+
+theorem corec_add (init₁ init₂ : MulTy α β) :
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (init₁ + init₂) =
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init₁ +
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) init₂ := by
+  refine eq_of_bisim (fun a b ↦ ∃ x y,
+    a = corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (x + y) ∧
+    b = corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) x +
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) y) ?_
+    ⟨_, _, rfl, rfl⟩
+  rintro _ _ ⟨x, y, rfl, rfl⟩
+  let f (s : _ → _) := (⋃ z ∈ x, (fun w ↦
+      (corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (mulOption z.1 z.2 w + x.erase z + y),
+      corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (mulOption z.1 z.2 w + x.erase z) +
+      corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) y)) '' s z) ∪
+    (⋃ z ∈ y, (fun w ↦
+      (corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (mulOption z.1 z.2 w + x + y.erase z),
+      corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) x +
+      corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (mulOption z.1 z.2 w + y.erase z))) '' s z)
+  constructor
+  on_goal 1 => use f (leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ)
+  on_goal 2 => use f (rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ)
+  all_goals
+    simp only [f, image_union, image_iUnion, image_image,
+      Multiset.mem_add, iUnion_or, iUnion_union_distrib,
+      leftMoves_corec, leftMoves, leftMovesSingle, rightMoves_corec, rightMoves, rightMovesSingle]
+    refine ⟨?_, ?_, ?_⟩
+    · congr! 6 with a ha b hb a ha b hb
+      · rw [Multiset.erase_add_left_pos _ ha]
+        simp [add_comm, add_assoc]
+      · rw [Multiset.erase_add_right_pos _ ha]
+        simp [add_comm, ← add_assoc]
+    · simp [image_iUnion, image_image, leftMoves, leftMovesSingle, rightMoves, rightMovesSingle,
+        add_comm]
+    · rintro z (⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩ | ⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩)
+      · use mulOption a.1 a.2 b + x.erase a, y
+      · use mulOption a.1 a.2 b + y.erase a, x
+        simp [add_comm, ← add_assoc]
+
+theorem corec_mulOption (b : Bool) (x y : α × β) :
+    corec
+      (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) (mulOption b x y) =
+    toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, y.1, x.2) +
+    toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, x.1, y.2) -
+    toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, y.1, y.2) := by
+  simp_rw [mulOption_eq_add, corec_add, toLGame]
+  congr
+  rw [← corec_neg, neg_singleton]
 
 @[simp]
 theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
@@ -945,28 +995,68 @@ theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
     b = (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) z).sum) ?_
     ⟨x, rfl, rfl⟩
   rintro _ _ ⟨x, rfl, rfl⟩
-  dsimp
+  dsimp -- TODO: redundant
   constructor
-  · simp_rw [leftMoves_corec, leftMoves_sum, Multiset.iUnion_map]
+  · use ⋃ y ∈ x, (fun z ↦
+      (corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (x.erase y + mulOption y.1 y.2 z),
+      (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (x.erase y + mulOption y.1 y.2 z)).sum
+      )) '' leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ y
+    simp only [toLGame, Multiset.map_add, image_iUnion, image_image, Multiset.iUnion_map,
+      Multiset.mem_singleton, iUnion_iUnion_eq_left, Multiset.erase_singleton, Multiset.zero_add,
+      leftMoves_sum, leftMoves_corec, leftMoves, leftMovesSingle, true_and]
+    constructor
+    · congr! 4 with y hy
+      rw [Multiset.map_erase_of_mem _ _ hy, corec_mulOption]
+      simp [mulOption, toLGame, sub_eq_add_neg, add_comm, add_assoc, ← corec_neg]
+    · rintro ⟨y, z⟩ ⟨a, ⟨⟨c, rfl⟩, ⟨d, ⟨e, rfl⟩, ⟨f, hf, h⟩⟩ ⟩⟩
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.1 h
+      exact ⟨_, rfl, by simp⟩
+  · use ⋃ y ∈ x, (fun z ↦
+      (corec
+        (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (x.erase y + mulOption y.1 y.2 z),
+      (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (x.erase y + mulOption y.1 y.2 z)).sum
+      )) '' rightMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ y
+    simp only [toLGame, Multiset.map_add, image_iUnion, image_image, Multiset.iUnion_map,
+      Multiset.mem_singleton, iUnion_iUnion_eq_left, Multiset.erase_singleton, Multiset.zero_add,
+      rightMoves_sum, rightMoves_corec, rightMoves, rightMovesSingle, true_and]
+    constructor
+    · congr! 4 with y hy
+      rw [Multiset.map_erase_of_mem _ _ hy, corec_mulOption]
+      simp [mulOption, toLGame, sub_eq_add_neg, add_comm, add_assoc, ← corec_neg]
+    · rintro ⟨y, z⟩ ⟨a, ⟨⟨c, rfl⟩, ⟨d, ⟨e, rfl⟩, ⟨f, hf, h⟩⟩ ⟩⟩
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.1 h
+      exact ⟨_, rfl, by simp⟩
+
+#exit
+  · simp_rw [rightMoves_corec, rightMoves_sum, Multiset.iUnion_map]
     use ⋃ y ∈ x, (fun z ↦
       (corec
         (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
         (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
         (x.erase y + mulOption y.1 y.2 z),
-      (let a := corec
-        (leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-        (rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves)
-        (mulOption true
-          (corec leftMovesα rightMovesα y.2.1, corec leftMovesβ rightMovesβ y.2.2)
-          (corec leftMovesα rightMovesα z.1, corec leftMovesβ rightMovesβ z.2))
-      y.1.rec (-a) a +
-        (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) (x.erase y)).sum
-      ))) ''
-      y.1.rec
-        (leftMovesα y.2.1 ×ˢ rightMovesβ y.2.2 ∪ rightMovesα y.2.1 ×ˢ leftMovesβ y.2.2)
-        (leftMovesα y.2.1 ×ˢ leftMovesβ y.2.2 ∪ rightMovesα y.2.1 ×ˢ rightMovesβ y.2.2)
+      ((Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ)
+        (x.erase y + mulOption y.1 y.2 z)).sum
+      ))) '' leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ y
     refine ⟨?_, ?_, ?_⟩
-    · simp [image_iUnion, image_image, leftMoves, leftMovesSingle_def]
+    · simp [leftMoves, leftMovesSingle, image_iUnion, image_image]
+    · simp only [toLGame, Multiset.map_add, image_iUnion, image_image,
+        leftMoves_corec, leftMoves, Multiset.mem_singleton, leftMovesSingle, iUnion_iUnion_eq_left,
+        Multiset.erase_singleton, Multiset.zero_add]
+      congr! 4 with y hy
+      rw [Multiset.map_erase_of_mem _ _ hy, corec_mulOption]
+      simp [mulOption, toLGame, sub_eq_add_neg, add_comm, add_assoc, ← corec_neg]
+    · rintro ⟨y, z⟩ ⟨_, ⟨_, rfl⟩, ⟨_, ⟨_, rfl⟩, ⟨_, _, h⟩⟩⟩
+      obtain ⟨rfl, rfl⟩ := Prod.ext_iff.1 h
+      exact ⟨_, rfl, rfl⟩
+
+#exit
     · simp [image_iUnion, image_image]
       congr! with y hy
       rw [Multiset.map_erase_of_mem _ _ hy]
@@ -986,6 +1076,40 @@ theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
 #exit
 
 end MulTy
+
+
+
+/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
+`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
+
+Using `LGame.mulOption`, this can alternatively be written as
+`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
+instance _root_.LGame.instMul : Mul LGame where
+  mul x y := MulTy.toLGame LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+    (true, x, y)
+
+theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
+    corec leftMovesα rightMovesα initα * corec leftMovesβ rightMovesβ initβ =
+    corec
+      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      {(true, initα, initβ)} := by
+  classical
+  refine corec_comp_hom_apply
+    (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
+    {(true, initα, initβ)}
+  on_goal 1 => apply MulTy.leftMoves_comp_map
+  on_goal 5 => apply MulTy.rightMoves_comp_map
+  all_goals first | exact leftMoves_comp_corec .. | exact rightMoves_comp_corec ..
+
+theorem _root_.LGame.neg_corec_mul_corec (initα : α) (initβ : β) :
+    -(corec leftMovesα rightMovesα initα * corec leftMovesβ rightMovesβ initβ) =
+    corec
+      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
+      {(false, initα, initβ)} := by
+  rw [corec_mul_corec, ← corec_mulTy_neg, neg_singleton, Bool.not_true]
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
