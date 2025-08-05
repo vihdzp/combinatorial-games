@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 import CombinatorialGames.Nimber.Field
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
-import Mathlib.SetTheory.Ordinal.Exponential
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Simplest extension theorems
@@ -23,14 +23,18 @@ This file aims to prove the four parts of the simplest extension theorem:
 - If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
   coefficients `< x`.
 
+The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
+
 ## Todo
 
-We are currently at 1/4.
+We are currently at 2/4.
 -/
 
 open Ordinal Polynomial Set
 
 /-! ### Mathlib lemmas -/
+
+/-! ### Order lemmas -/
 
 theorem le_of_forall_ne {α : Type*} [LinearOrder α] {x y : α} (h : ∀ z < x, z ≠ y) : x ≤ y := by
   contrapose! h
@@ -78,6 +82,14 @@ theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrdered
   simp_rw [le_add_iff_lt_or_exists_le]
   aesop
 
+theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
+    IsGreatest {y | P y} x := by
+  refine ⟨h.1, fun y hy ↦ ?_⟩
+  by_contra! hx
+  exact (h.le_of_ge hy hx.le).not_gt hx
+
+/-! #### Ordinal lemmas-/
+
 namespace Ordinal
 
 theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
@@ -119,14 +131,59 @@ theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c
 instance : CanonicallyOrderedAdd Ordinal where
   le_self_add := le_add_right
 
+attribute [simp] principal_zero
+
+protected theorem Principal.sSup {op : Ordinal → Ordinal → Ordinal} {s : Set Ordinal}
+    (H : ∀ x ∈ s, Principal op x) : Principal op (sSup s) := by
+  have : Principal op (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine fun x y hx hy ↦ ?_
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  obtain ⟨b, hbs, hb⟩ := hy
+  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
+  · exact H a has ha (hb.trans_le hab)
+  · exact H b hbs (ha.trans_le hab) hb
+
+protected theorem Principal.iSup {op : Ordinal → Ordinal → Ordinal} {ι} {f : ι → Ordinal}
+    (H : ∀ i, Principal op (f i)) : Principal op (⨆ i, f i) := by
+  apply Principal.sSup
+  simpa
+
 end Ordinal
+
+/-! #### Polynomial lemmas -/
+
+namespace Polynomial
+
+variable {R : Type*} [Semiring R] {p : R[X]}
+
+@[simp]
+theorem coeffs_nonempty_iff : p.coeffs.Nonempty ↔ p ≠ 0 := by
+  simp [Finset.nonempty_iff_ne_empty]
+
+theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
+  rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
+    WithBot.lt_coe_bot, p.degree_eq_bot]
+
+theorem coeff_eq_zero_of_degree_lt {n : ℕ} (h : p.degree < n) : p.coeff n = 0 := by
+  -- FIXME: why does this take explicit args?
+  apply (p.degree_lt_iff_coeff_zero n).1 h
+  rfl
+
+theorem coeff_eq_zero_of_natDegree_lt {n : ℕ} (h : p.natDegree < n) : p.coeff n = 0 := by
+  apply coeff_eq_zero_of_degree_lt (p.degree_le_natDegree.trans_lt _)
+  rwa [Nat.cast_lt]
+
+end Polynomial
 
 namespace Nimber
 
 /-! ### Groups -/
 
 /-- Add two nimbers as ordinal numbers. -/
-scoped notation:65 x:arg "+ₒ" y:arg => ∗(toOrdinal x + toOrdinal y)
+scoped notation:65 x:65 "+ₒ" y:66 => ∗(toOrdinal x + toOrdinal y)
 
 /-- A nimber `x` is a group when `Iio x` is closed under addition. Note that `0` is a group under
 this definition. -/
@@ -134,8 +191,22 @@ this definition. -/
 structure IsGroup (x : Nimber) where
   add_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y + z < x
 
+@[simp]
 theorem IsGroup.zero : IsGroup 0 where
   add_lt := by simp
+
+@[simp]
+theorem IsGroup.one : IsGroup 1 where
+  add_lt := by simp
+
+protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x) :
+    IsGroup (sSup s) :=
+  ⟨Principal.sSup (fun x hx ↦ (H x hx).add_lt)⟩
+
+protected theorem IsGroup.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsGroup (f i)) :
+    IsGroup (⨆ i, f i) := by
+  apply IsGroup.sSup
+  simpa
 
 theorem IsGroup.le_add_self {x y : Nimber} (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
@@ -192,7 +263,7 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
   h.add_eq_of_lt hy
 
 theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
-  refine ⟨@fun y z hy hz ↦ ?_⟩
+  refine ⟨fun y z hy hz ↦ ?_⟩
   induction y with | h y =>
   induction z with | h z =>
   obtain rfl | hy₀ := eq_or_ne y 0; simpa
@@ -247,42 +318,184 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
 
 /-! ### Rings -/
 
+/-- Multiply two nimbers as ordinal numbers. -/
+scoped notation:70 x:70 "*ₒ" y:71 => ∗(toOrdinal x * toOrdinal y)
+
 /-- A nimber `x` is a ring when `Iio x` is closed under addition and multiplication. Note that `0`
 is a ring under this definition. -/
 @[mk_iff]
 structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y * z < x
 
+@[simp]
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
   __ := IsGroup.zero
 
+@[simp]
+theorem IsRing.one : IsRing 1 where
+  mul_lt := by simp
+  __ := IsGroup.one
+
+protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) :
+    IsRing (sSup s) :=
+  ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, Principal.sSup fun x hx ↦ (H x hx).mul_lt⟩
+
+protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i)) :
+    IsRing (⨆ i, f i) := by
+  apply IsRing.sSup
+  simpa
+
+/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
+written as `y * z` for some `y, z < x`. -/
+theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x) :
+    ∃ y < x, ∃ z < x, y * z = x := by
+  simp_rw [isRing_iff, h', true_and, not_forall, not_lt] at h
+  obtain ⟨y, z, hy, hz, hx⟩ := h
+  obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
+    (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
+  refine ⟨y, hy, z, hz, H.1.antisymm' (mul_le_of_forall_ne ?_)⟩
+  refine fun a ha b hb hx ↦ hx.not_lt (h'.add_lt (h'.add_lt ?_ ?_) ?_) <;> by_contra! hx
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
+  · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
+  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+
+/-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = toOrdinal (∗x * ∗z) := by
+  apply le_antisymm
+  · apply le_of_forall_ne
+    rw [forall_lt_mul]
+    intro a ha b hb
+    rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
+      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
+      toNimber_toOrdinal, ← mul_add]
+    obtain hza | hza := eq_or_ne (∗z + ∗a) 0
+    · cases ha.ne' (add_eq_zero.1 hza)
+    · rw [← div_eq_iff hza]
+      exact (hx.mul_lt hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
+  · rw [toOrdinal_le_iff]
+    refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
+    rw [add_comm, ← add_assoc, ← mul_add, add_comm]
+    induction b with | h b =>
+    rw [toNimber.lt_iff_lt] at hb
+    have hx' : toOrdinal (a * (∗b + ∗z)) < x :=
+      hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
+    rw [← toNimber_toOrdinal (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
+      ← toNimber_toOrdinal (a * _), ← hx.toIsGroup.mul_add_eq_of_lt' hx']
+    exact (mul_add_lt hx' hb).ne
+termination_by z
+
+theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt' hy hyx hzy H
+
+-- TODO: characterize nim arithmetic on the naturals.
+proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
+
 /-! ### Fields -/
 
 /-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
-Note that `0` is a field under this definition. -/
+Note that `0` and `1` are fields under this definition. -/
 @[mk_iff]
 structure IsField (x : Nimber) extends IsRing x where
   inv_lt ⦃y⦄ (hy : y < x) : y⁻¹ < x
 
+@[simp]
 theorem IsField.zero : IsField 0 where
   inv_lt := by simp
   __ := IsRing.zero
 
+@[simp]
+theorem IsField.one : IsField 1 where
+  inv_lt := by simp
+  __ := IsRing.one
+
+protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x) :
+    IsField (sSup s) := by
+  have : IsField (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun x hx ↦ ?_⟩
+  rw [lt_csSup_iff hs hs'] at *
+  obtain ⟨a, has, ha⟩ := hx
+  exact ⟨a, has, (H a has).inv_lt ha⟩
+
+protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i)) :
+    IsField (⨆ i, f i) := by
+  apply IsField.sSup
+  simpa
+
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
 
+theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
+  h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+
+  /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
+    x * y = toOrdinal (∗x * ∗y) :=
+  hx.mul_eq_of_lt hyx
+
+-- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
+proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
 /-! ### Algebraically closed fields -/
 
-/-- A nimber `x` is algebraically closed when `IsField x`, and every polynomial in the nimbers with
-coefficients less than `x` has a root that's less than `x`. Note that `0` is algebraically closed
-under this definition. -/
+/-- A nimber `x` is algebraically closed when `IsField x`, and every non-constant polynomial in the
+nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
+algebraically closed under this definition.
+
+For simplicity, the constructor takes a redundant `p ≠ 0` assumption. The lemma
+`IsAlgClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root ⦃p : Nimber[X]⦄ (hp : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r
+  has_root' ⦃p : Nimber[X]⦄ (hp₀ : p ≠ 0) (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) :
+    ∃ r < x, p.IsRoot r
 
+theorem IsAlgClosed.has_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
+    (hp : p.degree ≠ 0) (hp' : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r := by
+  obtain rfl | hp₀ := eq_or_ne p 0
+  · aesop
+  · exact h.has_root' hp₀ hp hp'
+
+@[simp]
 theorem IsAlgClosed.zero : IsAlgClosed 0 where
-  has_root := by simp
+  has_root' := by simp
   __ := IsField.zero
+
+@[simp]
+theorem IsAlgClosed.one : IsAlgClosed 1 where
+  has_root' p hp₀ hp hp' := by
+    apply (hp₀ _).elim
+    ext n
+    simpa using hp' n
+  __ := IsField.one
+
+protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x) :
+    IsAlgClosed (sSup s) := by
+  have : IsAlgClosed (sSup ∅) := by simp
+  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hp hp' ↦ ?_⟩
+  simp_rw [lt_csSup_iff hs hs'] at *
+  choose f hf using hp'
+  obtain ⟨c, hc⟩ := ((Finset.range (p.natDegree + 1)).image f).exists_maximal (by simp)
+  have hc' := hc.1
+  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ] at hc'
+  obtain ⟨n, hn, rfl⟩ := hc'
+  have := (H _ (hf n).1).has_root hp fun m ↦ ?_
+  · obtain ⟨r, hr, hr'⟩ := this
+    exact ⟨r, ⟨_, (hf n).1, hr⟩, hr'⟩
+  · obtain hm | hm := le_or_gt m p.natDegree
+    · apply (hf m).2.trans_le (hc.isGreatest.2 _)
+      aesop (add simp [Nat.lt_succ])
+    · rw [coeff_eq_zero_of_natDegree_lt hm]
+      exact bot_le.trans_lt (hf n).2
+
+protected theorem IsAlgClosed.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsAlgClosed (f i)) :
+    IsAlgClosed (⨆ i, f i) := by
+  apply IsAlgClosed.sSup
+  simpa
 
 end Nimber

@@ -543,7 +543,6 @@ theorem add_dud (x : LGame) : x + dud = dud := by
 theorem dud_add (x : LGame) : dud + x = dud := by
   rw [add_comm, add_dud]
 
-open Classical in
 theorem leftMoves_sum (m : Multiset LGame) : m.sum.leftMoves =
     ⋃ y ∈ m, (· + (m.erase y).sum) '' y.leftMoves := by
   induction m using Multiset.induction with
@@ -555,7 +554,6 @@ theorem leftMoves_sum (m : Multiset LGame) : m.sum.leftMoves =
     rw [Multiset.erase_cons_tail_of_mem h]
     simp [← add_assoc, add_comm]
 
-open Classical in
 theorem rightMoves_sum (m : Multiset LGame) : m.sum.rightMoves =
     ⋃ y ∈ m, (· + (m.erase y).sum) '' y.rightMoves := by
   induction m using Multiset.induction with
