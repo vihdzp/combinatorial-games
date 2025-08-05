@@ -5,12 +5,11 @@ Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbo
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Logic.Small.Set
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 
@@ -465,10 +464,6 @@ instance : ZeroLEOneClass IGame where
   zero_le_one := IGame.zero_lt_one.le
 
 /-! ### Negation -/
-
-instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
-  rw [← Set.image_neg_eq_neg]
-  infer_instance
 
 private def neg' (x : IGame) : IGame :=
   {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
