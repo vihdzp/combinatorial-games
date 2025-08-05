@@ -6,9 +6,11 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
-import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
+import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
+import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
-import Mathlib.Data.Setoid.Basic
+import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Logic.Small.Set
 
 /-!
 # Loopy games
@@ -406,6 +408,19 @@ theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x
     rintro a b ⟨rfl, rfl⟩
     refine ⟨⟨{(a, dud)}, ?_⟩, ⟨{(a, dud)}, ?_⟩⟩ <;> simp_all
 
+/-- The game `tis = {{tisn} | ∅}ᴸ`, where `tisn = {∅ | {tis}}ᴸ`. -/
+def tis : LGame := corec (Bool.rec ∅ {false}) (Bool.rec {true} ∅) true
+/-- The game `tisn = {∅ | {tis}}ᴸ`, where `tis = {{tisn} | ∅}ᴸ`. -/
+def tisn : LGame := corec (Bool.rec ∅ {false}) (Bool.rec {true} ∅) false
+
+@[simp] theorem leftMoves_tis : leftMoves tis = {tisn} := by simp [tis, tisn]
+@[simp] theorem rightMoves_tis : rightMoves tis = ∅ := by simp [tis]
+theorem tis_eq : tis = {{tisn} | ∅}ᴸ := by ext <;> simp
+
+@[simp] theorem leftMoves_tisn : leftMoves tisn = ∅ := by simp [tisn]
+@[simp] theorem rightMoves_tisn : rightMoves tisn = {tis} := by simp [tis, tisn]
+theorem tisn_eq : tisn = {∅ | {tis}}ᴸ := by ext <;> simp
+
 /-! ### Negation -/
 
 /-- The negative of a game is defined by `-{s | t}ᴸ = {-t | -s}ᴸ`. -/
@@ -434,7 +449,7 @@ theorem leftMoves_neg (x : LGame) : (-x).leftMoves = -x.rightMoves := by
   exact leftMoves_corec ..
 
 @[simp]
-private theorem rightMoves_neg (x : LGame) : (-x).rightMoves = -x.leftMoves := by
+theorem rightMoves_neg (x : LGame) : (-x).rightMoves = -x.leftMoves := by
   rw [← Set.image_neg_eq_neg]
   exact rightMoves_corec ..
 
@@ -448,6 +463,20 @@ instance : NegZeroClass LGame where
 @[simp] theorem neg_on : -on = off := neg_corec_apply ..
 @[simp] theorem neg_off : -off = on := neg_corec_apply ..
 @[simp] theorem neg_dud : -dud = dud := neg_corec_apply ..
+
+@[simp]
+theorem neg_tis : -tis = tisn := by
+  refine eq_of_bisim (fun a b ↦ a = -tis ∧ b = tisn ∨ a = -tisn ∧ b = tis) ?_ (.inl ⟨rfl, rfl⟩)
+  rintro x y (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) <;> constructor
+  on_goal 1 => use ∅
+  on_goal 2 => use {(-tisn, tis)}
+  on_goal 3 => use {(-tis, tisn)}
+  on_goal 4 => use ∅
+  all_goals simp
+
+@[simp]
+theorem neg_tisn : -tisn = tis := by
+  rw [← neg_tis, neg_neg]
 
 /-! ### Addition -/
 
