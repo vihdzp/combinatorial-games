@@ -679,13 +679,13 @@ theorem mulOption_eq_add (b : Bool) (x : α × β) (y : α × β) :
 
 variable (leftMovesα rightMovesα : α → Set α) (leftMovesβ rightMovesβ : β → Set β)
 
--- TODO: docstring
+/-- The set of pairs `α × β` used in `leftMovesSingle`. -/
 def leftMovesSet (x : Bool × α × β) : Set (α × β) :=
   x.1.rec
     (leftMovesα x.2.1 ×ˢ rightMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ leftMovesβ x.2.2)
     (leftMovesα x.2.1 ×ˢ leftMovesβ x.2.2 ∪ rightMovesα x.2.1 ×ˢ rightMovesβ x.2.2)
 
--- TODO: docstring
+/-- The set of pairs `α × β` used in `rightMovesSingle`. -/
 def rightMovesSet (x : Bool × α × β) : Set (α × β) :=
   leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ (!x.1, x.2)
 
