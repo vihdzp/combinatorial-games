@@ -3,10 +3,14 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.IGame
+import CombinatorialGames.Game.Functor
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
+import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
+import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
-import Mathlib.Data.Setoid.Basic
+import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Logic.Small.Set
 
 /-!
 # Loopy games

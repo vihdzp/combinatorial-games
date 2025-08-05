@@ -5,12 +5,11 @@ Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbo
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Logic.Small.Set
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 
@@ -466,10 +465,6 @@ instance : ZeroLEOneClass IGame where
 
 /-! ### Negation -/
 
-instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
-  rw [← Set.image_neg_eq_neg]
-  infer_instance
-
 private def neg' (x : IGame) : IGame :=
   {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
 termination_by x
@@ -670,8 +665,8 @@ theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
 
-private theorem add_zero' : ∀ x : IGame, x + 0 = x := by
-  refine (moveRecOn · fun _ _ _ ↦ ?_)
+private theorem add_zero' (x : IGame) : x + 0 = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
   aesop
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
@@ -1052,15 +1047,12 @@ theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) := by
   aesop
 
-instance : MulZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
+private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
+  ext <;> simp
 
-instance : MulOneClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop (add simp [mulOption, and_assoc])
+private theorem one_mul' (x : IGame) : 1 * x = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
+  aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
   ext
@@ -1077,6 +1069,14 @@ decreasing_by igame_wf
 
 instance : CommMagma IGame where
   mul_comm := mul_comm'
+
+instance : MulZeroClass IGame where
+  zero_mul := zero_mul'
+  mul_zero x := mul_comm' .. ▸ zero_mul' x
+
+instance : MulOneClass IGame where
+  one_mul := one_mul'
+  mul_one x := mul_comm' .. ▸ one_mul' x
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
