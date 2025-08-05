@@ -670,7 +670,7 @@ theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
 
-private theorem zero_add' (x : IGame) : 0 + x = x := by
+private theorem add_zero' (x : IGame) : x + 0 = x := by
   refine moveRecOn x fun _ _ _ ↦ ?_
   aesop
 
@@ -694,8 +694,8 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
-  zero_add := zero_add'
-  add_zero _ := add_comm' .. ▸ zero_add' _
+  add_zero := add_zero'
+  zero_add _ := add_comm' .. ▸ add_zero' _
   add_comm := add_comm'
   add_assoc := add_assoc'
   nsmul := nsmulRec
