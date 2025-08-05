@@ -5,12 +5,11 @@ Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbo
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Logic.Small.Set
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 
@@ -82,7 +81,7 @@ noncomputable section
 
 /-! ### Game moves -/
 
-/-- Games up to identity.
+/-- Well-founded games up to identity.
 
 `IGame` uses the set-theoretic notion of equality on games, meaning that two `IGame`s are equal
 exactly when their left and right sets of options are.
@@ -90,9 +89,17 @@ exactly when their left and right sets of options are.
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
 like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
 can be proven over the 'identical' equivalence relation, and the literature may occasionally
-specifically use the 'identical' equivalence relation for this reason.
+specifically use the 'identical' equivalence relation for this reason. The quotient `Game` of games
+up to equality is defined in `CombinatorialGames.Game.Basic`.
 
-For the more common game equivalence from the literature, see `Game.Basic`. -/
+More precisely, `IGame` is the inductive type for the single constructor
+
+```
+  | ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u}
+```
+
+(though for technical reasons it's not literally defined as such). A consequence of this is that
+there is no infinite line of play. See `LGame` for a definition of loopy games. -/
 def IGame : Type (u + 1) :=
   QPF.Fix GameFunctor
 
@@ -101,7 +108,7 @@ namespace IGame
 /-- Construct an `IGame` from its left and right sets.
 
 This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructors on `Game` and `Surreal`.
+notation, and from the analogous constructors on other game types.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
@@ -131,6 +138,10 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x :=
   x.mk_dest
 
+/-- Two `IGame`s are equal when their move sets are.
+
+For the weaker but more common notion of equivalence where `x = y` if `x ≤ y` and `y ≤ x`,
+use `Game`. -/
 @[ext]
 theorem ext {x y : IGame.{u}} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
@@ -454,10 +465,6 @@ instance : ZeroLEOneClass IGame where
 
 /-! ### Negation -/
 
-instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
-  rw [← Set.image_neg_eq_neg]
-  infer_instance
-
 private def neg' (x : IGame) : IGame :=
   {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
 termination_by x
@@ -654,14 +661,13 @@ theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
   aesop
 
-instance : AddZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
-
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
+
+private theorem add_zero' (x : IGame) : x + 0 = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
+  aesop
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext <;>
@@ -683,10 +689,11 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
+  add_zero := add_zero'
+  zero_add _ := add_comm' .. ▸ add_zero' _
   add_comm := add_comm'
   add_assoc := add_assoc'
   nsmul := nsmulRec
-  __ : AddZeroClass IGame := inferInstance
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
@@ -1040,15 +1047,12 @@ theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) := by
   aesop
 
-instance : MulZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
+private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
+  ext <;> simp
 
-instance : MulOneClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop (add simp [mulOption, and_assoc])
+private theorem one_mul' (x : IGame) : 1 * x = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
+  aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
   ext
@@ -1065,6 +1069,14 @@ decreasing_by igame_wf
 
 instance : CommMagma IGame where
   mul_comm := mul_comm'
+
+instance : MulZeroClass IGame where
+  zero_mul := zero_mul'
+  mul_zero x := mul_comm' .. ▸ zero_mul' x
+
+instance : MulOneClass IGame where
+  one_mul := one_mul'
+  mul_one x := mul_comm' .. ▸ one_mul' x
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]

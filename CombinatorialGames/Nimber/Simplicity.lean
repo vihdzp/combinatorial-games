@@ -381,7 +381,7 @@ theorem IsRing.one : IsRing 1 where
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) :
     IsRing (sSup s) :=
-  ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, Principal.sSup (fun x hx ↦ (H x hx).mul_lt)⟩
+  ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, Principal.sSup fun x hx ↦ (H x hx).mul_lt⟩
 
 protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i)) :
     IsRing (⨆ i, f i) := by

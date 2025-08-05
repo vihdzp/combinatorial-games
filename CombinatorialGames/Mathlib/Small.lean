@@ -37,8 +37,16 @@ instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := b
     use n + 1
     simpa [level] using ⟨_, hn, hr⟩
 
-omit H in
 instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.TransGen r y x} := by
   simp_rw [← Relation.transGen_swap (r := r)]
-  exact small_transGen _ x
+  infer_instance
+
+instance small_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
+  simp_rw [Relation.reflTransGen_iff_eq_or_transGen]
+  exact @small_insert _ _ _ (small_transGen ..)
+
+instance small_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+    Small.{u} {y // Relation.ReflTransGen r y x} := by
+  simp_rw [← Relation.reflTransGen_swap (r := r)]
+  infer_instance
