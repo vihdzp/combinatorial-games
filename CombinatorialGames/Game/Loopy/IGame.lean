@@ -133,5 +133,10 @@ theorem toLGame_mul (x y : IGame) : toLGame (x * y) = toLGame x * toLGame y := b
 termination_by (x, y)
 decreasing_by igame_wf
 
+@[simp]
+theorem toLGame_mulOption (x y a b : IGame) :
+    toLGame (mulOption x y a b) = LGame.mulOption x.toLGame y.toLGame a.toLGame b.toLGame := by
+  simp [mulOption, LGame.mulOption]
+
 end IGame
 end
