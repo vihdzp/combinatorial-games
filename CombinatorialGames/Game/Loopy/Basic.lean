@@ -629,6 +629,7 @@ def MulTy (α β : Type*) :=
 
 namespace MulTy
 
+/-- Inverts the sign of all entries. -/
 instance : InvolutiveNeg (MulTy α β) where
   neg x := x.map (fun y ↦ (!y.1, y.2))
   neg_neg x := by simp
@@ -737,6 +738,22 @@ theorem rightMovesSet_neg (x : Bool × α × β) :
     leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   obtain ⟨_ | _, _, _⟩ := x <;> rfl
 
+theorem leftMovesSet_neg' (x : Bool × LGame × LGame) :
+    leftMovesSet LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (x.1, -x.2.1, x.2.2) =
+    (fun y ↦ (-y.1, y.2)) ''
+      rightMovesSet LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  obtain ⟨_ | _, _, _⟩ := x <;>
+    aesop (add simp [leftMovesSet, rightMovesSet])
+
+theorem rightMovesSet_neg' (x : Bool × LGame × LGame) :
+    rightMovesSet LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (x.1, -x.2.1, x.2.2) =
+    (fun y ↦ (-y.1, y.2)) ''
+      leftMovesSet LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  obtain ⟨_ | _, _, _⟩ := x <;>
+    aesop (add simp [leftMovesSet, rightMovesSet])
+
 theorem leftMovesSet_swap (x : Bool × α × β) :
     leftMovesSet leftMovesβ rightMovesβ leftMovesα rightMovesα (x.1, x.2.swap) =
     Prod.swap '' leftMovesSet leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
@@ -768,6 +785,22 @@ theorem rightMovesSingle_neg (x : Bool × α × β) :
     -leftMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   rw [leftMovesSingle, rightMovesSingle, rightMovesSet_neg]
   simp [image_image, ← image_neg_eq_neg]
+
+theorem leftMovesSingle_neg' (x : Bool × LGame × LGame) :
+    leftMovesSingle LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (x.1, -x.2.1, x.2.2) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) ''
+      rightMovesSingle LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  rw [leftMovesSingle, rightMovesSingle, leftMovesSet_neg']
+  simp [image_image, mulOption]
+
+theorem rightMovesSingle_neg' (x : Bool × LGame × LGame) :
+    rightMovesSingle LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (x.1, -x.2.1, x.2.2) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) ''
+      leftMovesSingle LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  rw [leftMovesSingle, rightMovesSingle, rightMovesSet_neg']
+  simp [image_image, mulOption]
 
 theorem leftMovesSingle_swap (x : Bool × α × β) :
     leftMovesSingle leftMovesβ rightMovesβ leftMovesα rightMovesα (x.1, x.2.swap) =
@@ -807,6 +840,26 @@ theorem rightMoves_neg (x : MulTy α β) :
     -leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ x := by
   rw [leftMoves, rightMoves, neg_def, Multiset.iUnion_map]
   simp [← image_neg_eq_neg, image_iUnion, image_image, rightMovesSingle_neg, ← neg_def]
+
+theorem leftMoves_neg' (x : MulTy LGame LGame) :
+    leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) ''
+      rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  rw [leftMoves, rightMoves, Multiset.iUnion_map]
+  simp only [leftMovesSingle_neg', image_image, image_iUnion, Multiset.map_add]
+  congr! with y hy
+  exact (x.map_erase_of_mem _ hy).symm
+
+theorem rightMoves_neg' (x : MulTy LGame LGame) :
+    rightMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+      (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) ''
+      leftMoves LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves x := by
+  rw [leftMoves, rightMoves, Multiset.iUnion_map]
+  simp only [rightMovesSingle_neg', image_image, image_iUnion, Multiset.map_add]
+  congr! with y hy
+  exact (x.map_erase_of_mem _ hy).symm
 
 theorem leftMoves_swap (x : MulTy α β) :
     leftMoves leftMovesβ rightMovesβ leftMovesα rightMovesα x.swap =
@@ -1145,5 +1198,19 @@ private theorem one_mul' (x : LGame) : 1 * x = x := by
 instance : MulOneClass LGame where
   one_mul := one_mul'
   mul_one x := mul_comm x _ ▸ one_mul' x
+
+private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
+  change MulTy.toLGame .. = -MulTy.toLGame ..
+  unfold MulTy.toLGame
+  rw [neg_corec_apply]
+  apply corec_comp_hom_apply
+    (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2))) _ _ {(true, x, y)}
+  all_goals
+    ext
+    simp [MulTy.leftMoves_neg', MulTy.rightMoves_neg']
+
+instance : HasDistribNeg LGame where
+  neg_mul := neg_mul'
+  mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 end LGame
