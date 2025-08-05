@@ -1022,16 +1022,12 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
 instance _root_.LGame.instMul : Mul LGame where
-  mul x y := MulTy.toLGame LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
+  mul x y := toLGame LGame.leftMoves LGame.rightMoves LGame.leftMoves LGame.rightMoves
     (true, x, y)
 
 theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
     corec leftMovesα rightMovesα initα * corec leftMovesβ rightMovesβ initβ =
-    corec
-      (MulTy.leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      (MulTy.rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
-      {(true, initα, initβ)} := by
-  classical
+    toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (true, initα, initβ) := by
   refine corec_comp_hom_apply
     (MulTy.map (corec leftMovesα rightMovesα) (corec leftMovesβ rightMovesβ)) ?_ ?_
     {(true, initα, initβ)}
