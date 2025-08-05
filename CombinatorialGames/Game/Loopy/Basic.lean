@@ -860,7 +860,7 @@ instance (x : MulTy α β) :
   exact small_biUnion.{u} (Multiset.toFinset x).toSet _
 
 /-- The game `±xᵢ * yᵢ`. -/
-def toLGame (x : Bool × α × β) : LGame :=
+abbrev toLGame (x : Bool × α × β) : LGame :=
   corec
     (leftMoves leftMovesα rightMovesα leftMovesβ rightMovesβ)
     (rightMoves leftMovesα rightMovesα leftMovesβ rightMovesβ) {x}
@@ -976,7 +976,7 @@ theorem corec_mulOption (b : Bool) (x y : α × β) :
     toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, y.1, x.2) +
     toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, x.1, y.2) -
     toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ (b, y.1, y.2) := by
-  simp_rw [mulOption_eq_add, corec_add, toLGame]
+  simp_rw [mulOption_eq_add, corec_add]
   congr
   rw [← corec_neg, neg_singleton]
 
@@ -987,7 +987,7 @@ theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
     (Multiset.map (toLGame leftMovesα rightMovesα leftMovesβ rightMovesβ) x).sum := by
   induction x using Multiset.induction with
   | empty => simp
-  | cons a x IH => simp [← Multiset.singleton_add, corec_add, toLGame, IH]
+  | cons a x IH => simp [← Multiset.singleton_add, corec_add, IH]
 
 /-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
 `{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
@@ -1022,7 +1022,7 @@ theorem leftMoves_mul (x y : LGame) :
     (x * y).leftMoves = (fun a ↦ mulOption x y a.1 a.2) ''
       (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) := by
   apply (leftMoves_corec ..).trans
-  simp [MulTy.leftMoves, MulTy.leftMovesSingle, MulTy.corec_mulOption, MulTy.toLGame, image_image]
+  simp [MulTy.leftMoves, MulTy.leftMovesSingle, MulTy.corec_mulOption, image_image]
   rfl
 
 @[simp]
@@ -1030,7 +1030,7 @@ theorem rightMoves_mul (x y : LGame) :
     (x * y).rightMoves = (fun a ↦ mulOption x y a.1 a.2) ''
       (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves) := by
   apply (rightMoves_corec ..).trans
-  simp [MulTy.rightMoves, MulTy.rightMovesSingle, MulTy.corec_mulOption, MulTy.toLGame, image_image]
+  simp [MulTy.rightMoves, MulTy.rightMovesSingle, MulTy.corec_mulOption, image_image]
   rfl
 
 @[simp]
