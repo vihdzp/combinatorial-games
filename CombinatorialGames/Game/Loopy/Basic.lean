@@ -1047,4 +1047,16 @@ instance : MulZeroClass LGame where
   zero_mul x := by ext <;> simp
   mul_zero x := by ext <;> simp
 
+private theorem one_mul' (x : LGame) : 1 * x = x := by
+  refine eq_of_bisim (fun x y ↦ x = 1 * y) ?_ rfl
+  rintro _ x rfl
+  constructor
+  · use (fun z ↦ (1 * z, z)) '' x.leftMoves
+    aesop
+  · use (fun z ↦ (1 * z, z)) '' x.rightMoves
+    aesop
+
+instance : CommMagma LGame where
+  mul_comm := mul_comm'
+
 end LGame
