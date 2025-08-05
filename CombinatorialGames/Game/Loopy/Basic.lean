@@ -774,10 +774,8 @@ theorem map_mulOption (b x y) :
   simp [mulOption, map, Prod.map]
 
 variable {f g}
-  [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
 set_option maxHeartbeats 1000000 in
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 theorem leftMovesSingle_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
@@ -790,7 +788,6 @@ theorem leftMovesSingle_comp_prodMap
 
 -- TODO: find a faster proof using the previous theorem?
 set_option maxHeartbeats 1000000 in
-omit Hα₁ Hα₂ Hβ₁ Hβ₂ in
 theorem rightMovesSingle_comp_prodMap
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
     (hrf : rightMovesα₂ ∘ f = Set.image f ∘ rightMovesα₁)
@@ -800,6 +797,8 @@ theorem rightMovesSingle_comp_prodMap
     image (map f g) ∘ rightMovesSingle leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, rightMovesSingle, rightMovesSet, leftMovesSet] at *
   rintro ⟨(_ | _), x⟩ <;> aesop
+
+variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
 theorem leftMoves_comp_map
     (hlf : leftMovesα₂ ∘ f = Set.image f ∘ leftMovesα₁)
