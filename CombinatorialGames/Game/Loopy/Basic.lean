@@ -733,6 +733,7 @@ move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
 def rightMoves (x : MulTy α β) : Set (MulTy α β) :=
   ⋃ y ∈ x, (x.erase y + ·) '' rightMovesSingle leftMovesα rightMovesα leftMovesβ rightMovesβ y
 
+-- TODO: upstream?
 theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
     ⋃ x ∈ m.map f, g x = ⋃ x ∈ m, g (f x) := by
   simp
