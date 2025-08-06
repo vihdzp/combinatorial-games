@@ -20,16 +20,24 @@ def RightStrategy (x : LGame) (s : Set LGame) : Prop :=
 @[simp]
 theorem leftStrategy_neg {x : LGame} {s : Set LGame} :
     LeftStrategy (-x) (-s) ↔ RightStrategy x s := by
-  rw [LeftStrategy, RightStrategy]
-  rw [← (Equiv.neg _).forall_congr_right]
-  simp_rw [Equiv.neg_apply, Set.neg_mem_neg]
-  congr! 2
-  rw [← (Equiv.neg _).forall_congr_right]
-  simp_rw [Equiv.neg_apply, rightMoves_neg, Set.neg_mem_neg]
-  congr! 2
-  simp only [leftMoves_neg, Set.mem_neg]
-  rw [← (Equiv.neg _).exists_congr_right]
-  simp
+  simp [LeftStrategy, RightStrategy]
+
+@[simp]
+theorem rightStrategy_neg {x : LGame} {s : Set LGame} :
+    RightStrategy (-x) (-s) ↔ LeftStrategy x s := by
+  simp_rw [← leftStrategy_neg, neg_neg]
+
+theorem exists_leftStrategy_iff_forall {x : LGame} :
+    (∃ s, LeftStrategy x s) ↔ ∀ y ∈ x.rightMoves, ∃ z ∈ y.leftMoves, ∃ s, LeftStrategy z s := by
+  sorry
+
+theorem exists_rightStrategy_iff_forall {x : LGame} :
+    (∃ s, RightStrategy x s) ↔ ∀ y ∈ x.leftMoves, ∃ z ∈ y.rightMoves, ∃ s, RightStrategy z s := by
+  have H {x} : (∃ s, LeftStrategy x (-s)) ↔ ∃ s, LeftStrategy x s := by
+    rw [← (Equiv.neg _).exists_congr_right]; simp
+  simp_rw [← leftStrategy_neg]
+  rw [H, exists_leftStrategy_iff_forall]
+  simp [← H]
 
 private theorem left_or_right_survive_left (x : LGame) :
     (∃ y ∈ x.leftMoves, ∃ s, LeftStrategy y s) ∨ ∃ s, RightStrategy x s := by
