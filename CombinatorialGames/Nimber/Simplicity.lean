@@ -522,7 +522,7 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
         exact hsy.ne
       · have hay : ∗a < y := ha.trans hsy
         rw [← toNimber_lt_iff] at hb
-        refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (∗a + y)) (b' := ∗a) ?_ hay.ne)
+        refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (∗a + y)) ?_ hay.ne)
         · rw [add_comm, ← add_assoc, ← mul_add, div_mul_cancel₀ _ (add_ne_zero_iff.2 hay.ne),
             ← toOrdinal_toNimber b, h'.mul_add_eq_of_lt hb, ← h'.mul_eq_of_lt hy hyx.le hay Hs']
           exact add_comm ..
