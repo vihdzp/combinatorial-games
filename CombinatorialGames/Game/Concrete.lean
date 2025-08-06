@@ -157,6 +157,9 @@ theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' leftMove
 theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' rightMoves a := by
   rw [toIGame, rightMoves_ofSets, image_eq_range]
 
+theorem toIGame_def (a : α) : toIGame a = {toIGame '' leftMoves a | toIGame '' rightMoves a}ᴵ := by
+  ext <;> simp
+
 theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ leftMoves a) :
     toIGame b ∈ (toIGame a).leftMoves := by
   rw [leftMoves_toIGame]
