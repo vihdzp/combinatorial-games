@@ -590,8 +590,8 @@ theorem rightMoves_sum (m : Multiset LGame) : m.sum.rightMoves =
   induction m using Multiset.induction with
   | empty => simp
   | cons a m IH =>
-    simp only [rightMoves_add, IH, image_iUnion, image_image, Multiset.mem_cons, Multiset.sum_cons,
-      iUnion_iUnion_eq_or_left, Multiset.erase_cons_head]
+    simp_rw [Multiset.mem_cons, Multiset.sum_cons, iUnion_iUnion_eq_or_left,
+      Multiset.erase_cons_head, rightMoves_add, IH, image_iUnion, image_image]
     congr! 5 with _ h
     rw [Multiset.erase_cons_tail_of_mem h]
     simp [← add_assoc, add_comm]
