@@ -55,7 +55,7 @@ private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ (-y).leftMoves, P (mulOption (-x) (-y) a b)) := by
-  simp_rw [forall_leftMoves_mul]
+  rw [forall_leftMoves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
