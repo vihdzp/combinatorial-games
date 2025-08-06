@@ -38,11 +38,11 @@ section Set
 some `a ∈ t`.
 
 In a WQO, this relation is well-founded. -/
-def posetRel (s t : Set α) : Prop :=
+def PosetRel (s t : Set α) : Prop :=
   ∃ a ∈ t, s = t \ Ici a
 
 @[inherit_doc]
-local infixl:50 " ≺ " => posetRel
+local infixl:50 " ≺ " => PosetRel
 
 theorem subrelation_posetRel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
   rintro x y ⟨a, ha, rfl⟩
@@ -50,7 +50,7 @@ theorem subrelation_posetRel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := 
   simp
 
 theorem not_posetRel_empty (s : Set α) : ¬ s ≺ ∅ := by
-  simp [posetRel]
+  simp [PosetRel]
 
 theorem posetRel_irrefl (s : Set α) : ¬ s ≺ s :=
   fun h ↦ ssubset_irrefl s <| subrelation_posetRel h
@@ -87,11 +87,10 @@ instance isWellFounded_posetRel [WellQuasiOrderedLE α] : IsWellFounded (Set α)
 
 end Set
 
-namespace IGame
-variable [WellQuasiOrderedLE α]
+namespace ConcreteGame
 
 /-- The set of states in a poset game. This is a type alias for `Set α`. -/
-def Poset (α : Type*) [Preorder α] [WellQuasiOrderedLE α] := Set α
+def Poset (α : Type*) [Preorder α] := Set α
 def toPoset : Set α ≃ Poset α := Equiv.refl _
 def ofPoset : Poset α ≃ Set α := Equiv.refl _
 
@@ -99,19 +98,33 @@ def ofPoset : Poset α ≃ Set α := Equiv.refl _
 @[simp] theorem ofPoset_toPoset (a : Set α) : ofPoset (toPoset a) = a := rfl
 
 namespace Poset
-open ConcreteGame
 
 /-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
 some `a ∈ t`. -/
-def rel (a b : Poset α) : Prop :=
-  posetRel (ofPoset a) (ofPoset b)
+def Rel (a b : Poset α) : Prop :=
+  PosetRel (ofPoset a) (ofPoset b)
 
 @[inherit_doc]
-local infixl:50 " ≺ " => rel
+local infixl:50 " ≺ " => Rel
 
-instance : IsWellFounded (Poset α) rel := isWellFounded_posetRel
-instance : WellFoundedRelation (Poset α) := ⟨rel, isWellFounded_posetRel.wf⟩
-instance : ConcreteGame (Poset α) := .ofImpartial rel
+instance : ConcreteLGame (Poset α) :=
+  .ofImpartial fun a ↦ {b | b ≺ a}
+
+/-- The starting position in a poset game. -/
+def univ (α : Type*) [Preorder α] : Poset α :=
+  toPoset .univ
+
+variable [WellQuasiOrderedLE α]
+
+instance : IsWellFounded (Poset α) Rel := isWellFounded_posetRel
+instance : WellFoundedRelation (Poset α) := ⟨Rel, isWellFounded_posetRel.wf⟩
+instance : ConcreteIGame (Poset α) := @ConcreteIGame.ofImpartial _ _ _ isWellFounded_posetRel
+
+theorem leftMoves_toIGame (a : Poset α) : (toIGame a).leftMoves = toIGame '' {b | b ≺ a} :=
+  ConcreteGame.leftMoves_toIGame ..
+
+theorem rightMoves_toIGame (a : Poset α) : (toIGame a).rightMoves = toIGame '' {b | b ≺ a} :=
+  ConcreteGame.rightMoves_toIGame ..
 
 @[simp]
 protected theorem neg_toIGame (a : Poset α) : -toIGame a = toIGame a :=
@@ -120,10 +133,6 @@ protected theorem neg_toIGame (a : Poset α) : -toIGame a = toIGame a :=
 protected instance impartial_toIGame (a : Poset α) : (toIGame a).Impartial :=
   impartial_toIGame rfl a
 
-/-- The starting position in a poset game. -/
-def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
-  toPoset Set.univ
-
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
 
@@ -131,12 +140,12 @@ def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (univ α) ‖ 0 := by
-  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (mem_leftMoves_toIGame_of_relLeft (top_compl_posetRel_univ))
+  apply IGame.Impartial.fuzzy_zero_of_forall_exists_moveLeft
+    (mem_leftMoves_toIGame_of_mem (top_compl_posetRel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [leftMoves_toIGame, mem_image] at hz
   rw [leftMoves_toIGame (univ α), mem_image]
   exact ⟨hz.choose, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end Poset
-end IGame
+end ConcreteGame

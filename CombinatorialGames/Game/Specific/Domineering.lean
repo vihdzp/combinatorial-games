@@ -22,7 +22,7 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
-namespace IGame
+namespace ConcreteGame
 
 open Function
 
@@ -81,6 +81,8 @@ theorem moveLeft_subset (b : Domineering) (m : ℤ × ℤ) :
 theorem moveRight_subset (b : Domineering) (m : ℤ × ℤ) :
     ofDomineering (b.moveRight m) ⊆ ofDomineering b :=
   (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
+
+-- TODO: these should be functions `Domineering → Finset Domineering` rather than relations.
 
 /-- Left can move from `b` to `a` when there exists some `m ∈ left b` with `a = b.moveLeft m`. -/
 def relLeft (a b : Domineering) : Prop :=
@@ -143,14 +145,14 @@ theorem subrelation_relRight :
 instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
 instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
 
-instance : ConcreteGame Domineering where
-  relLeft := relLeft
-  relRight := relRight
-  isWellFounded_rel := by
+instance : ConcreteIGame Domineering where
+  leftMoves x := {y | relLeft y x}
+  rightMoves x :=  {y | relRight y x}
+  isWellFounded_isOption := by
     apply @Subrelation.isWellFounded (r := InvImage (· < ·) fun b ↦ (ofDomineering b).card)
     rintro a b (h | h)
     · exact subrelation_relLeft h
     · exact subrelation_relRight h
 
 end Domineering
-end IGame
+end ConcreteGame
