@@ -1097,9 +1097,12 @@ private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
 termination_by (x, y)
 decreasing_by igame_wf
 
+private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
+  rw [mul_comm, neg_mul', mul_comm]
+
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
-  mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
+  mul_neg := mul_neg'
 
 theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
   simp [mulOption, sub_eq_neg_add, add_comm]
