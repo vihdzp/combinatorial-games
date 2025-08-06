@@ -129,13 +129,11 @@ instance : Neg Cut where
     intent := -x.extent
     upperPolar_extent := by
       ext
-      simp_rw [← Concept.lowerPolar_intent, upperPolar, lowerPolar, mem_setOf]
-      rw [← (Equiv.neg _).forall_congr_right]
+      simp_rw [← Concept.lowerPolar_intent, upperPolar, lowerPolar]
       simp [neg_lt]
     lowerPolar_intent := by
       ext
-      simp_rw [← Concept.upperPolar_extent, upperPolar, lowerPolar, mem_setOf]
-      rw [← (Equiv.neg _).forall_congr_right]
+      simp_rw [← Concept.upperPolar_extent, upperPolar, lowerPolar]
       simp [lt_neg]
   }
 
@@ -151,20 +149,11 @@ instance : InvolutiveNeg Cut where
 @[simp] theorem neg_min (x y : Cut) : -min x y = max (-x) (-y) := by ext; simp
 @[simp] theorem neg_max (x y : Cut) : -max x y = min (-x) (-y) := by ext; simp
 
-@[simp]
-theorem neg_sInf (s : Set Cut) : -sInf s = sSup (-s) := by
-  ext
-  rw [left_neg, right_sInf, mem_neg, mem_iUnion, ← (Equiv.neg _).exists_congr_right]
-  simp
+@[simp] theorem neg_sInf (s : Set Cut) : -sInf s = sSup (-s) := by ext; simp
+@[simp] theorem neg_sSup (s : Set Cut) : -sSup s = sInf (-s) := by ext; simp
 
-@[simp]
-theorem neg_sSup (s : Set Cut) : -sSup s = sInf (-s) := by
-  rw [← neg_neg (sInf _), neg_sInf, neg_neg]
-
-@[simp] theorem neg_iInf {ι} (f : ι → Cut) : - ⨅ i, f i = ⨆ i, - f i := by
-  simp [iInf, iSup, neg_range]
-@[simp] theorem neg_iSup {ι} (f : ι → Cut) : - ⨆ i, f i = ⨅ i, - f i := by
-  simp [iInf, iSup, neg_range]
+@[simp] theorem neg_iInf {ι} (f : ι → Cut) : - ⨅ i, f i = ⨆ i, - f i := by ext; simp
+@[simp] theorem neg_iSup {ι} (f : ι → Cut) : - ⨆ i, f i = ⨅ i, - f i := by ext; simp
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : Cut} : -x ≤ -y ↔ y ≤ x := by
@@ -425,8 +414,7 @@ theorem right_infRight (x : IGame) :
 @[simp]
 theorem neg_supLeft (x : IGame) : -supLeft x = infRight (-x) := by
   refine eq_of_forall_le_iff fun y ↦ ?_
-  rw [supLeft, infRight, le_iInf_iff, ← (Equiv.neg _).forall_congr_right]
-  simp
+  simp [supLeft, infRight]
 
 @[simp]
 theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by

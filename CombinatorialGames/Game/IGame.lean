@@ -513,22 +513,22 @@ theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := 
 @[game_cmp]
 theorem forall_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).leftMoves, P y) ↔ (∀ y ∈ x.rightMoves, P (-y)) := by
-  rw [← (Equiv.neg _).forall_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem forall_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).rightMoves, P y) ↔ (∀ y ∈ x.leftMoves, P (-y)) := by
-  rw [← (Equiv.neg _).forall_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem exists_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).leftMoves, P y) ↔ (∃ y ∈ x.rightMoves, P (-y)) := by
-  rw [← (Equiv.neg _).exists_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem exists_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).rightMoves, P y) ↔ (∃ y ∈ x.leftMoves, P (-y)) := by
-  rw [← (Equiv.neg _).exists_congr_right]; simp
+  simp
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
@@ -727,12 +727,11 @@ theorem sub_right_mem_rightMoves_sub {x y : IGame} (h : x ∈ y.rightMoves) (z :
 
 private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
   ext <;>
-  · simp
-    rw [← (Equiv.neg IGame).exists_congr_right]
-    nth_rewrite 2 [← (Equiv.neg IGame).exists_congr_right]
+  · simp only [leftMoves_neg, rightMoves_neg, leftMoves_add, rightMoves_add,
+      union_neg, mem_union, mem_neg, mem_image, exists_mem_neg]
     congr! 3 <;>
     · refine and_congr_right_iff.2 fun _ ↦ ?_
-      rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
+      rw [← neg_inj, neg_add', neg_neg]
 termination_by (x, y)
 decreasing_by igame_wf
 
