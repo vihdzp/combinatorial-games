@@ -579,8 +579,8 @@ theorem leftMoves_sum (m : Multiset LGame) : m.sum.leftMoves =
   induction m using Multiset.induction with
   | empty => simp
   | cons a m IH =>
-    simp only [leftMoves_add, IH, image_iUnion, image_image, Multiset.mem_cons, Multiset.sum_cons,
-      iUnion_iUnion_eq_or_left, Multiset.erase_cons_head]
+    simp_rw [Multiset.mem_cons, Multiset.sum_cons, iUnion_iUnion_eq_or_left,
+      Multiset.erase_cons_head, leftMoves_add, IH, image_iUnion, image_image]
     congr! 5 with _ h
     rw [Multiset.erase_cons_tail_of_mem h]
     simp [← add_assoc, add_comm]
@@ -590,8 +590,8 @@ theorem rightMoves_sum (m : Multiset LGame) : m.sum.rightMoves =
   induction m using Multiset.induction with
   | empty => simp
   | cons a m IH =>
-    simp only [rightMoves_add, IH, image_iUnion, image_image, Multiset.mem_cons, Multiset.sum_cons,
-      iUnion_iUnion_eq_or_left, Multiset.erase_cons_head]
+    simp_rw [Multiset.mem_cons, Multiset.sum_cons, iUnion_iUnion_eq_or_left,
+      Multiset.erase_cons_head, rightMoves_add, IH, image_iUnion, image_image]
     congr! 5 with _ h
     rw [Multiset.erase_cons_tail_of_mem h]
     simp [← add_assoc, add_comm]
@@ -653,9 +653,8 @@ theorem sub_dud (x : LGame) : x - dud = dud := by
 
 /-- Given two game graphs drawn on types `α` and `β`, the graph for the product can be drawn on the
 type `Multiset (Bool × α × β)`. Each term corresponds to a sum `Σ ±aᵢ * bᵢ`, where `aᵢ` and `bᵢ` are
-terms of `α` and `β` respectively. -/
-@[reducible]
-def MulTy (α β : Type*) :=
+terms of `α` and `β` respectively, and the attached bool represents each term's sign. -/
+abbrev MulTy (α β : Type*) :=
   Multiset (Bool × α × β)
 
 namespace MulTy
