@@ -61,11 +61,10 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
-  have H₁ := leftMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  have H₂ := rightMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  rw [undominate_def, undominate_def, neg_ofSets]
-  simp_rw [H₁, H₂, Set.neg_setOf]
-  congr! 3 <;> rw [← (Equiv.neg _).forall_congr_right] <;> simp [IGame.lt_neg, IGame.neg_lt]
+  have := leftMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  have := rightMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  rw [undominate_def, undominate_def]
+  simp_all [IGame.lt_neg, IGame.neg_lt]
 termination_by x
 decreasing_by igame_wf
 
