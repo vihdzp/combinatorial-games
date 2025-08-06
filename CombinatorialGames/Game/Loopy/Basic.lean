@@ -449,7 +449,7 @@ theorem leftMoves_neg (x : LGame) : (-x).leftMoves = -x.rightMoves := by
   exact leftMoves_corec ..
 
 @[simp]
-private theorem rightMoves_neg (x : LGame) : (-x).rightMoves = -x.leftMoves := by
+theorem rightMoves_neg (x : LGame) : (-x).rightMoves = -x.leftMoves := by
   rw [← Set.image_neg_eq_neg]
   exact rightMoves_corec ..
 
