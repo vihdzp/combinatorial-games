@@ -653,7 +653,7 @@ theorem sub_dud (x : LGame) : x - dud = dud := by
 
 /-- Given two game graphs drawn on types `α` and `β`, the graph for the product can be drawn on the
 type `Multiset (Bool × α × β)`. Each term corresponds to a sum `Σ ±aᵢ * bᵢ`, where `aᵢ` and `bᵢ` are
-terms of `α` and `β` respectively. -/
+terms of `α` and `β` respectively, and the attached bool represents each term's sign. -/
 abbrev MulTy (α β : Type*) :=
   Multiset (Bool × α × β)
 
