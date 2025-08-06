@@ -23,4 +23,14 @@ instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} 
   rw [← Set.image_neg_eq_neg]
   infer_instance
 
+theorem forall_mem_neg {α : Type*} [InvolutiveNeg α] {p : α → Prop} {s : Set α} :
+    (∀ x ∈ -s, p x) ↔ ∀ x ∈ s, p (-x) := by
+  rw [← (Equiv.neg _).forall_congr_right]
+  simp
+
+theorem exists_mem_neg {α : Type*} [InvolutiveNeg α] {p : α → Prop} {s : Set α} :
+    (∃ x ∈ -s, p x) ↔ ∃ x ∈ s, p (-x) := by
+  rw [← (Equiv.neg _).exists_congr_right]
+  simp
+
 end Set

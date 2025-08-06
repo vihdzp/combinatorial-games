@@ -17,6 +17,20 @@ to the set. -/
 def RightStrategy (x : LGame) (s : Set LGame) : Prop :=
   x ∈ s ∧ ∀ y ∈ s, ∀ z ∈ y.leftMoves, ∃ r ∈ z.rightMoves, r ∈ s
 
+@[simp]
+theorem leftStrategy_neg {x : LGame} {s : Set LGame} :
+    LeftStrategy (-x) (-s) ↔ RightStrategy x s := by
+  rw [LeftStrategy, RightStrategy]
+  rw [← (Equiv.neg _).forall_congr_right]
+  simp_rw [Equiv.neg_apply, Set.neg_mem_neg]
+  congr! 2
+  rw [← (Equiv.neg _).forall_congr_right]
+  simp_rw [Equiv.neg_apply, rightMoves_neg, Set.neg_mem_neg]
+  congr! 2
+  simp only [leftMoves_neg, Set.mem_neg]
+  rw [← (Equiv.neg _).exists_congr_right]
+  simp
+
 private theorem left_or_right_survive_left (x : LGame) :
     (∃ y ∈ x.leftMoves, ∃ s, LeftStrategy y s) ∨ ∃ s, RightStrategy x s := by
   sorry
