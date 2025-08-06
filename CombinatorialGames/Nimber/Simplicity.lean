@@ -27,7 +27,7 @@ The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 
 ## Todo
 
-We are currently at 2/4.
+We are currently at 3/4.
 -/
 
 open Ordinal Polynomial Set
@@ -36,10 +36,12 @@ open Ordinal Polynomial Set
 
 /-! ### Order lemmas -/
 
+-- #27703
 theorem le_of_forall_ne {α : Type*} [LinearOrder α] {x y : α} (h : ∀ z < x, z ≠ y) : x ≤ y := by
   contrapose! h
   use y
 
+-- #27701
 theorem lt_add_iff_lt_or_exists_lt {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
     [AddLeftReflectLT α] [IsLeftCancelAdd α] {a b c : α} :
     a < b + c ↔ a < b ∨ ∃ d < c, a = b + d := by
@@ -128,10 +130,23 @@ theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c
   · apply mul_le_mul_left'
     rwa [Order.succ_le_iff]
 
+-- TODO: come up with a better name, probably rename `log_eq_zero` while we're at it.
+theorem log_eq_zero' {b x : Ordinal} (hb : b ≤ 1) : log b x = 0 := by
+  obtain rfl | rfl := Ordinal.le_one_iff.1 hb <;> simp
+
+theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := by
+  constructor
+  · by_contra!
+    apply (le_log_of_opow_le (c := 1) this.2.1 (by simpa using this.2.2)).not_gt
+    simpa using this.1
+  · rintro (hb | hb)
+    · exact log_eq_zero' hb
+    · exact log_eq_zero hb
+
 instance : CanonicallyOrderedAdd Ordinal where
   le_self_add := le_add_right
 
-attribute [simp] principal_zero
+attribute [simp] principal_zero Ordinal.not_lt_zero
 
 protected theorem Principal.sSup {op : Ordinal → Ordinal → Ordinal} {s : Set Ordinal}
     (H : ∀ x ∈ s, Principal op x) : Principal op (sSup s) := by
@@ -177,6 +192,16 @@ theorem coeff_eq_zero_of_natDegree_lt {n : ℕ} (h : p.natDegree < n) : p.coeff 
   rwa [Nat.cast_lt]
 
 end Polynomial
+
+theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
+    a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
+  obtain rfl | ha := eq_or_ne a 0; simp
+  rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
+  tauto
+
+theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
+    a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
+  rw [eq_comm, inv_eq_self_iff]
 
 namespace Nimber
 
@@ -300,8 +325,20 @@ theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o
   ((IsGroup.two_opow _).add_eq_of_lt (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm.trans
     (o.two_opow_log_add ho)
 
+theorem add_lt_of_log_eq {a b : Ordinal} (ha₀ : a ≠ 0) (hb₀ : b ≠ 0) (h : log 2 a = log 2 b) :
+    ∗a + ∗b < ∗(2 ^ log 2 a) := by
+  rw [← two_opow_log_add ha₀, ← two_opow_log_add hb₀, h]
+  abel_nf
+  rw [CharTwo.two_zsmul, zero_add]
+  apply (IsGroup.two_opow _).add_lt <;> exact mod_lt _ (opow_ne_zero _ two_ne_zero)
+
+theorem exists_isGroup_add_lt {x : Nimber} (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y < y := by
+  induction x with | h x =>
+  refine ⟨_, opow_log_le_self _ hx, .two_opow _, ?_⟩
+  exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
+
 /-- The nimbers that are groups are exactly `0` and the powers of `2`. -/
-theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
+theorem isGroup_iff_zero_or_mem_range_two_opow {x : Nimber} :
     IsGroup x ↔ x = 0 ∨ x ∈ range fun y : Ordinal ↦ ∗(2 ^ y) := by
   constructor
   · by_contra! H
@@ -315,6 +352,11 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Ordinal} :
   · rintro (rfl | ⟨x, hx, rfl⟩)
     · exact .zero
     · exact .two_opow x
+
+/-- A version of `isGroup_iff_zero_or_mem_range_two_opow` stated in terms of `Ordinal`. -/
+theorem isGroup_iff_zero_or_mem_range_two_opow' {x : Ordinal} :
+    IsGroup (∗x) ↔ x = 0 ∨ x ∈ range (2 ^ · : Ordinal → _) :=
+  isGroup_iff_zero_or_mem_range_two_opow
 
 /-! ### Rings -/
 
@@ -367,7 +409,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
   · apply le_of_forall_ne
     rw [forall_lt_mul]
     intro a ha b hb
-    rw [ne_eq, ← toNimber_eq_iff, hx.toIsGroup.mul_add_eq_of_lt' hb,
+    rw [ne_eq, ← toNimber_eq_iff, hx.mul_add_eq_of_lt' hb,
       hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
       toNimber_toOrdinal, ← mul_add]
     obtain hza | hza := eq_or_ne (∗z + ∗a) 0
@@ -382,7 +424,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
     have hx' : toOrdinal (a * (∗b + ∗z)) < x :=
       hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
     rw [← toNimber_toOrdinal (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
-      ← toNimber_toOrdinal (a * _), ← hx.toIsGroup.mul_add_eq_of_lt' hx']
+      ← toNimber_toOrdinal (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by z
 
@@ -432,10 +474,76 @@ theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x
 theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
   h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
 
-  /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+/-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
     x * y = toOrdinal (∗x * ∗y) :=
   hx.mul_eq_of_lt hyx
+
+-- One day we'll get rid of this wretched simp lemma.
+attribute [-simp] add_one_eq_succ in
+private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
+    x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by
+  have hx₁ : 1 < x := by rw [← not_le, le_one_iff]; aesop
+  have hx₀ : x ≠ 0 := hx₁.ne_bot
+  let s := {z | x ≤ z⁻¹}
+  simp_rw [isField_iff, h', true_and, not_forall, not_lt] at h
+  obtain ⟨a, ha, hxa⟩ := h
+  have hsx : sInf s < x := (csInf_le' (s := s) hxa).trans_lt ha
+  have hxs : x ≤ (sInf s)⁻¹ := csInf_mem (s := s) ⟨a, hxa⟩
+  obtain ⟨y, hys, hy, hsy⟩ := exists_isGroup_add_lt (x := sInf s) fun _ ↦ by simp_all
+  have Hs (y) (hy : y < sInf s) : y⁻¹ < x := lt_of_not_ge (notMem_of_lt_csInf' (s := s) hy)
+  have Hs' (z) (hy : z < y) : z⁻¹ < x := Hs _ (hy.trans_le hys)
+  suffices x * y = x * (sInf s + y) + 1 by
+    rw [add_comm, CharTwo.eq_add_iff_add_eq, ← mul_add, add_comm, add_cancel_right] at this
+    rw [inv_eq_of_mul_eq_one_right this]
+    exact ⟨hsx, Hs⟩
+  have hyx := hys.trans_lt hsx
+  rw [← h'.mul_eq_of_lt hy hyx.le hsy Hs', ← h'.mul_add_eq_of_lt hx₁]
+  · apply le_antisymm
+    · refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
+      rw [add_comm, ← add_assoc, ← mul_add, add_comm]
+      have hax := h'.mul_lt ha (h'.add_lt (hb.trans hyx) hyx)
+      rw [← h'.mul_eq_of_lt hy hyx.le hb Hs', ← h'.mul_add_eq_of_lt hax]
+      · rw [ne_eq, toNimber.eq_iff_eq, toOrdinal_one]
+        intro H
+        have H' : _ / _ = _ / _ := congrArg (· / toOrdinal x) H
+        have hx₀ : toOrdinal x ≠ 0 := hx₀
+        have hx₁ : 1 < toOrdinal x := hx₁
+        rw [mul_add_div _ hx₀, mul_add_div _ hx₀,
+          div_eq_zero_of_lt (toOrdinal.lt_iff_lt.2 hax), div_eq_zero_of_lt hx₁, add_zero, add_zero, toOrdinal.eq_iff_eq] at H'
+        apply ha.not_ge (hxs.trans_eq (inv_eq_of_mul_eq_one_left _))
+        simpa [H'] using H
+    · rw [← toOrdinal.le_iff_le]
+      apply le_of_forall_ne
+      simp_rw [toOrdinal_one, add_one_eq_succ, toOrdinal_toNimber, Order.lt_succ_iff,
+        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← toNimber_eq_iff]
+      refine ⟨?_, fun a ha b hb ↦ ?_⟩
+      · rw [h'.mul_eq_of_lt hy hyx.le hsy Hs', mul_right_inj' hx₀]
+        exact hsy.ne
+      · have hay : ∗a < y := ha.trans hsy
+        rw [← toNimber_lt_iff] at hb
+        refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (∗a + y)) ?_ hay.ne)
+        · rw [add_comm, ← add_assoc, ← mul_add, div_mul_cancel₀ _ (add_ne_zero_iff.2 hay.ne),
+            ← toOrdinal_toNimber b, h'.mul_add_eq_of_lt hb, ← h'.mul_eq_of_lt hy hyx.le hay Hs']
+          exact add_comm ..
+        · apply (h'.mul_lt hb (Hs ..)).ne
+          rw [← add_comm, ← hy.add_eq_of_lt hay, toNimber_lt_iff]
+          apply (add_lt_add_left ha _).trans_eq
+          rw [← toNimber_eq_iff, hy.add_eq_of_lt hsy, add_comm, add_cancel_right]
+
+theorem inv_lt_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x) (hy : y < x⁻¹) :
+    y⁻¹ < x :=
+  (inv_lt_of_not_isField_aux h' h).2 y hy
+
+theorem inv_le_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x) (hy : y ≤ x⁻¹) :
+    y⁻¹ ≤ x := by
+  obtain rfl | hy := hy.eq_or_lt; simp
+  exact (inv_lt_of_not_isField h' h hy).le
+
+/-- The third **simplest extension theorem**: if `x` is a ring but not a field, then `x` can be
+written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
+theorem inv_lt_self_of_not_isField {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
+  (inv_lt_of_not_isField_aux h' h).1
 
 -- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
