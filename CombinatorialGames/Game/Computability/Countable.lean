@@ -142,7 +142,7 @@ def toNat (g : FGame) : ℕ :=
 termination_by g
 decreasing_by exact .single (toPlacements_mem_isOption (by assumption))
 
-proof_wanted natToFGame_rightInverse : Function.RightInverse toNat (FGame.mk ∘ ofNat)
-proof_wanted natToFGame_rightInverse : Function.LeftInverse toNat (FGame.mk ∘ ofNat)
+proof_wanted ofNat_rightInverse : Function.RightInverse toNat (FGame.mk ∘ ofNat)
+proof_wanted ofNat_leftInverse : Function.LeftInverse toNat (FGame.mk ∘ ofNat)
 
 end FGame
