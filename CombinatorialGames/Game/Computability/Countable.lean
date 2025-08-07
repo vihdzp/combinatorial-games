@@ -121,7 +121,6 @@ decreasing_by all_goals
   rw [Nat.digits_length_le_iff (by decide)]
   exact Nat.lt_pow_self (by decide)
 
--- (TODO: this name looks bad. Is there a nicer name?)
 /-- An auxiliary definition for defining the inverse of `natToFGame`.
 Given a game, we can decompose it into its immediate placements. -/
 def toPlacements (g : FGame) : Finset (FGame × Placement) :=
