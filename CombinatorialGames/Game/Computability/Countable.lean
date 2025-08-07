@@ -142,11 +142,16 @@ theorem toPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ toPlacements g) :
 
 /-- The inverse of `ofNat`. -/
 def toNat (g : FGame) : ℕ :=
-  Nat.ofDigits 4 (((toPlacements g).attach.image fun ⟨x, _⟩ ↦ (toNat x.1, x.2)).asList)
+  Nat.ofDigits 4 ((toPlacements g).attach.image fun ⟨x, _⟩ ↦ (toNat x.1, x.2)).asList
 termination_by g
 decreasing_by exact .single (toPlacements_mem_isOption (by assumption))
 
-proof_wanted ofNat_rightInverse : Function.RightInverse toNat ofNat
-proof_wanted ofNat_leftInverse : Function.LeftInverse toNat ofNat
+theorem toNat_def (g : FGame) :
+    toNat g = Nat.ofDigits 4 ((toPlacements g).image fun x ↦ (toNat x.1, x.2)).asList := by
+  rw [toNat]
+  -- TODO: :(
+  show Nat.ofDigits 4 (g.toPlacements.attach.image
+    fun x ↦ ((fun x ↦ (x.1.toNat, x.2)) ∘ Subtype.val) x).asList = _
+  rw [← Finset.image_image, Finset.attach_image_val]
 
 end FGame
