@@ -68,6 +68,19 @@ theorem leftMoves_toLGame (x : IGame) : x.toLGame.leftMoves = toLGame '' x.leftM
 theorem rightMoves_toLGame (x : IGame) : x.toLGame.rightMoves = toLGame '' x.rightMoves := by
   rw [toLGame_def, LGame.rightMoves_ofSets]
 
+theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGame.IsOption x where
+  mp := by
+    rintro ⟨x, rfl⟩
+    refine x.moveRecOn fun x hl hr ↦ .intro _ fun y ↦ ?_
+    rintro (hy | hy) <;> simp only [leftMoves_toLGame, rightMoves_toLGame] at hy <;>
+      obtain ⟨y, hy, rfl⟩ := hy
+    exacts [hl y hy, hr y hy]
+  mpr h := h.rec fun x _ ih ↦ by
+    choose f hf using ih
+    use {range fun y : x.leftMoves ↦ f y (.inl y.2) | range fun y : x.rightMoves ↦ f y (.inr y.2)}ᴵ
+    ext1 <;> (simp only [leftMoves_toLGame, leftMoves_ofSets, rightMoves_toLGame, rightMoves_ofSets,
+      ← range_comp]; convert Subtype.range_val; ext1; apply hf)
+
 @[simp]
 theorem toLGame_zero : toLGame 0 = 0 := by
   ext <;> simp
