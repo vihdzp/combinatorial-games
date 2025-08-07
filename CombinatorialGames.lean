@@ -12,6 +12,7 @@ import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Reductions
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
