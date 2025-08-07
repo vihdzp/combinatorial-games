@@ -143,14 +143,6 @@ def FGameToNat (g : FGame) : ℕ :=
 termination_by g
 decreasing_by exact .single (FGameToPlacements_mem_isOption (by assumption))
 
-theorem FGameToNat_def (g : FGame) :
-    FGameToNat g = Nat.ofDigits 4 (((FGameToPlacements g).image
-      fun x ↦ x.map FGameToNat id).asList.map Placement.toNat) := by
-  rw [FGameToNat]
-  congr!
-  ext x
-  simp
-
 proof_wanted natToFGame_rightInverse : Function.RightInverse FGameToNat natToFGame
 proof_wanted natToFGame_rightInverse : Function.LeftInverse FGameToNat natToFGame
 
