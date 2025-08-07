@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Loopy.Basic
 
@@ -73,8 +79,8 @@ theorem toLGame_one : toLGame 1 = 1 := by
 @[simp]
 theorem toLGame_neg (x : IGame) : toLGame (-x) = -toLGame x := by
   ext y
-  on_goal 1 => simp_rw [leftMoves_toLGame, leftMoves_neg, LGame.leftMoves_neg, rightMoves_toLGame]
-  on_goal 2 => simp_rw [rightMoves_toLGame, rightMoves_neg, LGame.rightMoves_neg, leftMoves_toLGame]
+  on_goal 1 => rw [leftMoves_toLGame, leftMoves_neg, LGame.leftMoves_neg, rightMoves_toLGame]
+  on_goal 2 => rw [rightMoves_toLGame, rightMoves_neg, LGame.rightMoves_neg, leftMoves_toLGame]
   all_goals
     constructor
     · rintro ⟨y, hy, rfl⟩

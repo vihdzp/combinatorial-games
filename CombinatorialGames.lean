@@ -9,6 +9,7 @@ import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Loopy.Basic
+import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
@@ -38,6 +39,7 @@ import CombinatorialGames.Surreal.Dyadic.Basic
 import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
+import CombinatorialGames.Surreal.Pow
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Test.GameCmp
