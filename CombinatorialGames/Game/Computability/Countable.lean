@@ -108,8 +108,7 @@ def Placement.place (parent : FGame) (child : FGame) : Placement → FGame
 | Right => {parent.leftMoves | insert child parent.rightMoves}ꟳ
 | Both => {insert child parent.leftMoves | insert child parent.rightMoves}ꟳ
 
-/-- Take a nat and convert it to an `FGame` by placing the `ofNat n` game at `n` -/
-def ofNat (n : ℕ) : SGame :=
+private def _root_.SGame.ofNat (n : ℕ) : SGame :=
   let d := (Nat.digits 4 n).zipIdx
   .mk _ _
     (fun x ↦ ofNat ((d.filter fun x ↦ x.1 = 1 || x.1 = 3)[x.1]).2)
@@ -120,6 +119,40 @@ decreasing_by all_goals
   apply hi.trans_le
   rw [Nat.digits_length_le_iff (by decide)]
   exact Nat.lt_pow_self (by decide)
+
+/-- Take a nat and convert it to an `FGame` by placing the `ofNat n` game at `n` -/
+def ofNat (n : ℕ) : FGame :=
+  .mk (SGame.ofNat n)
+
+theorem mem_moves {x : FGame} {a n : ℕ} (ha : a ≠ 0) :
+    (∃ k : Fin _, ofNat ((Nat.digits 4 n).zipIdx.filter (fun x ↦ x.1 = a || x.1 = 3))[k.1].2 = x) ↔
+    ∃ m, x = ofNat m ∧ ((Nat.digits 4 n)[m]?.getD 0 ∈ ({a, 3} : Set _)) := by
+  constructor
+  · rintro ⟨b, rfl⟩
+    refine ⟨_, rfl, ?_⟩
+    obtain ⟨hl, hl'⟩ := List.mem_zipIdx' (List.mem_of_mem_filter (List.getElem_mem b.2))
+    dsimp at hl hl'
+    rw [List.getElem?_eq_getElem hl, ← hl']
+    simpa using List.getElem_filter b.2
+  · rintro ⟨b, rfl, hb⟩
+    have : ∃ d, (d, b) ∈ (Nat.digits 4 n).zipIdx.filter (fun x ↦ x.1 = a || x.1 = 3) := by
+      aesop (add simp [List.mem_zipIdx_iff_getElem?, Option.getD_eq_iff])
+    obtain ⟨d, hd⟩ := this
+    obtain ⟨i, hi, hi'⟩ := List.getElem_of_mem hd
+    use ⟨i, hi⟩
+    rw [hi']
+
+theorem mem_leftMoves_ofNat' {x : FGame} {n : ℕ} :
+    x ∈ leftMoves (ofNat n) ↔
+    ∃ m, x = ofNat m ∧ (Nat.digits 4 n).getD m 0 ∈ ({1, 3} : Set _) := by
+  rw [ofNat, SGame.ofNat]
+  simpa using mem_moves one_ne_zero
+
+theorem mem_rightMoves_ofNat' {x : FGame} {n : ℕ} :
+    x ∈ rightMoves (ofNat n) ↔
+    ∃ m, x = ofNat m ∧ (Nat.digits 4 n).getD m 0 ∈ ({2, 3} : Set _) := by
+  rw [ofNat, SGame.ofNat]
+  simpa using mem_moves two_ne_zero
 
 /-- An auxiliary definition for defining the inverse of `natToFGame`.
 Given a game, we can decompose it into its immediate placements. -/
@@ -141,7 +174,7 @@ def toNat (g : FGame) : ℕ :=
 termination_by g
 decreasing_by exact .single (toPlacements_mem_isOption (by assumption))
 
-proof_wanted ofNat_rightInverse : Function.RightInverse toNat (FGame.mk ∘ ofNat)
-proof_wanted ofNat_leftInverse : Function.LeftInverse toNat (FGame.mk ∘ ofNat)
+proof_wanted ofNat_rightInverse : Function.RightInverse toNat ofNat
+proof_wanted ofNat_leftInverse : Function.LeftInverse toNat ofNat
 
 end FGame

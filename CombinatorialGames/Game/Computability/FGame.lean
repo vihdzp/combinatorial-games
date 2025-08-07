@@ -368,23 +368,3 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
-
-/-! ### Repr -/
-
--- Allows us to recursively represent `FGame`s. This doesn't seem very idiomatic,
--- so we avoid putting it in pub space.
-private instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
-
-private unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
-  reprPrec g n := if g.card = 0 then "∅" else Multiset.instRepr.reprPrec g n
-
--- TODO: can we hook into delab?
-private unsafe def instRepr_aux : FGame → Std.Format :=
-  fun g ↦ "{" ++
-    Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
-    Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
-
-/-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
-and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
-{a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
-unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
