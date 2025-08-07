@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Tristan Figueroa-Reid, Violeta Hernández
+Authors: Tristan Figueroa-Reid, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Computability.FGame
 import Mathlib.Data.Nat.Digits.Lemmas
@@ -9,9 +9,9 @@ import Mathlib.Data.Nat.Digits.Lemmas
 /-!
 # The computable bijection between ℕ and FGame
 
-Here, we provide a recursive, computable function constructed by Violeta Hernández from ℕ
-to FGame, derived from Ackermann’s Encoding, and, while it suffices to show that it's surjective
-to show its correctness for Plausible, we aim to prove that it is bijective.
+Here, we provide a recursive, computable function derived from Ackermann’s Encoding, and,
+while it suffices to show that it's surjective to show its correctness for Plausible,
+we aim to prove that it is bijective.
 
 We then construct a `Plausible` instance on `FGame` using this function, allowing us to sample an ℕ
 from RNG and use that to construct an `FGame` for counterexamples.
@@ -19,7 +19,7 @@ from RNG and use that to construct an `FGame` for counterexamples.
 ## Todo
 
 - Define plausible (This can be done right now, but `unsafe Repr` is weird. We can make a stable
-`Repr` by sorting over `FGameToNat`.)
+  `Repr` by sorting over `FGameToNat`.)
 - Show that `natToFGame` is bijective using `FGameToNat`.
 -/
 
@@ -104,9 +104,9 @@ theorem Placement.toNat_lt_four (p : Placement) : p.toNat < 4 := by unfold toNat
 /-- Places a child `FGame` into a parent `FGame` following the `Placement` rule. -/
 def Placement.place (parent : FGame) (child : FGame) : Placement → FGame
 | None => parent
-| Left => {parent.leftMoves ∪ {child} | parent.rightMoves}ꟳ
-| Right => {parent.leftMoves | parent.rightMoves ∪ {child}}ꟳ
-| Both => {parent.leftMoves ∪ {child} | parent.rightMoves ∪ {child}}ꟳ
+| Left => {insert child parent.leftMoves | parent.rightMoves}ꟳ
+| Right => {parent.leftMoves | insert child parent.rightMoves}ꟳ
+| Both => {insert child parent.leftMoves | insert child parent.rightMoves}ꟳ
 
 /-- Take a nat and convert it to an `FGame` by placing the
 `natToFGame n` game at `n` -/
@@ -123,7 +123,7 @@ decreasing_by
   exact Nat.lt_pow_self (by decide)
 
 -- (TODO: this name looks bad. Is there a nicer name?)
-/-- An auxiliary definition for beginning to define the inverse of `natToFGame`.
+/-- An auxiliary definition for defining the inverse of `natToFGame`.
 Given a game, we can decompose it into its immediate placements. -/
 def FGameToPlacements (g : FGame) : Finset (FGame × Placement) :=
   (g.leftMoves ∪ g.rightMoves).image fun x ↦ (x,
@@ -142,5 +142,16 @@ def FGameToNat (g : FGame) : ℕ :=
     fun ⟨x, _⟩ ↦ (FGameToNat x.1, x.2)).asList.map Placement.toNat)
 termination_by g
 decreasing_by exact .single (FGameToPlacements_mem_isOption (by assumption))
+
+theorem FGameToNat_def (g : FGame) :
+    FGameToNat g = Nat.ofDigits 4 (((FGameToPlacements g).image
+      fun x ↦ x.map FGameToNat id).asList.map Placement.toNat) := by
+  rw [FGameToNat]
+  congr!
+  ext x
+  simp
+
+proof_wanted natToFGame_rightInverse : Function.RightInverse FGameToNat natToFGame
+proof_wanted natToFGame_rightInverse : Function.LeftInverse FGameToNat natToFGame
 
 end FGame
