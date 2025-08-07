@@ -73,40 +73,14 @@ universe u
 
 namespace FGame
 
-/-- The placement enum. This defines where game children go. -/
-inductive Placement
-| None
-| Left
-| Right
-| Both
-deriving DecidableEq, Repr
-
-instance : Inhabited Placement := ⟨.None⟩
-
-/-- Converts a natural number to a placement -/
-def Placement.fromNat {n : ℕ} (hn : n < 4) : Placement := match n with
-| 0 => None
-| 1 => Left
-| 2 => Right
-| 3 => Both
-
-/-- Converts a placement to a natural number -/
-def Placement.toNat : Placement ↪ Nat where
-  toFun
-  | None => 0
-  | Left => 1
-  | Right => 2
-  | Both => 3
-  inj' := fun _ ↦ by aesop
-
-theorem Placement.toNat_lt_four (p : Placement) : p.toNat < 4 := by unfold toNat; aesop
-
-/-- Places a child `FGame` into a parent `FGame` following the `Placement` rule. -/
-def Placement.place (parent : FGame) (child : FGame) : Placement → FGame
-| None => parent
-| Left => {insert child parent.leftMoves | parent.rightMoves}ꟳ
-| Right => {parent.leftMoves | insert child parent.rightMoves}ꟳ
-| Both => {insert child parent.leftMoves | insert child parent.rightMoves}ꟳ
+/-- Places a child `FGame` into a parent `FGame` following the `Fin 4` rule.
+`0` is nothing, `1` is left, `2` is right, `3` is both. This convention follows for the rest
+of this file. -/
+def place (parent : FGame) (child : FGame) : Fin 4 → FGame
+| 0 => parent
+| 1 => {insert child parent.leftMoves | parent.rightMoves}ꟳ
+| 2 => {parent.leftMoves | insert child parent.rightMoves}ꟳ
+| 3 => {insert child parent.leftMoves | insert child parent.rightMoves}ꟳ
 
 private def _root_.SGame.ofNat (n : ℕ) : SGame :=
   let d := (Nat.digits 4 n).zipIdx
@@ -156,10 +130,9 @@ theorem mem_rightMoves_ofNat' {x : FGame} {n : ℕ} :
 
 /-- An auxiliary definition for defining the inverse of `natToFGame`.
 Given a game, we can decompose it into its immediate placements. -/
-def toPlacements (g : FGame) : Finset (FGame × Placement) :=
+def toPlacements (g : FGame) : Finset (FGame × Fin 4) :=
   (g.leftMoves ∪ g.rightMoves).image fun x ↦ (x,
-    if x ∈ g.leftMoves then if x ∈ g.rightMoves then Placement.Both else Placement.Left else
-      Placement.Right)
+    if x ∈ g.leftMoves then if x ∈ g.rightMoves then 3 else 1 else 2)
 
 theorem toPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ toPlacements g) :
     x.1.IsOption g := by
@@ -169,8 +142,7 @@ theorem toPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ toPlacements g) :
 
 /-- The inverse of `ofNat`. -/
 def toNat (g : FGame) : ℕ :=
-  Nat.ofDigits 4 (((toPlacements g).attach.image
-    fun ⟨x, _⟩ ↦ (toNat x.1, x.2)).asList.map Placement.toNat)
+  Nat.ofDigits 4 (((toPlacements g).attach.image fun ⟨x, _⟩ ↦ (toNat x.1, x.2)).asList)
 termination_by g
 decreasing_by exact .single (toPlacements_mem_isOption (by assumption))
 
