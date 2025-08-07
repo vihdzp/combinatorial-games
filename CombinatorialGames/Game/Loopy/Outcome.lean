@@ -71,51 +71,49 @@ theorem isRightSurviving_iff_forall_exists {x : LGame} :
     have ⟨r, hrz, hr⟩ := rightStrategy_iUnion (s := s) (fun y ↦ hstr y y.2) y hy z hz
     exact ⟨r, hrz, .inr hr⟩
 
-/-- `IsLeftWinning x` means that left wins `x` going second. -/
-inductive IsLeftWinning : LGame → Prop where
-  | intro' (x : LGame) (f : ∀ y ∈ x.rightMoves, LGame) :
-      (∀ y (hy : y ∈ x.rightMoves), f y hy ∈ y.leftMoves) →
-      (∀ y (hy : y ∈ x.rightMoves), IsLeftWinning (f y hy)) → IsLeftWinning x
+mutual
+  /-- `IsLeftWinning x` means that left wins `x` going second. -/
+  inductive IsLeftWinning : LGame → Prop where
+    | intro (x : LGame) : (∀ y ∈ x.rightMoves, IsRightLosing y) → IsLeftWinning x
+  /-- `IsRightLosing x` means that right loses `x` going second. -/
+  inductive IsRightLosing : LGame → Prop where
+    | intro (x y : LGame) : y ∈ x.leftMoves → IsLeftWinning y → IsRightLosing x
+end
 
-/-- `IsRightWinning x` means that right wins `x` going second. -/
-inductive IsRightWinning : LGame → Prop where
-  | intro' (x : LGame) (f : ∀ y ∈ x.leftMoves, LGame) :
-      (∀ y (hy : y ∈ x.leftMoves), f y hy ∈ y.rightMoves) →
-      (∀ y (hy : y ∈ x.leftMoves), IsRightWinning (f y hy)) → IsRightWinning x
-
-/-- `IsLeftLosing x` means that left loses `x` going second. -/
-def IsLeftLosing (x : LGame) : Prop := ∃ y ∈ x.rightMoves, IsRightWinning y
-
-/-- `IsRightLosing x` means that right loses `x` going second. -/
-def IsRightLosing (x : LGame) : Prop := ∃ y ∈ x.leftMoves, IsLeftWinning y
-
-theorem IsLeftWinning.intro (x : LGame)
-    (h : ∀ y ∈ x.rightMoves, ∃ z ∈ y.leftMoves, IsLeftWinning z) :
-    IsLeftWinning x := by
-  choose f hf using h
-  exact .intro' x f (hf · · |>.1) (hf · · |>.2)
-
-theorem IsRightWinning.intro (x : LGame)
-    (h : ∀ y ∈ x.leftMoves, ∃ z ∈ y.rightMoves, IsRightWinning z) :
-    IsRightWinning x := by
-  choose f hf using h
-  exact .intro' x f (hf · · |>.1) (hf · · |>.2)
+mutual
+  /-- `IsRightWinning x` means that right wins `x` going second. -/
+  inductive IsRightWinning : LGame → Prop where
+    | intro (x : LGame) : (∀ y ∈ x.leftMoves, IsLeftLosing y) → IsRightWinning x
+  /-- `IsLeftLosing x` means that left loses `x` going second. -/
+  inductive IsLeftLosing : LGame → Prop where
+    | intro (x y : LGame) : y ∈ x.rightMoves → IsRightWinning y → IsLeftLosing x
+end
 
 theorem isLeftWinning_iff_forall {x : LGame} :
     IsLeftWinning x ↔ ∀ y ∈ x.rightMoves, IsRightLosing y where
-  mp := by rintro ⟨_, f, h1, h2⟩ y hy; exact ⟨_, h1 y hy, h2 y hy⟩
+  mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _ h _ ↦ h) fun _ _ _ _ _ ↦ trivial
   mpr := .intro x
 
 theorem isRightWinning_iff_forall {x : LGame} :
     IsRightWinning x ↔ ∀ y ∈ x.leftMoves, IsLeftLosing y where
-  mp := by rintro ⟨_, f, h1, h2⟩ y hy; exact ⟨_, h1 y hy, h2 y hy⟩
+  mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _ h _ ↦ h) fun _ _ _ _ _ ↦ trivial
   mpr := .intro x
 
+theorem isRightLosing_iff_exists {x : LGame} :
+    IsRightLosing x ↔ ∃ y ∈ x.leftMoves, IsLeftWinning y where
+  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun x y hyx hy _ ↦ ⟨y, hyx, hy⟩
+  mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
+
+theorem isLeftLosing_iff_exists {x : LGame} :
+    IsLeftLosing x ↔ ∃ y ∈ x.rightMoves, IsRightWinning y where
+  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun x y hyx hy _ ↦ ⟨y, hyx, hy⟩
+  mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
+
 theorem leftStrategy_isLeftWinning : LeftStrategy {x | IsLeftWinning x} :=
-  fun _ ↦ isLeftWinning_iff_forall.mp
+  fun _ ↦ (isLeftWinning_iff_forall.trans (by simp [isRightLosing_iff_exists])).mp
 
 theorem rightStrategy_isRightWinning : RightStrategy {x | IsRightWinning x} :=
-  fun _ ↦ isRightWinning_iff_forall.mp
+  fun _ ↦ (isRightWinning_iff_forall.trans (by simp [isLeftLosing_iff_exists])).mp
 
 theorem IsLeftWinning.isLeftSurviving {x : LGame} (h : IsLeftWinning x) : IsLeftSurviving x :=
   ⟨_, h, leftStrategy_isLeftWinning⟩
@@ -125,48 +123,34 @@ theorem IsRightWinning.isRightSurviving {x : LGame} (h : IsRightWinning x) : IsR
 
 theorem leftStrategy_not_isLeftLosing : LeftStrategy {x | ¬ IsLeftLosing x} :=
   fun x hx y hy ↦ by
-    simp_rw [Set.mem_setOf, IsLeftLosing, isRightWinning_iff_forall] at hx
+    simp_rw [Set.mem_setOf, isLeftLosing_iff_exists, isRightWinning_iff_forall] at hx
     push_neg at hx
     exact hx y hy
 
 theorem rightStrategy_not_isRightLosing : RightStrategy {x | ¬ IsRightLosing x} :=
   fun x hx y hy ↦ by
-    simp_rw [Set.mem_setOf, IsRightLosing, isLeftWinning_iff_forall] at hx
+    simp_rw [Set.mem_setOf, isRightLosing_iff_exists, isLeftWinning_iff_forall] at hx
     push_neg at hx
     exact hx y hy
 
-private theorem IsRightWinning.not_isLeftSurviving {x : LGame} (h : IsRightWinning x) :
-    ∀ y ∈ x.leftMoves, ¬ IsLeftSurviving y :=
-  h.rec fun _x _f hf _ ih y hyx ⟨str, hy, hstr⟩ ↦
-    have ⟨_r, hr⟩ := hstr y hy _ (hf y hyx)
-    ih y hyx _ hr.1 ⟨str, hr.2, hstr⟩
-
-private theorem IsLeftWinning.not_isRightSurviving {x : LGame} (h : IsLeftWinning x) :
-    ∀ y ∈ x.rightMoves, ¬ IsRightSurviving y :=
-  h.rec fun _x _f hf _ ih y hyx ⟨str, hy, hstr⟩ ↦
-    have ⟨_r, hr⟩ := hstr y hy _ (hf y hyx)
-    ih y hyx _ hr.1 ⟨str, hr.2, hstr⟩
-
 theorem isLeftSuriving_iff_not_isLeftLosing {x : LGame} : IsLeftSurviving x ↔ ¬ IsLeftLosing x where
-  mp := fun ⟨str, mem, hstr⟩ ⟨y, hyx, hy⟩ ↦
-    have ⟨r, hry, hr⟩ := hstr x mem y hyx
-    hy.not_isLeftSurviving r hry ⟨str, hr, hstr⟩
+  mp ls ll := ll.rec (motive_1 := fun _ _ ↦ _) (fun _ _ ↦ id)
+    (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦ have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) ls
   mpr h := ⟨_, h, leftStrategy_not_isLeftLosing⟩
 
 theorem isRightSuriving_iff_not_isRightLosing {x : LGame} :
     IsRightSurviving x ↔ ¬ IsRightLosing x where
-  mp := fun ⟨str, mem, hstr⟩ ⟨y, hyx, hy⟩ ↦
-    have ⟨r, hry, hr⟩ := hstr x mem y hyx
-    hy.not_isRightSurviving r hry ⟨str, hr, hstr⟩
+  mp rs rl := rl.rec (motive_1 := fun _ _ ↦ _) (fun _ _ ↦ id)
+    (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦ have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) rs
   mpr h := ⟨_, h, rightStrategy_not_isRightLosing⟩
 
 theorem isLeftSurviving_iff_forall {x : LGame} :
     IsLeftSurviving x ↔ ∀ y ∈ x.rightMoves, ¬ IsRightWinning y := by
-  rw [isLeftSuriving_iff_not_isLeftLosing, IsLeftLosing]; push_neg; rfl
+  rw [isLeftSuriving_iff_not_isLeftLosing, isLeftLosing_iff_exists]; push_neg; rfl
 
 theorem isRightSurviving_iff_forall {x : LGame} :
     IsRightSurviving x ↔ ∀ y ∈ x.leftMoves, ¬ IsLeftWinning y := by
-  rw [isRightSuriving_iff_not_isRightLosing, IsRightLosing]; push_neg; rfl
+  rw [isRightSuriving_iff_not_isRightLosing, isRightLosing_iff_exists]; push_neg; rfl
 
 theorem left_or_right_survive_left (x : LGame) :
     (∃ y ∈ x.leftMoves, IsLeftSurviving y) ∨ IsRightSurviving x := by
