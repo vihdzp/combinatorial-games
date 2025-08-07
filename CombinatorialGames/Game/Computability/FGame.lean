@@ -13,15 +13,13 @@ import Mathlib.Data.Multiset.Sort
 # Computably short games
 
 We already have a definition of short games at `IGame.Short`, but it is, regrettably, noncomputable.
-Here, we provide a computable definition of short games from the ground up, following a similar
-construction method presented in `IGame.lean`.
+Here, we provide a computable definition of short games from the ground up, following an old
+construction method used in `IGame.lean` before its construction using `QPF`.
 
-We define `FGame` and its auxiliary backing type `SGame` as data, providing data for the left and
-right moves of a game in the form of an auxiliary `SGame` type. This makes us capable of performing
-some basic computations on `IGame`. Since we would like to use the same standard interface for
-theorem proving in combinatorial games, we restrict this file only for computability usage and
-FGame generation. Since some of `IGame`'s basic definitions are computable, these theorems
-suffice for most of the computability we need.
+We define `FGame` using an auxiliary backing inductive type `SGame` as data. This makes us capable
+of performing some basic computations on games we wouldn't get with the `IGame` interface. Since we
+would like to use the same standard interface for theorem proving in combinatorial games,
+we restrict this file only for computability usage.
 
 In general, **You should not build any substantial theory based off of this file.** The theorems
 here are intended to check for definitional correctness over theory building.
@@ -163,8 +161,8 @@ end SGame
 
 /-- Short games up to identity.
 
-`FGame` uses the set-theoretic notion of equality on short games,
-similarly to how `IGame` is defined on top of `PGame`.
+`FGame` uses the set-theoretic notion of equality over the type-based definition
+used in `SGame`.
 
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.
