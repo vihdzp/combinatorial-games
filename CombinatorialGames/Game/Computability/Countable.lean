@@ -20,7 +20,7 @@ from RNG and use that to construct an `FGame` for counterexamples.
 
 - Define plausible (This can be done right now, but `unsafe Repr` is weird. We can make a stable
 `Repr` by sorting over `FGameToNat`.)
-- Show that `natToFGame` is bijective with `FGameToNat`.
+- Show that `natToFGame` is bijective using `FGameToNat`.
 -/
 
 /- ### For Mathlib -/
@@ -29,7 +29,7 @@ instance List.decidableBExU {α : Type*} [DecidableEq α] (p : α → Prop) [Dec
     (l : List α) :
     Decidable (∃! x, x ∈ l ∧ p x) :=
   if h : (∃ x, x ∈ l ∧ p x) ∧ ∃ y ∈ l, ∀ x ∈ l, ¬x = y → ¬p x then .isTrue (by
-    obtain ⟨⟨x, hx⟩, ⟨z, hz⟩⟩ := h
+    obtain ⟨⟨x, hx⟩, z, hz⟩ := h
     refine ⟨x, hx, fun y hy ↦ ?_⟩
     exact (not_imp_not.mp (hz.2 y hy.1) hy.2).trans (not_imp_not.mp (hz.2 x hx.1) hx.2).symm)
   else .isFalse (by
@@ -58,9 +58,9 @@ def List.set' {α : Type*} (l : List α) (f : ℕ → Option α) : List α :=
 
 /-- Turns a `s : Finset _` containing tuples of indexes to elements to a list
 indexed by said elements, using the inhabited element for any holes.
-The return length is the largest index specified in `s`.
+The return length will include the largest index specified in `s`.
 
-For any values `x ∈ s`, `y ∈ s`, where `x.1 = y.1 → x.2 = y.2`, these values will be replaced
+For any values `x ∈ s`, `y ∈ s`, where `x.1 = y.1 → x.2 = y.2`, `x` and `y` will be replaced
 with the default value in the resulting `List`. -/
 def Finset.asList {α : Type*} [DecidableEq α] [hα : Inhabited α] (s : Finset (ℕ × α)) :
     List α := match (s.image Prod.fst).max with
@@ -139,7 +139,7 @@ theorem FGameToPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ FGameToPlacem
 /-- The inverse of `natToFGame`. -/
 def FGameToNat (g : FGame) : ℕ :=
   Nat.ofDigits 4 (((FGameToPlacements g).attach.image
-    (fun ⟨x, _⟩ ↦ (FGameToNat x.1, x.2))).asList.map Placement.toNat)
+    fun ⟨x, _⟩ ↦ (FGameToNat x.1, x.2)).asList.map Placement.toNat)
 termination_by g
 decreasing_by exact .single (FGameToPlacements_mem_isOption (by assumption))
 
