@@ -108,16 +108,15 @@ def Placement.place (parent : FGame) (child : FGame) : Placement → FGame
 | Right => {parent.leftMoves | insert child parent.rightMoves}ꟳ
 | Both => {insert child parent.leftMoves | insert child parent.rightMoves}ꟳ
 
-/-- Take a nat and convert it to an `FGame` by placing the
-`natToFGame n` game at `n` -/
-def natToFGame (n : ℕ) : FGame :=
-  ((Nat.digits 4 n).zipIdx.attach.map fun ⟨⟨k, i⟩, h⟩ ↦ (
-    Placement.fromNat (Nat.digits_lt_base (by decide) (List.fst_mem_of_mem_zipIdx h)),
-    natToFGame i
-  )).foldl (fun parent ⟨placement, child⟩ ↦ placement.place parent child) 0
+/-- Take a nat and convert it to an `FGame` by placing the `ofNat n` game at `n` -/
+def ofNat (n : ℕ) : SGame :=
+  let d := (Nat.digits 4 n).zipIdx
+  .mk _ _
+    (fun x ↦ ofNat ((d.filter fun x ↦ x.1 = 1 || x.1 = 3)[x.1]).2)
+    (fun x ↦ ofNat ((d.filter fun x ↦ x.1 = 2 || x.1 = 3)[x.1]).2)
 termination_by n
-decreasing_by
-  obtain ⟨hi, -⟩ := List.mem_zipIdx' h
+decreasing_by all_goals
+  obtain ⟨hi, -⟩ := List.mem_zipIdx' (List.mem_of_mem_filter (List.getElem_mem x.2))
   apply hi.trans_le
   rw [Nat.digits_length_le_iff (by decide)]
   exact Nat.lt_pow_self (by decide)
@@ -125,25 +124,25 @@ decreasing_by
 -- (TODO: this name looks bad. Is there a nicer name?)
 /-- An auxiliary definition for defining the inverse of `natToFGame`.
 Given a game, we can decompose it into its immediate placements. -/
-def FGameToPlacements (g : FGame) : Finset (FGame × Placement) :=
+def toPlacements (g : FGame) : Finset (FGame × Placement) :=
   (g.leftMoves ∪ g.rightMoves).image fun x ↦ (x,
     if x ∈ g.leftMoves then if x ∈ g.rightMoves then Placement.Both else Placement.Left else
       Placement.Right)
 
-theorem FGameToPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ FGameToPlacements g) :
+theorem toPlacements_mem_isOption {g : FGame} {x} (hx : x ∈ toPlacements g) :
     x.1.IsOption g := by
-  simp_rw [FGameToPlacements, Finset.mem_image, Finset.mem_union] at hx
+  simp_rw [toPlacements, Finset.mem_image, Finset.mem_union] at hx
   obtain ⟨_, hy, rfl⟩ := hx
   exact hy
 
-/-- The inverse of `natToFGame`. -/
-def FGameToNat (g : FGame) : ℕ :=
-  Nat.ofDigits 4 (((FGameToPlacements g).attach.image
-    fun ⟨x, _⟩ ↦ (FGameToNat x.1, x.2)).asList.map Placement.toNat)
+/-- The inverse of `ofNat`. -/
+def toNat (g : FGame) : ℕ :=
+  Nat.ofDigits 4 (((toPlacements g).attach.image
+    fun ⟨x, _⟩ ↦ (toNat x.1, x.2)).asList.map Placement.toNat)
 termination_by g
-decreasing_by exact .single (FGameToPlacements_mem_isOption (by assumption))
+decreasing_by exact .single (toPlacements_mem_isOption (by assumption))
 
-proof_wanted natToFGame_rightInverse : Function.RightInverse FGameToNat natToFGame
-proof_wanted natToFGame_rightInverse : Function.LeftInverse FGameToNat natToFGame
+proof_wanted natToFGame_rightInverse : Function.RightInverse toNat (FGame.mk ∘ ofNat)
+proof_wanted natToFGame_rightInverse : Function.LeftInverse toNat (FGame.mk ∘ ofNat)
 
 end FGame
