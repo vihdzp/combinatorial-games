@@ -6,7 +6,7 @@ Authors: Aaron Liu
 import CombinatorialGames.NatOrdinal
 import Mathlib.Data.Fintype.Order
 import Mathlib.SetTheory.Ordinal.Arithmetic
-import Mathlib.Data.Sign
+import Mathlib.Data.Sign.Defs
 import Mathlib.Order.PiLex
 
 /-!
