@@ -101,12 +101,12 @@ theorem isRightWinning_iff_forall {x : LGame} :
 
 theorem isRightLosing_iff_exists {x : LGame} :
     IsRightLosing x ↔ ∃ y ∈ x.leftMoves, IsLeftWinning y where
-  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun x y hyx hy _ ↦ ⟨y, hyx, hy⟩
+  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩
   mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
 
 theorem isLeftLosing_iff_exists {x : LGame} :
     IsLeftLosing x ↔ ∃ y ∈ x.rightMoves, IsRightWinning y where
-  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun x y hyx hy _ ↦ ⟨y, hyx, hy⟩
+  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ ↦ trivial) fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩
   mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
 
 theorem leftStrategy_isLeftWinning : LeftStrategy {x | IsLeftWinning x} :=
@@ -133,12 +133,13 @@ theorem rightStrategy_not_isRightLosing : RightStrategy {x | ¬ IsRightLosing x}
     push_neg at hx
     exact hx y hy
 
-theorem isLeftSuriving_iff_not_isLeftLosing {x : LGame} : IsLeftSurviving x ↔ ¬ IsLeftLosing x where
+theorem isLeftSurviving_iff_not_isLeftLosing {x : LGame} :
+    IsLeftSurviving x ↔ ¬ IsLeftLosing x where
   mp ls ll := ll.rec (motive_1 := fun _ _ ↦ _) (fun _ _ ↦ id)
     (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦ have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) ls
   mpr h := ⟨_, h, leftStrategy_not_isLeftLosing⟩
 
-theorem isRightSuriving_iff_not_isRightLosing {x : LGame} :
+theorem isRightSurviving_iff_not_isRightLosing {x : LGame} :
     IsRightSurviving x ↔ ¬ IsRightLosing x where
   mp rs rl := rl.rec (motive_1 := fun _ _ ↦ _) (fun _ _ ↦ id)
     (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦ have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) rs
@@ -146,16 +147,87 @@ theorem isRightSuriving_iff_not_isRightLosing {x : LGame} :
 
 theorem isLeftSurviving_iff_forall {x : LGame} :
     IsLeftSurviving x ↔ ∀ y ∈ x.rightMoves, ¬ IsRightWinning y := by
-  rw [isLeftSuriving_iff_not_isLeftLosing, isLeftLosing_iff_exists]; push_neg; rfl
+  rw [isLeftSurviving_iff_not_isLeftLosing, isLeftLosing_iff_exists]; push_neg; rfl
 
 theorem isRightSurviving_iff_forall {x : LGame} :
     IsRightSurviving x ↔ ∀ y ∈ x.leftMoves, ¬ IsLeftWinning y := by
-  rw [isRightSuriving_iff_not_isRightLosing, isRightLosing_iff_exists]; push_neg; rfl
+  rw [isRightSurviving_iff_not_isRightLosing, isRightLosing_iff_exists]; push_neg; rfl
 
-theorem left_or_right_survive_left (x : LGame) :
+theorem not_isLeftWinning_iff_exists {x : LGame} :
+    ¬ IsLeftWinning x ↔ ∃ y ∈ x.rightMoves, IsRightSurviving y := by
+  simp [isLeftWinning_iff_forall, isRightSurviving_iff_not_isRightLosing]
+
+theorem not_isRightWinning_iff_exists {x : LGame} :
+    ¬ IsRightWinning x ↔ ∃ y ∈ x.leftMoves, IsLeftSurviving y := by
+  simp [isRightWinning_iff_forall, isLeftSurviving_iff_not_isLeftLosing]
+
+/-- `IsLeftDrawing x` means that left draws `x` going second. -/
+def IsLeftDrawing (x : LGame) : Prop := IsLeftSurviving x ∧ ¬ IsLeftWinning x
+
+/-- `IsRightDrawing x` means that right draws `x` going second. -/
+def IsRightDrawing (x : LGame) : Prop := IsRightSurviving x ∧ ¬ IsRightWinning x
+
+/-- The three possible outcomes of a game. -/
+inductive Outcome : Type | win | draw | loss
+
+/-- `leftOutcome x` is the outcome of `x` with left going second. -/
+noncomputable def leftOutcome (x : LGame) : Outcome := by classical
+  exact if IsLeftSurviving x then if IsLeftWinning x then .win else .draw else .loss
+
+/-- `rightOutcome x` is the outcome of `x` with right going second. -/
+noncomputable def rightOutcome (x : LGame) : Outcome := by classical
+  exact if IsRightSurviving x then if IsRightWinning x then .win else .draw else .loss
+
+theorem leftOutcome_eq_loss_iff {x : LGame} : leftOutcome x = .loss ↔ IsLeftLosing x := by
+  classical rw [leftOutcome, Ne.ite_eq_right_iff, isLeftSurviving_iff_not_isLeftLosing, not_not]
+  split_ifs <;> rintro ⟨_⟩
+
+theorem rightOutcome_eq_loss_iff {x : LGame} : rightOutcome x = .loss ↔ IsRightLosing x := by
+  classical rw [rightOutcome, Ne.ite_eq_right_iff, isRightSurviving_iff_not_isRightLosing, not_not]
+  split_ifs <;> rintro ⟨_⟩
+
+theorem leftOutcome_eq_draw_iff {x : LGame} : leftOutcome x = .draw ↔ IsLeftDrawing x := by
+  classical rw [leftOutcome]
+  split_ifs with s w
+  on_goal 2 => simpa using ⟨s, w⟩
+  all_goals rw [false_iff, IsLeftDrawing, not_and_or, not_not]
+  exacts [.inr w, .inl s]
+
+theorem rightOutcome_eq_draw_iff {x : LGame} : rightOutcome x = .draw ↔ IsRightDrawing x := by
+  classical rw [rightOutcome]
+  split_ifs with s w
+  on_goal 2 => simpa using ⟨s, w⟩
+  all_goals rw [false_iff, IsRightDrawing, not_and_or, not_not]
+  exacts [.inr w, .inl s]
+
+theorem leftOutcome_eq_win_iff {x : LGame} : leftOutcome x = .win ↔ IsLeftWinning x := by
+  classical rw [leftOutcome]
+  split_ifs with s w
+  on_goal 3 => exact false_iff _ ▸ mt (·.isLeftSurviving) s
+  all_goals simpa using w
+
+theorem rightOutcome_eq_win_iff {x : LGame} : rightOutcome x = .win ↔ IsRightWinning x := by
+  classical rw [rightOutcome]
+  split_ifs with s w
+  on_goal 3 => exact false_iff _ ▸ mt (·.isRightSurviving) s
+  all_goals simpa using w
+
+theorem leftOutcome_trichotomy (x : LGame) :
+    IsLeftWinning x ∨ IsLeftDrawing x ∨ IsLeftLosing x := by
+  rw [← leftOutcome_eq_win_iff, ← leftOutcome_eq_draw_iff, ← leftOutcome_eq_loss_iff]
+  cases x.leftOutcome <;> simp
+
+theorem rightOutcome_trichotomy (x : LGame) :
+    IsRightWinning x ∨ IsRightDrawing x ∨ IsRightLosing x := by
+  rw [← rightOutcome_eq_win_iff, ← rightOutcome_eq_draw_iff, ← rightOutcome_eq_loss_iff]
+  cases x.rightOutcome <;> simp
+
+theorem isSurviving_total_left (x : LGame) :
     (∃ y ∈ x.leftMoves, IsLeftSurviving y) ∨ IsRightSurviving x := by
-  rw [or_iff_not_imp_left, isRightSurviving_iff_forall]
-  push_neg
-  exact forall₂_imp fun _ _ ↦ mt (·.isLeftSurviving)
+  rw [← not_isRightWinning_iff_exists, ← imp_iff_not_or]; exact (·.isRightSurviving)
+
+theorem isSurviving_total_right (x : LGame) :
+    IsLeftSurviving x ∨ (∃ y ∈ x.rightMoves, IsRightSurviving y) := by
+  rw [← not_isLeftWinning_iff_exists, ← imp_iff_or_not]; exact (·.isLeftSurviving)
 
 end LGame
