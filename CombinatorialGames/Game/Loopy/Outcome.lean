@@ -42,34 +42,6 @@ theorem rightStrategy_iUnion {ι} {s : ι → Set LGame} (h : ∀ i, RightStrate
     have ⟨r, hrz, hr⟩ := h i y hi z hz
     ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
 
-theorem isLeftSurviving_iff_forall_exists {x : LGame} :
-    IsLeftSurviving x ↔ ∀ y ∈ x.rightMoves, ∃ r ∈ y.leftMoves, IsLeftSurviving r where
-  mp h y hyx := have ⟨str, hx, hstr⟩ := h
-    have ⟨r, hry, hr⟩ := hstr x hx y hyx
-    ⟨r, hry, str, hr, hstr⟩
-  mpr h := by
-    choose r hr str mem hstr using h
-    let s (y : {y // y ∈ x.rightMoves}) := str y y.2
-    refine ⟨insert x (⋃ y, s y), .inl rfl, fun y hy z hz ↦ ?_⟩
-    obtain rfl | hy := hy
-    · exact ⟨_, hr .., .inr (Set.mem_iUnion_of_mem ⟨z, hz⟩ (mem ..))⟩
-    have ⟨r, hrz, hr⟩ := leftStrategy_iUnion (s := s) (fun y ↦ hstr y y.2) y hy z hz
-    exact ⟨r, hrz, .inr hr⟩
-
-theorem isRightSurviving_iff_forall_exists {x : LGame} :
-    IsRightSurviving x ↔ ∀ y ∈ x.leftMoves, ∃ r ∈ y.rightMoves, IsRightSurviving r where
-  mp h y hyx := have ⟨str, hx, hstr⟩ := h
-    have ⟨r, hry, hr⟩ := hstr x hx y hyx
-    ⟨r, hry, str, hr, hstr⟩
-  mpr h := by
-    choose r hr str mem hstr using h
-    let s (y : {y // y ∈ x.leftMoves}) := str y y.2
-    refine ⟨insert x (⋃ y, s y), .inl rfl, fun y hy z hz ↦ ?_⟩
-    obtain rfl | hy := hy
-    · exact ⟨_, hr .., .inr (Set.mem_iUnion_of_mem ⟨z, hz⟩ (mem ..))⟩
-    have ⟨r, hrz, hr⟩ := rightStrategy_iUnion (s := s) (fun y ↦ hstr y y.2) y hy z hz
-    exact ⟨r, hrz, .inr hr⟩
-
 mutual
   /-- `IsLeftWinning x` means that left wins `x` going second. -/
   inductive IsLeftWinning : LGame → Prop where
