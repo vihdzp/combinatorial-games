@@ -1,5 +1,4 @@
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.IGame
+import CombinatorialGames.Game.Loopy.IGame
 
 namespace LGame
 
@@ -230,4 +229,37 @@ theorem isSurviving_total_right (x : LGame) :
     IsLeftSurviving x ∨ (∃ y ∈ x.rightMoves, IsRightSurviving y) := by
   rw [← not_isLeftWinning_iff_exists, ← imp_iff_or_not]; exact (·.isLeftSurviving)
 
+/-- If there is no infinite play starting from `x` with left going second,
+then `x` cannot end in a draw with left going second. -/
+-- Note: the spelling `Relation.Comp (· ∈ ·.leftMoves) (· ∈ ·.rightMoves)` is slightly longer
+theorem not_isLeftDrawing_of_acc_comp {x : LGame}
+    (h : Acc (fun z x ↦ ∃ y ∈ x.rightMoves, z ∈ y.leftMoves) x) : ¬ IsLeftDrawing x :=
+  h.rec fun _x _ ih ⟨s, nl⟩ ↦
+    have ⟨y, hyx, hy⟩ := not_isLeftWinning_iff_exists.mp nl
+    have ⟨z, hzy, hz⟩ := not_isRightWinning_iff_exists.mp (isLeftSurviving_iff_forall.mp s y hyx)
+    ih z ⟨y, hyx, hzy⟩ ⟨hz, isRightSurviving_iff_forall.mp hy z hzy⟩
+
+/-- If there is no infinite play starting by from `x` with right going second,
+then `x` cannot end in a draw with right going second. -/
+theorem not_isRightDrawing_of_acc_comp {x : LGame}
+    (h : Acc (fun z x ↦ ∃ y ∈ x.leftMoves, z ∈ y.rightMoves) x) : ¬ IsRightDrawing x :=
+  h.rec fun _x _ ih ⟨s, nl⟩ ↦
+    have ⟨y, hyx, hy⟩ := not_isRightWinning_iff_exists.mp nl
+    have ⟨z, hzy, hz⟩ := not_isLeftWinning_iff_exists.mp (isRightSurviving_iff_forall.mp s y hyx)
+    ih z ⟨y, hyx, hzy⟩ ⟨hz, isLeftSurviving_iff_forall.mp hy z hzy⟩
+
+theorem not_isLeftDrawing_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsLeftDrawing x :=
+  not_isLeftDrawing_of_acc_comp <| Subrelation.accessible
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inl hzy) (.inr hyx)) h.transGen
+
+theorem not_isRightDrawing_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsRightDrawing x :=
+  not_isRightDrawing_of_acc_comp <| Subrelation.accessible
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inr hzy) (.inl hyx)) h.transGen
+
 end LGame
+
+theorem IGame.not_isLeftDrawing (x : IGame) : ¬ x.toLGame.IsLeftDrawing :=
+  LGame.not_isLeftDrawing_of_acc_isOption x.acc_toLGame
+
+theorem IGame.not_isRightDrawing (x : IGame) : ¬ x.toLGame.IsRightDrawing :=
+  LGame.not_isRightDrawing_of_acc_isOption x.acc_toLGame
