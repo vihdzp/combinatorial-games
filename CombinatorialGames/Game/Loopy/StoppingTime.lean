@@ -1,6 +1,78 @@
+/-
+Copyright (c) 2025 Aaron Liu. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Aaron Liu
+-/
 import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.NatOrdinal
+
+/-!
+# Stopping time
+
+The stopping time of a game is an ordinal which denotes how long the opponent can prolong the game.
+Each game has four stopping times, the left and right stopping time for left and right going first.
+
+- `stoppingTimeLeftLeft x`: the time it takes for left to force a win going first on `x`.
+  If left cannot force a win, then the stopping time is `⊤`. It is equal to
+  `⨅ y ∈ x.leftMoves, stoppingTimeLeftRight y`, which is the stopping time of
+  left's best option (the one that stops the fastest).
+- `stoppingTimeLeftRight x`: the time it takes for right to lose going first on `x`.
+  If right can survive forever, then the stopping time is `⊤`. It is equal to
+  `⨆ y ∈ x.rightMoves, stoppingTimeLeftLeft y + 1`, which is the supremum of the stopping times of
+  all of right's options, plus one (since right makes a move).
+- `stoppingTimeRightLeft x`: the time it takes for left to lose going first on `x`.
+  If left can survive forever, then the stopping time is `⊤`. It is equal to
+  `⨆ y ∈ x.leftMoves, stoppingTimeRightRight y + 1`, which is the supremum of the stopping times of
+  all of left's options, plus one (since left makes a move).
+- `stoppingTimeRightRight x`: the time it takes for right to force a win going first on `x`.
+  If right cannot force a win, then the stopping time is `⊤`. It is equal to
+  `⨅ y ∈ x.rightMoves, stoppingTimeRightLeft y`, which is the stopping time of
+  right's best option (the one that stops the fastest).
+
+These stopping times satisfy both an induction principle and a coinduction principle.
+
+For left stopping times,
+- `stoppingTimeLeft_induction left right`: if `left` and `right` are approximations to
+  `stoppingTimeLeftLeft` and `stoppingTimeLeftRight` assigning to each `LGame` a
+  `WithTop NatOrdinal`, and the inequalities `⨅ y ∈ x.leftMoves, right y ≤ left x` and
+  `⨆ y ∈ x.rightMoves, left y + 1 ≤ right x` hold for all `x` (the pair `(left, right)` is
+  *larger* then its refinement), then `left` and `right` are *overapproximations*
+  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
+- `stoppingTimeLeft_coinduction left right`: if `left` and `right` are approximations to
+  `stoppingTimeLeftLeft` and `stoppingTimeLeftRight` assigning to each `LGame` a
+  `WithTop NatOrdinal`, and the inequalities `left x ≤ ⨅ y ∈ x.leftMoves, right y` and
+  `right x ≤ ⨆ y ∈ x.rightMoves, left y + 1` hold for all `x` (the pair `(left, right)` is
+  *smaller* then its refinement), then `left` and `right` are *underapproximations*
+  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
+The function `(left, right) ↦ (x ↦ ⨅ y ∈ x.leftMoves, right y, x ↦ ⨆ y ∈ x.rightMoves, left y + 1)`,
+is interpreted as *refining* the approximation `(left, right)` to more closely match
+`(stoppingTimeLeftLeft, stoppingTimeLeftRight)` (which is its only fixpoint).
+The induction principle says that if this refinement decreases the pair, it must be an
+overestimation, and the coinduction principle says that if this refinement increases the pair,
+it must be an underestimation.
+
+For right stopping times,
+- `stoppingTimeRight_induction left right`: if `left` and `right` are approximations to
+  `stoppingTimeRightLeft` and `stoppingTimeRightRight` assigning to each `LGame` a
+  `WithTop NatOrdinal`, and the inequalities `⨆ y ∈ x.leftMoves, right y + 1 ≤ left x` and
+  `⨅ y ∈ x.rightMoves, left y ≤ right x` hold for all `x` (the pair `(left, right)` is
+  *larger* then its refinement), then `left` and `right` are *overapproximations*
+  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
+- `stoppingTimeRight_coinduction left right`: if `left` and `right` are approximations to
+  `stoppingTimeRightLeft` and `stoppingTimeRightRight` assigning to each `LGame` a
+  `WithTop NatOrdinal`, and the inequalities `left x ≤ ⨆ y ∈ x.leftMoves, right y + 1` and
+  `right x ≤ ⨅ y ∈ x.rightMoves, left y` hold for all `x` (the pair `(left, right)` is
+  *smaller* then its refinement), then `left` and `right` are *underapproximations*
+  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
+The function `(left, right) ↦ (x ↦ ⨆ y ∈ x.leftMoves, right y + 1, x ↦ ⨅ y ∈ x.rightMoves, left y`,
+is interpreted as *refining* the approximation `(left, right)` to more closely match
+`(stoppingTimeRightLeft, stoppingTimeRightRight)` (which is its only fixpoint).
+The induction principle says that if this refinement decreases the pair, it must be an
+overestimation, and the coinduction principle says that if this refinement increases the pair,
+it must be an underestimation.
+
+-/
 
 universe u v
 
