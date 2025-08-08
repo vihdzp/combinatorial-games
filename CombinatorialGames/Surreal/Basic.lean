@@ -303,8 +303,8 @@ theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Surreal → Prop} (H : ∀ y [Numeric y], P (mk y)) (x : Surreal) : P x :=
-  Quotient.ind (fun h ↦ @H _ h.2) x
+theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
+    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Surreal) : IGame := (Quotient.out x).1
@@ -425,7 +425,7 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 set are less than all the elements of the right set.
 
 This is given notation `{s | t}ˢ`, where the superscript `s` is to disambiguate from set builder
-notation, and from the analogous constructors on `IGame` and `Game`. This notation will attempt to
+notation, and from the analogous constructors on other game types. This notation will attempt to
 construct the relevant proof using `aesop`.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
@@ -441,8 +441,9 @@ def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
 
 @[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
 
+@[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
-    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : toGame {s | t}ˢ = {toGame '' s | toGame '' t}ᴳ := by
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} : toGame (ofSets s t H) = {toGame '' s | toGame '' t}ᴳ := by
   simp_rw [ofSets, toGame_mk, Game.mk_ofSets, Set.image_image, game_out_eq]
 
 theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric {s | t}ᴵ} :
@@ -453,20 +454,22 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
   congr <;> aesop
 
+@[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) : x < ofSets s t H := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
 
+@[aesop apply unsafe]
 theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) : ofSets s t H < x := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets _ _ H]
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
 theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
 theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
 
-instance : DenselyOrdered Surreal.{u} where
+instance : DenselyOrdered Surreal where
   dense a b hab := ⟨{{a} | {b}}ˢ,
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 

@@ -320,18 +320,10 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
-private theorem finite_setOf_subposition_of_birthday_lt_omega0 {x : IGame}
-    (hx : x.birthday < Ordinal.omega0.toNatOrdinal) : {y | Subposition y x}.Finite := by
-  simp_rw [NatOrdinal.lt_omega0] at hx
-  obtain ⟨n, hn⟩ := hx
-  apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
-  simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
-
 theorem short_iff_birthday_finite {x : IGame} :
     x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
-  constructor
-  · intro h
-    have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
+  refine ⟨fun h ↦ ?_, ?_⟩
+  · have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
       exact h.isOption y.2
     choose f hf using this
@@ -340,12 +332,14 @@ theorem short_iff_birthday_finite {x : IGame} :
     rw [birthday_le_iff', Nat.cast_add_one, ← succ_eq_add_one]
     aesop
   · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
-    rintro ⟨n, hn⟩
-    apply finite_setOf_subposition_of_birthday_lt_omega0
-    rw [hn]
-    exact NatOrdinal.nat_lt_omega0 n
+    intro ⟨n, hn⟩
+    apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
+    simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
 termination_by x
 decreasing_by igame_wf
+
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < Ordinal.omega0.toNatOrdinal :=
+  short_iff_birthday_finite.1 ‹_›
 
 end IGame
 
@@ -418,6 +412,16 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
 
+theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
+    birthday {s | t}ᴳ ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+  choose f hf using birthday_eq_iGameBirthday
+  trans {f '' s | f '' t}ᴵ.birthday
+  · convert birthday_mk_le {f '' s | f '' t}ᴵ using 2
+    simp_rw [mk_ofSets, image_image]
+    aesop
+  · simp_rw [IGame.birthday_ofSets, image_comp]
+    congr! <;> aesop
+
 theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, ha, ha'⟩ := birthday_eq_iGameBirthday x
   obtain ⟨b, hb, hb'⟩ := birthday_eq_iGameBirthday y
@@ -427,20 +431,15 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa using birthday_add_le x (-y)
 
-/- The bound `(x * y).birthday ≤ x.birthday * y.birthday` on surreals is currently an open problem.
-See https://mathoverflow.net/a/476829/147705. -/
-
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
-  refine small_subset (?_ : {x | birthday x ≤ o} ⊆ mk '' {x | IGame.birthday x ≤ o})
-  intro x hx
+  refine small_subset (s := mk '' {x | IGame.birthday x ≤ o}) fun x hx ↦ ?_
   obtain ⟨y, rfl, hy⟩ := birthday_eq_iGameBirthday x
   exact mem_image_of_mem mk (hy.trans_le hx)
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
-  apply small_subset (?_ : {x | birthday x < o} ⊆ {x | birthday x ≤ o})
-  exact setOf_subset_setOf.2 fun _ => le_of_lt
+instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
+  small_subset (s := {x | birthday x ≤ o}) <| setOf_subset_setOf.2 fun _ => le_of_lt
 
 /-- A variant of `small_setOf_birthday_le` in simp-normal form -/
 instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=

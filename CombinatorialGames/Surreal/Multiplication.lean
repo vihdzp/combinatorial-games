@@ -55,11 +55,7 @@ private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ (-y).leftMoves, P (mulOption (-x) (-y) a b)) := by
-  simp_rw [forall_leftMoves_mul, leftMoves_neg]
-  congr! 1
-  rw [← (Equiv.neg _).forall_congr_right]
-  congr! 2
-  rw [← (Equiv.neg _).forall_congr_right]
+  rw [forall_leftMoves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
@@ -68,12 +64,7 @@ private lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
       (∀ a ∈ x.leftMoves, ∀ b ∈ (-y).leftMoves, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ y.leftMoves, P (-mulOption (-x) y a b)) := by
   rw [forall_rightMoves_mul]
-  congr! 1
-  · congr! 2
-    rw [← (Equiv.neg _).forall_congr_right]
-    simp [mulOption_neg_right]
-  · rw [← (Equiv.neg _).forall_congr_right]
-    simp [mulOption_neg_left]
+  simp [mulOption_neg_right, mulOption_neg_left]
 
 -- Instead of making all of this private, we put it in an auxiliary namespace.
 namespace Surreal.Multiplication
@@ -481,7 +472,7 @@ instance mul (x y : IGame) [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :
 
 protected instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
-  inferInstanceAs (Numeric (_ - _))
+  .sub ..
 
 theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
   Game.mk_eq_mk.1 ((main_P24 ..).1 he)
@@ -493,8 +484,8 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-theorem mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
+protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
+  simpa [P3] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 
@@ -600,6 +591,24 @@ protected theorem mul_lt_mul_left_of_neg {x y z : IGame} [Numeric x] [Numeric y]
 protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : z < 0) : x * z < y * z ↔ y < x :=
   mul_lt_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+protected theorem mul_le_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a ≤ b → c ≤ d → 0 ≤ c → 0 ≤ b → a * c ≤ b * d :=
+  mul_le_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+protected theorem mul_lt_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a < b → c ≤ d → 0 < c → 0 ≤ b → a * c < b * d :=
+  mul_lt_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_left {a b : IGame} [Numeric a] [Numeric b] :
+    0 < a → (0 < a * b ↔ 0 < b) :=
+  mul_pos_iff_of_pos_left (a := Surreal.mk a) (b := Surreal.mk b)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_right {a b : IGame} [Numeric a] [Numeric b] :
+    0 < b → (0 < a * b ↔ 0 < a) :=
+  mul_pos_iff_of_pos_right (a := Surreal.mk a) (b := Surreal.mk b)
 
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]

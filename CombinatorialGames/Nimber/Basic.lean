@@ -15,10 +15,10 @@ arithmetical operations. The nim sum `a + b` is recursively defined as the least
 to any `a' + b` or `a + b'` for `a' < a` and `b' < b`. There is also a nim product, defined in the
 `CombinatorialGames.Nimber.Field` file.
 
-Nim addition arises within the context of impartial games. By the Sprague-Grundy theorem, each
+Nim arithmetic arises within the context of impartial games. By the Sprague-Grundy theorem, each
 impartial game is equivalent to some game of nim. If `x ≈ nim o₁` and `y ≈ nim o₂`, then
-`x + y ≈ nim (o₁ + o₂)`, where the ordinals are summed together as nimbers. Unfortunately, the
-nim product admits no such characterization.
+`x + y ≈ nim (o₁ + o₂)` and `x * y ≈ nim (o₁ * o₂)`, where the ordinals are summed or multiplied
+together as nimbers.
 
 ## Notation
 
@@ -74,7 +74,11 @@ namespace Nimber
 open Ordinal
 
 @[simp] theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber := rfl
-@[simp] theorem toOrdinal_toNimber (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
+@[simp] theorem toNimber_toOrdinal (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
+
+theorem toOrdinal_le_iff (a : Nimber) (b : Ordinal) : toOrdinal a ≤ b ↔ a ≤ ∗b := .rfl
+theorem toOrdinal_lt_iff (a : Nimber) (b : Ordinal) : toOrdinal a < b ↔ a < ∗b := .rfl
+theorem toOrdinal_eq_iff (a : Nimber) (b : Ordinal) : toOrdinal a = b ↔ a = ∗b := .rfl
 
 theorem lt_wf : @WellFounded Nimber (· < ·) :=
   Ordinal.lt_wf
@@ -110,8 +114,8 @@ protected def rec {β : Nimber → Sort*} (h : ∀ a, β (∗a)) : ∀ a, β a :
   h (toOrdinal a)
 
 /-- `Ordinal.induction` but for `Nimber`. -/
-theorem induction {p : Nimber → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
-  Ordinal.induction
+theorem induction {p : Nimber → Prop} (i) (h : ∀ j, (∀ k, k < j → p k) → p j) : p i :=
+  Ordinal.induction i h
 
 @[simp]
 protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
@@ -131,6 +135,9 @@ theorem lt_one_iff_zero {a : Nimber} : a < 1 ↔ a = 0 :=
 @[simp]
 theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
+
+theorem le_one_iff {a : Nimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Ordinal.le_one_iff
 
 theorem eq_nat_of_le_nat {a : Nimber} {b : ℕ} (h : a ≤ ∗b) : ∃ c : ℕ, a = ∗c :=
   Ordinal.lt_omega0.1 (h.trans_lt (nat_lt_omega0 b))
@@ -158,7 +165,11 @@ open Nimber
 namespace Ordinal
 
 @[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
-@[simp] theorem toNimber_toOrdinal (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
+@[simp] theorem toOrdinal_toNimber (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
+
+theorem toNimber_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.toOrdinal := .rfl
+theorem toNimber_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.toOrdinal := .rfl
+theorem toNimber_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.toOrdinal := .rfl
 
 @[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
 @[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl
@@ -314,6 +325,20 @@ instance : AddCommGroupWithOne Nimber where
   zsmul := zsmulRec
   neg_add_cancel := add_self
   add_comm := Nimber.add_comm
+
+theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
+  induction n <;> aesop
+
+@[game_cmp]
+theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
+  simp [natCast_eq_if, Nat.even_iff]
+
+@[simp, game_cmp]
+theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
+  natCast_eq_mod n
+
+-- This lets `game_cmp` reduce any instances of `NatCast`.
+attribute [game_cmp] Nat.reduceMod
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by

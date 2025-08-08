@@ -47,8 +47,8 @@ theorem mk_eq_mk {x y : IGame} : mk x = mk y ↔ x ≈ y := Quotient.eq
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Game → Prop} (H : ∀ y, P (mk y)) (x : Game) : P x :=
-  Quotient.ind H x
+theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : motive x :=
+  Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Game) : IGame := Quotient.out x
@@ -60,7 +60,7 @@ theorem equiv_mk_out (x : IGame) : x ≈ (mk x).out := (mk_out_equiv x).symm
 /-- Construct a `Game` from its left and right sets.
 
 This is given notation `{s | t}ᴳ`, where the superscript `G` is to disambiguate from set builder
-notation, and from the analogous constructors on `IGame` and `Surreal`.
+notation, and from the analogous constructors on other game types.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in `Game` have a canonical representative.  -/
@@ -107,8 +107,9 @@ theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
   rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
+@[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
@@ -255,6 +256,10 @@ theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n := by
 @[simp, norm_cast]
 theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n := by
   simp [← Game.mk_lt_mk]
+
+@[simp]
+theorem natCast_nonneg (n : ℕ) : 0 ≤ (n : IGame) :=
+  natCast_le.2 n.zero_le
 
 theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) :=
   fun _ _ h ↦ natCast_lt.2 h

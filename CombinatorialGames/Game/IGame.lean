@@ -3,14 +3,15 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
+import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
+import CombinatorialGames.Mathlib.Neg
+import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Basic
+import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Logic.Small.Set
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
-import Mathlib.Lean.PrettyPrinter.Delaborator
 
 /-!
 # Combinatorial (pre-)games
@@ -23,10 +24,8 @@ players Left and Right. In Lean, we instead define the type of games `IGame` as 
 is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
 a given universe closely mimics the ZFC distinction between sets and proper classes.
 
-This definition requires some amount of setup, which we achieve through an auxiliary type `PGame`.
-This type was historically the foundation for game theory in Lean, but it has now been superseded by
-`IGame`, a quotient of it with the correct notion of equality. See the docstring on `PGame` for more
-information.
+This definition requires some amount of setup, since Lean's inductive types aren't powerful enough
+to express this on their own. See the docstring on `GameFunctor` for more information.
 
 We are also interested in further quotients of `IGame`. The quotient of games under equivalence
 `x ≈ y ↔ x ≤ y ∧ y ≤ x`, which in the literature is often what is meant by a "combinatorial game",
@@ -75,192 +74,84 @@ The order structures interact in the expected way with arithmetic. In particular
 
 universe u
 
--- TODO: This is a false positive due to the provisional duplicated IGame/IGame file path.
-set_option linter.dupNamespace false
+open Set Pointwise
+
 -- Computations can be performed through the `game_cmp` tactic.
 noncomputable section
 
-open Set Pointwise
-
-/-! ### Pre-games -/
-
-/-- The type of "pre-games", before we have quotiented by equivalence (`identicalSetoid`).
-
-In ZFC, a combinatorial game is constructed from two sets of combinatorial games that have been
-constructed at an earlier stage. To do this in type theory, we say that a pre-game is built
-inductively from two families of pre-games indexed over any type in `Type u`. The resulting type
-`PGame.{u}` lives in `Type (u + 1)`, reflecting that it is a proper class in ZFC.
-
-This type was historically the foundation for game theory in Lean, but this led to many annoyances.
-Most impactfully, this type has a notion of equality that is too strict: two games `0 = { | }` could
-be distinct (and unprovably so!) if the indexed families of left and right sets were two distinct
-empty types. To get the correct notion of equality, we define `IGame` as the quotient of this type
-by the `Identical` relation, representing extensional equivalence.
-
-This type has thus been relegated to an auxiliary construction for `IGame`. **You should not build
-any substantial theory based on this type.** -/
-inductive PGame : Type (u + 1)
-  | mk : ∀ α β : Type u, (α → PGame) → (β → PGame) → PGame
-compile_inductive% PGame
-
-namespace PGame
-
-/-- The indexing type for allowable moves by Left. -/
-def LeftMoves : PGame → Type u
-  | mk l _ _ _ => l
-
-/-- The indexing type for allowable moves by Right. -/
-def RightMoves : PGame → Type u
-  | mk _ r _ _ => r
-
-/-- The new game after Left makes an allowed move. -/
-def moveLeft : ∀ g : PGame, LeftMoves g → PGame
-  | mk _l _ L _ => L
-
-/-- The new game after Right makes an allowed move. -/
-def moveRight : ∀ g : PGame, RightMoves g → PGame
-  | mk _ _r _ R => R
-
-@[simp] theorem leftMoves_mk {xl xr xL xR} : (mk xl xr xL xR).LeftMoves = xl := rfl
-@[simp] theorem moveLeft_mk {xl xr xL xR} : (mk xl xr xL xR).moveLeft = xL := rfl
-@[simp] theorem rightMoves_mk {xl xr xL xR} : (mk xl xr xL xR).RightMoves = xr := rfl
-@[simp] theorem moveRight_mk {xl xr xL xR} : (mk xl xr xL xR).moveRight = xR := rfl
-
-/-- Two pre-games are identical if their left and right sets are identical. That is, `Identical x y`
-if every left move of `x` is identical to some left move of `y`, every right move of `x` is
-identical to some right move of `y`, and vice versa.
-
-`IGame` is defined as a quotient of `PGame` under this relation. -/
-def Identical : PGame.{u} → PGame.{u} → Prop
-  | mk _ _ xL xR, mk _ _ yL yR =>
-      Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
-      Relator.BiTotal (fun i j ↦ Identical (xR i) (yR j))
-
-@[inherit_doc] scoped infix:50 " ≡ " => PGame.Identical
-
-theorem identical_iff : ∀ {x y : PGame}, x ≡ y ↔
-    Relator.BiTotal (x.moveLeft · ≡ y.moveLeft ·) ∧ Relator.BiTotal (x.moveRight · ≡ y.moveRight ·)
-  | mk .., mk .. => Iff.rfl
-
-@[refl]
-protected theorem Identical.refl (x) : x ≡ x :=
-  x.recOn fun _ _ _ _ IHL IHR ↦ ⟨Relator.BiTotal.refl IHL, Relator.BiTotal.refl IHR⟩
-
-@[symm]
-protected theorem Identical.symm : ∀ {x y}, x ≡ y → y ≡ x
-  | mk .., mk .., ⟨hL, hR⟩ => ⟨hL.symm fun _ _ h ↦ h.symm, hR.symm fun _ _ h ↦ h.symm⟩
-
-@[trans]
-protected theorem Identical.trans : ∀ {x y z}, x ≡ y → y ≡ z → x ≡ z
-  | mk .., mk .., mk .., ⟨hL₁, hR₁⟩, ⟨hL₂, hR₂⟩ =>
-    ⟨hL₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hL₂, hR₁.trans (fun _ _ _ h₁ ↦ h₁.trans) hR₂⟩
-
-/-- `Identical` as a `Setoid`. -/
-def identicalSetoid : Setoid PGame :=
-  ⟨Identical, .refl, .symm, .trans⟩
-
-/-- If `x ≡ y`, then a left move of `x` is identical to some left move of `y`. -/
-theorem Identical.moveLeft : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft i ≡ y.moveLeft j
-  | mk .., mk .., ⟨hl, _⟩ => hl.1
-
-/-- If `x ≡ y`, then a left move of `y` is identical to some left move of `x`. -/
-theorem Identical.moveLeft_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveLeft j ≡ y.moveLeft i
-  | mk .., mk .., ⟨hl, _⟩ => hl.2
-
-/-- If `x ≡ y`, then a right move of `x` is identical to some right move of `y`. -/
-theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i ≡ y.moveRight j
-  | mk .., mk .., ⟨_, hr⟩ => hr.1
-
-/-- If `x ≡ y`, then a right move of `y` is identical to some right move of `x`. -/
-theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
-  | mk .., mk .., ⟨_, hr⟩ => hr.2
-
-end PGame
-
 /-! ### Game moves -/
 
-/-- Games up to identity.
+/-- Well-founded games up to identity.
 
-`IGame` uses the set-theoretic notion of equality on games, compared to `PGame`'s 'type-theoretic'
-notion of equality.
+`IGame` uses the set-theoretic notion of equality on games, meaning that two `IGame`s are equal
+exactly when their left and right sets of options are.
 
 This is not the same equivalence as used broadly in combinatorial game theory literature, as a game
 like `{0, 1 | 0}` is not *identical* to `{1 | 0}`, despite being equivalent. However, many theorems
 can be proven over the 'identical' equivalence relation, and the literature may occasionally
-specifically use the 'identical' equivalence relation for this reason.
+specifically use the 'identical' equivalence relation for this reason. The quotient `Game` of games
+up to equality is defined in `CombinatorialGames.Game.Basic`.
 
-For the more common game equivalence from literature, see `Game.Basic`. -/
+More precisely, `IGame` is the inductive type for the single constructor
+
+```
+  | ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u}
+```
+
+(though for technical reasons it's not literally defined as such). A consequence of this is that
+there is no infinite line of play. See `LGame` for a definition of loopy games. -/
 def IGame : Type (u + 1) :=
-  Quotient PGame.identicalSetoid
+  QPF.Fix GameFunctor
 
 namespace IGame
-open scoped PGame
 
-/-- The quotient map from `PGame` into `IGame`. -/
-def mk (x : PGame) : IGame := Quotient.mk _ x
-theorem mk_eq_mk {x y : PGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
+/-- Construct an `IGame` from its left and right sets.
 
-alias ⟨_, mk_eq⟩ := mk_eq_mk
-alias _root_.PGame.Identical.mk_eq := mk_eq
+This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
+notation, and from the analogous constructors on other game types.
 
-@[cases_eliminator]
-theorem ind {P : IGame → Prop} (H : ∀ y, P (mk y)) (x : IGame) : P x :=
-  Quotient.ind H x
+This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
+Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+def ofSets (s t : Set IGame.{u}) [hs : Small.{u} s] [ht : Small.{u} t] : IGame.{u} :=
+  QPF.Fix.mk ⟨⟨s, t⟩, ⟨hs, ht⟩⟩
 
-/-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : IGame) : PGame := Quotient.out x
-@[simp] theorem out_eq (x : IGame) : mk x.out = x := Quotient.out_eq x
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
 
 /-- The set of left moves of the game. -/
-def leftMoves : IGame → Set IGame := by
-  refine Quotient.lift (fun x ↦ mk '' range x.moveLeft) fun x y h ↦ ?_
-  ext z
-  simp_rw [mem_image, mem_range, exists_exists_eq_and]
-  constructor <;> rintro ⟨i, rfl⟩
-  · obtain ⟨j, hj⟩ := h.moveLeft i
-    exact ⟨j, hj.mk_eq.symm⟩
-  · obtain ⟨j, hj⟩ := h.moveLeft_symm i
-    exact ⟨j, hj.mk_eq⟩
+def leftMoves (x : IGame.{u}) : Set IGame.{u} := x.dest.1.1
 
 /-- The set of right moves of the game. -/
-def rightMoves : IGame → Set IGame := by
-  refine Quotient.lift (fun x ↦ mk '' range x.moveRight) fun x y h ↦ ?_
-  ext z
-  simp_rw [mem_image, mem_range, exists_exists_eq_and]
-  constructor <;> rintro ⟨i, rfl⟩
-  · obtain ⟨j, hj⟩ := h.moveRight i
-    exact ⟨j, hj.mk_eq.symm⟩
-  · obtain ⟨j, hj⟩ := h.moveRight_symm i
-    exact ⟨j, hj.mk_eq⟩
+def rightMoves (x : IGame.{u}) : Set IGame.{u} := x.dest.1.2
 
-@[simp] theorem leftMoves_mk (x : PGame) : leftMoves (mk x) = mk '' range x.moveLeft := rfl
-@[simp] theorem rightMoves_mk (x : PGame) : rightMoves (mk x) = mk '' range x.moveRight := rfl
+instance (x : IGame.{u}) : Small.{u} x.leftMoves := x.dest.2.1
+instance (x : IGame.{u}) : Small.{u} x.rightMoves := x.dest.2.2
 
-instance (x : IGame.{u}) : Small.{u} x.leftMoves := by
-  cases x
-  rw [leftMoves_mk]
-  infer_instance
+@[simp, game_cmp]
+theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
+  rw [leftMoves, ofSets, QPF.Fix.dest_mk]
 
-instance (x : IGame.{u}) : Small.{u} x.rightMoves := by
-  cases x
-  rw [rightMoves_mk]
-  infer_instance
+@[simp, game_cmp]
+theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
+  rw [rightMoves, ofSets, QPF.Fix.dest_mk]
 
+@[simp]
+theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x :=
+  x.mk_dest
+
+/-- Two `IGame`s are equal when their move sets are.
+
+For the weaker but more common notion of equivalence where `x = y` if `x ≤ y` and `y ≤ x`,
+use `Game`. -/
 @[ext]
-theorem ext {x y : IGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
+theorem ext {x y : IGame.{u}} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
     x = y := by
-  cases x with | H x =>
-  cases y with | H y =>
-  dsimp at hl hr
-  refine (PGame.identical_iff.2 ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩).mk_eq <;> intro i
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := x.moveLeft) i)
-    exact ⟨j, mk_eq_mk.1 hj.symm⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hl ▸ mem_image_of_mem mk (mem_range_self (f := y.moveLeft) i)
-    exact ⟨j, mk_eq_mk.1 hj⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := x.moveRight) i)
-    exact ⟨j, mk_eq_mk.1 hj.symm⟩
-  · obtain ⟨_, ⟨j, rfl⟩, hj⟩ := hr ▸ mem_image_of_mem mk (mem_range_self (f := y.moveRight) i)
-    exact ⟨j, mk_eq_mk.1 hj⟩
+  rw [← ofSets_leftMoves_rightMoves x, ← ofSets_leftMoves_rightMoves y]
+  simp_rw [hl, hr]
+
+@[simp]
+theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
+    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+  simp [IGame.ext_iff]
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
@@ -273,42 +164,77 @@ theorem IsOption.of_mem_rightMoves {x y : IGame} : x ∈ y.rightMoves → IsOpti
 instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
   inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
 
--- TODO: is there some more general theorem about well-founded relations on quotients
--- that we could use here?
 theorem isOption_wf : WellFounded IsOption := by
-  suffices ∀ x, Acc IsOption (mk x) from ⟨ind this⟩
-  intro x
-  induction x with
-  | mk x _ _ _ hl hr =>
-    constructor
-    rintro ⟨y⟩ (h | h) <;>
-    obtain ⟨_, ⟨i, rfl⟩, (hi : _ = Quot.mk _ _)⟩ := h
-    exacts [hi ▸ hl i, hi ▸ hr i]
+  refine ⟨fun x ↦ ?_⟩
+  apply QPF.Fix.ind
+  unfold IsOption leftMoves rightMoves
+  rintro _ ⟨⟨⟨s, t⟩, ⟨_, _⟩⟩, rfl⟩
+  constructor
+  rintro y (hy | hy)
+  all_goals
+    rw [QPF.Fix.dest_mk] at hy
+    obtain ⟨⟨_, h⟩, _, rfl⟩ := hy
+    exact h
+
+-- We make no use of `IGame`'s definition from a `QPF` after this point.
+attribute [irreducible] IGame
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
 theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
 
-theorem self_not_mem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
+theorem self_notMem_leftMoves (x : IGame) : x ∉ x.leftMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
 
-theorem self_not_mem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
+theorem self_notMem_rightMoves (x : IGame) : x ∉ x.rightMoves :=
   fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
-left and right sets.
+left and right sets. You rarely need to use this explicitly, as the termination checker will handle
+things for you.
 
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
-def moveRecOn {P : IGame → Sort*} (x)
-    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) : P x :=
+def moveRecOn {motive : IGame → Sort*} (x)
+    (mk : Π x, (Π y ∈ x.leftMoves, motive y) → (Π y ∈ x.rightMoves, motive y) → motive x) :
+    motive x :=
   isOption_wf.recursion x fun x IH ↦
-    H x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
+    mk x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
 
-theorem moveRecOn_eq {P : IGame → Sort*} (x)
-    (H : Π x, (Π y ∈ x.leftMoves, P y) → (Π y ∈ x.rightMoves, P y) → P x) :
-    moveRecOn x H = H x (fun y _ ↦ moveRecOn y H) (fun y _ ↦ moveRecOn y H) :=
+theorem moveRecOn_eq {motive : IGame → Sort*} (x)
+    (mk : Π x, (Π y ∈ x.leftMoves, motive y) → (Π y ∈ x.rightMoves, motive y) → motive x) :
+    moveRecOn x mk = mk x (fun y _ ↦ moveRecOn y mk) (fun y _ ↦ moveRecOn y mk) :=
   isOption_wf.fix_eq ..
+
+/-- **Conway recursion**: build data for a game by recursively building it on its
+left and right sets. You rarely need to use this explicitly, as the termination checker will handle
+things for you.
+
+See `moveRecOn` for an alternate form. -/
+@[elab_as_elim]
+def ofSetsRecOn {motive : IGame.{u} → Sort*} (x)
+    (mk : Π (s t : Set _) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
+    motive x :=
+  cast (by simp) <| moveRecOn (motive := fun x ↦ motive {x.leftMoves | x.rightMoves}ᴵ) x
+    fun x IHl IHr ↦ mk _ _
+      (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
+
+@[simp]
+theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
+    (s t : Set IGame) [Small.{u} s] [Small.{u} t]
+    (mk : Π (s t : Set _) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
+    ofSetsRecOn {s | t}ᴵ mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
+  rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
+  congr
+  any_goals simp
+  all_goals
+    refine Function.hfunext rfl fun x _ h ↦ ?_
+    cases h
+    refine Function.hfunext ?_ fun _ _ _ ↦ ?_
+    · simp
+    · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : IGame → IGame → Prop :=
@@ -326,6 +252,9 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
     Subposition x z :=
   Relation.TransGen.trans h₁ h₂
 
+instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
+  small_transGen' _ x
+
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
 instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
@@ -336,60 +265,6 @@ macro "igame_wf" : tactic =>
   `(tactic| all_goals solve_by_elim (maxDepth := 8)
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
-
-/-- Construct an `IGame` from its left and right sets.
-
-This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructors on `Game` and `Surreal`.
-
-This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
-def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
-  mk <| .mk (Shrink s) (Shrink t)
-    (out ∘ Subtype.val ∘ (equivShrink s).symm) (out ∘ Subtype.val ∘ (equivShrink t).symm)
-
-@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
-
-@[simp, game_cmp]
-theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
-  ext; simp [ofSets, range_comp]
-
-@[simp, game_cmp]
-theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
-  ext; simp [ofSets, range_comp]
-
-@[simp]
-theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
-  ext <;> simp
-
-@[simp]
-theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
-    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
-  simp [IGame.ext_iff]
-
-/-- **Conway recursion**: build data for a game by recursively building it on its
-left and right sets.
-
-See `moveRecOn` for an alternate form. -/
-@[elab_as_elim]
-def ofSetsRecOn {P : IGame.{u} → Sort*} (x)
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) : P x :=
-  cast (by simp) <| moveRecOn (P := fun x ↦ P {x.leftMoves | x.rightMoves}ᴵ) x fun x IHl IHr ↦
-    H _ _ (fun y hy ↦ cast (by simp) (IHl y hy)) (fun y hy ↦ cast (by simp) (IHr y hy))
-
-@[simp]
-theorem ofSetsRecOn_ofSets {P : IGame.{u} → Sort*} (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (H : Π (s t : Set _) [Small s] [Small t], (Π x ∈ s, P x) → (Π x ∈ t, P x) → P {s | t}ᴵ) :
-    ofSetsRecOn {s | t}ᴵ H = H _ _ (fun y _ ↦ ofSetsRecOn y H) (fun y _ ↦ ofSetsRecOn y H) := by
-  rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
-  congr
-  any_goals simp
-  all_goals
-    refine Function.hfunext rfl fun x _ h ↦ ?_
-    cases h
-    refine Function.hfunext ?_ fun _ _ _ ↦ ?_
-    · simp
-    · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
 
 /-! ### Basic games -/
 
@@ -581,18 +456,14 @@ theorem equiv_of_exists {x y : IGame}
   apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
-theorem zero_lt_one : (0 : IGame) < 1 := by
+protected theorem zero_lt_one : (0 : IGame) < 1 := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf, le_iff_forall_lf]
   simp
 
 instance : ZeroLEOneClass IGame where
-  zero_le_one := zero_lt_one.le
+  zero_le_one := IGame.zero_lt_one.le
 
 /-! ### Negation -/
-
-instance {α : Type*} [InvolutiveNeg α] (s : Set α) [Small.{u} s] : Small.{u} (-s :) := by
-  rw [← Set.image_neg_eq_neg]
-  infer_instance
 
 private def neg' (x : IGame) : IGame :=
   {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
@@ -642,22 +513,22 @@ theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := 
 @[game_cmp]
 theorem forall_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).leftMoves, P y) ↔ (∀ y ∈ x.rightMoves, P (-y)) := by
-  rw [← (Equiv.neg _).forall_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem forall_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∀ y ∈ (-x).rightMoves, P y) ↔ (∀ y ∈ x.leftMoves, P (-y)) := by
-  rw [← (Equiv.neg _).forall_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem exists_leftMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).leftMoves, P y) ↔ (∃ y ∈ x.rightMoves, P (-y)) := by
-  rw [← (Equiv.neg _).exists_congr_right]; simp
+  simp
 
 @[game_cmp]
 theorem exists_rightMoves_neg {P : IGame → Prop} {x : IGame} :
     (∃ y ∈ (-x).rightMoves, P y) ↔ (∃ y ∈ x.leftMoves, P (-y)) := by
-  rw [← (Equiv.neg _).exists_congr_right]; simp
+  simp
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
@@ -790,14 +661,13 @@ theorem exists_rightMoves_add {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, P (a + y)) ∨ (∃ b ∈ y.rightMoves, P (x + b)) := by
   aesop
 
-instance : AddZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
-
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
+
+private theorem add_zero' (x : IGame) : x + 0 = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
+  aesop
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext <;>
@@ -819,10 +689,11 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
+  add_zero := add_zero'
+  zero_add _ := add_comm' .. ▸ add_zero' _
   add_comm := add_comm'
   add_assoc := add_assoc'
   nsmul := nsmulRec
-  __ : AddZeroClass IGame := inferInstance
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
@@ -856,12 +727,11 @@ theorem sub_right_mem_rightMoves_sub {x y : IGame} (h : x ∈ y.rightMoves) (z :
 
 private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
   ext <;>
-  · simp
-    rw [← (Equiv.neg IGame).exists_congr_right]
-    nth_rewrite 2 [← (Equiv.neg IGame).exists_congr_right]
+  · simp only [leftMoves_neg, rightMoves_neg, leftMoves_add, rightMoves_add,
+      union_neg, mem_union, mem_neg, mem_image, exists_mem_neg]
     congr! 3 <;>
     · refine and_congr_right_iff.2 fun _ ↦ ?_
-      rw [Equiv.neg_apply, ← neg_inj, neg_add', neg_neg, neg_neg]
+      rw [← neg_inj, neg_add', neg_neg]
 termination_by (x, y)
 decreasing_by igame_wf
 
@@ -970,7 +840,7 @@ theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
-For that, use `Ordinal.toIGame`. -/
+For that, use `NatOrdinal.toIGame`. -/
 instance : AddMonoidWithOne IGame where
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
@@ -1019,14 +889,14 @@ instance : IntCast IGame where
   | .ofNat n => n
   | .negSucc n => -(n + 1)
 
-@[simp] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
-@[simp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
+@[simp, game_cmp, norm_cast] theorem intCast_nat (n : ℕ) : ((n : ℤ) : IGame) = n := rfl
+@[simp, game_cmp] theorem intCast_ofNat (n : ℕ) : ((ofNat(n) : ℤ) : IGame) = n := rfl
 @[simp] theorem intCast_negSucc (n : ℕ) : (Int.negSucc n : IGame) = -(n + 1) := rfl
 
-theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
-theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
+@[game_cmp, norm_cast] theorem intCast_zero : ((0 : ℤ) : IGame) = 0 := rfl
+@[game_cmp, norm_cast] theorem intCast_one : ((1 : ℤ) : IGame) = 1 := by simp
 
-@[simp]
+@[simp, game_cmp, norm_cast]
 theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
   cases n with
   | ofNat n =>
@@ -1176,15 +1046,12 @@ theorem exists_rightMoves_mul {P : IGame → Prop} {x y : IGame} :
       (∃ a ∈ x.rightMoves, ∃ b ∈ y.leftMoves, P (mulOption x y a b)) := by
   aesop
 
-instance : MulZeroClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop
+private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
+  ext <;> simp
 
-instance : MulOneClass IGame := by
-  constructor <;>
-  · refine (moveRecOn · fun _ _ _ ↦ ?_)
-    aesop (add simp [mulOption, and_assoc])
+private theorem one_mul' (x : IGame) : 1 * x = x := by
+  refine moveRecOn x fun _ _ _ ↦ ?_
+  aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
   ext
@@ -1201,6 +1068,14 @@ decreasing_by igame_wf
 
 instance : CommMagma IGame where
   mul_comm := mul_comm'
+
+instance : MulZeroClass IGame where
+  zero_mul := zero_mul'
+  mul_zero x := mul_comm' .. ▸ zero_mul' x
+
+instance : MulOneClass IGame where
+  one_mul := one_mul'
+  mul_one x := mul_comm' .. ▸ one_mul' x
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
@@ -1221,12 +1096,9 @@ private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
 termination_by (x, y)
 decreasing_by igame_wf
 
-private theorem mul_neg' (x y : IGame) : x * -y = -(x * y) := by
-  rw [mul_comm, neg_mul', mul_comm]
-
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
-  mul_neg := mul_neg'
+  mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
   simp [mulOption, sub_eq_neg_add, add_comm]
@@ -1236,6 +1108,14 @@ theorem mulOption_neg_right (x y a b : IGame) : mulOption x (-y) a b = -mulOptio
 
 theorem mulOption_neg (x y a b : IGame) : mulOption (-x) (-y) a b = mulOption x y (-a) (-b) := by
   simp [mulOption, sub_eq_neg_add, add_comm]
+
+@[simp]
+theorem mulOption_zero_left (x y a : IGame) : mulOption x y 0 a = x * a := by
+  simp [mulOption]
+
+@[simp]
+theorem mulOption_zero_right (x y a : IGame) : mulOption x y a 0 = a * y := by
+  simp [mulOption]
 
 /-! Distributivity and associativity only hold up to equivalence; we prove this in
 `CombinatorialGames.Game.Basic`. -/
@@ -1365,7 +1245,6 @@ theorem invOption_right_right_mem_rightMoves_inv {x y a : IGame} (hx : 0 < x) (h
   use InvTy.right₂ (equivShrink _ ⟨_, hyx, hy⟩) i
   simp [InvTy.val, InvTy.val', invOption_eq hy]
 
-set_option linter.unnecessarySimpa false in
 private theorem invRec' {x : IGame} (hx : 0 < x)
     {P : ∀ y ∈ x⁻¹.leftMoves, Prop} {Q : ∀ y ∈ x⁻¹.rightMoves, Prop}
     (zero : P 0 (zero_mem_leftMoves_inv hx))
@@ -1384,12 +1263,10 @@ private theorem invRec' {x : IGame} (hx : 0 < x)
     constructor <;> intro y hy
     · rw [inv_eq hx, leftMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
-      have hi := this false i
-      simp_all
+      simpa using this false i
     · rw [inv_eq hx, rightMoves_ofSets] at hy
       obtain ⟨i, rfl⟩ := hy
-      have hi := this true i
-      simp_all
+      simpa using this true i
   intro b i
   induction i
   · simpa
@@ -1398,8 +1275,9 @@ private theorem invRec' {x : IGame} (hx : 0 < x)
   on_goal 5 => apply left₂
   on_goal 9 => apply right₁
   on_goal 13 => apply right₂
-  any_goals simpa [inv_eq hx, InvTy.val]
+  any_goals simp [inv_eq hx, InvTy.val]
   all_goals first |
+    exact by assumption |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.1 |
     exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.2
 

@@ -96,6 +96,9 @@ instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
   inferInstanceAs (Small (Iio o.toOrdinal))
 
+theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
+  Ordinal.bddAbove_of_small s
+
 @[simp]
 theorem bot_eq_zero : (⊥ : NatOrdinal) = 0 :=
   rfl
@@ -116,11 +119,9 @@ theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 :=
 theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 :=
   Iff.rfl
 
-@[simp]
 theorem toOrdinal_max (a b : NatOrdinal) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
   rfl
 
-@[simp]
 theorem toOrdinal_min (a b : NatOrdinal) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
   rfl
 
@@ -178,12 +179,10 @@ theorem toNatOrdinal_eq_zero (a) : toNatOrdinal a = 0 ↔ a = 0 :=
 theorem toNatOrdinal_eq_one (a) : toNatOrdinal a = 1 ↔ a = 1 :=
   Iff.rfl
 
-@[simp]
 theorem toNatOrdinal_max (a b : Ordinal) :
     toNatOrdinal (max a b) = max (toNatOrdinal a) (toNatOrdinal b) :=
   rfl
 
-@[simp]
 theorem toNatOrdinal_min (a b : Ordinal) :
     toNatOrdinal (min a b) = min (toNatOrdinal a) (toNatOrdinal b) :=
   rfl
@@ -335,8 +334,8 @@ theorem add_le_nadd : a + b ≤ a ♯ b := by
   | zero => simp
   | succ c h =>
     rwa [add_succ, nadd_succ, succ_le_succ_iff]
-  | isLimit c hc H =>
-    rw [(isNormal_add_right a).apply_of_isLimit hc, Ordinal.iSup_le_iff]
+  | limit c hc H =>
+    rw [(isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
     exact (H i hi).trans (nadd_le_nadd_left hi.le a)
 
@@ -741,7 +740,7 @@ theorem mul_le_nmul (a b : Ordinal.{u}) : a * b ≤ a ⨳ b := by
   · intro c hc H
     rcases eq_zero_or_pos a with (rfl | ha)
     · simp
-    · rw [(isNormal_mul_right ha).apply_of_isLimit hc, Ordinal.iSup_le_iff]
+    · rw [(isNormal_mul_right ha).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
       rintro ⟨i, hi⟩
       exact (H i hi).trans (nmul_le_nmul_left hi.le a)
 
