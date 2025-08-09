@@ -226,8 +226,14 @@ theorem not_isRightDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ Is
 
 end LGame
 
-theorem IGame.not_isLeftDraw (x : IGame) : ¬ x.toLGame.IsLeftDraw :=
+namespace IGame
+
+open LGame
+
+theorem not_isLeftDraw (x : IGame) : ¬ IsLeftDraw x :=
   LGame.not_isLeftDraw_of_acc_isOption x.acc_toLGame
 
-theorem IGame.not_isRightDraw (x : IGame) : ¬ x.toLGame.IsRightDraw :=
+theorem not_isRightDraw (x : IGame) : ¬ IsRightDraw x :=
   LGame.not_isRightDraw_of_acc_isOption x.acc_toLGame
+
+end IGame
