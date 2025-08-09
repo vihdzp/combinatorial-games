@@ -8,7 +8,8 @@ import CombinatorialGames.Game.Loopy.IGame
 /-!
 # Outcomes of loopy games
 
-We define when a loopy game is a win, a draw, or a loss with each player going first.
+We define when a loopy game is a win, a draw, or a loss with each player going first
+(under the normal play convention).
 -/
 
 namespace LGame
@@ -16,14 +17,20 @@ namespace LGame
 /-- A surviving strategy for Left, going second.
 
 This is a set of states, such that for every move Right makes, Left can bring it back
-to the set. -/
+to the set.
+
+You can think of this as a nonconstructive version of the more common definition of a strategy,
+which gives an explicit answer for every reachable state. -/
 def IsLeftStrategy (s : Set LGame) : Prop :=
   ∀ y ∈ s, ∀ z ∈ y.rightMoves, ∃ r ∈ z.leftMoves, r ∈ s
 
 /-- A surviving strategy for Right, going second.
 
 This is a set of states, such that for every move Left makes, Right can bring it back
-to the set. -/
+to the set.
+
+You can think of this as a nonconstructive version of the more common definition of a strategy,
+which gives an explicit answer for every reachable state. -/
 def IsRightStrategy (s : Set LGame) : Prop :=
   ∀ y ∈ s, ∀ z ∈ y.leftMoves, ∃ r ∈ z.rightMoves, r ∈ s
 
@@ -33,19 +40,27 @@ theorem isLeftStrategy_neg {s : Set LGame} : IsLeftStrategy (-s) ↔ IsRightStra
 
 @[simp]
 theorem isRightStrategy_neg {s : Set LGame} : IsRightStrategy (-s) ↔ IsLeftStrategy s := by
-  simp_rw [← isLeftStrategy_neg, neg_neg]
+  rw [← isLeftStrategy_neg, neg_neg]
 
-theorem isLeftStrategy_iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsLeftStrategy (s i)) :
+theorem IsLeftStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsLeftStrategy (s i)) :
     IsLeftStrategy (⋃ i, s i) :=
   fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
     have ⟨r, hrz, hr⟩ := h i y hi z hz
     ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
 
-theorem isRightStrategy_iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsRightStrategy (s i)) :
+theorem IsRightStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsRightStrategy (s i)) :
     IsRightStrategy (⋃ i, s i) :=
   fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
     have ⟨r, hrz, hr⟩ := h i y hi z hz
     ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
+
+theorem IsLeftStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsLeftStrategy s) :
+    IsLeftStrategy (⋃₀ S) :=
+  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
+
+theorem IsRightStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsRightStrategy s) :
+    IsRightStrategy (⋃₀ S) :=
+  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
 
 mutual
   /-- `IsLeftWin x` means that left wins `x` going first. -/
@@ -104,16 +119,14 @@ theorem isRightStrategy_isLeftLoss : IsRightStrategy {x | IsLeftLoss x} :=
   fun _ ↦ (isLeftLoss_iff_forall.trans (by simp [isRightWin_iff_exists])).mp
 
 theorem isLeftStrategy_not_isRightWin : IsLeftStrategy {x | ¬ IsRightWin x} :=
-  fun x hx y hy ↦ by
+  fun x hx ↦ by
     simp_rw [Set.mem_setOf, isRightWin_iff_exists, isLeftLoss_iff_forall] at hx
-    push_neg at hx
-    exact hx y hy
+    simpa using hx
 
 theorem isRightStrategy_not_isLeftWin : IsRightStrategy {x | ¬ IsLeftWin x} :=
-  fun x hx y hy ↦ by
+  fun x hx ↦ by
     simp_rw [Set.mem_setOf, isLeftWin_iff_exists, isRightLoss_iff_forall] at hx
-    push_neg at hx
-    exact hx y hy
+    simpa using hx
 
 theorem not_isRightWin_iff_mem_leftStrategy {x : LGame} :
     ¬ IsRightWin x ↔ ∃ s, x ∈ s ∧ IsLeftStrategy s where
@@ -183,18 +196,6 @@ theorem rightOutcome_eq_draw_iff {x : LGame} : rightOutcome x = .draw ↔ IsRigh
   on_goal 3 => simpa using ⟨w, l⟩
   all_goals rw [false_iff]
   exacts [(·.1 w), (·.2 l)]
-
-example (x : LGame) :
-    (∃ y ∈ x.leftMoves, ∃ s, y ∈ s ∧ IsLeftStrategy s) ∨ ∃ s, x ∈ s ∧ IsRightStrategy s := by
-  simp_rw [← not_isRightWin_iff_mem_leftStrategy, ← not_isLeftWin_iff_mem_rightStrategy]
-  rw [← not_isLeftLoss_iff_exists, ← not_and_or, and_comm]
-  exact not_isLeftWin_and_isLeftLoss
-
-example (x : LGame) :
-    (∃ s, x ∈ s ∧ IsLeftStrategy s) ∨ ∃ y ∈ x.rightMoves, ∃ s, y ∈ s ∧ IsRightStrategy s := by
-  simp_rw [← not_isLeftWin_iff_mem_rightStrategy, ← not_isRightWin_iff_mem_leftStrategy]
-  rw [← not_isRightLoss_iff_exists, ← not_and_or]
-  exact not_isRightWin_and_isRightLoss
 
 /-- If there is no infinite play starting by from `x` with right going second,
 then `x` cannot end in a draw with right going second. -/
