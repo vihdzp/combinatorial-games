@@ -261,7 +261,7 @@ theorem equiv_zero_iff_and {x : IGame} : x ≈ 0 ↔ IsLeftLoss x ∧ IsRightLos
 theorem lt_zero_iff_and {x : IGame} : x < 0 ↔ IsLeftLoss x ∧ IsRightWin x := by
   rw [lt_iff_le_not_ge, isLeftLoss_iff_le_zero, isRightWin_iff_lf_zero]
 
-theorem zero_lt_iff_an {x : IGame} : 0 < x ↔ IsLeftWin x ∧ IsRightLoss x := by
+theorem zero_lt_iff_and {x : IGame} : 0 < x ↔ IsLeftWin x ∧ IsRightLoss x := by
   rw [lt_iff_le_not_ge, isLeftWin_iff_zero_lf, isRightLoss_iff_zero_le, and_comm]
 
 end IGame
