@@ -56,6 +56,8 @@ def toLGame : IGame ↪ LGame where
   toFun := toLGame'
   inj' _ _ := toLGame'_inj
 
+instance : Coe IGame LGame := ⟨toLGame⟩
+
 theorem toLGame_def (x : IGame) :
     x.toLGame = {toLGame '' x.leftMoves | toLGame '' x.rightMoves}ᴸ :=
   toLGame'_def x
@@ -67,6 +69,20 @@ theorem leftMoves_toLGame (x : IGame) : x.toLGame.leftMoves = toLGame '' x.leftM
 @[simp]
 theorem rightMoves_toLGame (x : IGame) : x.toLGame.rightMoves = toLGame '' x.rightMoves := by
   rw [toLGame_def, LGame.rightMoves_ofSets]
+
+theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
+  refine x.moveRecOn fun x hl hr ↦ .intro _ fun y ↦ ?_
+  rintro (hy | hy) <;> simp only [leftMoves_toLGame, rightMoves_toLGame] at hy <;>
+    obtain ⟨y, hy, rfl⟩ := hy
+  exacts [hl y hy, hr y hy]
+
+theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGame.IsOption x where
+  mp := by rintro ⟨x, rfl⟩; exact x.acc_toLGame
+  mpr h := h.rec fun x _ ih ↦ by
+    choose f hf using ih
+    use {range fun y : x.leftMoves ↦ f y (.inl y.2) | range fun y : x.rightMoves ↦ f y (.inr y.2)}ᴵ
+    ext1 <;> (simp only [leftMoves_toLGame, leftMoves_ofSets, rightMoves_toLGame, rightMoves_ofSets,
+      ← range_comp]; convert Subtype.range_val; ext1; apply hf)
 
 @[simp]
 theorem toLGame_zero : toLGame 0 = 0 := by
@@ -141,7 +157,7 @@ decreasing_by igame_wf
 
 @[simp]
 theorem toLGame_mulOption (x y a b : IGame) :
-    toLGame (mulOption x y a b) = LGame.mulOption x.toLGame y.toLGame a.toLGame b.toLGame := by
+    toLGame (mulOption x y a b) = LGame.mulOption x y a b := by
   simp [mulOption, LGame.mulOption]
 
 end IGame
