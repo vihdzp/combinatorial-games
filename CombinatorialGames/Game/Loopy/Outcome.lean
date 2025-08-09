@@ -14,54 +14,6 @@ We define when a loopy game is a win, a draw, or a loss with each player going f
 
 namespace LGame
 
-/-- A surviving strategy for Left, going second.
-
-This is a set of states, such that for every move Right makes, Left can bring it back
-to the set.
-
-You can think of this as a nonconstructive version of the more common definition of a strategy,
-which gives an explicit answer for every reachable state. -/
-def IsLeftStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ y.rightMoves, ∃ r ∈ z.leftMoves, r ∈ s
-
-/-- A surviving strategy for Right, going second.
-
-This is a set of states, such that for every move Left makes, Right can bring it back
-to the set.
-
-You can think of this as a nonconstructive version of the more common definition of a strategy,
-which gives an explicit answer for every reachable state. -/
-def IsRightStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ y.leftMoves, ∃ r ∈ z.rightMoves, r ∈ s
-
-@[simp]
-theorem isLeftStrategy_neg {s : Set LGame} : IsLeftStrategy (-s) ↔ IsRightStrategy s := by
-  simp [IsLeftStrategy, IsRightStrategy]
-
-@[simp]
-theorem isRightStrategy_neg {s : Set LGame} : IsRightStrategy (-s) ↔ IsLeftStrategy s := by
-  rw [← isLeftStrategy_neg, neg_neg]
-
-theorem IsLeftStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsLeftStrategy (s i)) :
-    IsLeftStrategy (⋃ i, s i) :=
-  fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
-    have ⟨r, hrz, hr⟩ := h i y hi z hz
-    ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
-
-theorem IsRightStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsRightStrategy (s i)) :
-    IsRightStrategy (⋃ i, s i) :=
-  fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
-    have ⟨r, hrz, hr⟩ := h i y hi z hz
-    ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
-
-theorem IsLeftStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsLeftStrategy s) :
-    IsLeftStrategy (⋃₀ S) :=
-  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
-
-theorem IsRightStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsRightStrategy s) :
-    IsRightStrategy (⋃₀ S) :=
-  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
-
 mutual
   /-- `IsLeftWin x` means that left wins `x` going first. -/
   inductive IsLeftWin : LGame → Prop where
@@ -111,6 +63,54 @@ theorem not_isLeftLoss_iff_exists {x : LGame} :
 theorem not_isRightLoss_iff_exists {x : LGame} :
     ¬ IsRightLoss x ↔ ∃ y ∈ x.rightMoves, ¬ IsLeftWin y := by
   simp [isRightLoss_iff_forall]
+
+/-- A surviving strategy for Left, going second.
+
+This is a set of states, such that for every move Right makes, Left can bring it back
+to the set.
+
+You can think of this as a nonconstructive version of the more common definition of a strategy,
+which gives an explicit answer for every reachable state. -/
+def IsLeftStrategy (s : Set LGame) : Prop :=
+  ∀ y ∈ s, ∀ z ∈ y.rightMoves, ∃ r ∈ z.leftMoves, r ∈ s
+
+/-- A surviving strategy for Right, going second.
+
+This is a set of states, such that for every move Left makes, Right can bring it back
+to the set.
+
+You can think of this as a nonconstructive version of the more common definition of a strategy,
+which gives an explicit answer for every reachable state. -/
+def IsRightStrategy (s : Set LGame) : Prop :=
+  ∀ y ∈ s, ∀ z ∈ y.leftMoves, ∃ r ∈ z.rightMoves, r ∈ s
+
+@[simp]
+theorem isLeftStrategy_neg {s : Set LGame} : IsLeftStrategy (-s) ↔ IsRightStrategy s := by
+  simp [IsLeftStrategy, IsRightStrategy]
+
+@[simp]
+theorem isRightStrategy_neg {s : Set LGame} : IsRightStrategy (-s) ↔ IsLeftStrategy s := by
+  rw [← isLeftStrategy_neg, neg_neg]
+
+theorem IsLeftStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsLeftStrategy (s i)) :
+    IsLeftStrategy (⋃ i, s i) :=
+  fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
+    have ⟨r, hrz, hr⟩ := h i y hi z hz
+    ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
+
+theorem IsRightStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsRightStrategy (s i)) :
+    IsRightStrategy (⋃ i, s i) :=
+  fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
+    have ⟨r, hrz, hr⟩ := h i y hi z hz
+    ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
+
+theorem IsLeftStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsLeftStrategy s) :
+    IsLeftStrategy (⋃₀ S) :=
+  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
+
+theorem IsRightStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsRightStrategy s) :
+    IsRightStrategy (⋃₀ S) :=
+  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
 
 theorem isLeftStrategy_isRightLoss : IsLeftStrategy {x | IsRightLoss x} :=
   fun _ ↦ (isRightLoss_iff_forall.trans (by simp [isLeftWin_iff_exists])).mp
