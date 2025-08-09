@@ -962,7 +962,7 @@ theorem leftMoves_comp_map
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
     leftMoves leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ map f g =
     image (map f g) ∘ leftMoves leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  apply funext fun x ↦ ?_
+  ext1 x
   simp_rw [Function.comp_apply, leftMoves, map, Multiset.iUnion_map, image_iUnion]
   congr! with y hy
   simp_rw [← Multiset.map_erase_of_mem _ _ hy, ← Function.comp_apply (g := Prod.map id _),
@@ -976,7 +976,7 @@ theorem rightMoves_comp_map
     (hrg : rightMovesβ₂ ∘ g = Set.image g ∘ rightMovesβ₁) :
     rightMoves leftMovesα₂ rightMovesα₂ leftMovesβ₂ rightMovesβ₂ ∘ map f g =
     image (map f g) ∘ rightMoves leftMovesα₁ rightMovesα₁ leftMovesβ₁ rightMovesβ₁ := by
-  apply funext fun x ↦ ?_
+  ext1 x
   simp_rw [Function.comp_apply, rightMoves, map, Multiset.iUnion_map, image_iUnion]
   congr! with y hy
   simp_rw [← Multiset.map_erase_of_mem _ _ hy, ← Function.comp_apply (g := Prod.map id _),

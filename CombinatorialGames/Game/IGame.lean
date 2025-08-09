@@ -679,7 +679,7 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 private theorem add_assoc' (x y z : IGame) : x + y + z = x + (y + z) := by
-  apply ext <;>
+  ext1 <;>
   · simp only [leftMoves_add, rightMoves_add, image_union, image_image, union_assoc]
     refine congrArg₂ _ ?_ (congrArg₂ _ ?_ ?_) <;>
     · ext
