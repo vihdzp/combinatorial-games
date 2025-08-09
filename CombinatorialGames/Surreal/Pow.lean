@@ -27,6 +27,8 @@ Among other things, we prove that every non-zero surreal number is commensurate 
 set_option pp.universes true
 universe u
 
+universe u
+
 open Set
 
 -- TODO: upstream
@@ -57,7 +59,7 @@ decreasing_by igame_wf
 instance : Wpow IGame where
   wpow := wpow
 
-theorem wpow_def (x : IGame) : ω^ x =
+theorem wpow_def (x : IGame.{u}) : ω^ x =
     {insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) x.leftMoves) |
       image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) x.rightMoves}ᴵ := by
   change wpow _ = _
