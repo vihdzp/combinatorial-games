@@ -4,18 +4,28 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Surreal.Real
+import Mathlib.Algebra.Order.Archimedean.Class
 
 /-!
 # Surreal exponentiation
 
 We define here the ω-map on games and on surreal numbers, representing exponentials with base `ω`.
 
+Among other things, we prove that every non-zero surreal number is commensurate to some unique
+`ω^ x`. We express this using `ArchimedeanClass`. There's two important things to note:
+
+- The definition of `ArchimedeanClass` involves absolute values, such that e.g.
+  `-ω` is commensurate to `ω`.
+- The order in `ArchimedeanClass` is defined so that the equivalence class of `0` is the **largest**
+  equivalence class, rather than the smallest.
+
 ## Todo
 
 - Prove that `ω^ x` matches ordinal exponentiation for ordinal `x`.
-- Define commensurate surreals and prove properties relating to `ω^ x`.
 - Define the normal form of a surreal number.
 -/
+set_option pp.universes true
+universe u
 
 open Set
 
@@ -38,7 +48,7 @@ namespace IGame
 
 The standard definition in the literature instead has `r` ranging over positive reals,
 but this makes no difference as to the equivalence class of the games. -/
-private def wpow (x : IGame) : IGame :=
+private def wpow (x : IGame.{u}) : IGame.{u} :=
   {insert 0 (range (fun y : Ioi (0 : Dyadic) × x.leftMoves ↦ y.1 * wpow y.2)) |
     range (fun y : Ioi (0 : Dyadic) × x.rightMoves ↦ y.1 * wpow y.2)}ᴵ
 termination_by x
@@ -355,7 +365,11 @@ end IGame
 namespace Surreal
 open IGame
 
-instance : Wpow Surreal where
+variable {x y : Surreal}
+
+set_option pp.universes true
+
+instance : Wpow Surreal.{u} where
   wpow := Quotient.lift (fun x ↦ mk (ω^ x)) fun _ _ h ↦ mk_eq (Numeric.wpow_congr h)
 
 @[simp]
@@ -371,20 +385,24 @@ theorem wpow_pos : ∀ x : Surreal, 0 < ω^ x := by
   rintro ⟨x, _⟩
   exact Numeric.wpow_pos x
 
+@[simp]
+theorem wpow_abs (x : Surreal) : |ω^ x| = ω^ x :=
+  abs_of_pos (wpow_pos x)
+
 theorem strictMono_wpow : StrictMono (ω^ · : Surreal → _) := by
   rintro ⟨x, _⟩ ⟨y, _⟩
   exact Numeric.wpow_lt_wpow.2
 
 @[simp]
-theorem wpow_lt_wpow {x y : Surreal} : ω^ x < ω^ y ↔ x < y :=
+theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y :=
   strictMono_wpow.lt_iff_lt
 
 @[simp]
-theorem wpow_le_wpow {x y : Surreal} : ω^ x ≤ ω^ y ↔ x ≤ y :=
+theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y :=
   strictMono_wpow.le_iff_le
 
 @[simp]
-theorem wpow_inj {x y : Surreal} : ω^ x = ω^ y ↔ x = y :=
+theorem wpow_inj : ω^ x = ω^ y ↔ x = y :=
   strictMono_wpow.injective.eq_iff
 
 @[simp]
@@ -401,6 +419,53 @@ theorem wpow_neg : ∀ x : Surreal, ω^ -x = (ω^ x)⁻¹ := by
 theorem wpow_sub : ∀ x y : Surreal, ω^ (x - y) = ω^ x / ω^ y := by
   rintro ⟨x, _⟩ ⟨y, _⟩
   exact Surreal.mk_eq (Numeric.wpow_sub_equiv x y)
+
+theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
+  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_wpow r h
+
+theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
+  cases x; cases y; exact IGame.Numeric.wpow_lt_mul_wpow hr h
+
+theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
+  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_mul_wpow r hs h
+
+theorem archimedeanClassMk_wpow_strictAnti :
+    StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
+  refine fun x y h ↦ (ArchimedeanClass.mk_antitoneOn _ (wpow_pos _).le (wpow_pos _).le
+    (wpow_le_wpow.2 h.le)).lt_of_not_ge fun ⟨n, hn⟩ ↦ hn.not_gt ?_
+  simpa using mul_wpow_lt_wpow n h
+
+private theorem exists_archimedeanClassMk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
+    ∃ y : Subtype Numeric, ArchimedeanClass.mk (ω^ Surreal.mk y) = .mk (.mk x) := by
+  have IHl (y : ({y | y ∈ x.leftMoves} ∩ {y | 0 < y} :)) :
+      have : Numeric y := Numeric.of_mem_leftMoves y.2.1
+      ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ Surreal.mk z) = .mk (.mk y) := by
+    generalize_proofs
+    obtain ⟨_, _, hy⟩ := y
+    exact exists_archimedeanClassMk_wpow_eq' hy
+  have IHr (y : x.rightMoves) :
+      have : Numeric y := Numeric.of_mem_rightMoves y.2
+      ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ Surreal.mk z) = .mk (.mk y) := by
+    generalize_proofs
+    exact exists_archimedeanClassMk_wpow_eq' (h.trans (Numeric.lt_rightMove y.2))
+  choose f hf using IHl
+  choose g hg using IHr
+  by_contra!
+  have : Sma
+  apply this {Subtype.val '' range f | Subtype.val '' range g}ᴵ
+  sorry
+termination_by x
+decreasing_by igame_wf
+
+/-- Every non-zero surreal is commensurate to some `ω^ x`. -/
+theorem exists_archimedeanClassMk_wpow_eq (h : x ≠ 0) :
+    ∃ y, ArchimedeanClass.mk (ω^ y) = .mk x := by
+  obtain h | h := h.lt_or_gt <;> cases x
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_archimedeanClassMk_wpow_eq' (IGame.zero_lt_neg.2 h)
+    use .mk y
+    simpa using hy
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_archimedeanClassMk_wpow_eq' h
+    exact ⟨_, hy⟩
 
 end Surreal
 end
