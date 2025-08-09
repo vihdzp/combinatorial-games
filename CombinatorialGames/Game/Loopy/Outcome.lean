@@ -252,4 +252,16 @@ theorem isLeftLoss_iff_le_zero {x : IGame} : IsLeftLoss x ↔ x ≤ 0 := win_los
 theorem isRightWin_iff_lf_zero {x : IGame} : IsRightWin x ↔ x ⧏ 0 := win_loss_iff.2.1
 theorem isRightLoss_iff_zero_le {x : IGame} : IsRightLoss x ↔ 0 ≤ x := win_loss_iff.2.2
 
+theorem fuzzy_zero_iff_and {x : IGame} : x ‖ 0 ↔ IsLeftWin x ∧ IsRightWin x := by
+  rw [IncompRel, isLeftWin_iff_zero_lf, isRightWin_iff_lf_zero]
+
+theorem equiv_zero_iff_and {x : IGame} : x ≈ 0 ↔ IsLeftLoss x ∧ IsRightLoss x := by
+  rw [AntisymmRel, isLeftLoss_iff_le_zero, isRightLoss_iff_zero_le]
+
+theorem lt_zero_iff_and {x : IGame} : x < 0 ↔ IsLeftLoss x ∧ IsRightWin x := by
+  rw [lt_iff_le_not_ge, isLeftLoss_iff_le_zero, isRightWin_iff_lf_zero]
+
+theorem zero_lt_iff_an {x : IGame} : 0 < x ↔ IsLeftWin x ∧ IsRightLoss x := by
+  rw [lt_iff_le_not_ge, isLeftWin_iff_zero_lf, isRightLoss_iff_zero_le, and_comm]
+
 end IGame
