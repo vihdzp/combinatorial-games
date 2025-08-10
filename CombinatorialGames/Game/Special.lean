@@ -109,7 +109,7 @@ def tiny (x : IGame) : IGame :=
   {{0} | {{{0} | {-x}}ᴵ}}ᴵ
 
 @[inherit_doc] prefix:75 "⧾" => tiny
-recommended_spelling "tiny" for "⧾" in [«term⧾»]
+recommended_spelling "tiny" for "⧾" in [«term⧾_»]
 
 @[simp, game_cmp]
 theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
@@ -129,7 +129,7 @@ def miny (x : IGame) : IGame :=
   {{{{x} | {0}}ᴵ} | {0}}ᴵ
 
 @[inherit_doc] prefix:75 "⧿" => miny
-recommended_spelling "miny" for "⧿" in [«term⧿»]
+recommended_spelling "miny" for "⧿" in [«term⧿_»]
 
 @[simp, game_cmp]
 theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
@@ -160,7 +160,7 @@ def switch (x : IGame) : IGame :=
   {{x} | {-x}}ᴵ
 
 @[inherit_doc] prefix:75 "±" => switch
-recommended_spelling "switch" for "±" in [«term±»]
+recommended_spelling "switch" for "±" in [«term±_»]
 
 @[simp, game_cmp]
 theorem leftMoves_switch (x : IGame) : leftMoves (±x) = {x} :=
