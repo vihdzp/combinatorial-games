@@ -387,12 +387,30 @@ theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
 @[simp, norm_cast] theorem toSurreal_one : toSurreal 1 = 1 := by simpa using toSurreal_natCast 1
 
 @[simp]
-theorem toSurreal_add (x y : ℝ) : toSurreal (x + y) = x + y := by
-  simpa using Surreal.mk_eq (toIGame_add_equiv x y)
+theorem toSurreal_neg (x : ℝ) : toSurreal (-x) = -toSurreal x :=
+  Surreal.mk_eq (toIGame_neg _).antisymmRel
 
 @[simp]
-theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = x - y := by
-  simpa using Surreal.mk_eq (toIGame_sub_equiv x y)
+theorem toSurreal_add (x y : ℝ) : toSurreal (x + y) = x + y :=
+  Surreal.mk_eq (toIGame_add_equiv x y)
+
+@[simp]
+theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = x - y :=
+  Surreal.mk_eq (toIGame_sub_equiv x y)
+
+@[simp]
+theorem toSurreal_max (x y : ℝ) : max x y = max (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
+@[simp]
+theorem toSurreal_min (x y : ℝ) : min x y = min (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
+@[simp, norm_cast]
+theorem toSurreal_abs (x : ℝ) : |x| = |toSurreal x| := by
+  simp [abs]
 
 /-! For convenience, we deal with multiplication after defining `Real.toSurreal`. -/
 
