@@ -110,7 +110,6 @@ theorem mk_mul_congr {x₁ x₂ y₁ y₂ : Surreal} (h₁ : mk x₁ = mk x₂) 
   (mk_mul_le h₁ h₂).antisymm (mk_mul_le h₁.symm h₂.symm)
 
 end ArchimedeanClass
-  #exit
 
 /-! ### ω-map on `IGame` -/
 
@@ -702,9 +701,8 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
   apply wlog_eq_of_mk_eq_mk
-  rw [wpow_add, ArchimedeanClass.mk_mul]
-
-  #exit
+  rw [wpow_add]
+  exact ArchimedeanClass.mk_mul_congr (mk_wpow_log_eq hx) (mk_wpow_log_eq hy)
 
 @[simp]
 theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
