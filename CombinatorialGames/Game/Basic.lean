@@ -68,6 +68,7 @@ def ofSets (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] : Game.{u} :=
   mk {out '' s | out '' t}ᴵ
 
 @[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets s t
+recommended_spelling "ofSets" for "{· | ·}ᴳ" in [«term{_|_}ᴳ»]
 
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :

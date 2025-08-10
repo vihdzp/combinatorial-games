@@ -66,8 +66,8 @@ def Ordinal.toNimber : Ordinal ≃o Nimber :=
 def Nimber.toOrdinal : Nimber ≃o Ordinal :=
   OrderIso.refl _
 
-@[inherit_doc]
-scoped[Nimber] prefix:75 "∗" => Ordinal.toNimber
+@[inherit_doc] scoped[Nimber] prefix:75 "∗" => Ordinal.toNimber
+recommended_spelling "toNimber" for "∗" in [Nimber.«term∗_»]
 
 namespace Nimber
 

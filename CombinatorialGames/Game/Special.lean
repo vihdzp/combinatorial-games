@@ -29,6 +29,7 @@ def star : IGame :=
   {{0} | {0}}ᴵ
 
 @[inherit_doc] notation "⋆" => star
+recommended_spelling "star" for "⋆" in [«term⋆»]
 
 @[simp, game_cmp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
@@ -52,6 +53,7 @@ def half : IGame :=
   {{0} | {1}}ᴵ
 
 @[inherit_doc] notation "½" => half
+recommended_spelling "half" for "½" in [«term½»]
 
 @[simp, game_cmp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
@@ -69,6 +71,7 @@ def up : IGame :=
   {{0} | {⋆}}ᴵ
 
 @[inherit_doc] notation "↑" => up
+recommended_spelling "up" for "↑" in [«term↑»]
 
 @[simp, game_cmp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
@@ -84,6 +87,7 @@ def down : IGame :=
   {{⋆} | {0}}ᴵ
 
 @[inherit_doc] notation "↓" => down
+recommended_spelling "down" for "↓" in [«term↓»]
 
 @[simp, game_cmp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
@@ -105,6 +109,7 @@ def tiny (x : IGame) : IGame :=
   {{0} | {{{0} | {-x}}ᴵ}}ᴵ
 
 @[inherit_doc] prefix:75 "⧾" => tiny
+recommended_spelling "tiny" for "⧾" in [«term⧾»]
 
 @[simp, game_cmp]
 theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
@@ -124,6 +129,7 @@ def miny (x : IGame) : IGame :=
   {{{{x} | {0}}ᴵ} | {0}}ᴵ
 
 @[inherit_doc] prefix:75 "⧿" => miny
+recommended_spelling "miny" for "⧿" in [«term⧿»]
 
 @[simp, game_cmp]
 theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
@@ -154,6 +160,7 @@ def switch (x : IGame) : IGame :=
   {{x} | {-x}}ᴵ
 
 @[inherit_doc] prefix:75 "±" => switch
+recommended_spelling "switch" for "±" in [«term±»]
 
 @[simp, game_cmp]
 theorem leftMoves_switch (x : IGame) : leftMoves (±x) = {x} :=

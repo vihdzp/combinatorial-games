@@ -309,6 +309,7 @@ def ofFinsets (s t : Finset FGame) : FGame :=
     exact ⟨congrArg Multiset.toFinset ha, congrArg Multiset.toFinset hb⟩
 
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
+recommended_spelling "ofFinsets" for "{· | ·}ꟳ" in [«term{_|_}ꟳ»]
 
 private def moves_ofFinsets {s t : Finset FGame} :
     {s | t}ꟳ.leftMoves = s ∧ {s | t}ꟳ.rightMoves = t := by

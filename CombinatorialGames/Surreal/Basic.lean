@@ -440,6 +440,7 @@ def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
   exact H x hx y hy
 
 @[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
+recommended_spelling "ofSets" for "{· | ·}ˢ" in [«term{_|_}ˢ»]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
