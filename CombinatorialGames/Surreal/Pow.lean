@@ -476,19 +476,24 @@ theorem _root_.ArchimedeanClass.mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
     rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
     exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
 
+-- TODO: is there any reasonable way to generalize this?
+@[simp]
 theorem _root_.ArchimedeanClass.mk_realCast {r : ℝ} (h : r ≠ 0) :
     ArchimedeanClass.mk (r : Surreal) = ArchimedeanClass.mk 1 := by
   apply le_antisymm
   · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
     use n
-    simp only [ArchimedeanOrder.val_of, abs_one, nsmul_eq_mul]
-    have := ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
-    rw [← Real.toSurreal_le_iff, Real.toSurreal_one] at this
-    simp at this
-    exact this
-  · obtain ⟨n, hn⟩ := exists_nat_gt
+    simpa using Real.toSurreal_le_iff.2 <| ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
+  · obtain ⟨n, hn⟩ := exists_nat_gt |r|
+    use n
+    simpa using Real.toSurreal_le_iff.2 hn.le
 
-    #exit
+-- TODO: generalize, upstream.
+@[simp]
+theorem _root_.ArchimedeanClass.mk_ratCast {q : ℚ} (h : q ≠ 0) :
+    ArchimedeanClass.mk (q : Surreal) = ArchimedeanClass.mk 1 := by
+  rw [← Real.toSurreal_ratCast]
+  exact ArchimedeanClass.mk_realCast (mod_cast h)
 
 -- TODO: How do we write `ArchimedeanClass.mk` in theorem names? `mk` is ambiguous and
 -- `archimedeanClassMk` is far too long. Should we introduce notation? What should that look like?
@@ -563,7 +568,7 @@ private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
   apply Fits.equiv_of_forall_not_fits
   · constructor <;> intro y hy
     · have := Numeric.of_mem_leftMoves hy
-      obtain hy₀ | hy₀ := Numeric.le_or_lt y 0
+      obtain hy₀ | hy₀ := Numeric.le_or_gt y 0
       · exact (hy₀.trans_lt (IGame.Numeric.wpow_pos _)).not_ge
       · let y' : (x.leftMoves ∩ Ioi 0 :) := ⟨y, hy, hy₀⟩
         obtain ⟨n, hn⟩ := ArchimedeanClass.mk_le_mk.1 (hf y').le
@@ -606,9 +611,12 @@ theorem exists_mk_wpow_eq (h : x ≠ 0) :
   · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' h
     exact ⟨_, hy⟩
 
+/-! ### ω-logarithm -/
+
 /-- The ω-logarithm of a positive surreal `x` is the unique surreal `y` such that `x` is
-commensurate with `ω^ y`. As with `Real.log`, we set junk values `wlog 0 = 0` and
-`wlog (-x) = wlog x`. -/
+commensurate with `ω^ y`.
+
+As with `Real.log`, we set junk values `wlog 0 = 0` and `wlog (-x) = wlog x`. -/
 def wlog (x : Surreal) : Surreal :=
   if h : x = 0 then 0 else Classical.choose (exists_mk_wpow_eq h)
 
@@ -632,7 +640,43 @@ theorem wlog_eq_iff (h : x ≠ 0) :
     wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_log_eq h, wlog_eq_of_mk_eq_mk⟩
 
+@[simp]
+theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
+  obtain rfl | hr := eq_or_ne r 0
+  · simp
+  · rw [wlog_eq_iff (mod_cast hr), ArchimedeanClass.mk_realCast hr, wpow_zero]
 
+@[simp] theorem wlog_ratCast (q : ℚ) : wlog q = 0 := by simpa using wlog_realCast q
+@[simp] theorem wlog_intCast (n : ℤ) : wlog n = 0 := by simpa using wlog_realCast n
+@[simp] theorem wlog_natCast (n : ℕ) : wlog n = 0 := by simpa using wlog_realCast n
+
+end Surreal
+
+namespace IGame
+
+/-- Returns an arbitrary representative for `Surreal.wlog`. -/
+def wlog (x : IGame) : IGame := by
+  classical exact if _ : Numeric x then (Surreal.mk x).wlog.out else 0
+
+instance Numeric.wlog (x : IGame) [h : Numeric x] : Numeric (wlog x) := by
+  rw [IGame.wlog, dif_pos h]
+  infer_instance
+
+@[simp]
+theorem _root_.Surreal.mk_wlog (x : IGame) [h : Numeric x] :
+    Surreal.mk (wlog x) = (Surreal.mk x).wlog := by
+  simp_rw [wlog, dif_pos h, Surreal.out_eq]
+
+end IGame
+
+namespace Surreal
+open IGame
+
+private theorem numeric_of_forall_wlog_ne {x : IGame} [Numeric x] (h : 0 < x)
+    {f : (x.leftMoves ∩ Ioi 0 :) → Subtype Numeric} {g : x.rightMoves → Subtype Numeric}
+    (Hf : ∀ y (y), ω^ (f y).1 ≈ y.1) (Hg : ∀ y, ω^ (g y).1 ≈ y.1) :
+    Numeric {range (Subtype.val ∘ f) | range (Subtype.val ∘ g)}ᴵ := by
+  sorry
 
 end Surreal
 end
