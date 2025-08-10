@@ -301,7 +301,6 @@ instance : LE IGame where
 
 If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
 notation:50 x:50 " ⧏ " y:50 => ¬ y ≤ x
-
 recommended_spelling "lf" for "⧏" in [«term_⧏_»]
 
 /-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
@@ -392,12 +391,11 @@ theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
+recommended_spelling "equiv" for "≈" in [«term_≈_»]
 
 /-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
-
-recommended_spelling "equiv" for "≈" in [«term_≈_»]
 recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
