@@ -29,19 +29,97 @@ universe u
 
 open Set
 
+/-! ## For Mathlib-/
+
 -- TODO: upstream
 theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set α) (t : Set β) :
     Set.image2 f s t = Set.range (fun x : s × t ↦ f x.1 x.2) := by
   aesop
 
-/-- A typeclass for the the `ω^` notation. -/
-class Wpow (α : Type*) where
-  wpow : α → α
+namespace ArchimedeanClass
 
-prefix:75 "ω^ " => Wpow.wpow
+-- TODO: generalize, upstream.
+theorem mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
+    mk x ≤ mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
+  constructor
+  · rintro ⟨n, hn⟩
+    obtain rfl | hn₀ := n.eq_zero_or_pos
+    · simp_all
+    · use (n : ℚ)⁻¹
+      aesop (add simp [inv_mul_le_iff₀])
+  · rintro ⟨q, hq₀, hq⟩
+    obtain ⟨n, hn⟩ := exists_nat_gt q⁻¹
+    use n
+    simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
+    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
+    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
+
+--  TODO: golf using the previous theorem somehow?
+/-- A version of `ArchimedeanClass.mk_le_mk_of_pos` with dyadic rationals. -/
+theorem mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
+    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
+  constructor
+  · rintro ⟨n, hn⟩
+    obtain rfl | hn₀ := n.eq_zero_or_pos
+    · simp_all
+    · have hn' : 0 < (n : ℚ)⁻¹ := by simpa
+      obtain ⟨q, hq, hq'⟩ := exists_dyadic_btwn hn'
+      use q, hq
+      simp_rw [ArchimedeanOrder.val_of, nsmul_eq_mul] at hn
+      rw [← inv_mul_le_iff₀ (mod_cast hn₀)] at hn
+      apply (mul_le_mul_of_nonneg_right _ (abs_nonneg y)).trans hn
+      rw [← Rat.cast_lt (K := Surreal)] at hq'
+      simpa using hq'.le
+  · rintro ⟨q, hq₀, hq⟩
+    obtain ⟨n, hn⟩ := exists_nat_gt (q : ℚ)⁻¹
+    use n
+    simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
+    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
+    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
+
+-- TODO: is there any reasonable way to generalize this?
+@[simp]
+theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = ArchimedeanClass.mk 1 := by
+  apply le_antisymm
+  · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
+    use n
+    simpa using Real.toSurreal_le_iff.2 <| ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
+  · obtain ⟨n, hn⟩ := exists_nat_gt |r|
+    use n
+    simpa using Real.toSurreal_le_iff.2 hn.le
+
+-- TODO: generalize, upstream.
+@[simp]
+theorem mk_ratCast {q : ℚ} (h : q ≠ 0) :
+    ArchimedeanClass.mk (q : Surreal) = ArchimedeanClass.mk 1 := by
+  rw [← Real.toSurreal_ratCast]
+  exact ArchimedeanClass.mk_realCast (mod_cast h)
+
+private theorem mk_mul_le {x₁ x₂ y₁ y₂ : Surreal} (h₁ : mk x₁ = mk x₂) (h₂ : mk y₁ = mk y₂) :
+    mk (x₁ * y₁) ≤ mk (x₂ * y₂) := by
+  obtain ⟨m, hm⟩ := h₁.le
+  obtain ⟨n, hn⟩ := h₂.le
+  use m * n
+  convert mul_le_mul hm hn (abs_nonneg _) (nsmul_nonneg (abs_nonneg _) _) using 1 <;>
+    simp [abs_mul]
+  ring
+
+-- TODO: Perhaps we should define a product on `ArchimedeanClass` itself?
+theorem mk_mul_congr {x₁ x₂ y₁ y₂ : Surreal} (h₁ : mk x₁ = mk x₂) (h₂ : mk y₁ = mk y₂) :
+    mk (x₁ * y₁) = mk (x₂ * y₂) :=
+  (mk_mul_le h₁ h₂).antisymm (mk_mul_le h₁.symm h₂.symm)
+
+end ArchimedeanClass
+  #exit
 
 /-! ### ω-map on `IGame` -/
 
+/-- A typeclass for the the `ω^` notation. -/
+class Wpow (α : Type*) where
+  /-- The ω-map on games. -/
+  wpow : α → α
+
+@[inherit_doc] prefix:75 "ω^ " => Wpow.wpow
 noncomputable section
 namespace IGame
 
@@ -437,64 +515,6 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 
 /-! ### Archimedean classes -/
 
--- TODO: generalize, upstream.
-theorem _root_.ArchimedeanClass.mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
-    ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
-  constructor
-  · rintro ⟨n, hn⟩
-    obtain rfl | hn₀ := n.eq_zero_or_pos
-    · simp_all
-    · use (n : ℚ)⁻¹
-      aesop (add simp [inv_mul_le_iff₀])
-  · rintro ⟨q, hq₀, hq⟩
-    obtain ⟨n, hn⟩ := exists_nat_gt q⁻¹
-    use n
-    simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
-    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
-    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
-
---  TODO: golf using the previous theorem somehow?
-/-- A version of `ArchimedeanClass.mk_le_mk_of_pos` with dyadic rationals. -/
-theorem _root_.ArchimedeanClass.mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
-    ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
-  constructor
-  · rintro ⟨n, hn⟩
-    obtain rfl | hn₀ := n.eq_zero_or_pos
-    · simp_all
-    · have hn' : 0 < (n : ℚ)⁻¹ := by simpa
-      obtain ⟨q, hq, hq'⟩ := exists_dyadic_btwn hn'
-      use q, hq
-      simp_rw [ArchimedeanOrder.val_of, nsmul_eq_mul] at hn
-      rw [← inv_mul_le_iff₀ (mod_cast hn₀)] at hn
-      apply (mul_le_mul_of_nonneg_right _ (abs_nonneg y)).trans hn
-      rw [← Rat.cast_lt (K := Surreal)] at hq'
-      simpa using hq'.le
-  · rintro ⟨q, hq₀, hq⟩
-    obtain ⟨n, hn⟩ := exists_nat_gt (q : ℚ)⁻¹
-    use n
-    simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
-    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
-    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
-
--- TODO: is there any reasonable way to generalize this?
-@[simp]
-theorem _root_.ArchimedeanClass.mk_realCast {r : ℝ} (h : r ≠ 0) :
-    ArchimedeanClass.mk (r : Surreal) = ArchimedeanClass.mk 1 := by
-  apply le_antisymm
-  · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
-    use n
-    simpa using Real.toSurreal_le_iff.2 <| ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
-  · obtain ⟨n, hn⟩ := exists_nat_gt |r|
-    use n
-    simpa using Real.toSurreal_le_iff.2 hn.le
-
--- TODO: generalize, upstream.
-@[simp]
-theorem _root_.ArchimedeanClass.mk_ratCast {q : ℚ} (h : q ≠ 0) :
-    ArchimedeanClass.mk (q : Surreal) = ArchimedeanClass.mk 1 := by
-  rw [← Real.toSurreal_ratCast]
-  exact ArchimedeanClass.mk_realCast (mod_cast h)
-
 -- TODO: How do we write `ArchimedeanClass.mk` in theorem names? `mk` is ambiguous and
 -- `archimedeanClassMk` is far too long. Should we introduce notation? What should that look like?
 
@@ -620,6 +640,18 @@ As with `Real.log`, we set junk values `wlog 0 = 0` and `wlog (-x) = wlog x`. -/
 def wlog (x : Surreal) : Surreal :=
   if h : x = 0 then 0 else Classical.choose (exists_mk_wpow_eq h)
 
+/-- Returns an arbitrary representative for `Surreal.wlog`. -/
+def _root_.IGame.wlog (x : IGame) : IGame := by
+  classical exact if _ : Numeric x then (Surreal.mk x).wlog.out else 0
+
+instance _root_.IGame.Numeric.wlog (x : IGame) [h : Numeric x] : Numeric x.wlog := by
+  rw [IGame.wlog, dif_pos h]
+  infer_instance
+
+@[simp]
+theorem mk_wlog (x : IGame) [h : Numeric x] : Surreal.mk x.wlog = (Surreal.mk x).wlog := by
+  simp_rw [IGame.wlog, dif_pos h, Surreal.out_eq]
+
 @[simp]
 theorem wlog_zero : wlog 0 = 0 :=
   dif_pos rfl
@@ -640,6 +672,40 @@ theorem wlog_eq_iff (h : x ≠ 0) :
     wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_log_eq h, wlog_eq_of_mk_eq_mk⟩
 
+theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
+  simp
+
+@[simp]
+theorem wlog_neg (x : Surreal) : wlog (-x) = wlog x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simp
+  · apply wlog_eq_of_mk_eq_mk
+    simpa using mk_wpow_log_eq hx
+
+@[simp]
+theorem wlog_abs (x : Surreal) : wlog |x| = wlog x :=
+  abs_by_cases (wlog · = _) rfl (wlog_neg _)
+
+theorem wlog_surjective : Function.Surjective wlog :=
+  fun _ ↦ ⟨_, wlog_wpow _⟩
+
+theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
+  intro a ha b hb h
+  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_log_eq ha.ne', mk_wpow_log_eq hb.ne']
+  apply ArchimedeanClass.mk_antitoneOn _ ha.le hb.le h
+
+theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
+  intro a ha b hb h
+  rw [← neg_le_neg_iff] at h
+  convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+@[simp]
+theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
+  apply wlog_eq_of_mk_eq_mk
+  rw [wpow_add, ArchimedeanClass.mk_mul]
+
+  #exit
+
 @[simp]
 theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
   obtain rfl | hr := eq_or_ne r 0
@@ -650,33 +716,31 @@ theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
 @[simp] theorem wlog_intCast (n : ℤ) : wlog n = 0 := by simpa using wlog_realCast n
 @[simp] theorem wlog_natCast (n : ℕ) : wlog n = 0 := by simpa using wlog_realCast n
 
-end Surreal
-
-namespace IGame
-
-/-- Returns an arbitrary representative for `Surreal.wlog`. -/
-def wlog (x : IGame) : IGame := by
-  classical exact if _ : Numeric x then (Surreal.mk x).wlog.out else 0
-
-instance Numeric.wlog (x : IGame) [h : Numeric x] : Numeric (wlog x) := by
-  rw [IGame.wlog, dif_pos h]
-  infer_instance
-
-@[simp]
-theorem _root_.Surreal.mk_wlog (x : IGame) [h : Numeric x] :
-    Surreal.mk (wlog x) = (Surreal.mk x).wlog := by
-  simp_rw [wlog, dif_pos h, Surreal.out_eq]
-
-end IGame
-
-namespace Surreal
-open IGame
-
-private theorem numeric_of_forall_wlog_ne {x : IGame} [Numeric x] (h : 0 < x)
-    {f : (x.leftMoves ∩ Ioi 0 :) → Subtype Numeric} {g : x.rightMoves → Subtype Numeric}
-    (Hf : ∀ y (y), ω^ (f y).1 ≈ y.1) (Hg : ∀ y, ω^ (g y).1 ≈ y.1) :
-    Numeric {range (Subtype.val ∘ f) | range (Subtype.val ∘ g)}ᴵ := by
+theorem numeric_of_forall_wlog_ne {x : IGame} [Numeric x] (h : 0 < x)
+    (Hf : ∀ y (hy : y ∈ x.leftMoves), 0 < y →
+      wlog (@mk y (Numeric.of_mem_leftMoves hy)) ≠ wlog (mk x))
+    (Hg : ∀ y (hy : y ∈ x.rightMoves),
+      wlog (@mk y (Numeric.of_mem_rightMoves hy)) ≠ wlog (mk x)) :
+    Numeric {IGame.wlog '' {y ∈ x.leftMoves | 0 < y} | IGame.wlog '' x.rightMoves}ᴵ := by
   sorry
+
+theorem equiv_wlog_of_forall_wlog_ne {x : IGame} [Numeric x] (h : 0 < x)
+    (Hf : ∀ y (hy : y ∈ x.leftMoves), 0 < y →
+      wlog (@mk y (Numeric.of_mem_leftMoves hy)) ≠ wlog (mk x))
+    (Hg : ∀ y (hy : y ∈ x.rightMoves),
+      wlog (@mk y (Numeric.of_mem_rightMoves hy)) ≠ wlog (mk x)) :
+    ω^ {IGame.wlog '' {y ∈ x.leftMoves | 0 < y} | IGame.wlog '' x.rightMoves}ᴵ ≈ x := by
+  sorry
+
+/-- A game not commensurate with its positive options is a power of `ω`. -/
+theorem mem_range_wlog_of_forall_wlog_ne {x : IGame} [Numeric x] (h : 0 < x)
+    (Hf : ∀ y (hy : y ∈ x.leftMoves), 0 < y →
+      wlog (@mk y (Numeric.of_mem_leftMoves hy)) ≠ wlog (mk x))
+    (Hg : ∀ y (hy : y ∈ x.rightMoves),
+      wlog (@mk y (Numeric.of_mem_rightMoves hy)) ≠ wlog (mk x)) :
+    mk x ∈ range (ω^ ·) := by
+  have hn := numeric_of_forall_wlog_ne h Hf Hg
+  exact ⟨@mk _ hn, mk_eq (equiv_wlog_of_forall_wlog_ne h Hf Hg)⟩
 
 end Surreal
 end
