@@ -10,6 +10,7 @@ import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.Loopy.IGame
+import CombinatorialGames.Game.Loopy.Outcome
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
@@ -19,6 +20,7 @@ import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Game.Tactic
+import CombinatorialGames.Mathlib.Archimedean
 import CombinatorialGames.Mathlib.Concept
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift

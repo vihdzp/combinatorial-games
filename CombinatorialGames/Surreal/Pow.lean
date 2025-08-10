@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.Archimedean
 import CombinatorialGames.Surreal.Real
-import Mathlib.Algebra.Order.Archimedean.Class
 
 /-!
 # Surreal exponentiation
@@ -79,7 +79,7 @@ theorem mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
 
 -- TODO: is there any reasonable way to generalize this?
 @[simp]
-theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = ArchimedeanClass.mk 1 := by
+theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   apply le_antisymm
   · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
     use n
@@ -90,24 +90,9 @@ theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = ArchimedeanClas
 
 -- TODO: generalize, upstream.
 @[simp]
-theorem mk_ratCast {q : ℚ} (h : q ≠ 0) :
-    ArchimedeanClass.mk (q : Surreal) = ArchimedeanClass.mk 1 := by
+theorem mk_ratCast {q : ℚ} (h : q ≠ 0) : mk (q : Surreal) = 0 := by
   rw [← Real.toSurreal_ratCast]
   exact ArchimedeanClass.mk_realCast (mod_cast h)
-
-private theorem mk_mul_le {x₁ x₂ y₁ y₂ : Surreal} (h₁ : mk x₁ = mk x₂) (h₂ : mk y₁ = mk y₂) :
-    mk (x₁ * y₁) ≤ mk (x₂ * y₂) := by
-  obtain ⟨m, hm⟩ := h₁.le
-  obtain ⟨n, hn⟩ := h₂.le
-  use m * n
-  convert mul_le_mul hm hn (abs_nonneg _) (nsmul_nonneg (abs_nonneg _) _) using 1 <;>
-    simp [abs_mul]
-  ring
-
--- TODO: Perhaps we should define a product on `ArchimedeanClass` itself?
-theorem mk_mul_congr {x₁ x₂ y₁ y₂ : Surreal} (h₁ : mk x₁ = mk x₂) (h₂ : mk y₁ = mk y₂) :
-    mk (x₁ * y₁) = mk (x₂ * y₂) :=
-  (mk_mul_le h₁ h₂).antisymm (mk_mul_le h₁.symm h₂.symm)
 
 end ArchimedeanClass
 
