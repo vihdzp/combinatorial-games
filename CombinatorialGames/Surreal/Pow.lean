@@ -388,6 +388,10 @@ theorem wpow_pos : ∀ x : Surreal, 0 < ω^ x := by
   exact Numeric.wpow_pos x
 
 @[simp]
+theorem wpow_ne_zero (x : Surreal) : ω^ x ≠ 0 :=
+  (wpow_pos x).ne'
+
+@[simp]
 theorem wpow_abs (x : Surreal) : |ω^ x| = ω^ x :=
   abs_of_pos (wpow_pos x)
 
@@ -431,38 +435,7 @@ theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
   cases x; cases y; exact IGame.Numeric.mul_wpow_lt_mul_wpow r hs h
 
-/-- The `<` relation on `ArchimedeanClass`. `x ≪ y` means that `n * x < y` for every `n : ℕ`. -/
-notation:50 x:50 " ≪ " y:50 => ArchimedeanClass.mk y < ArchimedeanClass.mk x
-
-/-- The `=` relation on `ArchimedeanClass`. `x ≡ y` means that `x` and `y` are commensurate, i.e.
-`x < n * y` and `y < n * x` for some `n : ℕ`. -/
-notation:50 x:50 " ≡ " y:50 => ArchimedeanClass.mk x = ArchimedeanClass.mk y
-
-/-- The `≤` relation on `ArchimedeanClass`. `x ⪣ y` means that `y < n * x` for some `n : ℕ`. -/
-notation:50 x:50 " ⪣ " y:50 => ArchimedeanClass.mk y ≤ ArchimedeanClass.mk x
-
-recommended_spelling "llt" for "≪" in [«term_≪_»]
-recommended_spelling "lle" for "⪣" in [«term_⪣_»]
-recommended_spelling "comm" for "≡" in [«term_≡_»]
-
-theorem mk_wpow_strictAnti :
-    StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
-  refine fun x y h ↦ (ArchimedeanClass.mk_antitoneOn _ (wpow_pos _).le (wpow_pos _).le
-    (wpow_le_wpow.2 h.le)).lt_of_not_ge fun ⟨n, hn⟩ ↦ hn.not_gt ?_
-  simpa using mul_wpow_lt_wpow n h
-
-@[simp]
-theorem wpow_llt_wpow_iff : ω^ x ≪ ω^ y ↔ x < y :=
-  mk_wpow_strictAnti.lt_iff_lt
-
-@[simp]
-theorem mk_wpow_le_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) ≤ ArchimedeanClass.mk (ω^ y) ↔ y ≤ x :=
-  mk_wpow_strictAnti.le_iff_le
-
-/-- `ω^ x` and `ω^ y` are commensurate iff `x = y`. -/
-@[simp]
-theorem mk_wpow_inj : ArchimedeanClass.mk (ω^ x) = ArchimedeanClass.mk (ω^ y) ↔ x = y :=
-  mk_wpow_strictAnti.injective.eq_iff
+/-! ### Archimedean classes -/
 
 -- TODO: generalize, upstream.
 theorem _root_.ArchimedeanClass.mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
@@ -480,6 +453,7 @@ theorem _root_.ArchimedeanClass.mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
     rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
     exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
 
+--  TODO: golf using the previous theorem somehow?
 /-- A version of `ArchimedeanClass.mk_le_mk_of_pos` with dyadic rationals. -/
 theorem _root_.ArchimedeanClass.mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
     ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
@@ -501,6 +475,54 @@ theorem _root_.ArchimedeanClass.mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
     simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
     rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
     exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
+
+theorem _root_.ArchimedeanClass.mk_realCast {r : ℝ} (h : r ≠ 0) :
+    ArchimedeanClass.mk (r : Surreal) = ArchimedeanClass.mk 1 := by
+  apply le_antisymm
+  · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
+    use n
+    simp only [ArchimedeanOrder.val_of, abs_one, nsmul_eq_mul]
+    have := ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
+    rw [← Real.toSurreal_le_iff, Real.toSurreal_one] at this
+    simp at this
+    exact this
+  · obtain ⟨n, hn⟩ := exists_nat_gt
+
+    #exit
+
+-- TODO: How do we write `ArchimedeanClass.mk` in theorem names? `mk` is ambiguous and
+-- `archimedeanClassMk` is far too long. Should we introduce notation? What should that look like?
+
+theorem mk_wpow_strictAnti :
+    StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
+  refine fun x y h ↦ (ArchimedeanClass.mk_antitoneOn _ (wpow_pos _).le (wpow_pos _).le
+    (wpow_le_wpow.2 h.le)).lt_of_not_ge fun ⟨n, hn⟩ ↦ hn.not_gt ?_
+  simpa using mul_wpow_lt_wpow n h
+
+@[simp]
+theorem mk_wpow_lt_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) < ArchimedeanClass.mk (ω^ y) ↔ y < x :=
+  mk_wpow_strictAnti.lt_iff_lt
+
+@[simp]
+theorem mk_wpow_le_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) ≤ ArchimedeanClass.mk (ω^ y) ↔ y ≤ x :=
+  mk_wpow_strictAnti.le_iff_le
+
+/-- `ω^ x` and `ω^ y` are commensurate iff `x = y`. -/
+@[simp]
+theorem mk_wpow_inj : ArchimedeanClass.mk (ω^ x) = ArchimedeanClass.mk (ω^ y) ↔ x = y :=
+  mk_wpow_strictAnti.injective.eq_iff
+
+private theorem numeric_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
+    {f : (x.leftMoves ∩ Ioi 0 :) → Subtype Numeric} {g : x.rightMoves → Subtype Numeric}
+    (Hf : ∀ y, ω^ (f y).1 ≈ y.1) (Hg : ∀ y, ω^ (g y).1 ≈ y.1) :
+    Numeric {range (Subtype.val ∘ f) | range (Subtype.val ∘ g)}ᴵ := by
+  sorry
+
+private theorem eq_wpow_of_forall_mk_ne_mk {x : IGame.{u}} [Numeric x] (h : 0 < x)
+    {f : (x.leftMoves ∩ Ioi 0 :) → Subtype Numeric.{u}} {g : x.rightMoves → Subtype Numeric.{u}}
+    (Hf : ∀ y, ω^ (f y).1 ≈ y.1) (Hg : ∀ y, ω^ (g y).1 ≈ y.1) :
+    ω^ x ≈ {range (Subtype.val ∘ f) | range (Subtype.val ∘ g)}ᴵ := by
+  sorry
 
 private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
     ∃ y : Subtype Numeric, ArchimedeanClass.mk (ω^ mk y) = .mk (mk x) := by
@@ -536,6 +558,8 @@ private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
   apply H ⟨_, this⟩
   congr
   simp_rw [← mk_wpow, mk_eq_mk]
+  -- TODO: you actually need to prove the other direction
+  -- rw [equiv_comm]
   apply Fits.equiv_of_forall_not_fits
   · constructor <;> intro y hy
     · have := Numeric.of_mem_leftMoves hy
@@ -567,7 +591,7 @@ private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
       obtain ⟨q, hq₀, hq⟩ := (ArchimedeanClass.mk_le_mk_of_pos' (wpow_pos _)).1 (hf a).ge
       obtain ⟨n, hn⟩ := exists_nat_gt (r * q)
       use a.1, a.2.1
-      apply ArchimedeanClass.mk_antitoneOn
+      sorry
   · sorry
 termination_by x
 decreasing_by igame_wf
@@ -581,6 +605,34 @@ theorem exists_mk_wpow_eq (h : x ≠ 0) :
     simpa using hy
   · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' h
     exact ⟨_, hy⟩
+
+/-- The ω-logarithm of a positive surreal `x` is the unique surreal `y` such that `x` is
+commensurate with `ω^ y`. As with `Real.log`, we set junk values `wlog 0 = 0` and
+`wlog (-x) = wlog x`. -/
+def wlog (x : Surreal) : Surreal :=
+  if h : x = 0 then 0 else Classical.choose (exists_mk_wpow_eq h)
+
+@[simp]
+theorem wlog_zero : wlog 0 = 0 :=
+  dif_pos rfl
+
+@[simp]
+theorem mk_wpow_log_eq (h : x ≠ 0) : ArchimedeanClass.mk (ω^ wlog x) = ArchimedeanClass.mk x := by
+  rw [wlog, dif_neg h]
+  exact Classical.choose_spec (exists_mk_wpow_eq h)
+
+theorem wlog_eq_of_mk_eq_mk (h : ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x) :
+    wlog x = y := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simp at h
+  · rwa [← mk_wpow_log_eq hx, eq_comm, mk_wpow_inj] at h
+
+@[simp]
+theorem wlog_eq_iff (h : x ≠ 0) :
+    wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
+  ⟨fun hy ↦ hy ▸ mk_wpow_log_eq h, wlog_eq_of_mk_eq_mk⟩
+
+
 
 end Surreal
 end
