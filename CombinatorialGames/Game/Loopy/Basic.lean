@@ -331,6 +331,7 @@ noncomputable def ofSets (l : Set LGame.{u}) (r : Set LGame.{u})
   simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
 
 @[inherit_doc] notation "{" s " | " t "}ᴸ" => ofSets s t
+recommended_spelling "ofSets" for "{· | ·}ᴸ" in [«term{_|_}ᴸ»]
 
 @[simp]
 theorem leftMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.leftMoves = l := by

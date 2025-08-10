@@ -31,6 +31,7 @@ class Wpow (α : Type*) where
   wpow : α → α
 
 prefix:75 "ω^ " => Wpow.wpow
+recommended_spelling "wpow" for "ω^" in [«termω^_»]
 
 noncomputable section
 namespace IGame

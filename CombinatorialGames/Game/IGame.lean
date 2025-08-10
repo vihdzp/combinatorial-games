@@ -116,6 +116,7 @@ def ofSets (s t : Set IGame.{u}) [hs : Small.{u} s] [ht : Small.{u} t] : IGame.{
   QPF.Fix.mk ⟨⟨s, t⟩, ⟨hs, ht⟩⟩
 
 @[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
+recommended_spelling "ofSets" for "{· | ·}ᴵ" in [«term{_|_}ᴵ»]
 
 /-- The set of left moves of the game. -/
 def leftMoves (x : IGame.{u}) : Set IGame.{u} := x.dest.1.1
@@ -296,38 +297,39 @@ instance : LE IGame where
     (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
     (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
 
-/-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
+/-- The less or fuzzy relation on games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
 If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
 notation:50 x:50 " ⧏ " y:50 => ¬ y ≤ x
+recommended_spelling "lf" for "⧏" in [«term_⧏_»]
 
-/-- Definition of `x ≤ y` on pre-games, in terms of `⧏`. -/
+/-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
     x ≤ y ↔ (∀ z ∈ x.leftMoves, z ⧏ y) ∧ (∀ z ∈ y.rightMoves, x ⧏ z) :=
   propext_iff.1 <| Sym2.GameAdd.fix_eq ..
 
-/-- Definition of `x ⧏ y` on pre-games, in terms of `≤`. -/
+/-- Definition of `x ⧏ y` on games, in terms of `≤`. -/
 theorem lf_iff_exists_le {x y : IGame} :
     x ⧏ y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
   simpa [not_and_or, -not_and] using le_iff_forall_lf.not
 
-/-- The definition of `0 ≤ x` on pre-games, in terms of `0 ⧏`. -/
+/-- The definition of `0 ≤ x` on games, in terms of `0 ⧏`. -/
 theorem zero_le {x : IGame} : 0 ≤ x ↔ ∀ y ∈ x.rightMoves, 0 ⧏ y := by
   rw [le_iff_forall_lf]; simp
 
-/-- The definition of `x ≤ 0` on pre-games, in terms of `⧏ 0`. -/
+/-- The definition of `x ≤ 0` on games, in terms of `⧏ 0`. -/
 theorem le_zero {x : IGame} : x ≤ 0 ↔ ∀ y ∈ x.leftMoves, y ⧏ 0 := by
   rw [le_iff_forall_lf]; simp
 
-/-- The definition of `0 ⧏ x` on pre-games, in terms of `0 ≤`. -/
+/-- The definition of `0 ⧏ x` on games, in terms of `0 ≤`. -/
 theorem zero_lf {x : IGame} : 0 ⧏ x ↔ ∃ y ∈ x.leftMoves, 0 ≤ y := by
   rw [lf_iff_exists_le]; simp
 
-/-- The definition of `x ⧏ 0` on pre-games, in terms of `≤ 0`. -/
+/-- The definition of `x ⧏ 0` on games, in terms of `≤ 0`. -/
 theorem lf_zero {x : IGame} : x ⧏ 0 ↔ ∃ y ∈ x.rightMoves, y ≤ 0 := by
   rw [lf_iff_exists_le]; simp
 
-/-- The definition of `x ≤ y` on pre-games, in terms of `≤` two moves later.
+/-- The definition of `x ≤ y` on games, in terms of `≤` two moves later.
 
 Note that it's often more convenient to use `le_iff_forall_lf`, which only unfolds the definition by
 one step. -/
@@ -337,7 +339,7 @@ theorem le_def {x y : IGame} : x ≤ y ↔
   rw [le_iff_forall_lf]
   congr! 2 <;> rw [lf_iff_exists_le]
 
-/-- The definition of `x ⧏ y` on pre-games, in terms of `⧏` two moves later.
+/-- The definition of `x ⧏ y` on games, in terms of `⧏` two moves later.
 
 Note that it's often more convenient to use `lf_iff_exists_le`, which only unfolds the definition by
 one step. -/
@@ -389,10 +391,12 @@ theorem lf_rightMove {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
+recommended_spelling "equiv" for "≈" in [«term_≈_»]
 
 /-- The "fuzzy" relation `x ‖ y` means that `x ⧏ y` and `y ⧏ x`. This is notation for
 `IncompRel (⬝ ≤ ⬝) x y`. -/
 notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
+recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.AntisymmRel]
