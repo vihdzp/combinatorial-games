@@ -111,17 +111,17 @@ theorem mk_mulOption (x y a b : IGame) :
 @[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
 @[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
-@[simp]
+@[simp, norm_cast]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
   | 0 => rfl
   | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
 
-@[simp]
+@[simp, norm_cast]
 theorem mk_intCast (n : ℤ) : mk n = n := by
   cases n <;> simp
 
-@[simp] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
-@[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
+@[simp, norm_cast] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
+@[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
 
 theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp

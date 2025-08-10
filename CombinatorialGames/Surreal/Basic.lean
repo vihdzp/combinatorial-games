@@ -274,6 +274,7 @@ theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits 
   · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_ge <| H z (.of_mem_rightMoves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
+@[simp]
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
   refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
 
