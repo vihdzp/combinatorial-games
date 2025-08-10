@@ -101,6 +101,28 @@ theorem add_right_cancel_of_ne_top {x y z : ArchimedeanClass M} (hx : x ≠ ⊤)
   simp_rw [← add_comm x] at h
   exact add_left_cancel_of_ne_top hx h
 
+@[simp]
+theorem abs_natCast {α : Type*} [AddGroupWithOne α] [Lattice α]
+    [ZeroLEOneClass α] [AddLeftMono α] (n : ℕ) : |(n : α)| = n :=
+  abs_of_nonneg n.cast_nonneg'
+
+theorem abs_natCast' (n : ℕ) : |(n : ℤ)| = n := by
+  apply abs_natCast
+
+@[simp]
+theorem mk_intCast {n : ℤ} (h : n ≠ 0) : mk (n : M) = 0 := by
+  apply le_antisymm
+  · use 1
+    simp
+    rw [Int.abs_natCast]
+    exact?
+
+@[simp]
+theorem mk_natCast {n : ℕ} (h : n ≠ 0) : mk (n : M) = 0 := by
+  rw [← Int.cast_natCast]
+  exact mk_intCast (mod_cast h)
+
+#exit
 variable (M) in
 /-- `ArchimedeanClass.mk` defines a `AddValuation` on the ring `M`. -/
 noncomputable
