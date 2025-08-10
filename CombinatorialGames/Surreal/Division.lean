@@ -168,7 +168,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     first | have := Numeric.of_mem_leftMoves hyx | have := Numeric.of_mem_rightMoves hyx
     first | have := Hl a ha | have := Hr a ha
     try (have := hr y hyx; have hy := hx.trans (Numeric.lt_rightMove hyx))
-  · obtain hy | hy := Numeric.lt_or_le 0 y
+  · obtain hy | hy := Numeric.lt_or_ge 0 y
     · have := hl y hyx hy
       rw [(mulOption_self_inv x (hl' y hyx hy) a).lt_congr_left, add_comm,
         ← IGame.lt_sub_iff_add_lt, (IGame.sub_self_equiv _).lt_congr_right]
@@ -182,7 +182,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     apply Numeric.mul_neg_of_neg_of_pos _ hy
     rw [IGame.sub_neg]
     exact Numeric.lt_rightMove (invOption_right_right_mem_rightMoves_inv hx hy hyx ha)
-  · obtain hy | hy := Numeric.lt_or_le 0 y
+  · obtain hy | hy := Numeric.lt_or_ge 0 y
     · have := hl y hyx hy
       rw [(mulOption_self_inv x (hl' y hyx hy) a).lt_congr_right, add_comm,
         ← IGame.sub_lt_iff_lt_add, (IGame.sub_self_equiv _).lt_congr_left]
