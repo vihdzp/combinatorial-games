@@ -404,6 +404,11 @@ theorem toSurreal_max (x y : ℝ) : max x y = max (toSurreal x) (toSurreal y) :=
   have := le_total x y
   aesop
 
+@[simp]
+theorem toSurreal_min (x y : ℝ) : min x y = min (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
 @[simp, norm_cast]
 theorem toSurreal_abs (x : ℝ) : |x| = |toSurreal x| := by
   simp [abs]
