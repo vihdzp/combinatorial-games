@@ -1,6 +1,20 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
 import Mathlib.SetTheory.Ordinal.Family
 
-open Lean Elab Command
+/-!
+# Declare type aliases of `Ordinal`
+
+This repository contains two type aliases of `Ordinal`, each preserving the order structure but with
+distinct arithmetic defined on it, namely `NatOrdinal` and `Nimber`. We define a `ordinal_alias!`
+macro which contains all the boilerplate required to set up these types. This also ensures that the
+API between both stays consistent.
+-/
+
+open Lean
 
 /-- Doc-comment allowing antiquotation. -/
 def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
@@ -14,6 +28,7 @@ def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
 def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
 
+/-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 $doc:docComment
