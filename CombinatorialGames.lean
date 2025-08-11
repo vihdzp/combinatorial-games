@@ -18,7 +18,7 @@ import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
-import CombinatorialGames.Game.Tactic
+import CombinatorialGames.Tactic.GameCmp
 import CombinatorialGames.Mathlib.Concept
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
@@ -29,7 +29,7 @@ import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Nimber.Simplicity
-import CombinatorialGames.Register
+import CombinatorialGames.Tactic.Register
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut

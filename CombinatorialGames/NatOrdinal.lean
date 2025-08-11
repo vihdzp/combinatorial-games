@@ -43,6 +43,13 @@ universe u v
 
 open Function Order Set
 
+@[inherit_doc]
+
+example : "sus" = concat("su", "s") :=
+  rfl
+
+#exit
+
 noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `NatOrdinal` -/
