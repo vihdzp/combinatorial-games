@@ -92,13 +92,15 @@ theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVa
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def $(mkIdent `rec) {β : $Alias → Sort*} (h : ∀ a, β ($(mkOf Alias) a)) (a) : β a :=
-  h ($(mkVal Alias) a)
+protected def $(mkIdent `ind) {β : $Alias → Sort*} ($(mkIdent `mk) :
+    ∀ a, β ($(mkOf Alias) a)) (a) : β a :=
+  $(mkIdent `mk) ($(mkVal Alias) a)
 
 $(mkDocComment s!" `Ordinal.induction` but for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
+@[simp] protected theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le
 @[simp] protected theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
 @[simp] protected theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
 protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
