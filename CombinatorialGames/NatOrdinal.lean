@@ -52,19 +52,18 @@ def NatOrdinal : Type _ :=
   -- Porting note: used to derive LinearOrder & SuccOrder but need to manually define
   Ordinal deriving Zero, Inhabited, One, WellFoundedRelation
 
+instance NatOrdinal.instLinearOrder : LinearOrder NatOrdinal := Ordinal.instLinearOrder
+instance NatOrdinal.instSuccOrder : SuccOrder NatOrdinal := Ordinal.instSuccOrder
+instance NatOrdinal.instOrderBot : OrderBot NatOrdinal := Ordinal.instOrderBot
+instance NatOrdinal.instNoMaxOrder : NoMaxOrder NatOrdinal := Ordinal.instNoMaxOrder
+instance NatOrdinal.instZeroLEOneClass : ZeroLEOneClass NatOrdinal := Ordinal.instZeroLEOneClass
+instance NatOrdinal.instNeZeroOne : NeZero (1 : NatOrdinal) := Ordinal.instNeZeroOne
+
+instance NatOrdinal.uncountable : Uncountable NatOrdinal :=
+  Ordinal.uncountable
+
 namespace NatOrdinal
 open Ordinal
-
-instance : LinearOrder NatOrdinal := Ordinal.instLinearOrder
-instance : SuccOrder NatOrdinal := Ordinal.instSuccOrder
-instance : OrderBot NatOrdinal := Ordinal.instOrderBot
-instance : NoMaxOrder NatOrdinal := Ordinal.instNoMaxOrder
-instance : ZeroLEOneClass NatOrdinal := Ordinal.instZeroLEOneClass
-instance : NeZero (1 : NatOrdinal) := Ordinal.instNeZeroOne
-instance : Uncountable NatOrdinal := Ordinal.uncountable
-instance : WellFoundedLT NatOrdinal := Ordinal.wellFoundedLT
-instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
-  Ordinal.instConditionallyCompleteLinearOrderBot
 
 /-- The identity function between `Ordinal` and `NatOrdinal`. -/
 @[match_pattern]
