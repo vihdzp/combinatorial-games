@@ -48,19 +48,15 @@ noncomputable section
 def Nimber : Type _ :=
   Ordinal deriving Zero, Inhabited, One, Nontrivial, WellFoundedRelation
 
+instance Nimber.instLinearOrder : LinearOrder Nimber := Ordinal.instLinearOrder
+instance Nimber.instSuccOrder : SuccOrder Nimber := Ordinal.instSuccOrder
+instance Nimber.instOrderBot : OrderBot Nimber := Ordinal.instOrderBot
+instance Nimber.instNoMaxOrder : NoMaxOrder Nimber := Ordinal.instNoMaxOrder
+instance Nimber.instZeroLEOneClass : ZeroLEOneClass Nimber := Ordinal.instZeroLEOneClass
+instance Nimber.instNeZeroOne : NeZero (1 : Nimber) := Ordinal.instNeZeroOne
+
 namespace Nimber
 open Ordinal
-
-instance : LinearOrder Nimber := Ordinal.instLinearOrder
-instance : SuccOrder Nimber := Ordinal.instSuccOrder
-instance : OrderBot Nimber := Ordinal.instOrderBot
-instance : NoMaxOrder Nimber := Ordinal.instNoMaxOrder
-instance : ZeroLEOneClass Nimber := Ordinal.instZeroLEOneClass
-instance : NeZero (1 : Nimber) := Ordinal.instNeZeroOne
-instance : Uncountable Nimber := Ordinal.uncountable
-instance : WellFoundedLT Nimber := Ordinal.wellFoundedLT
-instance : ConditionallyCompleteLinearOrderBot Nimber :=
-  Ordinal.instConditionallyCompleteLinearOrderBot
 
 /-- The identity function between `Ordinal` and `Nimber`. -/
 @[match_pattern]
