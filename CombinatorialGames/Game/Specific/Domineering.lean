@@ -147,11 +147,13 @@ instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
 
 end Domineering
 
-open Domineering
+end IGame
+
+open IGame Domineering
+
+-- TODO: this should probably go much earlier in the file.
 
 /-- The game of domineering. -/
-def _root_.ConcreteGame.domineering : ConcreteGame Domineering where
+def ConcreteGame.domineering : ConcreteGame Domineering where
   leftMoves x := {y | relLeft y x}
   rightMoves x :=  {y | relRight y x}
-
-end IGame
