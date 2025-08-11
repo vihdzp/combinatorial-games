@@ -22,6 +22,7 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
+-- TODO: move this to IGame
 namespace ConcreteGame
 
 open Function
@@ -145,14 +146,13 @@ theorem subrelation_relRight :
 instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
 instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
 
-instance : ConcreteIGame Domineering where
+end Domineering
+
+open Domineering
+
+/-- The game of domineering. -/
+def domineering : ConcreteGame Domineering where
   leftMoves x := {y | relLeft y x}
   rightMoves x :=  {y | relRight y x}
-  isWellFounded_isOption := by
-    apply @Subrelation.isWellFounded (r := InvImage (· < ·) fun b ↦ (ofDomineering b).card)
-    rintro a b (h | h)
-    · exact subrelation_relLeft h
-    · exact subrelation_relRight h
 
-end Domineering
 end ConcreteGame

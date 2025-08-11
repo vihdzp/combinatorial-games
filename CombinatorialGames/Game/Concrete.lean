@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios
+Authors: Violeta Hernández Palacios, Junyan Xu
 -/
 import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Impartial.Basic
@@ -10,13 +10,14 @@ import CombinatorialGames.Game.Impartial.Basic
 # Combinatorial games from a type of states
 
 In the literature, mathematicians often describe games as graphs, consisting of a set of states, as
-well as move relations for the left and right players. We define two typeclasses to facilitate this
-conversion: `ConcreteLGame`, which takes a graph and turns it into a potentially loopy game, and
-`ConcreteIGame`, which enforces well-foundedness. We then define functions turning these into our
-standard types `IGame` and `LGame`.
+well as move relations for the left and right players. We define a structure `ConcreteGame` which
+facilitates this construction, bundling the left and right set functions along with the type, as
+well as functions `ConcreteGame.toLGame` and `ConcreteGame.toIGame` which turn them into the
+appropriate type of game.
 
-For simplicity, we put results on both concrete `IGame`s and `LGame`s in the common namespace
-`ConcreteGame`.
+When working with any "specific" game (nim, domineering, etc.) you can use this structure to set up
+the basic theorems and definitions, but the intent is that you're not working with `ConcreteGame`
+directly most of the time.
 
 Mathematically, `ConcreteGame.toLGame` is nothing but the corecursor on loopy games, while
 `ConcreteGame.toIGame` is defined inductively.
@@ -30,12 +31,11 @@ open IGame Set
 
 variable {α : Type*}
 
-/-- A "concrete" game is a type of states endowed with well-founded move relations for the
-left and right players.
+/-- A "concrete" game is a type of states endowed with move sets for the left and right players.
 
-This typeclass allows for loopy games, see `ConcreteIGame` for a typeclass enforcing
-well-foundedness. -/
-class ConcreteLGame (α : Type v) where
+You can use `ConcreteGame.toLGame` and `ConcreteGame.toIGame` to turn this structure into the
+appropriate game type. -/
+structure ConcreteGame (α : Type v) where
   /-- The set of options for the left player. -/
   leftMoves : α → Set α
   /-- The set of options for the right player. -/
@@ -45,131 +45,95 @@ class ConcreteLGame (α : Type v) where
   /-- To make a game in universe `u`, the set of left moves must be u-small. -/
   small_rightMoves (a : α) : Small.{u} (rightMoves a) := by infer_instance
 
-@[inherit_doc ConcreteLGame.leftMoves]
-def ConcreteGame.leftMoves [ConcreteLGame α] (a : α) :=
-  ConcreteLGame.leftMoves a
+namespace ConcreteGame
+variable {c : ConcreteGame.{u} α}
 
-@[inherit_doc ConcreteLGame.rightMoves]
-def ConcreteGame.rightMoves [ConcreteLGame α] (a : α) :=
-  ConcreteLGame.rightMoves a
+instance (a : α) : Small.{u} (c.leftMoves a) := c.small_leftMoves a
+instance (a : α) : Small.{u} (c.rightMoves a) := c.small_rightMoves a
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
-def ConcreteGame.IsOption [ConcreteLGame α] (a b : α) : Prop :=
-  a ∈ ConcreteGame.leftMoves b ∪ ConcreteGame.rightMoves b
+def IsOption (c : ConcreteGame α) (a b : α) : Prop :=
+  a ∈ c.leftMoves b ∪ c.rightMoves b
 
-/-- A "concrete" game is a type of states endowed with well-founded move relations for the
-left and right players.
+theorem IsOption.of_mem_leftMoves {x y : α} : x ∈ c.leftMoves y → c.IsOption x y := .inl
+theorem IsOption.of_mem_rightMoves {x y : α} : x ∈ c.rightMoves y → c.IsOption x y := .inr
 
-This typeclass allows only for well-founded games, see `ConcreteLGame` for a typeclass allowing
-loopy games. -/
-class ConcreteIGame (α : Type v) extends ConcreteLGame.{u} α where
-  /-- The option relation in the game is well-founded. -/
-  isWellFounded_isOption : IsWellFounded α ConcreteGame.IsOption
+instance (a : α) : Small.{u} {b // c.IsOption b a} :=
+  inferInstanceAs (Small (c.leftMoves a ∪ c.rightMoves a :))
 
 /-! ### Loopy games -/
 
-/-- Create a `ConcreteLGame` from a single function used for the left and right moves. -/
-def ConcreteLGame.ofImpartial (moves : α → Set α) [∀ x, Small.{u} (moves x)] : ConcreteLGame α where
-  leftMoves := moves
-  rightMoves := moves
-
-/-- Create a `ConcreteIGame` from a single function used for the left and right moves. -/
-def ConcreteIGame.ofImpartial (moves : α → Set α) [∀ x, Small.{u} (moves x)]
-    [H : IsWellFounded α fun a b ↦ a ∈ moves b] : ConcreteIGame α where
-  isWellFounded_isOption := by
-    convert H using 1
-    ext
-    exact or_self_iff
-  __ := ConcreteLGame.ofImpartial moves
-
-namespace ConcreteGame
-section ConcreteLGame
-variable [ConcreteLGame.{u} α]
-
-theorem IsOption.of_mem_leftMoves {x y : α} : x ∈ leftMoves y → IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : α} : x ∈ rightMoves y → IsOption x y := .inr
-
-instance (a : α) : Small.{u} (leftMoves a) := ConcreteLGame.small_leftMoves a
-instance (a : α) : Small.{u} (rightMoves a) := ConcreteLGame.small_rightMoves a
-instance (a : α) : Small.{u} {b // IsOption b a} :=
-  inferInstanceAs (Small (leftMoves a ∪ rightMoves a :))
-
 /-- Turns a state of a `ConcreteLGame` into an `LGame`. -/
-def toLGame (a : α) : LGame :=
-  .corec leftMoves rightMoves a
+def toLGame (c : ConcreteGame α) (a : α) : LGame :=
+  .corec c.leftMoves c.rightMoves a
 
 @[simp]
-theorem leftMoves_toLGame (a : α) : (toLGame a).leftMoves = toLGame '' leftMoves a :=
+theorem leftMoves_toLGame (c : ConcreteGame α) (a : α) :
+    (c.toLGame a).leftMoves = c.toLGame '' c.leftMoves a :=
   LGame.leftMoves_corec ..
 
 @[simp]
-theorem rightMoves_toLGame (a : α) : (toLGame a).rightMoves = toLGame '' rightMoves a :=
+theorem rightMoves_toLGame (c : ConcreteGame α) (a : α) :
+    (c.toLGame a).rightMoves = c.toLGame '' c.rightMoves a :=
   LGame.rightMoves_corec ..
 
-theorem mem_leftMoves_toLGame_of_mem {a b : α} (hab : b ∈ leftMoves a) :
-    toLGame b ∈ (toLGame a).leftMoves := by
+theorem mem_leftMoves_toLGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
+    c.toLGame b ∈ (c.toLGame a).leftMoves := by
   rw [leftMoves_toLGame]
   exact ⟨b, hab, rfl⟩
 
-theorem mem_rightMoves_toLGame_of_mem {a b : α} (hab : b ∈ rightMoves a) :
-    toLGame b ∈ (toLGame a).rightMoves := by
+theorem mem_rightMoves_toLGame_of_mem {a b : α} (hab : b ∈ c.rightMoves a) :
+    c.toLGame b ∈ (c.toLGame a).rightMoves := by
   rw [rightMoves_toLGame]
   exact ⟨b, hab, rfl⟩
 
-theorem neg_toLGame (h : leftMoves (α := α) = rightMoves) (a : α) : -toLGame a = toLGame a := by
+theorem neg_toLGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toLGame a = c.toLGame a := by
   simp_rw [toLGame, LGame.neg_corec_apply, h]
-
-end ConcreteLGame
 
 /-! ### Well-founded games -/
 
-section ConcreteIGame
-variable [ConcreteIGame.{u} α]
+variable [H : IsWellFounded α c.IsOption]
 
-open ConcreteLGame
-
-instance : IsWellFounded α IsOption :=
-  ConcreteIGame.isWellFounded_isOption
-
-theorem isOption_wf : @WellFounded α IsOption :=
-  IsWellFounded.wf
-
+variable (c) in
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. -/
 def moveRecOn {motive : α → Sort*} (x)
-    (mk : Π x : α, (Π y ∈ leftMoves x, motive y) → (Π y ∈ rightMoves x, motive y) → motive x) :
+    (mk : Π x : α, (Π y ∈ c.leftMoves x, motive y) → (Π y ∈ c.rightMoves x, motive y) → motive x) :
     motive x :=
-  isOption_wf.recursion x fun x IH ↦
+  H.wf.recursion x fun x IH ↦
     mk x (fun _ h ↦ IH _ (.of_mem_leftMoves h)) (fun _ h ↦ IH _ (.of_mem_rightMoves h))
 
 /-- Turns a state of a `ConcreteIGame` into an `IGame`. -/
-def toIGame (a : α) : IGame :=
-  {.range fun b : leftMoves a ↦ toIGame b | .range fun b : rightMoves a ↦ toIGame b}ᴵ
-termination_by isOption_wf.wrap a
+def toIGame (c : ConcreteGame α) [H : IsWellFounded α c.IsOption] (a : α) : IGame :=
+  {.range fun b : c.leftMoves a ↦ c.toIGame b | .range fun b : c.rightMoves a ↦ c.toIGame b}ᴵ
+termination_by H.wf.wrap a
 decreasing_by all_goals aesop
 
+variable (c) in
 @[simp]
-theorem leftMoves_toIGame (a : α) : (toIGame a).leftMoves = toIGame '' leftMoves a := by
+theorem leftMoves_toIGame (a : α) : (c.toIGame a).leftMoves = c.toIGame '' c.leftMoves a := by
   rw [toIGame, leftMoves_ofSets, image_eq_range]
 
+variable (c) in
 @[simp]
-theorem rightMoves_toIGame (a : α) : (toIGame a).rightMoves = toIGame '' rightMoves a := by
+theorem rightMoves_toIGame (a : α) : (c.toIGame a).rightMoves = c.toIGame '' c.rightMoves a := by
   rw [toIGame, rightMoves_ofSets, image_eq_range]
 
-theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ leftMoves a) :
-    toIGame b ∈ (toIGame a).leftMoves := by
+theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
+    c.toIGame b ∈ (c.toIGame a).leftMoves := by
   rw [leftMoves_toIGame]
   exact ⟨b, hab, rfl⟩
 
-theorem mem_rightMoves_toIGame_of_mem {a b : α} (hab : b ∈ rightMoves a) :
-    toIGame b ∈ (toIGame a).rightMoves := by
+theorem mem_rightMoves_toIGame_of_mem {a b : α} (hab : b ∈ c.rightMoves a) :
+    c.toIGame b ∈ (c.toIGame a).rightMoves := by
   rw [rightMoves_toIGame]
   exact ⟨b, hab, rfl⟩
 
+variable (c) in
 @[simp]
-theorem toLGame_toIGame (a : α) : (toIGame a).toLGame = toLGame a := by
-  apply moveRecOn a fun b IHl IHr ↦ ?_
+theorem toLGame_toIGame (a : α) : (c.toIGame a).toLGame = c.toLGame a := by
+  apply c.moveRecOn a fun b IHl IHr ↦ ?_
   ext x
   · simp_rw [leftMoves_toLGame, mem_image, IGame.leftMoves_toLGame, leftMoves_toIGame]
     constructor
@@ -184,61 +148,50 @@ theorem toLGame_toIGame (a : α) : (toIGame a).toLGame = toLGame a := by
     · rintro ⟨x, hx, rfl⟩
       exact ⟨_, mem_image_of_mem _ hx, IHr _ hx⟩
 
-theorem neg_toIGame (h : leftMoves (α := α) = rightMoves) (a : α) : -toIGame a = toIGame a := by
+theorem neg_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toIGame a = c.toIGame a := by
   rw [← IGame.toLGame.injective.eq_iff]
   simpa using neg_toLGame h a
 
-theorem impartial_toIGame (h : leftMoves (α := α) = rightMoves) (a : α) :
-    Impartial (toIGame a) := by
-  apply moveRecOn a fun b IHl IHr ↦ ?_
+theorem impartial_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : Impartial (c.toIGame a) := by
+  apply c.moveRecOn a fun b IHl IHr ↦ ?_
   rw [impartial_def, neg_toIGame h]
   simp_all
 
-end ConcreteIGame
+/-! ### Convenience constructors -/
 
-/-! ### Type aliases -/
+section ofImpartial
+variable (moves : α → Set α) [∀ x, Small.{u} (moves x)]
 
-/-- A type alias to turn a concrete game impartial, by allowing both players to perform
-each other's moves. -/
-def ToImpartial (α : Type*) := α
+/-- Create a `ConcreteGame` from a single function used for the left and right moves. -/
+def ofImpartial : ConcreteGame α where
+  leftMoves := moves
+  rightMoves := moves
 
-def toImpartial : α ≃ ToImpartial α := Equiv.refl _
-def ofImpartial : ToImpartial α ≃ α := Equiv.refl _
-@[simp] theorem ofImpartial_toImpartial (x : α) : ofImpartial (toImpartial x) = x := rfl
-@[simp] theorem toImpartial_ofImpartial (x : ToImpartial α) : toImpartial (ofImpartial x) = x := rfl
+@[simp] theorem ofImpartial_leftMoves : (ofImpartial moves).leftMoves = moves := rfl
+@[simp] theorem ofImpartial_rightMoves : (ofImpartial moves).rightMoves = moves := rfl
 
-namespace ToImpartial
-section ConcreteLGame
-variable [ConcreteLGame α]
-
-instance : ConcreteLGame (ToImpartial α) :=
-  .ofImpartial (fun x ↦ {y | IsOption (ofImpartial y) (ofImpartial x)})
-
-theorem leftMoves_eq_rightMoves (x : ToImpartial α) : leftMoves x = rightMoves x := rfl
-
-theorem mem_leftMoves {x y : ToImpartial α} :
-    y ∈ leftMoves x ↔ IsOption (ofImpartial y) (ofImpartial x) := .rfl
-
-theorem mem_rightMoves {x y : ToImpartial α} :
-    y ∈ rightMoves x ↔ IsOption (ofImpartial y) (ofImpartial x) := .rfl
-
-theorem isOption_iff {x y : ToImpartial α} :
-    IsOption x y ↔ IsOption (ofImpartial x) (ofImpartial y) := or_self_iff
-
-end ConcreteLGame
-
-section ConcreteIGame
-variable [ConcreteIGame α]
-
-instance : ConcreteIGame (ToImpartial α) :=
-  @ConcreteIGame.ofImpartial _ _ _ <| ConcreteIGame.isWellFounded_isOption (α := α)
+variable {moves} in
+theorem isOption_ofImpartial_iff {x y : α} : (ofImpartial moves).IsOption x y ↔ x ∈ moves y :=
+  or_self_iff
 
 @[simp]
-theorem neg_toIGame (x : ToImpartial α) : -toIGame x = toIGame x :=
-  ConcreteGame.neg_toIGame rfl x
+theorem isOption_ofImpartial : (ofImpartial moves).IsOption = fun x y ↦ x ∈ moves y := by
+  ext; exact or_self_iff
 
-instance (x : ToImpartial α) : Impartial (toIGame x) :=
+@[simp]
+theorem neg_toLGame_ofImpartial (x : α) :
+    -(ofImpartial moves).toLGame x = (ofImpartial moves).toLGame x :=
+  neg_toLGame rfl x
+
+variable [IsWellFounded α (ofImpartial moves).IsOption]
+
+instance impartial_toIGame_ofImpartial (x : α) : Impartial ((ofImpartial moves).toIGame x) :=
   impartial_toIGame rfl x
 
-end ConcreteIGame
-end ToImpartial
+@[simp]
+theorem neg_toIGame_ofImpartial (x : α) :
+    -(ofImpartial moves).toIGame x = (ofImpartial moves).toIGame x :=
+  neg_toIGame rfl x
+
+end ofImpartial
+end ConcreteGame
