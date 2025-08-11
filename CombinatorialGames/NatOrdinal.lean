@@ -546,7 +546,7 @@ private theorem nmul_nadd_lt₃' {a' b' c' : Ordinal} (ha : a' < a) (hb : b' < b
       a ⨳ (b ⨳ c) ♯ a' ⨳ (b' ⨳ c) ♯ a' ⨳ (b ⨳ c') ♯ a ⨳ (b' ⨳ c') := by
   simp only [nmul_comm _ (_ ⨳ _)]
   convert nmul_nadd_lt₃ hb hc ha using 1 <;>
-    (simp only [nadd_eq_add, NatOrdinal.of_val]; abel_nf)
+    (simp only [nadd_eq_add, of_val]; abel_nf)
 
 theorem lt_nmul_iff₃ : d < a ⨳ b ⨳ c ↔ ∃ a' < a, ∃ b' < b, ∃ c' < c,
     d ♯ a' ⨳ b' ⨳ c ♯ a' ⨳ b ⨳ c' ♯ a ⨳ b' ⨳ c' ≤
