@@ -48,6 +48,8 @@ noncomputable section
 
 namespace Nimber
 
+attribute [game_cmp] of_zero of_one
+
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
