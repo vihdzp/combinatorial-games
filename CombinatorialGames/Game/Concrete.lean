@@ -59,13 +59,13 @@ variable {c : ConcreteGame.{u} α}
 instance (a : α) : Small.{u} (c.leftMoves a) := c.small_leftMoves a
 instance (a : α) : Small.{u} (c.rightMoves a) := c.small_rightMoves a
 
-/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
+/-- `IsOption a b` means that `a` is either a left or a right move for `b`. -/
 @[aesop simp]
 def IsOption (c : ConcreteGame α) (a b : α) : Prop :=
   a ∈ c.leftMoves b ∪ c.rightMoves b
 
-theorem IsOption.of_mem_leftMoves {x y : α} : x ∈ c.leftMoves y → c.IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : α} : x ∈ c.rightMoves y → c.IsOption x y := .inr
+theorem IsOption.of_mem_leftMoves {a b : α} : a ∈ c.leftMoves b → c.IsOption a b := .inl
+theorem IsOption.of_mem_rightMoves {a b : α} : a ∈ c.rightMoves b → c.IsOption a b := .inr
 
 instance (a : α) : Small.{u} {b // c.IsOption b a} :=
   inferInstanceAs (Small (c.leftMoves a ∪ c.rightMoves a :))
@@ -164,7 +164,7 @@ theorem impartial_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : Impartial 
 /-! ### Convenience constructors -/
 
 section ofImpartial
-variable (moves : α → Set α) [∀ x, Small.{u} (moves x)]
+variable (moves : α → Set α) [∀ a, Small.{u} (moves a)]
 
 /-- Create a `ConcreteGame` from a single function used for the left and right moves. -/
 def ofImpartial : ConcreteGame α where
@@ -175,27 +175,27 @@ def ofImpartial : ConcreteGame α where
 @[simp] theorem ofImpartial_rightMoves : (ofImpartial moves).rightMoves = moves := rfl
 
 variable {moves} in
-theorem isOption_ofImpartial_iff {x y : α} : (ofImpartial moves).IsOption x y ↔ x ∈ moves y :=
+theorem isOption_ofImpartial_iff {a b : α} : (ofImpartial moves).IsOption a b ↔ a ∈ moves b :=
   or_self_iff
 
 @[simp]
-theorem isOption_ofImpartial : (ofImpartial moves).IsOption = fun x y ↦ x ∈ moves y := by
+theorem isOption_ofImpartial : (ofImpartial moves).IsOption = fun a b ↦ a ∈ moves b := by
   ext; exact or_self_iff
 
 @[simp]
-theorem neg_toLGame_ofImpartial (x : α) :
-    -(ofImpartial moves).toLGame x = (ofImpartial moves).toLGame x :=
-  neg_toLGame rfl x
+theorem neg_toLGame_ofImpartial (a : α) :
+    -(ofImpartial moves).toLGame a = (ofImpartial moves).toLGame a :=
+  neg_toLGame rfl a
 
 variable [IsWellFounded α (ofImpartial moves).IsOption]
 
-instance impartial_toIGame_ofImpartial (x : α) : Impartial ((ofImpartial moves).toIGame x) :=
-  impartial_toIGame rfl x
+instance impartial_toIGame_ofImpartial (a : α) : Impartial ((ofImpartial moves).toIGame a) :=
+  impartial_toIGame rfl a
 
 @[simp]
-theorem neg_toIGame_ofImpartial (x : α) :
-    -(ofImpartial moves).toIGame x = (ofImpartial moves).toIGame x :=
-  neg_toIGame rfl x
+theorem neg_toIGame_ofImpartial (a : α) :
+    -(ofImpartial moves).toIGame a = (ofImpartial moves).toIGame a :=
+  neg_toIGame rfl a
 
 end ofImpartial
 end ConcreteGame
