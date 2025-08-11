@@ -90,7 +90,7 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVal Alias) a + 1) :=
   rfl
 
-@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Ordinal.succ_ne_zero x
+@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Ordinal.succ_ne_zero a
 @[simp] protected theorem $(mkIdent `succ_one) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
