@@ -94,10 +94,10 @@ instance : ConditionallyCompleteLinearOrderBot Nimber :=
 
 @[simp] theorem bot_eq_zero : (⊥ : Nimber) = 0 := rfl
 
-@[simp] theorem of_zero : of 0 = 0 := rfl
+@[simp, game_cmp] theorem of_zero : of 0 = 0 := rfl
 @[simp] theorem val_zero : val 0 = 0 := rfl
 
-@[simp] theorem of_one : of 1 = 1 := rfl
+@[simp, game_cmp] theorem of_one : of 1 = 1 := rfl
 @[simp] theorem val_one : val 1 = 1 := rfl
 
 @[simp] theorem of_eq_zero {a} : of a = 0 ↔ a = 0 := .rfl
