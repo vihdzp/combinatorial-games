@@ -82,6 +82,12 @@ def val : NatOrdinal ≃o Ordinal := .refl _
 theorem lt_wf : @WellFounded NatOrdinal (· < ·) :=
   Ordinal.lt_wf
 
+instance : WellFoundedLT NatOrdinal :=
+  Ordinal.wellFoundedLT
+
+instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
+  WellFoundedLT.conditionallyCompleteLinearOrderBot _
+
 instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
   inferInstanceAs (Small (Iio o.val))
 
@@ -128,6 +134,10 @@ theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def rec {β : NatOrdinal → Sort*} (h : ∀ a, β (of a)) : ∀ a, β a := fun a =>
   h (val a)
+
+/-- `Ordinal.induction` but for `NatOrdinal`. -/
+theorem induction {p : NatOrdinal → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
+  Ordinal.induction
 
 end NatOrdinal
 

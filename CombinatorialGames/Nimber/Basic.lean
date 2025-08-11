@@ -38,7 +38,7 @@ isomorphisms `Nimber.of` and `Nimber.val` allow us to cast between them whenever
 
 universe u v
 
-open Function Order Set
+open Function Order
 
 noncomputable section
 
@@ -75,14 +75,24 @@ recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 @[simp] theorem of_val (a : Nimber) : of (val a) = a := rfl
 @[simp] theorem val_of (a : Ordinal) : val (of a) = a := rfl
 
-theorem lt_wf : @WellFounded Nimber (· < ·) := Ordinal.lt_wf
+theorem val_le_iff (a : Nimber) (b : Ordinal) : val a ≤ b ↔ a ≤ ∗b := .rfl
+theorem val_lt_iff (a : Nimber) (b : Ordinal) : val a < b ↔ a < ∗b := .rfl
+theorem val_eq_iff (a : Nimber) (b : Ordinal) : val a = b ↔ a = ∗b := .rfl
 
-instance (o : Nimber.{u}) : Small.{u} (Iio o) := inferInstanceAs (Small (Iio o.val))
+theorem of_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.val := .rfl
+theorem of_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.val := .rfl
+theorem of_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.val := .rfl
 
-theorem bddAbove_of_small (s : Set Nimber.{u}) [Small.{u} s] : BddAbove s :=
-  Ordinal.bddAbove_of_small s
+theorem lt_wf : @WellFounded Nimber (· < ·) :=
+  Ordinal.lt_wf
 
-@[simp] theorem bot_eq_zero : ⊥ = 0 := rfl
+instance : WellFoundedLT Nimber :=
+  Ordinal.wellFoundedLT
+
+instance : ConditionallyCompleteLinearOrderBot Nimber :=
+  WellFoundedLT.conditionallyCompleteLinearOrderBot _
+
+@[simp] theorem bot_eq_zero : (⊥ : Nimber) = 0 := rfl
 
 @[simp] theorem of_zero : of 0 = 0 := rfl
 @[simp] theorem val_zero : val 0 = 0 := rfl
@@ -96,15 +106,14 @@ theorem bddAbove_of_small (s : Set Nimber.{u}) [Small.{u} s] : BddAbove s :=
 @[simp] theorem of_eq_one {a} : of a = 1 ↔ a = 1 := .rfl
 @[simp] theorem val_eq_one {a} : val a = 1 ↔ a = 1 := .rfl
 
-theorem succ_def (a : Nimber) : succ a = of (val a + 1) := rfl
+theorem of_max (a b : Ordinal) : of (max a b) = max (of a) (of b) := rfl
+theorem val_max (a b : Nimber) : val (max a b) = max (val a) (val b) := rfl
 
-@[simp] protected theorem zero_le (o : Nimber) : 0 ≤ o := Ordinal.zero_le o
-protected theorem not_lt_zero (o : Nimber) : ¬ o < 0 := Ordinal.not_lt_zero o
-protected theorem pos_iff_ne_zero {a : Nimber} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
+theorem of_min (a b : Ordinal) : of (min a b) = min (of a) (of b) := rfl
+theorem val_min (a b : Nimber) : val (min a b) = min (val a) (val b) := rfl
 
-@[simp] protected theorem lt_one_iff_zero {o : Nimber} : o < 1 ↔ o = 0 := Ordinal.lt_one_iff_zero
-@[simp] theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
-theorem le_one_iff {a : Nimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
+theorem succ_def (a : Nimber) : succ a = ∗(val a + 1) :=
+  rfl
 
 /-- A recursor for `Nimber`. Use as `induction x`. -/
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -114,15 +123,37 @@ protected def rec {β : Nimber → Sort*} (h : ∀ a, β (of a)) : ∀ a, β a :
 theorem induction {p : Nimber → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
+@[simp]
+protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
+  Ordinal.le_zero
+
+@[simp]
+protected theorem not_lt_zero (a : Nimber) : ¬ a < 0 :=
+  Ordinal.not_lt_zero a
+
+protected theorem pos_iff_ne_zero {a : Nimber} : 0 < a ↔ a ≠ 0 :=
+  Ordinal.pos_iff_ne_zero
+
+@[simp]
+theorem lt_one_iff_zero {a : Nimber} : a < 1 ↔ a = 0 :=
+  Ordinal.lt_one_iff_zero
+
+@[simp]
+theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 :=
+  Ordinal.one_le_iff_ne_zero
+
+theorem le_one_iff {a : Nimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Ordinal.le_one_iff
+
 theorem eq_nat_of_le_nat {a : Nimber} {b : ℕ} (h : a ≤ ∗b) : ∃ c : ℕ, a = ∗c :=
   Ordinal.lt_omega0.1 (h.trans_lt (nat_lt_omega0 b))
 
-instance small_Iio (a : Nimber.{u}) : Small.{u} (Iio a) := Ordinal.small_Iio a
-instance small_Iic (a : Nimber.{u}) : Small.{u} (Iic a) := Ordinal.small_Iic a
-instance small_Ico (a b : Nimber.{u}) : Small.{u} (Ico a b) := Ordinal.small_Ico a b
-instance small_Icc (a b : Nimber.{u}) : Small.{u} (Icc a b) := Ordinal.small_Icc a b
-instance small_Ioo (a b : Nimber.{u}) : Small.{u} (Ioo a b) := Ordinal.small_Ioo a b
-instance small_Ioc (a b : Nimber.{u}) : Small.{u} (Ioc a b) := Ordinal.small_Ioc a b
+instance small_Iio (a : Nimber.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
+instance small_Iic (a : Nimber.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
+instance small_Ico (a b : Nimber.{u}) : Small.{u} (Set.Ico a b) := Ordinal.small_Ico a b
+instance small_Icc (a b : Nimber.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
+instance small_Ioo (a b : Nimber.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
+instance small_Ioc (a b : Nimber.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
 theorem not_bddAbove_compl_of_small (s : Set Nimber.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
   Ordinal.not_bddAbove_compl_of_small s
@@ -136,26 +167,6 @@ instance Nimber.uncountable : Uncountable Nimber :=
   Ordinal.uncountable
 
 open Nimber
-
-namespace Ordinal
-
-@[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
-@[simp] theorem toOrdinal_toNimber (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
-
-theorem toNimber_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.val := .rfl
-theorem toNimber_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.val := .rfl
-theorem toNimber_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.val := .rfl
-
-@[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
-@[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl
-
-@[simp] theorem toNimber_eq_zero {a} : ∗a = 0 ↔ a = 0 := .rfl
-@[simp] theorem toNimber_eq_one {a} : ∗a = 1 ↔ a = 1 := .rfl
-
-@[simp] theorem toNimber_max (a b : Ordinal) : ∗(max a b) = max (∗a) (∗b) := rfl
-@[simp] theorem toNimber_min (a b : Ordinal) : ∗(min a b) = min (∗a) (∗b) := rfl
-
-end Ordinal
 
 /-! ### Nimber addition -/
 
@@ -185,12 +196,12 @@ theorem add_def (a b : Nimber) :
 private theorem add_nonempty (a b : Nimber.{u}) :
     {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ.Nonempty :=
   nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
-    ((· + b) '' Iio a ∪ (a + ·) '' Iio b)
+    ((· + b) '' Set.Iio a ∪ (a + ·) '' Set.Iio b)
 
 theorem exists_of_lt_add (h : c < a + b) : (∃ a' < a, a' + b = c) ∨ ∃ b' < b, a + b' = c := by
   rw [add_def] at h
   have := notMem_of_lt_csInf' h
-  rwa [mem_compl_iff, not_not] at this
+  rwa [Set.mem_compl_iff, not_not] at this
 
 theorem add_le_of_forall_ne (h₁ : ∀ a' < a, a' + b ≠ c) (h₂ : ∀ b' < b, a + b' ≠ c) :
     a + b ≤ c := by
