@@ -238,14 +238,14 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
   · apply add_le_of_forall_ne
     all_goals
       intro c hc
-      obtain ⟨c, rfl⟩ := eq_nat_of_le_nat hc.le
+      obtain ⟨c, rfl⟩ := eq_natCast_of_le_natCast hc.le
       rw [OrderIso.lt_iff_lt] at hc
       replace hc := Nat.cast_lt.1 hc
       rw [add_nat]
       simpa using hc.ne
   · apply le_of_not_gt
     intro hc
-    obtain ⟨c, hc'⟩ := eq_nat_of_le_nat hc.le
+    obtain ⟨c, hc'⟩ := eq_natCast_of_le_natCast hc.le
     rw [hc', OrderIso.lt_iff_lt, Nat.cast_lt] at hc
     obtain h | h := Nat.lt_xor_cases hc
     · apply h.ne

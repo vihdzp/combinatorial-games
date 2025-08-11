@@ -108,7 +108,7 @@ protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 :
 theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
 
 -- TODO: upstream to Mathlib for Ordinal
-theorem $(mkIdent `eq_nat_of_le_nat) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
+theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
   Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
 
