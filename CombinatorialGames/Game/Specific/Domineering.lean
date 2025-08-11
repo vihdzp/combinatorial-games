@@ -22,8 +22,7 @@ Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
 -/
 
--- TODO: move this to IGame
-namespace ConcreteGame
+namespace IGame
 
 open Function
 
@@ -151,8 +150,8 @@ end Domineering
 open Domineering
 
 /-- The game of domineering. -/
-def domineering : ConcreteGame Domineering where
+def _root_.ConcreteGame.domineering : ConcreteGame Domineering where
   leftMoves x := {y | relLeft y x}
   rightMoves x :=  {y | relRight y x}
 
-end ConcreteGame
+end IGame

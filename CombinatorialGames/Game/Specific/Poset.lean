@@ -132,6 +132,6 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
     (mem_leftMoves_toIGame_of_mem (top_compl_posetRel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [leftMoves_toIGame, mem_image] at hz ⊢
-  exact ⟨hz.choose, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
+  exact ⟨_, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end IGame
