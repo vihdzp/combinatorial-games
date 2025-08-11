@@ -188,22 +188,6 @@ theorem nadd_comm (a b) : a ♯ b = b ♯ a := by
   congr <;> ext x <;> cases x <;> apply congr_arg _ (nadd_comm _ _)
 termination_by (a, b)
 
-@[deprecated "blsub will soon be deprecated" (since := "2024-11-18")]
-theorem blsub_nadd_of_mono {f : ∀ c < a ♯ b, Ordinal.{max u v}}
-    (hf : ∀ {i j} (hi hj), i ≤ j → f i hi ≤ f j hj) :
-    blsub.{u,v} _ f =
-      max (blsub.{u, v} a fun a' ha' => f (a' ♯ b) <| nadd_lt_nadd_right ha' b)
-        (blsub.{u, v} b fun b' hb' => f (a ♯ b') <| nadd_lt_nadd_left hb' a) := by
-  apply (blsub_le_iff.2 fun i h => _).antisymm (max_le _ _)
-  · intro i h
-    rcases lt_nadd_iff.1 h with (⟨a', ha', hi⟩ | ⟨b', hb', hi⟩)
-    · exact lt_max_of_lt_left ((hf h (nadd_lt_nadd_right ha' b) hi).trans_lt (lt_blsub _ _ ha'))
-    · exact lt_max_of_lt_right ((hf h (nadd_lt_nadd_left hb' a) hi).trans_lt (lt_blsub _ _ hb'))
-  all_goals
-    apply blsub_le_of_brange_subset.{u, u, v}
-    rintro c ⟨d, hd, rfl⟩
-    apply mem_brange_self
-
 private theorem iSup_nadd_of_monotone {a b} (f : Ordinal.{u} → Ordinal.{u}) (h : Monotone f) :
     ⨆ x : Iio (a ♯ b), f x = max (⨆ a' : Iio a, f (a'.1 ♯ b)) (⨆ b' : Iio b, f (a ♯ b'.1)) := by
   apply (max_le _ _).antisymm'
@@ -330,7 +314,7 @@ theorem nadd_eq_add (a b : Ordinal) : a ♯ b = val (of a + of b) :=
   rfl
 
 @[simp]
-theorem of_natCast (n : ℕ) : of n = n := by
+theorem _root_.NatOrdinal.of_natCast (n : ℕ) : of n = n := by
   rw [← val_natCast n]
   rfl
 
@@ -407,11 +391,6 @@ theorem nadd_right_comm : ∀ a b c, a ♯ b ♯ c = a ♯ c ♯ b :=
 /-! ### Natural multiplication -/
 
 variable {a b c d : Ordinal.{u}}
-
-@[deprecated "avoid using the definition of `nmul` directly" (since := "2024-11-19")]
-theorem nmul_def (a b : Ordinal) :
-    a ⨳ b = sInf {c | ∀ a' < a, ∀ b' < b, a' ⨳ b ♯ a ⨳ b' < c ♯ a' ⨳ b'} := by
-  rw [nmul]
 
 /-- The set in the definition of `nmul` is nonempty. -/
 private theorem nmul_nonempty (a b : Ordinal.{u}) :

@@ -52,10 +52,10 @@ theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n :=
     simp_all
 
 theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
-  rw [← NatOrdinal.of_natCast]
+  rw [← of_natCast]
   apply (Ordinal.Iio_natCast _).trans
   congr! 1
-  exact NatOrdinal.of_natCast
+  exact of_natCast _
 
 namespace NatOrdinal
 
