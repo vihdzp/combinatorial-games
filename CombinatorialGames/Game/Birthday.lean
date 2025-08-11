@@ -42,23 +42,6 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
 theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
   (Set.singleton_ne_empty a).symm
 
--- fix this! embarassing
-@[simp]
-theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
-  rfl
-
-@[simp]
-theorem NatOrdinal.succ_ne_zero (x : NatOrdinal) : succ x ≠ 0 :=
-  Ordinal.succ_ne_zero x
-
-@[simp]
-protected theorem NatOrdinal.le_zero {x : NatOrdinal} : x ≤ 0 ↔ x = 0 :=
-  Ordinal.le_zero
-
-@[simp]
-protected theorem NatOrdinal.succ_zero : succ (0 : NatOrdinal) = 1 :=
-  Ordinal.succ_zero
-
 @[simp]
 protected theorem NatOrdinal.succ_one : succ (1 : NatOrdinal) = 2 := by
   rw [succ_eq_add_one, one_add_one_eq_two]
