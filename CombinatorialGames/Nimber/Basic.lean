@@ -37,14 +37,16 @@ To reduce API duplication, we opt not to implement operations on `Nimber` on `Or
 isomorphisms `Nimber.of` and `Nimber.val` allow us to cast between them whenever needed.
 -/
 
-ordinal_alias!
-  /-- A type synonym for ordinals with nimber addition and multiplication. -/ Nimber
-
 universe u v
 
 open Function Order
 
 noncomputable section
+
+/-! ### Basic casts between `Ordinal` and `Nimber` -/
+
+ordinal_alias!
+  /-- A type synonym for ordinals with nimber addition and multiplication. -/ Nimber
 
 namespace Nimber
 
@@ -52,6 +54,8 @@ attribute [game_cmp] of_zero of_one
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
+
+/-! ### Nimber addition -/
 
 variable {a b c : Nimber.{u}}
 

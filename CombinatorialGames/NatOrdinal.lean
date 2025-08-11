@@ -40,14 +40,16 @@ between both types, we attempt to prove and state most results on `Ordinal`.
   form.
 -/
 
-ordinal_alias!
-  /-- A type synonym for ordinals with natural addition and multiplication. -/ NatOrdinal
-
 universe u v
 
 open Function Order Set
 
 noncomputable section
+
+/-! ### Basic casts between `Ordinal` and `NatOrdinal` -/
+
+ordinal_alias!
+  /-- A type synonym for ordinals with natural addition and multiplication. -/ NatOrdinal
 
 namespace Ordinal
 
