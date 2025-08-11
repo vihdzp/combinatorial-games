@@ -253,21 +253,21 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
     ∗(x * z + y) = ∗(x * z) + ∗y := by
   apply le_antisymm
   · apply le_of_forall_ne
-    simp_rw [← toNimber.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
+    simp_rw [← of.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
     rw [forall_lt_add, forall_lt_mul]
     refine ⟨fun a ha b hb ↦ ?_, fun a ha ↦ ?_⟩
     · have hx : val (∗b + ∗y) < x := h.add_lt hb hy
       rw [ne_eq, h.mul_add_eq_of_lt' hb, ← CharTwo.add_eq_iff_eq_add, add_assoc,
-        ← toNimber_val (∗b + _), ← h.mul_add_eq_of_lt' hx]
+        ← of_val (∗b + _), ← h.mul_add_eq_of_lt' hx]
       exact (mul_add_lt hx ha).ne
     · rw [h.mul_add_eq_of_lt' (ha.trans hy)]
       simpa using ha.ne
   · apply add_le_of_forall_ne <;>
-      simp_rw [← toNimber.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
+      simp_rw [← of.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
     · rw [forall_lt_mul]
       intro a ha b hb
       have hx : val (∗b + ∗y) < x := h.add_lt hb hy
-      rw [ne_eq, h.mul_add_eq_of_lt' hb, add_assoc, ← toNimber_val (∗b + _),
+      rw [ne_eq, h.mul_add_eq_of_lt' hb, add_assoc, ← of_val (∗b + _),
         ← h.mul_add_eq_of_lt' hx]
       exact ((mul_add_lt hx ha).trans_le (Ordinal.le_add_right ..)).ne
     · intro b hb
@@ -303,7 +303,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
       ∗(2 ^ log 2 b) + ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ x) := by
     have H' : ∗(b % 2 ^ log 2 b) + (∗(2 ^ log 2 a) + ∗(a % 2 ^ log 2 a)) < ∗(2 ^ log 2 b) := by
       apply (two_opow _).add_lt hm ((two_opow _).add_lt _ _)
-      · rwa [toNimber.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
+      · rwa [of.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
       · exact hm.trans ((opow_lt_opow_iff_right one_lt_two).2 hab)
     rw [add_assoc]
     apply ((two_opow _).add_eq_of_lt H').symm.trans_lt
@@ -317,7 +317,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · dsimp
     rw [hyz, ← add_assoc, add_comm (∗(2 ^ _)), add_cancel_right]
     apply ((two_opow _).add_lt hm hm).trans
-    rwa [toNimber.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
+    rwa [of.lt_iff_lt, opow_lt_opow_iff_right one_lt_two]
   · exact H hyz hy'
 termination_by x
 
@@ -344,7 +344,7 @@ theorem isGroup_iff_zero_or_mem_range_two_opow {x : Nimber} :
   · by_contra! H
     obtain ⟨h, hx, hx'⟩ := H
     apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add hx).symm).false
-    · rw [toNimber.lt_iff_lt]
+    · rw [of.lt_iff_lt]
       apply (opow_log_le_self _ hx).lt_of_ne
       contrapose! hx'
       exact hx' ▸ mem_range_self _
@@ -409,9 +409,9 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
   · apply le_of_forall_ne
     rw [forall_lt_mul]
     intro a ha b hb
-    rw [ne_eq, ← toNimber_eq_iff, hx.mul_add_eq_of_lt' hb,
+    rw [ne_eq, ← of_eq_iff, hx.mul_add_eq_of_lt' hb,
       hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
-      toNimber_val, ← mul_add]
+      of_val, ← mul_add]
     obtain hza | hza := eq_or_ne (∗z + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hza)
     · rw [← div_eq_iff hza]
@@ -420,11 +420,11 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
     rw [add_comm, ← add_assoc, ← mul_add, add_comm]
     induction b with | h b =>
-    rw [toNimber.lt_iff_lt] at hb
+    rw [of.lt_iff_lt] at hb
     have hx' : val (a * (∗b + ∗z)) < x :=
       hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
-    rw [← toNimber_val (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
-      ← toNimber_val (a * _), ← hx.mul_add_eq_of_lt' hx']
+    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
+      ← of_val (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by z
 
@@ -504,7 +504,7 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
       rw [add_comm, ← add_assoc, ← mul_add, add_comm]
       have hax := h'.mul_lt ha (h'.add_lt (hb.trans hyx) hyx)
       rw [← h'.mul_eq_of_lt hy hyx.le hb Hs', ← h'.mul_add_eq_of_lt hax]
-      · rw [ne_eq, toNimber.eq_iff_eq, val_one]
+      · rw [ne_eq, of.eq_iff_eq, val_one]
         intro H
         have H' : _ / _ = _ / _ := congrArg (· / val x) H
         have hx₀ : val x ≠ 0 := hx₀
@@ -515,21 +515,21 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
         simpa [H'] using H
     · rw [← val.le_iff_le]
       apply le_of_forall_ne
-      simp_rw [val_one, add_one_eq_succ, val_toNimber, Order.lt_succ_iff,
-        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← toNimber_eq_iff]
+      simp_rw [val_one, add_one_eq_succ, val_of, Order.lt_succ_iff,
+        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← of_eq_iff]
       refine ⟨?_, fun a ha b hb ↦ ?_⟩
       · rw [h'.mul_eq_of_lt hy hyx.le hsy Hs', mul_right_inj' hx₀]
         exact hsy.ne
       · have hay : ∗a < y := ha.trans hsy
-        rw [← toNimber_lt_iff] at hb
+        rw [← of_lt_iff] at hb
         refine ne_of_eq_of_ne ?_ (mul_ne_of_ne (a' := ∗b / (∗a + y)) ?_ hay.ne)
         · rw [add_comm, ← add_assoc, ← mul_add, div_mul_cancel₀ _ (add_ne_zero_iff.2 hay.ne),
-            ← val_toNimber b, h'.mul_add_eq_of_lt hb, ← h'.mul_eq_of_lt hy hyx.le hay Hs']
+            ← val_of b, h'.mul_add_eq_of_lt hb, ← h'.mul_eq_of_lt hy hyx.le hay Hs']
           exact add_comm ..
         · apply (h'.mul_lt hb (Hs ..)).ne
-          rw [← add_comm, ← hy.add_eq_of_lt hay, toNimber_lt_iff]
+          rw [← add_comm, ← hy.add_eq_of_lt hay, of_lt_iff]
           apply (add_lt_add_left ha _).trans_eq
-          rw [← toNimber_eq_iff, hy.add_eq_of_lt hsy, add_comm, add_cancel_right]
+          rw [← of_eq_iff, hy.add_eq_of_lt hsy, add_comm, add_cancel_right]
 
 theorem inv_lt_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x) (hy : y < x⁻¹) :
     y⁻¹ < x :=
