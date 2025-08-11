@@ -20,6 +20,10 @@ in order to successfully analyse positions we would need some more theorems.
 Most importantly, we need a general statement that allows us to discard irrelevant moves.
 Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
+
+## Todo
+
+Refactor this file to adhere to the design notes specified in `CombinatorialGames.Game.Concrete`.
 -/
 
 namespace IGame

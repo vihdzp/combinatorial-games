@@ -15,12 +15,20 @@ facilitates this construction, bundling the left and right set functions along w
 well as functions `ConcreteGame.toLGame` and `ConcreteGame.toIGame` which turn them into the
 appropriate type of game.
 
-When working with any "specific" game (nim, domineering, etc.) you can use this structure to set up
+Mathematically, `ConcreteGame.toLGame` is nothing but the corecursor on loopy games, while
+`ConcreteGame.toIGame` is defined inductively.
+
+## Design notes
+
+When working with any "specific" game (nim, domineering, etc.) you can use  `ConcreteGame` to set up
 the basic theorems and definitions, but the intent is that you're not working with `ConcreteGame`
 directly most of the time.
 
-Mathematically, `ConcreteGame.toLGame` is nothing but the corecursor on loopy games, while
-`ConcreteGame.toIGame` is defined inductively.
+If you want to prove theorems about a particular game, you should organize your material as follows:
+
+- Any preliminaries about the game (definitions, structures, etc.) go in a namespace inside
+  `ConcreteGame`, e.g. `ConcreteGame.Poset`, `ConcreteGame.Domineering`, etc.
+- Theorems about the actual `IGame`s or `LGame`s should go in the corresponding namespace.
 -/
 
 universe u v
