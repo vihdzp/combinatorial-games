@@ -73,7 +73,7 @@ protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : �
 
 theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
     o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n := by
-  rw [← val_of o, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
+  rw [← of_val o, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
   simp [← val_natCast]
 
 theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 := by
