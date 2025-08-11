@@ -33,8 +33,7 @@ much more convenient. However, the fact that nimbers are of characteristic 2 pre
 interacting with the arithmetic in any nice way.
 
 To reduce API duplication, we opt not to implement operations on `Nimber` on `Ordinal`. The order
-isomorphisms `Ordinal.toNimber` and `Nimber.toOrdinal` allow us to cast between them whenever
-needed.
+isomorphisms `Nimber.of` and `Nimber.val` allow us to cast between them whenever needed.
 -/
 
 universe u v
@@ -56,29 +55,33 @@ instance Nimber.instNoMaxOrder : NoMaxOrder Nimber := Ordinal.instNoMaxOrder
 instance Nimber.instZeroLEOneClass : ZeroLEOneClass Nimber := Ordinal.instZeroLEOneClass
 instance Nimber.instNeZeroOne : NeZero (1 : Nimber) := Ordinal.instNeZeroOne
 
+namespace Nimber
+open Ordinal
+
 /-- The identity function between `Ordinal` and `Nimber`. -/
 @[match_pattern]
-def Ordinal.toNimber : Ordinal ≃o Nimber :=
-  OrderIso.refl _
+def of : Ordinal ≃o Nimber := .refl _
 
 /-- The identity function between `Nimber` and `Ordinal`. -/
 @[match_pattern]
-def Nimber.toOrdinal : Nimber ≃o Ordinal :=
-  OrderIso.refl _
+def val : Nimber ≃o Ordinal := .refl _
 
-@[inherit_doc] scoped[Nimber] prefix:75 "∗" => Ordinal.toNimber
-recommended_spelling "toNimber" for "∗" in [Nimber.«term∗_»]
+@[inherit_doc] scoped[Nimber] prefix:75 "∗" => of
+recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
-namespace Nimber
+@[simp] theorem of_symm : of.symm = val := rfl
+@[simp] theorem val_symm : val.symm = of := rfl
 
-open Ordinal
+@[simp] theorem of_val (a : Nimber) : of (val a) = a := rfl
+@[simp] theorem val_of (a : Ordinal) : val (of a) = a := rfl
 
-@[simp] theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber := rfl
-@[simp] theorem toNimber_toOrdinal (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
+theorem val_le_iff (a : Nimber) (b : Ordinal) : val a ≤ b ↔ a ≤ ∗b := .rfl
+theorem val_lt_iff (a : Nimber) (b : Ordinal) : val a < b ↔ a < ∗b := .rfl
+theorem val_eq_iff (a : Nimber) (b : Ordinal) : val a = b ↔ a = ∗b := .rfl
 
-theorem toOrdinal_le_iff (a : Nimber) (b : Ordinal) : toOrdinal a ≤ b ↔ a ≤ ∗b := .rfl
-theorem toOrdinal_lt_iff (a : Nimber) (b : Ordinal) : toOrdinal a < b ↔ a < ∗b := .rfl
-theorem toOrdinal_eq_iff (a : Nimber) (b : Ordinal) : toOrdinal a = b ↔ a = ∗b := .rfl
+theorem of_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.val := .rfl
+theorem of_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.val := .rfl
+theorem of_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.val := .rfl
 
 theorem lt_wf : @WellFounded Nimber (· < ·) :=
   Ordinal.lt_wf
@@ -91,31 +94,34 @@ instance : ConditionallyCompleteLinearOrderBot Nimber :=
 
 @[simp] theorem bot_eq_zero : (⊥ : Nimber) = 0 := rfl
 
-@[simp] theorem toOrdinal_zero : toOrdinal 0 = 0 := rfl
-@[simp] theorem toOrdinal_one : toOrdinal 1 = 1 := rfl
+@[simp, game_cmp] theorem of_zero : of 0 = 0 := rfl
+@[simp] theorem val_zero : val 0 = 0 := rfl
 
-@[simp] theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 := .rfl
-@[simp] theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 := .rfl
+@[simp, game_cmp] theorem of_one : of 1 = 1 := rfl
+@[simp] theorem val_one : val 1 = 1 := rfl
 
-@[simp]
-theorem toOrdinal_max (a b : Nimber) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
-  rfl
+@[simp] theorem of_eq_zero {a} : of a = 0 ↔ a = 0 := .rfl
+@[simp] theorem val_eq_zero {a} : val a = 0 ↔ a = 0 := .rfl
 
-@[simp]
-theorem toOrdinal_min (a b : Nimber) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
-  rfl
+@[simp] theorem of_eq_one {a} : of a = 1 ↔ a = 1 := .rfl
+@[simp] theorem val_eq_one {a} : val a = 1 ↔ a = 1 := .rfl
 
-theorem succ_def (a : Nimber) : succ a = ∗(toOrdinal a + 1) :=
+theorem of_max (a b : Ordinal) : of (max a b) = max (of a) (of b) := rfl
+theorem val_max (a b : Nimber) : val (max a b) = max (val a) (val b) := rfl
+
+theorem of_min (a b : Ordinal) : of (min a b) = min (of a) (of b) := rfl
+theorem val_min (a b : Nimber) : val (min a b) = min (val a) (val b) := rfl
+
+theorem succ_def (a : Nimber) : succ a = ∗(val a + 1) :=
   rfl
 
 /-- A recursor for `Nimber`. Use as `induction x`. -/
 @[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : Nimber → Sort*} (h : ∀ a, β (∗a)) : ∀ a, β a := fun a ↦
-  h (toOrdinal a)
+protected def rec {β : Nimber → Sort*} (h : ∀ a, β (of a)) : ∀ a, β a := fun a ↦ h (val a)
 
 /-- `Ordinal.induction` but for `Nimber`. -/
-theorem induction {p : Nimber → Prop} (i) (h : ∀ j, (∀ k, k < j → p k) → p j) : p i :=
-  Ordinal.induction i h
+theorem induction {p : Nimber → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
+  Ordinal.induction
 
 @[simp]
 protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
@@ -161,26 +167,6 @@ instance Nimber.uncountable : Uncountable Nimber :=
   Ordinal.uncountable
 
 open Nimber
-
-namespace Ordinal
-
-@[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
-@[simp] theorem toOrdinal_toNimber (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
-
-theorem toNimber_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.toOrdinal := .rfl
-theorem toNimber_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.toOrdinal := .rfl
-theorem toNimber_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.toOrdinal := .rfl
-
-@[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
-@[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl
-
-@[simp] theorem toNimber_eq_zero {a} : ∗a = 0 ↔ a = 0 := .rfl
-@[simp] theorem toNimber_eq_one {a} : ∗a = 1 ↔ a = 1 := .rfl
-
-@[simp] theorem toNimber_max (a b : Ordinal) : ∗(max a b) = max (∗a) (∗b) := rfl
-@[simp] theorem toNimber_min (a b : Ordinal) : ∗(min a b) = min (∗a) (∗b) := rfl
-
-end Ordinal
 
 /-! ### Nimber addition -/
 
