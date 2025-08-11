@@ -99,6 +99,9 @@ instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
 theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
   Ordinal.bddAbove_of_small s
 
+theorem bddAbove_iff_small {s : Set NatOrdinal.{u}} : BddAbove s ↔ Small.{u} s :=
+  Ordinal.bddAbove_iff_small
+
 @[simp]
 theorem bot_eq_zero : ⊥ = 0 :=
   rfl
