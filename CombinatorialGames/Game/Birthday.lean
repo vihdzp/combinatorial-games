@@ -72,11 +72,11 @@ protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : �
   Ordinal.iSup_eq_zero_iff
 
 theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
-    o < Ordinal.omega0.toNatOrdinal ↔ ∃ n : ℕ, o = n := by
-  rw [← o.toOrdinal_toNatOrdinal, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
+    o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n := by
+  rw [← val_of o, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
   simp [← toOrdinal_cast_nat]
 
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < Ordinal.omega0.toNatOrdinal := by
+theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 := by
   rw [NatOrdinal.lt_omega0]
   use n
 
@@ -321,7 +321,7 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
 theorem short_iff_birthday_finite {x : IGame} :
-    x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
+    x.Short ↔ x.birthday < of Ordinal.omega0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
@@ -338,7 +338,7 @@ theorem short_iff_birthday_finite {x : IGame} :
 termination_by x
 decreasing_by igame_wf
 
-theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < Ordinal.omega0.toNatOrdinal :=
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of Ordinal.omega0 :=
   short_iff_birthday_finite.1 ‹_›
 
 end IGame

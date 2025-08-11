@@ -52,10 +52,10 @@ theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n :=
     simp_all
 
 theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
-  rw [← Ordinal.toNatOrdinal_cast_nat]
+  rw [← NatOrdinal.of_natCast]
   apply (Ordinal.Iio_natCast _).trans
   congr! 1
-  exact Ordinal.toNatOrdinal_cast_nat _
+  exact NatOrdinal.of_natCast
 
 namespace NatOrdinal
 
@@ -255,13 +255,12 @@ theorem Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x 
   use n
   rwa [IGame.neg_lt]
 
-local notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+local notation "ω" => toIGame (NatOrdinal.of Ordinal.omega0)
 
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt,
-    ← Ordinal.toNatOrdinal_cast_nat n]
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
   exact Ordinal.nat_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
