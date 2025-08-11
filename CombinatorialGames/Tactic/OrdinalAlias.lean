@@ -2,149 +2,113 @@ import Mathlib.SetTheory.Ordinal.Family
 
 open Lean Elab Command
 
--- $(mkDocComment s!" Docstring for {decl.getId} docstring {"hello"}"):docComment
-
+/-- Doc-comment allowing antiquotation. -/
 def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
   .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
 
-macro "ordinal_alias!" doc:docComment x:ident : command => `(
+/-- `Alias.of` -/
+def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
+  .mk <| mkIdent (Alias.getId ++ `of)
+
+/-- `Alias.val` -/
+def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
+  .mk <| mkIdent (Alias.getId ++ `val)
+
+macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 $doc:docComment
-def $x : Type _ :=
-  Ordinal deriving Zero, Inhabited, One, WellFoundedRelation
+def $Alias : Type _ :=
+  Ordinal deriving Zero, One, Nontrivial, Inhabited, WellFoundedRelation
 
-instance : LinearOrder $x := Ordinal.instLinearOrder
-instance : SuccOrder $x := Ordinal.instSuccOrder
-instance : OrderBot $x := Ordinal.instOrderBot
-instance : NoMaxOrder $x := Ordinal.instNoMaxOrder
-instance : ZeroLEOneClass $x := Ordinal.instZeroLEOneClass
-instance : NeZero (1 : $x) := Ordinal.instNeZeroOne
-instance : Uncountable $x := Ordinal.uncountable
+namespace $Alias
+universe u
 
-$(mkDocComment s!" The identity function between `Ordinal` and `{x.getId}`."):docComment
+noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
+instance : SuccOrder $Alias := Ordinal.instSuccOrder
+instance : OrderBot $Alias := Ordinal.instOrderBot
+instance : NoMaxOrder $Alias := Ordinal.instNoMaxOrder
+instance : ZeroLEOneClass $Alias := Ordinal.instZeroLEOneClass
+instance : NeZero (1 : $Alias) := Ordinal.instNeZeroOne
+instance : Uncountable $Alias := Ordinal.uncountable
+instance : WellFoundedLT $Alias := Ordinal.wellFoundedLT
+noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
+  Ordinal.instConditionallyCompleteLinearOrderBot
+
+theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := Ordinal.lt_wf
+
+$(mkDocComment s!" The identity function between `Ordinal` and `{Alias.getId}`."):docComment
 @[match_pattern]
-def Ordinal.toNatOrdinal : Ordinal ≃o $x := .refl _
+def $(mkIdent `of) : Ordinal ≃o $Alias := .refl _
 
-$(mkDocComment s!" The identity function between `{x.getId}` and `Ordinal`."):docComment
+$(mkDocComment s!" The identity function between `{Alias.getId}` and `Ordinal`."):docComment
 @[match_pattern]
-def $(mkIdent (x.getId ++ `toOrdinal)) : $x ≃o Ordinal := .refl _
-/-
-namespace NatOrdinal
+def $(mkIdent `val) : $Alias ≃o Ordinal := .refl _
 
-open Ordinal
+@[simp] theorem $(mkIdent `of_symm) : .symm $(mkOf Alias) = $(mkVal Alias) := rfl
+@[simp] theorem $(mkIdent `val_symm) : .symm $(mkVal Alias) = $(mkOf Alias) := rfl
 
-@[simp] theorem toOrdinal_symm : toOrdinal.symm = Ordinal.toNatOrdinal := rfl
+@[simp] theorem $(mkIdent `of_val) (a) : $(mkOf Alias) ($(mkVal Alias) a) = a := rfl
+@[simp] theorem $(mkIdent `val_of) (a) : $(mkVal Alias) ($(mkOf Alias) a) = a := rfl
 
-@[simp]
-theorem toOrdinal_toNatOrdinal (a : NatOrdinal) : a.toOrdinal.toNatOrdinal = a :=
+theorem $(mkIdent `val_le_iff) {a b} : $(mkVal Alias) a ≤ b ↔ a ≤ $(mkOf Alias) b := .rfl
+theorem $(mkIdent `val_lt_iff) {a b} : $(mkVal Alias) a < b ↔ a < $(mkOf Alias) b := .rfl
+theorem $(mkIdent `val_eq_iff) {a b} : $(mkVal Alias) a = b ↔ a = $(mkOf Alias) b := .rfl
+
+theorem $(mkIdent `of_le_iff) {a b} : $(mkOf Alias) a ≤ b ↔ a ≤ $(mkVal Alias) b := .rfl
+theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias) b := .rfl
+theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
+
+@[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
+
+@[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
+@[simp] theorem $(mkIdent `val_zero) : $(mkVal Alias) 0 = 0 := rfl
+
+@[simp] theorem $(mkIdent `of_one) : $(mkOf Alias) 1 = 1 := rfl
+@[simp] theorem $(mkIdent `val_one) : $(mkVal Alias) 1 = 1 := rfl
+
+@[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
+@[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+
+@[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
+@[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+
+theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVal Alias) a + 1) :=
   rfl
 
-theorem lt_wf : @WellFounded NatOrdinal (· < ·) :=
-  Ordinal.lt_wf
-
-instance : WellFoundedLT NatOrdinal :=
-  Ordinal.wellFoundedLT
-
-instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
-  WellFoundedLT.conditionallyCompleteLinearOrderBot _
-
-instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
-  inferInstanceAs (Small (Iio o.toOrdinal))
-
-theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
-  Ordinal.bddAbove_of_small s
-
-@[simp]
-theorem bot_eq_zero : ⊥ = 0 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_zero : toOrdinal 0 = 0 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_one : toOrdinal 1 = 1 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 :=
-  Iff.rfl
-
-theorem toOrdinal_max (a b : NatOrdinal) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-theorem toOrdinal_min (a b : NatOrdinal) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-theorem succ_def (a : NatOrdinal) : succ a = toNatOrdinal (toOrdinal a + 1) :=
-  rfl
-
-@[simp]
-theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
-  Ordinal.zero_le o
-
-theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 :=
-  Ordinal.not_lt_zero o
-
-@[simp]
-theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
-  Ordinal.lt_one_iff_zero
-
-/-- A recursor for `NatOrdinal`. Use as `induction x`. -/
+$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : NatOrdinal → Sort*} (h : ∀ a, β (toNatOrdinal a)) : ∀ a, β a := fun a =>
-  h (toOrdinal a)
+protected def $(mkIdent `rec) {β : $Alias → Sort*} (h : ∀ a, β ($(mkOf Alias) a)) (a) : β a :=
+  h ($(mkVal Alias) a)
 
-/-- `Ordinal.induction` but for `NatOrdinal`. -/
-theorem induction {p : NatOrdinal → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
+$(mkDocComment s!" `Ordinal.induction` but for `{Alias.getId}`. "):docComment
+theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
-end NatOrdinal
+@[simp] protected theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
+@[simp] protected theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
+protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
 
-namespace Ordinal
+@[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
+@[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
+theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
 
-variable {a b c : Ordinal.{u}}
+-- TODO: upstream to Mathlib for Ordinal
+theorem $(mkIdent `eq_nat_of_le_nat) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
+    ∃ c : ℕ, a = $(mkOf Alias) c :=
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
 
-@[simp]
-theorem toNatOrdinal_symm_eq : toNatOrdinal.symm = NatOrdinal.toOrdinal :=
-  rfl
+instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
+instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
+instance (a b : $Alias.{u}) : Small.{u} (Set.Ico a b) := Ordinal.small_Ico a b
+instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
+instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
+instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
-@[simp]
-theorem toNatOrdinal_toOrdinal (a : Ordinal) : a.toNatOrdinal.toOrdinal = a :=
-  rfl
+theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
+  Ordinal.not_bddAbove_compl_of_small s
 
-@[simp]
-theorem toNatOrdinal_zero : toNatOrdinal 0 = 0 :=
-  rfl
+end $Alias
 
-@[simp]
-theorem toNatOrdinal_one : toNatOrdinal 1 = 1 :=
-  rfl
-
-@[simp]
-theorem toNatOrdinal_eq_zero (a) : toNatOrdinal a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toNatOrdinal_eq_one (a) : toNatOrdinal a = 1 ↔ a = 1 :=
-  Iff.rfl
-
-theorem toNatOrdinal_max (a b : Ordinal) :
-    toNatOrdinal (max a b) = max (toNatOrdinal a) (toNatOrdinal b) :=
-  rfl
-
-theorem toNatOrdinal_min (a b : Ordinal) :
-    toNatOrdinal (min a b) = min (toNatOrdinal a) (toNatOrdinal b) :=
-  rfl
-  -/
-
+-- TODO: how do we name this correctly?
+-- theorem not_small_nimber : ¬ Small.{u} $Alias.{max u v} := not_small_ordinal
 )
-
-noncomputable section
-ordinal_alias! /-- A type synonym for ordinals with natural addition and multiplication. -/ NatOrdinal
-
-#synth NatOrdinal.toOrdinal

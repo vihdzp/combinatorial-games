@@ -3,6 +3,7 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.SetTheory.Ordinal.Family
 import Mathlib.Tactic.Abel
 
@@ -39,114 +40,14 @@ between both types, we attempt to prove and state most results on `Ordinal`.
   form.
 -/
 
+ordinal_alias!
+  /-- A type synonym for ordinals with natural addition and multiplication. -/ NatOrdinal
+
 universe u v
 
 open Function Order Set
 
-@[inherit_doc]
-
-example : "sus" = concat("su", "s") :=
-  rfl
-
-#exit
-
 noncomputable section
-
-/-! ### Basic casts between `Ordinal` and `NatOrdinal` -/
-
-/-- A type synonym for ordinals with natural addition and multiplication. -/
-def NatOrdinal : Type _ :=
-  -- Porting note: used to derive LinearOrder & SuccOrder but need to manually define
-  Ordinal deriving Zero, Inhabited, One, WellFoundedRelation
-
-instance NatOrdinal.instLinearOrder : LinearOrder NatOrdinal := Ordinal.instLinearOrder
-instance NatOrdinal.instSuccOrder : SuccOrder NatOrdinal := Ordinal.instSuccOrder
-instance NatOrdinal.instOrderBot : OrderBot NatOrdinal := Ordinal.instOrderBot
-instance NatOrdinal.instNoMaxOrder : NoMaxOrder NatOrdinal := Ordinal.instNoMaxOrder
-instance NatOrdinal.instZeroLEOneClass : ZeroLEOneClass NatOrdinal := Ordinal.instZeroLEOneClass
-instance NatOrdinal.instNeZeroOne : NeZero (1 : NatOrdinal) := Ordinal.instNeZeroOne
-
-instance NatOrdinal.uncountable : Uncountable NatOrdinal :=
-  Ordinal.uncountable
-
-namespace NatOrdinal
-open Ordinal
-
-/-- The identity function between `Ordinal` and `NatOrdinal`. -/
-@[match_pattern]
-def of : Ordinal ≃o NatOrdinal := .refl _
-
-/-- The identity function between `NatOrdinal` and `Ordinal`. -/
-@[match_pattern]
-def val : NatOrdinal ≃o Ordinal := .refl _
-
-@[simp] theorem of_symm : of.symm = val := rfl
-@[simp] theorem val_symm : val.symm = of := rfl
-
-@[simp] theorem of_val (a : NatOrdinal) : of (val a) = a := rfl
-@[simp] theorem val_of (a : Ordinal) : val (of a) = a := rfl
-
-theorem lt_wf : @WellFounded NatOrdinal (· < ·) :=
-  Ordinal.lt_wf
-
-instance : WellFoundedLT NatOrdinal :=
-  Ordinal.wellFoundedLT
-
-instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
-  WellFoundedLT.conditionallyCompleteLinearOrderBot _
-
-instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
-  inferInstanceAs (Small (Iio o.val))
-
-theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
-  Ordinal.bddAbove_of_small s
-
-@[simp]
-theorem bot_eq_zero : ⊥ = 0 :=
-  rfl
-
-@[simp] theorem of_zero : of 0 = 0 := rfl
-@[simp] theorem val_zero : val 0 = 0 := rfl
-
-@[simp] theorem of_one : of 1 = 1 := rfl
-@[simp] theorem val_one : val 1 = 1 := rfl
-
-@[simp] theorem of_eq_zero {a} : of a = 0 ↔ a = 0 := .rfl
-@[simp] theorem val_eq_zero {a} : val a = 0 ↔ a = 0 := .rfl
-
-@[simp] theorem of_eq_one {a} : of a = 1 ↔ a = 1 := .rfl
-@[simp] theorem val_eq_one {a} : val a = 1 ↔ a = 1 := .rfl
-
-theorem val_max (a b : NatOrdinal) : val (max a b) = max (val a) (val b) :=
-  rfl
-
-theorem val_min (a b : NatOrdinal) : val (min a b) = min (val a) (val b) :=
-  rfl
-
-theorem succ_def (a : NatOrdinal) : succ a = of (val a + 1) :=
-  rfl
-
-@[simp]
-theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
-  Ordinal.zero_le o
-
-theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 :=
-  Ordinal.not_lt_zero o
-
-@[simp]
-theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
-  Ordinal.lt_one_iff_zero
-
-/-- A recursor for `NatOrdinal`. Use as `induction x`. -/
-@[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : NatOrdinal → Sort*} (h : ∀ a, β (of a)) : ∀ a, β a := fun a =>
-  h (val a)
-
-/-- `Ordinal.induction` but for `NatOrdinal`. -/
-theorem induction {p : NatOrdinal → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
-  Ordinal.induction
-
-end NatOrdinal
 
 namespace Ordinal
 
