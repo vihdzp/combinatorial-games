@@ -135,18 +135,14 @@ variable (c) in
 theorem toLGame_toIGame (a : α) : (c.toIGame a).toLGame = c.toLGame a := by
   apply c.moveRecOn a fun b IHl IHr ↦ ?_
   ext x
-  · simp_rw [leftMoves_toLGame, mem_image, IGame.leftMoves_toLGame, leftMoves_toIGame]
+  on_goal 1 => set IH := IHl; rw [leftMoves_toLGame, IGame.leftMoves_toLGame, leftMoves_toIGame]
+  on_goal 2 => set IH := IHr; rw [rightMoves_toLGame, IGame.rightMoves_toLGame, rightMoves_toIGame]
+  all_goals
     constructor
     · rintro ⟨_, ⟨x, hx, rfl⟩, rfl⟩
-      exact ⟨x, hx, (IHl _ hx).symm⟩
+      exact ⟨x, hx, (IH _ hx).symm⟩
     · rintro ⟨x, hx, rfl⟩
-      exact ⟨_, mem_image_of_mem _ hx, IHl _ hx⟩
-  · simp_rw [rightMoves_toLGame, mem_image, IGame.rightMoves_toLGame, rightMoves_toIGame]
-    constructor
-    · rintro ⟨_, ⟨x, hx, rfl⟩, rfl⟩
-      exact ⟨x, hx, (IHr _ hx).symm⟩
-    · rintro ⟨x, hx, rfl⟩
-      exact ⟨_, mem_image_of_mem _ hx, IHr _ hx⟩
+      exact ⟨_, mem_image_of_mem _ hx, IH _ hx⟩
 
 theorem neg_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toIGame a = c.toIGame a := by
   rw [← IGame.toLGame.injective.eq_iff]
