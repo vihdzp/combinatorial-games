@@ -167,6 +167,26 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
+@[simp]
+theorem natCast_image_Iio' (n : ℕ) : Nat.cast '' Iio n = Iio (n : Ordinal) := by
+  ext o
+  have (h : o < n) := NatOrdinal.eq_natCast_of_le_natCast h.le
+  aesop
+
+@[simp]
+theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
+  natCast_image_Iio' n
+
+@[simp]
+theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∀ a < ↑n, P a) ↔ ∀ a < n, P a := by
+  change (∀ a ∈ Iio _, _) ↔ ∀ a ∈ Iio _, _
+  simp [← natCast_image_Iio]
+
+@[simp]
+theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P a) ↔ ∃ a < n, P a := by
+  change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
+  simp [← natCast_image_Iio]
+
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
     apply_fun val at h
