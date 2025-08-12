@@ -17,22 +17,20 @@ and `b' < b`. The natural multiplication `a * b` is likewise recursively defined
 ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for any `a' < a` and
 `b' < b`.
 
-These operations form a rich algebraic structure: they're commutative, associative, preserve order,
-have the usual `0` and `1` from ordinals, and distribute over one another.
+These operations give the ordinals a `CommSemiring` + `IsStrictOrderedRing` structure. To make the
+best use of it, we define them on a type alias `NatOrdinal`.
 
-Moreover, these operations are the addition and multiplication of ordinals when viewed as
-combinatorial `Game`s. This makes them particularly useful for game theory.
-
-Finally, both operations admit simple, intuitive descriptions in terms of the Cantor normal form.
-The natural addition of two ordinals corresponds to adding their Cantor normal forms as if they were
-polynomials in `ω`. Likewise, their natural multiplication corresponds to multiplying the Cantor
-normal forms as polynomials.
+An equivalent characterization explains the relevance of these operations to game theory: they are
+the restrictions of surreal addition and multiplication to the ordinals.
 
 ## Implementation notes
 
 To reduce API duplication, we opt not to implement operations on `NatOrdinal` on `Ordinal`. The
 order isomorphisms `NatOrdinal.of` and `NatOrdinal.val` allow us to cast between them whenever
 needed.
+
+For similar reasons, most results about ordinals and games are written using `NatOrdinal` rather
+than `Ordinal` (except when `Nimber` would make more sense).
 
 ## Todo
 
@@ -42,7 +40,7 @@ needed.
 
 universe u v
 
-open Function Order Set
+open Order Set
 
 noncomputable section
 
