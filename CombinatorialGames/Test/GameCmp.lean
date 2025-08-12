@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Specific.Nim
-import CombinatorialGames.Game.Tactic
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 Tests for the `game_cmp` tactic.
