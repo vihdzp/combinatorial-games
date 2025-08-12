@@ -73,6 +73,14 @@ theorem $(mkIdent `of_le_iff) {a b} : $(mkOf Alias) a ≤ b ↔ a ≤ $(mkVal Al
 theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias) b := .rfl
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
+@[simp]
+theorem $(mkIdent `of_image_Iio) (a) : $(mkOf Alias) '' Set.Iio a = Set.Iio ($(mkOf Alias) a) :=
+  Set.image_id _
+
+@[simp]
+theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($(mkVal Alias) a) :=
+  Set.image_id _
+
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
