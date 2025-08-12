@@ -156,6 +156,8 @@ instance : SuccAddOrder NatOrdinal := ⟨succ_eq_add_one'⟩
 @[simp] theorem of_add_one (a : Ordinal) : of (a + 1) = of a + 1 := succ_eq_add_one _
 @[simp] theorem val_add_one (a : NatOrdinal) : val (a + 1) = val a + 1 := (succ_eq_add_one a).symm
 
+@[simp] theorem add_one_ne_zero (a : NatOrdinal) : a + 1 ≠ 0 := by simp [← succ_eq_add_one]
+
 -- TODO: someday we'll get rid of this.
 attribute [-simp] Ordinal.add_one_eq_succ
 attribute [simp] Order.succ_eq_add_one
@@ -167,11 +169,11 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
+@[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
+
 @[simp]
 theorem natCast_image_Iio' (n : ℕ) : Nat.cast '' Iio n = Iio (n : Ordinal) := by
-  ext o
-  have (h : o < n) := NatOrdinal.eq_natCast_of_le_natCast h.le
-  aesop
+  ext o; have (h : o < n) := NatOrdinal.eq_natCast_of_le_natCast h.le; aesop
 
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
