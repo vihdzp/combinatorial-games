@@ -91,7 +91,7 @@ theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVa
   rfl
 
 @[simp]
-theorem $(mkIdent `succ_of) (a : $Alias) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
+theorem $(mkIdent `succ_of) (a : Ordinal) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
   rfl
 
 @[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Ordinal.succ_ne_zero a
@@ -107,10 +107,11 @@ $(mkDocComment s!" `Ordinal.induction` but for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
-@[simp] protected theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le a
-@[simp] protected theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
-@[simp] protected theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
-protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
+@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le a
+@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
+@[simp] theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
+theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
+theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := Ordinal.eq_zero_or_pos a
 
 @[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
 @[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero

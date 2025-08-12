@@ -53,7 +53,7 @@ ordinal_alias!
 
 namespace NatOrdinal
 
-variable {a b c : NatOrdinal.{u}}
+variable {a b c d a' b' c' : NatOrdinal.{u}}
 
 /-! ### Natural addition -/
 
@@ -88,10 +88,10 @@ theorem add_le_iff : b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b 
   simp
 
 instance : AddLeftStrictMono NatOrdinal where
-  elim _a _b _c h := lt_add_iff.2 (Or.inr ⟨_, h, le_rfl⟩)
+  elim _a _b _c h := lt_add_iff.2 (.inr ⟨_, h, le_rfl⟩)
 
 instance : AddRightStrictMono NatOrdinal where
-  elim _a _b _c h := lt_add_iff.2 (Or.inl ⟨_, h, le_rfl⟩)
+  elim _a _b _c h := lt_add_iff.2 (.inl ⟨_, h, le_rfl⟩)
 
 instance : AddLeftMono NatOrdinal :=
   addLeftMono_of_addLeftStrictMono _
@@ -143,6 +143,9 @@ instance : IsOrderedCancelAddMonoid NatOrdinal where
     by_contra! h'
     exact h.not_gt (add_lt_add_left h' a)
 
+theorem le_add_left : a ≤ b + a := by simp
+theorem le_add_right : a ≤ a + b := by simp
+
 private theorem succ_eq_add_one' (a : NatOrdinal) : succ a = a + 1 := by
   rw [add_def, ciSup_unique (s := fun _ : Iio 1 ↦ _), Iio_one_default_eq, add_zero,
     eq_comm, max_eq_right_iff, iSup_le_iff]
@@ -166,6 +169,11 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
+instance : CharZero NatOrdinal where
+  cast_injective m n h := by
+    apply_fun val at h
+    simpa using h
+
 @[simp]
 theorem of_add_natCast (a : Ordinal) (n : ℕ) : of (a + n) = of a + n := by
   induction n with
@@ -180,7 +188,7 @@ theorem val_add_natCast (a : NatOrdinal) (n : ℕ) : val (a + n) = val a + n :=
 theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c h => simpa [← add_assoc] using add_le_add_right h 1
+  | succ c IH => simpa [← add_assoc] using add_le_add_right IH 1
   | limit c hc IH =>
     rw [(Ordinal.isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
@@ -189,143 +197,7 @@ theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
 theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
   oadd_le_add' ..
 
-#exit
-
-end NatOrdinal
-
-namespace NatOrdinal
-
-open NatOrdinal NaturalOps
-
-instance : Add NatOrdinal := ⟨add⟩
-instance : SuccAddOrder NatOrdinal := ⟨fun x => (add_one x).symm⟩
-
-instance : AddCommMonoid NatOrdinal where
-  add_assoc := add_assoc
-  zero_add := zero_add
-  add_zero := add_zero
-  add_comm := add_comm
-  nsmul := nsmulRec
-
-instance : IsOrderedCancelAddMonoid NatOrdinal where
-  add_le_add_left _ _ := add_le_add_left
-  le_of_add_le_add_left a b c h := by
-    by_contra! h'
-    exact h.not_gt (add_lt_add_left h' a)
-
-instance : AddMonoidWithOne NatOrdinal :=
-  AddMonoidWithOne.unary
-
-theorem lt_add_iff {a b c : NatOrdinal} :
-    a < b + c ↔ (∃ b' < b, a ≤ b' + c) ∨ ∃ c' < c, a ≤ b + c' :=
-  NatOrdinal.lt_add_iff
-
-theorem add_le_iff {a b c : NatOrdinal} :
-     b + c ≤ a ↔ (∀ b' < b, b' + c < a) ∧ ∀ c' < c, b + c' < a :=
-  NatOrdinal.add_le_iff
-
-@[simp]
-theorem val_natCast (n : ℕ) : val n = n := by
-  induction' n with n hn
-  · rfl
-  · change (val n) + 1 = n + 1
-    rw [hn]; exact add_one n
-
-instance : CharZero NatOrdinal where
-  cast_injective m n h := by
-    apply_fun val at h
-    simpa using h
-
-end NatOrdinal
-
-open NatOrdinal
-
-open NaturalOps
-
-namespace NatOrdinal
-
-theorem add_eq_add (a b : NatOrdinal) : a + b = val (of a + of b) :=
-  rfl
-
-@[simp]
-theorem _root_.NatOrdinal.of_natCast (n : ℕ) : of n = n := by
-  rw [← val_natCast n]
-  rfl
-
-theorem lt_of_add_lt_add_left : ∀ {a b c}, a + b < a + c → b < c :=
-  @lt_of_add_lt_add_left NatOrdinal _ _ _
-
-theorem lt_of_add_lt_add_right : ∀ {a b c}, b + a < c + a → b < c :=
-  @lt_of_add_lt_add_right NatOrdinal _ _ _
-
-theorem le_of_add_le_add_left : ∀ {a b c}, a + b ≤ a + c → b ≤ c :=
-  @le_of_add_le_add_left NatOrdinal _ _ _
-
-theorem le_of_add_le_add_right : ∀ {a b c}, b + a ≤ c + a → b ≤ c :=
-  @le_of_add_le_add_right NatOrdinal _ _ _
-
-@[simp]
-theorem add_lt_add_iff_left : ∀ (a) {b c}, a + b < a + c ↔ b < c :=
-  @add_lt_add_iff_left NatOrdinal _ _ _ _
-
-@[simp]
-theorem add_lt_add_iff_right : ∀ (a) {b c}, b + a < c + a ↔ b < c :=
-  @add_lt_add_iff_right NatOrdinal _ _ _ _
-
-@[simp]
-theorem add_le_add_iff_left : ∀ (a) {b c}, a + b ≤ a + c ↔ b ≤ c :=
-  @add_le_add_iff_left NatOrdinal _ _ _ _
-
-@[simp]
-theorem add_le_add_iff_right : ∀ (a) {b c}, b + a ≤ c + a ↔ b ≤ c :=
-  @_root_.add_le_add_iff_right NatOrdinal _ _ _ _
-
-theorem add_le_add : ∀ {a b c d}, a ≤ b → c ≤ d → a + c ≤ b + d :=
-  @add_le_add NatOrdinal _ _ _ _
-
-theorem add_lt_add : ∀ {a b c d}, a < b → c < d → a + c < b + d :=
-  @add_lt_add NatOrdinal _ _ _ _
-
-theorem add_lt_add_of_lt_of_le : ∀ {a b c d}, a < b → c ≤ d → a + c < b + d :=
-  @add_lt_add_of_lt_of_le NatOrdinal _ _ _ _
-
-theorem add_lt_add_of_le_of_lt : ∀ {a b c d}, a ≤ b → c < d → a + c < b + d :=
-  @add_lt_add_of_le_of_lt NatOrdinal _ _ _ _
-
-theorem add_left_cancel : ∀ {a b c}, a + b = a + c → b = c :=
-  @_root_.add_left_cancel NatOrdinal _ _
-
-theorem add_right_cancel : ∀ {a b c}, a + b = c + b → a = c :=
-  @_root_.add_right_cancel NatOrdinal _ _
-
-@[simp]
-theorem add_left_cancel_iff : ∀ {a b c}, a + b = a + c ↔ b = c :=
-  @add_left_cancel_iff NatOrdinal _ _
-
-@[simp]
-theorem add_right_cancel_iff : ∀ {a b c}, b + a = c + a ↔ b = c :=
-  @add_right_cancel_iff NatOrdinal _ _
-
-theorem le_add_self {a b} : a ≤ b + a := by simpa using add_le_add_right (Ordinal.zero_le b) a
-
-theorem le_add_left {a b c} (h : a ≤ c) : a ≤ b + c :=
-  le_add_self.trans (add_le_add_left h b)
-
-theorem le_self_add {a b} : a ≤ a + b := by simpa using add_le_add_left (Ordinal.zero_le b) a
-
-theorem le_add_right {a b c} (h : a ≤ b) : a ≤ b + c :=
-  le_self_add.trans (add_le_add_right h c)
-
-theorem add_left_comm : ∀ a b c, a + (b + c) = b + (a + c) :=
-  @add_left_comm NatOrdinal _
-
-theorem add_right_comm : ∀ a b c, a + b + c = a + c + b :=
-  @add_right_comm NatOrdinal _
-
 /-! ### Natural multiplication -/
-
-variable {a b c d : NatOrdinal.{u}}
-
 
 /-- Natural multiplication on ordinals `a * b`, also known as the Hessenberg product, is recursively
 defined as the least ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for all
@@ -335,116 +207,126 @@ distributive (over natural addition).
 Natural multiplication can equivalently be characterized as the ordinal resulting from multiplying
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
-noncomputable def nmul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  sInf {c | ∀ a' < a, ∀ b' < b, nmul a' b + nmul a b' < c + nmul a' b'}
+noncomputable def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
+  sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
 termination_by (a, b)
 
-/-- The set in the definition of `nmul` is nonempty. -/
-private theorem nmul_nonempty (a b : NatOrdinal.{u}) :
+instance : Mul NatOrdinal := ⟨mul⟩
+
+/-- Multiply two `NatOrdinal`s as ordinal numbers. -/
+scoped notation:70 x:70 "*ₒ" y:71 => of (val x * val y)
+
+theorem mul_def (a b : NatOrdinal) :
+    a * b = sInf {c | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'} := by
+  change mul .. = _
+  rw [mul]
+  rfl
+
+/-- The set in the definition of `mul` is nonempty. -/
+private theorem mul_nonempty (a b : NatOrdinal.{u}) :
     {c : NatOrdinal.{u} | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'}.Nonempty := by
   obtain ⟨c, hc⟩ : BddAbove ((fun x ↦ x.1 * b + a * x.2) '' Set.Iio a ×ˢ Set.Iio b) :=
     bddAbove_of_small _
   exact ⟨_, fun x hx y hy ↦
-    (lt_succ_of_le <| hc <| Set.mem_image_of_mem _ <| Set.mk_mem_prod hx hy).trans_le le_self_add⟩
+    (lt_succ_of_le <| hc <| Set.mem_image_of_mem _ <| Set.mk_mem_prod hx hy).trans_le le_add_right⟩
 
-theorem nmul_add_lt {a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
-    a' * b + a * b' < a * b + a' * b' := by
-  conv_rhs => rw [nmul]
-  exact csInf_mem (nmul_nonempty a b) a' ha b' hb
+theorem mul_add_lt (ha : a' < a) (hb : b' < b) : a' * b + a * b' < a * b + a' * b' := by
+  rw [mul_def a b]
+  exact csInf_mem (mul_nonempty a b) a' ha b' hb
 
-theorem nmul_add_le {a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
-    a' * b + a * b' ≤ a * b + a' * b' := by
-  rcases lt_or_eq_of_le ha with (ha | rfl)
-  · rcases lt_or_eq_of_le hb with (hb | rfl)
-    · exact (nmul_add_lt ha hb).le
-    · rw [add_comm]
-  · exact le_rfl
+theorem mul_add_le (ha : a' ≤ a) (hb : b' ≤ b) : a' * b + a * b' ≤ a * b + a' * b' := by
+  obtain rfl | ha := ha.eq_or_lt; rfl
+  obtain rfl | hb := hb.eq_or_lt; rw [add_comm]
+  exact (mul_add_lt ha hb).le
 
-theorem lt_nmul_iff : c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' := by
-  refine ⟨fun h => ?_, ?_⟩
-  · rw [nmul] at h
+theorem lt_mul_iff : c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' := by
+  refine ⟨fun h ↦ ?_, fun ⟨a', ha, b', hb, h⟩ ↦ ?_⟩
+  · rw [mul_def] at h
     simpa using notMem_of_lt_csInf h ⟨0, fun _ _ => bot_le⟩
-  · rintro ⟨a', ha, b', hb, h⟩
-    have := h.trans_lt (nmul_add_lt ha hb)
-    rwa [add_lt_add_iff_right] at this
+  · rw [← add_lt_add_iff_right]
+    exact h.trans_lt (mul_add_lt ha hb)
 
-theorem nmul_le_iff : a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' := by
-  rw [← not_iff_not]; simp [lt_nmul_iff]
+theorem mul_le_iff : a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' := by
+  simpa using lt_mul_iff.not
 
-theorem nmul_comm (a b) : a * b = b * a := by
-  rw [nmul, nmul]
-  congr; ext x; constructor <;> intro H c hc d hd
-  · rw [add_comm, ← nmul_comm, ← nmul_comm a, ← nmul_comm d]
+private theorem mul_comm' (a b : NatOrdinal) : a * b = b * a := by
+  rw [mul_def, mul_def]
+  congr with x; constructor <;> intro H c hc d hd
+  · rw [add_comm, ← mul_comm', ← mul_comm' a, ← mul_comm' d]
     exact H _ hd _ hc
-  · rw [add_comm, nmul_comm, nmul_comm c, nmul_comm c]
+  · rw [add_comm, mul_comm', mul_comm' c, mul_comm' c]
     exact H _ hd _ hc
 termination_by (a, b)
 
-@[simp]
-theorem nmul_zero (a) : a * 0 = 0 := by
-  rw [← NatOrdinal.le_zero, nmul_le_iff]
-  exact fun _ _ a ha => (Ordinal.not_lt_zero a ha).elim
+instance : CommMagma NatOrdinal where
+  mul_comm := mul_comm'
 
-@[simp]
-theorem zero_nmul (a) : 0 * a = 0 := by rw [nmul_comm, nmul_zero]
+private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
+  rw [← NatOrdinal.le_zero, mul_le_iff]
+  simp
 
-@[simp]
-theorem nmul_one (a : NatOrdinal) : a * 1 = a := by
-  rw [nmul]
+instance : MulZeroClass NatOrdinal where
+  mul_zero := mul_zero'
+  zero_mul a := by rw [mul_comm', mul_zero']
+
+private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
+  rw [mul_def]
   convert csInf_Ici
   ext b
   refine ⟨fun H ↦ le_of_forall_lt (a := a) fun c hc ↦ ?_, fun ha c hc ↦ ?_⟩
-  · simpa [nmul_one c] using H c hc
-  · simpa [nmul_one c] using hc.trans_le ha
+  · simpa [mul_one' c] using H c hc
+  · simpa [mul_one' c] using hc.trans_le ha
 termination_by a
 
-@[simp]
-theorem one_nmul (a) : 1 * a = a := by rw [nmul_comm, nmul_one]
+instance : MulZeroOneClass NatOrdinal where
+  mul_one := mul_one'
+  one_mul a := by rw [mul_comm', mul_one']
 
-theorem nmul_lt_nmul_of_pos_left (h₁ : a < b) (h₂ : 0 < c) : c * a < c * b :=
-  lt_nmul_iff.2 ⟨0, h₂, a, h₁, by simp⟩
+instance : PosMulStrictMono NatOrdinal where
+  elim a b c h := lt_mul_iff.2 ⟨0, a.2, b, h, by simp⟩
 
-theorem nmul_lt_nmul_of_pos_right (h₁ : a < b) (h₂ : 0 < c) : a * c < b * c :=
-  lt_nmul_iff.2 ⟨a, h₁, 0, h₂, by simp⟩
+instance : MulPosStrictMono NatOrdinal where
+  elim a b c h := lt_mul_iff.2 ⟨b, h, 0, a.2, by simp⟩
 
-theorem nmul_le_nmul_left (h : a ≤ b) (c) : c * a ≤ c * b := by
-  rcases lt_or_eq_of_le h with (h₁ | rfl) <;> rcases (eq_zero_or_pos c).symm with (h₂ | rfl)
-  · exact (nmul_lt_nmul_of_pos_left h₁ h₂).le
-  all_goals simp
+instance : MulLeftMono NatOrdinal where
+  elim a b c h := by
+    obtain rfl | h₁ := h.eq_or_lt; simp
+    obtain rfl | h₂ := eq_zero_or_pos a; simp
+    dsimp
+    exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
-theorem nmul_le_nmul_right (h : a ≤ b) (c) : a * c ≤ b * c := by
-  rw [nmul_comm, nmul_comm b]
-  exact nmul_le_nmul_left h c
+instance : MulRightMono NatOrdinal where
+  elim a b c h := by convert mul_le_mul_left' h a using 1 <;> exact mul_comm ..
 
-theorem nmul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
-  refine le_antisymm (nmul_le_iff.2 fun a' ha d hd => ?_)
+private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
+  refine le_antisymm (mul_le_iff.2 fun a' ha d hd => ?_)
     (add_le_iff.2 ⟨fun d hd => ?_, fun d hd => ?_⟩)
-  · rw [nmul_add]
+  · rw [mul_add]
     rcases lt_add_iff.1 hd with (⟨b', hb, hd⟩ | ⟨c', hc, hd⟩)
-    · have := add_lt_add_of_lt_of_le (nmul_add_lt ha hb) (nmul_add_le ha.le hd)
-      rw [nmul_add, nmul_add] at this
+    · have := add_lt_add_of_lt_of_le (mul_add_lt ha hb) (mul_add_le ha.le hd)
+      rw [mul_add, mul_add] at this
       simp only [add_assoc] at this
       rwa [add_left_comm, add_left_comm _ (a * b'), add_left_comm (a * b),
         add_lt_add_iff_left, add_left_comm (a' * b), add_left_comm (a * b),
         add_lt_add_iff_left, ← add_assoc, ← add_assoc] at this
-    · have := add_lt_add_of_le_of_lt (nmul_add_le ha.le hd) (nmul_add_lt ha hc)
-      rw [nmul_add, nmul_add] at this
+    · have := add_lt_add_of_le_of_lt (mul_add_le ha.le hd) (mul_add_lt ha hc)
+      rw [mul_add, mul_add] at this
       simp only [add_assoc] at this
       rwa [add_left_comm, add_comm (a * c), add_left_comm (a' * d), add_left_comm (a * c'),
         add_left_comm (a * b), add_lt_add_iff_left, add_comm (a' * c), add_left_comm (a * d),
         add_left_comm (a' * b), add_left_comm (a * b), add_lt_add_iff_left, add_comm (a * d),
         add_comm (a' * d), ← add_assoc, ← add_assoc] at this
-  · rcases lt_nmul_iff.1 hd with ⟨a', ha, b', hb, hd⟩
-    have := add_lt_add_of_le_of_lt hd (nmul_add_lt ha (add_lt_add_right hb c))
-    rw [nmul_add, nmul_add, nmul_add a'] at this
+  · rcases lt_mul_iff.1 hd with ⟨a', ha, b', hb, hd⟩
+    have := add_lt_add_of_le_of_lt hd (mul_add_lt ha (add_lt_add_right hb c))
+    rw [mul_add, mul_add, mul_add a'] at this
     simp only [add_assoc] at this
     rwa [add_left_comm (a' * b'), add_left_comm, add_lt_add_iff_left, add_left_comm,
       add_left_comm _ (a' * b'), add_left_comm (a * b'), add_lt_add_iff_left,
       add_left_comm (a' * c), add_left_comm, add_lt_add_iff_left, add_left_comm,
       add_comm _ (a' * c), add_lt_add_iff_left] at this
-  · rcases lt_nmul_iff.1 hd with ⟨a', ha, c', hc, hd⟩
-    have := add_lt_add_of_lt_of_le (nmul_add_lt ha (add_lt_add_left hc b)) hd
-    rw [nmul_add, nmul_add, nmul_add a'] at this
+  · rcases lt_mul_iff.1 hd with ⟨a', ha, c', hc, hd⟩
+    have := add_lt_add_of_lt_of_le (mul_add_lt ha (add_lt_add_left hc b)) hd
+    rw [mul_add, mul_add, mul_add a'] at this
     simp only [add_assoc] at this
     rwa [add_left_comm _ (a' * b), add_lt_add_iff_left, add_left_comm (a' * c'),
       add_left_comm _ (a' * c), add_lt_add_iff_left, add_left_comm, add_comm (a' * c'),
@@ -452,142 +334,88 @@ theorem nmul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
       add_comm _ (a' * c'), add_left_comm, add_lt_add_iff_left] at this
 termination_by (a, b, c)
 
-theorem add_nmul (a b c) : (a + b) * c = a * c + b * c := by
-  rw [nmul_comm, nmul_add, nmul_comm, nmul_comm c]
+instance : Distrib NatOrdinal where
+  left_distrib := mul_add
+  right_distrib a b c := by rw [mul_comm, mul_add, mul_comm, mul_comm c]
 
-theorem nmul_add_lt₃ {a' b' c' : NatOrdinal} (ha : a' < a) (hb : b' < b) (hc : c' < c) :
+theorem mul_add_lt₃ (ha : a' < a) (hb : b' < b) (hc : c' < c) :
     a' * b * c + a * b' * c + a * b * c' + a' * b' * c' <
       a * b * c + a' * b' * c + a' * b * c' + a * b' * c' := by
-  simpa only [add_nmul, ← add_assoc] using nmul_add_lt (nmul_add_lt ha hb) hc
+  simpa only [add_mul, ← add_assoc] using mul_add_lt (mul_add_lt ha hb) hc
 
-theorem nmul_add_le₃ {a' b' c' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) (hc : c' ≤ c) :
+theorem mul_add_le₃ {a' b' c' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) (hc : c' ≤ c) :
     a' * b * c + a * b' * c + a * b * c' + a' * b' * c' ≤
       a * b * c + a' * b' * c + a' * b * c' + a * b' * c' := by
-  simpa only [add_nmul, ← add_assoc] using nmul_add_le (nmul_add_le ha hb) hc
+  simpa only [add_mul, ← add_assoc] using mul_add_le (mul_add_le ha hb) hc
 
-private theorem nmul_add_lt₃' {a' b' c' : NatOrdinal} (ha : a' < a) (hb : b' < b) (hc : c' < c) :
+private theorem mul_add_lt₃' {a' b' c' : NatOrdinal} (ha : a' < a) (hb : b' < b) (hc : c' < c) :
     a' * (b * c) + a * (b' * c) + a * (b * c') + a' * (b' * c') <
       a * (b * c) + a' * (b' * c) + a' * (b * c') + a * (b' * c') := by
-  simp only [nmul_comm _ (_ * _)]
-  convert nmul_add_lt₃ hb hc ha using 1 <;>
-    (simp only [add_eq_add, of_val]; abel_nf)
+  simp only [mul_comm _ (_ * _)]
+  convert mul_add_lt₃ hb hc ha using 1 <;> abel_nf
 
-theorem lt_nmul_iff₃ : d < a * b * c ↔ ∃ a' < a, ∃ b' < b, ∃ c' < c,
+theorem lt_mul_iff₃ : d < a * b * c ↔ ∃ a' < a, ∃ b' < b, ∃ c' < c,
     d + a' * b' * c + a' * b * c' + a * b' * c' ≤
       a' * b * c + a * b' * c + a * b * c' + a' * b' * c' := by
   refine ⟨fun h ↦ ?_, fun ⟨a', ha, b', hb, c', hc, h⟩ ↦ ?_⟩
-  · rcases lt_nmul_iff.1 h with ⟨e, he, c', hc, H₁⟩
-    rcases lt_nmul_iff.1 he with ⟨a', ha, b', hb, H₂⟩
+  · rcases lt_mul_iff.1 h with ⟨e, he, c', hc, H₁⟩
+    rcases lt_mul_iff.1 he with ⟨a', ha, b', hb, H₂⟩
     refine ⟨a', ha, b', hb, c', hc, ?_⟩
-    have := add_le_add H₁ (nmul_add_le H₂ hc.le)
-    simp only [add_nmul, add_assoc] at this
+    have := add_le_add H₁ (mul_add_le H₂ hc.le)
+    simp only [add_mul, add_assoc] at this
     rw [add_left_comm, add_left_comm d, add_left_comm, add_le_add_iff_left,
       add_left_comm (a * b' * c), add_left_comm (a' * b * c), add_left_comm (a * b * c'),
       add_le_add_iff_left, add_left_comm (a * b * c'), add_left_comm (a * b * c')] at this
     simpa only [add_assoc]
-  · have := h.trans_lt (nmul_add_lt₃ ha hb hc)
+  · have := h.trans_lt (mul_add_lt₃ ha hb hc)
     repeat rw [add_lt_add_iff_right] at this
     assumption
 
-theorem nmul_le_iff₃ : a * b * c ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' < c,
+theorem mul_le_iff₃ : a * b * c ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' < c,
     a' * b * c + a * b' * c + a * b * c' + a' * b' * c' <
       d + a' * b' * c + a' * b * c' + a * b' * c' := by
-  simpa using lt_nmul_iff₃.not
+  simpa using lt_mul_iff₃.not
 
-private theorem nmul_le_iff₃' : a * (b * c) ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' < c,
+private theorem mul_le_iff₃' : a * (b * c) ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' < c,
     a' * (b * c) + a * (b' * c) + a * (b * c') + a' * (b' * c') <
       d + a' * (b' * c) + a' * (b * c') + a * (b' * c') := by
-  simp only [nmul_comm _ (_ * _), nmul_le_iff₃, add_eq_add, of_val]
+  simp only [mul_comm _ (_ * _), mul_le_iff₃]
   constructor <;> intro h a' ha b' hb c' hc
   · convert h b' hb c' hc a' ha using 1 <;> abel_nf
   · convert h c' hc a' ha b' hb using 1 <;> abel_nf
 
-theorem nmul_assoc (a b c : NatOrdinal) : a * b * c = a * (b * c) := by
+private theorem mul_assoc (a b c : NatOrdinal) : a * b * c = a * (b * c) := by
   apply le_antisymm
-  · rw [nmul_le_iff₃]
+  · rw [mul_le_iff₃]
     intro a' ha b' hb c' hc
-    repeat rw [nmul_assoc]
-    exact nmul_add_lt₃' ha hb hc
-  · rw [nmul_le_iff₃']
+    repeat rw [mul_assoc]
+    exact mul_add_lt₃' ha hb hc
+  · rw [mul_le_iff₃']
     intro a' ha b' hb c' hc
-    repeat rw [← nmul_assoc]
-    exact nmul_add_lt₃ ha hb hc
+    repeat rw [← mul_assoc]
+    exact mul_add_lt₃ ha hb hc
 termination_by (a, b, c)
 
-end NatOrdinal
-
-namespace NatOrdinal
-
-open NatOrdinal
-
-instance : Mul NatOrdinal :=
-  ⟨nmul⟩
-
 instance : CommSemiring NatOrdinal where
-  left_distrib := nmul_add
-  right_distrib := add_nmul
-  zero_mul := zero_nmul
-  mul_zero := nmul_zero
-  mul_assoc := nmul_assoc
-  one_mul := one_nmul
-  mul_one := nmul_one
-  mul_comm := nmul_comm
+  mul_assoc := mul_assoc
 
-instance : IsOrderedRing NatOrdinal where
-  zero_le_one := @zero_le_one NatOrdinal _ _ _ _
-  mul_le_mul_of_nonneg_left _ _ c h _ := nmul_le_nmul_left h c
-  mul_le_mul_of_nonneg_right _ _ c h _ := nmul_le_nmul_right h c
+instance : IsStrictOrderedRing NatOrdinal where
+  mul_lt_mul_of_pos_left _ _ _ := mul_lt_mul_of_pos_left
+  mul_lt_mul_of_pos_right _ _ _ := mul_lt_mul_of_pos_right
 
-theorem lt_mul_iff {a b c : NatOrdinal} :
-    c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' :=
-  NatOrdinal.lt_nmul_iff
-
-theorem mul_le_iff {a b c : NatOrdinal} :
-    a * b ≤ c ↔ ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b' :=
-  NatOrdinal.nmul_le_iff
-
-theorem mul_add_lt {a b a' b' : NatOrdinal} (ha : a' < a) (hb : b' < b) :
-    a' * b + a * b' < a * b + a' * b' :=
-  NatOrdinal.nmul_add_lt ha hb
-
-theorem nmul_add_le {a b a' b' : NatOrdinal} (ha : a' ≤ a) (hb : b' ≤ b) :
-    a' * b + a * b' ≤ a * b + a' * b' :=
-  NatOrdinal.nmul_add_le ha hb
-
-end NatOrdinal
-
-namespace NatOrdinal
-
-theorem nmul_eq_mul (a b) : a * b = val (of a * of b) :=
-  rfl
-
-theorem nmul_add_one : ∀ a b, a * (b + 1) = a * b + a :=
-  @mul_add_one NatOrdinal _ _ _
-
-theorem add_one_nmul : ∀ a b, (a + 1) * b = a * b + b :=
-  @add_one_mul NatOrdinal _ _ _
-
-theorem nmul_succ (a b) : a * succ b = a * b + a := by rw [← add_one, nmul_add_one]
-
-theorem succ_nmul (a b) : succ a * b = a * b + b := by rw [← add_one, add_one_nmul]
-
-theorem nmul_add_one : ∀ a b, a * (b + 1) = a * b + a :=
-  nmul_succ
-
-theorem add_one_nmul : ∀ a b, (a + 1) * b = a * b + b :=
-  succ_nmul
-
-theorem mul_le_nmul (a b : NatOrdinal.{u}) : a * b ≤ a * b := by
-  refine b.limitRecOn ?_ ?_ ?_
-  · simp
-  · intro c h
-    rw [mul_succ, nmul_succ]
-    exact (add_le_add _ a).trans (add_le_add_right h a)
-  · intro c hc H
-    rcases eq_zero_or_pos a with (rfl | ha)
+/-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
+theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
+  induction b using Ordinal.limitRecOn with
+  | zero => simp
+  | succ c IH => simpa [mul_add_one] using (add_right_mono IH).trans (oadd_le_add ..)
+  | limit c hc IH =>
+    obtain rfl | ha := eq_zero_or_pos a
     · simp
-    · rw [(isNormal_mul_right ha).apply_of_isSuccLimit hc, NatOrdinal.iSup_le_iff]
+    · rw [(Ordinal.isNormal_mul_right ha).apply_of_isSuccLimit hc, iSup_le_iff]
       rintro ⟨i, hi⟩
-      exact (H i hi).trans (nmul_le_nmul_left hi.le a)
+      exact (IH i hi).trans (mul_le_mul_left' hi.le (of a))
+
+theorem omul_le_mul (a b : NatOrdinal) : a *ₒ b ≤ a * b :=
+  omul_le_mul' ..
 
 end NatOrdinal
