@@ -46,14 +46,6 @@ theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
 protected theorem NatOrdinal.succ_one : succ (1 : NatOrdinal) = 2 := by
   rw [succ_eq_add_one, one_add_one_eq_two]
 
-protected theorem NatOrdinal.lt_iSup_iff {ι : Type*} [Small.{u} ι] (f : ι → NatOrdinal.{u}) {x} :
-    x < ⨆ i, f i ↔ ∃ i, x < f i :=
-  Ordinal.lt_iSup_iff
-
-protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : ι → NatOrdinal.{u}} :
-    ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
-  Ordinal.iSup_eq_zero_iff
-
 theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
     o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n := by
   rw [← of_val o, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
