@@ -23,19 +23,18 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
-* `PGame.Poset.impartial_toIGame`: poset games are impartial
-* `PGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second player,
-  shown via a strategy stealing argument
+* `ConcreteGame.Poset.impartial_toIGame`: poset games are impartial
+* `ConcreteGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second
+  player, shown via a strategy stealing argument
 -/
 
 variable {α : Type*} [Preorder α]
 
 open Set
 
-/-! ### Poset relation -/
+namespace ConcreteGame.Poset
 
-namespace ConcreteGame
-namespace Poset
+/-! ### Poset relation -/
 
 /-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
 some `a ∈ t`.
@@ -88,57 +87,52 @@ theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ 
 instance isWellFounded_rel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
   ⟨wellFounded_rel⟩
 
-end Poset
-
-variable (α) in
-/-- The poset game, played on a poset `α`. -/
-abbrev poset : ConcreteGame (Set α) :=
-  .ofImpartial fun x ↦ {y | Poset.Rel y x}
-
-end ConcreteGame
-
 /-! ### Poset game -/
 
 -- TODO: add stuff on `LGame`
 
-namespace IGame
+section IGame
 variable [WellQuasiOrderedLE α]
 
-open ConcreteGame Poset
+variable (α) in
+/-- The poset game, played on a poset `α`. -/
+abbrev _root_.ConcreteGame.poset : ConcreteGame (Set α) :=
+  .ofImpartial fun x ↦ {y | Poset.Rel y x}
 
 instance : IsWellFounded _ (poset α).IsOption := by
   simpa using isWellFounded_rel
 
 /-- A state of the poset game on `α`. -/
-noncomputable def poset (s : Set α) : IGame :=
-  (ConcreteGame.poset α).toIGame s
+noncomputable def toIGame (s : Set α) : IGame :=
+  (poset α).toIGame s
 
 @[simp]
-theorem leftMoves_poset (s : Set α) : (poset s).leftMoves = poset '' {t | Rel t s} :=
-  leftMoves_toIGame ..
+theorem leftMoves_toIGame (s : Set α) : (toIGame s).leftMoves = toIGame '' {t | Rel t s} :=
+  ConcreteGame.leftMoves_toIGame ..
 
 @[simp]
-theorem rightMoves_poset (s : Set α) : (poset s).rightMoves = poset '' {t | Rel t s} :=
-  rightMoves_toIGame ..
+theorem rightMoves_toIGame (s : Set α) : (toIGame s).rightMoves = toIGame '' {t | Rel t s} :=
+  ConcreteGame.rightMoves_toIGame ..
 
 @[simp]
-protected theorem neg_poset (s : Set α) : -poset s = poset s :=
+protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
   neg_toIGame_ofImpartial _ s
 
-protected instance impartial_toIGame (s : Set α) : (poset s).Impartial :=
+protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
   impartial_toIGame_ofImpartial _ s
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
 
-/-- Any poset game on a poset with a top element is won by the first player. This is proven by
+/-- Any poset game on a toIGame with a top element is won by the first player. This is proven by
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
-    poset (@univ α) ‖ 0 := by
+    toIGame (@univ α) ‖ 0 := by
   apply IGame.Impartial.fuzzy_zero_of_forall_exists_moveLeft
     (mem_leftMoves_toIGame_of_mem (top_compl_rel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
-  rw [leftMoves_toIGame, mem_image] at hz ⊢
+  rw [ConcreteGame.leftMoves_toIGame, mem_image] at hz ⊢
   exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end IGame
+end ConcreteGame.Poset
