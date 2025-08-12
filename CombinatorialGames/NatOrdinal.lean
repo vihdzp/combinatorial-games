@@ -30,9 +30,9 @@ normal forms as polynomials.
 
 ## Implementation notes
 
-Given the rich algebraic structure of these two operations, we choose to create a type synonym
-`NatOrdinal`, where we provide the appropriate instances. However, to avoid casting back and forth
-between both types, we attempt to prove and state most results on `Ordinal`.
+To reduce API duplication, we opt not to implement operations on `NatOrdinal` on `Ordinal`. The
+order isomorphisms `NatOrdinal.of` and `NatOrdinal.val` allow us to cast between them whenever
+needed.
 
 ## Todo
 
