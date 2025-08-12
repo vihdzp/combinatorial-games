@@ -49,8 +49,8 @@ theorem withTop_iSup_lt_top_iff_of_forall_lt {ι} {f : ι → WithTop NatOrdinal
     rw [← coe_le_coe, ha]
     apply le_iSup _ i
   · rw [range_comp'] at hg'
-    have : Small.{u} (range g) := small_of_image coe_injective.injOn
     rw [iSup, range_comp']
+    have : Small.{u} (range g) := small_of_image coe_injective.injOn
     exact withTop_sSup_coe_lt _
 
 theorem withTop_sSup_lt_top_iff_of_forall_lt {s : Set (WithTop NatOrdinal.{u})}
