@@ -124,6 +124,12 @@ instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
+theorem $(mkIdent `bddAbove_iff_small) {s : Set $Alias.{u}} : BddAbove s ↔ Small.{u} s :=
+  Ordinal.bddAbove_iff_small
+
+theorem $(mkIdent `bddAbove_of_small) (s : Set $Alias.{u}) [Small.{u} s] : BddAbove s :=
+  Ordinal.bddAbove_of_small s
+
 theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
   Ordinal.not_bddAbove_compl_of_small s
 
