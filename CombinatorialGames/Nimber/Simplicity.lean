@@ -1024,22 +1024,21 @@ theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
     conv_lhs => rw [← h'.map_embed hx₁ hp, eq_prod_roots_of_splits_id hs]
     simp [hr]
 
--- TODO: upstream attr.
-attribute [simp] eval_multiset_prod in
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
-    {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
+    {p : Nimber[X]} (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hp]
+  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk]
   have hx₀ := zero_lt_one.trans hx₁
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
+    have h' := h.le n.le_succ
     have hx : ∗(x.val ^ (n + 1)) = x ^ (n + 1) := by
       refine le_antisymm (le_of_forall_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
       · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' hy
         have : p.coeff (n + 1) = 0 := p.coeff_eq_zero_of_degree_lt hpn
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
-        rw [← IH (h.le n.le_succ) hpn hpk, ← Nimber.add_eq_zero.ne]
+        rw [← IH h' hpn hpk, ← Nimber.add_eq_zero.ne]
         suffices eval x (p + X ^ (n + 1)) ≠ 0 by simpa
         have hpq : p.degree < (X ^ (n + 1) : Nimber[X]).degree := by simpa
         have hqn : (p + X ^ (n + 1)).degree = (n + 1 : WithBot ℕ) :=
@@ -1062,33 +1061,38 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           · refine h.coeff_prod_lt hx₁ fun y hy ↦ ?_
             have : (f y).1 < x := (f y).2
             apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
-        have IH := IH (h.le n.le_succ) hq' H
+        have IH := IH h' hq' H
         simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
         exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
     have hx' : val x ^ (n + 1) = val (x ^ (n + 1)) := hx
-    obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
-    rw [eval_add, eval_mul, eval_C, eval_pow, eval_X, oeval_C_mul_X_pow_add hq,
-      IH (h.le n.le_succ), (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
+    obtain ⟨a, q, rfl, hqn⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
+    have hqn' := hqn
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
+    have hqk (k) : q.coeff k < x := by
+      obtain hk | hk := le_or_gt k n
+      · convert hpk k using 1
+        aesop
+      · rwa [q.coeff_eq_zero_of_degree_lt (hqn'.trans_lt (mod_cast hk))]
+    rw [eval_add, eval_mul, eval_C, eval_pow, eval_X, oeval_C_mul_X_pow_add hqn, IH h' hqn' hqk,
+      (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
     · have hxn : val x ≤ val x ^ (n + 1) := by
         rw [← opow_natCast]
         exact left_le_opow _ (mod_cast n.succ_pos)
       congr
       refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
-      · convert hp (n + 1)
-        simpa using q.coeff_eq_zero_of_degree_lt hq
-      · sorry
-    · refine oeval_lt_opow (fun k ↦ ?_) hq
-      obtain hk | hk := le_or_gt k n
-      · convert hp k using 1
-        aesop
-      · rwa [q.coeff_eq_zero_of_degree_lt]
-        rw [Nat.cast_add_one, WithBot.natCast_eq_coe, WithBot.lt_add_one] at hq
-        exact hq.trans_lt (mod_cast hk)
-
-
-
-#exit
+      · convert hpk (n + 1)
+        simpa using q.coeff_eq_zero_of_degree_lt hqn
+      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' ha
+        rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
+        have hpn' : (p * C b).degree ≤ n := by compute_degree!
+        have H : ∀ k, (p * C b).coeff k < x := by
+          simp_rw [coeff_mul_C]
+          exact fun k ↦ h.mul_lt (hpk k) hb
+        rw [← IH h' hpn hpk, ← eval_C (a := b), ← eval_mul, IH h' hpn' H]
+        apply oeval_lt_opow H
+        simpa using hpn'
+    · exact oeval_lt_opow hqk hqn
 
 theorem IsNthDegreeClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) :
     x ^ n = ∗(x.val ^ n) := by
