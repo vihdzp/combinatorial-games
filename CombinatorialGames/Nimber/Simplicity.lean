@@ -202,6 +202,18 @@ theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
   rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
     WithBot.lt_coe_bot, p.degree_eq_bot]
 
+theorem eq_C_mul_X_pow_add_of_degree_le {R} [Ring R] {p : R[X]} {n : ℕ} (h : p.degree ≤ n) :
+    ∃ (a : R) (q : R[X]), p = C a * X ^ n + q ∧ q.degree < n := by
+  obtain hp | hp := h.lt_or_eq
+  · use 0, p
+    simpa
+  · refine ⟨p.coeff n, p - C (p.coeff n) * X ^ n, ?_, ?_⟩
+    · rw [_root_.add_sub_cancel]
+    · apply (degree_sub_lt _ (by aesop) _).trans_le h
+      · rw [hp, degree_C_mul_X_pow _ (p.coeff_ne_zero_of_eq_degree hp)]
+      · rw [leadingCoeff, p.natDegree_eq_of_degree_eq_some hp]
+        simp
+
 alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
 
 end Polynomial
@@ -669,7 +681,7 @@ theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
   rw [coeff_mul]
   exact h.sum_lt (hp 0).ne_bot fun y hy ↦ h.mul_lt (hp _) (hq _)
 
-theorem IsGroup.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsRing x)
+theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsRing x)
     (hx₁ : 1 < x) (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.prod f).coeff k < x := by
   classical
   induction s using Finset.induction with
@@ -790,6 +802,22 @@ theorem eq_oeval_of_lt_opow {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y <
       · simpa using hpk k
     · rw [oeval_C_mul_X_pow_add hpn, hp]
       exact div_add_mod ..
+
+theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
+    (hp : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < x ^ n := by
+  obtain rfl | hx₀ := x.eq_zero_or_pos; simp at hp
+  induction n generalizing p with
+  | zero => simp_all
+  | succ n IH =>
+    have hn' : p.degree ≤ n := Order.le_of_lt_succ hn
+    obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hn'
+    rw [oeval_C_mul_X_pow_add hq, val_of, pow_succ]
+    refine mul_add_lt (IH (fun k ↦ ?_) hq) ?_
+    · obtain h | h := lt_or_ge k n
+      · convert hp k using 1
+        aesop
+      · rwa [q.coeff_eq_zero_of_degree_lt (hq.trans_le (mod_cast h))]
+    · simpa [q.coeff_eq_zero_of_degree_lt hq] using hp n=
 
 /-! ### n-th degree closed fields -/
 
@@ -971,6 +999,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
   obtain hx₁ | hx₁ := le_or_gt x 1
   · obtain rfl := p_eq_zero_of_le_one hx₁ hp
     simp
+  have := zero_lt_one.trans hx₁
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
@@ -983,11 +1012,15 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have hq' : (X ^ (n + 1) + ∏ i, (X + C (f i).1)).degree ≤ n := by
           rw [← Order.lt_succ_iff, ← CharTwo.sub_eq_add]
           convert degree_sub_lt .. <;> simp_all
-        have := IH (h.le n.le_succ) hq' (h.coeff_add_lt ?_ ?_)
-        · sorry
-        · have := zero_lt_one.trans hx₁
-          aesop
-        · apply h.coeff_prod_lt
+        have H : ∀ (k : ℕ), (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
+          apply h.coeff_add_lt
+          · aesop
+          · apply h.coeff_prod_lt hx₁ fun y hy ↦ ?_
+            have : (f y).1 < x := (f y).2
+            apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
+        have IH := IH (h.le n.le_succ) hq' H
+        simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
+        exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
 
 #exit
 
