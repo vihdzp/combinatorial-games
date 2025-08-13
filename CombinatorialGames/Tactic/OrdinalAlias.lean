@@ -153,18 +153,18 @@ theorem $(mkIdent `bddAbove_of_small) (s : Set $Alias.{u}) [Small.{u} s] : BddAb
 theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
   Ordinal.not_bddAbove_compl_of_small s
 
-theorem $(mkIdent `le_iSup) {ι : Sort*} (f : ι → $Alias.{u}) [Small.{u} ι] (i : ι) : f i ≤ iSup f :=
+theorem $(mkIdent `le_iSup) {ι : Type*} (f : ι → $Alias.{u}) [Small.{u} ι] (i : ι) : f i ≤ iSup f :=
   Ordinal.le_iSup f i
 
-theorem $(mkIdent `iSup_le_iff) {ι : Sort*} {f : ι → $Alias.{u}} {a : $Alias.{u}} [Small.{u} ι] :
+theorem $(mkIdent `iSup_le_iff) {ι : Type*} {f : ι → $Alias.{u}} {a : $Alias.{u}} [Small.{u} ι] :
     ⨆ i, f i ≤ a ↔ ∀ i, f i ≤ a :=
   Ordinal.iSup_le_iff
 
-theorem $(mkIdent `lt_iSup_iff) {ι : Sort*} [Small.{u} ι] (f : ι → $Alias.{u}) {x} :
+theorem $(mkIdent `lt_iSup_iff) {ι : Type*} [Small.{u} ι] (f : ι → $Alias.{u}) {x} :
     x < ⨆ i, f i ↔ ∃ i, x < f i :=
   Ordinal.lt_iSup_iff
 
-theorem $(mkIdent `iSup_eq_zero_iff) {ι : Sort*} [Small.{u} ι] {f : ι → $Alias.{u}} :
+theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Alias.{u}} :
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
 

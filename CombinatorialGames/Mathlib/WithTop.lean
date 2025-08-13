@@ -47,7 +47,7 @@ theorem withTop_iSup_lt_top_iff_of_forall_lt {ι} {f : ι → WithTop NatOrdinal
     refine @small_image _ _ _ _ (bddAbove_iff_small.1 ⟨a, ?_⟩)
     rintro _ ⟨i, rfl⟩
     rw [← coe_le_coe, ha]
-    apply le_iSup _ i
+    apply _root_.le_iSup _ i
   · rw [range_comp'] at hg'
     rw [iSup, range_comp']
     have : Small.{u} (range g) := small_of_image coe_injective.injOn
@@ -60,7 +60,7 @@ theorem withTop_sSup_lt_top_iff_of_forall_lt {s : Set (WithTop NatOrdinal.{u})}
 @[simp]
 theorem withTop_iSup_lt_top {ι} [Small.{u} ι] {f : ι → WithTop NatOrdinal.{u}} :
     ⨆ i, f i < ⊤ ↔ ∀ i, f i < ⊤ := by
-  use fun hf i ↦ (le_iSup f i).trans_lt hf
+  use fun hf i ↦ (_root_.le_iSup f i).trans_lt hf
   refine fun h ↦ (withTop_iSup_lt_top_iff_of_forall_lt h).2 ?_
   infer_instance
 
