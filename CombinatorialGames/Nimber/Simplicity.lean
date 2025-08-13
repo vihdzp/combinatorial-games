@@ -719,4 +719,12 @@ protected theorem IsAlgClosed.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsAlgClo
   apply IsAlgClosed.sSup
   simpa
 
+/-- If `x` is a field, to prove it algebraically closed, it suffices to check
+*monic* polynomials. -/
+theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
+    (hp : ∀ p : Nimber[X], p.Monic → 0 < p.degree → (∀ k, p.coeff k < x) → ∃ r < x, p.IsRoot r) :
+    IsAlgClosed x := by
+  rw [isAlgClosed_iff_forall]
+  exact fun n ↦ IsNthDegreeClosed.ofMonic h fun p hm hp₀ _ ↦ hp p hm hp₀
+
 end Nimber
