@@ -25,7 +25,6 @@ the birthday of a `Game` more closely matches Conway's original description. The
 universe u
 
 open NatOrdinal Order Set
-open scoped NaturalOps IGame
 
 /-! ### Stuff for Mathlib -/
 
@@ -42,47 +41,19 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
 theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
   (Set.singleton_ne_empty a).symm
 
--- fix this! embarassing
-@[simp]
-theorem NatOrdinal.bot_eq_zero' : (⊥ : NatOrdinal) = 0 :=
-  rfl
+theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
+  Ordinal.lt_omega0
 
-@[simp]
-theorem NatOrdinal.succ_ne_zero (x : NatOrdinal) : succ x ≠ 0 :=
-  Ordinal.succ_ne_zero x
-
-@[simp]
-protected theorem NatOrdinal.le_zero {x : NatOrdinal} : x ≤ 0 ↔ x = 0 :=
-  Ordinal.le_zero
-
-@[simp]
-protected theorem NatOrdinal.succ_zero : succ (0 : NatOrdinal) = 1 :=
-  Ordinal.succ_zero
-
-@[simp]
-protected theorem NatOrdinal.succ_one : succ (1 : NatOrdinal) = 2 := by
-  rw [succ_eq_add_one, one_add_one_eq_two]
-
-protected theorem NatOrdinal.lt_iSup_iff {ι : Type*} [Small.{u} ι] (f : ι → NatOrdinal.{u}) {x} :
-    x < ⨆ i, f i ↔ ∃ i, x < f i :=
-  Ordinal.lt_iSup_iff
-
-protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : ι → NatOrdinal.{u}} :
-    ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
-  Ordinal.iSup_eq_zero_iff
-
-theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
-    o < Ordinal.omega0.toNatOrdinal ↔ ∃ n : ℕ, o = n := by
-  rw [← o.toOrdinal_toNatOrdinal, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
-  simp [← toOrdinal_cast_nat]
-
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < Ordinal.omega0.toNatOrdinal := by
-  rw [NatOrdinal.lt_omega0]
-  use n
+theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 :=
+  Ordinal.nat_lt_omega0 n
 
 /-! ### `IGame` birthday -/
 
 namespace IGame
+
+-- TODO: upstream
+attribute [simp] Order.lt_add_one_iff
+attribute [-simp] Ordinal.add_one_eq_succ
 
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
@@ -141,7 +112,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
 
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
-  rw [birthday, NatOrdinal.iSup_eq_zero_iff, IGame.ext_iff]
+  rw [birthday, iSup_eq_zero_iff, IGame.ext_iff]
   simp [IsOption, forall_and, eq_empty_iff_forall_notMem]
 
 @[simp] theorem birthday_zero : birthday 0 = 0 := by simp
@@ -151,17 +122,17 @@ theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
 @[simp]
 theorem birthday_half : birthday ½ = 2 := by
   rw [half, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_up : birthday ↑ = 2 := by
   rw [up, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_down : birthday ↓ = 2 := by
   rw [down, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
@@ -321,7 +292,7 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
 theorem short_iff_birthday_finite {x : IGame} :
-    x.Short ↔ x.birthday < Ordinal.omega0.toNatOrdinal := by
+    x.Short ↔ x.birthday < of Ordinal.omega0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (y : {y // IsOption y x}) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
@@ -338,7 +309,7 @@ theorem short_iff_birthday_finite {x : IGame} :
 termination_by x
 decreasing_by igame_wf
 
-theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < Ordinal.omega0.toNatOrdinal :=
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of Ordinal.omega0 :=
   short_iff_birthday_finite.1 ‹_›
 
 end IGame

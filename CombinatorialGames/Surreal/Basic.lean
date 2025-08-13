@@ -117,22 +117,22 @@ protected theorem le_total (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y
   rw [or_iff_not_imp_left]
   exact Numeric.le_of_not_le
 
-protected theorem lt_of_not_le [Numeric x] [Numeric y] (h : ¬ x ≤ y) : y < x :=
+protected theorem lt_of_not_ge [Numeric x] [Numeric y] (h : ¬ x ≤ y) : y < x :=
   (Numeric.le_of_not_le h).lt_of_not_ge h
 
 @[simp]
 protected theorem not_le [Numeric x] [Numeric y] : ¬ x ≤ y ↔ y < x :=
-  ⟨Numeric.lt_of_not_le, not_le_of_gt⟩
+  ⟨Numeric.lt_of_not_ge, not_le_of_gt⟩
 
 @[simp]
 protected theorem not_lt [Numeric x] [Numeric y] : ¬ x < y ↔ y ≤ x :=
   not_iff_comm.1 Numeric.not_le
 
-protected theorem le_or_lt (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y < x := by
+protected theorem le_or_gt (x y : IGame) [Numeric x] [Numeric y] : x ≤ y ∨ y < x := by
   rw [← Numeric.not_le]
   exact em _
 
-protected theorem lt_or_le (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y ≤ x := by
+protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y ≤ x := by
   rw [← Numeric.not_lt]
   exact em _
 
@@ -440,6 +440,7 @@ def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
   exact H x hx y hy
 
 @[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
+recommended_spelling "ofSets" for "{· | ·}ˢ" in [«term{_|_}ˢ»]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]

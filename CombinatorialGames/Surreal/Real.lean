@@ -16,11 +16,10 @@ that they are ring and field homomorphisms respectively.
 
 ## TODO
 
-Every real number has birthday at most `ω`. This can be proven by showing that a real number is
-equivalent to its Dedekind cut where only dyadic rationals are considered. At a later point, after
-we have the necessary API on dyadic numbers, we might want to prove this equivalence, or even
-re-define real numbers as Dedekind cuts of dyadic numbers specifically.
+Prove that every real number has birthday at most `ω`.
 -/
+
+universe u
 
 open IGame
 
@@ -53,7 +52,7 @@ namespace Real
 
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
 rationals. -/
-@[coe, match_pattern] def toIGame (x : ℝ) : IGame :=
+@[coe, match_pattern] def toIGame (x : ℝ) : IGame.{u} :=
   {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴵ
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
@@ -388,12 +387,30 @@ theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
 @[simp, norm_cast] theorem toSurreal_one : toSurreal 1 = 1 := by simpa using toSurreal_natCast 1
 
 @[simp]
-theorem toSurreal_add (x y : ℝ) : toSurreal (x + y) = x + y := by
-  simpa using Surreal.mk_eq (toIGame_add_equiv x y)
+theorem toSurreal_neg (x : ℝ) : toSurreal (-x) = -toSurreal x :=
+  Surreal.mk_eq (toIGame_neg _).antisymmRel
 
 @[simp]
-theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = x - y := by
-  simpa using Surreal.mk_eq (toIGame_sub_equiv x y)
+theorem toSurreal_add (x y : ℝ) : toSurreal (x + y) = x + y :=
+  Surreal.mk_eq (toIGame_add_equiv x y)
+
+@[simp]
+theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = x - y :=
+  Surreal.mk_eq (toIGame_sub_equiv x y)
+
+@[simp]
+theorem toSurreal_max (x y : ℝ) : max x y = max (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
+@[simp]
+theorem toSurreal_min (x y : ℝ) : min x y = min (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
+@[simp, norm_cast]
+theorem toSurreal_abs (x : ℝ) : |x| = |toSurreal x| := by
+  simp [abs]
 
 /-! For convenience, we deal with multiplication after defining `Real.toSurreal`. -/
 
@@ -427,10 +444,10 @@ private theorem toIGame_mul_le_mul' {x : ℝ} {q r : ℚ} (h : q * r ≤ x * r) 
   obtain hr | rfl | hr := lt_trichotomy r 0 <;> simp_all
 
 private theorem mulOption_lt_toIGame {x : ℝ} {q r s : ℚ} (h : x * s < x * q - r * q + r * s) :
-    mulOption (toIGame x) q r s < toIGame (x * q) := by
+    mulOption (toIGame x) q r s < toIGame.{u} (x * q) := by
   obtain ⟨t, ht, ht'⟩ := exists_rat_mul_btwn h
   apply lt_of_le_of_lt (b := ((r * q + t * s - r * s :) : IGame))
-  · have := toIGame_mul_le_mul ht
+  · have := toIGame_mul_le_mul.{u} ht
     simp_all [mulOption, ← Surreal.mk_le_mk]
   · rw [← sub_lt_iff_lt_add, lt_sub_iff_add_lt] at ht'
     convert ht'
@@ -438,14 +455,14 @@ private theorem mulOption_lt_toIGame {x : ℝ} {q r s : ℚ} (h : x * s < x * q 
     abel_nf
 
 private theorem toIGame_lt_mulOption {x : ℝ} {q r s : ℚ} (h : x * q - r * q + r * s < x * s) :
-    toIGame (x * q) < mulOption (toIGame x) q r s := by
+    toIGame.{u} (x * q) < mulOption (toIGame x) q r s := by
   obtain ⟨t, ht, ht'⟩ := exists_rat_mul_btwn' h
   apply lt_of_lt_of_le (b := ((r * q + t * s - r * s :) : IGame))
   · rw [← lt_sub_iff_add_lt, sub_lt_iff_lt_add] at ht
     convert ht
     simp only [toIGame_lt_ratCast, Rat.cast_sub, Rat.cast_add, Rat.cast_mul]
     abel_nf
-  · have := toIGame_mul_le_mul' ht'
+  · have := toIGame_mul_le_mul'.{u} ht'
     simp_all [mulOption, ← Surreal.mk_le_mk]
 
 theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * q := by
@@ -542,27 +559,27 @@ private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
       simp_all [← Rat.cast_div]
 
 private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic) (h : q < x * y) :
-    (q : IGame) < x * y := by
+    (q : IGame.{u}) < x * y := by
   obtain hx | rfl | hx := lt_trichotomy x 0
   · obtain hy | rfl | hy := lt_trichotomy y 0
-    · have := @dyadic_lt_mul_toIGame' (-x) (-y) q
+    · have := @dyadic_lt_mul_toIGame'.{u} (-x) (-y) q
       simp_all
     · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
       simp_all
-    · have := @mul_toIGame_lt_dyadic' (-x) y (-q)
+    · have := @mul_toIGame_lt_dyadic'.{u} (-x) y (-q)
       simp_all
   · rw [(Numeric.mul_congr_left toIGame_zero_equiv).lt_congr_right]
     simp_all
   · obtain hy | rfl | hy := lt_trichotomy y 0
-    · have := @mul_toIGame_lt_dyadic' x (-y) (-q)
+    · have := @mul_toIGame_lt_dyadic'.{u} x (-y) (-q)
       simp_all
     · rw [(Numeric.mul_congr_right toIGame_zero_equiv).lt_congr_right]
       simp_all
     · exact dyadic_lt_mul_toIGame' hx hy h
 
 private theorem mul_toIGame_lt_dyadic {x y : ℝ} (q : Dyadic) (h : x * y < q) :
-    x * y < (q : IGame) := by
-  have := @dyadic_lt_mul_toIGame (-x) y (-q)
+    x * y < (q : IGame.{u}) := by
+  have := @dyadic_lt_mul_toIGame.{u} (-x) y (-q)
   simp_all
 
 private theorem toSurreal_mul_ratCast (x : ℝ) (q : ℚ) : toSurreal (x * q) = x * q := by

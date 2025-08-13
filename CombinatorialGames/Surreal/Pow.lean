@@ -17,6 +17,8 @@ We define here the ω-map on games and on surreal numbers, representing exponent
 - Define the normal form of a surreal number.
 -/
 
+universe u
+
 open Set
 
 -- TODO: upstream
@@ -29,6 +31,7 @@ class Wpow (α : Type*) where
   wpow : α → α
 
 prefix:75 "ω^ " => Wpow.wpow
+recommended_spelling "wpow" for "ω^" in [«termω^_»]
 
 noncomputable section
 namespace IGame
@@ -38,7 +41,7 @@ namespace IGame
 
 The standard definition in the literature instead has `r` ranging over positive reals,
 but this makes no difference as to the equivalence class of the games. -/
-private def wpow (x : IGame) : IGame :=
+private def wpow (x : IGame.{u}) : IGame.{u} :=
   {insert 0 (range (fun y : Ioi (0 : Dyadic) × x.leftMoves ↦ y.1 * wpow y.2)) |
     range (fun y : Ioi (0 : Dyadic) × x.rightMoves ↦ y.1 * wpow y.2)}ᴵ
 termination_by x
@@ -47,7 +50,7 @@ decreasing_by igame_wf
 instance : Wpow IGame where
   wpow := wpow
 
-theorem wpow_def (x : IGame) : ω^ x =
+theorem wpow_def (x : IGame.{u}) : ω^ x =
     {insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) x.leftMoves) |
       image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) x.rightMoves}ᴵ := by
   change wpow _ = _

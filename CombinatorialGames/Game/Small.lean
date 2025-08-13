@@ -90,7 +90,7 @@ theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < 
   · have := Dicotic.of_mem_leftMoves hz
     exact (lt_of_numeric_of_pos z hy).not_ge
   · have := Numeric.of_mem_rightMoves hz
-    obtain (h | h) := Numeric.le_or_lt z 0
+    obtain (h | h) := Numeric.le_or_gt z 0
     · cases ((Numeric.lt_rightMove hz).trans_le h).not_gt hy
     · exact (lt_of_numeric_of_pos x h).not_ge
   · obtain rfl | h := eq_or_ne x 0
