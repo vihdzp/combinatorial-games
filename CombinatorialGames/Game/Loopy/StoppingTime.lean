@@ -120,23 +120,21 @@ namespace LGame
 
 /-- Refines the approximations for the left stopping times.
 `stoppingTimeLeftLeft` is defined as the unique fixed point of this function. -/
-private noncomputable def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
+private def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
   toFun f x := ⨅ y ∈ x.leftMoves, ⨆ i ∈ y.rightMoves, f i + 1
   monotone' := monotone_lam fun _ =>
     Monotone.iInf' fun _ => Monotone.iInf' fun _ => Monotone.iSup' fun i => Monotone.iSup' fun _ =>
       add_right_mono.comp (Function.monotone_eval i)
 
-private noncomputable
-def stoppingTimeRightApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
+private def stoppingTimeRightApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
   toFun f x := ⨅ y ∈ x.rightMoves, ⨆ i ∈ y.leftMoves, f i + 1
   monotone' := monotone_lam fun _ =>
     Monotone.iInf' fun _ => Monotone.iInf' fun _ => Monotone.iSup' fun i => Monotone.iSup' fun _ =>
       add_right_mono.comp (Function.monotone_eval i)
 
-private
-theorem eq_of_finite_left {x} (hx : stoppingTimeLeftApprox x = x)
+private theorem eq_of_finite_left {x} (hx : stoppingTimeLeftApprox x = x)
     {i : LGame.{u}} (hi : stoppingTimeLeftApprox.lfp i ≠ ⊤) :
     stoppingTimeLeftApprox.lfp i = x i := by
   have ihx : ∀ j, stoppingTimeLeftApprox.lfp j < stoppingTimeLeftApprox.lfp i →
@@ -166,8 +164,7 @@ theorem eq_of_finite_left {x} (hx : stoppingTimeLeftApprox x = x)
   exact Order.le_succ _
 termination_by wellFounded_lt.wrap (stoppingTimeLeftApprox.lfp i)
 
-private
-theorem eq_of_finite_right {x} (hx : stoppingTimeRightApprox x = x)
+private theorem eq_of_finite_right {x} (hx : stoppingTimeRightApprox x = x)
     {i : LGame.{u}} (hi : stoppingTimeRightApprox.lfp i ≠ ⊤) :
     stoppingTimeRightApprox.lfp i = x i := by
   have ihx : ∀ j, stoppingTimeRightApprox.lfp j < stoppingTimeRightApprox.lfp i →
@@ -195,15 +192,13 @@ theorem eq_of_finite_right {x} (hx : stoppingTimeRightApprox x = x)
   exact le_iSup₂_of_le k hk (Order.le_add_one (OrderHom.lfp stoppingTimeRightApprox k))
 termination_by wellFounded_lt.wrap (stoppingTimeRightApprox.lfp i)
 
-private
-theorem lfp_eq_gfp_left : stoppingTimeLeftApprox.lfp = stoppingTimeLeftApprox.gfp := by
+private theorem lfp_eq_gfp_left : stoppingTimeLeftApprox.lfp = stoppingTimeLeftApprox.gfp := by
   ext i
   by_cases hi : stoppingTimeLeftApprox.lfp i = ⊤
   · exact le_antisymm (stoppingTimeLeftApprox.lfp_le_gfp i) (le_top.trans_eq hi.symm)
   · exact eq_of_finite_left stoppingTimeLeftApprox.isFixedPt_gfp hi
 
-private
-theorem lfp_eq_gfp_right : stoppingTimeRightApprox.lfp = stoppingTimeRightApprox.gfp := by
+private theorem lfp_eq_gfp_right : stoppingTimeRightApprox.lfp = stoppingTimeRightApprox.gfp := by
   ext i
   by_cases hi : stoppingTimeRightApprox.lfp i = ⊤
   · exact le_antisymm (stoppingTimeRightApprox.lfp_le_gfp i) (le_top.trans_eq hi.symm)
@@ -211,25 +206,21 @@ theorem lfp_eq_gfp_right : stoppingTimeRightApprox.lfp = stoppingTimeRightApprox
 
 /-- The ordinal corresponding to the time it takes for left to force a win going first,
 counted in right moves. -/
-noncomputable
 def stoppingTimeLeftLeft (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   stoppingTimeLeftApprox.lfp x
 
 /-- The ordinal corresponding to the time it takes for right to force a win going first,
 counted in left moves. -/
-noncomputable
 def stoppingTimeRightRight (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   stoppingTimeRightApprox.lfp x
 
 /-- The ordinal corresponding to the time it takes for left to force a win going second,
 counted in right moves. -/
-noncomputable
 def stoppingTimeLeftRight (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   ⨆ i ∈ x.rightMoves, stoppingTimeLeftLeft i + 1
 
 /-- The ordinal corresponding to the time it takes for right to force a win going second,
 counted in left moves. -/
-noncomputable
 def stoppingTimeRightLeft (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   ⨆ i ∈ x.leftMoves, stoppingTimeRightRight i + 1
 
