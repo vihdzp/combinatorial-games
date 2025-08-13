@@ -649,7 +649,7 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
 
 @[simp]
 theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x ↔ IsField x := by
-  refine ⟨(IsNthDegreeClosed.toIsField · le_rfl), fun h ↦ .ofMonic h fun p hm hp₀ hp₁ hp ↦ ?_⟩
+  refine ⟨(IsNthDegreeClosed.toIsField · le_rfl), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
   rw [Polynomial.eq_X_add_C_of_degree_le_one hp₁] at hp ⊢
   have hd : p.natDegree = 1 := by
     apply natDegree_eq_of_degree_eq_some
