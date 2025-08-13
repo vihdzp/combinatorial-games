@@ -106,6 +106,15 @@ instance WithTop.succAddOrder {α : Type*}
     | top => simp [SuccOrder.succ]
     | coe => simp [SuccOrder.succ, ← WithTop.coe_one, ← WithTop.coe_add, ← Order.succ_eq_add_one]
 
+theorem Order.lt_add_one_iff_not_isMax {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOrder α]
+    (x : α) : x < x + 1 ↔ ¬IsMax x := by
+  rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
+
+theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOrder α]
+    (x : α) : x ≤ x + 1 := by
+  rw [← Order.succ_eq_add_one]
+  exact Order.le_succ x
+
 noncomputable section
 namespace LGame
 
@@ -182,9 +191,7 @@ theorem eq_of_finite_right {x} (hx : stoppingTimeRightApprox x = x)
   rw [Order.lt_add_one_iff_not_isMax]
   refine mt (IsMax.mono · ?_) hli
   rw [← hu]
-  apply le_iSup₂_of_le k hk
-  rw [← Order.succ_eq_add_one]
-  exact Order.le_succ _
+  exact le_iSup₂_of_le k hk (Order.le_add_one (OrderHom.lfp stoppingTimeRightApprox k))
 termination_by wellFounded_lt.wrap (stoppingTimeRightApprox.lfp i)
 
 private
