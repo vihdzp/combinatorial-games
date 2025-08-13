@@ -25,8 +25,6 @@ universe u
 
 open Nimber Set
 
-theorem Nimber.Iio_of_natCast (n : ℕ) : Iio (∗n) = Nimber.of '' Iio n := by aesop
-
 namespace IGame
 
 /-! ### Nim game -/
@@ -67,26 +65,22 @@ theorem exists_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
 @[game_cmp]
 theorem forall_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ leftMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
-  rw [leftMoves_nim, Nimber.Iio_of_natCast, Ordinal.Iio_natCast]
-  simp
+  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem forall_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ rightMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
-  rw [rightMoves_nim, Nimber.Iio_of_natCast, Ordinal.Iio_natCast]
-  simp
+  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem exists_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ leftMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
-  rw [leftMoves_nim, Nimber.Iio_of_natCast, Ordinal.Iio_natCast]
-  simp
+  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem exists_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ rightMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
-  rw [rightMoves_nim, Nimber.Iio_of_natCast, Ordinal.Iio_natCast]
-  simp
+  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem forall_leftMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :

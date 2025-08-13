@@ -25,7 +25,6 @@ the birthday of a `Game` more closely matches Conway's original description. The
 universe u
 
 open NatOrdinal Order Set
-open scoped NaturalOps IGame
 
 /-! ### Stuff for Mathlib -/
 
@@ -42,30 +41,19 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
 theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
   (Set.singleton_ne_empty a).symm
 
-@[simp]
-protected theorem NatOrdinal.succ_one : succ (1 : NatOrdinal) = 2 := by
-  rw [succ_eq_add_one, one_add_one_eq_two]
+theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
+  Ordinal.lt_omega0
 
-protected theorem NatOrdinal.lt_iSup_iff {ι : Type*} [Small.{u} ι] (f : ι → NatOrdinal.{u}) {x} :
-    x < ⨆ i, f i ↔ ∃ i, x < f i :=
-  Ordinal.lt_iSup_iff
-
-protected theorem NatOrdinal.iSup_eq_zero_iff {ι : Type*} [Small.{u} ι] {f : ι → NatOrdinal.{u}} :
-    ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
-  Ordinal.iSup_eq_zero_iff
-
-theorem NatOrdinal.lt_omega0 {o : NatOrdinal} :
-    o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n := by
-  rw [← of_val o, OrderIso.lt_iff_lt, Ordinal.lt_omega0]
-  simp [← val_natCast]
-
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 := by
-  rw [NatOrdinal.lt_omega0]
-  use n
+theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 :=
+  Ordinal.nat_lt_omega0 n
 
 /-! ### `IGame` birthday -/
 
 namespace IGame
+
+-- TODO: upstream
+attribute [simp] Order.lt_add_one_iff
+attribute [-simp] Ordinal.add_one_eq_succ
 
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
@@ -124,7 +112,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
 
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
-  rw [birthday, NatOrdinal.iSup_eq_zero_iff, IGame.ext_iff]
+  rw [birthday, iSup_eq_zero_iff, IGame.ext_iff]
   simp [IsOption, forall_and, eq_empty_iff_forall_notMem]
 
 @[simp] theorem birthday_zero : birthday 0 = 0 := by simp
@@ -134,17 +122,17 @@ theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
 @[simp]
 theorem birthday_half : birthday ½ = 2 := by
   rw [half, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_up : birthday ↑ = 2 := by
   rw [up, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_down : birthday ↓ = 2 := by
   rw [down, birthday_ofSets]
-  simp
+  simpa using one_add_one_eq_two
 
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
