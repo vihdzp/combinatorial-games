@@ -1064,7 +1064,6 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have IH := IH h' hq' H
         simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
         exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
-    have hx' : val x ^ (n + 1) = val (x ^ (n + 1)) := hx
     obtain ⟨a, q, rfl, hqn⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
     have hqn' := hqn
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
@@ -1094,19 +1093,22 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         simpa using hpn'
     · exact oeval_lt_opow hqk hqn
 
-theorem IsNthDegreeClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) :
-    x ^ n = ∗(x.val ^ n) := by
+theorem IsNthDegreeClosed.pow_mul_eq {n : ℕ} {x y : Nimber}
+    (h : IsNthDegreeClosed n x) (hy : y < x) : x ^ n * y = ∗(x.val ^ n * y.val) := by
   obtain hx₁ | hx₁ := le_or_gt x 1
-  · obtain rfl | rfl := le_one_iff.1 hx₁
-    · cases n <;> simp
-    · simp
-  · conv_lhs => rw [← eval_X (x := x), ← eval_pow]
-    rw [h.eval_eq_of_lt, oeval_X_pow]
-    · exact degree_X_pow_le n
+  · have := le_one_iff.1 hx₁; aesop
+  · conv_lhs => rw [← eval_X (x := x), ← eval_pow, ← eval_C (a := y), ← eval_mul]
+    rw [h.eval_eq_of_lt, mul_comm, oeval_C_mul_X_pow]
+    · compute_degree!
     · have := zero_lt_one.trans hx₁
       aesop
 
-#exit
+theorem IsNthDegreeClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) :
+    x ^ n = ∗(x.val ^ n) := by
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · have := le_one_iff.1 hx₁; cases n <;> aesop
+  · simpa using h.pow_mul_eq hx₁
+
 proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗ω)
 
 /-! ### Algebraically closed fields -/
