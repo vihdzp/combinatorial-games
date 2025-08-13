@@ -6,6 +6,8 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 import CombinatorialGames.Nimber.Field
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Splits
+import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.SetTheory.Ordinal.Principal
 import Mathlib.Tactic.ComputeDegree
 
@@ -183,6 +185,8 @@ theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
   rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
     WithBot.lt_coe_bot, p.degree_eq_bot]
 
+alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
+
 end Polynomial
 
 theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
@@ -207,6 +211,26 @@ this definition. -/
 @[mk_iff]
 structure IsGroup (x : Nimber) where
   add_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y + z < x
+
+theorem IsGroup.sum_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) {ι} {s : Finset ι}
+    {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp_all [Nimber.pos_iff_ne_zero]
+  | insert a s ha IH =>
+    rw [Finset.sum_insert ha]
+    apply h.add_lt <;> aesop
+
+/-- `Iio x` as a subgroup of `Nimber`. -/
+def IsGroup.toAddSubgroup {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) : AddSubgroup Nimber where
+  carrier := Iio x
+  zero_mem' := Nimber.pos_iff_ne_zero.2 hx₀
+  add_mem' := @h.add_lt
+  neg_mem' := id
+
+@[simp]
+theorem val_toAddSubgroup_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) (y : h.toAddSubgroup hx₀) :
+    y < x := y.2
 
 @[simp]
 theorem IsGroup.zero : IsGroup 0 where
@@ -363,6 +387,41 @@ is a ring under this definition. -/
 structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z⦄ (hy : y < x) (hz : z < x) : y * z < x
 
+theorem IsRing.pow_lt' {x y : Nimber} (h : IsRing x) {n : ℕ} (hn : n ≠ 0) (hy : y < x) :
+    y ^ n < x := by
+  induction n using Nat.twoStepInduction with
+  | zero => contradiction
+  | one => simpa
+  | more n _ IH => rw [pow_succ]; exact h.mul_lt (IH n.succ_ne_zero) hy
+
+theorem IsRing.pow_lt {x y : Nimber} (h : IsRing x) {n : ℕ} (hx : 1 < x) (hy : y < x) :
+    y ^ n < x := by
+  obtain rfl | hn := eq_or_ne n 0
+  · simpa
+  · exact h.pow_lt' hn hy
+
+private theorem p_eq_zero_of_le_one {x : Nimber} {p : Nimber[X]}
+    (hx₁ : x ≤ 1) (h : ∀ k, p.coeff k < x) : p = 0 := by
+  ext k; simpa using (h k).trans_le hx₁
+
+theorem IsRing.eval_lt {x y : Nimber} (h : IsRing x) {p : Nimber[X]} (hp : ∀ k, p.coeff k < x)
+    (hy : y < x) : p.eval y < x := by
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · have := p_eq_zero_of_le_one hx₁ hp
+    simp_all
+  · rw [eval_eq_sum]
+    exact h.sum_lt hx₁.ne_bot fun n hn ↦ h.mul_lt (hp _) (h.pow_lt hx₁ hy)
+
+/-- `Iio x` as a subring of `Nimber`. -/
+def IsRing.toSubring {x : Nimber} (h : IsRing x) (hx₁ : 1 < x) : Subring Nimber where
+  one_mem' := hx₁
+  mul_mem' := @h.mul_lt
+  __ := h.toAddSubgroup (by aesop)
+
+@[simp]
+theorem val_toSubring_lt {x : Nimber} (h : IsRing x) (hx₁ : 1 < x) (y : h.toSubring hx₁) :
+    y < x := y.2
+
 @[simp]
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
@@ -429,9 +488,6 @@ theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
 
--- TODO: characterize nim arithmetic on the naturals.
-proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
-
 /-! ### Fields -/
 
 /-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
@@ -448,6 +504,21 @@ theorem IsField.inv_lt {x y : Nimber} (h : IsField x) (hy : y < x) : y⁻¹ < x 
   · simpa
   · exact h.inv_lt' hy₀ hy
 
+theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
+  h.toIsRing.mul_lt hy (h.inv_lt hz)
+
+/-- `Iio x` as a subring of `Nimber`. -/
+def IsField.toSubfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x) : Subfield Nimber where
+  inv_mem' := @h.inv_lt
+  __ := h.toSubring hx₁
+
+@[simp]
+theorem val_toSubfield_lt {x : Nimber} (h : IsField x) (hx₁ : 1 < x) (y : h.toSubfield hx₁) :
+    y < x := y.2
+
+noncomputable instance {x : Nimber} (h : IsField x) (hx₁ : 1 < x) : Field (h.toSubring hx₁) :=
+  inferInstanceAs (Field (h.toSubfield hx₁))
+
 @[simp]
 theorem IsField.zero : IsField 0 where
   inv_lt' := by simp
@@ -460,9 +531,6 @@ theorem IsField.one : IsField 1 where
 
 theorem IsField.of_le_one {x : Nimber} (h : x ≤ 1) : IsField x := by
   obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
-
-theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
-  h.toIsRing.mul_lt hy (h.inv_lt hz)
 
 theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
   h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
@@ -538,8 +606,59 @@ written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem inv_lt_self_of_not_isField {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
 
+-- TODO: characterize nim arithmetic on the naturals.
+proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
+
 -- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
+/-! ### Polynomials -/
+
+/-- Reinterpret a polynomial in the nimbers as a polynomial in the subfield `x`.
+
+We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
+issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
+def IsField.embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) (p : Nimber[X])
+    (hp : ∀ k, p.coeff k < x) : (h.toSubfield hx₁)[X] :=
+  .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
+
+@[simp]
+theorem IsField.coeff_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) (k : ℕ) : (h.embed hx₁ p hp).coeff k = ⟨p.coeff k, hp k⟩ :=
+  rfl
+
+@[simp]
+theorem IsField.map_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).map (Subring.subtype _) = p := by
+  ext; simp
+
+theorem forall_coeff_C_lt {x y : Nimber} (hy : y < x) (k) : (C y).coeff k < x := by
+  rw [coeff_C]
+  split_ifs
+  · assumption
+  · exact hy.bot_lt
+
+@[simp]
+theorem IsField.embed_C {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {y} {hy} :
+    h.embed hx₁ (C y) hy = C ⟨y, by simpa using hy 0⟩ := by
+  ext
+  simp_rw [h.coeff_embed, coeff_C]
+  split_ifs <;> rfl
+
+theorem IsField.val_eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) (y) : (h.embed hx₁ p hp).eval y = p.eval y.1 := by
+  simp [embed, sum, eval_eq_sum]
+
+@[simp]
+theorem IsField.eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) (y) : (h.embed hx₁ p hp).eval y = ⟨_, h.eval_lt hp y.2⟩ := by
+  rw [← Subtype.val_inj, h.val_eval_embed]
+
+@[simp]
+theorem IsField.degree_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).degree = p.degree := by
+  conv_rhs => rw [← h.map_embed hx₁ hp]
+  exact (degree_map_eq_of_injective (Subring.subtype_injective _) _).symm
 
 /-! ### n-th degree closed fields -/
 
@@ -568,21 +687,19 @@ theorem IsNthDegreeClosed.le {m n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x
   has_root' _p hp₀ hpm := h.has_root' hp₀ (hpm.trans (mod_cast hmn))
   __ := h.toIsRing
 
-@[simp]
-theorem IsNthDegreeClosed.zero (n : ℕ) : IsNthDegreeClosed n 0 where
-  has_root' := by simp
-  __ := IsRing.zero
-
-@[simp]
-theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 where
+theorem IsNthDegreeClosed.of_le_one (n : ℕ) {x : Nimber} (h : x ≤ 1) : IsNthDegreeClosed n x where
   has_root' p hp₀ _ hp := by
-    suffices p = 0 by simp_all
-    ext n
-    simpa using hp n
-  __ := IsRing.one
+    have := p_eq_zero_of_le_one h hp
+    simp_all
+  __ := IsRing.of_le_one h
 
-theorem IsNthDegreeClosed.of_le_one (n : ℕ) {x : Nimber} (h : x ≤ 1) : IsNthDegreeClosed n x := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
+@[simp]
+theorem IsNthDegreeClosed.zero (n : ℕ) : IsNthDegreeClosed n 0 :=
+  .of_le_one n zero_le_one
+
+@[simp]
+theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 :=
+  .of_le_one n le_rfl
 
 protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
     (H : ∀ x ∈ s, IsNthDegreeClosed n x) : IsNthDegreeClosed n (sSup s) := by
@@ -630,7 +747,7 @@ theorem isNthDegreeClosed_zero_iff_isRing {x : Nimber} : IsNthDegreeClosed 0 x �
   refine ⟨IsNthDegreeClosed.toIsRing, fun h ↦ ⟨h, fun p ↦ ?_⟩⟩
   cases _ : p.degree <;> aesop
 
-theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hn : 1 ≤ n) :
+theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hn : 0 < n) :
     IsField x := by
   obtain hx₁ | hx₁ := le_or_gt x 1
   · exact IsField.of_le_one hx₁
@@ -649,9 +766,9 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
 
 @[simp]
 theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x ↔ IsField x := by
-  refine ⟨(IsNthDegreeClosed.toIsField · le_rfl), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
+  refine ⟨(IsNthDegreeClosed.toIsField · one_pos), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
   rw [Polynomial.eq_X_add_C_of_degree_le_one hp₁] at hp ⊢
-  have hd : p.natDegree = 1 := by
+  have : p.natDegree = 1 := by
     apply natDegree_eq_of_degree_eq_some
     rw [← Order.succ_le_iff] at hp₀
     exact hp₁.antisymm hp₀
@@ -670,6 +787,76 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
     IsField (⨆ i, f i) := by
   apply IsField.sSup
   simpa
+
+theorem IsNthDegreeClosed.has_root_subring {n : ℕ} {x : Nimber} (hx₁ : 1 < x)
+    (h : IsNthDegreeClosed n x) {p : (h.toSubring hx₁)[X]}
+    (hp₀ : p.degree ≠ 0) (hpn : p.degree ≤ n) : ∃ r, p.IsRoot r := by
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  obtain ⟨r, hr, hr'⟩ := h.has_root (hd ▸ hp₀) (hd ▸ hpn) (by simp)
+  exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
+
+
+theorem IsNthDegreeClosed.splits_subring {n : ℕ} {x : Nimber} (hx₁ : 1 < x)
+    (h : IsNthDegreeClosed n x) (h' : IsField x) {p : (h.toSubring hx₁)[X]} (hpn : p.degree ≤ n) :
+    p.Splits (h'.subringMap hx₁) := by
+  let F := h'.toSubfield hx₁
+  obtain hp₀ | hp₀ := le_or_gt p.degree 0
+  · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
+  induction n with
+  | zero => cases hp₀.not_ge hpn
+  | succ n IH =>
+    obtain ⟨r, hr⟩ := h.has_root_subring hx₁ hp₀.ne' hpn
+    rw [← hr.mul_div_eq (R := F)]
+    apply splits_mul _ (splits_X_sub_C _)
+    -- TODO: how do we avoid the def-eq abuse here?
+    let q : F[X] := @HDiv.hDiv F[X] F[X] _ _ p (X - C r)
+    obtain hp₀' | hp₀' := le_or_gt q.degree 1
+    · exact splits_of_degree_le_one _ hp₀'
+    · apply IH (h.le n.le_succ)
+      · rw [← Order.lt_succ_iff]
+        apply (degree_div_lt (R := F) _ _).trans_le hpn <;> aesop
+      · exact zero_lt_one.trans hp₀'
+
+set_option maxHeartbeats 500000 in
+theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
+    p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
+  obtain rfl | hp₀ := eq_or_ne p 0
+  · simp
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · cases hp₀ (p_eq_zero_of_le_one hx₁ hp)
+  obtain rfl | hn₀ := n.eq_zero_or_pos
+  · cases hp' : p.degree
+    · simp_all
+    · have hp₀ : p.degree = 0 := by simp_all
+      rw [p.eq_C_of_degree_eq_zero hp₀]
+      simp
+  · have h' := h.toIsField hn₀
+    let F := h'.toSubfield hx₁
+    have := eq_prod_roots_of_splits (K := F) (i := .id _)
+      (h.splits_subring hx₁ h' (p := h.embed hx₁ p hp) (by simpa))
+    apply_fun Polynomial.map (Subfield.subtype F) at this
+    convert ← this
+    · rw [map_map]
+      exact h.map_embed hx₁ hp
+    · simp
+      congr
+      have := map_multiset_prod (Subring.subtype _) ((h.embed hx₁ p hp).roots.map (fun a ↦ X - C a))
+      rw [← map_multiset_prod]
+
+#exit
+theorem pow_add_prod_ne_pow {x : Nimber} {n : ℕ} {f : Fin n → Nimber} (hf : ∀ i, f i < x) :
+    x ^ n ≠ x∏ i : Fin n, (x + f i) := by
+  sorry
+
+theorem IsNthDegreeClosed.foldr_mul_add_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
+    (l : List Nimber) (hl : ∀ y ∈ l, y < x) (hln : l.length ≤ n + 1) :
+    l.zipIdx.foldr (fun a b ↦ a.1 * x ^ a.2 + b) 0 =
+    of (l.zipIdx.foldr (fun a b ↦ a.1.val * x.val ^ a.2 + b) 0) := by
+  sorry
+
+
+#exit
 
 proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗ω)
 
@@ -690,8 +877,9 @@ theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : �
   has_root' _p hp₀ _ := h.has_root' hp₀
   __ := h
 
+@[coe]
 theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x :=
-  (h.toIsNthDegreeClosed 1).toIsField le_rfl
+  (h.toIsNthDegreeClosed 1).toIsField one_pos
 
 theorem isAlgClosed_iff_forall {x : Nimber} : IsAlgClosed x ↔ ∀ n, IsNthDegreeClosed n x where
   mp := IsAlgClosed.toIsNthDegreeClosed
