@@ -118,7 +118,8 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
 noncomputable section
 namespace LGame
 
-/-- Refines the approximations for the left stopping times. `stoppingTimeLeftLeft` is defined as the unique fixed point of this function. -/
+/-- Refines the approximations for the left stopping times.
+`stoppingTimeLeftLeft` is defined as the unique fixed point of this function. -/
 private noncomputable def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
   toFun f x := ⨅ y ∈ x.leftMoves, ⨆ i ∈ y.rightMoves, f i + 1
