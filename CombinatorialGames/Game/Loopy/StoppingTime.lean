@@ -214,26 +214,20 @@ noncomputable
 def stoppingTimeLeftLeft (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   stoppingTimeLeftApprox.lfp x
 
-/--
-The ordinal corresponding to the time it takes for right to force a win going first,
-counted in left moves.
--/
+/-- The ordinal corresponding to the time it takes for right to force a win going first,
+counted in left moves. -/
 noncomputable
 def stoppingTimeRightRight (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   stoppingTimeRightApprox.lfp x
 
-/--
-The ordinal corresponding to the time it takes for left to force a win going second,
-counted in right moves.
--/
+/-- The ordinal corresponding to the time it takes for left to force a win going second,
+counted in right moves. -/
 noncomputable
 def stoppingTimeLeftRight (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   ⨆ i ∈ x.rightMoves, stoppingTimeLeftLeft i + 1
 
-/--
-The ordinal corresponding to the time it takes for right to force a win going second,
-counted in left moves.
--/
+/-- The ordinal corresponding to the time it takes for right to force a win going second,
+counted in left moves. -/
 noncomputable
 def stoppingTimeRightLeft (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   ⨆ i ∈ x.leftMoves, stoppingTimeRightRight i + 1
