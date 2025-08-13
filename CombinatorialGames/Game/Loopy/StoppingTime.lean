@@ -76,6 +76,8 @@ it must be an underestimation.
 
 universe u v
 
+/-! ### For Mathlib -/
+
 theorem monotone_prodMk_iff {α β γ : Type*} [Preorder α] [Preorder β] [Preorder γ]
     {f : γ → α} {g : γ → β} : Monotone (fun x => (f x, g x)) ↔ Monotone f ∧ Monotone g := by
   simp_rw [Monotone, Prod.mk_le_mk, forall_and]
@@ -104,10 +106,11 @@ instance WithTop.succAddOrder {α : Type*}
     | top => simp [SuccOrder.succ]
     | coe => simp [SuccOrder.succ, ← WithTop.coe_one, ← WithTop.coe_add, ← Order.succ_eq_add_one]
 
+noncomputable section
 namespace LGame
 
-private noncomputable
-def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
+/-- Refines the approximations for the left stopping times. `stoppingTimeLeftLeft` is defined as the unique fixed point of this function. -/
+private noncomputable def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
   toFun f x := ⨅ y ∈ x.leftMoves, ⨆ i ∈ y.rightMoves, f i + 1
   monotone' := monotone_lam fun _ =>
@@ -176,7 +179,7 @@ theorem eq_of_finite_right {x} (hx : stoppingTimeRightApprox x = x)
   apply ihx
   rw [← hu]
   refine lt_of_lt_of_le ?_ (le_iSup₂ k hk)
-  rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
+  rw [Order.lt_add_one_iff_not_isMax]
   refine mt (IsMax.mono · ?_) hli
   rw [← hu]
   apply le_iSup₂_of_le k hk
@@ -198,10 +201,8 @@ theorem lfp_eq_gfp_right : stoppingTimeRightApprox.lfp = stoppingTimeRightApprox
   · exact le_antisymm (stoppingTimeRightApprox.lfp_le_gfp i) (le_top.trans_eq hi.symm)
   · exact eq_of_finite_right stoppingTimeRightApprox.isFixedPt_gfp hi
 
-/--
-The ordinal corresponding to the time it takes for left to force a win going first,
-counted in right moves.
--/
+/-- The ordinal corresponding to the time it takes for left to force a win going first,
+counted in right moves. -/
 noncomputable
 def stoppingTimeLeftLeft (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   stoppingTimeLeftApprox.lfp x
@@ -266,7 +267,7 @@ theorem stoppingTimeLeft_coinduction (left right : LGame.{u} → WithTop NatOrdi
   apply stoppingTimeLeftApprox.le_gfp at ul
   exact ⟨ul, fun x ↦ (hr x).trans (iSup₂_mono fun y j ↦ add_right_mono (ul y))⟩
 
-theorem stoppingTimeRigh_induction (left right : LGame.{u} → WithTop NatOrdinal.{u})
+theorem stoppingTimeRight_induction (left right : LGame.{u} → WithTop NatOrdinal.{u})
     (hl : ∀ x, ⨆ y ∈ x.leftMoves, right y + 1 ≤ left x)
     (hr : ∀ x, ⨅ y ∈ x.rightMoves, left y ≤ right x) :
     stoppingTimeRightLeft ≤ left ∧ stoppingTimeRightRight ≤ right := by
