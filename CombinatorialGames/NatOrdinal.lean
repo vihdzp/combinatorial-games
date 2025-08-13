@@ -3,6 +3,7 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.SetTheory.Ordinal.Family
 import Mathlib.Tactic.Abel
 
@@ -47,147 +48,12 @@ noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `NatOrdinal` -/
 
-/-- A type synonym for ordinals with natural addition and multiplication. -/
-def NatOrdinal : Type _ :=
-  -- Porting note: used to derive LinearOrder & SuccOrder but need to manually define
-  Ordinal deriving Zero, Inhabited, One, WellFoundedRelation
-
-instance NatOrdinal.instLinearOrder : LinearOrder NatOrdinal := Ordinal.instLinearOrder
-instance NatOrdinal.instSuccOrder : SuccOrder NatOrdinal := Ordinal.instSuccOrder
-instance NatOrdinal.instOrderBot : OrderBot NatOrdinal := Ordinal.instOrderBot
-instance NatOrdinal.instNoMaxOrder : NoMaxOrder NatOrdinal := Ordinal.instNoMaxOrder
-instance NatOrdinal.instZeroLEOneClass : ZeroLEOneClass NatOrdinal := Ordinal.instZeroLEOneClass
-instance NatOrdinal.instNeZeroOne : NeZero (1 : NatOrdinal) := Ordinal.instNeZeroOne
-
-instance NatOrdinal.uncountable : Uncountable NatOrdinal :=
-  Ordinal.uncountable
-
-/-- The identity function between `Ordinal` and `NatOrdinal`. -/
-@[match_pattern]
-def Ordinal.toNatOrdinal : Ordinal ≃o NatOrdinal :=
-  OrderIso.refl _
-
-/-- The identity function between `NatOrdinal` and `Ordinal`. -/
-@[match_pattern]
-def NatOrdinal.toOrdinal : NatOrdinal ≃o Ordinal :=
-  OrderIso.refl _
-
-namespace NatOrdinal
-
-open Ordinal
-
-@[simp]
-theorem toOrdinal_symm_eq : NatOrdinal.toOrdinal.symm = Ordinal.toNatOrdinal :=
-  rfl
-
-@[simp]
-theorem toOrdinal_toNatOrdinal (a : NatOrdinal) : a.toOrdinal.toNatOrdinal = a :=
-  rfl
-
-theorem lt_wf : @WellFounded NatOrdinal (· < ·) :=
-  Ordinal.lt_wf
-
-instance : WellFoundedLT NatOrdinal :=
-  Ordinal.wellFoundedLT
-
-instance : ConditionallyCompleteLinearOrderBot NatOrdinal :=
-  WellFoundedLT.conditionallyCompleteLinearOrderBot _
-
-instance (o : NatOrdinal.{u}) : Small.{u} (Iio o) :=
-  inferInstanceAs (Small (Iio o.toOrdinal))
-
-theorem bddAbove_of_small (s : Set NatOrdinal.{u}) [Small.{u} s] : BddAbove s :=
-  Ordinal.bddAbove_of_small s
-
-theorem bddAbove_iff_small {s : Set NatOrdinal.{u}} : BddAbove s ↔ Small.{u} s :=
-  Ordinal.bddAbove_iff_small
-
-@[simp]
-theorem bot_eq_zero : ⊥ = 0 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_zero : toOrdinal 0 = 0 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_one : toOrdinal 1 = 1 :=
-  rfl
-
-@[simp]
-theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 :=
-  Iff.rfl
-
-theorem toOrdinal_max (a b : NatOrdinal) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-theorem toOrdinal_min (a b : NatOrdinal) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-theorem succ_def (a : NatOrdinal) : succ a = toNatOrdinal (toOrdinal a + 1) :=
-  rfl
-
-@[simp]
-theorem zero_le (o : NatOrdinal) : 0 ≤ o :=
-  Ordinal.zero_le o
-
-theorem not_lt_zero (o : NatOrdinal) : ¬ o < 0 :=
-  Ordinal.not_lt_zero o
-
-@[simp]
-theorem lt_one_iff_zero {o : NatOrdinal} : o < 1 ↔ o = 0 :=
-  Ordinal.lt_one_iff_zero
-
-/-- A recursor for `NatOrdinal`. Use as `induction x`. -/
-@[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : NatOrdinal → Sort*} (h : ∀ a, β (toNatOrdinal a)) : ∀ a, β a := fun a =>
-  h (toOrdinal a)
-
-/-- `Ordinal.induction` but for `NatOrdinal`. -/
-theorem induction {p : NatOrdinal → Prop} : ∀ (i) (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
-  Ordinal.induction
-
-end NatOrdinal
+ordinal_alias!
+  /-- A type synonym for ordinals with natural addition and multiplication. -/ NatOrdinal
 
 namespace Ordinal
 
 variable {a b c : Ordinal.{u}}
-
-@[simp]
-theorem toNatOrdinal_symm_eq : toNatOrdinal.symm = NatOrdinal.toOrdinal :=
-  rfl
-
-@[simp]
-theorem toNatOrdinal_toOrdinal (a : Ordinal) : a.toNatOrdinal.toOrdinal = a :=
-  rfl
-
-@[simp]
-theorem toNatOrdinal_zero : toNatOrdinal 0 = 0 :=
-  rfl
-
-@[simp]
-theorem toNatOrdinal_one : toNatOrdinal 1 = 1 :=
-  rfl
-
-@[simp]
-theorem toNatOrdinal_eq_zero (a) : toNatOrdinal a = 0 ↔ a = 0 :=
-  Iff.rfl
-
-@[simp]
-theorem toNatOrdinal_eq_one (a) : toNatOrdinal a = 1 ↔ a = 1 :=
-  Iff.rfl
-
-theorem toNatOrdinal_max (a b : Ordinal) :
-    toNatOrdinal (max a b) = max (toNatOrdinal a) (toNatOrdinal b) :=
-  rfl
-
-theorem toNatOrdinal_min (a b : Ordinal) :
-    toNatOrdinal (min a b) = min (toNatOrdinal a) (toNatOrdinal b) :=
-  rfl
 
 /-! We place the definitions of `nadd` and `nmul` before actually developing their API, as this
 guarantees we only need to open the `NaturalOps` locale once. -/
@@ -255,22 +121,6 @@ theorem nadd_comm (a b) : a ♯ b = b ♯ a := by
   rw [nadd, nadd, max_comm]
   congr <;> ext x <;> cases x <;> apply congr_arg _ (nadd_comm _ _)
 termination_by (a, b)
-
-@[deprecated "blsub will soon be deprecated" (since := "2024-11-18")]
-theorem blsub_nadd_of_mono {f : ∀ c < a ♯ b, Ordinal.{max u v}}
-    (hf : ∀ {i j} (hi hj), i ≤ j → f i hi ≤ f j hj) :
-    blsub.{u,v} _ f =
-      max (blsub.{u, v} a fun a' ha' => f (a' ♯ b) <| nadd_lt_nadd_right ha' b)
-        (blsub.{u, v} b fun b' hb' => f (a ♯ b') <| nadd_lt_nadd_left hb' a) := by
-  apply (blsub_le_iff.2 fun i h => _).antisymm (max_le _ _)
-  · intro i h
-    rcases lt_nadd_iff.1 h with (⟨a', ha', hi⟩ | ⟨b', hb', hi⟩)
-    · exact lt_max_of_lt_left ((hf h (nadd_lt_nadd_right ha' b) hi).trans_lt (lt_blsub _ _ ha'))
-    · exact lt_max_of_lt_right ((hf h (nadd_lt_nadd_left hb' a) hi).trans_lt (lt_blsub _ _ hb'))
-  all_goals
-    apply blsub_le_of_brange_subset.{u, u, v}
-    rintro c ⟨d, hd, rfl⟩
-    apply mem_brange_self
 
 private theorem iSup_nadd_of_monotone {a b} (f : Ordinal.{u} → Ordinal.{u}) (h : Monotone f) :
     ⨆ x : Iio (a ♯ b), f x = max (⨆ a' : Iio a, f (a'.1 ♯ b)) (⨆ b' : Iio b, f (a ♯ b'.1)) := by
@@ -375,15 +225,15 @@ theorem add_le_iff {a b c : NatOrdinal} :
   Ordinal.nadd_le_iff
 
 @[simp]
-theorem toOrdinal_cast_nat (n : ℕ) : toOrdinal n = n := by
+theorem val_natCast (n : ℕ) : val n = n := by
   induction' n with n hn
   · rfl
-  · change (toOrdinal n) ♯ 1 = n + 1
+  · change (val n) ♯ 1 = n + 1
     rw [hn]; exact nadd_one n
 
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
-    apply_fun toOrdinal at h
+    apply_fun val at h
     simpa using h
 
 end NatOrdinal
@@ -394,12 +244,12 @@ open NaturalOps
 
 namespace Ordinal
 
-theorem nadd_eq_add (a b : Ordinal) : a ♯ b = toOrdinal (toNatOrdinal a + toNatOrdinal b) :=
+theorem nadd_eq_add (a b : Ordinal) : a ♯ b = val (of a + of b) :=
   rfl
 
 @[simp]
-theorem toNatOrdinal_cast_nat (n : ℕ) : toNatOrdinal n = n := by
-  rw [← toOrdinal_cast_nat n]
+theorem _root_.NatOrdinal.of_natCast (n : ℕ) : of n = n := by
+  rw [← val_natCast n]
   rfl
 
 theorem lt_of_nadd_lt_nadd_left : ∀ {a b c}, a ♯ b < a ♯ c → b < c :=
@@ -475,11 +325,6 @@ theorem nadd_right_comm : ∀ a b c, a ♯ b ♯ c = a ♯ c ♯ b :=
 /-! ### Natural multiplication -/
 
 variable {a b c d : Ordinal.{u}}
-
-@[deprecated "avoid using the definition of `nmul` directly" (since := "2024-11-19")]
-theorem nmul_def (a b : Ordinal) :
-    a ⨳ b = sInf {c | ∀ a' < a, ∀ b' < b, a' ⨳ b ♯ a ⨳ b' < c ♯ a' ⨳ b'} := by
-  rw [nmul]
 
 /-- The set in the definition of `nmul` is nonempty. -/
 private theorem nmul_nonempty (a b : Ordinal.{u}) :
@@ -612,15 +457,7 @@ private theorem nmul_nadd_lt₃' {a' b' c' : Ordinal} (ha : a' < a) (hb : b' < b
       a ⨳ (b ⨳ c) ♯ a' ⨳ (b' ⨳ c) ♯ a' ⨳ (b ⨳ c') ♯ a ⨳ (b' ⨳ c') := by
   simp only [nmul_comm _ (_ ⨳ _)]
   convert nmul_nadd_lt₃ hb hc ha using 1 <;>
-    (simp only [nadd_eq_add, NatOrdinal.toOrdinal_toNatOrdinal]; abel_nf)
-
-@[deprecated nmul_nadd_le₃ (since := "2024-11-19")]
-theorem nmul_nadd_le₃' {a' b' c' : Ordinal} (ha : a' ≤ a) (hb : b' ≤ b) (hc : c' ≤ c) :
-    a' ⨳ (b ⨳ c) ♯ a ⨳ (b' ⨳ c) ♯ a ⨳ (b ⨳ c') ♯ a' ⨳ (b' ⨳ c') ≤
-      a ⨳ (b ⨳ c) ♯ a' ⨳ (b' ⨳ c) ♯ a' ⨳ (b ⨳ c') ♯ a ⨳ (b' ⨳ c') := by
-  simp only [nmul_comm _ (_ ⨳ _)]
-  convert nmul_nadd_le₃ hb hc ha using 1 <;>
-    (simp only [nadd_eq_add, NatOrdinal.toOrdinal_toNatOrdinal]; abel_nf)
+    (simp only [nadd_eq_add, of_val]; abel_nf)
 
 theorem lt_nmul_iff₃ : d < a ⨳ b ⨳ c ↔ ∃ a' < a, ∃ b' < b, ∃ c' < c,
     d ♯ a' ⨳ b' ⨳ c ♯ a' ⨳ b ⨳ c' ♯ a ⨳ b' ⨳ c' ≤
@@ -647,16 +484,10 @@ theorem nmul_le_iff₃ : a ⨳ b ⨳ c ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' 
 private theorem nmul_le_iff₃' : a ⨳ (b ⨳ c) ≤ d ↔ ∀ a' < a, ∀ b' < b, ∀ c' < c,
     a' ⨳ (b ⨳ c) ♯ a ⨳ (b' ⨳ c) ♯ a ⨳ (b ⨳ c') ♯ a' ⨳ (b' ⨳ c') <
       d ♯ a' ⨳ (b' ⨳ c) ♯ a' ⨳ (b ⨳ c') ♯ a ⨳ (b' ⨳ c') := by
-  simp only [nmul_comm _ (_ ⨳ _), nmul_le_iff₃, nadd_eq_add, toOrdinal_toNatOrdinal]
+  simp only [nmul_comm _ (_ ⨳ _), nmul_le_iff₃, nadd_eq_add, of_val]
   constructor <;> intro h a' ha b' hb c' hc
   · convert h b' hb c' hc a' ha using 1 <;> abel_nf
   · convert h c' hc a' ha b' hb using 1 <;> abel_nf
-
-@[deprecated lt_nmul_iff₃ (since := "2024-11-19")]
-theorem lt_nmul_iff₃' : d < a ⨳ (b ⨳ c) ↔ ∃ a' < a, ∃ b' < b, ∃ c' < c,
-    d ♯ a' ⨳ (b' ⨳ c) ♯ a' ⨳ (b ⨳ c') ♯ a ⨳ (b' ⨳ c') ≤
-      a' ⨳ (b ⨳ c) ♯ a ⨳ (b' ⨳ c) ♯ a ⨳ (b ⨳ c') ♯ a' ⨳ (b' ⨳ c') := by
-  simpa using nmul_le_iff₃'.not
 
 theorem nmul_assoc (a b c : Ordinal) : a ⨳ b ⨳ c = a ⨳ (b ⨳ c) := by
   apply le_antisymm
@@ -714,7 +545,7 @@ end NatOrdinal
 
 namespace Ordinal
 
-theorem nmul_eq_mul (a b) : a ⨳ b = toOrdinal (toNatOrdinal a * toNatOrdinal b) :=
+theorem nmul_eq_mul (a b) : a ⨳ b = val (of a * of b) :=
   rfl
 
 theorem nmul_nadd_one : ∀ a b, a ⨳ (b ♯ 1) = a ⨳ b ♯ a :=

@@ -7,7 +7,7 @@ import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
-import CombinatorialGames.Register
+import CombinatorialGames.Tactic.Register
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable

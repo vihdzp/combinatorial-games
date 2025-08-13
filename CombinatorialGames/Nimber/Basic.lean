@@ -3,7 +3,8 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Register
+import CombinatorialGames.Tactic.OrdinalAlias
+import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
 import Mathlib.SetTheory.Ordinal.Family
 
@@ -33,8 +34,7 @@ much more convenient. However, the fact that nimbers are of characteristic 2 pre
 interacting with the arithmetic in any nice way.
 
 To reduce API duplication, we opt not to implement operations on `Nimber` on `Ordinal`. The order
-isomorphisms `Ordinal.toNimber` and `Nimber.toOrdinal` allow us to cast between them whenever
-needed.
+isomorphisms `Nimber.of` and `Nimber.val` allow us to cast between them whenever needed.
 -/
 
 universe u v
@@ -45,146 +45,17 @@ noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `Nimber` -/
 
-/-- A type synonym for ordinals with nimber addition and multiplication. -/
-def Nimber : Type _ :=
-  Ordinal deriving Zero, Inhabited, One, Nontrivial, WellFoundedRelation
-
-instance Nimber.instLinearOrder : LinearOrder Nimber := Ordinal.instLinearOrder
-instance Nimber.instSuccOrder : SuccOrder Nimber := Ordinal.instSuccOrder
-instance Nimber.instOrderBot : OrderBot Nimber := Ordinal.instOrderBot
-instance Nimber.instNoMaxOrder : NoMaxOrder Nimber := Ordinal.instNoMaxOrder
-instance Nimber.instZeroLEOneClass : ZeroLEOneClass Nimber := Ordinal.instZeroLEOneClass
-instance Nimber.instNeZeroOne : NeZero (1 : Nimber) := Ordinal.instNeZeroOne
-
-/-- The identity function between `Ordinal` and `Nimber`. -/
-@[match_pattern]
-def Ordinal.toNimber : Ordinal ≃o Nimber :=
-  OrderIso.refl _
-
-/-- The identity function between `Nimber` and `Ordinal`. -/
-@[match_pattern]
-def Nimber.toOrdinal : Nimber ≃o Ordinal :=
-  OrderIso.refl _
-
-@[inherit_doc] scoped[Nimber] prefix:75 "∗" => Ordinal.toNimber
-recommended_spelling "toNimber" for "∗" in [Nimber.«term∗_»]
+ordinal_alias!
+  /-- A type synonym for ordinals with nimber addition and multiplication. -/ Nimber
 
 namespace Nimber
 
-open Ordinal
+attribute [game_cmp] of_zero of_one
 
-@[simp] theorem toOrdinal_symm_eq : Nimber.toOrdinal.symm = Ordinal.toNimber := rfl
-@[simp] theorem toNimber_toOrdinal (a : Nimber) : ∗(Nimber.toOrdinal a) = a := rfl
-
-theorem toOrdinal_le_iff (a : Nimber) (b : Ordinal) : toOrdinal a ≤ b ↔ a ≤ ∗b := .rfl
-theorem toOrdinal_lt_iff (a : Nimber) (b : Ordinal) : toOrdinal a < b ↔ a < ∗b := .rfl
-theorem toOrdinal_eq_iff (a : Nimber) (b : Ordinal) : toOrdinal a = b ↔ a = ∗b := .rfl
-
-theorem lt_wf : @WellFounded Nimber (· < ·) :=
-  Ordinal.lt_wf
-
-instance : WellFoundedLT Nimber :=
-  Ordinal.wellFoundedLT
-
-instance : ConditionallyCompleteLinearOrderBot Nimber :=
-  WellFoundedLT.conditionallyCompleteLinearOrderBot _
-
-@[simp] theorem bot_eq_zero : (⊥ : Nimber) = 0 := rfl
-
-@[simp] theorem toOrdinal_zero : toOrdinal 0 = 0 := rfl
-@[simp] theorem toOrdinal_one : toOrdinal 1 = 1 := rfl
-
-@[simp] theorem toOrdinal_eq_zero {a} : toOrdinal a = 0 ↔ a = 0 := .rfl
-@[simp] theorem toOrdinal_eq_one {a} : toOrdinal a = 1 ↔ a = 1 := .rfl
-
-@[simp]
-theorem toOrdinal_max (a b : Nimber) : toOrdinal (max a b) = max (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-@[simp]
-theorem toOrdinal_min (a b : Nimber) : toOrdinal (min a b) = min (toOrdinal a) (toOrdinal b) :=
-  rfl
-
-theorem succ_def (a : Nimber) : succ a = ∗(toOrdinal a + 1) :=
-  rfl
-
-/-- A recursor for `Nimber`. Use as `induction x`. -/
-@[elab_as_elim, cases_eliminator, induction_eliminator]
-protected def rec {β : Nimber → Sort*} (h : ∀ a, β (∗a)) : ∀ a, β a := fun a ↦
-  h (toOrdinal a)
-
-/-- `Ordinal.induction` but for `Nimber`. -/
-theorem induction {p : Nimber → Prop} (i) (h : ∀ j, (∀ k, k < j → p k) → p j) : p i :=
-  Ordinal.induction i h
-
-@[simp]
-protected theorem le_zero {a : Nimber} : a ≤ 0 ↔ a = 0 :=
-  Ordinal.le_zero
-
-@[simp]
-protected theorem not_lt_zero (a : Nimber) : ¬ a < 0 :=
-  Ordinal.not_lt_zero a
-
-protected theorem pos_iff_ne_zero {a : Nimber} : 0 < a ↔ a ≠ 0 :=
-  Ordinal.pos_iff_ne_zero
-
-@[simp]
-theorem lt_one_iff_zero {a : Nimber} : a < 1 ↔ a = 0 :=
-  Ordinal.lt_one_iff_zero
-
-@[simp]
-theorem one_le_iff_ne_zero {a : Nimber} : 1 ≤ a ↔ a ≠ 0 :=
-  Ordinal.one_le_iff_ne_zero
-
-theorem le_one_iff {a : Nimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
-  Ordinal.le_one_iff
-
-theorem eq_nat_of_le_nat {a : Nimber} {b : ℕ} (h : a ≤ ∗b) : ∃ c : ℕ, a = ∗c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (nat_lt_omega0 b))
-
-instance small_Iio (a : Nimber.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
-instance small_Iic (a : Nimber.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
-instance small_Ico (a b : Nimber.{u}) : Small.{u} (Set.Ico a b) := Ordinal.small_Ico a b
-instance small_Icc (a b : Nimber.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
-instance small_Ioo (a b : Nimber.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
-instance small_Ioc (a b : Nimber.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
-
-theorem not_bddAbove_compl_of_small (s : Set Nimber.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
-  Ordinal.not_bddAbove_compl_of_small s
-
-end Nimber
-
-theorem not_small_nimber : ¬ Small.{u} Nimber.{max u v} :=
-  not_small_ordinal
-
-instance Nimber.uncountable : Uncountable Nimber :=
-  Ordinal.uncountable
-
-open Nimber
-
-namespace Ordinal
-
-@[simp] theorem toNimber_symm_eq : toNimber.symm = Nimber.toOrdinal := rfl
-@[simp] theorem toOrdinal_toNimber (a : Ordinal) : Nimber.toOrdinal (∗a) = a := rfl
-
-theorem toNimber_le_iff (a : Ordinal) (b : Nimber) : ∗a ≤ b ↔ a ≤ b.toOrdinal := .rfl
-theorem toNimber_lt_iff (a : Ordinal) (b : Nimber) : ∗a < b ↔ a < b.toOrdinal := .rfl
-theorem toNimber_eq_iff (a : Ordinal) (b : Nimber) : ∗a = b ↔ a = b.toOrdinal := .rfl
-
-@[simp, game_cmp] theorem toNimber_zero : ∗0 = 0 := rfl
-@[simp, game_cmp] theorem toNimber_one : ∗1 = 1 := rfl
-
-@[simp] theorem toNimber_eq_zero {a} : ∗a = 0 ↔ a = 0 := .rfl
-@[simp] theorem toNimber_eq_one {a} : ∗a = 1 ↔ a = 1 := .rfl
-
-@[simp] theorem toNimber_max (a b : Ordinal) : ∗(max a b) = max (∗a) (∗b) := rfl
-@[simp] theorem toNimber_min (a b : Ordinal) : ∗(min a b) = min (∗a) (∗b) := rfl
-
-end Ordinal
+@[inherit_doc] scoped prefix:75 "∗" => of
+recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
 /-! ### Nimber addition -/
-
-namespace Nimber
 
 variable {a b c : Nimber.{u}}
 
@@ -371,14 +242,14 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
   · apply add_le_of_forall_ne
     all_goals
       intro c hc
-      obtain ⟨c, rfl⟩ := eq_nat_of_le_nat hc.le
+      obtain ⟨c, rfl⟩ := eq_natCast_of_le_natCast hc.le
       rw [OrderIso.lt_iff_lt] at hc
       replace hc := Nat.cast_lt.1 hc
       rw [add_nat]
       simpa using hc.ne
   · apply le_of_not_gt
     intro hc
-    obtain ⟨c, hc'⟩ := eq_nat_of_le_nat hc.le
+    obtain ⟨c, hc'⟩ := eq_natCast_of_le_natCast hc.le
     rw [hc', OrderIso.lt_iff_lt, Nat.cast_lt] at hc
     obtain h | h := Nat.lt_xor_cases hc
     · apply h.ne

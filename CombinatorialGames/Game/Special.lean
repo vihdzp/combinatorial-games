@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
 import CombinatorialGames.Game.Short
-import CombinatorialGames.Game.Tactic
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 # Special games
