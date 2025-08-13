@@ -102,6 +102,14 @@ theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [Canonicall
 theorem WithBot.add_one_ne_zero (x : WithBot ℕ) : x + 1 ≠ 0 := by
   cases x <;> exact not_eq_of_beq_eq_false rfl
 
+@[simp]
+theorem WithBot.natCast_eq_coe (n : ℕ) : (n : WithBot ℕ) = WithBot.some n :=
+  rfl
+
+@[simp]
+theorem WithBot.lt_add_one (n : ℕ) : WithBot.some n < WithBot.some n + 1 :=
+  Order.lt_succ _
+
 /-! #### Ordinal lemmas-/
 
 namespace Ordinal
@@ -477,31 +485,44 @@ theorem exists_mul_of_not_isRing {x : Nimber} (h' : IsGroup x) (h : ¬ IsRing x)
   · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
   · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
 
-/-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
-    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = val (∗x * ∗z) := by
+/-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
+    (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hw : IsGroup (∗w))
+    (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
+    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < x) :
+    x * z = val (∗x * ∗z) := by
   apply le_antisymm
   · apply le_of_forall_ne
     rw [forall_lt_mul]
     intro a ha b hb
     rw [ne_eq, ← of_eq_iff, hx.mul_add_eq_of_lt' hb,
-      hx.mul_eq_of_lt' hy hyx (ha.trans hzy) H, add_comm, CharTwo.add_eq_iff_eq_add,
+      hx.mul_eq_of_lt' hy hw hyx (ha.trans hzy) hyw H H', add_comm, CharTwo.add_eq_iff_eq_add,
       of_val, ← mul_add]
     obtain hza | hza := eq_or_ne (∗z + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hza)
     · rw [← div_eq_iff hza]
-      exact (hx.mul_lt hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
+      exact (H' hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
     rw [add_comm, ← add_assoc, ← mul_add, add_comm]
     induction b with | mk b
     rw [of.lt_iff_lt] at hb
-    have hx' : val (a * (∗b + ∗z)) < x :=
-      hx.mul_lt ha (hx.add_lt (hb.trans (hzy.trans_le hyx)) (hzy.trans_le hyx))
-    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hyx (hb.trans hzy) H,
+    have hzw := hzy.trans_le hyw
+    have hx' : val (a * (∗b + ∗z)) < x := H' ha (hw.add_lt (hb.trans hzw) hzw)
+    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hw hyx (hb.trans hzy) hyw H H',
       ← of_val (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by z
+
+theorem IsGroup.mul_eq_of_lt {x y z w : Nimber} (hx : IsRing x) (hy : IsGroup y) (hw : IsGroup w)
+    (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
+    (H : ∀ z < y, z⁻¹ < w) (H' : ∀ ⦃a b⦄, a < x → b < w → a * b < x) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt' hy hw hyx hzy hyw H H'
+
+/-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = val (∗x * ∗z) :=
+  hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hyx hzy hyx H hx.mul_lt
 
 theorem IsRing.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
@@ -630,6 +651,35 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 /-! ### Polynomials -/
 
+theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
+    (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p + q).coeff k < x := by
+  intro k
+  rw [coeff_add]
+  exact h.add_lt (hp k) (hq k)
+
+theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsGroup x)
+    (hx₀ : x ≠ 0) (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.sum f).coeff k < x := by
+  intro k
+  rw [finset_sum_coeff]
+  exact h.sum_lt hx₀ fun y hy ↦ (hs y hy k)
+
+theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
+    (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
+  intro k
+  rw [coeff_mul]
+  exact h.sum_lt (hp 0).ne_bot fun y hy ↦ h.mul_lt (hp _) (hq _)
+
+theorem IsGroup.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsRing x)
+    (hx₁ : 1 < x) (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.prod f).coeff k < x := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    have := zero_lt_one.trans hx₁
+    aesop (add simp [coeff_one])
+  | insert y s hy IH =>
+    rw [Finset.prod_insert hy]
+    apply h.coeff_mul_lt <;> aesop
+
 /-- Reinterpret a polynomial in the nimbers as a polynomial in the subfield `x`.
 
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
@@ -731,10 +781,7 @@ theorem eq_oeval_of_lt_opow {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y <
     obtain ⟨p, hpn, hpk, hp⟩ := IH (mod_lt y (pow_ne_zero n hx₀))
     refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
     · compute_degree!
-      refine ⟨?_, hpn.trans (mod_cast n.lt_succ_self)⟩
-      -- TODO: Why can't `exact_mod_cast n.lt_succ_self` solve this?
-      rw [← WithBot.coe_natCast, WithBot.coe_lt_coe]
-      exact n.lt_succ_self
+      exact hpn.trans (WithBot.lt_add_one n)
     · rw [coeff_add, coeff_C_mul, coeff_X_pow]
       split_ifs with h
       · subst h
@@ -921,13 +968,26 @@ theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  induction n with
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · obtain rfl := p_eq_zero_of_le_one hx₁ hp
+    simp
+  induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
     have hx : x ^ (n + 1) = ∗(x.val ^ (n + 1)) := by
-      sorry
-    have : IsRing (x ^ (n + 1)) := sorry
-    sorry
+      apply le_antisymm
+      · refine pow_le_of_forall_ne fun f ↦ ?_
+        have hm : (∏ i, (X + C (f i).1)).Monic := by simp [Monic, leadingCoeff_prod]
+        have hq : (∏ i, (X + C (f i).1)).degree = (n + 1 : WithBot ℕ) := by
+          rw [degree_prod_of_monic] <;> simp [Monic]
+        have hq' : (X ^ (n + 1) + ∏ i, (X + C (f i).1)).degree ≤ n := by
+          rw [← Order.lt_succ_iff, ← CharTwo.sub_eq_add]
+          convert degree_sub_lt .. <;> simp_all
+        have := IH (h.le n.le_succ) hq' (h.coeff_add_lt ?_ ?_)
+        · sorry
+        · have := zero_lt_one.trans hx₁
+          aesop
+        · apply h.coeff_prod_lt
 
 #exit
 
