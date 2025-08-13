@@ -127,6 +127,8 @@ private def stoppingTimeLeftApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     Monotone.iInf' fun _ => Monotone.iInf' fun _ => Monotone.iSup' fun i => Monotone.iSup' fun _ =>
       add_right_mono.comp (Function.monotone_eval i)
 
+/-- Refines the approximations for the right stopping times.
+`stoppingTimeRightRight` is defined as the unique fixed point of this function. -/
 private def stoppingTimeRightApprox : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
   toFun f x := ⨅ y ∈ x.rightMoves, ⨆ i ∈ y.leftMoves, f i + 1
