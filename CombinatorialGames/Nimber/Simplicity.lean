@@ -538,7 +538,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     exact (mul_add_lt hx' hb).ne
 termination_by z
 
-theorem IsGroup.mul_eq_of_lt {x y z w : Nimber} (hx : IsRing x) (hy : IsGroup y) (hw : IsGroup w)
+theorem IsGroup.mul_eq_of_lt {x y z w : Nimber} (hx : IsGroup x) (hy : IsGroup y) (hw : IsGroup w)
     (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
     (H : ∀ z < y, z⁻¹ < w) (H' : ∀ ⦃a b⦄, a < x → b < w → a * b < x) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy hw hyx hzy hyw H H'
@@ -944,8 +944,7 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
 theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x ↔ IsField x := by
   refine ⟨(IsNthDegreeClosed.toIsField · one_pos), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
   rw [Polynomial.eq_X_add_C_of_degree_le_one hp₁] at hp ⊢
-  have : p.natDegree = 1 := by
-    apply natDegree_eq_of_degree_eq_some
+  have : p.natDegree = 1 := natDegree_eq_of_degree_eq_some <| by
     rw [← Order.succ_le_iff] at hp₀
     exact hp₁.antisymm hp₀
   rw [Monic, leadingCoeff] at hm
@@ -986,7 +985,7 @@ theorem IsNthDegreeClosed.splits_subfield {n : ℕ} {x : Nimber}
     · exact splits_of_degree_le_one _ hp₀'
     · apply IH (h.le n.le_succ)
       · rw [← Order.lt_succ_iff]
-        apply (degree_div_lt _ _).trans_le hpn <;> aesop
+        apply (degree_div_lt ..).trans_le hpn <;> aesop
       · exact zero_lt_one.trans hp₀'
 
 theorem IsNthDegreeClosed.roots_eq_map {n : ℕ} {x : Nimber}
@@ -1030,30 +1029,13 @@ attribute [simp] eval_multiset_prod in
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  obtain hx₁ | hx₁ := le_or_gt x 1
-  · obtain rfl := p_eq_zero_of_le_one hx₁ hp
-    simp
+  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hp]
   have hx₀ := zero_lt_one.trans hx₁
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
-    have hx : x ^ (n + 1) = ∗(x.val ^ (n + 1)) := by
-      refine le_antisymm (pow_le_of_forall_ne fun f ↦ ?_) (le_of_forall_ne fun y hy ↦ ?_)
-      · have hm : (∏ i, (X + C (f i).1)).Monic := by simp [Monic, leadingCoeff_prod]
-        have hq : (∏ i, (X + C (f i).1)).degree = (n + 1 : WithBot ℕ) := by
-          rw [degree_prod_of_monic] <;> simp [Monic]
-        have hq' : (X ^ (n + 1) + ∏ i, (X + C (f i).1)).degree ≤ n := by
-          rw [← Order.lt_succ_iff, ← CharTwo.sub_eq_add]
-          convert degree_sub_lt .. <;> simp_all
-        have H : ∀ (k : ℕ), (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
-          apply h.coeff_add_lt
-          · aesop
-          · apply h.coeff_prod_lt hx₁ fun y hy ↦ ?_
-            have : (f y).1 < x := (f y).2
-            apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
-        have IH := IH (h.le n.le_succ) hq' H
-        simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
-        exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
+    have hx : ∗(x.val ^ (n + 1)) = x ^ (n + 1) := by
+      refine le_antisymm (le_of_forall_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
       · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' hy
         have : p.coeff (n + 1) = 0 := p.coeff_eq_zero_of_degree_lt hpn
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
@@ -1068,7 +1050,43 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           exact WithBot.bot_ne_coe this
         refine fun hq ↦ (h.root_lt hqn.le ?_ ((mem_roots hq₀).2 hq)).false
         aesop
-    sorry
+      · have hm : (∏ i, (X + C (f i).1)).Monic := by simp [Monic, leadingCoeff_prod]
+        have hq : (∏ i, (X + C (f i).1)).degree = (n + 1 : WithBot ℕ) := by
+          rw [degree_prod_of_monic] <;> simp [Monic]
+        have hq' : (X ^ (n + 1) + ∏ i, (X + C (f i).1)).degree ≤ n := by
+          rw [← Order.lt_succ_iff, ← CharTwo.sub_eq_add]
+          convert degree_sub_lt .. <;> simp_all
+        have H : ∀ k, (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
+          apply h.coeff_add_lt
+          · aesop
+          · refine h.coeff_prod_lt hx₁ fun y hy ↦ ?_
+            have : (f y).1 < x := (f y).2
+            apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
+        have IH := IH (h.le n.le_succ) hq' H
+        simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
+        exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
+    have hx' : val x ^ (n + 1) = val (x ^ (n + 1)) := hx
+    obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
+    rw [eval_add, eval_mul, eval_C, eval_pow, eval_X, oeval_C_mul_X_pow_add hq,
+      IH (h.le n.le_succ), (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
+    · have hxn : val x ≤ val x ^ (n + 1) := by
+        rw [← opow_natCast]
+        exact left_le_opow _ (mod_cast n.succ_pos)
+      congr
+      refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
+        @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
+      · convert hp (n + 1)
+        simpa using q.coeff_eq_zero_of_degree_lt hq
+      · sorry
+    · refine oeval_lt_opow (fun k ↦ ?_) hq
+      obtain hk | hk := le_or_gt k n
+      · convert hp k using 1
+        aesop
+      · rwa [q.coeff_eq_zero_of_degree_lt]
+        rw [Nat.cast_add_one, WithBot.natCast_eq_coe, WithBot.lt_add_one] at hq
+        exact hq.trans_lt (mod_cast hk)
+
+
 
 #exit
 
