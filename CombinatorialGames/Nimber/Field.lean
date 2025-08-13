@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Nimber.Basic
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
 
@@ -230,6 +231,29 @@ theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
   rw [ne_eq, ← add_left_inj (a * b), add_self]
   convert mul_ne_zero ha hb using 2
   ring
+
+-- TODO: upstream
+theorem _root_.Fin.comp_cons_apply {α β} {n : ℕ}
+    (g : α → β) (a : α) (f : Fin n → α) (i : Fin (n + 1)) :
+    g (Fin.cons (α := fun _ ↦ α) a f i) = Fin.cons (α := fun _ ↦ β) (g a) (g ∘ f) i :=
+  congrFun (Fin.comp_cons g a f) i
+
+theorem pow_le_of_forall_ne {a b : Nimber} {n : ℕ}
+    (H : ∀ f : Fin n → Set.Iio a, a ^ n + ∏ i, (a + f i) ≠ b) : a ^ n ≤ b := by
+  induction n generalizing b with
+  | zero => simpa [eq_comm] using H nofun
+  | succ n IH =>
+    rw [pow_succ]
+    refine mul_le_of_forall_ne fun c hc d hd ↦ ?_
+    have hc' := mt IH hc.not_ge
+    push_neg at hc'
+    obtain ⟨f, rfl⟩ := hc'
+    convert H <| Fin.cons (α := fun _ ↦ Set.Iio a) ⟨d, hd⟩ f using 1
+    have := Fin.comp_cons (fun x ↦ a + x.1) ⟨d, hd⟩ f
+    dsimp [Function.comp_def] at this
+    rw [this, Fin.prod_cons]
+    ring_nf
+    rw [CharTwo.two_eq_zero, mul_zero, add_zero]
 
 /-! ### Nimber division -/
 
