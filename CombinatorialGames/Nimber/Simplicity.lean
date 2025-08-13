@@ -661,41 +661,40 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nim
   simp [← Subtype.val_inj, embed, sum, eval_eq_sum]
 
 /-- Evaluate a nimber polynomial using ordinal arithmetic. -/
-def ordinalEval (p : Nimber[X]) (x : Nimber) : Nimber :=
+def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
   of ((List.range (p.natDegree + 1)).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum
 
 @[simp]
-theorem ordinalEval_zero (x : Nimber) : ordinalEval 0 x = 0 := by
-  simp [ordinalEval]
+theorem oeval_zero (x : Nimber) : oeval x 0 = 0 := by
+  simp [oeval]
 
-theorem ordinalEval_eq_of_natDegree_le
-    {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 ≤ n) (x : Nimber) :
-    ordinalEval p x = of ((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
+theorem oeval_eq_of_natDegree_le {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 ≤ n) (x : Nimber) :
+    oeval x p = of ((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
   induction n with
   | zero => simp_all
   | succ n IH =>
     obtain h | h := h.eq_or_lt
-    · rw [ordinalEval, h]
+    · rw [oeval, h]
     · rw [add_lt_add_iff_right] at h
       rw [List.range_succ]
       simpa [p.coeff_eq_zero_of_natDegree_lt h] using IH h
 
-theorem ordinalEval_eq_of_degree_le
+theorem oeval_eq_of_degree_le
     {p : Nimber[X]} {n : ℕ} (h : p.degree + 1 ≤ n) (x : Nimber) :
-    ordinalEval p x = of ((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
+    oeval x p = of ((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
   obtain rfl | hp := eq_or_ne p 0
   · simp
-  · apply ordinalEval_eq_of_natDegree_le
+  · apply oeval_eq_of_natDegree_le
     rw [degree_eq_natDegree hp] at h
     exact_mod_cast h
 
-theorem ordinalEval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (a x : Nimber) :
-    ordinalEval (C a * X ^ n + p) x = of (x.val ^ n * a.val + val (ordinalEval p x)) := by
-  obtain rfl | ha := eq_or_ne a 0; simp [ordinalEval]
+theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a : Nimber) :
+    oeval x (C a * X ^ n + p) = of (x.val ^ n * a.val + val (oeval x p)) := by
+  obtain rfl | ha := eq_or_ne a 0; simp [oeval]
   · have hp' : p.natDegree ≤ n := p.natDegree_le_of_degree_le hp.le
     have hp'' : (C a * X ^ n + p).natDegree ≤ n := by compute_degree!
-    rw [ordinalEval_eq_of_natDegree_le (add_right_mono hp'),
-      ordinalEval_eq_of_natDegree_le (add_right_mono hp'')]
+    rw [oeval_eq_of_natDegree_le (add_right_mono hp'),
+      oeval_eq_of_natDegree_le (add_right_mono hp'')]
     cases n with
     | zero => simp_all
     | succ n =>
@@ -707,21 +706,21 @@ theorem ordinalEval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n
       aesop
 
 @[simp]
-theorem ordinalEval_C_mul_X_pow (a x : Nimber) (n : ℕ) :
-    ordinalEval (C a * X ^ n) x = of (x.val ^ n * a.val) := by
-  simpa using ordinalEval_C_mul_X_pow_add (p := 0) (WithBot.bot_lt_coe n) a x
+theorem oeval_C_mul_X_pow (x a : Nimber) (n : ℕ) :
+    oeval x (C a * X ^ n) = of (x.val ^ n * a.val) := by
+  simpa using oeval_C_mul_X_pow_add (p := 0) (WithBot.bot_lt_coe n) x a
 
 @[simp]
-theorem ordinalEval_X_pow (x : Nimber) (n : ℕ) : ordinalEval (X ^ n) x = of (x.val ^ n) := by
-  simpa using ordinalEval_C_mul_X_pow 1 x n
+theorem oeval_X_pow (x : Nimber) (n : ℕ) : oeval x (X ^ n) = of (x.val ^ n) := by
+  simpa using oeval_C_mul_X_pow x 1 n
 
 @[simp]
-theorem ordinalEval_C (a x : Nimber) : ordinalEval (C a) x = a := by
-  simpa using ordinalEval_C_mul_X_pow a x 0
+theorem oeval_C (x a : Nimber) : oeval x (C a) = a := by
+  simpa using oeval_C_mul_X_pow x a 0
 
 @[simp]
-theorem ordinalEval_X (x : Nimber) : ordinalEval X x = x := by
-  simpa using ordinalEval_X_pow x 1
+theorem oeval_X (x : Nimber) : oeval x X = x := by
+  simpa using oeval_X_pow x 1
 
 /-! ### n-th degree closed fields -/
 
@@ -839,7 +838,7 @@ theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x �
   have := hp 0
   aesop
 
--- We could have proved this earlier, but going through `IsNthDegreeClosed`
+-- We could have proved this much earlier, but going through `IsNthDegreeClosed`
 -- gives a much shorter proof.
 protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x) :
     IsField (sSup s) := by
@@ -881,7 +880,7 @@ theorem IsNthDegreeClosed.map_roots_subfield {n : ℕ} {x : Nimber}
     {p : (h'.toSubfield hx₁)[X]} (hpn : p.degree ≤ n) :
     p.roots.map (Subfield.subtype _) = (p.map (Subfield.subtype _)).roots := by
   rw [roots_map]
-  apply h.splits_subfield h' hx₁ hpn
+  exact h.splits_subfield h' hx₁ hpn
 
 -- TODO: upstream attr.
 attribute [simp] Polynomial.map_multiset_prod
@@ -906,7 +905,7 @@ theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
 
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
-    p.eval x = ordinalEval p x := by
+    p.eval x = oeval x p := by
   sorry
 
 proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗ω)
