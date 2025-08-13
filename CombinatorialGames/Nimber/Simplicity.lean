@@ -8,6 +8,7 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
 import Mathlib.Algebra.Polynomial.Splits
 import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Multiset.Fintype
 import Mathlib.SetTheory.Ordinal.Principal
 import Mathlib.Tactic.ComputeDegree
 
@@ -92,6 +93,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
   refine ⟨h.1, fun y hy ↦ ?_⟩
   by_contra! hx
   exact (h.le_of_ge hy hx.le).not_gt hx
+
+theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [CanonicallyOrderedAdd α]
+    {x : WithBot α} : x ≤ 0 ↔ x = ⊥ ∨ x = 0 := by
+  cases x <;> simp
 
 /-! #### Ordinal lemmas-/
 
@@ -516,9 +521,6 @@ def IsField.toSubfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x) : Subfield N
 theorem val_toSubfield_lt {x : Nimber} (h : IsField x) (hx₁ : 1 < x) (y : h.toSubfield hx₁) :
     y < x := y.2
 
-noncomputable instance {x : Nimber} (h : IsField x) (hx₁ : 1 < x) : Field (h.toSubring hx₁) :=
-  inferInstanceAs (Field (h.toSubfield hx₁))
-
 @[simp]
 theorem IsField.zero : IsField 0 where
   inv_lt' := by simp
@@ -628,15 +630,19 @@ theorem IsField.coeff_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Ni
   rfl
 
 @[simp]
-theorem IsField.map_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
-    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).map (Subring.subtype _) = p := by
-  ext; simp
+theorem IsField.degree_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).degree = p.degree :=
+  rfl
 
-theorem forall_coeff_C_lt {x y : Nimber} (hy : y < x) (k) : (C y).coeff k < x := by
-  rw [coeff_C]
-  split_ifs
-  · assumption
-  · exact hy.bot_lt
+@[simp]
+theorem IsField.leadingCoeff_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).leadingCoeff = ⟨p.leadingCoeff, hp _⟩ :=
+  rfl
+
+@[simp]
+theorem IsField.map_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).map (Subfield.subtype _) = p := by
+  ext; simp
 
 @[simp]
 theorem IsField.embed_C {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {y} {hy} :
@@ -653,12 +659,6 @@ theorem IsField.val_eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p :
 theorem IsField.eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
     (hp : ∀ k, p.coeff k < x) (y) : (h.embed hx₁ p hp).eval y = ⟨_, h.eval_lt hp y.2⟩ := by
   rw [← Subtype.val_inj, h.val_eval_embed]
-
-@[simp]
-theorem IsField.degree_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
-    (hp : ∀ k, p.coeff k < x) : (h.embed hx₁ p hp).degree = p.degree := by
-  conv_rhs => rw [← h.map_embed hx₁ hp]
-  exact (degree_map_eq_of_injective (Subring.subtype_injective _) _).symm
 
 /-! ### n-th degree closed fields -/
 
@@ -788,75 +788,62 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
   apply IsField.sSup
   simpa
 
-theorem IsNthDegreeClosed.has_root_subring {n : ℕ} {x : Nimber} (hx₁ : 1 < x)
-    (h : IsNthDegreeClosed n x) {p : (h.toSubring hx₁)[X]}
+theorem IsNthDegreeClosed.has_root_subfield {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) (h' : IsField x)  (hx₁ : 1 < x) {p : (h'.toSubfield hx₁)[X]}
     (hp₀ : p.degree ≠ 0) (hpn : p.degree ≤ n) : ∃ r, p.IsRoot r := by
   have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
   obtain ⟨r, hr, hr'⟩ := h.has_root (hd ▸ hp₀) (hd ▸ hpn) (by simp)
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
-
-theorem IsNthDegreeClosed.splits_subring {n : ℕ} {x : Nimber} (hx₁ : 1 < x)
-    (h : IsNthDegreeClosed n x) (h' : IsField x) {p : (h.toSubring hx₁)[X]} (hpn : p.degree ≤ n) :
-    p.Splits (h'.subringMap hx₁) := by
-  let F := h'.toSubfield hx₁
+theorem IsNthDegreeClosed.splits_subfield {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) (h' : IsField x) (hx₁ : 1 < x) {p : (h'.toSubfield hx₁)[X]}
+    (hpn : p.degree ≤ n) : p.Splits (.id _) := by
   obtain hp₀ | hp₀ := le_or_gt p.degree 0
   · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
-  induction n with
+  induction n generalizing p with
   | zero => cases hp₀.not_ge hpn
   | succ n IH =>
-    obtain ⟨r, hr⟩ := h.has_root_subring hx₁ hp₀.ne' hpn
-    rw [← hr.mul_div_eq (R := F)]
+    obtain ⟨r, hr⟩ := h.has_root_subfield h' hx₁ hp₀.ne' hpn
+    rw [← hr.mul_div_eq]
     apply splits_mul _ (splits_X_sub_C _)
-    -- TODO: how do we avoid the def-eq abuse here?
-    let q : F[X] := @HDiv.hDiv F[X] F[X] _ _ p (X - C r)
-    obtain hp₀' | hp₀' := le_or_gt q.degree 1
+    obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
     · exact splits_of_degree_le_one _ hp₀'
     · apply IH (h.le n.le_succ)
       · rw [← Order.lt_succ_iff]
-        apply (degree_div_lt (R := F) _ _).trans_le hpn <;> aesop
+        apply (degree_div_lt _ _).trans_le hpn <;> aesop
       · exact zero_lt_one.trans hp₀'
 
-set_option maxHeartbeats 500000 in
+theorem IsNthDegreeClosed.map_roots_subfield {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) (h' : IsField x) (hx₁ : 1 < x)
+    {p : (h'.toSubfield hx₁)[X]} (hpn : p.degree ≤ n) :
+    p.roots.map (Subfield.subtype _) = (p.map (Subfield.subtype _)).roots := by
+  rw [roots_map]
+  apply h.splits_subfield h' hx₁ hpn
+
+-- TODO: upstream attr.
+attribute [simp] Polynomial.map_multiset_prod
 theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) {p : Nimber[X]} (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
-  obtain rfl | hp₀ := eq_or_ne p 0
-  · simp
-  obtain hx₁ | hx₁ := le_or_gt x 1
-  · cases hp₀ (p_eq_zero_of_le_one hx₁ hp)
+  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  have hx₁ := lt_of_not_ge fun h ↦ hp₀ (p_eq_zero_of_le_one h hp)
   obtain rfl | hn₀ := n.eq_zero_or_pos
-  · cases hp' : p.degree
+  · obtain hp' | hp' := WithBot.le_zero_iff.1 hpn
     · simp_all
-    · have hp₀ : p.degree = 0 := by simp_all
-      rw [p.eq_C_of_degree_eq_zero hp₀]
+    · rw [p.eq_C_of_degree_eq_zero hp']
       simp
   · have h' := h.toIsField hn₀
-    let F := h'.toSubfield hx₁
-    have := eq_prod_roots_of_splits (K := F) (i := .id _)
-      (h.splits_subring hx₁ h' (p := h.embed hx₁ p hp) (by simpa))
-    apply_fun Polynomial.map (Subfield.subtype F) at this
-    convert ← this
-    · rw [map_map]
-      exact h.map_embed hx₁ hp
-    · simp
-      congr
-      have := map_multiset_prod (Subring.subtype _) ((h.embed hx₁ p hp).roots.map (fun a ↦ X - C a))
-      rw [← map_multiset_prod]
-
-#exit
-theorem pow_add_prod_ne_pow {x : Nimber} {n : ℕ} {f : Fin n → Nimber} (hf : ∀ i, f i < x) :
-    x ^ n ≠ x∏ i : Fin n, (x + f i) := by
-  sorry
+    have hs := h.splits_subfield h' hx₁ (p := h'.embed hx₁ p hp) hpn
+    have hr := roots_map (Subfield.subtype _) hs
+    rw [h'.map_embed] at hr
+    conv_lhs => rw [← h'.map_embed hx₁ hp, eq_prod_roots_of_splits_id hs]
+    simp [hr]
 
 theorem IsNthDegreeClosed.foldr_mul_add_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     (l : List Nimber) (hl : ∀ y ∈ l, y < x) (hln : l.length ≤ n + 1) :
     l.zipIdx.foldr (fun a b ↦ a.1 * x ^ a.2 + b) 0 =
     of (l.zipIdx.foldr (fun a b ↦ a.1.val * x.val ^ a.2 + b) 0) := by
   sorry
-
-
-#exit
 
 proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗ω)
 
