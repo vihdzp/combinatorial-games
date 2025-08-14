@@ -25,7 +25,7 @@ This file aims to prove the four parts of the simplest extension theorem:
 - If `x` is not a group, then `x` can be written as `y + z` for some `y, z < x`.
 - If `x` is a group but not a ring, then `x` can be written as `y * z` for some `y, z < x`.
 - If `x` is a ring but not a field, then `x` can be written as `y⁻¹` for some `y < x`.
-- If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
+- If `x` is a field that isn't algebraically closed, then `x` is the root of some polynomial with
   coefficients `< x`.
 
 The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
@@ -34,6 +34,8 @@ The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 
 We are currently at 3/4.
 -/
+
+universe u
 
 open Ordinal Polynomial Set
 
@@ -844,11 +846,13 @@ theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
 namespace Lex
 
 /-- The lexicographic ordering on nimber polynomials. -/
-noncomputable instance : LinearOrder (Nimber[X]) :=
-  LinearOrder.lift' (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) <| by
-    intro p q h
-    rw [toLex_inj, Finsupp.ext_iff] at h
-    rwa [← toFinsupp_inj, Finsupp.ext_iff]
+noncomputable instance : LinearOrder (Nimber[X]) where
+  lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
+  __ := LinearOrder.lift'
+    (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) <| by
+      intro p q h
+      rw [toLex_inj, Finsupp.ext_iff] at h
+      rwa [← toFinsupp_inj, Finsupp.ext_iff]
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
@@ -876,7 +880,6 @@ theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   obtain rfl | hq₀ := eq_or_ne q 0; aesop
   contrapose! h
   have h' := natDegree_lt_natDegree hq₀ h
-  rw [lt_def]
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
   · rw [p.coeff_eq_zero_of_natDegree_lt hk, q.coeff_eq_zero_of_natDegree_lt (h'.trans hk)]
   · rw [q.coeff_eq_zero_of_natDegree_lt h', Nimber.pos_iff_ne_zero]
@@ -897,10 +900,126 @@ theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := b
   simp_rw [lt_def, degree_lt_iff_coeff_zero, le_iff_lt_or_eq]
   refine ⟨?_, fun _ ↦ ⟨n, ?_⟩⟩ <;> aesop
 
-instance : NoTopOrder (Nimber[X]) where
-  exists_not_le p := by
+@[simp]
+theorem coe_lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : WithTop.some p < .some X ^ n ↔ p.degree < n := by
+  rw [← WithTop.coe_pow, WithTop.coe_lt_coe, lt_X_pow_iff]
+
+instance : NoMaxOrder (Nimber[X]) where
+  exists_gt p := by
     use X ^ (p.natDegree + 1)
     simpa using degree_le_natDegree
+
+attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
+
+noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
+  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
+  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (Order.succ (p.coeff 0)))) ?_ (by simp)
+  refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
+  · obtain ⟨n, hn, hpq⟩ := hpq
+    cases n with
+    | zero =>
+      obtain hpq' | hpq' := (Order.succ_le_of_lt hpq).lt_or_eq
+      · refine le_of_lt ⟨0, ?_⟩
+        aesop
+      · apply le_of_eq
+        ext k
+        cases k <;> aesop
+    | succ n => refine le_of_lt ⟨n + 1, ?_⟩; aesop
+  · rw [le_iff_lt_or_eq]
+    rintro (hpq | rfl)
+    · obtain ⟨n, hn, hpq⟩ := hpq
+      refine ⟨n, fun k hk ↦ ?_, ?_⟩
+      · specialize hn k hk
+        aesop
+      · have (a b : Nimber.{u}) (h : Order.succ a < b) : a < b := (Order.le_succ a).trans_lt h
+        aesop
+    · use 0
+      aesop
+
+@[aesop simp]
+theorem coeff_succ (p : Nimber[X]) :
+    (Order.succ p).coeff = Function.update p.coeff 0 (Order.succ (p.coeff 0)) := by
+  change coeff (Polynomial.ofFinsupp _) = _
+  simp
+  rfl
+
+@[simp]
+theorem coeff_succ_zero (p : Nimber[X]) :
+    (Order.succ p).coeff 0 = Order.succ (p.coeff 0) := by
+  rw [coeff_succ, Function.update_self]
+
+@[simp]
+theorem coeff_succ_of_ne_zero (p : Nimber[X]) {k : ℕ} (h : k ≠ 0) :
+    (Order.succ p).coeff k = p.coeff k := by
+  rw [coeff_succ, Function.update_of_ne h]
+
+theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) :
+    Order.succ p = p + 1 := by
+  aesop
+
+theorem forall_lt_quadratic_iff {P : Nimber[X] → Prop} {x y z : Nimber} :
+    (∀ p < C x * X ^ 2 + C y * X + C z, P p) ↔
+      (∀ c < z, P (C x * X ^ 2 + C y * X + C c)) ∧
+      (∀ b < y, ∀ c, P (C x * X ^ 2 + C b * X + C c)) ∧
+      (∀ a < x, ∀ b c, P (C a * X ^ 2 + C b * X + C c)) := by
+  refine ⟨fun H ↦
+    ⟨fun c hc ↦ H _ ⟨0, by aesop⟩, fun b hb c ↦ H _ ⟨1, by aesop⟩, fun a ha b c ↦ H _ ⟨2, by aesop⟩⟩,
+    fun ⟨H₁, H₂, H₃⟩ p hp ↦ ?_⟩
+  obtain ⟨n, hn, hp⟩ := hp
+  match n with
+  | 0 =>
+    have : p.coeff 0 < z := by simpa using hp
+    convert H₁ _ this
+    ext k
+    match k with | 0 | 1 | 2 | k + 3 => aesop
+  | 1 =>
+    have : p.coeff 1 < y := by simpa using hp
+    convert H₂ _ this (p.coeff 0)
+    ext k
+    match k with | 0 | 1 | 2 | k + 3 => aesop
+  | 2 =>
+    have : p.coeff 2 < x := by simpa using hp
+    convert H₃ _ this (p.coeff 1) (p.coeff 0)
+    ext k
+    match k with | 0 | 1 | 2 | k + 3 => aesop
+  | n + 3 => simp at hp
+
+theorem forall_le_quadratic_iff {P : Nimber[X] → Prop} {x y z : Nimber} :
+    (∀ p ≤ C x * X ^ 2 + C y * X + C z, P p) ↔
+      (∀ c ≤ z, P (C x * X ^ 2 + C y * X + C c)) ∧
+      (∀ b < y, ∀ c, P (C x * X ^ 2 + C b * X + C c)) ∧
+      (∀ a < x, ∀ b c, P (C a * X ^ 2 + C b * X + C c)) := by
+  simp_rw [le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_quadratic_iff]
+  tauto
+
+    #exit
+
+@[simp]
+theorem forall_lt_C_iff {P : Nimber[X] → Prop} {x : Nimber} :
+    (∀ p < C x, P p) ↔ ∀ a < x, P (C a) := by
+  constructor <;> intro H y hy
+  · refine H _ ⟨0, ?_⟩
+    aesop
+  · rw [eq_C_of_degree_le_zero <| (degree_mono hy.le).trans degree_C_le]
+    obtain ⟨n, hn, hy⟩ := hy
+    aesop
+
+@[simp]
+theorem forall_le_C_iff {P : Nimber[X] → Prop} {x : Nimber} :
+    (∀ y ≤ C x, P y) ↔ ∀ y ≤ x, P (C y) := by
+  simp_rw [le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_C_iff]
+
+@[simp]
+theorem exists_lt_C_iff {P : Nimber[X] → Prop} {x : Nimber} :
+    (∃ y < C x, P y) ↔ ∃ y < x, P (C y) := by
+  rw [← not_iff_not]; simp
+
+@[simp]
+theorem exists_le_C_iff {P : Nimber[X] → Prop} {x : Nimber} :
+    (∃ y ≤ C x, P y) ↔ ∃ y ≤ x, P (C y) := by
+  rw [← not_iff_not]; simp
+  #exit
+
 
 end Lex
 
@@ -912,26 +1031,26 @@ order on `Nimber[X]` is the lexicographic order). -/
 noncomputable def simplestIrreducible (x : Nimber) : WithTop (Nimber[X]) :=
   sInf (WithTop.some '' {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0})
 
-private theorem simplestIrreducible_mem {x : Nimber} {p : Nimber[X]}
-    (h : simplestIrreducible x = p) :
-    p ∈ {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0} := by
+private theorem simplestIrreducible_mem {x : Nimber} (h) :
+    (simplestIrreducible x).untop h ∈
+      {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0} := by
   obtain hs | hs := ({p : Nimber[X] |
     0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0}).eq_empty_or_nonempty
   · simp [simplestIrreducible, hs] at h
   · convert csInf_mem hs
-    rw [← WithTop.coe_inj, ← h, simplestIrreducible, WithTop.coe_sInf' hs]
+    rw [← WithTop.coe_inj, WithTop.coe_untop, simplestIrreducible, WithTop.coe_sInf' hs]
     exact OrderBot.bddBelow _
 
-theorem degree_simplestIrreducible_pos {x : Nimber} {p : Nimber[X]}
-    (h : simplestIrreducible x = p) : 0 < p.degree :=
+theorem degree_simplestIrreducible_pos {x : Nimber} (h) :
+    0 < ((simplestIrreducible x).untop h).degree :=
   (simplestIrreducible_mem h).1
 
-theorem simplestIrreducible_coeff_lt {x : Nimber} {p : Nimber[X]}
-    (h : simplestIrreducible x = p) : ∀ k, p.coeff k < x :=
+theorem simplestIrreducible_coeff_lt {x : Nimber} (h) :
+    ∀ k, ((simplestIrreducible x).untop h).coeff k < x :=
   (simplestIrreducible_mem h).2.1
 
-theorem simplestIrreducible_not_root_of_lt {x : Nimber} {p : Nimber[X]}
-    (h : simplestIrreducible x = p) : ∀ r < x, p.eval r ≠ 0 :=
+theorem simplestIrreducible_not_root_of_lt {x : Nimber} (h) :
+    ∀ r < x, ((simplestIrreducible x).untop h).eval r ≠ 0 :=
   (simplestIrreducible_mem h).2.2
 
 -- TODO: upstream attr.
@@ -980,6 +1099,12 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
   obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
   have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
 
+theorem IsRing.simplestIrreducible_eq {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
+    simplestIrreducible x = .some (C x⁻¹) * .some X + 1 := by
+
+  sorry
+
+#exit
 /-! ### n-th degree closed fields -/
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
@@ -1109,13 +1234,14 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
 
 theorem IsNthDegreeClosed.X_pow_le_simplestIrreducible {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) ≤ simplestIrreducible x := by
-  refine le_of_forall_ne fun p hp ↦ ?_
+  refine le_of_forall_ne fun p hp hp' ↦ ?_
   obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
-  rw [WithTop.coe_lt_coe, Lex.lt_X_pow_iff] at hp
-  intro hp'
-  obtain ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos hp'.symm) (by simpa using hp)
-    (simplestIrreducible_coeff_lt hp'.symm)
-  exact simplestIrreducible_not_root_of_lt hp'.symm r hr hr'
+  have h' : simplestIrreducible x ≠ ⊤ := hp' ▸ WithTop.coe_ne_top
+  have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
+    (simplestIrreducible_coeff_lt h')
+  · exact simplestIrreducible_not_root_of_lt h' r hr hr'
+  · simp_rw [← hp']
+    simpa using hp
 
 theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
@@ -1302,6 +1428,13 @@ theorem IsAlgClosed.simplestIrreducible_eq_top {x : Nimber} (h : IsAlgClosed x) 
   rw [WithTop.coe_lt_coe]
   simpa using degree_le_natDegree
 
+-- TODO: is the `IsRing` assumption necessary?
+theorem isAlgClosed_iff_simplestIrreducible_eq_top {x : Nimber} (h : IsRing x) :
+    IsAlgClosed x ↔ simplestIrreducible x = ⊤ where
+  mp := IsAlgClosed.simplestIrreducible_eq_top
+  mpr hx := ⟨h, fun _p hp₀ hpk ↦
+    has_root_of_lt_simplestIrreducible hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
+
 @[simp]
 theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ :=
   IsAlgClosed.zero.simplestIrreducible_eq_top
@@ -1309,5 +1442,12 @@ theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ :=
 @[simp]
 theorem simplestIrreducible_one : simplestIrreducible 1 = ⊤ :=
   IsAlgClosed.one.simplestIrreducible_eq_top
+
+/-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
+then `x` is the root of some polynomial with coefficients `< x`. -/
+theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬ IsAlgClosed x) :
+    ((simplestIrreducible x).untop
+      ((isAlgClosed_iff_simplestIrreducible_eq_top h.toIsRing).not.1 h')).IsRoot x := by
+  sorry
 
 end Nimber
