@@ -280,7 +280,7 @@ theorem IsGroup.sum_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) {ι} {s : 
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
   induction s using Finset.induction with
-  | empty => simp_all
+  | empty => simp_all [Nimber.pos_iff_ne_zero]
   | insert a s ha IH =>
     rw [Finset.sum_insert ha]
     apply h.add_lt <;> aesop
@@ -986,7 +986,7 @@ theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
   · rw [p.coeff_eq_zero_of_natDegree_lt hk, q.coeff_eq_zero_of_natDegree_lt (h'.trans hk)]
   · rw [q.coeff_eq_zero_of_natDegree_lt h']
-    aesop
+    aesop (add simp [Nimber.pos_iff_ne_zero])
 
 theorem natDegree_mono : Monotone (α := Nimber[X]) natDegree := by
   apply Monotone.comp (fun a b ↦ ?_) degree_mono
@@ -1125,7 +1125,7 @@ theorem has_root_of_lt_simplestIrreducible {x : Nimber} {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpk : ∀ k, p.coeff k < x) (hpn : p < simplestIrreducible x) :
     ∃ r < x, p.IsRoot r := by
   obtain hp | hp₀ := le_or_gt p.degree 0
-  · have := WithBot.le_zero_iff.1 hp; aesop (erase simp [Nimber.pos_iff_ne_zero])
+  · have := WithBot.le_zero_iff.1 hp; aesop
   contrapose! hpn
   exact simplestIrreducible_le_of_not_isRoot hp₀ hpk hpn
 
@@ -1175,7 +1175,7 @@ theorem IsRing.simplestIrreducible_eq_of_not_isField {x : Nimber} (h : IsRing x)
       dsimp
       compute_degree!
     · have := h.inv_lt_self_of_not_isField h'
-      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop
+      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [Nimber.pos_iff_ne_zero])
     · replace H : x⁻¹ * r + 1 = 0 := by simpa using H
       rw [Nimber.add_eq_zero] at H
       obtain rfl := eq_of_inv_mul_eq_one H
@@ -1211,7 +1211,6 @@ theorem IsField.monic_simplestIrreducible {x : Nimber} (h : IsField x) (h') :
   · sorry
   · sorry
 
-#exit
 /-! ### n-th degree closed fields -/
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
@@ -1345,10 +1344,15 @@ theorem IsNthDegreeClosed.X_pow_le_simplestIrreducible {n : ℕ} {x : Nimber}
   obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
   have h' := hp' ▸ WithTop.coe_ne_top
   have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
-    (simplestIrreducible_coeff_lt h')
-  · exact simplestIrreducible_not_root_of_lt h' r hr hr'
+    (coeff_simplestIrreducible_lt h')
+  · exact simplestIrreducible_not_root_of_lt h' hr hr'
   · simp_rw [← hp']
     simpa using hp
+
+theorem IsField.X_sq_le_simplestIrreducible {x : Nimber} (h : IsField x) :
+    .some (X ^ 2) ≤ simplestIrreducible x := by
+  rw [← isNthDegreeClosed_one_iff_isField] at h
+  exact h.X_pow_le_simplestIrreducible
 
 theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
@@ -1541,10 +1545,6 @@ theorem isAlgClosed_iff_simplestIrreducible_eq_top {x : Nimber} (h : IsRing x) :
   mp := IsAlgClosed.simplestIrreducible_eq_top
   mpr hx := ⟨h, fun _p hp₀ hpk ↦
     has_root_of_lt_simplestIrreducible hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
-
-@[simp]
-theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ :=
-  IsAlgClosed.zero.simplestIrreducible_eq_top
 
 @[simp]
 theorem simplestIrreducible_one : simplestIrreducible 1 = ⊤ :=
