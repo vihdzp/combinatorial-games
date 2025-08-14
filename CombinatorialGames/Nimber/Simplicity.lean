@@ -865,11 +865,11 @@ noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
   bot_le p := by rw [← not_lt, lt_def]; simp
 
-noncomputable instance : ConditionallyCompleteLinearOrderBot (Nimber[X]) :=
-  WellFoundedLT.conditionallyCompleteLinearOrderBot _
-
 @[simp] theorem bot_eq_zero : (⊥ : Nimber[X]) = 0 := rfl
 @[simp] theorem le_zero_iff {p : Nimber[X]} : p ≤ 0 ↔ p = 0 := le_bot_iff
+
+noncomputable instance : ConditionallyCompleteLinearOrderBot (Nimber[X]) :=
+  WellFoundedLT.conditionallyCompleteLinearOrderBot _
 
 theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   intro p q h
@@ -896,6 +896,11 @@ theorem lt_of_natDegree_lt {p q : Nimber[X]} (h : p.natDegree < q.natDegree) : p
 theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := by
   simp_rw [lt_def, degree_lt_iff_coeff_zero, le_iff_lt_or_eq]
   refine ⟨?_, fun _ ↦ ⟨n, ?_⟩⟩ <;> aesop
+
+instance : NoTopOrder (Nimber[X]) where
+  exists_not_le p := by
+    use X ^ (p.natDegree + 1)
+    simpa using degree_le_natDegree
 
 end Lex
 
@@ -1287,5 +1292,22 @@ theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
     IsAlgClosed x := by
   rw [isAlgClosed_iff_forall]
   exact fun n ↦ IsNthDegreeClosed.ofMonic h fun p hm hp₀ _ ↦ hp p hm hp₀
+
+theorem IsAlgClosed.simplestIrreducible_eq_top {x : Nimber} (h : IsAlgClosed x) :
+    simplestIrreducible x = ⊤ := by
+  rw [WithTop.eq_top_iff_forall_ge]
+  intro p
+  apply (h.toIsNthDegreeClosed _).X_pow_le_simplestIrreducible.trans'
+  apply le_of_lt
+  rw [WithTop.coe_lt_coe]
+  simpa using degree_le_natDegree
+
+@[simp]
+theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ :=
+  IsAlgClosed.zero.simplestIrreducible_eq_top
+
+@[simp]
+theorem simplestIrreducible_one : simplestIrreducible 1 = ⊤ :=
+  IsAlgClosed.one.simplestIrreducible_eq_top
 
 end Nimber
