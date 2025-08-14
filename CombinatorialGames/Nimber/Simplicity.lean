@@ -1538,9 +1538,8 @@ theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
 theorem IsAlgClosed.simplestIrreducible_eq_top {x : Nimber} (h : IsAlgClosed x) :
     simplestIrreducible x = ⊤ := by
   rw [WithTop.eq_top_iff_forall_ge]
-  intro p
-  apply (h.toIsNthDegreeClosed _).X_pow_le_simplestIrreducible.trans'
-  apply le_of_lt
+  refine fun p ↦ le_of_lt ?_
+  apply (h.toIsNthDegreeClosed _).X_pow_lt_simplestIrreducible.trans'
   rw [WithTop.coe_lt_coe]
   simpa using degree_le_natDegree
 
