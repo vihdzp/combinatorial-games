@@ -217,7 +217,7 @@ theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
 
 theorem IsGroup.of_le_one {x : Nimber} (h : x ≤ 1) : IsGroup x := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
+  cases Nimber.le_one_iff.1 h <;> simp_all
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x) :
     IsGroup (sSup s) :=
