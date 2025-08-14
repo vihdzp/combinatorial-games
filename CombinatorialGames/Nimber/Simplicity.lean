@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Mathlib.WithTop
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
 import Mathlib.Algebra.Polynomial.Splits
@@ -37,12 +38,16 @@ We are currently at 3/4.
 
 universe u
 
-open Ordinal Polynomial Set
+open Order Ordinal Polynomial Set
 
 /-! ### Mathlib lemmas -/
 
 -- TODO: should some of these be global?
 attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
+
+-- TODO: this is a pending Mathlib refactor.
+attribute [-simp] add_one_eq_succ
+attribute [simp] lt_add_one_iff
 
 /-! ### Order lemmas -/
 
@@ -132,8 +137,8 @@ namespace Ordinal
 
 theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
   apply le_antisymm
-  · simpa [← succ_one] using div_opow_log_lt o one_lt_two
-  · simpa [← succ_zero] using div_opow_log_pos 2 ho
+  · simpa [← one_add_one_eq_two] using div_opow_log_lt o one_lt_two
+  · simpa [one_le_iff_ne_zero, pos_iff_ne_zero] using div_opow_log_pos 2 ho
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : 2 ^ log 2 o + o % 2 ^ log 2 o = o := by
   convert div_add_mod .. using 2
@@ -148,7 +153,7 @@ theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_left_strictMono hr).trans_le
   simp_rw [← mul_succ]
-  exact mul_le_mul_left' (Order.succ_le_iff.mpr hq) _
+  exact mul_le_mul_left' (succ_le_iff.mpr hq) _
 
 theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
     (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
@@ -161,10 +166,10 @@ theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
   aesop
 
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
-  apply lt_of_lt_of_le (b := a * (Order.succ b))
+  apply lt_of_lt_of_le (b := a * (succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
   · apply mul_le_mul_left'
-    rwa [Order.succ_le_iff]
+    rwa [succ_le_iff]
 
 -- TODO: come up with a better name, probably rename `log_eq_zero` while we're at it.
 theorem log_eq_zero' {b x : Ordinal} (hb : b ≤ 1) : log b x = 0 := by
@@ -380,7 +385,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
     rw [← val.lt_iff_lt] at H' ⊢
     apply (add_left_strictMono H').trans_le
     dsimp
-    rwa [← Ordinal.mul_two, ← opow_succ, opow_le_opow_iff_right one_lt_two, Order.succ_le_iff]
+    rwa [← Ordinal.mul_two, ← opow_succ, opow_le_opow_iff_right one_lt_two, succ_le_iff]
   obtain hyz | hyz | hyz := lt_trichotomy (log 2 y) (log 2 z)
   · rw [add_comm]
     exact H hyz hz'
@@ -611,8 +616,6 @@ theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x
     x * y = val (∗x * ∗y) :=
   hx.mul_eq_of_lt hyx
 
--- One day we'll get rid of this wretched simp lemma.
-attribute [-simp] add_one_eq_succ in
 private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
     x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by
   have hx₁ : 1 < x := lt_of_not_ge <| mt IsField.of_le_one h
@@ -647,7 +650,7 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
         simpa [H'] using H
     · rw [← val.le_iff_le]
       apply le_of_forall_ne
-      simp_rw [val_one, add_one_eq_succ, val_of, Order.lt_succ_iff,
+      simp_rw [val_one, add_one_eq_succ, val_of, lt_succ_iff,
         le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← of_eq_iff]
       refine ⟨?_, fun a ha b hb ↦ ?_⟩
       · rw [h'.mul_eq_of_lt hy hyx.le hsy Hs', mul_right_inj' hx₀]
@@ -836,7 +839,7 @@ theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
-    have hn' : p.degree ≤ n := Order.le_of_lt_succ hn
+    have hn' : p.degree ≤ n := le_of_lt_succ hn
     obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hn'
     rw [oeval_C_mul_X_pow_add hq, val_of, pow_succ]
     refine mul_add_lt (IH (fun k ↦ ?_) hq) ?_
@@ -1003,12 +1006,12 @@ instance : NoMaxOrder (Nimber[X]) where
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
   have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (Order.succ (p.coeff 0)))) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
     | zero =>
-      obtain hpq' | hpq' := (Order.succ_le_of_lt hpq).lt_or_eq
+      obtain hpq' | hpq' := (succ_le_of_lt hpq).lt_or_eq
       · refine le_of_lt ⟨0, ?_⟩
         aesop
       · apply le_of_eq
@@ -1021,30 +1024,29 @@ noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
       refine ⟨n, fun k hk ↦ ?_, ?_⟩
       · specialize hn k hk
         aesop
-      · have (a b : Nimber.{u}) (h : Order.succ a < b) : a < b := (Order.le_succ a).trans_lt h
+      · have (a b : Nimber.{u}) (h : succ a < b) : a < b := (le_succ a).trans_lt h
         aesop
     · use 0
       aesop
 
 @[aesop simp]
 theorem coeff_succ (p : Nimber[X]) :
-    (Order.succ p).coeff = Function.update p.coeff 0 (Order.succ (p.coeff 0)) := by
+    (succ p).coeff = Function.update p.coeff 0 (succ (p.coeff 0)) := by
   change coeff (Polynomial.ofFinsupp _) = _
   simp
   rfl
 
 @[simp]
 theorem coeff_succ_zero (p : Nimber[X]) :
-    (Order.succ p).coeff 0 = Order.succ (p.coeff 0) := by
+    (succ p).coeff 0 = succ (p.coeff 0) := by
   rw [coeff_succ, Function.update_self]
 
 @[simp]
 theorem coeff_succ_of_ne_zero (p : Nimber[X]) {k : ℕ} (h : k ≠ 0) :
-    (Order.succ p).coeff k = p.coeff k := by
+    (succ p).coeff k = p.coeff k := by
   rw [coeff_succ, Function.update_of_ne h]
 
-theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) :
-    Order.succ p = p + 1 := by
+theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) : succ p = p + 1 := by
   aesop
 
 end Lex
@@ -1131,7 +1133,7 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
   obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
   have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
 
-theorem IsRing.simplestIrreducible_eq {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
+theorem simplestIrreducible_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
     simplestIrreducible x = .some (C x⁻¹) * .some X + 1 := by
   have hx₁ : 1 < x := by by_contra! hx; cases h' <| IsField.of_le_one hx
   have hx₀ : x ≠ 0 := hx₁.ne_bot
@@ -1149,7 +1151,7 @@ theorem IsRing.simplestIrreducible_eq {x : Nimber} (h : IsRing x) (h' : ¬ IsFie
       exact hr.false
   · simp_rw [← WithTop.coe_mul, ← WithTop.coe_add_one]
     apply le_of_forall_ne
-    rw [← WithTop.coe_one, ← C_1, ]
+    rw [WithTop.forall_lt_coe, ← C_1, ]
 
 #exit
 /-! ### n-th degree closed fields -/
@@ -1261,7 +1263,7 @@ theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x �
   refine ⟨(IsNthDegreeClosed.toIsField · one_pos), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
   rw [Polynomial.eq_X_add_C_of_degree_le_one hp₁] at hp ⊢
   have : p.natDegree = 1 := natDegree_eq_of_degree_eq_some <| by
-    rw [← Order.succ_le_iff] at hp₀
+    rw [← succ_le_iff] at hp₀
     exact hp₁.antisymm hp₀
   rw [Monic, leadingCoeff] at hm
   have := hp 0
@@ -1298,7 +1300,7 @@ theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClose
     apply (h.toIsField n.succ_pos).root_lt _ hpk hr
     apply (WithTop.coe_lt_coe.2 (Lex.lt_of_degree_lt _)).trans_le h.X_pow_le_simplestIrreducible
     rw [degree_X_pow]
-    exact Order.lt_succ_of_le hpn
+    exact lt_succ_of_le hpn
 
 /-
 -- TODO: do I even need this?
@@ -1353,7 +1355,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have hq : (∏ i, (X + C (f i).1)).degree = (n + 1 : WithBot ℕ) := by
           rw [degree_prod_of_monic] <;> simp [Monic]
         have hq' : (X ^ (n + 1) + ∏ i, (X + C (f i).1)).degree ≤ n := by
-          rw [← Order.lt_succ_iff, ← CharTwo.sub_eq_add]
+          rw [← lt_succ_iff, ← CharTwo.sub_eq_add]
           convert degree_sub_lt .. <;> simp_all
         have H : ∀ k, (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
           apply h.coeff_add_lt
@@ -1363,7 +1365,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
             apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
         have IH := IH h' hq' H
         simp only [eval_add, eval_pow, eval_X, eval_prod, eval_C] at IH
-        exact IH ▸ (oeval_lt_opow H (Order.lt_succ_of_le hq')).ne
+        exact IH ▸ (oeval_lt_opow H (lt_succ_of_le hq')).ne
     obtain ⟨a, q, rfl, hqn⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
     have hqn' := hqn
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
