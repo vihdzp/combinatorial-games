@@ -620,7 +620,7 @@ theorem IsNthDegreeClosed.ofMonic {n : ℕ} {x : Nimber} (h : IsField x)
     have hm : (C p.leadingCoeff⁻¹ * p).Monic := by simp [Monic, hp₀']
     have hd : (C p.leadingCoeff⁻¹ * p).degree = p.degree := by compute_degree!
     have := hp _ hm (hd ▸ hp₀) (hd ▸ hpn) fun k ↦ ?_
-    · aesop
+    · simp_all
     · rw [coeff_C_mul, inv_mul_eq_div]
       exact h.div_lt (hp' k) (hp' _)
   __ := h
