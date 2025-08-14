@@ -8,6 +8,7 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
 import Mathlib.Algebra.Polynomial.Splits
 import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.Data.Multiset.Fintype
 import Mathlib.SetTheory.Ordinal.Principal
 import Mathlib.Tactic.ComputeDegree
@@ -93,6 +94,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
   refine ⟨h.1, fun y hy ↦ ?_⟩
   by_contra! hx
   exact (h.le_of_ge hy hx.le).not_gt hx
+
+theorem MinimalFor.not_lt {α ι : Type*} {P : α → Prop} {f : α → ι} {x y : α} [Preorder ι]
+    (h : MinimalFor P f x) (hy : P y) : ¬ f y < f x :=
+  fun hx ↦ (h.le_of_le hy hx.le).not_gt hx
 
 theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [CanonicallyOrderedAdd α]
     {x : WithBot α} : x ≤ 0 ↔ x = ⊥ ∨ x = 0 := by
@@ -836,6 +841,140 @@ theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
       · rwa [q.coeff_eq_zero_of_degree_lt (hq.trans_le (mod_cast h))]
     · simpa [q.coeff_eq_zero_of_degree_lt hq] using hp n
 
+namespace Lex
+
+/-- The lexicographic ordering on nimber polynomials. -/
+noncomputable instance : LinearOrder (Nimber[X]) :=
+  LinearOrder.lift' (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) <| by
+    intro p q h
+    rw [toLex_inj, Finsupp.ext_iff] at h
+    rwa [← toFinsupp_inj, Finsupp.ext_iff]
+
+theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
+    (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
+  .rfl
+
+instance : WellFoundedLT (Lex (ℕᵒᵈ →₀ Nimber)) where
+  wf := Finsupp.Lex.wellFounded' Nimber.not_lt_zero lt_wf (wellFounded_lt (α := ℕ))
+
+instance : WellFoundedLT (Nimber[X]) where
+  wf := InvImage.wf
+    (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) wellFounded_lt
+
+noncomputable instance : OrderBot (Nimber[X]) where
+  bot := 0
+  bot_le p := by rw [← not_lt, lt_def]; simp
+
+noncomputable instance : ConditionallyCompleteLinearOrderBot (Nimber[X]) :=
+  WellFoundedLT.conditionallyCompleteLinearOrderBot _
+
+@[simp] theorem bot_eq_zero : (⊥ : Nimber[X]) = 0 := rfl
+@[simp] theorem le_zero_iff {p : Nimber[X]} : p ≤ 0 ↔ p = 0 := le_bot_iff
+
+theorem degree_mono : Monotone (α := Nimber[X]) degree := by
+  intro p q h
+  obtain rfl | hq₀ := eq_or_ne q 0; aesop
+  contrapose! h
+  have h' := natDegree_lt_natDegree hq₀ h
+  rw [lt_def]
+  refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
+  · rw [p.coeff_eq_zero_of_natDegree_lt hk, q.coeff_eq_zero_of_natDegree_lt (h'.trans hk)]
+  · rw [q.coeff_eq_zero_of_natDegree_lt h', Nimber.pos_iff_ne_zero]
+    aesop
+
+theorem natDegree_mono : Monotone (α := Nimber[X]) natDegree := by
+  apply Monotone.comp (fun a b ↦ ?_) degree_mono
+  cases a <;> cases b <;> aesop
+
+theorem lt_of_degree_lt {p q : Nimber[X]} (h : p.degree < q.degree) : p < q := by
+  contrapose! h; exact degree_mono h
+
+theorem lt_of_natDegree_lt {p q : Nimber[X]} (h : p.natDegree < q.natDegree) : p < q := by
+  contrapose! h; exact natDegree_mono h
+
+@[simp]
+theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := by
+  simp_rw [lt_def, degree_lt_iff_coeff_zero, le_iff_lt_or_eq]
+  refine ⟨?_, fun _ ↦ ⟨n, ?_⟩⟩ <;> aesop
+
+end Lex
+
+/-- Returns the lexicographically earliest polynomial, all of whose coefficients are less than `x`,
+without any roots less than `x`. If none exists, returns `⊤`.
+
+This function takes values on `WithTop (Nimber[X])`, which is a well-ordered complete lattice (the
+order on `Nimber[X]` is the lexicographic order). -/
+noncomputable def simplestIrreducible (x : Nimber) : WithTop (Nimber[X]) :=
+  sInf (WithTop.some '' {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0})
+
+private theorem simplestIrreducible_mem {x : Nimber} {p : Nimber[X]}
+    (h : simplestIrreducible x = p) :
+    p ∈ {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0} := by
+  obtain hs | hs := ({p : Nimber[X] |
+    0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0}).eq_empty_or_nonempty
+  · simp [simplestIrreducible, hs] at h
+  · convert csInf_mem hs
+    rw [← WithTop.coe_inj, ← h, simplestIrreducible, WithTop.coe_sInf' hs]
+    exact OrderBot.bddBelow _
+
+theorem degree_simplestIrreducible_pos {x : Nimber} {p : Nimber[X]}
+    (h : simplestIrreducible x = p) : 0 < p.degree :=
+  (simplestIrreducible_mem h).1
+
+theorem simplestIrreducible_coeff_lt {x : Nimber} {p : Nimber[X]}
+    (h : simplestIrreducible x = p) : ∀ k, p.coeff k < x :=
+  (simplestIrreducible_mem h).2.1
+
+theorem simplestIrreducible_not_root_of_lt {x : Nimber} {p : Nimber[X]}
+    (h : simplestIrreducible x = p) : ∀ r < x, p.eval r ≠ 0 :=
+  (simplestIrreducible_mem h).2.2
+
+-- TODO: upstream attr.
+attribute [simp] mem_lowerBounds
+theorem has_root_of_lt_simplestIrreducible {x : Nimber} {p : Nimber[X]}
+    (hp₀ : p.degree ≠ 0) (hpk : ∀ k, p.coeff k < x) (hpn : p < simplestIrreducible x) :
+    ∃ r < x, p.IsRoot r := by
+  obtain hp | hp₀ := le_or_gt p.degree 0
+  · have := WithBot.le_zero_iff.1 hp; aesop
+  contrapose! hpn
+  rw [simplestIrreducible, sInf_le_iff]
+  aesop
+
+theorem IsField.has_root_subfield {x : Nimber} (h : IsField x)
+    (hx₁ : 1 < x) {p : (h.toSubfield hx₁)[X]} (hp₀ : p.degree ≠ 0)
+    (hpn : map (Subfield.subtype _) p < simplestIrreducible x) : ∃ r, p.IsRoot r := by
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  obtain ⟨r, hr, hr'⟩ := has_root_of_lt_simplestIrreducible (hd ▸ hp₀) (by simp) hpn
+  exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
+
+theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
+    {p : (h.toSubfield hx₁)[X]} (hpn : map (Subfield.subtype _) p < simplestIrreducible x) :
+    p.Splits (.id _) := by
+  obtain hp₀ | hp₀ := le_or_gt p.degree 0
+  · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
+  induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
+  subst hp
+  obtain ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
+  rw [← hr.mul_div_eq]
+  apply splits_mul _ (splits_X_sub_C _)
+  obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
+  · exact splits_of_degree_le_one _ hp₀'
+  · have hp : (p / (X - C r)).degree < p.degree := by apply degree_div_lt <;> aesop
+    apply IH _ hp _ (zero_lt_one.trans hp₀') rfl
+    apply (WithTop.coe_strictMono (Lex.lt_of_degree_lt _)).trans hpn
+    simpa
+
+theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
+    (hpn : p < simplestIrreducible x) (hpk : ∀ k, p.coeff k < x) :
+    p.roots = (h.embed hx₁ p hpk).roots.map (Subfield.subtype _) := by
+  simpa using roots_map (Subfield.subtype _)
+    (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa))
+
+theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
+    (hpn : p < simplestIrreducible x) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
+  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
+  have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
+
 /-! ### n-th degree closed fields -/
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
@@ -963,45 +1102,27 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
   apply IsField.sSup
   simpa
 
-theorem IsNthDegreeClosed.has_root_subfield {n : ℕ} {x : Nimber}
-    (h : IsNthDegreeClosed n x) (h' : IsField x)  (hx₁ : 1 < x) {p : (h'.toSubfield hx₁)[X]}
-    (hp₀ : p.degree ≠ 0) (hpn : p.degree ≤ n) : ∃ r, p.IsRoot r := by
-  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
-  obtain ⟨r, hr, hr'⟩ := h.has_root (hd ▸ hp₀) (hd ▸ hpn) (by simp)
-  exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
-
-theorem IsNthDegreeClosed.splits_subfield {n : ℕ} {x : Nimber}
-    (h : IsNthDegreeClosed n x) (h' : IsField x) (hx₁ : 1 < x) {p : (h'.toSubfield hx₁)[X]}
-    (hpn : p.degree ≤ n) : p.Splits (.id _) := by
-  obtain hp₀ | hp₀ := le_or_gt p.degree 0
-  · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
-  induction n generalizing p with
-  | zero => cases hp₀.not_ge hpn
-  | succ n IH =>
-    obtain ⟨r, hr⟩ := h.has_root_subfield h' hx₁ hp₀.ne' hpn
-    rw [← hr.mul_div_eq]
-    apply splits_mul _ (splits_X_sub_C _)
-    obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
-    · exact splits_of_degree_le_one _ hp₀'
-    · apply IH (h.le n.le_succ)
-      · rw [← Order.lt_succ_iff]
-        apply (degree_div_lt ..).trans_le hpn <;> aesop
-      · exact zero_lt_one.trans hp₀'
-
-theorem IsNthDegreeClosed.roots_eq_map {n : ℕ} {x : Nimber}
-    (h : IsNthDegreeClosed n x) (h' : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
-    (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
-    p.roots = (h'.embed hx₁ p hpk).roots.map (Subfield.subtype _) := by
-  simpa using roots_map (Subfield.subtype _)
-    (h.splits_subfield h' hx₁ (p := h'.embed hx₁ p hpk) hpn)
+theorem IsNthDegreeClosed.X_pow_le_simplestIrreducible {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) ≤ simplestIrreducible x := by
+  refine le_of_forall_ne fun p hp ↦ ?_
+  obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
+  rw [WithTop.coe_lt_coe, Lex.lt_X_pow_iff] at hp
+  intro hp'
+  obtain ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos hp'.symm) (by simpa using hp)
+    (simplestIrreducible_coeff_lt hp'.symm)
+  exact simplestIrreducible_not_root_of_lt hp'.symm r hr hr'
 
 theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
   cases n with
-  | zero => cases hpn.not_gt (degree_pos_of_mem_roots hr)
-  | succ n => have := h.roots_eq_map (h.toIsField n.succ_pos) hx₁ hpn hpk ▸ hr; aesop
+  | zero => cases hpn.not_gt <| degree_pos_of_mem_roots hr
+  | succ n =>
+    apply (h.toIsField n.succ_pos).root_lt _ hpk hr
+    apply (WithTop.coe_lt_coe.2 (Lex.lt_of_degree_lt _)).trans_le h.X_pow_le_simplestIrreducible
+    rw [degree_X_pow]
+    exact Order.lt_succ_of_le hpn
 
+/-
 -- TODO: do I even need this?
 -- TODO: upstream attr.
 attribute [simp] Polynomial.map_multiset_prod
@@ -1023,6 +1144,7 @@ theorem IsNthDegreeClosed.eq_prod_roots_of_degree_le {n : ℕ} {x : Nimber}
     rw [h'.map_embed] at hr
     conv_lhs => rw [← h'.map_embed hx₁ hp, eq_prod_roots_of_splits_id hs]
     simp [hr]
+-/
 
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
