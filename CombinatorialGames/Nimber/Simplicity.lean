@@ -1164,7 +1164,8 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
   obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
   have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
 
-attribute [-simp] WithTop.coe_add WithTop.coe_mul in
+attribute [-simp] WithTop.coe_add WithTop.coe_mul WithTop.coe_pow
+
 theorem IsRing.simplestIrreducible_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
     simplestIrreducible x = .some (C x⁻¹ * X + 1) := by
   have hx₁ : 1 < x := by by_contra! hx; cases h' <| IsField.of_le_one hx
@@ -1338,21 +1339,25 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
   apply IsField.sSup
   simpa
 
-theorem IsNthDegreeClosed.X_pow_le_simplestIrreducible {n : ℕ} {x : Nimber}
-    (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) ≤ simplestIrreducible x := by
-  refine le_of_forall_ne fun p hp hp' ↦ ?_
-  obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
-  have h' := hp' ▸ WithTop.coe_ne_top
-  have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
-    (coeff_simplestIrreducible_lt h')
-  · exact simplestIrreducible_not_root_of_lt h' hr hr'
-  · simp_rw [← hp']
-    simpa using hp
+theorem IsNthDegreeClosed.X_pow_lt_simplestIrreducible {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) < simplestIrreducible x := by
+  apply lt_of_le_of_ne
+  · refine le_of_forall_ne fun p hp hp' ↦ ?_
+    obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
+    have h' := hp' ▸ WithTop.coe_ne_top
+    have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
+      (coeff_simplestIrreducible_lt h')
+    · exact simplestIrreducible_not_root_of_lt h' hr hr'
+    · simp_rw [← hp']
+      simpa using hp
+  · intro hp
+    have ht := hp ▸ WithTop.coe_ne_top
+    simpa [← hp] using coeff_simplestIrreducible_zero_ne ht
 
-theorem IsField.X_sq_le_simplestIrreducible {x : Nimber} (h : IsField x) :
-    .some (X ^ 2) ≤ simplestIrreducible x := by
+theorem IsField.X_sq_lt_simplestIrreducible {x : Nimber} (h : IsField x) :
+    .some (X ^ 2) < simplestIrreducible x := by
   rw [← isNthDegreeClosed_one_iff_isField] at h
-  exact h.X_pow_le_simplestIrreducible
+  exact h.X_pow_lt_simplestIrreducible
 
 theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
@@ -1360,7 +1365,7 @@ theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClose
   | zero => cases hpn.not_gt <| degree_pos_of_mem_roots hr
   | succ n =>
     apply (h.toIsField n.succ_pos).root_lt _ hpk hr
-    apply (WithTop.coe_lt_coe.2 (Lex.lt_of_degree_lt _)).trans_le h.X_pow_le_simplestIrreducible
+    apply (WithTop.coe_lt_coe.2 (Lex.lt_of_degree_lt _)).trans h.X_pow_lt_simplestIrreducible
     rw [degree_X_pow]
     exact lt_succ_of_le hpn
 
