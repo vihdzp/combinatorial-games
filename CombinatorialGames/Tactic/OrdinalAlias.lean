@@ -73,6 +73,14 @@ theorem $(mkIdent `of_le_iff) {a b} : $(mkOf Alias) a ≤ b ↔ a ≤ $(mkVal Al
 theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias) b := .rfl
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
+@[simp]
+theorem $(mkIdent `of_image_Iio) (a) : $(mkOf Alias) '' Set.Iio a = Set.Iio ($(mkOf Alias) a) :=
+  Set.image_id _
+
+@[simp]
+theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($(mkVal Alias) a) :=
+  Set.image_id _
+
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
@@ -90,6 +98,10 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVal Alias) a + 1) :=
   rfl
 
+@[simp]
+theorem $(mkIdent `succ_of) (a : Ordinal) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
+  rfl
+
 @[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Ordinal.succ_ne_zero a
 @[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
 
@@ -103,10 +115,11 @@ $(mkDocComment s!" `Ordinal.induction` but for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   Ordinal.induction
 
-@[simp] protected theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le a
-@[simp] protected theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
-@[simp] protected theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
-protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
+@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le a
+@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
+@[simp] theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
+theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
+theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := Ordinal.eq_zero_or_pos a
 
 @[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
 @[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
@@ -124,6 +137,13 @@ instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
+instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
+instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
+
+@[simp]
+theorem $(mkIdent `Iio_one_default_eq) : (default : Set.Iio (1 : $Alias)) = ⟨0, zero_lt_one' $Alias⟩ :=
+  rfl
+
 theorem $(mkIdent `bddAbove_iff_small) {s : Set $Alias.{u}} : BddAbove s ↔ Small.{u} s :=
   Ordinal.bddAbove_iff_small
 
@@ -132,6 +152,21 @@ theorem $(mkIdent `bddAbove_of_small) (s : Set $Alias.{u}) [Small.{u} s] : BddAb
 
 theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [Small.{u} s] : ¬ BddAbove sᶜ :=
   Ordinal.not_bddAbove_compl_of_small s
+
+theorem $(mkIdent `le_iSup) {ι : Type*} (f : ι → $Alias.{u}) [Small.{u} ι] (i : ι) : f i ≤ iSup f :=
+  Ordinal.le_iSup f i
+
+theorem $(mkIdent `iSup_le_iff) {ι : Type*} {f : ι → $Alias.{u}} {a : $Alias.{u}} [Small.{u} ι] :
+    ⨆ i, f i ≤ a ↔ ∀ i, f i ≤ a :=
+  Ordinal.iSup_le_iff
+
+theorem $(mkIdent `lt_iSup_iff) {ι : Type*} [Small.{u} ι] (f : ι → $Alias.{u}) {x} :
+    x < ⨆ i, f i ↔ ∃ i, x < f i :=
+  Ordinal.lt_iSup_iff
+
+theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Alias.{u}} :
+    ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
+  Ordinal.iSup_eq_zero_iff
 
 end $Alias
 

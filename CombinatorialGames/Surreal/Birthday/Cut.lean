@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu
 -/
 import CombinatorialGames.Surreal.Cut
+import CombinatorialGames.Mathlib.WithTop
 
 /-!
 # Birthday of cuts
@@ -25,16 +26,6 @@ namespace Surreal
 namespace Cut
 
 /-! ### Birthday of cuts -/
-
--- TODO: PR to Mathlib
-noncomputable instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α]
-    [NoMaxOrder α] [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where
-  succ_eq_add_one := by
-    rintro (x | x)
-    · rfl
-    · apply WithTop.succ_coe.trans
-      rw [Order.succ_eq_add_one]
-      rfl
 
 /-- The birthday of a cut `x` is defined as the infimum of `⨆ a ∈ s, a.birthday + 1` over all
 sets `s` of surreals where either the infimum of the left cuts or the supremum of right cuts of `s`
@@ -107,14 +98,11 @@ theorem birthday_lt_sSup_birthday {a : Surreal} {s : Set Surreal} (ha : a ∈ s)
 
 theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
     sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) < ⊤ ↔ Small.{u} s := by
-  constructor <;> intro hs
-  · obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hs.ne
-    refine small_subset (s := {x : Surreal | x.birthday < a}) fun x hx ↦ ?_
-    rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
-    exact birthday_lt_sSup_birthday hx
-  · simp_rw [← WithTop.coe_one, ← WithTop.coe_add, ← image_image]
-    rw [← WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _)]
-    exact WithTop.coe_lt_top _
+  refine ⟨fun hs ↦ ?_, fun _ ↦ NatOrdinal.withTop_sSup_lt_top.2 <| by simp⟩
+  obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hs.ne
+  refine small_subset (s := {x : Surreal | x.birthday < a}) fun x hx ↦ ?_
+  rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
+  exact birthday_lt_sSup_birthday hx
 
 theorem sSup_birthday_eq_top_iff {s : Set Surreal.{u}} :
     sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) = ⊤ ↔ ¬ Small.{u} s := by
@@ -154,7 +142,7 @@ theorem birthday_leftSurreal (x : Surreal) : (leftSurreal x).birthday = x.birthd
       simp_rw [mem_image, EmbeddingLike.apply_eq_iff_eq, exists_eq_right] at this
       apply (Order.add_one_le_of_lt <| birthday_lt_sSup_birthday this).not_gt
       rwa [hy']
-    · rw [← hy', ← WithTop.coe_one, ← WithTop.coe_add] at hx
+    · rw [← hy', ← WithTop.coe_add_one] at hx
       have := sSup_birthday_lt_top_iff.1 (hx.trans (WithTop.coe_lt_top _))
       simpa using leftSurreal_mem_of_sSup_eq hy
 
@@ -252,12 +240,12 @@ private theorem birthday_game_le (x : IGame) :
   have H₁ : (supLeft x).birthday ≤ x.birthday := by
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
-    rw [← WithTop.coe_one, ← WithTop.coe_add, WithTop.coe_le_coe, Order.add_one_le_iff]
+    rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
     exact IGame.birthday_lt_of_mem_leftMoves i.2
   have H₂ : (infRight x).birthday ≤ x.birthday := by
     rw [infRight, iInf_subtype']
     apply (birthday_iInf_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.1.trans ?_
-    rw [← WithTop.coe_one, ← WithTop.coe_add, WithTop.coe_le_coe, Order.add_one_le_iff]
+    rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
     exact IGame.birthday_lt_of_mem_rightMoves i.2
   use H₁, H₂
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
