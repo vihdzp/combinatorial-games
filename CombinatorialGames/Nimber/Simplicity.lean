@@ -459,7 +459,7 @@ theorem IsField.one : IsField 1 where
   __ := IsRing.one
 
 theorem IsField.of_le_one {x : Nimber} (h : x ≤ 1) : IsField x := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
+  cases Nimber.le_one_iff.1 h <;> simp_all
 
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
