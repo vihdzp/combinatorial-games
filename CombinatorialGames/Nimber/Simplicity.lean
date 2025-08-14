@@ -374,7 +374,7 @@ theorem IsRing.one : IsRing 1 where
   __ := IsGroup.one
 
 theorem IsRing.of_le_one {x : Nimber} (h : x ≤ 1) : IsRing x := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
+  cases Nimber.le_one_iff.1 h <;> simp_all
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) :
     IsRing (sSup s) :=
