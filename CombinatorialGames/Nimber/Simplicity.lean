@@ -139,6 +139,14 @@ theorem WithTop.forall_lt_coe {α : Type*} {P : WithTop α → Prop} [Preorder �
   · rw [WithTop.lt_iff_exists_coe]
     aesop
 
+-- TODO: presumably we should PR this along with all the other versions.
+theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorder α] [AddLeftMono α]
+    {a b : WithBot α} (ha : 0 < a) (hb : 0 ≤ b) : 0 < a + b := by
+  obtain ⟨a, rfl, ha⟩ := WithBot.lt_iff_exists_coe.1 ha
+  obtain ⟨b, rfl, hb⟩ := WithBot.coe_le_iff.1 hb
+  rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
+  exact _root_.add_pos_of_pos_of_nonneg ha hb
+
 /-! #### Ordinal lemmas-/
 
 namespace Ordinal
@@ -262,6 +270,10 @@ theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
 theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
     a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
   rw [eq_comm, inv_eq_self_iff]
+
+protected theorem CharTwo.add_eq_zero {R : Type*} [Ring R] [CharP R 2] {x y : R} :
+    x + y = 0 ↔ x = y := by
+  rw [← CharTwo.sub_eq_add, sub_eq_iff_eq_add, zero_add]
 
 namespace Nimber
 
@@ -1104,7 +1116,7 @@ noncomputable def simplestIrreducible (x : Nimber) : WithTop (Nimber[X]) :=
   sInf (WithTop.some '' {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0})
 
 private theorem simplestIrreducible_mem {x : Nimber} (ht) :
-    (simplestIrreducible x).untop ht ∈
+    x.simplestIrreducible.untop ht ∈
       {p | 0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0} := by
   obtain hs | hs := ({p : Nimber[X] |
     0 < p.degree ∧ (∀ k, p.coeff k < x) ∧ ∀ r < x, p.eval r ≠ 0}).eq_empty_or_nonempty
@@ -1114,15 +1126,19 @@ private theorem simplestIrreducible_mem {x : Nimber} (ht) :
     exact OrderBot.bddBelow _
 
 theorem degree_simplestIrreducible_pos {x : Nimber} (ht) :
-    0 < ((simplestIrreducible x).untop ht).degree :=
+    0 < (x.simplestIrreducible.untop ht).degree :=
   (simplestIrreducible_mem ht).1
 
+theorem natDegree_simplestIrreducible_pos {x : Nimber} (ht) :
+    0 < (x.simplestIrreducible.untop ht).natDegree :=
+  natDegree_pos_iff_degree_pos.2 (degree_simplestIrreducible_pos ht)
+
 theorem coeff_simplestIrreducible_lt {x : Nimber} (ht) :
-    ∀ k, ((simplestIrreducible x).untop ht).coeff k < x :=
+    ∀ k, (x.simplestIrreducible.untop ht).coeff k < x :=
   (simplestIrreducible_mem ht).2.1
 
 theorem simplestIrreducible_not_root_of_lt {x r : Nimber} (ht) (hr : r < x) :
-    ((simplestIrreducible x).untop ht).eval r ≠ 0 :=
+    (x.simplestIrreducible.untop ht).eval r ≠ 0 :=
   (simplestIrreducible_mem ht).2.2 r hr
 
 @[simp]
@@ -1130,7 +1146,7 @@ theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ := by
   simp [simplestIrreducible]
 
 theorem coeff_simplestIrreducible_zero_ne {x : Nimber} (ht) :
-    ((simplestIrreducible x).untop ht).coeff 0 ≠ 0 := by
+    (x.simplestIrreducible.untop ht).coeff 0 ≠ 0 := by
   obtain rfl | hx := eq_bot_or_bot_lt x
   · simp at ht
   · rw [coeff_zero_eq_eval_zero]
@@ -1142,9 +1158,8 @@ theorem simplestIrreducible_ne_zero (x : Nimber) : simplestIrreducible x ≠ 0 :
   have ht := h ▸ WithTop.zero_ne_top
   simpa [h] using coeff_simplestIrreducible_zero_ne ht
 
-
 @[simp]
-theorem simplestIrreducible_ne_zero' (x : Nimber) (ht) : (simplestIrreducible x).untop ht ≠ 0 := by
+theorem simplestIrreducible_ne_zero' {x : Nimber} (ht) : x.simplestIrreducible.untop ht ≠ 0 := by
   rw [← WithTop.coe_inj.ne]
   simp
 
@@ -1235,23 +1250,26 @@ theorem IsRing.simplestIrreducible_eq_of_not_isField {x : Nimber} (h : IsRing x)
         simp [← ht, mul_div_cancel₀, hy₀]
 
 theorem IsField.monic_simplestIrreducible {x : Nimber} (h : IsField x) (ht) :
-    Monic ((simplestIrreducible x).untop ht) := by
+    Monic (x.simplestIrreducible.untop ht) := by
   by_contra! hm
-  let c := ((simplestIrreducible x).untop ht).leadingCoeff
+  let c := (x.simplestIrreducible.untop ht).leadingCoeff
   have hm' : 1 < c := by
     rw [← not_le, le_one_iff]
     simp_all [c, Monic]
-  apply (simplestIrreducible_le_of_not_isRoot (x := x)
-    (p := ((simplestIrreducible x).untop ht) * C c⁻¹) _ _ _).not_gt
+  apply (simplestIrreducible_le_of_not_isRoot _ _ _).not_gt
   · conv_rhs => rw [← WithTop.coe_untop _ ht]
     rw [WithTop.coe_lt_coe]
-    exact Lex.mul_leadingCoeff_inv_lt (simplestIrreducible_ne_zero' x ht) hm
+    exact Lex.mul_leadingCoeff_inv_lt (simplestIrreducible_ne_zero' ht) hm
   · rw [degree_mul]
-    apply WithBot.add_pos
-  · sorry
-  · sorry
+    apply WithBot.add_pos_of_pos_of_nonneg
+    · exact degree_simplestIrreducible_pos _
+    · aesop
+  · have H := coeff_simplestIrreducible_lt ht
+    have : c⁻¹ < x := h.inv_lt (H _)
+    apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
+  · have := @simplestIrreducible_not_root_of_lt x
+    aesop
 
-#exit
 /-! ### n-th degree closed fields -/
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
@@ -1557,6 +1575,9 @@ theorem IsAlgClosed.zero : IsAlgClosed 0 := by
 theorem IsAlgClosed.one : IsAlgClosed 1 := by
   simp [isAlgClosed_iff_forall]
 
+theorem IsAlgClosed.of_le_one {x : Nimber} (h : x ≤ 1) : IsAlgClosed x := by
+  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
+
 protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x) :
     IsAlgClosed (sSup s) := by
   rw [isAlgClosed_iff_forall]
@@ -1594,11 +1615,41 @@ theorem isAlgClosed_iff_simplestIrreducible_eq_top {x : Nimber} (h : IsRing x) :
 theorem simplestIrreducible_one : simplestIrreducible 1 = ⊤ :=
   IsAlgClosed.one.simplestIrreducible_eq_top
 
+-- Why isn't this tagged?
+attribute [simp] eval_prod leadingCoeff_prod
+
 /-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
 then `x` is the root of some polynomial with coefficients `< x`. -/
 theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬ IsAlgClosed x) :
-    ((simplestIrreducible x).untop
+    (x.simplestIrreducible.untop
       ((isAlgClosed_iff_simplestIrreducible_eq_top h.toIsRing).not.1 h')).IsRoot x := by
-  sorry
+  have hx₁ : 1 < x := by by_contra! hx; cases h' <| IsAlgClosed.of_le_one hx
+  have hx₀ : 0 < x := hx₁.bot_lt
+  generalize_proofs ht
+  let n := (x.simplestIrreducible.untop ht).natDegree
+  rw [IsRoot, ← add_right_inj (x ^ n), add_zero]
+  apply le_antisymm
+  · sorry
+  · refine pow_le_of_forall_ne fun f hf ↦ ?_
+    rw [add_right_inj] at hf
+    have hf' : ∏ i, (x + (f i)) = eval x (∏ i, (X + C (f i).1)) := by simp
+    rw [hf', ← Nimber.add_eq_zero, ← eval_add] at hf
+    apply (h.root_lt _ _ ((mem_roots _).2 hf)).false
+    · conv_rhs => rw [← WithTop.coe_untop _ ht]
+      rw [WithTop.coe_lt_coe, add_comm, ← CharTwo.sub_eq_add]
+      apply Lex.lt_of_degree_lt (degree_sub_lt _ (simplestIrreducible_ne_zero' ht) _)
+      · rw [degree_prod_of_monic, degree_eq_natDegree] <;> sorry--aesop (add simp [Monic])
+      · simp [h.monic_simplestIrreducible]
+    · apply h.coeff_add_lt
+      · apply h.coeff_prod_lt hx₁
+        sorry--aesop
+      · exact coeff_simplestIrreducible_lt _
+    · rw [ne_eq, CharTwo.add_eq_zero]
+      let i : Fin n := ⟨0, natDegree_simplestIrreducible_pos ht⟩
+      apply_fun eval (f i).1
+      rw [eval_prod, Finset.prod_eq_zero (Finset.mem_univ i), ne_comm]
+      · exact simplestIrreducible_not_root_of_lt _ (f i).2
+      · simp
+
 
 end Nimber
