@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import Mathlib.Algebra.Field.IsField
+import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Degree.Operations
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
@@ -181,15 +183,6 @@ theorem coeffs_nonempty_iff : p.coeffs.Nonempty ↔ p ≠ 0 := by
 theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
   rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
     WithBot.lt_coe_bot, p.degree_eq_bot]
-
-theorem coeff_eq_zero_of_degree_lt {n : ℕ} (h : p.degree < n) : p.coeff n = 0 := by
-  -- FIXME: why does this take explicit args?
-  apply (p.degree_lt_iff_coeff_zero n).1 h
-  rfl
-
-theorem coeff_eq_zero_of_natDegree_lt {n : ℕ} (h : p.natDegree < n) : p.coeff n = 0 := by
-  apply coeff_eq_zero_of_degree_lt (p.degree_le_natDegree.trans_lt _)
-  rwa [Nat.cast_lt]
 
 end Polynomial
 
