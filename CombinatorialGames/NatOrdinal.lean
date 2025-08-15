@@ -172,12 +172,8 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
 
 @[simp]
-theorem natCast_image_Iio' (n : ℕ) : Nat.cast '' Iio n = Iio (n : Ordinal) := by
-  ext o; have (h : o < n) := NatOrdinal.eq_natCast_of_le_natCast h.le; aesop
-
-@[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
-  natCast_image_Iio' n
+  Ordinal.natCast_image_Iio n
 
 @[simp]
 theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∀ a < ↑n, P a) ↔ ∀ a < n, P a := by

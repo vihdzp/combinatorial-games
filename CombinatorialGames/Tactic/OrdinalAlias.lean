@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import Mathlib.SetTheory.Ordinal.Family
+import Mathlib.Order.Interval.Finset.Nat
 
 /-!
 # Declare type aliases of `Ordinal`
@@ -27,6 +28,19 @@ def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
 /-- `Alias.val` -/
 def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
+
+-- TODO: upstream
+theorem Ordinal.eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+
+-- TODO: upstream
+@[simp]
+theorem Ordinal.natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
+  ext o; have (h : o < n) := Ordinal.eq_natCast_of_le_natCast h.le; aesop
+
+theorem Ordinal.finite_Iio_natCast (n : ℕ) : (Set.Iio (n : Ordinal)).Finite := by
+  rw [← Ordinal.natCast_image_Iio]
+  exact (Set.finite_Iio _).image _
 
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
@@ -125,10 +139,12 @@ theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := Ordinal.eq_
 @[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
 theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
 
--- TODO: upstream to Mathlib for Ordinal
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+  Ordinal.eq_natCast_of_le_natCast h
+
+theorem $(mkIdent `finite_Iio_of_natCast) (n : ℕ) : (Set.Iio ($(mkOf Alias) n)).Finite :=
+  Ordinal.finite_Iio_natCast n
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
