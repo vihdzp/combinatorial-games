@@ -918,8 +918,7 @@ theorem forall_lt_quadratic {P : Nimber[X] → Prop} {x y z : Nimber} :
       (∀ a < x, ∀ b c, P (C a * X ^ 2 + C b * X + C c)) := by
   refine ⟨fun H ↦
     ⟨fun c hc ↦ H _ ⟨0, by aesop⟩, fun b hb c ↦ H _ ⟨1, by aesop⟩, fun a ha b c ↦ H _ ⟨2, by aesop⟩⟩,
-    fun ⟨H₁, H₂, H₃⟩ p hp ↦ ?_⟩
-  obtain ⟨n, hn, hp⟩ := hp
+    fun ⟨H₁, H₂, H₃⟩ p ⟨n, hn, hp⟩ ↦ ?_⟩
   match n with
   | 0 =>
     have : p.coeff 0 < z := by simpa using hp
@@ -1028,6 +1027,21 @@ theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := b
 @[simp]
 theorem coe_lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : WithTop.some p < .some X ^ n ↔ p.degree < n := by
   rw [← WithTop.coe_pow, WithTop.coe_lt_coe, lt_X_pow_iff]
+
+theorem mul_leadingCoeff_inv_lt {p : Nimber[X]} (h₀ : p ≠ 0) (h₁ : ¬p.Monic) :
+    p * C p.leadingCoeff⁻¹ < p := by
+  refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
+  · rw [coeff_eq_zero_of_natDegree_lt, coeff_eq_zero_of_natDegree_lt hk]
+    rwa [natDegree_mul_leadingCoeff_inv _ h₀]
+  · obtain hp₁ | hp₁ := le_or_gt p.leadingCoeff 1
+    · obtain _ | _ := le_one_iff.1 hp₁ <;> simp_all [Monic]
+    · aesop
+
+theorem mul_leadingCoeff_inv_le (p : Nimber[X]) :
+    p * C p.leadingCoeff⁻¹ ≤ p := by
+  obtain rfl | h₀ := eq_or_ne p 0; simp
+  by_cases h₁ : p.leadingCoeff = 1; simp [h₁]
+  exact (mul_leadingCoeff_inv_lt h₀ h₁).le
 
 instance : NoMaxOrder (Nimber[X]) where
   exists_gt p := by
@@ -1220,20 +1234,24 @@ theorem IsRing.simplestIrreducible_eq_of_not_isField {x : Nimber} (h : IsRing x)
           simpa [← ht] using degree_simplestIrreducible_pos ht'
         simp [← ht, mul_div_cancel₀, hy₀]
 
-theorem IsField.monic_simplestIrreducible {x : Nimber} (h : IsField x) (h') :
-    Monic ((simplestIrreducible x).untop h') := by
+theorem IsField.monic_simplestIrreducible {x : Nimber} (h : IsField x) (ht) :
+    Monic ((simplestIrreducible x).untop ht) := by
   by_contra! hm
-  let c := ((simplestIrreducible x).untop h').leadingCoeff
+  let c := ((simplestIrreducible x).untop ht).leadingCoeff
   have hm' : 1 < c := by
     rw [← not_le, le_one_iff]
     simp_all [c, Monic]
   apply (simplestIrreducible_le_of_not_isRoot (x := x)
-    (p := C c⁻¹ * ((simplestIrreducible x).untop h')) _ _ _).not_gt
-  · sorry
-  · sorry
+    (p := ((simplestIrreducible x).untop ht) * C c⁻¹) _ _ _).not_gt
+  · conv_rhs => rw [← WithTop.coe_untop _ ht]
+    rw [WithTop.coe_lt_coe]
+    exact Lex.mul_leadingCoeff_inv_lt (simplestIrreducible_ne_zero' x ht) hm
+  · rw [degree_mul]
+    apply WithBot.add_pos
   · sorry
   · sorry
 
+#exit
 /-! ### n-th degree closed fields -/
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
