@@ -7,7 +7,7 @@ import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.Data.Nat.Nth
 import CombinatorialGames.Nimber.Simplicity
-import Mathlib.Fieldtheory.Minpoly.Field
+import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.NumberTheory.PrimeCounting
 import Mathlib.SetTheory.Ordinal.CantorNormalForm
@@ -63,7 +63,7 @@ protected def kappa (h : ℕ) : Nimber :=
 protected def alpha (h : ℕ) : Nimber :=
   sInf {x | x < Nimber.kappa h ∧ ∀ y < Nimber.kappa h, y.val ^ h ≠ x.val}
 
-theorem kappa_q_lt_iff_pair_lt (k n k' n' : ℕ) :
+protected theorem kappa_q_lt_iff_pair_lt (k n k' n' : ℕ) :
   Nimber.kappa_q k n < Nimber.kappa_q k' n' ↔ k < k' ∨ k = k' ∧ n < n' := by
   simp only [Nimber.kappa_q, OrderIso.lt_iff_lt]
   rw [opow_lt_opow_iff_right (by simp)]
@@ -103,27 +103,35 @@ theorem kappa_q_lt_iff_pair_lt (k n k' n' : ℕ) :
       repeat rw [← opow_natCast, ← natCast_opow]
       rwa [Nat.cast_lt, Nat.pow_lt_pow_iff_right (one_lt_nth_prime k)]
 
+/-- Add two ordinals as nimbers. -/
+scoped notation:65 x:65 "+ₙᵢₘ" y:66 => val (∗x + ∗y)
 
+protected theorem base_two_expansion (x : Nimber) :
+  (CNF 2 x.val).foldr (fun p r ↦ 2 ^ p.1 * p.2 +ₙᵢₘ r) 0 = x.val := by
+  sorry
 
-theorem kappa_nth_prime_pow (k n : ℕ) {h : n ≠ 0} :
+protected theorem kappa_nth_prime_pow (k n : ℕ) {h : n ≠ 0} :
   Nimber.kappa ((nth Nat.Prime k) ^ n) = Nimber.kappa_q k n := by
   sorry
 
-theorem kappa_pow_eq_alpha (k : ℕ) :
+protected theorem kappa_pow_eq_alpha (k : ℕ) :
   (Nimber.kappa (nth Nat.Prime k)) ^ (nth Nat.Prime k) = Nimber.alpha (nth Nat.Prime k) := by
   sorry
 
-theorem kappa_pow_decrease (k n : ℕ) {h : n ≠ 0} :
+protected theorem kappa_pow_decrease (k n : ℕ) {h : n ≠ 0} :
   (Nimber.kappa ((nth Nat.Prime k) ^ (n + 1))) ^ (nth Nat.Prime k)
   = (Nimber.kappa ((nth Nat.Prime k) ^ n)) := by
   sorry
 
-/-
-TODO: lexicographic ordering of kappa's ?
--/
+private def tau' : Nimber :=
+  sInf {x | IsAlgClosed x}
 
-theorem wpow_wpow_w_isAlgClosed : IsAlgClosed tau := by
+private theorem tau'_eq_tau : tau' = tau := by
   sorry
+
+/-- public name is more explicit -/
+theorem wpow_wpow_w_first_isAlgClosed :
+  sInf {x | IsAlgClosed x} = (of <| omega0 ^ (omega0 ^ omega0)) := by exact tau'_eq_tau
 
 end Nimber
 
