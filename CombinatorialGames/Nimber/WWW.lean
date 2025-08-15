@@ -7,7 +7,7 @@ import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.Data.Nat.Nth
 import CombinatorialGames.Nimber.Simplicity
-import Mathlib.Fieldtheory.Minpoly.Field
+import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.NumberTheory.PrimeCounting
 import Mathlib.SetTheory.Ordinal.CantorNormalForm
