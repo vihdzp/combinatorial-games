@@ -688,18 +688,26 @@ written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
 
+-- TODO: upstream
+def _root_.Subring.toSubfield_of_finite {R : Type*} [Field R]
+    (s : Subring R) (hs : s.carrier.Finite) : Subfield R where
+  inv_mem' x hx := by
+    obtain rfl | hx₀ := eq_or_ne x 0; simp
+    have := hs.to_subtype
+    let f (y : s) : s := ⟨x * y, s.mul_mem hx y.2⟩
+    have hf : Function.Injective f := fun _ ↦ by aesop
+    obtain ⟨y, hy⟩ := Finite.surjective_of_injective hf ⟨1, s.one_mem⟩
+    convert y.2
+    apply inv_eq_of_mul_eq_one_right
+    simpa [f] using hy
+  __ := s
+
 theorem IsRing.toIsField_of_finite {n : ℕ} (h : IsRing.{u} (∗n)) : IsField.{u} (∗n) where
   inv_lt' x hx₀ hx := by
     obtain hn₁ | hn₁ := le_or_gt n 1
     · interval_cases n <;> simp_all
-    have := (finite_Iio_of_natCast n).to_subtype
-    let f (y : Iio (∗n)) : Iio (∗n) := ⟨x * y, h.mul_lt hx y.2⟩
-    have hf : Function.Injective f := fun _ ↦ by aesop
-    obtain ⟨⟨y, hy' : _ < ∗n⟩, hy⟩ := Finite.surjective_of_injective hf
-      ⟨1, (Nat.one_lt_cast (α := Ordinal)).2 hn₁⟩
-    convert hy'
-    apply inv_eq_of_mul_eq_one_right
-    simpa [f] using hy
+    · exact ((h.toSubring ((Nat.one_lt_cast (α := Ordinal)).2 hn₁)).toSubfield_of_finite
+        (finite_Iio_of_natCast n)).inv_mem hx
   __ := h
 
 -- TODO: characterize nim arithmetic on the naturals.
