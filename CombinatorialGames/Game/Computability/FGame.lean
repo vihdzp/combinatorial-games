@@ -13,15 +13,13 @@ import Mathlib.Data.Multiset.Sort
 # Computably short games
 
 We already have a definition of short games at `IGame.Short`, but it is, regrettably, noncomputable.
-Here, we provide a computable definition of short games from the ground up, following a similar
-construction method presented in `IGame.lean`.
+Here, we provide a computable definition of short games from the ground up, following an old
+construction method used in `IGame.lean` before its construction using `QPF`.
 
-We define `FGame` and its auxiliary backing type `SGame` as data, providing data for the left and
-right moves of a game in the form of an auxiliary `SGame` type. This makes us capable of performing
-some basic computations on `IGame`. Since we would like to use the same standard interface for
-theorem proving in combinatorial games, we restrict this file only for computability usage and
-FGame generation. Since some of `IGame`'s basic definitions are computable, these theorems
-suffice for most of the computability we need.
+We define `FGame` using an auxiliary backing inductive type `SGame` as data. This makes us capable
+of performing some basic computations on games we wouldn't get with the `IGame` interface. Since we
+would like to use the same standard interface for theorem proving in combinatorial games,
+we restrict this file only for computability usage.
 
 In general, **You should not build any substantial theory based off of this file.** The theorems
 here are intended to check for definitional correctness over theory building.
@@ -163,8 +161,8 @@ end SGame
 
 /-- Short games up to identity.
 
-`FGame` uses the set-theoretic notion of equality on short games,
-similarly to how `IGame` is defined on top of `PGame`.
+`FGame` uses the set-theoretic notion of equality over the type-based definition
+used in `SGame`.
 
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.
@@ -371,23 +369,3 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
-
-/-! ### Repr -/
-
--- Allows us to recursively represent `FGame`s. This doesn't seem very idiomatic,
--- so we avoid putting it in pub space.
-private instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
-
-private unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
-  reprPrec g n := if g.card = 0 then "∅" else Multiset.instRepr.reprPrec g n
-
--- TODO: can we hook into delab?
-private unsafe def instRepr_aux : FGame → Std.Format :=
-  fun g ↦ "{" ++
-    Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
-    Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
-
-/-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
-and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
-{a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
-unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
