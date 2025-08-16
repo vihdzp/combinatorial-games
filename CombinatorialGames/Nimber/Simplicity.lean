@@ -1145,6 +1145,7 @@ theorem simplestIrreducible_not_root_of_lt {x r : Nimber} (ht) (hr : r < x) :
 theorem simplestIrreducible_zero : simplestIrreducible 0 = ⊤ := by
   simp [simplestIrreducible]
 
+@[simp]
 theorem coeff_simplestIrreducible_zero_ne {x : Nimber} (ht) :
     (x.simplestIrreducible.untop ht).coeff 0 ≠ 0 := by
   obtain rfl | hx := eq_bot_or_bot_lt x
@@ -1162,6 +1163,23 @@ theorem simplestIrreducible_ne_zero (x : Nimber) : simplestIrreducible x ≠ 0 :
 theorem simplestIrreducible_ne_zero' {x : Nimber} (ht) : x.simplestIrreducible.untop ht ≠ 0 := by
   rw [← WithTop.coe_inj.ne]
   simp
+
+theorem simplestIrreducible_ne_X_pow' (x : Nimber) (n : ℕ) (ht) :
+    x.simplestIrreducible.untop ht ≠ X ^ n := by
+  cases n with
+  | zero =>
+    have := degree_simplestIrreducible_pos ht
+    aesop
+  | succ n =>
+    apply_fun (coeff · 0)
+    simp
+
+theorem simplestIrreducible_ne_X_pow (x : Nimber) (n : ℕ) :
+    simplestIrreducible x ≠ .some (X ^ n) := by
+  intro hp
+  have ht := hp ▸ WithTop.coe_ne_top
+  rw [← WithTop.coe_untop _ ht, WithTop.coe_inj] at hp
+  exact (simplestIrreducible_ne_X_pow' _ _ _) hp
 
 -- TODO: upstream attr.
 attribute [simp] mem_lowerBounds
@@ -1399,18 +1417,29 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
 
 theorem IsNthDegreeClosed.X_pow_lt_simplestIrreducible {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) < simplestIrreducible x := by
-  apply lt_of_le_of_ne
-  · refine le_of_forall_ne fun p hp hp' ↦ ?_
-    obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
-    have h' := hp' ▸ WithTop.coe_ne_top
-    have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
-      (coeff_simplestIrreducible_lt h')
-    · exact simplestIrreducible_not_root_of_lt h' hr hr'
-    · simp_rw [← hp']
-      simpa using hp
-  · intro hp
-    have ht := hp ▸ WithTop.coe_ne_top
-    simpa [← hp] using coeff_simplestIrreducible_zero_ne ht
+  refine (simplestIrreducible_ne_X_pow x _).lt_of_le' (le_of_forall_ne fun p hp hp' ↦ ?_)
+  obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
+  have h' := hp' ▸ WithTop.coe_ne_top
+  have ⟨r, hr, hr'⟩ := h.has_root' (degree_simplestIrreducible_pos h') ?_
+    (coeff_simplestIrreducible_lt h')
+  · exact simplestIrreducible_not_root_of_lt h' hr hr'
+  · simp_rw [← hp']
+    simpa using hp
+
+theorem isNthDegreeClosed_iff_X_pow_lt_simplestIrreducible {n : ℕ} {x : Nimber} (h : IsRing x) :
+    IsNthDegreeClosed n x ↔ .some (X ^ (n + 1)) < simplestIrreducible x where
+  mp := IsNthDegreeClosed.X_pow_lt_simplestIrreducible
+  mpr hx := by
+    refine ⟨h, fun p hp₀ hpn hpk ↦ has_root_of_lt_simplestIrreducible hp₀.ne' hpk <| hx.trans' ?_⟩
+    rw [WithTop.coe_lt_coe]
+    apply Lex.lt_of_degree_lt
+    simpa
+
+theorem isNthDegreeClosed_iff_X_pow_le_simplestIrreducible {n : ℕ} {x : Nimber} (h : IsRing x) :
+    IsNthDegreeClosed n x ↔ .some (X ^ (n + 1)) ≤ simplestIrreducible x where
+  mp hx := hx.X_pow_lt_simplestIrreducible.le
+  mpr hx := (isNthDegreeClosed_iff_X_pow_lt_simplestIrreducible h).2
+    (hx.lt_of_ne' (simplestIrreducible_ne_X_pow x _))
 
 theorem IsField.X_sq_lt_simplestIrreducible {x : Nimber} (h : IsField x) :
     .some (X ^ 2) < simplestIrreducible x := by
@@ -1615,6 +1644,10 @@ theorem isAlgClosed_iff_simplestIrreducible_eq_top {x : Nimber} (h : IsRing x) :
 theorem simplestIrreducible_one : simplestIrreducible 1 = ⊤ :=
   IsAlgClosed.one.simplestIrreducible_eq_top
 
+theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
+    {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
+  (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
+
 -- Why isn't this tagged?
 attribute [simp] eval_prod leadingCoeff_prod
 
@@ -1629,7 +1662,8 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
   let n := (x.simplestIrreducible.untop ht).natDegree
   rw [IsRoot, ← add_right_inj (x ^ n), add_zero]
   apply le_antisymm
-  · sorry
+  · conv_lhs => left; rw [← eval_X (x := x), ← eval_pow]
+    rw [← eval_add]
   · refine pow_le_of_forall_ne fun f hf ↦ ?_
     rw [add_right_inj] at hf
     have hf' : ∏ i, (x + (f i)) = eval x (∏ i, (X + C (f i).1)) := by simp
