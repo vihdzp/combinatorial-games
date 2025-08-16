@@ -1040,6 +1040,14 @@ theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := b
 theorem coe_lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : WithTop.some p < .some X ^ n ↔ p.degree < n := by
   rw [← WithTop.coe_pow, WithTop.coe_lt_coe, lt_X_pow_iff]
 
+@[simp]
+theorem X_pow_le_iff {p : Nimber[X]} {n : ℕ} : X ^ n ≤ p ↔ n ≤ p.degree := by
+  rw [← not_lt, lt_X_pow_iff, not_lt]
+
+@[simp]
+theorem X_pow_le_coe_iff {p : Nimber[X]} {n : ℕ} : .some X ^ n ≤ WithTop.some p ↔ n ≤ p.degree := by
+  rw [← not_lt, coe_lt_X_pow_iff, not_lt]
+
 theorem mul_leadingCoeff_inv_lt {p : Nimber[X]} (h₀ : p ≠ 0) (h₁ : ¬p.Monic) :
     p * C p.leadingCoeff⁻¹ < p := by
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
@@ -1660,10 +1668,23 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
   have hx₀ : 0 < x := hx₁.bot_lt
   generalize_proofs ht
   let n := (x.simplestIrreducible.untop ht).natDegree
+  have hn : 1 ≤ n := natDegree_simplestIrreducible_pos _
+  have hd := degree_eq_natDegree (simplestIrreducible_ne_zero' ht)
+  have hm := h.monic_simplestIrreducible
   rw [IsRoot, ← add_right_inj (x ^ n), add_zero]
   apply le_antisymm
   · conv_lhs => left; rw [← eval_X (x := x), ← eval_pow]
-    rw [← eval_add]
+    rw [← eval_add, IsNthDegreeClosed.eval_eq_of_lt (n := n - 1)]
+    · apply le_of_forall_ne
+      sorry
+    · rw [isNthDegreeClosed_iff_X_pow_le_simplestIrreducible h.toIsRing, n.sub_add_cancel hn,
+        WithTop.coe_pow, ← WithTop.coe_untop _ ht, Lex.X_pow_le_coe_iff,
+        degree_eq_natDegree (simplestIrreducible_ne_zero' _)]
+    · rw [← lt_succ_iff, WithBot.natCast_eq_coe, WithBot.orderSucc_coe, succ_eq_add_one,
+        n.sub_add_cancel hn, ← CharTwo.sub_eq_add]
+      apply (degree_sub_lt ..).trans_eq <;> aesop
+    · apply h.coeff_add_lt _ (coeff_simplestIrreducible_lt _)
+      aesop
   · refine pow_le_of_forall_ne fun f hf ↦ ?_
     rw [add_right_inj] at hf
     have hf' : ∏ i, (x + (f i)) = eval x (∏ i, (X + C (f i).1)) := by simp
@@ -1672,8 +1693,8 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
     · conv_rhs => rw [← WithTop.coe_untop _ ht]
       rw [WithTop.coe_lt_coe, add_comm, ← CharTwo.sub_eq_add]
       apply Lex.lt_of_degree_lt (degree_sub_lt _ (simplestIrreducible_ne_zero' ht) _)
-      · rw [degree_prod_of_monic, degree_eq_natDegree] <;> sorry--aesop (add simp [Monic])
-      · simp [h.monic_simplestIrreducible]
+      · rw [degree_prod_of_monic] <;> sorry--aesop (add simp [Monic])
+      · aesop
     · apply h.coeff_add_lt
       · apply h.coeff_prod_lt hx₁
         sorry--aesop
