@@ -845,7 +845,7 @@ theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
 For that, use `NatOrdinal.toIGame`. -/
-instance : AddMonoidWithOne IGame where
+instance : AddCommMonoidWithOne IGame where
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
 @[game_cmp]
@@ -1080,6 +1080,8 @@ instance : MulZeroClass IGame where
 instance : MulOneClass IGame where
   one_mul := one_mul'
   mul_one x := mul_comm' .. ▸ one_mul' x
+
+instance : MulZeroOneClass IGame where
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
