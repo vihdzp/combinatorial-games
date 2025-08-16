@@ -273,6 +273,10 @@ theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
 
 theorem eval_X_pow {R} [CommRing R] (x : R) (n : ℕ) : eval x (X ^ n : R[X]) = x ^ n := by simp
 
+theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
+    p - X ^ p.natDegree = p.eraseLead := by
+  rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
+
 alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
 
 end Polynomial
@@ -774,7 +778,7 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   induction s using Finset.induction with
   | empty =>
     have := zero_lt_one.trans hx₁
-    aesop 
+    aesop
   | insert y s hy IH =>
     rw [Finset.prod_insert hy]
     apply h.coeff_mul_lt <;> aesop
@@ -976,6 +980,36 @@ theorem X_pow_le_iff {p : Nimber[X]} {n : ℕ} : X ^ n ≤ p ↔ n ≤ p.degree 
 theorem X_pow_le_coe_iff {p : Nimber[X]} {n : ℕ} : .some X ^ n ≤ WithTop.some p ↔ n ≤ p.degree := by
   rw [← not_lt, coe_lt_X_pow_iff, not_lt]
 
+theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree + p) :
+    X ^ p.natDegree + q < p := by
+  have hd := degree_mono h.le
+  obtain ⟨n, hn, hn'⟩ := h
+  have hnp : n < p.natDegree := by
+    by_contra! hnp
+    apply hn'.ne_bot
+    obtain rfl | hnp := hnp.eq_or_lt
+    · simp [hm]
+    · rw [coeff_eq_zero_of_natDegree_lt, Nimber.bot_eq_zero]
+      apply (natDegree_add_le ..).trans_lt
+      simpa
+  have hp₀ : p ≠ 0 := by aesop
+  refine ⟨n, fun k hk ↦ ?_, ?_⟩
+  · rw [coeff_add, coeff_X_pow]
+    split_ifs with hk'
+    · subst hk'
+      rw [q.coeff_eq_zero_of_degree_lt, hm.coeff_natDegree, add_zero]
+      apply hd.trans_lt
+      rw [add_comm, ← CharTwo.sub_eq_add, self_sub_X_pow_of_monic hm, ← degree_eq_natDegree hp₀]
+      exact degree_eraseLead_lt hp₀
+    · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, if_neg hk', zero_add]
+  · rwa [coeff_add, coeff_X_pow, if_neg hnp.ne, zero_add] at hn' ⊢
+
+theorem X_pow_add_le {p q : Nimber[X]} (hm : p.Monic) (h : q ≤ X ^ p.natDegree + p) :
+    X ^ p.natDegree + q ≤ p := by
+  obtain rfl | h := h.eq_or_lt
+  · rw [← add_assoc, CharTwo.add_self_eq_zero, zero_add] -- CharTwo.add_cancel_left
+  · exact (X_pow_add_lt hm h).le
+
 theorem mul_leadingCoeff_inv_lt {p : Nimber[X]} (h₀ : p ≠ 0) (h₁ : ¬p.Monic) :
     p * C p.leadingCoeff⁻¹ < p := by
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
@@ -1054,7 +1088,7 @@ theorem oeval_zero (x : Nimber) : oeval x 0 = 0 := by
 theorem oeval_eq_of_natDegree_le {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 ≤ n) (x : Nimber) :
     oeval x p = ∗((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
   induction n with
-  | zero => simp_all
+  | zero => simp at h
   | succ n IH =>
     obtain h | h := h.eq_or_lt
     · rw [oeval, h]
@@ -1179,6 +1213,7 @@ theorem forall_lt_oeval_iff {x : Nimber} (hx₁ : 1 < x) {P : Ordinal → Prop}
   mp := sorry
   mpr H y hy := sorry
 
+#exit
 /-- Returns the lexicographically earliest polynomial, all of whose coefficients are less than `x`,
 without any roots less than `x`. If none exists, returns `⊤`.
 
@@ -1723,7 +1758,7 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
   let n := (x.simplestIrreducible.untop ht).natDegree
   have hn : 1 ≤ n := natDegree_simplestIrreducible_pos _
   have hd := degree_eq_natDegree (simplestIrreducible_ne_zero' ht)
-  have hm := h.monic_simplestIrreducible
+  have hm := h.monic_simplestIrreducible ht
   have hxp : ∀ k, (X ^ n + x.simplestIrreducible.untop ht).coeff k < x :=
     h.coeff_add_lt (coeff_X_pow_lt _ hx₁) (coeff_simplestIrreducible_lt _)
   rw [IsRoot, ← add_right_inj (x ^ n), add_zero]
@@ -1752,7 +1787,9 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
         apply (hq'.trans_lt _).ne'
         simpa using hn
       apply (h.root_lt _ (h.coeff_add_lt (coeff_X_pow_lt _ hx₁) hqk) hr).false
-      sorry
+      rw [← WithTop.coe_untop _ ht, WithTop.coe_lt_coe]
+      apply Lex.X_pow_add_lt hm
+      simpa
     · exact hp.trans' (Lex.degree_mono hq.le)
   · refine pow_le_of_forall_ne fun f hf ↦ ?_
     rw [add_right_inj] at hf

@@ -211,10 +211,12 @@ theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : �
 -- This lets `game_cmp` reduce any instances of `NatCast`.
 attribute [game_cmp] Nat.reduceMod
 
+-- TODO: prove this for `CharTwo`.
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by
   rw [add_assoc, add_self, add_zero]
 
+-- TODO: prove this for `CharTwo`.
 @[simp]
 theorem add_cancel_left (a b : Nimber) : a + (a + b) = b := by
   rw [← add_assoc, add_self, zero_add]
