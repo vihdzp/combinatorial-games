@@ -1764,10 +1764,8 @@ theorem IsField.isRoot_simplestIrreducible {x : Nimber} (h : IsField x) (h' : ¬
       apply Lex.lt_of_degree_lt (degree_sub_lt _ (simplestIrreducible_ne_zero' ht) _)
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
-    · apply h.coeff_add_lt
-      · apply h.coeff_prod_lt hx₁
-        aesop
-      · exact coeff_simplestIrreducible_lt _
+    · apply h.coeff_add_lt (h.coeff_prod_lt hx₁ _) (coeff_simplestIrreducible_lt _)
+      aesop
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_simplestIrreducible_pos ht⟩
       apply_fun eval (f i).1
