@@ -11,6 +11,7 @@ import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Loopy.Outcome
+import CombinatorialGames.Game.Loopy.StoppingTime
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Short
