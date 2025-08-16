@@ -150,7 +150,7 @@ theorem neg_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toIGame a = c
 
 theorem impartial_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : Impartial (c.toIGame a) := by
   apply c.moveRecOn a fun b IHl IHr ↦ ?_
-  rw [impartial_def, neg_toIGame h]
+  rw [impartial_def', neg_toIGame h]
   simp_all
 
 /-! ### Convenience constructors -/

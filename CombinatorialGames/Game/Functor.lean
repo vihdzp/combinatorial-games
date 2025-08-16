@@ -1,8 +1,9 @@
 /-
 Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Aaron Liu, Violeta Hernández Palacios
+Authors: Aaron Liu, Violeta Hernández Palacios, Yuyang Zhao
 -/
+import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.QPF.Univariate.Basic
 import Mathlib.Logic.Small.Set
 
@@ -36,6 +37,52 @@ functor.
 
 universe u
 
+/-- Either the Left or Right player. -/
+inductive Player where
+  /-- The Left player. -/
+  | left  : Player
+  /-- The Right player. -/
+  | right : Player
+
+namespace Player
+
+@[simp]
+protected lemma «forall» {p : Player → Prop} :
+    (∀ x, p x) ↔ p left ∧ p right :=
+  ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ fun | left => hl | right => hr⟩
+
+@[simp]
+protected lemma «exists» {p : Player → Prop} :
+    (∃ x, p x) ↔ p left ∨ p right :=
+  ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
+
+instance : Neg Player where
+  neg := fun
+    | left => right
+    | right => left
+
+@[simp] lemma neg_left : -left = right := rfl
+@[simp] lemma neg_right : -right = left := rfl
+
+instance : InvolutiveNeg Player where
+  neg_neg := fun | left | right => rfl
+
+instance : Mul Player where
+  mul := fun
+    | left, p => p
+    | right, p => -p
+
+@[simp] lemma left_mul (p : Player) : left * p = p := rfl
+@[simp] lemma right_mul (p : Player) : right * p = -p := rfl
+@[simp] lemma mul_left (p : Player) : p * left = p := by cases p <;> rfl
+@[simp] lemma mul_right (p : Player) : p * right = -p := by cases p <;> rfl
+
+instance : HasDistribNeg Player where
+  neg_mul x y := by cases x <;> cases y <;> rfl
+  mul_neg x y := by cases x <;> cases y <;> rfl
+
+end Player
+
 /-- The functor from a type into the subtype of small pairs of sets in that type.
 
 This is the quotient of a polynomial functor. The type `IGame` of well-founded games is defined as
@@ -54,29 +101,26 @@ coinductive LGame : Type (u + 1)
 ```
 -/
 def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
-  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+  {s : Player → Set α // ∀ p, Small.{u} (s p)}
 
 namespace GameFunctor
 
 @[ext] theorem ext {α : Type (u + 1)} {x y : GameFunctor α} : x.1 = y.1 → x = y := Subtype.ext
 
-instance {α : Type (u + 1)} (x : GameFunctor α) : Small.{u} x.1.1 := x.2.1
-instance {α : Type (u + 1)} (x : GameFunctor α) : Small.{u} x.1.2 := x.2.2
+instance {α : Type (u + 1)} (x : GameFunctor α) (p : Player) : Small.{u} (x.1 p) := x.2 p
 
 instance : Functor GameFunctor where
-  map f s := ⟨⟨f '' s.1.1, f '' s.1.2⟩, ⟨inferInstance, inferInstance⟩⟩
+  map f s := ⟨(f '' s.1 ·), fun _ => inferInstance⟩
 
 theorem map_def {α β} (f : α → β) (s : GameFunctor α) :
-    f <$> s = ⟨⟨f '' s.1.1, f '' s.1.2⟩, ⟨inferInstance, inferInstance⟩⟩ :=
+    f <$> s = ⟨(f '' s.1 ·), fun _ => inferInstance⟩ :=
   rfl
 
 noncomputable instance : QPF GameFunctor where
-  P := ⟨Type u × Type u, fun x ↦ PLift x.1 ⊕ PLift x.2⟩
-  abs x := ⟨⟨Set.range (x.2 ∘ .inl ∘ PLift.up), Set.range (x.2 ∘ .inr ∘ PLift.up)⟩,
-    ⟨inferInstance, inferInstance⟩⟩
-  repr x := ⟨⟨Shrink x.1.1, Shrink x.1.2⟩,
-    Sum.rec (fun y ↦ ((equivShrink _).symm y.1).1) (fun y ↦ ((equivShrink _).symm y.1).1)⟩
-  abs_repr x := by ext <;> simp [← (equivShrink _).exists_congr_right]
-  abs_map f := by intro ⟨x, f⟩; ext <;> simp [PFunctor.map, map_def]
+  P := ⟨Player → Type u, fun x ↦ Σ p, PLift (x p)⟩
+  abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ inferInstance⟩
+  repr x := ⟨fun p ↦ Shrink (x.1 p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.1).1)⟩
+  abs_repr x := by ext; simp [← (equivShrink _).exists_congr_right]
+  abs_map f := by intro ⟨x, f⟩; ext; simp [PFunctor.map, map_def]
 
 end GameFunctor

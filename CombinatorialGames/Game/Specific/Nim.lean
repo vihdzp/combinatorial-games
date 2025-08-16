@@ -112,7 +112,7 @@ theorem nim_injective : Function.Injective nim := by
   intro a b h'
   obtain h | rfl | h := lt_trichotomy a b
   on_goal 2 => rfl
-  all_goals cases self_notMem_leftMoves _ <| h' ▸ mem_leftMoves_nim_of_lt h
+  all_goals cases self_notMem_moves _ _ <| h' ▸ mem_leftMoves_nim_of_lt h
 
 @[simp] theorem nim_inj {a b : Nimber} : nim a = nim b ↔ a = b := nim_injective.eq_iff
 
@@ -139,7 +139,7 @@ theorem neg_nim (o : Nimber) : -nim o = nim o := by
 termination_by o
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
-  apply Impartial.mk' (by simp)
+  apply mk (by simp)
   all_goals
     intro x hx
     simp only [leftMoves_nim, rightMoves_nim] at hx

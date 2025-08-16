@@ -226,11 +226,11 @@ lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x)
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hd : d ∈ (-y).leftMoves) : P3 a x b (-d) := by
   rw [P3_comm]
   rw [leftMoves_neg] at hd
-  refine ((ihyx (.of_mem_leftMoves hb) (.of_mem_rightMoves hd) <| Or.inl rfl).2 ?_).1 a ha
+  refine ((ihyx (.of_mem_moves hb) (.of_mem_moves hd) <| Or.inl rfl).2 ?_).1 a ha
   exact Numeric.leftMove_lt_rightMove hb hd
 
 lemma P24_of_IH1 (ihxy : IH1 x y) (ha : a ∈ x.leftMoves) (hb : b ∈ x.leftMoves) : P24 a b y :=
-  ihxy (.of_mem_leftMoves ha) (.of_mem_leftMoves hb) (Or.inl rfl)
+  ihxy (.of_mem_moves ha) (.of_mem_moves hb) (Or.inl rfl)
 
 lemma mulOption_lt_iff_P1 :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) ↔ P1 x y a b c (-d) := by
@@ -251,7 +251,7 @@ lemma mulOption_lt [Numeric x] [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a 
   · exact mulOption_lt_of_lt ihxy ihyx h ha hb hc hd
   · refine mulOption_lt_iff_P1.2 (P1_of_equiv h (P24_of_IH1 ihxy ha hc).1
       (ihxy ?_ ?_ <| .inr (isOption_neg.1 ?_)).1 <| P3_of_IH1 ihyx ha hb hd)
-    all_goals apply IsOption.of_mem_leftMoves; assumption
+    all_goals apply IsOption.of_mem_moves; assumption
   · rw [← neg_neg y] at hb
     simpa [lt_neg] using mulOption_lt_of_lt (IH1_neg_right ihxy) (IH1_neg_left ihyx) h hc hd ha hb
 
@@ -276,10 +276,8 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
     all_goals
-      try replace ha := IsOption.of_mem_leftMoves ha
-      try replace ha := IsOption.of_mem_rightMoves ha
-      try replace hb := IsOption.of_mem_leftMoves hb
-      try replace hb := IsOption.of_mem_rightMoves hb
+      replace ha := IsOption.of_mem_moves ha
+      replace hb := IsOption.of_mem_moves hb
       have := numeric_isOption_mul_of_IH IH ha
       have := numeric_mul_isOption_of_IH IH hb
       have := numeric_isOption_mul_isOption_of_IH IH ha hb
@@ -344,8 +342,8 @@ lemma IH4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y)
 lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁ ≈ x₂)
     (hi : a ∈ x₁.leftMoves) (hj : b ∈ y.leftMoves) :
     Game.mk (mulOption x₁ y a b) < Game.mk (x₂ * y) := by
-  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_leftMoves hi)).2 _).1 b hj) using 1
-  · rw [← (h.2.2 (.of_mem_leftMoves hj)).1 he]
+  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_moves hi)).2 _).1 b hj) using 1
+  · rw [← (h.2.2 (.of_mem_moves hj)).1 he]
     rfl
   · rw [← he.lt_congr_right]
     exact Numeric.leftMove_lt hi
@@ -384,8 +382,8 @@ def IH3 (x₁ x' x₂ y₁ y₂ : IGame) : Prop :=
 lemma IH3_of_IH (ih24 : IH24 x₁ x₂ y) (ih4 : IH4 x₁ x₂ y)
     (hi : a ∈ x₂.leftMoves) (hb : b ∈ y.leftMoves) (hl : mulOption x₂ y a b < x₂ * y) :
     IH3 x₁ a x₂ b y :=
-  have h24 := ih24.2.1 (.of_mem_leftMoves hi)
-  ⟨(ih4 <| .of_mem_leftMoves hb).2 (.of_mem_leftMoves hi), h24.1,
+  have h24 := ih24.2.1 (.of_mem_moves hi)
+  ⟨(ih4 <| .of_mem_moves hb).2 (.of_mem_moves hi), h24.1,
     mulOption_lt_mul_iff_P3.1 hl, fun l ↦ (h24.2 l).1 b hb⟩
 
 lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ ≤ i) : P3 x₁ x₂ y₁ y₂ := by
