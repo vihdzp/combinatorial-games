@@ -106,14 +106,14 @@ namespace Nimber
 
 /-! ### Basic results -/
 
-private theorem p_eq_zero_of_le_one {x : Nimber} {p : Nimber[X]}
+theorem polynomial_eq_zero_of_le_one {x : Nimber} {p : Nimber[X]}
     (hx₁ : x ≤ 1) (h : ∀ k, p.coeff k < x) : p = 0 := by
   ext k; simpa using (h k).trans_le hx₁
 
 theorem IsRing.eval_lt {x y : Nimber} (h : IsRing x) {p : Nimber[X]} (hp : ∀ k, p.coeff k < x)
     (hy : y < x) : p.eval y < x := by
   obtain hx₁ | hx₁ := le_or_gt x 1
-  · have := p_eq_zero_of_le_one hx₁ hp
+  · have := polynomial_eq_zero_of_le_one hx₁ hp
     simp_all
   · rw [eval_eq_sum]
     exact h.sum_lt hx₁.ne_bot fun n hn ↦ h.mul_lt (hp _) (h.pow_lt hx₁ hy)
@@ -562,7 +562,7 @@ theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
   mp H := by
     obtain rfl | hp₀ := eq_or_ne p 0; simp
-    obtain hx₁ | hx₁ := le_or_gt x 1; cases hp₀ <| p_eq_zero_of_le_one hx₁ hpk
+    obtain hx₁ | hx₁ := le_or_gt x 1; cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
     have H' := (opow_natDegree_le_oeval x hp₀).trans_lt H
     rw [of.lt_iff_lt, ← Ordinal.opow_natCast, ← Ordinal.opow_natCast,
       Ordinal.opow_lt_opow_iff_right (a := x.val) hx₁] at H'
@@ -732,7 +732,7 @@ theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : N
 
 theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
     (hpn : p < leastNotSplit x) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk] at hr
+  obtain hx₁ | hx₁ := le_or_gt x 1; simp [polynomial_eq_zero_of_le_one hx₁ hpk] at hr
   have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
 
 attribute [simp] Polynomial.map_multiset_prod
@@ -740,7 +740,7 @@ theorem IsField.eq_prod_roots_of_lt_leastNotSplit {x : Nimber} (h : IsField x)
     {p : Nimber[X]} (hpn : p < leastNotSplit x) (hpk : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
   obtain rfl | hp₀ := eq_or_ne p 0; simp
-  have hx₁ := lt_of_not_ge fun h ↦ hp₀ (p_eq_zero_of_le_one h hpk)
+  have hx₁ := lt_of_not_ge fun h ↦ hp₀ (polynomial_eq_zero_of_le_one h hpk)
   have hs := h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)
   conv_lhs => rw [← h.map_embed hx₁ hpk, eq_prod_roots_of_splits_id hs]
   simp [h.roots_eq_map hx₁ hpn hpk]

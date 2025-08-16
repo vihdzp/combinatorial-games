@@ -5,6 +5,14 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Simplicity.Polynomial
 
+open Order Ordinal Polynomial
+
+-- Why isn't this tagged?
+attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod
+
+-- TODO: upstream to Mathlib
+attribute [aesop simp] coeff_C coeff_X coeff_one
+
 namespace Nimber
 
 /-! ### n-th degree closed fields -/
@@ -36,7 +44,7 @@ theorem IsNthDegreeClosed.le {m n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x
 
 theorem IsNthDegreeClosed.of_le_one (n : ℕ) {x : Nimber} (h : x ≤ 1) : IsNthDegreeClosed n x where
   has_root' p hp₀ _ hp := by
-    have := p_eq_zero_of_le_one h hp
+    have := polynomial_eq_zero_of_le_one h hp
     simp_all
   __ := IsRing.of_le_one h
 
@@ -178,7 +186,7 @@ theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClose
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [p_eq_zero_of_le_one hx₁ hpk]
+  obtain hx₁ | hx₁ := le_or_gt x 1; simp [polynomial_eq_zero_of_le_one hx₁ hpk]
   have hx₀ := zero_lt_one.trans hx₁
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
@@ -340,9 +348,6 @@ theorem leastNotSplit_one : leastNotSplit 1 = ⊤ :=
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
-
--- Why isn't this tagged?
-attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod
 
 theorem succ_one : succ 1 = ∗2 := Ordinal.succ_one
 
