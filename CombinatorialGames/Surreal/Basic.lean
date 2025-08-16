@@ -34,6 +34,7 @@ form a linear ordered commutative ring.
 - Prove that surreals with finite birthday are dyadic rationals.
 - Build the embedding from reals into surreals.
 - Define sign sequences.
+- Redefine `Numeric` in terms of `IGame.moves`.
 -/
 
 universe u
