@@ -98,6 +98,11 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
+@[aesop simp]
+theorem coeff_eraseLead (p : Polynomial R) (k : ℕ) :
+    p.eraseLead.coeff k = if k = p.natDegree then 0 else p.coeff k :=
+  p.coeff_erase ..
+
 alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
 
 end Polynomial
@@ -328,6 +333,15 @@ theorem degree_mono : Monotone (α := Nimber[X]) degree := by
 theorem natDegree_mono : Monotone (α := Nimber[X]) natDegree := by
   apply Monotone.comp (fun a b ↦ ?_) degree_mono
   cases a <;> cases b <;> aesop
+
+theorem C_strictMono : StrictMono (α := Nimber) C := by
+  intro x y h
+  use 0
+  aesop
+
+@[simp]
+theorem C_lt_C_iff {x y : Nimber} : C x < C y ↔ x < y :=
+  C_strictMono.lt_iff_lt
 
 theorem lt_of_degree_lt {p q : Nimber[X]} (h : p.degree < q.degree) : p < q := by
   contrapose! h; exact degree_mono h
@@ -584,27 +598,64 @@ theorem oeval_split' {x : Nimber} {p q : Nimber[X]} {n : ℕ}
     oeval x (p + q) = oeval x p + oeval x q :=
   oeval_split (n := n + 1) (by simpa) hq
 
-theorem oeval_lt_of_lt {x : Nimber} {p q : Nimber[X]} (h : p < q)
+theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
   sorry
 
-theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0) (h : y < oeval x p) :
-    ∃ q : Nimber[X], q < p ∧ (∀ k, val (q.coeff k) < x) ∧ oeval x q = y := by
-  sorry
+theorem oeval_le_oeval {x : Nimber} {p q : Nimber[X]} (h : p ≤ q)
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q := by
+  obtain rfl | h := h.eq_or_lt
+  · rfl
+  · exact (oeval_lt_oeval h hpk hqk).le
+
+theorem oeval_lt_oeval_iff {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q ↔ p < q where
+  mpr h := oeval_lt_oeval h hpk hqk
+  mp h := by
+    by_contra! h'
+    exact h.not_ge (oeval_le_oeval h' hqk hpk)
+
+theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q ↔ p ≤ q :=
+  le_iff_le_iff_lt_iff_lt.2 (oeval_lt_oeval_iff hqk hpk)
+
+/-- A version of `eq_oeval_of_lt_opow` stated in terms of `Ordinal`. -/
+theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
+  induction n generalizing y with
+  | zero => use 0; simp_all [Ordinal.pos_iff_ne_zero]
+  | succ n IH =>
+    obtain ⟨p, hpn, hpk, hp⟩ := IH (Ordinal.mod_lt y (pow_ne_zero n hx₀))
+    refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
+    · compute_degree!
+      exact hpn.le
+    · rw [coeff_add, coeff_C_mul, coeff_X_pow]
+      split_ifs with h
+      · subst h
+        rw [p.coeff_eq_zero_of_degree_lt hpn, add_zero, mul_one, val_of]
+        rwa [Ordinal.div_lt (pow_ne_zero k hx₀), ← pow_succ]
+      · simpa using hpk k
+    · rw [oeval_C_mul_X_pow_add hpn, hp]
+      exact Ordinal.div_add_mod ..
 
 theorem eq_oeval_of_lt_opow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < of (x.val ^ n)) :
-    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y := by
-  rw [← oeval_X_pow] at h
-  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₀ h
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y :=
+  eq_oeval_of_lt_opow' hx₀ h
+
+theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
+    (hpk : ∀ k, p.coeff k < x) (h : y < oeval x p) :
+    ∃ q : Nimber[X], q < p ∧ (∀ k, q.coeff k < x) ∧ oeval x q = y := by
+  have hpd : p.degree < (p.natDegree + 1 :) := by simpa using degree_le_natDegree
+  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_opow hx₀ <| h.trans (oeval_lt_opow hpk hpd)
   refine ⟨q, ?_, hqk, rfl⟩
-  simpa using hqn
+  rwa [oeval_lt_oeval_iff hqk hpk] at h
 
 theorem forall_lt_oeval_iff {x : Nimber} (hx₁ : 1 < x) {P : Ordinal → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
-  mp H q hqp hqk := H _ <| oeval_lt_of_lt hqp hqk hpk
+  mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk
   mpr H y hy := by
-    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₁.ne_bot hy
+    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₁.ne_bot hpk hy
     exact H q hqn hqk
 
 /-! ### Least irreducible polynomial -/

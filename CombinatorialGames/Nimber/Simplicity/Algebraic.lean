@@ -334,7 +334,6 @@ theorem IsAlgClosed.leastNotSplit_eq_top {x : Nimber} (h : IsAlgClosed x) :
   rw [WithTop.coe_lt_coe]
   simpa using degree_le_natDegree
 
--- TODO: is the `IsRing` assumption necessary?
 theorem isAlgClosed_iff_leastNotSplit_eq_top {x : Nimber} (h : IsRing x) :
     IsAlgClosed x ↔ leastNotSplit x = ⊤ where
   mp := IsAlgClosed.leastNotSplit_eq_top
@@ -348,11 +347,6 @@ theorem leastNotSplit_one : leastNotSplit 1 = ⊤ :=
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
-
-theorem succ_one : succ 1 = ∗2 := Ordinal.succ_one
-
-theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := by
-  rw [← succ_one, lt_succ_iff, le_one_iff]
 
 /-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
 then `x` is the root of some polynomial with coefficients `< x`. -/
