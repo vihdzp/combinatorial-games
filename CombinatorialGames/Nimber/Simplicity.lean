@@ -774,7 +774,7 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   induction s using Finset.induction with
   | empty =>
     have := zero_lt_one.trans hx₁
-    aesop (add simp [coeff_one])
+    aesop 
   | insert y s hy IH =>
     rw [Finset.prod_insert hy]
     apply h.coeff_mul_lt <;> aesop
