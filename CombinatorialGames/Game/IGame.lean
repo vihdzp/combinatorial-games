@@ -1077,11 +1077,9 @@ instance : MulZeroClass IGame where
   zero_mul := zero_mul'
   mul_zero x := mul_comm' .. ▸ zero_mul' x
 
-instance : MulOneClass IGame where
+instance : MulZeroOneClass IGame where
   one_mul := one_mul'
   mul_one x := mul_comm' .. ▸ one_mul' x
-
-instance : MulZeroOneClass IGame where
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
