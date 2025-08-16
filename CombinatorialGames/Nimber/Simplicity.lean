@@ -1163,34 +1163,6 @@ theorem oeval_split' {x : Nimber} {p q : Nimber[X]} {n : ℕ}
     oeval x (p + q) = oeval x p + oeval x q :=
   oeval_split (n := n + 1) (by simpa) hq
 
-theorem oeval_lt_of_lt {x : Nimber} {p q : Nimber[X]} (h : p < q)
-    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
-  obtain ⟨n, hn, hpq⟩ := h
-  sorry
-
-/-- A version of `eq_oeval_of_lt_opow` stated in terms of `Ordinal`. -/
-theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
-    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
-  induction n generalizing y with
-  | zero => use 0; simp_all [Ordinal.pos_iff_ne_zero]
-  | succ n IH =>
-    obtain ⟨p, hpn, hpk, hp⟩ := IH (mod_lt y (pow_ne_zero n hx₀))
-    refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
-    · compute_degree!
-      exact hpn.le
-    · rw [coeff_add, coeff_C_mul, coeff_X_pow]
-      split_ifs with h
-      · subst h
-        rw [p.coeff_eq_zero_of_degree_lt hpn, add_zero, mul_one, val_of]
-        rwa [div_lt (pow_ne_zero k hx₀), ← pow_succ]
-      · simpa using hpk k
-    · rw [oeval_C_mul_X_pow_add hpn, hp]
-      exact div_add_mod ..
-
-theorem eq_oeval_of_lt_opow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < of (x.val ^ n)) :
-    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y :=
-  eq_oeval_of_lt_opow' hx₀ h
-
 theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
     (hp : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < x ^ n := by
   obtain rfl | hx₀ := x.eq_zero_or_pos; simp at hp
@@ -1207,15 +1179,33 @@ theorem oeval_lt_opow {x : Ordinal} {p : Nimber[X]} {n : ℕ}
       · rwa [q.coeff_eq_zero_of_degree_lt (hq.trans_le (mod_cast h))]
     · simpa [q.coeff_eq_zero_of_degree_lt hq] using hp n
 
+theorem oeval_lt_of_lt {x : Nimber} {p q : Nimber[X]} (h : p < q)
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
+  obtain ⟨n, hn, hpq⟩ := h
+  sorry
+
+theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0) (h : y < oeval x p) :
+    ∃ q : Nimber[X], q < p ∧ (∀ k, val (q.coeff k) < x) ∧ oeval x q = y := by
+  sorry
+
+theorem eq_oeval_of_lt_opow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < of (x.val ^ n)) :
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y := by
+  rw [← oeval_X_pow] at h
+  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₀ h
+  refine ⟨q, ?_, hqk, rfl⟩
+  simpa using hqn
+
 theorem forall_lt_oeval_iff {x : Nimber} (hx₁ : 1 < x) {P : Ordinal → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
-  mp := sorry
-  mpr H y hy := sorry
+  mp H q hqp hqk := H _ <| oeval_lt_of_lt hqp hqk hpk
+  mpr H y hy := by
+    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₁.ne_bot hy
+    exact H q hqn hqk
 
 #exit
-/-- Returns the lexicographically earliest polynomial, all of whose coefficients are less than `x`,
-without any roots less than `x`. If none exists, returns `⊤`.
+/-- Returns the lexicographically earliest non-constant polynomial, all of whose coefficients are
+less than `x`, without any roots less than `x`. If none exists, returns `⊤`.
 
 This function takes values on `WithTop (Nimber[X])`, which is a well-ordered complete lattice (the
 order on `Nimber[X]` is the lexicographic order). -/
