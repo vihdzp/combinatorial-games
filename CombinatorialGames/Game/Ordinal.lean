@@ -151,11 +151,11 @@ theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGa
     all_goals
     · rw [← toIGame.le_iff_le] at hd
       apply (hd.trans_lt _).not_ge
-      rw [(toIGame_add ..).lt_congr_left]
+      grw [(toIGame_add ..).le]
       simpa
   · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
     all_goals
-      rw [← (toIGame_add ..).le_congr_right]
+      grw [(toIGame_add ..).ge]
       simpa
 termination_by (a, b)
 
@@ -170,15 +170,17 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   constructor
   · rintro _ e c hc d hd he rfl
     rw [← toIGame.le_iff_le, (toIGame_add ..).le_congr (toIGame_add ..)] at he
-    rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
+    rw [← add_le_add_iff_right (toIGame (c * d))]
     apply not_le_of_le_of_not_le he
-    rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
+    grw [← (toIGame_mul ..).ge, (toIGame_mul ..).le, (toIGame_mul ..).le]
+    rw [← IGame.le_sub_iff_add_le]
     exact leftMove_lf <| mulOption_left_left_mem_leftMoves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
   · rintro _ _ _ c hc rfl d hd rfl rfl
-    rw [IGame.le_sub_iff_add_le,
-      ← (add_congr_right (toIGame_mul ..)).le_congr (add_congr (toIGame_mul ..) (toIGame_mul ..)),
-      ← (toIGame_add ..).le_congr (toIGame_add ..), toIGame.le_iff_le, not_le]
+    rw [IGame.le_sub_iff_add_le]
+    grw [← (toIGame_mul ..).le, (toIGame_mul ..).ge, (toIGame_mul ..).ge,
+      ← (toIGame_add ..).le, (toIGame_add ..).ge]
+    rw [toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
 termination_by (a, b)
 
@@ -231,7 +233,8 @@ local notation "ω" => toIGame (NatOrdinal.of Ordinal.omega0)
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
+  grw [(toIGame_natCast_equiv n).ge]
+  rw [toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
   exact Ordinal.nat_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
