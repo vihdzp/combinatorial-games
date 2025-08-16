@@ -511,17 +511,16 @@ instance : NegZeroClass IGame where
 theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴵ := by
   rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
 
-@[simp]
 theorem leftMoves_neg (x : IGame) : (-x).leftMoves = -x.rightMoves := by
   refine ofSetsRecOn x ?_; simp
 
-@[simp]
 theorem rightMoves_neg (x : IGame) : (-x).rightMoves = -x.leftMoves := by
   refine ofSetsRecOn x ?_; simp
 
+@[simp]
 theorem moves_neg (p : Player) (x : IGame) :
     (-x).moves p = -x.moves (-p) := by
-  cases p with | _ => simp
+  cases p <;> simp [leftMoves_neg, rightMoves_neg]
 
 theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
   simp [isOption_iff_mem_union, union_comm]
@@ -1024,16 +1023,6 @@ theorem rightMoves_mul (x y : IGame) :
       (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves) := by
   rw [mul_eq, rightMoves_ofSets]
 
-@[simp]
-theorem leftMoves_mulOption (x y a b : IGame) :
-    (mulOption x y a b).leftMoves = leftMoves (a * y + x * b - a * b) :=
-  rfl
-
-@[simp]
-theorem rightMoves_mulOption (x y a b : IGame) :
-    (mulOption x y a b).rightMoves = rightMoves (a * y + x * b - a * b) :=
-  rfl
-
 theorem mulOption_left_left_mem_leftMoves_mul {x y a b : IGame}
     (h₁ : a ∈ x.leftMoves) (h₂ : b ∈ y.leftMoves) : mulOption x y a b ∈ (x * y).leftMoves := by
   rw [leftMoves_mul]; use (a, b); simp_all
@@ -1087,6 +1076,7 @@ theorem moves_mul (p : Player) (x y : IGame) :
       (x.leftMoves ×ˢ y.moves p ∪ x.rightMoves ×ˢ y.moves (-p)) := by
   cases p with | _ => simp
 
+@[simp]
 theorem moves_mulOption (p : Player) (x y a b : IGame) :
     (mulOption x y a b).moves p = (a * y + x * b - a * b).moves p :=
   rfl
@@ -1098,18 +1088,18 @@ theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).moves p, P a) ↔
       (∀ p', ∀ a ∈ x.moves p', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  rw [Player.forall]; cases p <;> aesop
+  cases p <;> aesop
 
 theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).moves p, P a) ↔
       (∃ p', ∃ a ∈ x.moves p', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  rw [Player.exists]; cases p <;> aesop
+  cases p <;> aesop
 
 private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
   ext <;> simp
 
 private theorem one_mul' (x : IGame) : 1 * x = x := by
-  refine ofSetsRecOn x fun _ _ _ ↦ ?_
+  refine ofSetsRecOn x ?_
   aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by

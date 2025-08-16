@@ -37,16 +37,21 @@ functor.
 
 universe u
 
+/-- Either the Left or Right player. -/
 inductive Player where
+  /-- The Left player. -/
   | left  : Player
+  /-- The Right player. -/
   | right : Player
 
 namespace Player
 
+@[simp]
 protected lemma «forall» {p : Player → Prop} :
     (∀ x, p x) ↔ p left ∧ p right :=
   ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ fun | left => hl | right => hr⟩
 
+@[simp]
 protected lemma «exists» {p : Player → Prop} :
     (∃ x, p x) ↔ p left ∨ p right :=
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩

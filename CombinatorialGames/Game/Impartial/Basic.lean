@@ -79,11 +79,11 @@ protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
   (impartial_def.1 h).2 p y
 
 protected instance zero : Impartial 0 := by
-  rw [impartial_def']
+  rw [impartial_def]
   simp
 
 protected instance star : Impartial ⋆ := by
-  rw [impartial_def']
+  rw [impartial_def]
   simp [Impartial.zero]
 
 protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by

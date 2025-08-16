@@ -139,7 +139,7 @@ theorem neg_nim (o : Nimber) : -nim o = nim o := by
 termination_by o
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
-  apply Impartial.mk (by simp)
+  apply mk (by simp)
   all_goals
     intro x hx
     simp only [leftMoves_nim, rightMoves_nim] at hx

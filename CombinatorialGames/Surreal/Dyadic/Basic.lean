@@ -198,7 +198,7 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short x := by
   rw [toIGame]
   split_ifs with h
   · exact .intCast _
-  · rw [short_def']
+  · rw [short_def]
     simpa using ⟨.dyadic _, .dyadic _⟩
 termination_by x.den
 decreasing_by dyadic_wf

@@ -108,11 +108,11 @@ decreasing_by igame_wf
 
 @[simp]
 protected instance zero : Short 0 := by
-  rw [short_def']; simp
+  rw [short_def]; simp
 
 @[simp]
 protected instance one : Short 1 := by
-  rw [short_def']; simp
+  rw [short_def]; simp
 
 protected instance neg (x : IGame) [Short x] : Short (-x) := by
   apply mk
