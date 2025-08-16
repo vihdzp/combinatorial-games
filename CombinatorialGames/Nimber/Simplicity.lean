@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import Mathlib.Algebra.Field.IsField
+import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Degree.Operations
 import Mathlib.SetTheory.Ordinal.Principal
 import Mathlib.Tactic.ComputeDegree
 
