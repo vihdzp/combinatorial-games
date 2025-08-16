@@ -73,7 +73,7 @@ theorem birthday_le_iff' {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
 
 theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
     (∃ y ∈ x.leftMoves, o ≤ y.birthday) ∨ (∃ y ∈ x.rightMoves, o ≤ y.birthday) := by
-  simp [lt_birthday_iff', IsOption, or_and_right, exists_or]
+  simp [lt_birthday_iff', isOption_iff_mem_union, or_and_right, exists_or]
 
 theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
     (∀ y ∈ x.leftMoves, y.birthday < o) ∧ (∀ y ∈ x.rightMoves, y.birthday < o) := by
@@ -113,7 +113,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
   rw [birthday, iSup_eq_zero_iff, IGame.ext_iff]
-  simp [IsOption, forall_and, eq_empty_iff_forall_notMem]
+  simp [isOption_iff_mem_union, forall_and, eq_empty_iff_forall_notMem]
 
 @[simp] theorem birthday_zero : birthday 0 = 0 := by simp
 @[simp] theorem birthday_one : birthday 1 = 1 := by rw [one_def, birthday_ofSets]; simp

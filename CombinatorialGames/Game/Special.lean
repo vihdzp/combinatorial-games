@@ -44,7 +44,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext <;> simp [mulOption]
 
-@[simp] instance : Short ⋆ := by rw [short_def]; simp
+@[simp] instance : Short ⋆ := by rw [short_def']; simp
 
 /-! ### Half -/
 
@@ -62,7 +62,7 @@ theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
 theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
-instance : Short ½ := by rw [short_def]; simp
+instance : Short ½ := by rw [short_def']; simp
 
 /-! ### Up and down -/
 
@@ -80,7 +80,7 @@ recommended_spelling "up" for "↑" in [«term↑»]
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
-instance : Short ↑ := by rw [short_def]; simp
+instance : Short ↑ := by rw [short_def, Player.forall]; simp
 
 /-- The game `↓ = {⋆ | 0}`. -/
 def down : IGame :=
@@ -99,7 +99,7 @@ recommended_spelling "down" for "↓" in [«term↓»]
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
-instance : Short ↓ := by rw [short_def]; simp
+instance : Short ↓ := by rw [short_def']; simp
 
 /-! ### Tiny and miny -/
 
@@ -120,8 +120,8 @@ theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
   rightMoves_ofSets ..
 
 instance (x : IGame) [Short x] : Short (⧾x) := by
-  have : {{0} | {-x}}ᴵ.Short := by rw [short_def]; simpa
-  rw [short_def]
+  have : {{0} | {-x}}ᴵ.Short := by rw [short_def']; simpa
+  rw [short_def']
   simpa
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/

@@ -71,10 +71,10 @@ theorem rightMoves_toLGame (x : IGame) : x.toLGame.rightMoves = toLGame '' x.rig
   rw [toLGame_def, LGame.rightMoves_ofSets]
 
 theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
-  refine x.moveRecOn fun x hl hr ↦ .intro _ fun y ↦ ?_
+  refine x.moveRecOn fun x h ↦ .intro _ fun y ↦ ?_
   rintro (hy | hy) <;> simp only [leftMoves_toLGame, rightMoves_toLGame] at hy <;>
     obtain ⟨y, hy, rfl⟩ := hy
-  exacts [hl y hy, hr y hy]
+  exacts [h _ y hy, h _ y hy]
 
 theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGame.IsOption x where
   mp := by rintro ⟨x, rfl⟩; exact x.acc_toLGame

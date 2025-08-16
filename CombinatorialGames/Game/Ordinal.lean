@@ -211,7 +211,7 @@ open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
-    have := Short.of_mem_leftMoves y.2
+    have := Short.of_mem_moves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove

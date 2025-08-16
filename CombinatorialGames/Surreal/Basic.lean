@@ -81,6 +81,7 @@ protected theorem of_mem_rightMoves [h : Numeric x] (hy : y ∈ x.rightMoves) : 
   (numeric_def.1 h).2.2 y hy
 
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
+  rw [isOption_iff_mem_union] at h
   cases h with
   | inl h => exact .of_mem_leftMoves h
   | inr h => exact .of_mem_rightMoves h

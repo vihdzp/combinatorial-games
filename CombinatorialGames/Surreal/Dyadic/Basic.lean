@@ -198,7 +198,7 @@ instance _root_.IGame.Short.dyadic (x : Dyadic) : Short x := by
   rw [toIGame]
   split_ifs with h
   · exact .intCast _
-  · rw [short_def]
+  · rw [short_def']
     simpa using ⟨.dyadic _, .dyadic _⟩
 termination_by x.den
 decreasing_by dyadic_wf
@@ -474,11 +474,11 @@ namespace IGame
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
   have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_leftMoves y.2
-    have := Short.of_mem_leftMoves y.2
+    have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_rightMoves y.2
-    have := Short.of_mem_rightMoves y.2
+    have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   choose f hf using H₁
   choose g hg using H₂

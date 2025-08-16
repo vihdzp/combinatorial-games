@@ -239,13 +239,13 @@ theorem not_isRightDraw (x : IGame) : ¬ IsRightDraw x :=
 private theorem win_loss_iff {x : IGame} :
     ((IsLeftWin x ↔ 0 ⧏ x) ∧ (IsLeftLoss x ↔ x ≤ 0)) ∧
     ((IsRightWin x ↔ x ⧏ 0) ∧ (IsRightLoss x ↔ 0 ≤ x)) :=
-  x.moveRecOn fun x hl hr ↦ by
+  x.moveRecOn fun x h ↦ by
     rw [isLeftWin_iff_exists, isLeftLoss_iff_forall, isRightWin_iff_exists, isRightLoss_iff_forall,
       zero_lf, lf_zero, le_zero, zero_le, leftMoves_toLGame, rightMoves_toLGame]
     simp_rw [Set.forall_mem_image, Set.exists_mem_image]
     constructor <;>
       refine ⟨exists_congr fun y ↦ and_congr_right fun hy ↦ ?_, forall₂_congr fun y hy ↦ ?_⟩
-    exacts [(hl y hy).2.2, (hl y hy).2.1, (hr y hy).1.2, (hr y hy).1.1]
+    exacts [(h _ y hy).2.2, (h _ y hy).2.1, (h _ y hy).1.2, (h _ y hy).1.1]
 
 theorem isLeftWin_iff_zero_lf {x : IGame} : IsLeftWin x ↔ 0 ⧏ x := win_loss_iff.1.1
 theorem isLeftLoss_iff_le_zero {x : IGame} : IsLeftLoss x ↔ x ≤ 0 := win_loss_iff.1.2

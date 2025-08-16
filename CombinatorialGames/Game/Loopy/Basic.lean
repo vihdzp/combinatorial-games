@@ -79,17 +79,20 @@ See the module docstring for guidance on how to make use of this type. -/
 def LGame := QPF.Cofix GameFunctor
 
 namespace LGame
+export Player (left right)
 
 instance : DecidableEq LGame := Classical.decEq _
 
+/-- The set of moves of the game. -/
+def moves (x : LGame.{u}) (p : Player) : Set LGame.{u} := x.dest.1 p
+
 /-- The set of left moves of the game. -/
-def leftMoves (x : LGame.{u}) : Set LGame.{u} := x.dest.1.1
+abbrev leftMoves (x : LGame.{u}) : Set LGame.{u} := x.moves left
 
 /-- The set of right moves of the game. -/
-def rightMoves (x : LGame.{u}) : Set LGame.{u} := x.dest.1.2
+abbrev rightMoves (x : LGame.{u}) : Set LGame.{u} := x.moves right
 
-instance small_leftMoves (x : LGame.{u}) : Small.{u} (leftMoves x) := x.dest.2.1
-instance small_rightMoves (x : LGame.{u}) : Small.{u} (rightMoves x) := x.dest.2.2
+instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
@@ -134,18 +137,16 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   obtain ⟨⟨s, hs₁, hs₂, hs⟩, ⟨t, ht₁, ht₂, ht⟩⟩ := H _ _ hxy
   simp_rw [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
-  refine ⟨⟨⟨range (inclusion hs), range (inclusion ht)⟩, ⟨?_, ?_⟩⟩, ?_, ?_⟩
+  refine ⟨⟨fun | left => range (inclusion hs) | right => range (inclusion ht), ?_⟩, ?_, ?_⟩
   · have : Small.{u} s := small_subset (s := leftMoves x ×ˢ leftMoves y) fun z hz ↦
       ⟨(hs₁ z.1).1 ⟨_, hz⟩, (hs₂ z.2).1 ⟨_, hz⟩⟩
-    infer_instance
-  · have : Small.{u} t := small_subset (s := rightMoves x ×ˢ rightMoves y) fun z hz ↦
+    have : Small.{u} t := small_subset (s := rightMoves x ×ˢ rightMoves y) fun z hz ↦
       ⟨(ht₁ z.1).1 ⟨_, hz⟩, (ht₂ z.2).1 ⟨_, hz⟩⟩
-    infer_instance
+    rintro (_ | _) <;> infer_instance
   all_goals
-    ext z
-    all_goals
-      revert z
-      simpa [GameFunctor.map_def, ← range_comp]
+    ext p z
+    revert z
+    cases p <;> simpa [GameFunctor.map_def, ← range_comp]
 
 /-- Two `LGame`s are equal when their move sets are.
 
@@ -182,9 +183,10 @@ private instance : Small.{u + 1} (Subtype (Reachable leftMoves rightMoves init))
 private def dest (x : Shrink (Subtype (Reachable leftMoves rightMoves init))) :
     GameFunctor (Shrink (Subtype (Reachable leftMoves rightMoves init))) :=
   have hx := ((equivShrink _).symm x).2
-  ⟨⟨equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx),
-    equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx)⟩,
-    inferInstance, inferInstance⟩
+  ⟨fun
+    | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
+    | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
+    fun | left | right => inferInstance⟩
 
 private theorem unique (f g : Subtype (Reachable leftMoves rightMoves init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
@@ -208,7 +210,7 @@ def corec : LGame.{u} :=
 private theorem corec'_trans {x} (hx : Reachable leftMoves rightMoves init x)
   (y : Subtype (Reachable leftMoves rightMoves x)) :
     corec' _ _ x y = corec' _ _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
-  apply unique <;> ext <;>
+  apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
 private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {x : LGame} :
@@ -225,7 +227,7 @@ private theorem corec'_aux {a} (ha : a ∈ leftMoves init ∪ rightMoves init) {
 @[simp]
 theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
     corec leftMoves rightMoves '' leftMoves init := by
-  rw [LGame.leftMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
+  rw [LGame.leftMoves, moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   simpa [← (equivShrink (Subtype (Reachable _ _ _))).exists_congr_right]
     using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inl ha)
@@ -233,7 +235,7 @@ theorem leftMoves_corec : (corec leftMoves rightMoves init).leftMoves =
 @[simp]
 theorem rightMoves_corec : (corec leftMoves rightMoves init).rightMoves =
     corec leftMoves rightMoves '' rightMoves init := by
-  rw [LGame.rightMoves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
+  rw [LGame.rightMoves, moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   simpa [← (equivShrink (Subtype (Reachable _ _ _))).exists_congr_right]
     using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux _ _ _ (.inr ha)
@@ -254,7 +256,7 @@ theorem hom_unique_apply {leftMoves : α → Set α} {rightMoves : α → Set α
     (hrg : LGame.rightMoves ∘ g = image g ∘ rightMoves) (x) : f x = g x := by
   change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x)) =
     (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable leftMoves rightMoves x))
-  apply unique <;> ext z
+  apply unique <;> ext z p <;> cases p
   · change _ ∈ (LGame.leftMoves ∘ f) _ ↔ _
     rw [hlf]
     simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
