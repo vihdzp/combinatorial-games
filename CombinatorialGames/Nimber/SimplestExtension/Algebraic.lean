@@ -398,6 +398,13 @@ theorem isAlgClosed_iff_leastNotSplit_eq_top {x : Nimber} (h : IsRing x) :
   mpr hx := ⟨h, fun _p hp₀ hpk ↦
     has_root_of_lt_leastNotSplit hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
 
+@[simp]
+theorem leastNotSplit_one : leastNotSplit 1 = ⊤ :=
+  IsAlgClosed.one.leastNotSplit_eq_top
+
+theorem leastNotSplit_of_le_one {x : Nimber} (h : x ≤ 1) : leastNotSplit x = ⊤ :=
+  (IsAlgClosed.of_le_one h).leastNotSplit_eq_top
+
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
@@ -585,16 +592,33 @@ protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
     aesop
   · simp [hy₀]
 
-private theorem leastNotSplit_algClosure' {x : Nimber} {p : Nimber[X]} (hp : p.degree ≠ 0)
-    (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, q.degree ≠ 0 → ∃ r, q.IsRoot r)
-    (hp : ∀ r, ¬ p.IsRoot r) : leastNotSplit (algClosure x) = p := by
-  sorry
+theorem le_algClosure (x : Nimber) : x ≤ algClosure x := by
+  apply le_ciSup_of_le (bddAbove_of_small _) 1
+  simpa using le_sSup_algClosureSet x
 
-#exit
+private theorem leastNotSplit_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
+    (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
+    (hr : ∀ r, ¬ p.IsRoot r) : leastNotSplit (algClosure x) = p := by
+  apply le_antisymm
+  · exact leastNotSplit_le_of_not_isRoot hp
+      (fun k ↦ (hpk k).trans_le (le_algClosure x)) fun r _ ↦ hr r
+  · apply le_of_forall_ne
+    rw [WithTop.forall_lt_coe]
+    intro q hq hq'
+    have ht := hq' ▸ WithTop.coe_ne_top
+    have hq' : q = x.algClosure.leastNotSplit.untop ht := by simp_rw [← hq', WithTop.untop_coe]
+    have hqd : 0 < q.degree := hq' ▸ degree_leastNotSplit_pos ht
+    obtain ⟨r, hr⟩ := IH q hq hqd
+    apply leastNotSplit_not_root_of_lt ht (r := r)
+    apply algClosure.root_lt (p := q) (by aesop)
+    · exact hq' ▸ coeff_leastNotSplit_lt ht
+    · exact hr
+    · exact hq' ▸ hr
+
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
-  suffices H : ∀ p : Nimber[X], p.degree ≠ 0 → ∃ r, p.IsRoot r from
-    .of_exists_root _ fun p _ hp ↦ H _ hp.degree_pos.ne'
+  suffices H : ∀ p : Nimber[X], 0 < p.degree → ∃ r, p.IsRoot r from
+    .of_exists_root _ fun p _ hp ↦ H _ hp.degree_pos
   intro p
   induction p using WellFoundedLT.induction with | ind p IH
   intro hp
@@ -607,7 +631,5 @@ instance : _root_.IsAlgClosed Nimber := by
   have hp' := (IsField.algClosure x).isRoot_leastNotSplit (ht ▸ WithTop.coe_ne_top)
   simp_rw [ht, WithTop.untop_coe] at hp'
   exact hr _ hp'
-
-#print axioms Nimber.instIsAlgClosed
 
 end Nimber
