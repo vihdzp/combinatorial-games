@@ -27,6 +27,12 @@ attribute [aesop simp] coeff_C coeff_X coeff_one
 
 /-! ### For Mathlib -/
 
+@[simp]
+theorem sSup_succ {α : Type*} [ConditionallyCompleteLinearOrderBot α] [SuccOrder α] (x : α) :
+    sSup (succ '' Iio x) = x := by
+  convert _root_.iSup_succ x
+  rw [iSup, image_eq_range]
+
 namespace Finsupp
 
 variable {α β : Type*} [Zero β]
@@ -92,26 +98,26 @@ nimbers with degree less or equal to `n` and coefficients less than `x` has a ro
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
-`IsNthDegreeClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
+`IsNthDegreeClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
 @[mk_iff]
 structure IsNthDegreeClosed (n : ℕ) (x : Nimber) extends IsRing x where
-  has_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
+  exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
     ∃ r < x, p.IsRoot r
 
-theorem IsNthDegreeClosed.has_root {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
+theorem IsNthDegreeClosed.exists_root {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r := by
   obtain rfl | hp₀ := eq_or_ne p 0
   · aesop
-  · apply h.has_root' _ hpn hp
+  · apply h.exists_root' _ hpn hp
     cases _ : p.degree <;> simp_all [Nat.pos_iff_ne_zero]
 
 theorem IsNthDegreeClosed.le {m n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hmn : m ≤ n) :
     IsNthDegreeClosed m x where
-  has_root' _p hp₀ hpm := h.has_root' hp₀ (hpm.trans (mod_cast hmn))
+  exists_root' _p hp₀ hpm := h.exists_root' hp₀ (hpm.trans (mod_cast hmn))
   __ := h.toIsRing
 
 theorem IsNthDegreeClosed.of_le_one (n : ℕ) {x : Nimber} (h : x ≤ 1) : IsNthDegreeClosed n x where
-  has_root' p hp₀ _ hp := by
+  exists_root' p hp₀ _ hp := by
     have := polynomial_eq_zero_of_le_one h hp
     simp_all
   __ := IsRing.of_le_one h
@@ -132,7 +138,7 @@ protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
   refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hpn hp ↦ ?_⟩
   simp_rw [lt_csSup_iff hs hs'] at *
   obtain ⟨c, hc, hc'⟩ := exists_gt_of_forall_coeff_gt hp
-  obtain ⟨r, hr, hr'⟩ := (H _ hc).has_root' hp₀ hpn fun m ↦ hc' _
+  obtain ⟨r, hr, hr'⟩ := (H _ hc).exists_root' hp₀ hpn fun m ↦ hc' _
   exact ⟨r, ⟨_, hc, hr⟩, hr'⟩
 
 protected theorem IsNthDegreeClosed.iSup {n : ℕ} {ι} {f : ι → Nimber}
@@ -145,7 +151,7 @@ degree less or equal to `n`. -/
 theorem IsNthDegreeClosed.ofMonic {n : ℕ} {x : Nimber} (h : IsField x)
     (hp : ∀ p : Nimber[X], p.Monic → 0 < p.degree → p.degree ≤ n → (∀ k, p.coeff k < x) →
       ∃ r < x, p.IsRoot r) : IsNthDegreeClosed n x where
-  has_root' p hp₀ hpn hp' := by
+  exists_root' p hp₀ hpn hp' := by
     have hp₀' : p ≠ 0 := by rintro rfl; simp at hp₀
     have hm : (C p.leadingCoeff⁻¹ * p).Monic := by simp [Monic, hp₀']
     have hd : (C p.leadingCoeff⁻¹ * p).degree = p.degree := by compute_degree!
@@ -166,7 +172,7 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
   · exact IsField.of_le_one hx₁
   · refine ⟨h.toIsRing, fun y hy₀ hy ↦ ?_⟩
     have hp : degree (C y * (X : Nimber[X]) + 1) = 1 := by compute_degree!
-    have ⟨r, hr, hr₀⟩ := h.has_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
+    have ⟨r, hr, hr₀⟩ := h.exists_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
     · convert hr
       apply inv_eq_of_mul_eq_one_right
       rw [← Nimber.add_eq_zero]
@@ -205,7 +211,7 @@ theorem IsNthDegreeClosed.X_pow_lt_leastNotSplit {n : ℕ} {x : Nimber}
   refine (leastNotSplit_ne_X_pow x _).lt_of_le' (le_of_forall_ne fun p hp hp' ↦ ?_)
   obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
   have h' := hp' ▸ WithTop.coe_ne_top
-  have ⟨r, hr, hr'⟩ := h.has_root' (degree_leastNotSplit_pos h') ?_
+  have ⟨r, hr, hr'⟩ := h.exists_root' (degree_leastNotSplit_pos h') ?_
     (coeff_leastNotSplit_lt h')
   · exact leastNotSplit_not_root_of_lt h' hr hr'
   · simp_rw [← hp']
@@ -215,7 +221,7 @@ theorem isNthDegreeClosed_iff_X_pow_lt_leastNotSplit {n : ℕ} {x : Nimber} (h :
     IsNthDegreeClosed n x ↔ .some (X ^ (n + 1)) < leastNotSplit x where
   mp := IsNthDegreeClosed.X_pow_lt_leastNotSplit
   mpr hx := by
-    refine ⟨h, fun p hp₀ hpn hpk ↦ has_root_of_lt_leastNotSplit hp₀.ne' hpk <| hx.trans' ?_⟩
+    refine ⟨h, fun p hp₀ hpn hpk ↦ exists_root_of_lt_leastNotSplit hp₀.ne' hpk <| hx.trans' ?_⟩
     rw [WithTop.coe_lt_coe]
     apply Lex.lt_of_degree_lt
     simpa
@@ -333,14 +339,14 @@ nimbers with coefficients less than `x` has a root that's less than `x`. Note th
 algebraically closed under this definition.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
-`IsAlgClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
+`IsAlgClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
+  exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : ℕ) :
     IsNthDegreeClosed n x where
-  has_root' _p hp₀ _ := h.has_root' hp₀
+  exists_root' _p hp₀ _ := h.exists_root' hp₀
   __ := h
 
 @[coe]
@@ -349,11 +355,11 @@ theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x :=
 
 theorem isAlgClosed_iff_forall {x : Nimber} : IsAlgClosed x ↔ ∀ n, IsNthDegreeClosed n x where
   mp := IsAlgClosed.toIsNthDegreeClosed
-  mpr H := ⟨(H 0).toIsRing, fun _p hp₀ ↦ (H _).has_root' hp₀ degree_le_natDegree⟩
+  mpr H := ⟨(H 0).toIsRing, fun _p hp₀ ↦ (H _).exists_root' hp₀ degree_le_natDegree⟩
 
-theorem IsAlgClosed.has_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
+theorem IsAlgClosed.exists_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r :=
-  (h.toIsNthDegreeClosed _).has_root hp₀ degree_le_natDegree hp
+  (h.toIsNthDegreeClosed _).exists_root hp₀ degree_le_natDegree hp
 
 @[simp]
 theorem IsAlgClosed.zero : IsAlgClosed 0 := by
@@ -396,7 +402,7 @@ theorem isAlgClosed_iff_leastNotSplit_eq_top {x : Nimber} (h : IsRing x) :
     IsAlgClosed x ↔ leastNotSplit x = ⊤ where
   mp := IsAlgClosed.leastNotSplit_eq_top
   mpr hx := ⟨h, fun _p hp₀ hpk ↦
-    has_root_of_lt_leastNotSplit hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
+    exists_root_of_lt_leastNotSplit hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
 
 @[simp]
 theorem leastNotSplit_one : leastNotSplit 1 = ⊤ :=
@@ -408,6 +414,12 @@ theorem leastNotSplit_of_le_one {x : Nimber} (h : x ≤ 1) : leastNotSplit x = �
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
+
+theorem IsAlgClosed.root_lt {x r : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
+  apply h.toIsField.root_lt _ hpk hr
+  rw [h.leastNotSplit_eq_top]
+  exact WithTop.coe_lt_top p
 
 /-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
 then `x` is the root of some polynomial with coefficients `< x`. -/
@@ -534,6 +546,14 @@ private theorem iterate_algClosureSet_mono {x : Nimber} :
   refine Monotone.monotone_iterate_of_le_map (fun y z h ↦ ?_) (le_sSup_algClosureSet x)
   exact csSup_le_csSup' (bddAbove_of_small _) (image_mono (algClosureSet_mono h))
 
+private theorem IsAlgClosed.algClosureSet_subset {x y : Nimber} (h : IsAlgClosed x) (hy : y ≤ x) :
+    algClosureSet y ⊆ Iio x := by
+  rintro z ((⟨a, ha, b, hb, rfl⟩ | ⟨a, ha, b, hb, rfl⟩) | ⟨_, ⟨⟨⟨p, hpk⟩, rfl⟩, hp⟩⟩)
+  · exact h.add_lt (ha.trans_le hy) (hb.trans_le hy)
+  · exact h.mul_lt (ha.trans_le hy) (hb.trans_le hy)
+  · apply h.root_lt (fun k ↦ (hpk k).trans_le hy)
+    simpa using hp
+
 /-- The algebraic closure of a nimber is the smallest nimber which all sums, products, and all roots
 of all polynomials with coefficients less than `x`.
 
@@ -623,5 +643,29 @@ instance : _root_.IsAlgClosed Nimber := by
   have hp' := (IsField.algClosure x).isRoot_leastNotSplit (ht ▸ WithTop.coe_ne_top)
   simp_rw [ht, WithTop.untop_coe] at hp'
   exact hr _ hp'
+
+protected theorem IsAlgClosed.algClosure (x : Nimber) : IsAlgClosed (algClosure x) where
+  exists_root' p hp₀ hpk := by
+    obtain ⟨r, hr⟩ := _root_.IsAlgClosed.exists_root p hp₀.ne'
+    exact ⟨r, algClosure.root_lt (by aesop) hpk hr, hr⟩
+  __ := IsField.algClosure x
+
+/-- There is a proper class of nimbers that are algebraically closed (even though we only know the
+first three members!) -/
+theorem not_bddAbove_setOf_isAlgClosed : ¬ BddAbove {x | IsAlgClosed x} :=
+  fun ⟨x, hx⟩ ↦ (lt_succ x).not_ge <|
+    (le_algClosure _).trans (hx (IsAlgClosed.algClosure <| succ x))
+
+theorem IsAlgClosed.algClosure_le {x y : Nimber} (h : IsAlgClosed x) (hy : y ≤ x) :
+    algClosure y ≤ x := by
+  rw [algClosure, iSup_le_iff]
+  intro n
+  induction n with
+  | zero => simpa
+  | succ n IH =>
+    rw [Function.iterate_succ_apply', ← sSup_succ x]
+    exact csSup_le_csSup' (bddAbove_of_small _) (image_mono (h.algClosureSet_subset IH))
+
+proof_wanted IsAlgClosed.tau : IsAlgClosed (∗ ω ^ ω ^ ω)
 
 end Nimber

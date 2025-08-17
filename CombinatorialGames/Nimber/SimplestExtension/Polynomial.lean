@@ -800,7 +800,7 @@ theorem leastNotSplit_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
   rw [leastNotSplit, sInf_le_iff]
   aesop
 
-theorem has_root_of_lt_leastNotSplit {x : Nimber} {p : Nimber[X]}
+theorem exists_root_of_lt_leastNotSplit {x : Nimber} {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpk : ∀ k, p.coeff k < x) (hpn : p < leastNotSplit x) :
     ∃ r < x, p.IsRoot r := by
   obtain hp | hp₀ := le_or_gt p.degree 0
@@ -808,11 +808,11 @@ theorem has_root_of_lt_leastNotSplit {x : Nimber} {p : Nimber[X]}
   contrapose! hpn
   exact leastNotSplit_le_of_not_isRoot hp₀ hpk hpn
 
-theorem IsField.has_root_subfield {x : Nimber} (h : IsField x)
+theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     (hx₁ : 1 < x) {p : (h.toSubfield hx₁)[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNotSplit x) : ∃ r, p.IsRoot r := by
   have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
-  obtain ⟨r, hr, hr'⟩ := has_root_of_lt_leastNotSplit (hd ▸ hp₀) (by simp) hpn
+  obtain ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNotSplit (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
 theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
@@ -822,7 +822,7 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
   · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
   induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
   subst hp
-  obtain ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
+  obtain ⟨r, hr⟩ := h.exists_root_subfield hx₁ hp₀.ne' hpn
   rw [← hr.mul_div_eq]
   apply splits_mul _ (splits_X_sub_C _)
   obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
