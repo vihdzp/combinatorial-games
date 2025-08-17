@@ -20,10 +20,6 @@ import Mathlib.Tactic.ComputeDegree
 This file contains multiple auxiliary results and definitions for working with nimber polynomials:
 
 - `IsField.embed`: embeds a polynomial `p : Nimber[X]` into the subfield `Iio x`, for `IsField x`.
-- `Lex.instLinearOrderPolynomial`: a linear order instance on nimber polynomials, defined as the
-  lexicographic ordering.
-- `oeval`: evaluate a nimber polynomial using ordinal arithmetic.
-- `leastNotSplit x`: the smallest non-constant polynomial in `x` without roots less than `x`.
 -/
 
 universe u
