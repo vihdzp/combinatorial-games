@@ -4,8 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Mathlib.WithTop
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Splits
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.Data.Multiset.Fintype
 import Mathlib.SetTheory.Ordinal.Principal
 import Mathlib.Tactic.ComputeDegree
 
@@ -16,19 +21,18 @@ We say that a nimber `x` is a group when the lower set `Iio x` is closed under a
 we say that `x` is a ring when `Iio x` is closed under addition and multiplication, and we say that
 `x` is a field when it's closed under addition, multiplication, and division.
 
-This file aims to prove the four parts of the simplest extension theorem:
+The simplest extension theorem states:
 
 - If `x` is not a group, then `x` can be written as `y + z` for some `y, z < x`.
 - If `x` is a group but not a ring, then `x` can be written as `y * z` for some `y, z < x`.
 - If `x` is a ring but not a field, then `x` can be written as `y⁻¹` for some `y < x`.
-- If `x` is a field that isn't algebraically complete, then `x` is the root of some polynomial with
+- If `x` is a field that isn't algebraically closed, then `x` is the root of some polynomial with
   coefficients `< x`.
 
+This file proves the first 3/4 parts of the theorem. The last part is in
+`CombinatorialGames.Nimber.Simplicity.Polynomial`.
+
 The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
-
-## Todo
-
-We are currently at 3/4.
 -/
 
 open Ordinal Polynomial Set
@@ -168,22 +172,6 @@ protected theorem Principal.iSup {op : Ordinal → Ordinal → Ordinal} {ι} {f 
   simpa
 
 end Ordinal
-
-/-! #### Polynomial lemmas -/
-
-namespace Polynomial
-
-variable {R : Type*} [Semiring R] {p : R[X]}
-
-@[simp]
-theorem coeffs_nonempty_iff : p.coeffs.Nonempty ↔ p ≠ 0 := by
-  simp [Finset.nonempty_iff_ne_empty]
-
-theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
-  rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
-    WithBot.lt_coe_bot, p.degree_eq_bot]
-
-end Polynomial
 
 theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
     a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
