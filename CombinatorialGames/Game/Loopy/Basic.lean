@@ -84,7 +84,13 @@ export Player (left right)
 instance : DecidableEq LGame := Classical.decEq _
 
 /-- The set of moves of the game. -/
-def moves (x : LGame.{u}) (p : Player) : Set LGame.{u} := x.dest.1 p
+def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
+
+/-- The set of left moves of the game. -/
+scoped postfix:max "ᴸ" => moves left
+
+/-- The set of right moves of the game. -/
+scoped postfix:max "ᴿ" => moves right
 
 /-- The set of left moves of the game. -/
 abbrev leftMoves (x : LGame.{u}) : Set LGame.{u} := x.moves left

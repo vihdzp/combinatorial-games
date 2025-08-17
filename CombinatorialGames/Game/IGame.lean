@@ -124,7 +124,13 @@ def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
 recommended_spelling "ofSets" for "{· | ·}ᴵ" in [«term{_|_}ᴵ»]
 
 /-- The set of moves of the game. -/
-def moves (x : IGame.{u}) (p : Player) : Set IGame.{u} := x.dest.1 p
+def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
+
+/-- The set of left moves of the game. -/
+scoped postfix:max "ᴸ" => moves left
+
+/-- The set of right moves of the game. -/
+scoped postfix:max "ᴿ" => moves right
 
 /-- The set of left moves of the game. -/
 abbrev leftMoves (x : IGame.{u}) : Set IGame.{u} := x.moves left
@@ -135,8 +141,8 @@ abbrev rightMoves (x : IGame.{u}) : Set IGame.{u} := x.moves right
 instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 @[simp, game_cmp]
-theorem moves_mk (st : Player → Set _) [Small.{u} (st left)] [Small.{u} (st right)] :
-    (mk st).moves = st := by
+theorem moves_mk (p) (st : Player → Set _) [Small.{u} (st left)] [Small.{u} (st right)] :
+    (mk st).moves p = st p := by
   ext; rw [moves, mk, QPF.Fix.dest_mk]
 
 @[simp]
