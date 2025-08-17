@@ -10,8 +10,8 @@ import Mathlib.Tactic.ComputeDegree
 # Nimbers are algebraically closed
 
 This file aims to prove the last part of the simplest extension theorem (see
-`CombinatorialGames.Nimber.SimplestExtension.Basic`), and to deduce, as a corollary, that the nimbers are
-algebraically closed.
+`CombinatorialGames.Nimber.SimplestExtension.Basic`), and to deduce, as a corollary, that the
+nimbers are algebraically closed.
 -/
 
 open Polynomial
@@ -27,32 +27,34 @@ nimbers with degree less or equal to `n` and coefficients less than `x` has a ro
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
-`IsNthDegreeClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
+`IsNthDegreeClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0`
+as well. -/
 @[mk_iff]
 structure IsNthDegreeClosed (n : ℕ) (x : Nimber) extends IsRing x where
-  has_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
+  exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
     ∃ r < x, p.IsRoot r
 
-theorem IsNthDegreeClosed.has_root {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
+theorem IsNthDegreeClosed.exists_root {n : ℕ} {x : Nimber}
+    (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r := by
   obtain rfl | hp₀ := eq_or_ne p 0
   · aesop
-  · apply h.has_root' _ hpn hp
+  · apply h.exists_root' _ hpn hp
     cases _ : p.degree <;> simp_all [Nat.pos_iff_ne_zero]
 
 theorem IsNthDegreeClosed.le {m n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hmn : m ≤ n) :
     IsNthDegreeClosed m x where
-  has_root' _p hp₀ hpm := h.has_root' hp₀ (hpm.trans (mod_cast hmn))
+  exists_root' _p hp₀ hpm := h.exists_root' hp₀ (hpm.trans (mod_cast hmn))
   __ := h.toIsRing
 
 @[simp]
 theorem IsNthDegreeClosed.zero (n : ℕ) : IsNthDegreeClosed n 0 where
-  has_root' := by simp
+  exists_root' := by simp
   __ := IsRing.zero
 
 @[simp]
 theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 where
-  has_root' p hp₀ _ hp := by
+  exists_root' p hp₀ _ hp := by
     suffices p = 0 by simp_all
     ext n
     simpa using hp n
@@ -73,7 +75,7 @@ protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
   have hc' := hc.1
   simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ] at hc'
   obtain ⟨n, hn, rfl⟩ := hc'
-  have := (H _ (hf n).1).has_root' hp₀ hpn fun m ↦ ?_
+  have := (H _ (hf n).1).exists_root' hp₀ hpn fun m ↦ ?_
   · obtain ⟨r, hr, hr'⟩ := this
     exact ⟨r, ⟨_, (hf n).1, hr⟩, hr'⟩
   · obtain hm | hm := le_or_gt m p.natDegree
@@ -92,7 +94,7 @@ degree less or equal to `n`. -/
 theorem IsNthDegreeClosed.ofMonic {n : ℕ} {x : Nimber} (h : IsField x)
     (hp : ∀ p : Nimber[X], p.Monic → 0 < p.degree → p.degree ≤ n → (∀ k, p.coeff k < x) →
       ∃ r < x, p.IsRoot r) : IsNthDegreeClosed n x where
-  has_root' p hp₀ hpn hp' := by
+  exists_root' p hp₀ hpn hp' := by
     have hp₀' : p ≠ 0 := by rintro rfl; simp at hp₀
     have hm : (C p.leadingCoeff⁻¹ * p).Monic := by simp [Monic, hp₀']
     have hd : (C p.leadingCoeff⁻¹ * p).degree = p.degree := by compute_degree!
@@ -113,7 +115,7 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
   · exact IsField.of_le_one hx₁
   · refine ⟨h.toIsRing, fun y hy₀ hy ↦ ?_⟩
     have hp : degree (C y * (X : Nimber[X]) + 1) = 1 := by compute_degree!
-    have ⟨r, hr, hr₀⟩ := h.has_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
+    have ⟨r, hr, hr₀⟩ := h.exists_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
     · convert hr
       apply inv_eq_of_mul_eq_one_right
       rw [← Nimber.add_eq_zero]
@@ -157,14 +159,14 @@ nimbers with coefficients less than `x` has a root that's less than `x`. Note th
 algebraically closed under this definition.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
-`IsAlgClosed.has_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
+`IsAlgClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
-  has_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
+  exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
 
 theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : ℕ) :
     IsNthDegreeClosed n x where
-  has_root' _p hp₀ _ := h.has_root' hp₀
+  exists_root' _p hp₀ _ := h.exists_root' hp₀
   __ := h
 
 theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x :=
@@ -172,11 +174,11 @@ theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x :=
 
 theorem isAlgClosed_iff_forall {x : Nimber} : IsAlgClosed x ↔ ∀ n, IsNthDegreeClosed n x where
   mp := IsAlgClosed.toIsNthDegreeClosed
-  mpr H := ⟨(H 0).toIsRing, fun _p hp₀ ↦ (H _).has_root' hp₀ degree_le_natDegree⟩
+  mpr H := ⟨(H 0).toIsRing, fun _p hp₀ ↦ (H _).exists_root' hp₀ degree_le_natDegree⟩
 
-theorem IsAlgClosed.has_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
+theorem IsAlgClosed.exists_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r :=
-  (h.toIsNthDegreeClosed _).has_root hp₀ degree_le_natDegree hp
+  (h.toIsNthDegreeClosed _).exists_root hp₀ degree_le_natDegree hp
 
 @[simp]
 theorem IsAlgClosed.zero : IsAlgClosed 0 := by
