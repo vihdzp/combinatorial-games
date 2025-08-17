@@ -666,6 +666,6 @@ theorem IsAlgClosed.algClosure_le {x y : Nimber} (h : IsAlgClosed x) (hy : y ≤
     rw [Function.iterate_succ_apply', ← sSup_succ x]
     exact csSup_le_csSup' (bddAbove_of_small _) (image_mono (h.algClosureSet_subset IH))
 
-proof_wanted IsAlgClosed.tau : IsAlgClosed (∗ ω ^ ω ^ ω)
+proof_wanted algClosure_two : algClosure (∗2) = ∗ ω ^ ω ^ ω
 
 end Nimber
