@@ -25,13 +25,13 @@ The simplest extension theorem states:
 - If `x` is a field that isn't algebraically closed, then `x` is the root of some polynomial with
   coefficients `< x`.
 
-This file proves the first 3/4 parts of the theorem. The last part is in
+This file proves the first 3/4 parts of the theorem. The last part will be proven in
 `CombinatorialGames.Nimber.Simplicity.Polynomial`.
 
 The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 -/
 
-open Ordinal Polynomial Set
+open Order Ordinal Set
 
 /-! ### Mathlib lemmas -/
 

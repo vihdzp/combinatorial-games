@@ -22,8 +22,6 @@ open Order Polynomial
 
 /-! ### For Mathlib-/
 
-/-! #### Polynomial lemmas -/
-
 namespace Polynomial
 
 variable {R : Type*} [Semiring R] {p : R[X]}
