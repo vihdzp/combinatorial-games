@@ -22,7 +22,7 @@ The simplest extension theorem states:
   coefficients `< x`.
 
 This file proves the first 3/4 parts of the theorem. The last part will be proven in
-`CombinatorialGames.Nimber.Simplicity.Polynomial`.
+`CombinatorialGames.Nimber.Simplicity.Algebraic`.
 
 The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 -/
