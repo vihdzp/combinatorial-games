@@ -30,7 +30,7 @@ The simplest extension theorem states:
   coefficients `< x`.
 
 This file proves the first 3/4 parts of the theorem. The last part is in
-`CombinatorialGames.Nimber.Simplicity.Polynomial`.
+`CombinatorialGames.Nimber.SimplestExtension.Polynomial`.
 
 The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 -/

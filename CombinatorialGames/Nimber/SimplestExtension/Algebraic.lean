@@ -3,13 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
-import CombinatorialGames.Nimber.Simplicity.Polynomial
+import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 
 /-!
 # Nimbers are algebraically closed
 
 This file aims to prove the last part of the simplest extension theorem (see
-`CombinatorialGames.Nimber.Simplicity.Basic`), and to deduce, as a corollary, that the nimbers are
+`CombinatorialGames.Nimber.SimplestExtension.Basic`), and to deduce, as a corollary, that the nimbers are
 algebraically closed.
 -/
 
