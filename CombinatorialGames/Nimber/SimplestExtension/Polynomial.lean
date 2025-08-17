@@ -756,6 +756,18 @@ theorem leastNotSplit_zero : leastNotSplit 0 = ⊤ := by
   simp [leastNotSplit]
 
 @[simp]
+theorem leastNotSplit_one : leastNotSplit 1 = ⊤ := by
+  have (p : Nimber[X]) : p = 0 ↔ (∀ k, p.coeff k = 0) := ext_iff
+  simp_rw [leastNotSplit, lt_one_iff_zero, sInf_eq_top, Set.mem_image, forall_exists_index]
+  intro p hp H
+  rw [Set.mem_setOf_eq, ← this] at H
+  clear this
+  aesop
+
+theorem leastNotSplit_of_le_one {x : Nimber} (h : x ≤ 1) : leastNotSplit x = ⊤ := by
+  cases Nimber.le_one_iff.1 h <;> simp_all
+
+@[simp]
 theorem coeff_leastNotSplit_zero_ne {x : Nimber} (ht) :
     (x.leastNotSplit.untop ht).coeff 0 ≠ 0 := by
   obtain rfl | hx := eq_bot_or_bot_lt x
