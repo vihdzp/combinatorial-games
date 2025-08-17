@@ -5,6 +5,14 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Simplicity.Polynomial
 
+/-!
+# Nimbers are algebraically closed
+
+This file aims to prove the last part of the simplest extension theorem (see
+`CombinatorialGames.Nimber.Simplicity.Basic`), and to deduce, as a corollary, that the nimbers are
+algebraically closed.
+-/
+
 open Order Ordinal Polynomial
 
 -- Why isn't this tagged?
