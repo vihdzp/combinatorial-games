@@ -199,7 +199,7 @@ theorem IsGroup.sum_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) {ι} {s : 
   | empty => simp_all [Nimber.pos_iff_ne_zero]
   | insert a s ha IH =>
     rw [Finset.sum_insert ha]
-    apply h.add_lt <;> aesop
+    apply h.add_lt <;> simp_all
 
 @[simp]
 theorem IsGroup.zero : IsGroup 0 where
