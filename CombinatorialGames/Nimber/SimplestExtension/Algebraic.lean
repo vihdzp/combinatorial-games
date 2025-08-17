@@ -542,13 +542,13 @@ nimbers are algebraically closed. -/
 noncomputable def algClosure (x : Nimber) : Nimber :=
   ⨆ n : ℕ, (fun y ↦ sSup (succ '' algClosureSet y))^[n] x
 
-private theorem bddAbove_range_algClosure {x : Nimber} :
-    BddAbove (range fun n ↦ (fun y ↦ sSup (succ '' algClosureSet y))^[n] x) :=
-  bddAbove_of_small _
+theorem le_algClosure (x : Nimber) : x ≤ algClosure x := by
+  apply le_ciSup_of_le (bddAbove_of_small _) 1
+  simpa using le_sSup_algClosureSet x
 
 private theorem lt_algClosure_iff {x y : Nimber} :
     y < algClosure x ↔ ∃ n, y < (fun y ↦ sSup (succ '' algClosureSet y))^[n] x :=
-  lt_ciSup_iff bddAbove_range_algClosure
+  lt_ciSup_iff (bddAbove_of_small _)
 
 private theorem algClosure.op_lt {x y z : Nimber} {op : Nimber → Nimber → Nimber}
     (hy : y < algClosure x) (hz : z < algClosure x)
@@ -592,10 +592,6 @@ protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
     aesop
   · simp [hy₀]
 
-theorem le_algClosure (x : Nimber) : x ≤ algClosure x := by
-  apply le_ciSup_of_le (bddAbove_of_small _) 1
-  simpa using le_sSup_algClosureSet x
-
 private theorem leastNotSplit_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
     (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
     (hr : ∀ r, ¬ p.IsRoot r) : leastNotSplit (algClosure x) = p := by
@@ -607,13 +603,9 @@ private theorem leastNotSplit_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 <
     intro q hq hq'
     have ht := hq' ▸ WithTop.coe_ne_top
     have hq' : q = x.algClosure.leastNotSplit.untop ht := by simp_rw [← hq', WithTop.untop_coe]
-    have hqd : 0 < q.degree := hq' ▸ degree_leastNotSplit_pos ht
-    obtain ⟨r, hr⟩ := IH q hq hqd
-    apply leastNotSplit_not_root_of_lt ht (r := r)
-    apply algClosure.root_lt (p := q) (by aesop)
-    · exact hq' ▸ coeff_leastNotSplit_lt ht
-    · exact hr
-    · exact hq' ▸ hr
+    obtain ⟨r, hr⟩ := IH q hq (hq' ▸ degree_leastNotSplit_pos ht)
+    exact leastNotSplit_not_root_of_lt ht
+      (algClosure.root_lt (by aesop) (hq' ▸ coeff_leastNotSplit_lt ht) hr) (hq' ▸ hr)
 
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
