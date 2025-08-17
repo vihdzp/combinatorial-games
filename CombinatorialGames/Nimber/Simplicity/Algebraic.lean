@@ -13,6 +13,8 @@ This file aims to prove the last part of the simplest extension theorem (see
 algebraically closed.
 -/
 
+open Polynomial
+
 namespace Nimber
 
 /-! ### n-th degree closed fields -/
@@ -145,7 +147,7 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
   apply IsField.sSup
   simpa
 
-proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗ω)
+proof_wanted IsNthDegreeClosed.omega0 : IsNthDegreeClosed 2 (∗Ordinal.omega0)
 
 /-! ### Algebraically closed fields -/
 

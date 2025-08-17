@@ -35,6 +35,12 @@ open Order Ordinal Set
 
 /-! ### Mathlib lemmas -/
 
+-- TODO: this is a pending Mathlib refactor.
+attribute [-simp] add_one_eq_succ
+attribute [simp] lt_add_one_iff
+
+attribute [simp] principal_zero Ordinal.not_lt_zero
+
 /-! ### Order lemmas -/
 
 -- #27703
@@ -97,8 +103,8 @@ namespace Ordinal
 
 theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
   apply le_antisymm
-  · simpa [← succ_one] using div_opow_log_lt o one_lt_two
-  · simpa [← succ_zero] using div_opow_log_pos 2 ho
+  · simpa [← one_add_one_eq_two] using div_opow_log_lt o one_lt_two
+  · simpa [one_le_iff_ne_zero, pos_iff_ne_zero] using div_opow_log_pos 2 ho
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : 2 ^ log 2 o + o % 2 ^ log 2 o = o := by
   convert div_add_mod .. using 2
@@ -146,8 +152,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
 
 instance : CanonicallyOrderedAdd Ordinal where
   le_self_add := le_add_right
-
-attribute [simp] principal_zero Ordinal.not_lt_zero
 
 protected theorem Principal.sSup {op : Ordinal → Ordinal → Ordinal} {s : Set Ordinal}
     (H : ∀ x ∈ s, Principal op x) : Principal op (sSup s) := by
@@ -456,8 +460,6 @@ theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x
     x * y = val (∗x * ∗y) :=
   hx.mul_eq_of_lt hyx
 
--- One day we'll get rid of this wretched simp lemma.
-attribute [-simp] add_one_eq_succ in
 private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
     x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by
   have hx₁ : 1 < x := lt_of_not_ge <| mt IsField.of_le_one h
