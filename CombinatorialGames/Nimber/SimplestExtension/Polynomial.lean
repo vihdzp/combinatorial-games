@@ -3,7 +3,16 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.Nimber.SimplestExtension.Basic
+import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Splits
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.Data.Multiset.Fintype
+import Mathlib.SetTheory.Ordinal.Principal
+import Mathlib.Tactic.ComputeDegree
 
 /-!
 # Nimber polynomials
