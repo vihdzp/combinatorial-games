@@ -507,7 +507,7 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
   have hx₀ : x ≠ 0 := hx₁.ne_bot
   let s := {z | x ≤ z⁻¹}
   simp_rw [isField_iff, h', true_and, not_forall, not_lt] at h
-  obtain ⟨a, _, ha, hxa⟩ := h
+  obtain ⟨a, -, ha, hxa⟩ := h
   have hsx : sInf s < x := (csInf_le' (s := s) hxa).trans_lt ha
   have hxs : x ≤ (sInf s)⁻¹ := csInf_mem (s := s) ⟨a, hxa⟩
   obtain ⟨y, hys, hy, hsy⟩ := exists_isGroup_add_lt (x := sInf s) fun _ ↦ by simp_all
