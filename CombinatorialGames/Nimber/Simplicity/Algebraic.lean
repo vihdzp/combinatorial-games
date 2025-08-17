@@ -1,4 +1,17 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
 import CombinatorialGames.Nimber.Simplicity.Basic
+
+/-!
+# Nimbers are algebraically closed
+
+This file aims to prove the last part of the simplest extension theorem (see
+`CombinatorialGames.Nimber.Simplicity.Basic`), and to deduce, as a corollary, that the nimbers are
+algebraically closed.
+-/
 
 namespace Nimber
 
