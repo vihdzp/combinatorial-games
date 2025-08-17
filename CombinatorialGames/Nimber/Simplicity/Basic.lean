@@ -4,10 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
-import CombinatorialGames.Mathlib.WithTop
-import Mathlib.Algebra.Field.Subfield.Defs
-import Mathlib.Data.Finsupp.WellFounded
-import Mathlib.Data.Multiset.Fintype
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
