@@ -5,6 +5,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Neg
+import CombinatorialGames.Mathlib.Pointwise
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
 import Mathlib.Algebra.Ring.Defs
