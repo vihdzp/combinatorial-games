@@ -29,9 +29,9 @@ import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
-import CombinatorialGames.Nimber.SimplestExtensionAlgebraic
-import CombinatorialGames.Nimber.SimplestExtensionBasic
-import CombinatorialGames.Nimber.SimplestExtensionPolynomial
+import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+import CombinatorialGames.Nimber.SimplestExtension.Basic
+import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut
