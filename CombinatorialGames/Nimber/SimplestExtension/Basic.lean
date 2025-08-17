@@ -4,7 +4,15 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Mathlib.WithTop
+import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Splits
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.Data.Multiset.Fintype
 import Mathlib.SetTheory.Ordinal.Principal
+import Mathlib.Tactic.ComputeDegree
 
 /-!
 # Simplest extension theorems
@@ -115,7 +123,7 @@ theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_left_strictMono hr).trans_le
   simp_rw [← mul_succ]
-  exact mul_le_mul_left' (Order.succ_le_iff.mpr hq) _
+  exact mul_le_mul_left' (succ_le_iff.mpr hq) _
 
 theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
     (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
@@ -128,10 +136,10 @@ theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
   aesop
 
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
-  apply lt_of_lt_of_le (b := a * (Order.succ b))
+  apply lt_of_lt_of_le (b := a * (succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
   · apply mul_le_mul_left'
-    rwa [Order.succ_le_iff]
+    rwa [succ_le_iff]
 
 -- TODO: come up with a better name, probably rename `log_eq_zero` while we're at it.
 theorem log_eq_zero' {b x : Ordinal} (hb : b ≤ 1) : log b x = 0 := by
@@ -200,6 +208,17 @@ theorem IsGroup.sum_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) {ι} {s : 
   | insert a s ha IH =>
     rw [Finset.sum_insert ha]
     apply h.add_lt <;> simp_all
+
+/-- `Iio x` as a subgroup of `Nimber`. -/
+def IsGroup.toAddSubgroup {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) : AddSubgroup Nimber where
+  carrier := Iio x
+  zero_mem' := Nimber.pos_iff_ne_zero.2 hx₀
+  add_mem' := @h.add_lt
+  neg_mem' := id
+
+@[simp]
+theorem val_toAddSubgroup_lt {x : Nimber} (h : IsGroup x) (hx₀ : x ≠ 0) (y : h.toAddSubgroup hx₀) :
+    y < x := y.2
 
 @[simp]
 theorem IsGroup.zero : IsGroup 0 where
@@ -379,6 +398,16 @@ theorem IsRing.pow_lt {x y : Nimber} (h : IsRing x) {n : ℕ} (hx : 1 < x) (hy :
   · simpa
   · exact h.pow_lt' hn hy
 
+/-- `Iio x` as a subring of `Nimber`. -/
+def IsRing.toSubring {x : Nimber} (h : IsRing x) (hx₁ : 1 < x) : Subring Nimber where
+  one_mem' := hx₁
+  mul_mem' := @h.mul_lt
+  __ := h.toAddSubgroup (by aesop)
+
+@[simp]
+theorem val_toSubring_lt {x : Nimber} (h : IsRing x) (hx₁ : 1 < x) (y : h.toSubring hx₁) :
+    y < x := y.2
+
 @[simp]
 theorem IsRing.zero : IsRing 0 where
   mul_lt := by simp
@@ -479,6 +508,15 @@ theorem IsField.inv_lt {x y : Nimber} (h : IsField x) (hy : y < x) : y⁻¹ < x 
 
 theorem IsField.div_lt {x y z : Nimber} (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
+
+/-- `Iio x` as a subring of `Nimber`. -/
+def IsField.toSubfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x) : Subfield Nimber where
+  inv_mem' := @h.inv_lt
+  __ := h.toSubring hx₁
+
+@[simp]
+theorem val_toSubfield_lt {x : Nimber} (h : IsField x) (hx₁ : 1 < x) (y : h.toSubfield hx₁) :
+    y < x := y.2
 
 @[simp]
 theorem IsField.zero : IsField 0 where
