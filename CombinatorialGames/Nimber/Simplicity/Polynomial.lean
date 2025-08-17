@@ -584,23 +584,80 @@ theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
     simpa using H'
   mpr := oeval_lt_opow hpk
 
-theorem oeval_split {x : Nimber} {p q : Nimber[X]} {n : ℕ}
-    (hp : ∀ k < n, p.coeff k = 0) (hq : ∀ k, n ≤ k → q.coeff k = 0) :
-    oeval x (p + q) = oeval x p + oeval x q := by
-  induction n generalizing p q with
-  | zero =>
-    obtain rfl : q = 0 := by ext; simp_all
-    simp
-  | succ n IH => sorry
-
-theorem oeval_split' {x : Nimber} {p q : Nimber[X]} {n : ℕ}
-    (hp : ∀ k ≤ n, p.coeff k = 0) (hq : ∀ k, n < k → q.coeff k = 0) :
-    oeval x (p + q) = oeval x p + oeval x q :=
-  oeval_split (n := n + 1) (by simpa) hq
-
 theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
-  sorry
+  rw [Nimber.Lex.lt_def] at h
+  obtain ⟨n, hnl, hnr⟩ := h
+  have hx : 0 < x := (zero_le (p.coeff 0)).trans_lt (hpk 0)
+  induction hk : p.natDegree - n using Nat.caseStrongRecOn generalizing p q with
+  | zero =>
+    rw [Nat.sub_eq_zero_iff_le] at hk
+    apply (mul_coeff_le_oeval x q n).trans_lt'
+    have hpn : (erase n p).degree < n := by
+      apply lt_of_le_of_ne ((p.degree_erase_le n).trans
+        (degree_le_natDegree.trans (WithBot.coe_mono hk)))
+      intro hdd
+      exact coeff_ne_zero_of_eq_degree hdd (erase_same p n)
+    rw [← p.monomial_add_erase n, ← C_mul_X_pow_eq_monomial]
+    rw [oeval_C_mul_X_pow_add hpn, of.lt_iff_lt]
+    have hpe (k : Nat) : (p.erase n).coeff k < x := by
+      rw [p.coeff_erase]
+      split <;> simp [hpk, hx]
+    apply (add_lt_add_left (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
+    rw [← mul_add_one]
+    apply mul_le_mul_left'
+    rwa [add_one_le_iff, val.lt_iff_lt]
+  | ind k ih =>
+    have hp0 : p ≠ 0 := by rintro rfl; simp at hk
+    have hq0 : q ≠ 0 := by rintro rfl; simp at hnr
+    have hqd : n ≤ q.natDegree := by
+      by_contra! hn
+      apply coeff_eq_zero_of_natDegree_lt at hn
+      simp [hn] at hnr
+    have hpqd : p.natDegree ≤ q.natDegree := by
+      rw [Polynomial.natDegree_le_iff_coeff_eq_zero]
+      intro N hN
+      exact (hnl N (hqd.trans_lt hN)).trans (coeff_eq_zero_of_natDegree_lt hN)
+    replace hqd : n < q.natDegree := by
+      apply lt_of_le_of_ne hqd
+      rintro rfl
+      simp [hpqd] at hk
+    replace hpqd : p.natDegree = q.natDegree := by
+      apply Polynomial.natDegree_eq_of_le_of_coeff_ne_zero hpqd
+      rw [hnl _ hqd]
+      simp [hq0]
+    rw [← p.eraseLead_add_C_mul_X_pow, add_comm p.eraseLead,
+      ← q.eraseLead_add_C_mul_X_pow, add_comm q.eraseLead]
+    rw [oeval_C_mul_X_pow_add ((degree_eraseLead_lt hp0).trans_le degree_le_natDegree),
+      oeval_C_mul_X_pow_add ((degree_eraseLead_lt hq0).trans_le degree_le_natDegree)]
+    rw [hpqd, ← coeff_natDegree, hpqd, (hnl _ hqd), coeff_natDegree, of.lt_iff_lt,
+      add_lt_add_iff_left, val.lt_iff_lt]
+    by_cases hpe : p.eraseLead = 0
+    · rw [hpe, oeval_zero]
+      rw [← eraseLead_coeff_of_ne n (hqd.trans_eq hpqd.symm).ne, hpe, coeff_zero,
+        ← eraseLead_coeff_of_ne n hqd.ne] at hnr
+      have hqe : q.eraseLead ≠ 0 := fun h => by simp [h] at hnr
+      apply (opow_natDegree_le_oeval x hqe).trans_lt'
+      rw [← val_lt_iff, val_zero, ← Ordinal.opow_natCast]
+      apply Ordinal.opow_pos
+      rwa [← of_lt_iff, of_zero]
+    apply ih (p.eraseLead.natDegree - n)
+    · rw [Nat.sub_le_iff_le_add, ← Nat.lt_succ_iff,
+        ← Nat.succ_add, ← hk, Nat.sub_add_cancel (hqd.le.trans_eq hpqd.symm)]
+      exact p.eraseLead_natDegree_lt_or_eraseLead_eq_zero.resolve_right hpe
+    · intro u
+      rw [eraseLead_coeff]
+      split <;> simp [hx, hpk]
+    · intro u
+      rw [eraseLead_coeff]
+      split <;> simp [hx, hqk]
+    · intro u hu
+      rw [eraseLead_coeff, eraseLead_coeff, hpqd]
+      split
+      · rfl
+      · exact hnl u hu
+    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, if_neg hqd.ne, if_neg hqd.ne]
+    · rfl
 
 theorem oeval_le_oeval {x : Nimber} {p q : Nimber[X]} (h : p ≤ q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q := by
