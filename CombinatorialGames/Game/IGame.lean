@@ -1011,10 +1011,10 @@ private theorem one_mul' (x : IGame) : 1 * x = x := by
   aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
-  ext p; cases p
-  all_goals
-    simp only [moves_mul, mem_image, mem_prod, mem_union, Prod.exists]
-    dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
+  ext p
+  simp only [moves_mul, mem_image, mem_prod, mem_union, Prod.exists]
+  cases p; all_goals
+    dsimp
     simp only [and_comm, or_comm]
     rw [exists_comm]
     congr! 4 with b a
