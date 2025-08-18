@@ -38,38 +38,6 @@ theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
   rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
     WithBot.lt_coe_bot, p.degree_eq_bot]
 
-theorem degree_pos_of_mem_roots {R} [CommRing R] [IsDomain R] {p : R[X]} {r} (h : r ∈ p.roots) :
-    0 < p.degree := by
-  by_contra!
-  rw [p.eq_C_of_degree_le_zero this, roots_C] at h
-  cases h
-
-theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
-    (add : ∀ a n q, degree q < .some n → motive q → motive (C a * X ^ n + q)) (p : R[X]) :
-    motive p := by
-  induction hn : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
-  cases n with
-  | bot => simp_all
-  | coe n =>
-    rw [← eraseLead_add_C_mul_X_pow p, add_comm]
-    have hp₀ : p ≠ 0 := by aesop
-    have hpn : p.eraseLead.degree < .some n := hn ▸ degree_eraseLead_lt hp₀
-    apply add _ _ _ ((degree_eraseLead_lt hp₀).trans_eq _) (IH _ hpn _ rfl)
-    rw [hn, natDegree_eq_of_degree_eq_some hn]
-
-theorem eval_X_pow {R} [CommRing R] (x : R) (n : ℕ) : eval x (X ^ n : R[X]) = x ^ n := by simp
-
-theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
-    p - X ^ p.natDegree = p.eraseLead := by
-  rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
-
-@[aesop simp]
-theorem coeff_eraseLead (p : Polynomial R) (k : ℕ) :
-    p.eraseLead.coeff k = if k = p.natDegree then 0 else p.coeff k :=
-  p.coeff_erase ..
-
-alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
-
 end Polynomial
 
 namespace Nimber
