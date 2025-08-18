@@ -137,10 +137,10 @@ theorem birthday_down : birthday ↓ = 2 := by
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   refine eq_of_forall_lt_iff fun y ↦ ?_
-  rw [lt_birthday_iff, lt_birthday_iff, exists_leftMoves_neg, exists_rightMoves_neg, or_comm]
+  rw [lt_birthday_iff, lt_birthday_iff, exists_moves_neg, exists_moves_neg, or_comm]
   congr! 3
   all_goals
-    rw [← and_congr_right]
+    dsimp; rw [and_congr_right]
     intro h
     rw [birthday_neg]
 termination_by x
@@ -169,8 +169,7 @@ theorem neg_toIGame_birthday_le (x : IGame) : -x.birthday.toIGame ≤ x := by
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
   refine eq_of_forall_lt_iff fun o ↦ ?_
-  simp_rw [lt_add_iff, lt_birthday_iff, exists_leftMoves_add, exists_rightMoves_add, or_and_right,
-    exists_or, or_or_or_comm]
+  simp_rw [lt_add_iff, lt_birthday_iff, exists_moves_add, or_and_right, exists_or, or_or_or_comm]
   congr! 2
   all_goals
     constructor
@@ -214,7 +213,7 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
       (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦ {s.1 | s.2}ᴵ)
     refine fun x hx ↦ ⟨((↑) ⁻¹' x.leftMoves, (↑) ⁻¹' x.rightMoves), ?_⟩
     simp_rw [lt_succ_iff, birthday_le_iff] at hx
-    ext <;> simp_all
+    ext p; cases p <;> simp_all
   | isSuccPrelimit o ho ih =>
     convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih
     ext x

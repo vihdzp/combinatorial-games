@@ -303,6 +303,11 @@ noncomputable def ofSets (lr : Player → Set LGame.{u})
 
 @[inherit_doc] notation "{" s " | " t "}ᴸ" => ofSets (Player.cases s t)
 
+theorem ofSets_eq_ofSets_cases (lr : Player → Set LGame.{u})
+    [Small.{u} (lr left)] [Small.{u} (lr right)] :
+    ofSets lr = {lr left | lr right}ᴸ := by
+  congr; ext1 p; cases p <;> rfl
+
 @[simp]
 theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
     [Small.{u} (lr left)] [Small.{u} (lr right)] : (ofSets lr).moves p = lr p := by

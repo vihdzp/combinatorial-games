@@ -168,8 +168,7 @@ theorem ofSets_inj' {st₁ st₂ : Player → Set _}
 
 theorem ofSets_eq_ofSets_cases (st : Player → Set _) [Small (st left)] [Small (st right)] :
     ofSets st = {st left | st right}ᴵ := by
-  rw [← ofSets_leftMoves_rightMoves (ofSets st)]
-  simp [- ofSets_leftMoves_rightMoves]
+  congr; ext1 p; cases p <;> rfl
 
 theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
     {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
@@ -992,11 +991,13 @@ theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b 
     IsOption (mulOption x y a b) (x * y) := by
   aesop
 
+@[game_cmp]
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).moves p, P a) ↔
       (∀ p', ∀ a ∈ x.moves p', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
   aesop
 
+@[game_cmp]
 theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).moves p, P a) ↔
       (∃ p', ∃ a ∈ x.moves p', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by

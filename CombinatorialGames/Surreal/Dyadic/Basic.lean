@@ -290,7 +290,7 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
-  · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
+  · rw [Fits, forall_moves_add, forall_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz

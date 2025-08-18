@@ -131,7 +131,7 @@ private theorem wpow_pos' (x : IGame) [Numeric (ω^ x)] : 0 < ω^ x := by
 
 @[simp]
 theorem wpow_zero : ω^ (0 : IGame) = 1 := by
-  ext <;> simp [leftMoves_wpow, rightMoves_wpow]
+  ext p; cases p <;> simp [leftMoves_wpow, rightMoves_wpow]
 
 namespace Numeric
 
@@ -297,7 +297,8 @@ private theorem wpow_lt_mulOption {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
 theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x * ω^ y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
   simp only [forall_leftMoves_wpow, forall_rightMoves_wpow, forall_and,
-    forall_leftMoves_add, forall_rightMoves_add, forall_leftMoves_mul, forall_rightMoves_mul]
+    forall_moves_add, forall_moves_mul, Player.forall,
+    Player.left_mul, Player.right_mul, Player.neg_left, Player.neg_right]
   repeat any_goals constructor
   on_goal 1 => exact (Numeric.mul_pos (wpow_pos _) (wpow_pos _)).not_ge
   on_goal 7 => simp

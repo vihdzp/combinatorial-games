@@ -241,7 +241,8 @@ private theorem win_loss_iff {x : IGame} :
     ((IsRightWin x ↔ x ⧏ 0) ∧ (IsRightLoss x ↔ 0 ≤ x)) :=
   x.moveRecOn fun x h ↦ by
     rw [isLeftWin_iff_exists, isLeftLoss_iff_forall, isRightWin_iff_exists, isRightLoss_iff_forall,
-      zero_lf, lf_zero, le_zero, zero_le, leftMoves_toLGame, rightMoves_toLGame]
+      zero_lf, lf_zero, le_zero, zero_le, LGame.leftMoves, LGame.rightMoves, moves_toLGame,
+      moves_toLGame]
     simp_rw [Set.forall_mem_image, Set.exists_mem_image]
     constructor <;>
       refine ⟨exists_congr fun y ↦ and_congr_right fun hy ↦ ?_, forall₂_congr fun y hy ↦ ?_⟩
