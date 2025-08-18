@@ -51,12 +51,8 @@ theorem nim_def (o : Nimber) : nim o = {nim '' Iio o | nim '' Iio o}ᴵ :=
   ConcreteGame.toIGame_def o
 
 @[simp]
-theorem leftMoves_nim (o : Nimber) : (nim o).leftMoves = nim '' Iio o :=
-  ConcreteGame.leftMoves_toIGame ..
-
-@[simp]
-theorem rightMoves_nim (o : Nimber) : (nim o).rightMoves = nim '' Iio o :=
-  ConcreteGame.rightMoves_toIGame ..
+theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
+  ConcreteGame.moves_toIGame ..
 
 theorem forall_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
     (∀ x ∈ (nim o).leftMoves, P x) ↔ (∀ a < o, P (nim a)) := by
