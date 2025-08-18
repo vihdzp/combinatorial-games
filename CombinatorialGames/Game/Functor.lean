@@ -48,6 +48,7 @@ deriving DecidableEq
 
 namespace Player
 
+/-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
 abbrev cases {α : Sort*} (l r : α) : Player → α
   | left => l

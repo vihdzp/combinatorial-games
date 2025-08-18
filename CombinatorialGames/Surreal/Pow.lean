@@ -142,14 +142,14 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
     (x < y → ∀ {r : ℝ}, 0 < r → r * ω^ x < ω^ y) ∧ (x ≤ y → ω^ x ≤ ω^ y) := by
   refine ⟨fun hxy r hr ↦ ?_, fun hxy ↦ ?_⟩
   · obtain (⟨z, hz, hxz⟩ | ⟨z, hz, hzy⟩) := lf_iff_exists_le.1 hxy.not_ge
-    · have := Numeric.of_mem_leftMoves hz
-      have := Numeric.of_mem_leftMoves (wpow_mem_leftMoves_wpow hz)
+    · have := Numeric.of_mem_moves hz
+      have := Numeric.of_mem_moves (wpow_mem_leftMoves_wpow hz)
       apply ((Numeric.mul_le_mul_left (mod_cast hr)).2 (wpow_strictMono_aux.2 hxz)).trans_lt
       obtain ⟨n, hn⟩ := exists_nat_gt r
       exact ((Numeric.mul_lt_mul_right (wpow_pos' z)).2 (mod_cast hn)).trans
         (Numeric.leftMove_lt (natCast_mul_wpow_mem_leftMoves_wpow n hz))
-    · have := Numeric.of_mem_rightMoves hz
-      have := Numeric.of_mem_rightMoves (wpow_mem_rightMoves_wpow hz)
+    · have := Numeric.of_mem_moves hz
+      have := Numeric.of_mem_moves (wpow_mem_rightMoves_wpow hz)
       apply (wpow_strictMono_aux.2 hzy).trans_lt'
       rw [← Numeric.lt_div_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm,
         ← (Numeric.mul_congr_left r.toIGame_inv_equiv).lt_congr_right]
@@ -159,12 +159,12 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       simpa
   · rw [le_iff_forall_lf, forall_leftMoves_wpow, forall_rightMoves_wpow]
     refine ⟨⟨zero_lf_wpow _, ?_⟩, ?_⟩ <;> intro r hr z hz
-    · have := Numeric.of_mem_leftMoves hz
-      have := Numeric.of_mem_leftMoves (wpow_mem_leftMoves_wpow hz)
+    · have := Numeric.of_mem_moves hz
+      have := Numeric.of_mem_moves (wpow_mem_leftMoves_wpow hz)
       rw [← (Numeric.mul_congr_left (Real.toIGame_dyadic_equiv r)).le_congr_right]
       exact (wpow_strictMono_aux.1 ((Numeric.leftMove_lt hz).trans_le hxy) (mod_cast hr)).not_ge
-    · have := Numeric.of_mem_rightMoves hz
-      have := Numeric.of_mem_rightMoves (wpow_mem_rightMoves_wpow hz)
+    · have := Numeric.of_mem_moves hz
+      have := Numeric.of_mem_moves (wpow_mem_rightMoves_wpow hz)
       have hr' : 0 < (r : ℝ)⁻¹ := by simpa
       rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
       simpa [← Surreal.mk_lt_mk] using
@@ -173,15 +173,15 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance wpow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
-  rw [numeric_def]
+  rw [numeric_def']
   simp_rw [forall_leftMoves_wpow, forall_rightMoves_wpow]
   refine ⟨⟨fun r hr y hy ↦ ?_, fun r hr y hy s hs z hz ↦ ?_⟩,
     ⟨.zero, fun r hr y hy ↦ ?_⟩, fun r hr y hy ↦ ?_⟩
   all_goals
-    first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+    have := Numeric.of_mem_moves hy
     have := Numeric.wpow y
   · exact Numeric.mul_pos (mod_cast hr) (wpow_pos' y)
-  · have := Numeric.of_mem_rightMoves hz
+  · have := Numeric.of_mem_moves hz
     have := Numeric.wpow z
     rw [← Numeric.div_lt_iff' (mod_cast hs), ← Surreal.mk_lt_mk]
     dsimp
@@ -304,10 +304,10 @@ theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ �
   on_goal 7 => simp
   all_goals
     intro r hr z hz
-    first | have := Numeric.of_mem_leftMoves hz | have := Numeric.of_mem_rightMoves hz
+    have := Numeric.of_mem_moves hz
   any_goals
     intro s hs w hw
-    first | have := Numeric.of_mem_leftMoves hw | have := Numeric.of_mem_rightMoves hw
+    have := Numeric.of_mem_moves hw
   all_goals apply not_le_of_gt
   · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_left, ← (mul_assoc_equiv ..).lt_congr_left,
       Numeric.mul_lt_mul_right (wpow_pos _)]
