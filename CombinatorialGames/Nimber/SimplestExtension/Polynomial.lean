@@ -6,7 +6,6 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Definitions
-import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 
 /-!
