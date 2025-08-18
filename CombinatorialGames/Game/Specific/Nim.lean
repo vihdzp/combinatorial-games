@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Impartial.Basic
+import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 
@@ -25,26 +25,38 @@ universe u
 
 open Nimber Set
 
+namespace ConcreteGame
+
+/-- The game of nim as a `ConcreteGame`. -/
+abbrev nim : ConcreteGame Nimber :=
+  .ofImpartial Iio
+
+instance : IsWellFounded _ nim.IsOption := by
+  rw [ConcreteGame.isOption_ofImpartial]
+  change WellFoundedLT Nimber
+  infer_instance
+
+end ConcreteGame
+
 namespace IGame
 
 /-! ### Nim game -/
 
 /-- The definition of single-heap nim, which can be viewed as a pile of stones where each player can
 take a positive number of stones from it on their turn. -/
-noncomputable def nim (o : Nimber.{u}) : IGame.{u} :=
-  {.range fun (⟨x, _⟩ : Iio o) ↦ nim x | .range fun (⟨x, _⟩ : Iio o) ↦ nim x}ᴵ
-termination_by o
+noncomputable def nim : Nimber.{u} → IGame.{u} :=
+  ConcreteGame.nim.toIGame
 
-theorem nim_def (o : Nimber) : nim o = {nim '' Iio o | nim '' Iio o}ᴵ := by
-  rw [nim]; simp [image_eq_range]
-
-@[simp]
-theorem leftMoves_nim (o : Nimber) : (nim o).leftMoves = nim '' Iio o := by
-  rw [nim_def]; exact leftMoves_ofSets ..
+theorem nim_def (o : Nimber) : nim o = {nim '' Iio o | nim '' Iio o}ᴵ :=
+  ConcreteGame.toIGame_def o
 
 @[simp]
-theorem rightMoves_nim (o : Nimber) : (nim o).rightMoves = nim '' Iio o := by
-  rw [nim_def]; exact rightMoves_ofSets ..
+theorem leftMoves_nim (o : Nimber) : (nim o).leftMoves = nim '' Iio o :=
+  ConcreteGame.leftMoves_toIGame ..
+
+@[simp]
+theorem rightMoves_nim (o : Nimber) : (nim o).rightMoves = nim '' Iio o :=
+  ConcreteGame.rightMoves_toIGame ..
 
 theorem forall_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
     (∀ x ∈ (nim o).leftMoves, P x) ↔ (∀ a < o, P (nim a)) := by
@@ -129,23 +141,11 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
 termination_by o
 
 @[simp, game_cmp]
-theorem neg_nim (o : Nimber) : -nim o = nim o := by
-  rw [nim_def, neg_ofSets]
-  congr!
-  all_goals
-    rw [← image_neg_eq_neg, image_image]
-    congr!
-    rw [neg_nim]
-termination_by o
+theorem neg_nim (o : Nimber) : -nim o = nim o :=
+  ConcreteGame.neg_toIGame_ofImpartial ..
 
-protected instance Impartial.nim (o : Nimber) : Impartial (nim o) := by
-  apply mk (by simp)
-  all_goals
-    intro x hx
-    simp only [leftMoves_nim, rightMoves_nim] at hx
-    obtain ⟨a, ha, rfl⟩ := hx
-    exact .nim a
-termination_by o
+protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
+  ConcreteGame.impartial_toIGame_ofImpartial ..
 
 protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
   rw [dicotic_def]
