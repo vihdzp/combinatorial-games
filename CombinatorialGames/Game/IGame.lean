@@ -106,10 +106,6 @@ def IGame : Type (u + 1) :=
 namespace IGame
 export Player (left right)
 
-/-- Construct an `IGame` from its left and right sets. -/
-def mk (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : IGame.{u} :=
-  QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
-
 /-- Construct an `IGame` from its left and right sets.
 
 This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
@@ -117,14 +113,25 @@ notation, and from the analogous constructors on other game types.
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
-def ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] : IGame.{u} :=
-  mk fun | left => s | right => t
+def ofSets (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : IGame.{u} :=
+  QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
-@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets s t
-recommended_spelling "ofSets" for "{· | ·}ᴵ" in [«term{_|_}ᴵ»]
+@[inherit_doc ofSets]
+notation3 "{" s " | " t "}ᴵ" => ofSets fun | left => s | right => t
+
+-- The automatically generated delaborator does not work in other files for some reason.
+/-- Unexpander for the `{s | t}ᴵ` notation. -/
+@[app_unexpander IGame.ofSets]
+def ofSetsUnexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ fun $p:ident ↦ match $p':ident with | left => $s | right => $t) =>
+      if p == p' then
+        `({$s | $t}ᴵ)
+      else
+        throw ()
+  | _ => throw ()
 
 /-- The set of moves of the game. -/
-def moves (x : IGame.{u}) (p : Player) : Set IGame.{u} := x.dest.1 p
+def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
 
 /-- The set of left moves of the game. -/
 abbrev leftMoves (x : IGame.{u}) : Set IGame.{u} := x.moves left
@@ -135,25 +142,24 @@ abbrev rightMoves (x : IGame.{u}) : Set IGame.{u} := x.moves right
 instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 @[simp, game_cmp]
-theorem moves_mk (st : Player → Set _) [Small.{u} (st left)] [Small.{u} (st right)] :
-    (mk st).moves = st := by
-  ext; rw [moves, mk, QPF.Fix.dest_mk]
+theorem moves_ofSets (p) (st : Player → Set _) [Small.{u} (st left)] [Small.{u} (st right)] :
+    (ofSets st).moves p = st p := by
+  ext; rw [moves, ofSets, QPF.Fix.dest_mk]
 
 @[simp]
-theorem mk_moves (x : IGame) : mk x.moves = x := x.mk_dest
+theorem ofSets_moves (x : IGame) : ofSets x.moves = x := x.mk_dest
 
 @[simp, game_cmp]
 theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
-  rw [leftMoves, ofSets, moves_mk]
+  rw [leftMoves, moves_ofSets]
 
 @[simp, game_cmp]
 theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
-  rw [rightMoves, ofSets, moves_mk]
+  rw [rightMoves, moves_ofSets]
 
 @[simp]
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
-  rw [ofSets]
-  convert x.mk_moves
+  convert x.ofSets_moves
   split <;> rfl
 
 /-- Two `IGame`s are equal when their move sets are.
@@ -284,7 +290,7 @@ macro "igame_wf" : tactic =>
 /-- The game `0 = {∅ | ∅}ᴵ`. -/
 instance : Zero IGame := ⟨{∅ | ∅}ᴵ⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
+theorem zero_def : (0 : IGame) = {∅ | ∅}ᴵ := rfl
 
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
@@ -294,7 +300,7 @@ instance : Inhabited IGame := ⟨0⟩
 /-- The game `1 = {{0} | ∅}ᴵ`. -/
 instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
-theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
+theorem one_def : (1 : IGame) = {{0} | ∅}ᴵ := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..

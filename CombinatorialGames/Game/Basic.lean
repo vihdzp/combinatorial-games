@@ -64,11 +64,22 @@ notation, and from the analogous constructors on other game types.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in `Game` have a canonical representative.  -/
-def ofSets (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] : Game.{u} :=
-  mk {out '' s | out '' t}ᴵ
+def ofSets (st : Player → Set Game.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : Game.{u} :=
+  mk <| .ofSets fun p ↦ out '' (st p)
 
-@[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets s t
-recommended_spelling "ofSets" for "{· | ·}ᴳ" in [«term{_|_}ᴳ»]
+@[inherit_doc ofSets]
+notation3 "{" s " | " t "}ᴳ" => ofSets fun | left => s | right => t
+
+-- The automatically generated delaborator does not work in other files for some reason.
+/-- Unexpander for the `{s | t}ᴳ` notation. -/
+@[app_unexpander Game.ofSets]
+def ofSetsUnexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ fun $p:ident ↦ match $p':ident with | left => $s | right => $t) =>
+      if p == p' then
+        `({$s | $t}ᴳ)
+      else
+        throw ()
+  | _ => throw ()
 
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
@@ -124,8 +135,8 @@ theorem mk_intCast (n : ℤ) : mk n = n := by
 @[simp] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
 @[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
 
-theorem zero_def : 0 = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
-theorem one_def : 1 = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+theorem zero_def : (0 : Game) = {∅ | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
+theorem one_def : (1 : Game) = {{0} | ∅}ᴳ := by apply (mk_ofSets _ _).trans; simp
 
 instance : ZeroLEOneClass Game where
   zero_le_one := zero_le_one (α := IGame)
