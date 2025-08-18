@@ -76,6 +76,10 @@ variable (c) in
 theorem rightMoves_toLGame (a : α) : (c.toLGame a).rightMoves = c.toLGame '' c.rightMoves a :=
   LGame.rightMoves_corec ..
 
+theorem toLGame_def (a : α) : c.toLGame a =
+    {c.toLGame '' c.leftMoves a | c.toLGame '' c.rightMoves a}ᴸ := by
+  ext <;> simp
+
 theorem mem_leftMoves_toLGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
     c.toLGame b ∈ (c.toLGame a).leftMoves := by
   rw [leftMoves_toLGame]
@@ -119,6 +123,10 @@ variable (c) in
 @[simp]
 theorem rightMoves_toIGame (a : α) : (c.toIGame a).rightMoves = c.toIGame '' c.rightMoves a := by
   rw [toIGame, rightMoves_ofSets, image_eq_range]
+
+theorem toIGame_def (a : α) : c.toIGame a =
+    {c.toIGame '' c.leftMoves a | c.toIGame '' c.rightMoves a}ᴵ := by
+  ext <;> simp
 
 theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
     c.toIGame b ∈ (c.toIGame a).leftMoves := by
