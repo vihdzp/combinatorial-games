@@ -138,12 +138,12 @@ theorem moves_ofSets (p) (st : Player → Set _) [Small.{u} (st left)] [Small.{u
 theorem ofSets_moves (x : IGame) : ofSets x.moves = x := x.mk_dest
 
 @[simp, game_cmp]
-theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s := by
-  rw [leftMoves, moves_ofSets]
+theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s :=
+  moves_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t := by
-  rw [rightMoves, moves_ofSets]
+theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t :=
+  moves_ofSets ..
 
 @[simp]
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
