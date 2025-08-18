@@ -47,6 +47,11 @@ inductive Player where
 namespace Player
 
 @[simp]
+abbrev cases {α : Sort*} (l r : α) : Player → α
+  | left => l
+  | right => r
+
+@[simp]
 protected lemma «forall» {p : Player → Prop} :
     (∀ x, p x) ↔ p left ∧ p right :=
   ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ fun | left => hl | right => hr⟩
@@ -57,9 +62,7 @@ protected lemma «exists» {p : Player → Prop} :
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
 instance : Neg Player where
-  neg := fun
-    | left => right
-    | right => left
+  neg := cases right left
 
 @[simp] lemma neg_left : -left = right := rfl
 @[simp] lemma neg_right : -right = left := rfl

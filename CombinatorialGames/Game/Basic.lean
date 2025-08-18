@@ -67,19 +67,13 @@ classes in `Game` have a canonical representative.  -/
 def ofSets (st : Player → Set Game.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : Game.{u} :=
   mk <| .ofSets fun p ↦ out '' (st p)
 
-@[inherit_doc ofSets]
-notation3 "{" s " | " t "}ᴳ" => ofSets fun | left => s | right => t
+@[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets (Player.cases s t)
 
--- The automatically generated delaborator does not work in other files for some reason.
-/-- Unexpander for the `{s | t}ᴳ` notation. -/
-@[app_unexpander Game.ofSets]
-def ofSetsUnexpander : Lean.PrettyPrinter.Unexpander
-  | `($_ fun $p:ident ↦ match $p':ident with | left => $s | right => $t) =>
-      if p == p' then
-        `({$s | $t}ᴳ)
-      else
-        throw ()
-  | _ => throw ()
+theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
+    {s | t}ᴳ = mk {out '' s | out '' t}ᴵ := by
+  rw [ofSets]
+  congr with p
+  cases p <;> rfl
 
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
@@ -151,7 +145,7 @@ theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) 
   rw [← mk_add, add_eq (x * y), mul_eq]
   simp only [leftMoves_add, rightMoves_add, leftMoves_mul, rightMoves_mul, prod_union,
     union_assoc, image_image, image_union, mk_ofSets]
-  congr 1
+  congr! 2
   all_goals
     nth_rewrite 2 [union_left_comm]
     congr
@@ -190,7 +184,7 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   rw [mul_eq, mul_eq x (y * z)]
   simp only [leftMoves_mul, rightMoves_mul, union_prod, prod_union, union_assoc,
     image_image, image_union, mk_ofSets]
-  congr 1
+  congr! 2
   all_goals
     nth_rewrite 2 [union_left_comm]
     nth_rewrite 3 [union_comm]
@@ -208,13 +202,13 @@ decreasing_by igame_wf
 
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ s) : x ⧏ {s | t}ᴳ := by
-  rw [ofSets]
+  rw [ofSets_cases]
   have : x.out ∈ {out '' s | out '' t}ᴵ.leftMoves := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using leftMove_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : {s | t}ᴳ ⧏ x := by
-  rw [ofSets]
+  rw [ofSets_cases]
   have : x.out ∈ {out '' s | out '' t}ᴵ.rightMoves := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_rightMove this
 

@@ -116,19 +116,7 @@ Lean. To perform computations on `IGame` we can instead make use of the `game_cm
 def ofSets (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : IGame.{u} :=
   QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
-@[inherit_doc ofSets]
-notation3 "{" s " | " t "}ᴵ" => ofSets fun | left => s | right => t
-
--- The automatically generated delaborator does not work in other files for some reason.
-/-- Unexpander for the `{s | t}ᴵ` notation. -/
-@[app_unexpander IGame.ofSets]
-def ofSetsUnexpander : Lean.PrettyPrinter.Unexpander
-  | `($_ fun $p:ident ↦ match $p':ident with | left => $s | right => $t) =>
-      if p == p' then
-        `({$s | $t}ᴵ)
-      else
-        throw ()
-  | _ => throw ()
+@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets (Player.cases s t)
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
@@ -159,8 +147,8 @@ theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ
 
 @[simp]
 theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
-  convert x.ofSets_moves
-  split <;> rfl
+  convert x.ofSets_moves with p
+  cases p <;> rfl
 
 /-- Two `IGame`s are equal when their move sets are.
 
@@ -290,7 +278,7 @@ macro "igame_wf" : tactic =>
 /-- The game `0 = {∅ | ∅}ᴵ`. -/
 instance : Zero IGame := ⟨{∅ | ∅}ᴵ⟩
 
-theorem zero_def : (0 : IGame) = {∅ | ∅}ᴵ := rfl
+theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
 
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
@@ -300,7 +288,7 @@ instance : Inhabited IGame := ⟨0⟩
 /-- The game `1 = {{0} | ∅}ᴵ`. -/
 instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
 
-theorem one_def : (1 : IGame) = {{0} | ∅}ᴵ := rfl
+theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
