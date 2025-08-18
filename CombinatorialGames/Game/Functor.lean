@@ -48,6 +48,16 @@ deriving DecidableEq
 
 namespace Player
 
+@[simp]
+abbrev cases {α : Sort*} (l r : α) : Player → α
+  | left => l
+  | right => r
+
+@[simp]
+theorem ofSets_inj {α : Sort*} (l₁ r₁ : α) (l₂ r₂ : α) :
+    cases l₁ r₁ = cases l₂ r₂ ↔ l₁ = l₂ ∧ r₁ = r₂ :=
+  ⟨fun h ↦ ⟨congr($h left), congr($h right)⟩, fun ⟨hl, hr⟩ ↦ hl ▸ hr ▸ rfl⟩
+
 instance : Fintype Player where
   elems := {left, right}
   complete := by aesop
@@ -55,7 +65,7 @@ instance : Fintype Player where
 @[simp]
 protected lemma «forall» {p : Player → Prop} :
     (∀ x, p x) ↔ p left ∧ p right :=
-  ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ Player.rec hl hr⟩
+  ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ fun | left => hl | right => hr⟩
 
 @[simp]
 protected lemma «exists» {p : Player → Prop} :
@@ -63,9 +73,7 @@ protected lemma «exists» {p : Player → Prop} :
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
 instance : Neg Player where
-  neg := fun
-    | left => right
-    | right => left
+  neg := cases right left
 
 @[simp] lemma neg_left : -left = right := rfl
 @[simp] lemma neg_right : -right = left := rfl

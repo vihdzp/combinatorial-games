@@ -455,7 +455,7 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
       (.range fun x : t ↦ have : Numeric x := H.of_mem_rightMoves (by simp); mk x)
       (by have := @H.leftMove_lt_rightMove; aesop) := by
   simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
-  congr <;> aesop
+  congr; aesop
 
 @[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]

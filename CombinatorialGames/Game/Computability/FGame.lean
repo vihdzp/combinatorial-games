@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Tactic.GameCmp
 import CombinatorialGames.Mathlib.Finlift
+import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Quotient
 import Mathlib.Data.Multiset.Sort
