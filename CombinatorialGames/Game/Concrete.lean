@@ -69,6 +69,14 @@ variable (p c) in
 theorem moves_toLGame (a : α) : (c.toLGame a).moves p = c.toLGame '' c.moves p a :=
   LGame.moves_corec ..
 
+theorem toLGame_def' (a : α) : c.toLGame a =
+    .ofSets fun p ↦ c.toLGame '' c.moves p a := by
+  ext p; simp
+
+theorem toLGame_def (a : α) : c.toLGame a =
+    {c.toLGame '' c.moves left a | c.toLGame '' c.moves right a}ᴸ := by
+  ext p; cases p <;> simp
+
 theorem mem_moves_toLGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
     c.toLGame b ∈ (c.toLGame a).moves p := by
   rw [moves_toLGame]
@@ -101,6 +109,14 @@ variable (p c) in
 @[simp]
 theorem moves_toIGame (a : α) : (c.toIGame a).moves p = c.toIGame '' c.moves p a := by
   rw [toIGame, moves_ofSets, image_eq_range]
+
+theorem toIGame_def' (a : α) : c.toIGame a =
+    .ofSets fun p ↦ c.toIGame '' c.moves p a := by
+  ext p; simp
+
+theorem toIGame_def (a : α) : c.toIGame a =
+    {c.toIGame '' c.moves left a | c.toIGame '' c.moves right a}ᴵ := by
+  ext p; cases p <;> simp
 
 theorem mem_moves_toIGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
     c.toIGame b ∈ (c.toIGame a).moves p := by
