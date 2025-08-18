@@ -118,10 +118,10 @@ protected instance neg (x : IGame) [Short x] : Short (-x) := by
   apply mk
   · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
   · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · rw [forall_leftMoves_neg]
+  · rw [forall_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
-  · rw [forall_rightMoves_neg]
+  · rw [forall_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
 termination_by x
@@ -132,21 +132,16 @@ theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
   ⟨fun _ ↦ by simpa using Short.neg (-x), fun _ ↦ Short.neg x⟩
 
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
-  apply mk
+  rw [short_def]
+  intro p
+  constructor
   · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
-  · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
-  · rw [forall_leftMoves_add]
-    constructor
-    all_goals
-      intro z hz
-      have := Short.of_mem_moves hz
-      exact Short.add ..
-  · rw [forall_rightMoves_add]
-    constructor
-    all_goals
-      intro z hz
-      have := Short.of_mem_moves hz
-      exact Short.add ..
+  rw [forall_moves_add]
+  constructor
+  all_goals
+    intro z hz
+    have := Short.of_mem_moves hz
+    exact Short.add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
@@ -165,24 +160,20 @@ protected instance intCast : ∀ n : ℤ, Short n
   | .negSucc n => inferInstanceAs (Short (-(n + 1)))
 
 protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
-  apply mk
+  rw [short_def]
+  intro p
+  constructor
   · simpa [Set.image_union] using
       ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
         (finite_moves _ x).image2 _ (finite_moves _ y)⟩
-  · simpa [Set.image_union] using
-      ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
-        (finite_moves _ x).image2 _ (finite_moves _ y)⟩
-  on_goal 1 => rw [forall_leftMoves_mul]
-  on_goal 2 => rw [forall_rightMoves_mul]
-  all_goals
-  · constructor
-    all_goals
-      intro a ha b hb
-      replace ha := Short.of_mem_moves ha
-      replace hb := Short.of_mem_moves hb
-      have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
-      rw [mulOption]
-      infer_instance
+  rw [forall_moves_mul]
+  intro p'
+  intro a ha b hb
+  replace ha := Short.of_mem_moves ha
+  replace hb := Short.of_mem_moves hb
+  have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
+  rw [mulOption]
+  infer_instance
 termination_by (x, y)
 decreasing_by igame_wf
 
