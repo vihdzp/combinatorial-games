@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
