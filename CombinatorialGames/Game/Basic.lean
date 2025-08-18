@@ -75,6 +75,11 @@ theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
   congr with p
   cases p <;> rfl
 
+theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
+    mk (.ofSets st) = ofSets fun p ↦ mk '' st p := by
+  refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
+    simpa using fun a ha ↦ ⟨a, ha, equiv_mk_out a⟩
+
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk {s | t}ᴵ = {mk '' s | mk '' t}ᴳ := by

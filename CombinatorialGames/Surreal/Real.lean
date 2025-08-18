@@ -59,7 +59,7 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
-  apply Numeric.mk' <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
+  apply Numeric.mk <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
   · intro x hx y hy
     dsimp at *
     simpa using hx.trans hy
@@ -347,7 +347,8 @@ private theorem toSurreal_def_aux {x : ℝ} :
 @[simp] theorem toGame_toSurreal (x : ℝ) : x.toSurreal.toGame = x.toGame := rfl
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
-    .ofSets ((↑) '' {q : Dyadic | q < x}) ((↑) '' {q : Dyadic | x < q}) toSurreal_def_aux := by
+    .ofSets (Player.cases ((↑) '' {q : Dyadic | q < x}) ((↑) '' {q : Dyadic | x < q}))
+      toSurreal_def_aux := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
   congr; aesop
 
@@ -481,7 +482,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
       rw [← Numeric.div_lt_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
       simpa
   · intro r hr y hy
-    have := Numeric.of_mem_rightMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_left,
       (Numeric.mulOption_congr₄ hy).le_congr_left]
@@ -489,7 +490,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (s - q) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
-    have := Numeric.of_mem_leftMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_left,
       (Numeric.mulOption_congr₄ hy).le_congr_left]
@@ -497,7 +498,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (s - q) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
-    have := Numeric.of_mem_leftMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_right,
       (Numeric.mulOption_congr₄ hy).le_congr_right]
@@ -505,7 +506,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (q - s) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r hr y hy
-    have := Numeric.of_mem_rightMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_right,
       (Numeric.mulOption_congr₄ hy).le_congr_right]
