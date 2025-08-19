@@ -99,9 +99,10 @@ lemma numeric_option_inv {x : IGame} [Numeric x] (hx : 0 < x)
   all_goals
     intro y hy hyx
     intros
-    first |
-      have := Numeric.of_mem_leftMoves hyx; have := hl _ hyx hy |
-      have := Numeric.of_mem_rightMoves hyx; have := hr _ hyx
+    have := Numeric.of_mem_moves hyx
+    first
+    | have := hl _ hyx hy
+    | have := hr _ hyx
     infer_instance
 
 lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
@@ -111,7 +112,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
   apply invRec hx
   · simp
   all_goals intro y hy hyx a ha h
-  · have := Numeric.of_mem_rightMoves hyx
+  · have := Numeric.of_mem_moves hyx
     have := hr y hyx
     have := (numeric_option_inv hx hl hr).1 a ha
     rw [← IGame.sub_pos, (one_neg_mul_invOption x (hr' y hyx) a).lt_congr_right]
@@ -119,7 +120,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     · rwa [IGame.sub_pos]
     · rw [IGame.sub_pos]
       exact Numeric.lt_rightMove hyx
-  · have := Numeric.of_mem_leftMoves hyx
+  · have := Numeric.of_mem_moves hyx
     have := hl y hyx hy
     have := (numeric_option_inv hx hl hr).2 a ha
     rw [← IGame.sub_pos, (one_neg_mul_invOption x (hl' y hyx hy) a).lt_congr_right]
@@ -127,7 +128,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     · rwa [IGame.sub_neg]
     · rw [IGame.sub_neg]
       exact Numeric.leftMove_lt hyx
-  · have := Numeric.of_mem_leftMoves hyx
+  · have := Numeric.of_mem_moves hyx
     have := hl y hyx hy
     have := (numeric_option_inv hx hl hr).1 a ha
     rw [← IGame.sub_neg, (one_neg_mul_invOption x (hl' y hyx hy) a).lt_congr_left]
@@ -135,7 +136,7 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     · rwa [IGame.sub_pos]
     · rw [IGame.sub_neg]
       exact Numeric.leftMove_lt hyx
-  · have := Numeric.of_mem_rightMoves hyx
+  · have := Numeric.of_mem_moves hyx
     have := hr y hyx
     have := (numeric_option_inv hx hl hr).2 a ha
     rw [← IGame.sub_neg, (one_neg_mul_invOption x (hr' y hyx) a).lt_congr_left]
@@ -150,7 +151,7 @@ lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
     Numeric x⁻¹ := by
   obtain ⟨Hl, Hr⟩ := mul_inv_option_mem hx hl hr hl' hr'
   obtain ⟨Hl', Hr'⟩ := numeric_option_inv hx hl hr
-  refine Numeric.mk' (fun y hy z hz ↦ ?_) Hl' Hr'
+  refine Numeric.mk (fun y hy z hz ↦ ?_) Hl' Hr'
   have := Hl' y hy
   have := Hr' z hz
   exact (Numeric.mul_lt_mul_left hx).1 <| (Hl y hy).trans (Hr z hz)
@@ -165,7 +166,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
   refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
   all_goals
     intro y hyx a ha
-    first | have := Numeric.of_mem_leftMoves hyx | have := Numeric.of_mem_rightMoves hyx
+    have := Numeric.of_mem_moves hyx
     first | have := Hl a ha | have := Hr a ha
     try (have := hr y hyx; have hy := hx.trans (Numeric.lt_rightMove hyx))
   · obtain hy | hy := Numeric.lt_or_ge 0 y
@@ -209,9 +210,9 @@ lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
 
 theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻¹ ≈ 1 := by
   have IHl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
-    fun y hy hy' ↦ have := Numeric.of_mem_leftMoves hy; main hy'
+    fun y hy hy' ↦ have := Numeric.of_mem_moves hy; main hy'
   have IHr : ∀ y ∈ x.rightMoves, Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
-    fun y hy ↦ have := Numeric.of_mem_rightMoves hy; main (hx.trans (Numeric.lt_rightMove hy))
+    fun y hy ↦ have := Numeric.of_mem_moves hy; main (hx.trans (Numeric.lt_rightMove hy))
   have hl := fun y hy hy' ↦ (IHl y hy hy').1
   have hr := fun y hy ↦ (IHr y hy).1
   have hl' := fun y hy hy' ↦ (IHl y hy hy').2
@@ -417,7 +418,7 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
       simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
       rintro _ hn rfl x hx q hq
       use (1 + -q) / n
-      first | have := Numeric.of_mem_leftMoves hx | have := Numeric.of_mem_rightMoves hx
+      have := Numeric.of_mem_moves hx
       simp_all [invOption, ← Surreal.mk_eq_mk]
 
 private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
@@ -437,7 +438,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
         obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.1 _ hy |
         obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast.2 _ hy
       use k * (n : ℚ)⁻¹ + m * q - k * q
-      first | have := Numeric.of_mem_leftMoves hy | have := Numeric.of_mem_rightMoves hy
+      have := Numeric.of_mem_moves hy
       simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/

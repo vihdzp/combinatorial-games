@@ -245,8 +245,8 @@ lemma mulOption_lt_of_lt [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d}
 lemma mulOption_lt [Numeric x] [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d}
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hc : c ∈ x.leftMoves) (hd : d ∈ (-y).leftMoves) :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) := by
-  have := Numeric.of_mem_leftMoves ha
-  have := Numeric.of_mem_leftMoves hc
+  have := Numeric.of_mem_moves ha
+  have := Numeric.of_mem_moves hc
   obtain (h | h | h) := Numeric.lt_or_equiv_or_gt a c
   · exact mulOption_lt_of_lt ihxy ihyx h ha hb hc hd
   · refine mulOption_lt_iff_P1.2 (P1_of_equiv h (P24_of_IH1 ihxy ha hc).1
@@ -262,7 +262,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihyx := IH1_swap_of_IH IH
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
-  refine .mk' ?_ ?_ ?_
+  refine .mk ?_ ?_ ?_
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
@@ -445,7 +445,7 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
   refine P3_of_IH3 ?_ ?_ hx
   all_goals
     intro i hi
-    have := Numeric.of_mem_leftMoves hi
+    have := Numeric.of_mem_moves hi
     refine ⟨(main_P24 ..).1, (main_P24 ..).1, P3_comm.2 ?_, fun h ↦ ?_⟩
   · exact ((main_P24 y₁ y₂ x₂).2 hy).1 _ hi
   · exact P3_of_lt_of_lt h hy

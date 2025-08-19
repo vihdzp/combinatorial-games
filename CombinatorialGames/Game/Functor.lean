@@ -46,6 +46,16 @@ inductive Player where
 
 namespace Player
 
+/-- Specify a function `Player → α` from its two outputs. -/
+@[simp]
+abbrev cases {α : Sort*} (l r : α) : Player → α
+  | left => l
+  | right => r
+
+lemma apply_cases {α β : Sort*} (f : α → β) (l r : α) (p : Player) :
+    f (cases l r p) = cases (f l) (f r) p := by
+  cases p <;> rfl
+
 @[simp]
 protected lemma «forall» {p : Player → Prop} :
     (∀ x, p x) ↔ p left ∧ p right :=
@@ -57,9 +67,7 @@ protected lemma «exists» {p : Player → Prop} :
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
 instance : Neg Player where
-  neg := fun
-    | left => right
-    | right => left
+  neg := cases right left
 
 @[simp] lemma neg_left : -left = right := rfl
 @[simp] lemma neg_right : -right = left := rfl
