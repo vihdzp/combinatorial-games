@@ -54,6 +54,10 @@ abbrev cases {α : Sort*} (l r : α) : Player → α
   | left => l
   | right => r
 
+lemma apply_cases {α β : Sort*} (f : α → β) (l r : α) (p : Player) :
+    f (cases l r p) = cases (f l) (f r) p := by
+  cases p <;> rfl
+
 @[simp]
 theorem ofSets_inj {α : Sort*} (l₁ r₁ : α) (l₂ r₂ : α) :
     cases l₁ r₁ = cases l₂ r₂ ↔ l₁ = l₂ ∧ r₁ = r₂ :=
