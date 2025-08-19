@@ -69,7 +69,7 @@ def ofSets (st : Player → Set Game.{u}) [Small.{u} (st left)] [Small.{u} (st r
 
 @[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets (Player.cases s t)
 
-theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
+private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
     {s | t}ᴳ = mk {out '' s | out '' t}ᴵ := by
   rw [ofSets]
   congr with p
@@ -83,8 +83,8 @@ theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk {s | t}ᴵ = {mk '' s | mk '' t}ᴳ := by
-  refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
-    simpa using fun a ha ↦ ⟨a, ha, equiv_mk_out a⟩
+  rw [mk_ofSets']
+  simp_rw [Player.apply_cases]
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
