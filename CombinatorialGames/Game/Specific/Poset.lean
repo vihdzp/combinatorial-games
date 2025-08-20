@@ -107,8 +107,12 @@ noncomputable def toIGame (s : Set α) : IGame :=
   (poset α).toIGame s
 
 @[simp]
-theorem moves_toIGame (p) (s : Set α) : (toIGame s).moves p = toIGame '' {t | Rel t s} :=
-  ConcreteGame.moves_toIGame ..
+theorem leftMoves_toIGame (s : Set α) : (toIGame s).leftMoves = toIGame '' {t | Rel t s} :=
+  ConcreteGame.leftMoves_toIGame ..
+
+@[simp]
+theorem rightMoves_toIGame (s : Set α) : (toIGame s).rightMoves = toIGame '' {t | Rel t s} :=
+  ConcreteGame.rightMoves_toIGame ..
 
 @[simp]
 protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
@@ -125,9 +129,9 @@ a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (@univ α) ‖ 0 := by
   apply IGame.Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (mem_moves_toIGame_of_mem (top_compl_rel_univ))
+    (mem_leftMoves_toIGame_of_mem (top_compl_rel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
-  rw [IGame.leftMoves, ConcreteGame.moves_toIGame, mem_image] at hz ⊢
+  rw [ConcreteGame.leftMoves_toIGame, mem_image] at hz ⊢
   exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end IGame

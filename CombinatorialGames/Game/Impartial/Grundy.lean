@@ -129,7 +129,7 @@ namely the game of nim for the game's Grundy value. -/
 theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
   rw [equiv_iff_forall_fuzzy]
   constructor <;> intro y hy
-  · rw [leftMoves, moves_nim] at hy
+  · rw [leftMoves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
     have := Impartial.of_mem_moves hz

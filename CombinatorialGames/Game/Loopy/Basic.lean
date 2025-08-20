@@ -807,7 +807,6 @@ theorem moves_comp_map
   aesop
 
 variable (p)
-variable
     [∀ x, Small.{u} (movesα left x)] [∀ x, Small.{u} (movesα right x)]
     [∀ x, Small.{u} (movesβ left x)] [∀ x, Small.{u} (movesβ right x)]
 

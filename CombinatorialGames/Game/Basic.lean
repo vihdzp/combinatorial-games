@@ -146,8 +146,7 @@ instance : NeZero (1 : Game) where
 instance : Nontrivial Game := ⟨_, _, zero_ne_one⟩
 instance : CharZero Game := AddMonoidWithOne.toCharZero
 
-theorem mk_mul_add (x y z : IGame) :
-    mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
+theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq' (x * y), mul_eq']
   simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
   dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
@@ -166,16 +165,13 @@ theorem mk_mul_add (x y z : IGame) :
 termination_by (x, y, z)
 decreasing_by igame_wf
 
-theorem mk_mul_sub (x y z : IGame) :
-    mk (x * (y - z)) = mk (x * y) - mk (x * z) := by
+theorem mk_mul_sub (x y z : IGame) : mk (x * (y - z)) = mk (x * y) - mk (x * z) := by
   simpa using mk_mul_add x y (-z)
 
-theorem mk_add_mul (x y z : IGame) :
-    mk ((x + y) * z) = mk (x * z) + mk (y * z) := by
+theorem mk_add_mul (x y z : IGame) : mk ((x + y) * z) = mk (x * z) + mk (y * z) := by
   rw [mul_comm, mk_mul_add, mul_comm, mul_comm z]
 
-theorem mk_sub_mul (x y z : IGame) :
-    mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
+theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
   simpa using mk_add_mul x (-y) z
 
 -- TODO: upstream
