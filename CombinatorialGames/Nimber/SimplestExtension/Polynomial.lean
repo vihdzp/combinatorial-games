@@ -20,7 +20,7 @@ universe u
 
 open Order Polynomial
 
-/-! ### For Mathlib-/
+/-! ### For Mathlib -/
 
 -- TODO: should some of these be global?
 attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
