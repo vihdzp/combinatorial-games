@@ -86,7 +86,7 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
     aesop
   | insert y s hy IH =>
     rw [Finset.prod_insert hy]
-    apply h.coeff_mul_lt <;> aesop
+    apply h.coeff_mul_lt <;> simp_all
 
 /-! ### Embedding in a subfield -/
 
