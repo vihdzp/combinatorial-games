@@ -39,8 +39,14 @@ def toNimber : NatNimber ↪o Nimber where
 @[simp] theorem toNimber_one : toNimber 1 = 1 := by simp [toNimber]
 @[simp] theorem toNimber_of (n : ℕ) : toNimber (of n) = Nimber.of n := rfl
 
+instance : Neg NatNimber where
+  neg n := n
+
 instance : Add NatNimber where
   add m n := of (m.val ^^^ n.val)
+
+instance : Sub NatNimber where
+  sub m n := m + n
 
 @[simp]
 theorem toNimber_add (x y : NatNimber) : toNimber (x + y) = .of x.val + .of y.val :=
