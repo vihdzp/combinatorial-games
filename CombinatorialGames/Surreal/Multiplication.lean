@@ -55,7 +55,7 @@ private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ (-y).leftMoves, P (mulOption (-x) (-y) a b)) := by
-  rw [forall_leftMoves_mul]
+  rw [forall_moves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
@@ -63,7 +63,7 @@ private lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).rightMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ (-y).leftMoves, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ y.leftMoves, P (-mulOption (-x) y a b)) := by
-  rw [forall_rightMoves_mul]
+  rw [forall_moves_mul]
   simp [mulOption_neg_right, mulOption_neg_left]
 
 -- Instead of making all of this private, we put it in an auxiliary namespace.
@@ -225,7 +225,7 @@ lemma P1_of_P3 (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) :
 lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x)
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hd : d ∈ (-y).leftMoves) : P3 a x b (-d) := by
   rw [P3_comm]
-  rw [leftMoves_neg] at hd
+  rw [leftMoves, moves_neg] at hd
   refine ((ihyx (.of_mem_moves hb) (.of_mem_moves hd) <| Or.inl rfl).2 ?_).1 a ha
   exact Numeric.leftMove_lt_rightMove hb hd
 
@@ -272,7 +272,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
     · rw [← neg_neg y] at hd
       simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
   all_goals
-    simp only [leftMoves_mul, rightMoves_mul, mulOption, Set.mem_image, Prod.exists,
+    simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
     all_goals
@@ -418,7 +418,7 @@ lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x
     apply IH3_of_IH
   assumption'
   all_goals
-    apply Numeric.leftMove_lt (mulOption_left_left_mem_leftMoves_mul _ _) <;> assumption
+    exact Numeric.leftMove_lt (mulOption_mem_moves_mul hb ha)
 
 /-- We tie everything together to complete the induction. -/
 theorem main (a : Args) : a.Numeric → P124 a := by
@@ -454,7 +454,7 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
     rw [← P3_neg, neg_neg]
     exact P3_of_lt_of_lt h hy
 termination_by (x₁, x₂)
-decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf
+decreasing_by all_goals (try rw [leftMoves, moves_neg] at *); igame_wf
 
 end Surreal.Multiplication
 

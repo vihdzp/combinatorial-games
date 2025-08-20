@@ -171,7 +171,7 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
     apply @leftMove_lt_rightMove x <;> simp_all
   all_goals
     intro y hy
-    simp only [leftMoves_neg, rightMoves_neg] at hy
+    simp only [moves_neg] at hy
     have := Numeric.of_mem_moves hy
     simpa using Numeric.neg (-y)
 termination_by x
@@ -182,7 +182,7 @@ theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
   ⟨fun _ ↦ by simpa using Numeric.neg (-x), fun _ ↦ Numeric.neg x⟩
 
 protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
-  apply mk <;> simp only [leftMoves_add, rightMoves_add, Set.mem_union, Set.mem_image]
+  apply mk <;> simp only [moves_add, Set.mem_union, Set.mem_image]
   · rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
     any_goals simpa using leftMove_lt_rightMove ha hb
     all_goals
@@ -235,7 +235,7 @@ theorem Fits.refl (x : IGame) : x.Fits x :=
 
 @[simp]
 theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
-  rw [Fits, forall_leftMoves_neg, forall_rightMoves_neg, and_comm]; simp [Fits]
+  rw [Fits, forall_moves_neg, forall_moves_neg, and_comm]; simp [Fits]
 
 alias ⟨_, Fits.neg⟩ := fits_neg_iff
 
@@ -255,7 +255,7 @@ theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.
     (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : y ≤ x := by
   rw [← IGame.neg_le_neg_iff]
   apply hx.neg.le_of_forall_leftMoves_not_fits
-  simpa only [fits_neg_iff, forall_leftMoves_neg]
+  simpa only [fits_neg_iff, forall_moves_neg]
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`. -/

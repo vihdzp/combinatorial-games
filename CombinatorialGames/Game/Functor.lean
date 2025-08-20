@@ -38,11 +38,13 @@ functor.
 universe u
 
 /-- Either the Left or Right player. -/
+@[aesop safe cases]
 inductive Player where
   /-- The Left player. -/
   | left  : Player
   /-- The Right player. -/
   | right : Player
+deriving DecidableEq
 
 namespace Player
 
@@ -55,6 +57,15 @@ abbrev cases {α : Sort*} (l r : α) : Player → α
 lemma apply_cases {α β : Sort*} (f : α → β) (l r : α) (p : Player) :
     f (cases l r p) = cases (f l) (f r) p := by
   cases p <;> rfl
+
+@[simp]
+theorem cases_inj {α : Sort*} {l₁ r₁ l₂ r₂ : α} :
+    cases l₁ r₁ = cases l₂ r₂ ↔ l₁ = l₂ ∧ r₁ = r₂ :=
+  ⟨fun h ↦ ⟨congr($h left), congr($h right)⟩, fun ⟨hl, hr⟩ ↦ hl ▸ hr ▸ rfl⟩
+
+instance : Fintype Player where
+  elems := {left, right}
+  complete := by aesop
 
 @[simp]
 protected lemma «forall» {p : Player → Prop} :
@@ -73,8 +84,12 @@ instance : Neg Player where
 @[simp] lemma neg_right : -right = left := rfl
 
 instance : InvolutiveNeg Player where
-  neg_neg := fun | left | right => rfl
+  neg_neg := by decide
 
+/--
+The multiplication of `Player`s is used to state the lemmas about the multiplication of
+combinatorial games, such as `IGame.mulOption_mem_moves_mul`.
+-/
 instance : Mul Player where
   mul := fun
     | left, p => p
@@ -82,12 +97,25 @@ instance : Mul Player where
 
 @[simp] lemma left_mul (p : Player) : left * p = p := rfl
 @[simp] lemma right_mul (p : Player) : right * p = -p := rfl
-@[simp] lemma mul_left (p : Player) : p * left = p := by cases p <;> rfl
-@[simp] lemma mul_right (p : Player) : p * right = -p := by cases p <;> rfl
+@[simp] lemma mul_left : ∀ p, p * left = p := by decide
+@[simp] lemma mul_right : ∀ p, p * right = -p := by decide
+@[simp] lemma mul_self : ∀ p, p * p = left := by decide
 
 instance : HasDistribNeg Player where
-  neg_mul x y := by cases x <;> cases y <;> rfl
-  mul_neg x y := by cases x <;> cases y <;> rfl
+  neg_mul := by decide
+  mul_neg := by decide
+
+instance : CommGroup Player where
+  one := left
+  inv := id
+  mul_assoc := by decide
+  mul_comm := by decide
+  one_mul := by decide
+  mul_one := by decide
+  inv_mul_cancel := by decide
+
+@[simp] lemma one_eq_left : 1 = left := rfl
+@[simp] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
 end Player
 

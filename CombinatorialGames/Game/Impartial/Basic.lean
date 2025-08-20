@@ -89,8 +89,8 @@ protected instance star : Impartial ⋆ := by
 protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
   apply mk
   · simp
-  on_goal 1 => rw [leftMoves_neg]
-  on_goal 2 => rw [rightMoves_neg]
+  on_goal 1 => rw [leftMoves, moves_neg]
+  on_goal 2 => rw [rightMoves, moves_neg]
   all_goals
   · intro y hy
     try have := Impartial.of_mem_moves hy
@@ -104,8 +104,8 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   apply mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
-  on_goal 1 => rw [leftMoves_add]
-  on_goal 2 => rw [rightMoves_add]
+  on_goal 1 => rw [leftMoves, moves_add]
+  on_goal 2 => rw [rightMoves, moves_add]
   all_goals
   · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
     · try have := Impartial.of_mem_moves hz
@@ -251,7 +251,7 @@ theorem fuzzy_zero_of_forall_exists_moveRight {y} (hy : y ∈ x.rightMoves)
   rw [← neg_fuzzy_zero]
   apply fuzzy_zero_of_forall_exists_moveLeft (x := -x) (y := -y)
   · simpa
-  · simpa only [forall_leftMoves_neg, exists_leftMoves_neg, neg_equiv_neg_iff]
+  · simpa only [forall_moves_neg, exists_moves_neg, neg_equiv_neg_iff]
 
 end Impartial
 end IGame

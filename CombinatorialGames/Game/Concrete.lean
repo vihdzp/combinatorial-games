@@ -44,7 +44,11 @@ structure ConcreteGame (α : Type v) : Type v where
   rightMoves : α → Set α
 
 namespace ConcreteGame
-variable {c : ConcreteGame.{v} α}
+variable {c : ConcreteGame.{v} α} {p : Player}
+
+variable (c p) in
+def moves : α → Set α :=
+  p.cases c.leftMoves c.rightMoves
 
 /-- `IsOption a b` means that `a` is either a left or a right move for `b`. -/
 @[aesop simp]
@@ -64,34 +68,35 @@ instance (a : α) : Small.{u} {b // c.IsOption b a} :=
 variable (c) in
 /-- Turns a state of a `ConcreteLGame` into an `LGame`. -/
 def toLGame (a : α) : LGame.{u} :=
-  .corec c.leftMoves c.rightMoves a
+  .corec (Player.cases c.leftMoves c.rightMoves) a
 
 variable (c) in
 @[simp]
 theorem leftMoves_toLGame (a : α) : (c.toLGame a).leftMoves = c.toLGame '' c.leftMoves a :=
-  LGame.leftMoves_corec ..
+  LGame.moves_corec ..
 
 variable (c) in
 @[simp]
 theorem rightMoves_toLGame (a : α) : (c.toLGame a).rightMoves = c.toLGame '' c.rightMoves a :=
-  LGame.rightMoves_corec ..
+  LGame.moves_corec ..
+
+variable (p c) in
+@[simp]
+theorem moves_toLGame (a : α) : (c.toLGame a).moves p = c.toLGame '' c.moves p a :=
+  LGame.moves_corec ..
 
 theorem toLGame_def (a : α) : c.toLGame a =
     {c.toLGame '' c.leftMoves a | c.toLGame '' c.rightMoves a}ᴸ := by
-  ext <;> simp
+  ext p; cases p <;> simp [moves]
 
-theorem mem_leftMoves_toLGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
-    c.toLGame b ∈ (c.toLGame a).leftMoves := by
-  rw [leftMoves_toLGame]
-  exact ⟨b, hab, rfl⟩
-
-theorem mem_rightMoves_toLGame_of_mem {a b : α} (hab : b ∈ c.rightMoves a) :
-    c.toLGame b ∈ (c.toLGame a).rightMoves := by
-  rw [rightMoves_toLGame]
+theorem mem_moves_toLGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
+    c.toLGame b ∈ (c.toLGame a).moves p := by
+  rw [moves_toLGame]
   exact ⟨b, hab, rfl⟩
 
 theorem neg_toLGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toLGame a = c.toLGame a := by
   simp_rw [toLGame, LGame.neg_corec_apply, h]
+  aesop
 
 /-! ### Well-founded games -/
 
@@ -124,9 +129,14 @@ variable (c) in
 theorem rightMoves_toIGame (a : α) : (c.toIGame a).rightMoves = c.toIGame '' c.rightMoves a := by
   rw [toIGame, rightMoves_ofSets, image_eq_range]
 
+variable (c p) in
+@[simp]
+theorem moves_toIGame (a : α) : (c.toIGame a).moves p = c.toIGame '' c.moves p a := by
+  cases p <;> (rw [toIGame, moves_ofSets, image_eq_range]; rfl)
+
 theorem toIGame_def (a : α) : c.toIGame a =
     {c.toIGame '' c.leftMoves a | c.toIGame '' c.rightMoves a}ᴵ := by
-  ext <;> simp
+  ext p; cases p <;> simp [moves]
 
 theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
     c.toIGame b ∈ (c.toIGame a).leftMoves := by
@@ -142,9 +152,9 @@ variable (c) in
 @[simp]
 theorem toLGame_toIGame (a : α) : (c.toIGame a).toLGame = c.toLGame a := by
   apply c.moveRecOn a fun b IHl IHr ↦ ?_
-  ext x
-  on_goal 1 => set IH := IHl; rw [leftMoves_toLGame, IGame.leftMoves_toLGame, leftMoves_toIGame]
-  on_goal 2 => set IH := IHr; rw [rightMoves_toLGame, IGame.rightMoves_toLGame, rightMoves_toIGame]
+  ext p x; cases p
+  on_goal 1 => set IH := IHl; rw [moves_toLGame, IGame.moves_toLGame, moves_toIGame]
+  on_goal 2 => set IH := IHr; rw [moves_toLGame, IGame.moves_toLGame, moves_toIGame]
   all_goals
     constructor
     · rintro ⟨_, ⟨x, hx, rfl⟩, rfl⟩
@@ -159,7 +169,7 @@ theorem neg_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : -c.toIGame a = c
 theorem impartial_toIGame (h : c.leftMoves = c.rightMoves) (a : α) : Impartial (c.toIGame a) := by
   apply c.moveRecOn a fun b IHl IHr ↦ ?_
   rw [impartial_def', neg_toIGame h]
-  simp_all
+  simp_all [moves]
 
 /-! ### Convenience constructors -/
 
