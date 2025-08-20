@@ -38,7 +38,7 @@ variable {α : Type v}
 You can use `ConcreteGame.toLGame` and `ConcreteGame.toIGame` to turn this structure into the
 appropriate game type. -/
 structure ConcreteGame (α : Type v) : Type v where
-  /-- The set of options for the players. -/
+  /-- The sets of options for the players. -/
   moves : Player → α → Set α
 
 namespace ConcreteGame
