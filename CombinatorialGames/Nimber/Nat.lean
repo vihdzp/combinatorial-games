@@ -52,6 +52,9 @@ instance : Sub NatNimber where
 theorem toNimber_add (x y : NatNimber) : toNimber (x + y) = .of x.val + .of y.val :=
   (Nimber.add_nat ..).symm
 
+@[simp] theorem sub_eq (x y : NatNimber) : x - y = x + y := rfl
+@[simp] theorem neg_eq (x : NatNimber) : -x = x := rfl
+
 /-- Multiplies `x` by `∗2 ^ (2 ^ t - 1)`, whenever `x < ∗2 ^ 2 ^ t`. This is a subroutine needed to
 multiply two general nimbers. This makes use of the formula:
 
