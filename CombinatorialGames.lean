@@ -29,6 +29,7 @@ import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Nimber.Nat
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
