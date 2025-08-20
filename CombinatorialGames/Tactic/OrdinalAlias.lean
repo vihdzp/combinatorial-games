@@ -3,6 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import Mathlib.Data.Nat.Lattice
+import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.SetTheory.Ordinal.Family
 
 /-!
@@ -16,6 +18,8 @@ API between both stays consistent.
 
 open Lean
 
+/-! ### Auxiliary lemmas -/
+
 /-- Doc-comment allowing antiquotation. -/
 def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
   .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
@@ -28,36 +32,50 @@ def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
 def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
 
-/-- Declare a type alias of `Ordinal`, preserving the order structure. -/
-macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
+-- TODO: upstream
+theorem Ordinal.eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+
+-- TODO: upstream
+@[simp]
+theorem Ordinal.natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
+  ext o; have (h : o < n) := Ordinal.eq_natCast_of_le_natCast h.le; aesop
+
+theorem Ordinal.finite_Iio_natCast (n : ℕ) : (Set.Iio (n : Ordinal)).Finite := by
+  rw [← Ordinal.natCast_image_Iio]
+  exact (Set.finite_Iio _).image _
+
+/-! ### Macros -/
+
+/-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
+macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 
 $doc:docComment
 def $Alias : Type _ :=
-  Ordinal deriving Zero, One, Nontrivial, Inhabited, WellFoundedRelation
+  $Source deriving Zero, One, Nontrivial, Inhabited, WellFoundedRelation
 
 namespace $Alias
 universe u
 
-noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
-instance : SuccOrder $Alias := Ordinal.instSuccOrder
-instance : OrderBot $Alias := Ordinal.instOrderBot
-instance : NoMaxOrder $Alias := Ordinal.instNoMaxOrder
-instance : ZeroLEOneClass $Alias := Ordinal.instZeroLEOneClass
-instance : NeZero (1 : $Alias) := Ordinal.instNeZeroOne
-instance : Uncountable $Alias := Ordinal.uncountable
-instance : WellFoundedLT $Alias := Ordinal.wellFoundedLT
+instance : PartialOrder $Alias := inferInstanceAs (PartialOrder $Source)
+instance : SuccOrder $Alias := inferInstanceAs (SuccOrder $Source)
+instance : OrderBot $Alias := inferInstanceAs (OrderBot $Source)
+instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
+instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
+instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
+instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
-  Ordinal.instConditionallyCompleteLinearOrderBot
+  inferInstanceAs (ConditionallyCompleteLinearOrderBot $Source)
 
-theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := Ordinal.lt_wf
+theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
-$(mkDocComment s!" The identity function between `Ordinal` and `{Alias.getId}`."):docComment
+$(mkDocComment s!" The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
 @[match_pattern]
-def $(mkIdent `of) : Ordinal ≃o $Alias := .refl _
+def $(mkIdent `of) : $Source ≃o $Alias := .refl _
 
-$(mkDocComment s!" The identity function between `{Alias.getId}` and `Ordinal`."):docComment
+$(mkDocComment s!" The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
 @[match_pattern]
-def $(mkIdent `val) : $Alias ≃o Ordinal := .refl _
+def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
 @[simp] theorem $(mkIdent `of_symm) : .symm $(mkOf Alias) = $(mkVal Alias) := rfl
 @[simp] theorem $(mkIdent `val_symm) : .symm $(mkVal Alias) = $(mkOf Alias) := rfl
@@ -99,11 +117,13 @@ theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVa
   rfl
 
 @[simp]
-theorem $(mkIdent `succ_of) (a : Ordinal) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
+theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
   rfl
 
-@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Ordinal.succ_ne_zero a
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
+@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
+@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := by
+  change Order.succ (0 : $Source) = 1
+  simp
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -111,24 +131,40 @@ protected def $(mkIdent `ind) {motive : $Alias → Sort*}
     ($(mkIdent `mk) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
   $(mkIdent `mk) ($(mkVal Alias) a)
 
-$(mkDocComment s!" `Ordinal.induction` but for `{Alias.getId}`. "):docComment
+$(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
-  Ordinal.induction
+  WellFoundedLT.induction
 
-@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := Ordinal.zero_le a
-@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := Ordinal.le_zero
-@[simp] theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := Ordinal.not_lt_zero a
-theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := Ordinal.pos_iff_ne_zero
-theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := Ordinal.eq_zero_or_pos a
+@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := bot_le
+@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := le_bot_iff
+@[simp] theorem $(mkIdent `not_lt_zero) (a : $Alias) : ¬ a < 0 := not_lt_bot
+theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
+theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
+
+end $Alias
+)
+
+/-- Declare a type alias of `Ordinal`, preserving the order structure. -/
+macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
+
+alias! $doc $Alias Ordinal
+
+namespace $Alias
+universe u
+
+noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
+instance : Uncountable $Alias := Ordinal.uncountable
 
 @[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
 @[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
 theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
 
--- TODO: upstream to Mathlib for Ordinal
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+  Ordinal.eq_natCast_of_le_natCast h
+
+theorem $(mkIdent `finite_Iio_of_natCast) (n : ℕ) : (Set.Iio ($(mkOf Alias) n)).Finite :=
+  Ordinal.finite_Iio_natCast n
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
