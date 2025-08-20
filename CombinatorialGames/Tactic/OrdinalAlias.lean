@@ -18,7 +18,7 @@ API between both stays consistent.
 
 open Lean
 
-/-! ### Auxiliary lemmas -/
+/-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
 def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
@@ -31,19 +31,6 @@ def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
 /-- `Alias.val` -/
 def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
-
--- TODO: upstream
-theorem Ordinal.eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
-
--- TODO: upstream
-@[simp]
-theorem Ordinal.natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
-  ext o; have (h : o < n) := Ordinal.eq_natCast_of_le_natCast h.le; aesop
-
-theorem Ordinal.finite_Iio_natCast (n : ℕ) : (Set.Iio (n : Ordinal)).Finite := by
-  rw [← Ordinal.natCast_image_Iio]
-  exact (Set.finite_Iio _).image _
 
 /-! ### Macros -/
 
@@ -159,12 +146,10 @@ instance : Uncountable $Alias := Ordinal.uncountable
 @[simp] theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 := Ordinal.one_le_iff_ne_zero
 theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
 
+-- TODO: upstream to Mathlib for Ordinal
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
-  Ordinal.eq_natCast_of_le_natCast h
-
-theorem $(mkIdent `finite_Iio_of_natCast) (n : ℕ) : (Set.Iio ($(mkOf Alias) n)).Finite :=
-  Ordinal.finite_Iio_natCast n
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
