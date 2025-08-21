@@ -453,26 +453,15 @@ def delabFuzzy : Delab := do
     annotateGoToSyntaxDef stx
   catch _ => failure -- fail over to the default delaborator
 
-theorem equiv_of_forall_lf {x y : IGame}
-    (hl₁ : ∀ a ∈ x.leftMoves,  ¬y ≤ a)
-    (hr₁ : ∀ a ∈ x.rightMoves, ¬a ≤ y)
-    (hl₂ : ∀ b ∈ y.leftMoves,  ¬x ≤ b)
-    (hr₂ : ∀ b ∈ y.rightMoves, ¬b ≤ x) : x ≈ y := by
-  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
-
-theorem equiv_of_exists_le {x y : IGame}
-    (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≤ b)
-    (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, b ≤ a)
-    (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  b ≤ a)
-    (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≤ b) : x ≈ y := by
-  apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
-
+/-- The reverse implication is not necessarily true (e.g. `{-1 | 1} ≈ 0`). -/
 theorem equiv_of_exists {x y : IGame}
     (hl₁ : ∀ a ∈ x.leftMoves,  ∃ b ∈ y.leftMoves,  a ≈ b)
     (hr₁ : ∀ a ∈ x.rightMoves, ∃ b ∈ y.rightMoves, a ≈ b)
     (hl₂ : ∀ b ∈ y.leftMoves,  ∃ a ∈ x.leftMoves,  a ≈ b)
     (hr₂ : ∀ b ∈ y.rightMoves, ∃ a ∈ x.rightMoves, a ≈ b) : x ≈ y := by
-  apply equiv_of_exists_le <;> grind [AntisymmRel]
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  simp_rw [lf_iff_exists_le]
+  grind [AntisymmRel]
 
 @[simp]
 protected theorem zero_lt_one : (0 : IGame) < 1 := by
