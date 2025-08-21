@@ -20,6 +20,10 @@ in order to successfully analyse positions we would need some more theorems.
 Most importantly, we need a general statement that allows us to discard irrelevant moves.
 Specifically to domineering, we need the fact that
 disjoint parts of the chessboard give sums of games.
+
+## Todo
+
+Refactor this file to adhere to the design notes specified in `CombinatorialGames.Game.Concrete`.
 -/
 
 namespace IGame
@@ -82,6 +86,8 @@ theorem moveRight_subset (b : Domineering) (m : ℤ × ℤ) :
     ofDomineering (b.moveRight m) ⊆ ofDomineering b :=
   (Finset.erase_subset _ _).trans (Finset.erase_subset _ _)
 
+-- TODO: these should be functions `Domineering → Finset Domineering` rather than relations.
+
 /-- Left can move from `b` to `a` when there exists some `m ∈ left b` with `a = b.moveLeft m`. -/
 def relLeft (a b : Domineering) : Prop :=
   ∃ m ∈ left b, a = b.moveLeft m
@@ -143,14 +149,14 @@ theorem subrelation_relRight :
 instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
 instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
 
-instance : ConcreteGame Domineering where
-  relLeft := relLeft
-  relRight := relRight
-  isWellFounded_rel := by
-    apply @Subrelation.isWellFounded (r := InvImage (· < ·) fun b ↦ (ofDomineering b).card)
-    rintro a b (h | h)
-    · exact subrelation_relLeft h
-    · exact subrelation_relRight h
-
 end Domineering
+
 end IGame
+
+open IGame Domineering
+
+-- TODO: this should probably go much earlier in the file.
+
+/-- The game of domineering. -/
+def ConcreteGame.domineering : ConcreteGame Domineering where
+  moves p x := p.cases {y | relLeft y x} {y | relRight y x}

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Concrete
-import CombinatorialGames.Game.Impartial
+import CombinatorialGames.Game.Impartial.Basic
 import Mathlib.Order.WellQuasiOrder
 
 /-!
@@ -23,59 +23,60 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
-* `PGame.Poset.impartial_toPGame`: poset games are impartial
-* `PGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second player,
-  shown via a strategy stealing argument
+* `ConcreteGame.Poset.impartial_toIGame`: poset games are impartial
+* `ConcreteGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second
+  player, shown via a strategy stealing argument
 -/
 
 variable {α : Type*} [Preorder α]
 
 open Set
 
-section Set
+namespace ConcreteGame.Poset
+
+/-! ### Poset relation -/
 
 /-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
 some `a ∈ t`.
 
 In a WQO, this relation is well-founded. -/
-def posetRel (s t : Set α) : Prop :=
+def Rel (s t : Set α) : Prop :=
   ∃ a ∈ t, s = t \ Ici a
 
 @[inherit_doc]
-local infixl:50 " ≺ " => posetRel
+local infixl:50 " ≺ " => Rel
 
-theorem subrelation_posetRel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
+theorem subrelation_rel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
   rintro x y ⟨a, ha, rfl⟩
   refine ⟨diff_subset, not_subset.2 ⟨a, ha, ?_⟩⟩
   simp
 
-theorem not_posetRel_empty (s : Set α) : ¬ s ≺ ∅ := by
-  simp [posetRel]
+theorem not_rel_empty (s : Set α) : ¬ s ≺ ∅ := by
+  simp [Rel]
 
-theorem posetRel_irrefl (s : Set α) : ¬ s ≺ s :=
-  fun h ↦ ssubset_irrefl s <| subrelation_posetRel h
+theorem rel_irrefl (s : Set α) : ¬ s ≺ s :=
+  fun h ↦ ssubset_irrefl s <| subrelation_rel h
 
 instance : IsIrrefl (Set α) (· ≺ ·) where
-  irrefl := posetRel_irrefl
+  irrefl := rel_irrefl
 
-theorem top_compl_posetRel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
+theorem top_compl_rel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
   use ⊤
   simp [Ici, compl_eq_univ_diff]
 
-theorem posetRel_univ_of_posetRel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {s : Set α}
+theorem rel_univ_of_rel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {s : Set α}
     (h : s ≺ {⊤}ᶜ) : s ≺ univ := by
   obtain ⟨a, _, rfl⟩ := h
   use a, mem_univ _
   rw [compl_eq_univ_diff, diff_diff, union_eq_right.2]
   simp
 
-theorem wellFounded_posetRel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
+theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
   rw [WellFounded.wellFounded_iff_no_descending_seq]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
-  have hf' := hf -- Is there a way to make `choose` not delete my hypothesis?
-  choose g hg using hf
+  choose g hg using id hf
   obtain ⟨m, n, h, h'⟩ := wellQuasiOrdered_le g
-  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_posetRel (hf' n)
+  let f' := @RelEmbedding.natGT _ (· < ·) _ f fun n ↦ subrelation_rel (hf n)
   have : g n ∈ f (m + 1) := by
     obtain rfl | h := h.nat_succ_le.eq_or_lt
     · exact (hg _).1
@@ -83,61 +84,51 @@ theorem wellFounded_posetRel [WellQuasiOrderedLE α] : @WellFounded (Set α) (·
   rw [(hg m).2, mem_diff] at this
   exact this.2 h'
 
-instance isWellFounded_posetRel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
-  ⟨wellFounded_posetRel⟩
+instance isWellFounded_rel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
+  ⟨wellFounded_rel⟩
 
-end Set
+/-! ### Poset game -/
 
-namespace IGame
+-- TODO: add stuff on `LGame`
+
+section IGame
 variable [WellQuasiOrderedLE α]
 
-/-- The set of states in a poset game. This is a type alias for `Set α`. -/
-def Poset (α : Type*) [Preorder α] [WellQuasiOrderedLE α] := Set α
-def toPoset : Set α ≃ Poset α := Equiv.refl _
-def ofPoset : Poset α ≃ Set α := Equiv.refl _
+variable (α) in
+/-- The poset game, played on a poset `α`. -/
+abbrev _root_.ConcreteGame.poset : ConcreteGame (Set α) :=
+  .ofImpartial fun x ↦ {y | Poset.Rel y x}
 
-@[simp] theorem toPoset_ofPoset (a : Poset α) : toPoset (ofPoset a) = a := rfl
-@[simp] theorem ofPoset_toPoset (a : Set α) : ofPoset (toPoset a) = a := rfl
+instance : IsWellFounded _ (poset α).IsOption := by
+  simpa using isWellFounded_rel
 
-namespace Poset
-open ConcreteGame
-
-/-- A valid move in the poset game is to change set `t` to set `s`, whenever `s = t \ Ici a` for
-some `a ∈ t`. -/
-def rel (a b : Poset α) : Prop :=
-  posetRel (ofPoset a) (ofPoset b)
-
-@[inherit_doc]
-local infixl:50 " ≺ " => rel
-
-instance : IsWellFounded (Poset α) rel := isWellFounded_posetRel
-instance : WellFoundedRelation (Poset α) := ⟨rel, isWellFounded_posetRel.wf⟩
-instance : ConcreteGame (Poset α) := .ofImpartial rel
+/-- A state of the poset game on `α`. -/
+noncomputable def toIGame (s : Set α) : IGame :=
+  (poset α).toIGame s
 
 @[simp]
-protected theorem neg_toIGame (a : Poset α) : -toIGame a = toIGame a :=
-  neg_toIGame rfl a
+theorem moves_toIGame (p) (s : Set α) : (toIGame s).moves p = toIGame '' {t | Rel t s} :=
+  ConcreteGame.moves_toIGame ..
 
-protected instance impartial_toIGame (a : Poset α) : (toIGame a).Impartial :=
-  impartial_toIGame rfl a
+@[simp]
+protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
+  neg_toIGame_ofImpartial _ s
 
-/-- The starting position in a poset game. -/
-def univ (α : Type*) [Preorder α] [WellQuasiOrderedLE α] : Poset α :=
-  toPoset Set.univ
+protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
+  impartial_toIGame_ofImpartial _ s
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
 
-/-- Any poset game on a poset with a top element is won by the first player. This is proven by
+/-- Any poset game on a toIGame with a top element is won by the first player. This is proven by
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
-    toIGame (univ α) ‖ 0 := by
-  apply Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (mem_leftMoves_toIGame_of_relLeft (top_compl_posetRel_univ))
+    toIGame (@univ α) ‖ 0 := by
+  apply IGame.Impartial.fuzzy_zero_of_forall_exists_moveLeft
+    (mem_moves_toIGame_of_mem (top_compl_rel_univ))
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
-  rw [leftMoves_toIGame, mem_image] at hz
-  rw [leftMoves_toIGame (univ α), mem_image]
-  exact ⟨hz.choose, posetRel_univ_of_posetRel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
+  rw [IGame.leftMoves, ConcreteGame.moves_toIGame, mem_image] at hz ⊢
+  exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
-end Poset
 end IGame
+end ConcreteGame.Poset

@@ -47,8 +47,8 @@ theorem mk_eq_mk {x y : IGame} : mk x = mk y ↔ x ≈ y := Quotient.eq
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
 @[cases_eliminator]
-theorem ind {P : Game → Prop} (H : ∀ y, P (mk y)) (x : Game) : P x :=
-  Quotient.ind H x
+theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : motive x :=
+  Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
 def out (x : Game) : IGame := Quotient.out x
@@ -60,20 +60,31 @@ theorem equiv_mk_out (x : IGame) : x ≈ (mk x).out := (mk_out_equiv x).symm
 /-- Construct a `Game` from its left and right sets.
 
 This is given notation `{s | t}ᴳ`, where the superscript `G` is to disambiguate from set builder
-notation, and from the analogous constructors on `IGame` and `Surreal`.
+notation, and from the analogous constructors on other game types.
 
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in `Game` have a canonical representative.  -/
-def ofSets (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] : Game.{u} :=
-  mk {out '' s | out '' t}ᴵ
+def ofSets (st : Player → Set Game.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : Game.{u} :=
+  mk <| .ofSets fun p ↦ out '' (st p)
 
-@[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets s t
+@[inherit_doc] notation "{" s " | " t "}ᴳ" => ofSets (Player.cases s t)
+
+private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
+    {s | t}ᴳ = mk {out '' s | out '' t}ᴵ := by
+  rw [ofSets]
+  congr with p
+  cases p <;> rfl
+
+theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
+    mk (.ofSets st) = ofSets fun p ↦ mk '' st p := by
+  refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
+    simpa using fun a ha ↦ ⟨a, ha, equiv_mk_out a⟩
 
 @[simp]
 theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk {s | t}ᴵ = {mk '' s | mk '' t}ᴳ := by
-  refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
-    simpa using fun a ha ↦ ⟨a, ha, equiv_mk_out a⟩
+  rw [mk_ofSets']
+  simp_rw [Player.apply_cases]
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
@@ -83,10 +94,10 @@ instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrizatio
 instance : Inhabited Game := ⟨0⟩
 
 instance : AddCommGroupWithOne Game where
-  zero_add := by rintro ⟨x⟩; change mk (0 + _) = mk _; rw [zero_add]
-  add_zero := by rintro ⟨x⟩; change mk (_ + 0) = mk _; rw [add_zero]
-  add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (_ + _) = mk (_ + _); rw [add_comm]
-  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (_ + _ + _) = mk (_ + (_ + _)); rw [add_assoc]
+  zero_add := by rintro ⟨x⟩; exact congr(mk $(zero_add _))
+  add_zero := by rintro ⟨x⟩; exact congr(mk $(add_zero _))
+  add_comm := by rintro ⟨x⟩ ⟨y⟩; exact congr(mk $(add_comm _ _))
+  add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact congr(mk $(add_assoc _ _ _))
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
   nsmul := nsmulRec
   zsmul := zsmulRec
@@ -107,8 +118,9 @@ theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
   rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
+@[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
@@ -135,21 +147,21 @@ instance : Nontrivial Game := ⟨_, _, zero_ne_one⟩
 instance : CharZero Game := AddMonoidWithOne.toCharZero
 
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
-  rw [← mk_add, add_eq (x * y), mul_eq]
-  simp only [leftMoves_add, rightMoves_add, leftMoves_mul, rightMoves_mul, prod_union,
-    union_assoc, image_image, image_union, mk_ofSets]
-  congr 1
+  rw [← mk_add, add_eq' (x * y), mul_eq']
+  simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
+  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
+  congr! 2
+  ext p
+  nth_rewrite 2 [union_left_comm]
+  congrm _ ∈ ?_ ∪ (?_ ∪ (?_ ∪ ?_))
   all_goals
-    nth_rewrite 2 [union_left_comm]
-    congr
-    all_goals
-      ext
-      simp only [mulOption, mk_sub, mk_add, mem_image, mem_prod, and_assoc, Prod.exists,
-        exists_and_left, exists_exists_and_eq_and]
-      iterate 2 (congr! 2; rw [and_congr_right_iff]; intros)
-      congr! 1
-      rw [mk_mul_add, mk_mul_add, mk_mul_add]
-      abel
+    ext
+    simp only [mulOption, mk_sub, mk_add, mem_image, mem_prod, and_assoc, Prod.exists,
+      exists_and_left, exists_exists_and_eq_and]
+    iterate 2 (congr! 2; rw [and_congr_right_iff]; intros)
+    congr! 1
+    rw [mk_mul_add, mk_mul_add, mk_mul_add]
+    abel
 termination_by (x, y, z)
 decreasing_by igame_wf
 
@@ -172,36 +184,37 @@ theorem _root_.Set.prod_image_right {α β γ : Type*} (f : α → γ) (s : Set 
     t ×ˢ (f '' s) = (fun x ↦ (x.1, f x.2)) '' t ×ˢ s := by
   aesop
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 500000 in
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
-  rw [mul_eq, mul_eq x (y * z)]
-  simp only [leftMoves_mul, rightMoves_mul, union_prod, prod_union, union_assoc,
-    image_image, image_union, mk_ofSets]
-  congr 1
+  rw [mul_eq', mul_eq' x (y * z)]
+  simp only [moves_mul, union_prod, prod_union, union_assoc, image_image, image_union, mk_ofSets']
+  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
+  congr! 2
+  ext
+  nth_rewrite 2 [union_left_comm]
+  nth_rewrite 3 [union_comm]
+  congrm _ ∈ ?_ ∪ (?_ ∪ (?_ ∪ ?_))
   all_goals
-    nth_rewrite 2 [union_left_comm]
-    nth_rewrite 3 [union_comm]
-    congr
-    all_goals
-      simp_rw [prod_image_left, prod_image_right, image_image]
-      ext
-      simp only [mem_image, mem_prod, and_assoc, Prod.exists, exists_and_left]
-      iterate 3 (congr! 2; rw [and_congr_right_iff]; intros)
-      simp only [mulOption, mk_mul_add, mk_add_mul, mk_mul_sub, mk_sub_mul, mk_add, mk_sub]
-      iterate 7 rw [mk_mul_assoc]
-      abel_nf
+    simp_rw [prod_image_left, prod_image_right, image_image]
+    ext
+    simp only [mem_image, mem_prod, and_assoc, Prod.exists, exists_and_left, neg_neg]
+    iterate 3 (congr! 2; rw [and_congr_right_iff]; intros)
+    simp only [mulOption, mk_mul_add, mk_add_mul, mk_mul_sub, mk_sub_mul,
+      mk_add, mk_sub]
+    iterate 7 rw [mk_mul_assoc]
+    abel_nf
 termination_by (x, y, z)
 decreasing_by igame_wf
 
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ s) : x ⧏ {s | t}ᴳ := by
-  rw [ofSets]
+  rw [ofSets_cases]
   have : x.out ∈ {out '' s | out '' t}ᴵ.leftMoves := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using leftMove_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : {s | t}ᴳ ⧏ x := by
-  rw [ofSets]
+  rw [ofSets_cases]
   have : x.out ∈ {out '' s | out '' t}ᴵ.rightMoves := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_rightMove this
 
@@ -255,6 +268,10 @@ theorem natCast_le {m n : ℕ} : (m : IGame) ≤ n ↔ m ≤ n := by
 @[simp, norm_cast]
 theorem natCast_lt {m n : ℕ} : (m : IGame) < n ↔ m < n := by
   simp [← Game.mk_lt_mk]
+
+@[simp]
+theorem natCast_nonneg (n : ℕ) : 0 ≤ (n : IGame) :=
+  natCast_le.2 n.zero_le
 
 theorem natCast_strictMono : StrictMono ((↑) : ℕ → IGame) :=
   fun _ _ h ↦ natCast_lt.2 h

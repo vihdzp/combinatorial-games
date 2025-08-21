@@ -3,7 +3,6 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
-
 import CombinatorialGames.Game.Birthday
 
 /-!
@@ -15,22 +14,12 @@ From the literature, this file provides an explicit (though noncomputable) const
 games through undominating and unreversing games.
 
 ## Todo
+
 - Define (un)reversibility
 -/
 
 universe u
 
-/-! ### For Mathlib -/
-
-theorem _root_.Set.neg_setOf {α : Type*} [InvolutiveNeg α] (p : α → Prop) :
-    -{x | p x} = {x | p (-x)} :=
-  rfl
-
-theorem _root_.Set.image_neg_of_apply_neg {α β : Type*} [InvolutiveNeg α] [InvolutiveNeg β]
-    {s : Set α} {f : α → β} (H : ∀ x ∈ s, f (-x) = -f x) : f '' (-s) = -f '' s := by
-  ext
-  rw [Set.mem_image, ← (Equiv.neg _).exists_congr_right]
-  aesop
 
 namespace IGame
 
@@ -72,25 +61,23 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
-  have H₁ := leftMoves_neg x ▸ Set.image_neg_of_apply_neg fun y _ ↦ undominate_neg y
-  have H₂ := rightMoves_neg x ▸ Set.image_neg_of_apply_neg fun y _ ↦ undominate_neg y
-  rw [undominate_def, undominate_def, neg_ofSets]
-  simp_rw [H₁, H₂, Set.neg_setOf]
-  congr! 3 <;> rw [← (Equiv.neg _).forall_congr_right] <;> simp [IGame.lt_neg, IGame.neg_lt]
+  have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  rw [undominate_def, undominate_def]
+  simp_all [IGame.lt_neg, IGame.neg_lt]
 termination_by x
 decreasing_by igame_wf
 
 private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
   rw [le_def, leftMoves_undominate, rightMoves_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
-  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_leftMoves x).exists_le_maximal hy
-    have := Short.of_mem_leftMoves hz
+  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
+    have := Short.of_mem_moves hz
     have IH := le_undominate z
     refine .inl ⟨_, ⟨⟨Set.mem_image_of_mem _ hz, fun a ha h ↦ ?_⟩, hyz.trans IH⟩⟩
     replace h := IH.trans_lt h
     exact (hz' ha h.le).not_gt h
   · rintro y ⟨⟨z, ⟨hz, rfl⟩⟩, _⟩
-    have := Short.of_mem_rightMoves hz
+    have := Short.of_mem_moves hz
     exact .inr ⟨z, hz, le_undominate z⟩
 termination_by x
 decreasing_by igame_wf

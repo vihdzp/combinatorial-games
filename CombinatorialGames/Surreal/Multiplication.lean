@@ -55,11 +55,7 @@ private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).leftMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ (-y).leftMoves, P (mulOption (-x) (-y) a b)) := by
-  simp_rw [forall_leftMoves_mul, leftMoves_neg]
-  congr! 1
-  rw [← (Equiv.neg _).forall_congr_right]
-  congr! 2
-  rw [← (Equiv.neg _).forall_congr_right]
+  rw [forall_moves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
@@ -67,13 +63,8 @@ private lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).rightMoves, P a) ↔
       (∀ a ∈ x.leftMoves, ∀ b ∈ (-y).leftMoves, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x).leftMoves, ∀ b ∈ y.leftMoves, P (-mulOption (-x) y a b)) := by
-  rw [forall_rightMoves_mul]
-  congr! 1
-  · congr! 2
-    rw [← (Equiv.neg _).forall_congr_right]
-    simp [mulOption_neg_right]
-  · rw [← (Equiv.neg _).forall_congr_right]
-    simp [mulOption_neg_left]
+  rw [forall_moves_mul]
+  simp [mulOption_neg_right, mulOption_neg_left]
 
 -- Instead of making all of this private, we put it in an auxiliary namespace.
 namespace Surreal.Multiplication
@@ -234,12 +225,12 @@ lemma P1_of_P3 (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) :
 lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x)
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hd : d ∈ (-y).leftMoves) : P3 a x b (-d) := by
   rw [P3_comm]
-  rw [leftMoves_neg] at hd
-  refine ((ihyx (.of_mem_leftMoves hb) (.of_mem_rightMoves hd) <| Or.inl rfl).2 ?_).1 a ha
+  rw [leftMoves, moves_neg] at hd
+  refine ((ihyx (.of_mem_moves hb) (.of_mem_moves hd) <| Or.inl rfl).2 ?_).1 a ha
   exact Numeric.leftMove_lt_rightMove hb hd
 
 lemma P24_of_IH1 (ihxy : IH1 x y) (ha : a ∈ x.leftMoves) (hb : b ∈ x.leftMoves) : P24 a b y :=
-  ihxy (.of_mem_leftMoves ha) (.of_mem_leftMoves hb) (Or.inl rfl)
+  ihxy (.of_mem_moves ha) (.of_mem_moves hb) (Or.inl rfl)
 
 lemma mulOption_lt_iff_P1 :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) ↔ P1 x y a b c (-d) := by
@@ -254,13 +245,13 @@ lemma mulOption_lt_of_lt [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d}
 lemma mulOption_lt [Numeric x] [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d}
     (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hc : c ∈ x.leftMoves) (hd : d ∈ (-y).leftMoves) :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) := by
-  have := Numeric.of_mem_leftMoves ha
-  have := Numeric.of_mem_leftMoves hc
+  have := Numeric.of_mem_moves ha
+  have := Numeric.of_mem_moves hc
   obtain (h | h | h) := Numeric.lt_or_equiv_or_gt a c
   · exact mulOption_lt_of_lt ihxy ihyx h ha hb hc hd
   · refine mulOption_lt_iff_P1.2 (P1_of_equiv h (P24_of_IH1 ihxy ha hc).1
       (ihxy ?_ ?_ <| .inr (isOption_neg.1 ?_)).1 <| P3_of_IH1 ihyx ha hb hd)
-    all_goals apply IsOption.of_mem_leftMoves; assumption
+    all_goals apply IsOption.of_mem_moves; assumption
   · rw [← neg_neg y] at hb
     simpa [lt_neg] using mulOption_lt_of_lt (IH1_neg_right ihxy) (IH1_neg_left ihyx) h hc hd ha hb
 
@@ -271,7 +262,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihyx := IH1_swap_of_IH IH
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
-  refine .mk' ?_ ?_ ?_
+  refine .mk ?_ ?_ ?_
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
@@ -281,14 +272,12 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
     · rw [← neg_neg y] at hd
       simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
   all_goals
-    simp only [leftMoves_mul, rightMoves_mul, mulOption, Set.mem_image, Prod.exists,
+    simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
     all_goals
-      try replace ha := IsOption.of_mem_leftMoves ha
-      try replace ha := IsOption.of_mem_rightMoves ha
-      try replace hb := IsOption.of_mem_leftMoves hb
-      try replace hb := IsOption.of_mem_rightMoves hb
+      replace ha := IsOption.of_mem_moves ha
+      replace hb := IsOption.of_mem_moves hb
       have := numeric_isOption_mul_of_IH IH ha
       have := numeric_mul_isOption_of_IH IH hb
       have := numeric_isOption_mul_isOption_of_IH IH ha hb
@@ -353,8 +342,8 @@ lemma IH4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y)
 lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁ ≈ x₂)
     (hi : a ∈ x₁.leftMoves) (hj : b ∈ y.leftMoves) :
     Game.mk (mulOption x₁ y a b) < Game.mk (x₂ * y) := by
-  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_leftMoves hi)).2 _).1 b hj) using 1
-  · rw [← (h.2.2 (.of_mem_leftMoves hj)).1 he]
+  convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_moves hi)).2 _).1 b hj) using 1
+  · rw [← (h.2.2 (.of_mem_moves hj)).1 he]
     rfl
   · rw [← he.lt_congr_right]
     exact Numeric.leftMove_lt hi
@@ -393,8 +382,8 @@ def IH3 (x₁ x' x₂ y₁ y₂ : IGame) : Prop :=
 lemma IH3_of_IH (ih24 : IH24 x₁ x₂ y) (ih4 : IH4 x₁ x₂ y)
     (hi : a ∈ x₂.leftMoves) (hb : b ∈ y.leftMoves) (hl : mulOption x₂ y a b < x₂ * y) :
     IH3 x₁ a x₂ b y :=
-  have h24 := ih24.2.1 (.of_mem_leftMoves hi)
-  ⟨(ih4 <| .of_mem_leftMoves hb).2 (.of_mem_leftMoves hi), h24.1,
+  have h24 := ih24.2.1 (.of_mem_moves hi)
+  ⟨(ih4 <| .of_mem_moves hb).2 (.of_mem_moves hi), h24.1,
     mulOption_lt_mul_iff_P3.1 hl, fun l ↦ (h24.2 l).1 b hb⟩
 
 lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ ≤ i) : P3 x₁ x₂ y₁ y₂ := by
@@ -429,7 +418,7 @@ lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x
     apply IH3_of_IH
   assumption'
   all_goals
-    apply Numeric.leftMove_lt (mulOption_left_left_mem_leftMoves_mul _ _) <;> assumption
+    exact Numeric.leftMove_lt (mulOption_mem_moves_mul hb ha)
 
 /-- We tie everything together to complete the induction. -/
 theorem main (a : Args) : a.Numeric → P124 a := by
@@ -456,7 +445,7 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
   refine P3_of_IH3 ?_ ?_ hx
   all_goals
     intro i hi
-    have := Numeric.of_mem_leftMoves hi
+    have := Numeric.of_mem_moves hi
     refine ⟨(main_P24 ..).1, (main_P24 ..).1, P3_comm.2 ?_, fun h ↦ ?_⟩
   · exact ((main_P24 y₁ y₂ x₂).2 hy).1 _ hi
   · exact P3_of_lt_of_lt h hy
@@ -465,7 +454,7 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
     rw [← P3_neg, neg_neg]
     exact P3_of_lt_of_lt h hy
 termination_by (x₁, x₂)
-decreasing_by all_goals (try rw [leftMoves_neg] at *); igame_wf
+decreasing_by all_goals (try rw [leftMoves, moves_neg] at *); igame_wf
 
 end Surreal.Multiplication
 
@@ -481,7 +470,7 @@ instance mul (x y : IGame) [hx : Numeric x] [hy : Numeric y] : Numeric (x * y) :
 
 protected instance mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
     Numeric (mulOption x y a b) :=
-  inferInstanceAs (Numeric (_ - _))
+  .sub ..
 
 theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ x₂) : x₁ * y ≈ x₂ * y :=
   Game.mk_eq_mk.1 ((main_P24 ..).1 he)
@@ -493,8 +482,8 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-theorem mul_pos [Numeric x₁] [Numeric x₂] (hp₁ : 0 < x₁) (hp₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt hp₁ hp₂
+protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
+  simpa [P3] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 
@@ -600,6 +589,24 @@ protected theorem mul_lt_mul_left_of_neg {x y z : IGame} [Numeric x] [Numeric y]
 protected theorem mul_lt_mul_right_of_neg {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
     (hz : z < 0) : x * z < y * z ↔ y < x :=
   mul_lt_mul_right_of_neg (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hz
+
+protected theorem mul_le_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a ≤ b → c ≤ d → 0 ≤ c → 0 ≤ b → a * c ≤ b * d :=
+  mul_le_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+protected theorem mul_lt_mul {a b c d : IGame} [Numeric a] [Numeric b] [Numeric c] [Numeric d] :
+    a < b → c ≤ d → 0 < c → 0 ≤ b → a * c < b * d :=
+  mul_lt_mul (a := Surreal.mk a) (b := Surreal.mk b) (c := Surreal.mk c) (d := Surreal.mk d)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_left {a b : IGame} [Numeric a] [Numeric b] :
+    0 < a → (0 < a * b ↔ 0 < b) :=
+  mul_pos_iff_of_pos_left (a := Surreal.mk a) (b := Surreal.mk b)
+
+@[simp]
+protected theorem mul_pos_iff_of_pos_right {a b : IGame} [Numeric a] [Numeric b] :
+    0 < b → (0 < a * b ↔ 0 < a) :=
+  mul_pos_iff_of_pos_right (a := Surreal.mk a) (b := Surreal.mk b)
 
 theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   repeat rw [← Surreal.mk_eq_mk]

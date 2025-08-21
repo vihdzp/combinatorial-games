@@ -14,10 +14,10 @@ The nim product `a * b` is recursively defined as the least nimber not equal to 
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. When endowed with this operation, the nimbers
 form a field.
 
-It's possible to show the existence of the nimber inverse implicitly via the simplicity theorem.
-Instead, we employ the explicit formula given in [On Numbers And Games][conway2001] (p. 56), which
-uses mutual induction and mimicks the definition for the surreal inverse. This definition `invAux`
-"accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
+It's possible to show the existence of the nimber inverse implicitly via the simplest extension
+theorem. Instead, we employ the explicit formula given in [On Numbers And Games][conway2001]
+(p. 56), which uses mutual induction and mimics the definition for the surreal inverse. This
+definition `invAux` "accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
 
 ## Todo
 
@@ -93,7 +93,9 @@ instance : MulZeroClass Nimber where
     rw [← Nimber.le_zero]
     exact mul_le_of_forall_ne fun _ h ↦ (Nimber.not_lt_zero _ h).elim
 
-private theorem mul_ne_of_lt : ∀ a' < a, ∀ b' < b, a' * b + a * b' + a' * b' ≠ a * b := by
+private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
+    a' * b + a * b' + a' * b' ≠ a * b := by
+  revert b' a'
   have H := csInf_mem (mul_nonempty a b)
   rw [← mul_def] at H
   simpa using H
@@ -102,14 +104,14 @@ instance : NoZeroDivisors Nimber where
   eq_zero_or_eq_zero_of_mul_eq_zero {a b} h := by
     by_contra! hab
     iterate 2 rw [← Nimber.pos_iff_ne_zero] at hab
-    apply (mul_ne_of_lt _ hab.1 _ hab.2).symm
+    apply (mul_ne_of_lt hab.1 hab.2).symm
     simpa only [zero_add, mul_zero, zero_mul]
 
 protected theorem mul_comm (a b : Nimber) : a * b = b * a := by
   apply le_antisymm <;> refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
   on_goal 1 => rw [add_comm (x * _), Nimber.mul_comm a, Nimber.mul_comm x, Nimber.mul_comm x]
   on_goal 2 => rw [add_comm (x * _), ← Nimber.mul_comm y, ← Nimber.mul_comm a, ← Nimber.mul_comm y]
-  all_goals exact mul_ne_of_lt y hy x hx
+  all_goals exact mul_ne_of_lt hy hx
 termination_by (a, b)
 
 protected theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
@@ -123,11 +125,11 @@ protected theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
       abel_nf
       simp only [two_zsmul, zero_add]
       rw [← add_assoc]
-      exact mul_ne_of_lt _ ha _ h
+      exact mul_ne_of_lt ha h
   · apply add_le_of_forall_ne <;>
       (intro x' hx'; obtain ⟨x, hx, y, hy, rfl⟩ := exists_of_lt_mul hx')
     · obtain h | h | h := lt_trichotomy (y + c) (b + c)
-      · have H := mul_ne_of_lt _ hx _ h
+      · have H := mul_ne_of_lt hx h
         rw [Nimber.mul_add x, Nimber.mul_add a, Nimber.mul_add x] at H
         abel_nf at H ⊢
         simpa only [two_zsmul, zero_add] using H
@@ -135,20 +137,20 @@ protected theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
       · obtain ⟨z, hz, hz'⟩ | ⟨c', hc, hc'⟩ := exists_of_lt_add h
         · exact ((hz.trans hy).ne <| add_left_injective _ hz').elim
         · have := add_eq_iff_eq_add.1 hc'
-          have H := mul_ne_of_lt _ hx _ hc
+          have H := mul_ne_of_lt hx hc
           rw [← hc', Nimber.mul_add a y c', ← add_ne_add_left (a * y), ← add_ne_add_left (a * c),
             ← add_ne_add_left (a * c'), ← add_eq_iff_eq_add.2 hc', Nimber.mul_add x,
             Nimber.mul_add x]
           abel_nf at H ⊢
           simpa only [two_zsmul, add_zero, zero_add] using H
     · obtain h | h | h := lt_trichotomy (b + y) (b + c)
-      · have H := mul_ne_of_lt _ hx _ h
+      · have H := mul_ne_of_lt hx h
         rw [Nimber.mul_add x, Nimber.mul_add a, Nimber.mul_add x] at H
         abel_nf at H ⊢
         simpa only [two_zsmul, zero_add] using H
       · exact (hy.ne <| add_right_injective _ h).elim
       · obtain ⟨b', hb, hb'⟩ | ⟨z, hz, hz'⟩ := exists_of_lt_add h
-        · have H := mul_ne_of_lt _ hx _ hb
+        · have H := mul_ne_of_lt hx hb
           have hb'' := add_eq_iff_eq_add.2 (add_comm b c ▸ hb')
           rw [← hb', Nimber.mul_add a b', ← add_ne_add_left (a * y), ← add_ne_add_left (a * b),
             ← add_ne_add_left (a * b'), ← hb'', Nimber.mul_add x, Nimber.mul_add x]
@@ -222,6 +224,13 @@ instance : CommRing Nimber where
 instance : IsDomain Nimber where
 instance : CancelMonoidWithZero Nimber where
 
+theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
+    a' * b + a * b' + a' * b' ≠ a * b := by
+  rw [ne_eq, ← add_eq_zero] at ha hb
+  rw [ne_eq, ← add_left_inj (a * b), add_self]
+  convert mul_ne_zero ha hb using 2
+  ring
+
 /-! ### Nimber division -/
 
 mutual
@@ -263,17 +272,17 @@ theorem invSet_recOn {p : Nimber → Prop} (a : Nimber) (h0 : p 0)
   exact Set.sInter_subset_of_mem ⟨h0, hi⟩
 
 /-- An enumeration of elements in `invSet` by a type in the same universe. -/
-private def List.toNimber {a : Nimber} : List a.toOrdinal.toType → Nimber
+private def List.toNimber {a : Nimber} : List a.val.toType → Nimber
   | [] => 0
   | x :: l =>
-    let a' := ∗((Ordinal.enumIsoToType a.toOrdinal).symm x)
+    let a' := ∗((Ordinal.enumIsoToType a.val).symm x)
     invAux a' * (1 + (a + a') * toNimber l)
 
 instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
   refine @small_subset.{u, u + 1} _ _ _ ?_ (small_range (@List.toNimber a))
   refine fun x hx ↦ invSet_recOn a ⟨[], rfl⟩ ?_ x hx
   rintro a' ha _ _ ⟨l, rfl⟩
-  use Ordinal.enumIsoToType _ ⟨toOrdinal a', ha⟩ :: l
+  use Ordinal.enumIsoToType _ ⟨val a', ha⟩ :: l
   rw [List.toNimber]
   simp
 

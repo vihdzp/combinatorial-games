@@ -42,34 +42,7 @@ theorem OrderEmbedding.antisymmRel_iff_eq {α β : Type*} [Preorder α] [Partial
     {a b : α} (f : α ↪o β) : f a ≈ f b ↔ a = b := by
   simp
 
-theorem Ordinal.Iio_natCast (n : ℕ) : Iio (n : Ordinal) = Nat.cast '' Iio n := by
-  ext o
-  constructor
-  · intro ho
-    obtain ⟨n, rfl⟩ := Ordinal.lt_omega0.1 (ho.trans (nat_lt_omega0 _))
-    simp_all
-  · rintro ⟨o, ho, rfl⟩
-    simp_all
-
-theorem NatOrdinal.Iio_natCast (n : ℕ) : Iio (n : NatOrdinal) = Nat.cast '' Iio n := by
-  rw [← Ordinal.toNatOrdinal_cast_nat]
-  apply (Ordinal.Iio_natCast _).trans
-  congr! 1
-  exact Ordinal.toNatOrdinal_cast_nat _
-
 namespace NatOrdinal
-
-@[simp]
-theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
-    (∀ a < (n : NatOrdinal), P a) ↔ ∀ a < n, P a := by
-  change (∀ a ∈ Iio _, _) ↔ ∀ a ∈ Iio _, _
-  simp [NatOrdinal.Iio_natCast]
-
-@[simp]
-theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} :
-    (∃ a < (n : NatOrdinal), P a) ↔ ∃ a < n, P a := by
-  change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
-  simp [NatOrdinal.Iio_natCast]
 
 /-! ### `NatOrdinal` to `IGame` -/
 
@@ -114,13 +87,11 @@ theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
 @[game_cmp]
 theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ leftMoves (toIGame n), P x) ↔ ∀ m < n, P (toIGame m) := by
-  rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
   simp
 
 @[game_cmp]
 theorem exists_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ leftMoves (toIGame n), P x) ↔ (∃ m < n, P (toIGame m)) := by
-  rw [leftMoves_toIGame, NatOrdinal.Iio_natCast]
   simp
 
 @[game_cmp]
@@ -137,8 +108,8 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGame.leftMoves := by
   simpa
 
-@[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
-@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
+@[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext p; cases p <;> simp
+@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp [eq_comm]
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
@@ -202,7 +173,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
-    exact leftMove_lf <| mulOption_left_left_mem_leftMoves_mul
+    exact leftMove_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
@@ -240,7 +211,7 @@ open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
-    have := Short.of_mem_leftMoves y.2
+    have := Short.of_mem_moves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove
@@ -255,13 +226,12 @@ theorem Short.exists_neg_natCast_lt (x : IGame) [Short x] : ∃ n : ℕ, -n < x 
   use n
   rwa [IGame.neg_lt]
 
-notation "ω" => toIGame Ordinal.omega0.toNatOrdinal
+local notation "ω" => toIGame (NatOrdinal.of Ordinal.omega0)
 
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt,
-    ← Ordinal.toNatOrdinal_cast_nat n]
+  rw [← (toIGame_natCast_equiv n).lt_congr_left, toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
   exact Ordinal.nat_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by

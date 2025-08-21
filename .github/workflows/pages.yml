@@ -1,8 +1,9 @@
-name: CI
+name: Pages CI
 
 on:
   push:
     branches: ["master"]
+  pull_request:
   workflow_dispatch:
 
 # Bestows GITHUB_TOKEN permission to deploy to GitHub Pages
@@ -10,11 +11,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-
-# Allow only one maximum concurrent deployment to prevent previous updates
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -39,6 +35,11 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
+    # Allow only one maximum concurrent deployment to prevent previous updates
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
 
     permissions:
       pages: write
