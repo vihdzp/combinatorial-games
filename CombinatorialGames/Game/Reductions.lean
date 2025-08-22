@@ -102,5 +102,4 @@ theorem equiv_of_gift_right {gs l r : Set IGame.{u}} [Small.{u} gs] [Small.{u} l
     rw [Function.Involutive.coe_toPerm, ← IGame.neg_le_neg_iff, neg_neg, neg_ofSets, ← Set.mem_neg]
   simpa using equiv_of_gift_left hg
 
-
 end IGame
