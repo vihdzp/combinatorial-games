@@ -17,6 +17,8 @@ import Mathlib.Data.Finsupp.WellFounded
 This file contains multiple auxiliary results and definitions for working with nimber polynomials:
 
 - `IsField.embed`: embeds a polynomial `p : Nimber[X]` into the subfield `Iio x`, for `IsField x`.
+- `Lex.instLinearOrderPolynomial`: a linear order instance on nimber polynomials, defined as the
+  lexicographic ordering.
 -/
 
 universe u
