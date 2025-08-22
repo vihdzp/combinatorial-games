@@ -61,11 +61,11 @@ theorem equiv_of_bypass_right {ι : Type u} {l r : Set IGame.{u}} [Small.{u} l] 
     {l | Set.range d ∪ r}ᴵ ≈ {l | (⋃ i, (dl i).rightMoves) ∪ r}ᴵ := by
   rw [← neg_equiv_neg_iff]
   conv at hbb =>
-    enter [i]
+    intro i
     rw [← IGame.neg_le_neg_iff, neg_ofSets]
     simp only [Set.union_neg, Set.neg_range]
   conv at hdl =>
-    enter [i]
+    intro i
     rw [← Set.neg_mem_neg, leftMoves, ← Player.neg_right, ← moves_neg]
   simpa [Set.neg_range] using equiv_of_bypass_left hbb hdl
 
@@ -94,7 +94,7 @@ theorem equiv_of_gift_right {gs l r : Set IGame.{u}} [Small.{u} gs] [Small.{u} l
   rw [← neg_equiv_neg_iff]
   conv at hg =>
     rw [← neg_involutive.toPerm.forall_congr_right]
-    enter [g]
+    intro g
     rw [Function.Involutive.coe_toPerm, ← IGame.neg_le_neg_iff, neg_neg, neg_ofSets, ← Set.mem_neg]
   simpa using equiv_of_gift_left hg
 
