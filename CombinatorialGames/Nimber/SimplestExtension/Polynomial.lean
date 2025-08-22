@@ -5,8 +5,9 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Degree.Definitions
+import Mathlib.Algebra.Polynomial.Degree.Domain
 import Mathlib.Algebra.Polynomial.Eval.Coeff
+import Mathlib.Data.Finsupp.WellFounded
 
 /-!
 # Nimber polynomials
