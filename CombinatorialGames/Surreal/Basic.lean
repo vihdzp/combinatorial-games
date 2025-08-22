@@ -49,7 +49,7 @@ private def NumericAux (x : IGame) : Prop :=
 termination_by x
 decreasing_by igame_wf
 
-/-- A game `{s | t}ᴵ` is numeric if everything in `s` is less than everything in `t`, and all the
+/-- A game `!{s | t}` is numeric if everything in `s` is less than everything in `t`, and all the
 elements of these sets are also numeric.
 
 The `Surreal` numbers are built as the quotient of numeric games under equivalence. -/
@@ -422,45 +422,41 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
-This is given notation `{s | t}ˢ`, where the superscript `s` is to disambiguate from set builder
-notation, and from the analogous constructors on other game types. This notation will attempt to
-construct the relevant proof using `aesop`.
-
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in Surreal have a canonical representative. (Note however that every short numeric game has
 a unique "canonical" form!) -/
-def ofSets (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
-    (H : ∀ x ∈ st left, ∀ y ∈ st right, x < y) : Surreal.{u} := by
-  refine @mk (.ofSets fun p ↦ out '' st p) (.mk ?_ (by simp) (by simp))
-  rw [leftMoves, moves_ofSets, rightMoves, moves_ofSets]
-  rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
-  rw [← Surreal.mk_lt_mk, out_eq, out_eq]
-  exact H x hx y hy
-
-@[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets (Player.cases s t) (by aesop)
+instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
+  ofSets st H _ _ := by
+    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp) (by simp))
+    rw [leftMoves, moves_ofSets, rightMoves, moves_ofSets]
+    rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
+    rw [← Surreal.mk_lt_mk, out_eq, out_eq]
+    exact H x hx y hy
 
 theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
-    toGame (ofSets st H) = Game.ofSets (fun p ↦ toGame '' st p) := by
-  simp_rw [ofSets, toGame_mk, Game.mk_ofSets', Set.image_image, game_out_eq]
+    toGame !{st} = !{fun p ↦ toGame '' st p} := by
+  change toGame (@mk _ (_)) = _
+  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, game_out_eq]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
-    toGame (ofSets (Player.cases s t) H) = {toGame '' s | toGame '' t}ᴳ := by
+    toGame (ofSets (Player.cases s t) H) = !{toGame '' s | toGame '' t} := by
   rw [toGame_ofSets']
   congr; aesop
 
 theorem mk_ofSets' {st : Player → Set IGame.{u}}
-    [Small.{u} (st left)] [Small.{u} (st right)] {H : Numeric (.ofSets st)} :
-    mk (.ofSets st) = ofSets
-      (fun p ↦ .range fun x : st p ↦ mk x (h := H.of_mem_moves (p := p) (by simp)))
-      (by have := @H.leftMove_lt_rightMove; aesop) := by
-  simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets']
+    [Small.{u} (st left)] [Small.{u} (st right)] {H : Numeric !{st}} :
+    mk !{st} =
+      !{fun p ↦ .range fun x : st p ↦ mk x (h := H.of_mem_moves (p := p) (by simp))}'(by
+        have := @H.leftMove_lt_rightMove; aesop) := by
+  change _ = @mk _ (_)
+  simp_rw [← toGame_inj, toGame_mk, Game.mk_ofSets']
   congr; aesop
 
-theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric {s | t}ᴵ} :
-    mk {s | t}ᴵ = ofSets
+theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric !{s | t}} :
+    mk !{s | t} = ofSets
       (Player.cases
         (.range fun x : s ↦ mk x (h := H.of_mem_moves (p := left) (by simp)))
         (.range fun x : t ↦ mk x (h := H.of_mem_moves (p := right) (by simp))))
@@ -482,11 +478,11 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
-theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr! <;> simp
-theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr! <;> aesop
+theorem zero_def : (0 : Surreal) = !{∅ | ∅} := by apply (mk_ofSets ..).trans; congr! <;> simp
+theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop
 
 instance : DenselyOrdered Surreal where
-  dense a b hab := ⟨{{a} | {b}}ˢ,
+  dense a b hab := ⟨!{{a} | {b}},
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
 end Surreal

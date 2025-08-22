@@ -47,7 +47,7 @@ take a positive number of stones from it on their turn. -/
 noncomputable def nim : Nimber.{u} → IGame.{u} :=
   ConcreteGame.nim.toIGame
 
-theorem nim_def (o : Nimber) : nim o = {nim '' Iio o | nim '' Iio o}ᴵ :=
+theorem nim_def (o : Nimber) : nim o = !{nim '' Iio o | nim '' Iio o} :=
   ConcreteGame.toIGame_def o
 
 @[simp]

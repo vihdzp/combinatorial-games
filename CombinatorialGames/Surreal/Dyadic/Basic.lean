@@ -129,7 +129,7 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
   that both options will have smaller denominators. -/
 @[coe]
 noncomputable def toIGame (x : Dyadic) : IGame :=
-  if _ : x.den = 1 then x.num else {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
+  if _ : x.den = 1 then x.num else !{{toIGame (lower x)} | {toIGame (upper x)}}
 termination_by x.den
 decreasing_by dyadic_wf
 
@@ -145,7 +145,7 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 @[simp] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by simpa using toIGame_natCast 1
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
-    x = {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ :=
+    x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
   by rw [toIGame, dif_neg hx]
 
 @[simp]
@@ -179,7 +179,7 @@ theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ r
 /-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
 necessarily be the canonical form. -/
 theorem toIGame_equiv_lower_upper (x : Dyadic) :
-    (x : IGame) ≈ {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ := by
+    (x : IGame) ≈ !{{(lower x : IGame)} | {(upper x : IGame)}} := by
   rw [toIGame]
   split_ifs with h
   · unfold lower upper

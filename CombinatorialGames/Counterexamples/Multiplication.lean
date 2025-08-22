@@ -22,7 +22,7 @@ open IGame
 namespace IGame
 
 /-- The game `⋆' = {-1, 0 | 0, 1}`, which is equivalent but not identical to `⋆`. -/
-@[game_cmp] def star' : IGame := {{0, -1} | {0, 1}}ᴵ
+@[game_cmp] def star' : IGame := !{{0, -1} | {0, 1}}
 local notation " ⋆' " => star'
 
 /-- `⋆'` is equivalent to `⋆`. -/

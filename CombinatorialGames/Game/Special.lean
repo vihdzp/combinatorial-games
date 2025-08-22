@@ -26,7 +26,7 @@ namespace IGame
 
 /-- The game `⋆ = {0 | 0}`, which is fuzzy with zero. -/
 def star : IGame :=
-  {{0} | {0}}ᴵ
+  !{{0} | {0}}
 
 @[inherit_doc] notation "⋆" => star
 recommended_spelling "star" for "⋆" in [«term⋆»]
@@ -50,7 +50,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 /-- The game `½ = {0 | 1}`, which we prove satisfies `½ + ½ = 1`. -/
 def half : IGame :=
-  {{0} | {1}}ᴵ
+  !{{0} | {1}}
 
 @[inherit_doc] notation "½" => half
 recommended_spelling "half" for "½" in [«term½»]
@@ -68,7 +68,7 @@ instance : Short ½ := by rw [short_def]; simp
 
 /-- The game `↑ = {0 | ⋆}`. -/
 def up : IGame :=
-  {{0} | {⋆}}ᴵ
+  !{{0} | {⋆}}
 
 @[inherit_doc] notation "↑" => up
 recommended_spelling "up" for "↑" in [«term↑»]
@@ -84,7 +84,7 @@ instance : Short ↑ := by rw [short_def]; simp
 
 /-- The game `↓ = {⋆ | 0}`. -/
 def down : IGame :=
-  {{⋆} | {0}}ᴵ
+  !{{⋆} | {0}}
 
 @[inherit_doc] notation "↓" => down
 recommended_spelling "down" for "↓" in [«term↓»]
@@ -106,7 +106,7 @@ instance : Short ↓ := by rw [short_def]; simp
 /-- A tiny game `⧾x` is defined as `{0 | {0 | -x}}`, and is amongst the smallest of the
 infinitesimals. -/
 def tiny (x : IGame) : IGame :=
-  {{0} | {{{0} | {-x}}ᴵ}}ᴵ
+  !{{0} | {!{{0} | {-x}}}}
 
 @[inherit_doc] prefix:75 "⧾" => tiny
 recommended_spelling "tiny" for "⧾" in [«term⧾_»]
@@ -116,23 +116,23 @@ theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
   leftMoves_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {{{0} | {-x}}ᴵ} :=
+theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
 instance (x : IGame) [Short x] : Short (⧾x) := by
-  have : {{0} | {-x}}ᴵ.Short := by rw [short_def]; simpa
+  have : !{{0} | {-x}}.Short := by rw [short_def]; simpa
   rw [short_def]
   simpa
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
-  {{{{x} | {0}}ᴵ} | {0}}ᴵ
+  !{{!{{x} | {0}}} | {0}}
 
 @[inherit_doc] prefix:75 "⧿" => miny
 recommended_spelling "miny" for "⧿" in [«term⧿_»]
 
 @[simp, game_cmp]
-theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {{{x} | {0}}ᴵ} :=
+theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {!{{x} | {0}}} :=
   leftMoves_ofSets ..
 
 @[simp, game_cmp]
@@ -157,7 +157,7 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 
 /-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
 def switch (x : IGame) : IGame :=
-  {{x} | {-x}}ᴵ
+  !{{x} | {-x}}
 
 @[inherit_doc] prefix:75 "±" => switch
 recommended_spelling "switch" for "±" in [«term±_»]

@@ -33,7 +33,7 @@ on a type `α`, as long as the amount of branches per node is `u`-small, there's
 isomorphic to it".
 
 Although extensionality still holds, it's not always sufficient to prove two games equal. For
-instance, if `x = {x | x}ᴸ` and `y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to
+instance, if `x = !{x | x}` and `y = !{y | y}`, then `x = y`, but trying to use extensionality to
 prove this just leads to a cyclic argument. Instead, we can use `LGame.eq_of_bisim`, which can
 roughly be interpreted as saying "if two games have the same shape, they're equal". In this case,
 the relation `r a b ↔ a = x ∧ b = y` is a bisimulation between both games, which proves their
@@ -148,8 +148,8 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
 
 /-- Two `LGame`s are equal when their move sets are.
 
-This is not always sufficient to prove that two games are equal. For instance, if `x = {x | x}ᴸ` and
-`y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to prove this just leads to a cyclic
+This is not always sufficient to prove that two games are equal. For instance, if `x = !{x | x}` and
+`y = !{y | y}`, then `x = y`, but trying to use extensionality to prove this just leads to a cyclic
 argument. For these situations, you can use `eq_of_bisim` instead. -/
 @[ext]
 protected theorem ext {x y : LGame.{u}}
@@ -200,7 +200,7 @@ private def corec' (x : Subtype (Reachable moves init)) :=
 /-- The corecursor on `LGame`.
 
 You can use this in order to define an arbitrary `LGame` by "drawing" its move graph on some other
-type. As an example, `on = {on | }ᴸ` is defined as `corec (Player.cases ⊤ ⊥) ()`. -/
+type. As an example, `on = !{on | }` is defined as `corec (Player.cases ⊤ ⊥) ()`. -/
 def corec : LGame.{u} :=
   corec' moves init ⟨_, .refl⟩
 
@@ -289,67 +289,60 @@ theorem corec_moves_apply (x : LGame) : corec moves x = x := by simp
 
 /-- Construct an `LGame` from its left and right sets.
 
-This is given notation `{s | t}ᴸ`, where the superscript `L` is to disambiguate from set builder
-notation, and from the analogous constructors on other game types.
-
 It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
-noncomputable def ofSets (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] : LGame.{u} := by
-  have this (p) : ∀ (a : Option LGame),
-      Small.{u} ((a.elim (some '' lr p) (some '' moves p ·)) : Set _) := by
-    cases p <;> simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
-  exact corec (fun p ↦ (·.elim (some '' lr p) (some '' moves p ·))) none
-
-@[inherit_doc] notation "{" s " | " t "}ᴸ" => ofSets (Player.cases s t)
-
-theorem ofSets_eq_ofSets_cases (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] :
-    ofSets lr = {lr left | lr right}ᴸ := by
-  congr; ext1 p; cases p <;> rfl
+instance : OfSets LGame.{u} fun _ ↦ True where
+  ofSets lr _ :=
+    have this (p) : ∀ (a : Option LGame),
+        Small.{u} ((a.elim (some '' lr p) (some '' moves p ·)) : Set _) := by
+      cases p <;> simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
+    corec (fun p ↦ (·.elim (some '' lr p) (some '' moves p ·))) none
 
 @[simp]
 theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] : (ofSets lr).moves p = lr p := by
-  rw [ofSets, moves_corec, Option.elim_none, Set.image_image]
+    [Small.{u} (lr left)] [Small.{u} (lr right)] : !{lr}.moves p = lr p := by
+  dsimp [ofSets]
+  rw [moves_corec, Option.elim_none, Set.image_image]
   conv_rhs => rw [← Set.image_id (lr p), ← corec_moves]
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
 @[simp]
-theorem leftMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.leftMoves = l := by
+theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+    !{l | r}.leftMoves = l := by
   rw [leftMoves, moves_ofSets]
 
 @[simp]
-theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.rightMoves = r := by
+theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+    !{l | r}.rightMoves = r := by
   rw [rightMoves, moves_ofSets]
 
 /-! ### Basic games -/
 
-/-- The game `0 = {∅ | ∅}ᴸ`. -/
-instance : Zero LGame := ⟨{∅ | ∅}ᴸ⟩
+/-- The game `0 = !{∅ | ∅}`. -/
+instance : Zero LGame := ⟨!{∅ | ∅}⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴸ := rfl
+theorem zero_def : (0 : LGame) = !{∅ | ∅} := rfl
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
 
 instance : Inhabited LGame := ⟨0⟩
 
-/-- The game `1 = {{0} | ∅}ᴵ`. -/
-instance : One LGame := ⟨{{0} | ∅}ᴸ⟩
+/-- The game `1 = !{{0} | ∅}`. -/
+instance : One LGame := ⟨!{{0} | ∅}⟩
 
-theorem one_def : 1 = {{0} | ∅}ᴸ := rfl
+theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 
 @[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
 
-/-- The game `on = {{on} | ∅}ᴸ`. -/
+/-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
 @[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
 @[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
-theorem on_eq : on = {{on} | ∅}ᴸ := by ext p; cases p <;> simp
+theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
   refine ⟨?_, fun hx ↦ ?_⟩
@@ -358,12 +351,12 @@ theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ 
     rintro a b ⟨rfl, rfl⟩
     refine Player.rec ⟨{(a, on)}, ?_⟩ ⟨∅, ?_⟩ <;> simp_all
 
-/-- The game `off = {∅ | {off}}ᴸ`. -/
+/-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
 @[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
 @[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
-theorem off_eq : off = {∅ | {off}}ᴸ := by ext p; cases p <;> simp
+theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
@@ -372,12 +365,12 @@ theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x
     rintro a b ⟨rfl, rfl⟩
     refine Player.rec ⟨∅, ?_⟩ ⟨{(a, off)}, ?_⟩ <;> simp_all
 
-/-- The game `dud = {{dud} | {dud}}ᴸ`. -/
+/-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
 @[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
 @[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
-theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by ext p; cases p <;> simp
+theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
 theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
@@ -386,22 +379,22 @@ theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x
     rintro a b ⟨rfl, rfl⟩
     refine fun p ↦ ⟨{(a, dud)}, ?_⟩; cases p <;> simp_all
 
-/-- The game `tis = {{tisn} | ∅}ᴸ`, where `tisn = {∅ | {tis}}ᴸ`. -/
+/-- The game `tis = !{{tisn} | ∅}`, where `tisn = !{∅ | {tis}}`. -/
 def tis : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) true
-/-- The game `tisn = {∅ | {tis}}ᴸ`, where `tis = {{tisn} | ∅}ᴸ`. -/
+/-- The game `tisn = !{∅ | {tis}}`, where `tis = !{{tisn} | ∅}`. -/
 def tisn : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) false
 
 @[simp] theorem leftMoves_tis : leftMoves tis = {tisn} := by simp [tis, tisn]
 @[simp] theorem rightMoves_tis : rightMoves tis = ∅ := by simp [tis]
-theorem tis_eq : tis = {{tisn} | ∅}ᴸ := by ext p; cases p <;> simp
+theorem tis_eq : tis = !{{tisn} | ∅} := by ext p; cases p <;> simp
 
 @[simp] theorem leftMoves_tisn : leftMoves tisn = ∅ := by simp [tisn]
 @[simp] theorem rightMoves_tisn : rightMoves tisn = {tis} := by simp [tis, tisn]
-theorem tisn_eq : tisn = {∅ | {tis}}ᴸ := by ext p; cases p <;> simp
+theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 
 /-! ### Negation -/
 
-/-- The negative of a game is defined by `-{s | t}ᴸ = {-t | -s}ᴸ`. -/
+/-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
 instance : Neg LGame where
   neg := corec fun p ↦ moves (-p)
 
@@ -427,7 +420,7 @@ theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
   exact moves_corec ..
 
 @[simp]
-theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -{s | t}ᴸ = {-t | -s}ᴸ := by
+theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -!{s | t} = !{-t | -s} := by
   ext p; cases p <;> simp
 
 instance : NegZeroClass LGame where
@@ -453,7 +446,7 @@ theorem neg_tisn : -tisn = tis := by
 
 /-! ### Addition -/
 
-/-- The sum of `x = {s₁ | t₁}ᴸ` and `y = {s₂ | t₂}ᴸ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴸ`. -/
+/-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
 instance : Add LGame where
   add x y := corec
     (fun p x ↦ (fun y ↦ (y, x.2)) '' moves p x.1 ∪ (fun y ↦ (x.1, y)) '' moves p x.2)
@@ -784,14 +777,18 @@ theorem map_mulOption (b x y) :
 
 variable {p f g}
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 theorem movesSingle_comp_prodMap
     (hf : ∀ p, movesα₂ p ∘ f = Set.image f ∘ movesα₁ p)
     (hg : ∀ p, movesβ₂ p ∘ g = Set.image g ∘ movesβ₁ p) :
     movesSingle p movesα₂ movesβ₂ ∘ Prod.map id (Prod.map f g) =
     image (map f g) ∘ movesSingle p movesα₁ movesβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, movesSingle, movesSet] at *
-  rintro ⟨(_ | _), x⟩ <;> aesop
+  rintro ⟨p', x⟩
+  ext
+  simp only [Prod.map_apply, id_eq, Prod.map_fst, Prod.map_snd, mem_image, Prod.exists, hf, hg]
+  clear hf hg
+  cases p <;> cases p' <;> aesop
 
 variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
@@ -902,12 +899,12 @@ theorem corec_swap (x : MulTy α β) :
   ext
   simp [moves_swap]
 
-/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
-`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+/-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
+`!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
-`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
+`x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 instance _root_.LGame.instMul : Mul LGame where
   mul x y := toLGame LGame.moves LGame.moves (right, x, y)
 

@@ -86,7 +86,7 @@ theorem moves_toLGame (a : α) : (c.toLGame a).moves p = c.toLGame '' c.moves p 
   LGame.moves_corec ..
 
 theorem toLGame_def (a : α) : c.toLGame a =
-    {c.toLGame '' c.leftMoves a | c.toLGame '' c.rightMoves a}ᴸ := by
+    !{c.toLGame '' c.leftMoves a | c.toLGame '' c.rightMoves a} := by
   ext p; cases p <;> simp [moves]
 
 theorem mem_moves_toLGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
@@ -115,7 +115,7 @@ variable (c) in
 /-- Turns a state of a `ConcreteIGame` into an `IGame`. -/
 def toIGame (a : α) : IGame.{u} :=
   have := H
-  {.range fun b : c.leftMoves a ↦ toIGame b | .range fun b : c.rightMoves a ↦ toIGame b}ᴵ
+  !{.range fun b : c.leftMoves a ↦ toIGame b | .range fun b : c.rightMoves a ↦ toIGame b}
 termination_by H.wf.wrap a
 decreasing_by all_goals aesop
 
@@ -135,7 +135,7 @@ theorem moves_toIGame (a : α) : (c.toIGame a).moves p = c.toIGame '' c.moves p 
   cases p <;> (rw [toIGame, moves_ofSets, image_eq_range]; rfl)
 
 theorem toIGame_def (a : α) : c.toIGame a =
-    {c.toIGame '' c.leftMoves a | c.toIGame '' c.rightMoves a}ᴵ := by
+    !{c.toIGame '' c.leftMoves a | c.toIGame '' c.rightMoves a} := by
   ext p; cases p <;> simp [moves]
 
 theorem mem_leftMoves_toIGame_of_mem {a b : α} (hab : b ∈ c.leftMoves a) :
