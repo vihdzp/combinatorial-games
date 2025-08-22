@@ -226,7 +226,7 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
     have H₁ := le_sSup (mem_image_of_mem rightSurreal hx)
     have H₂ := sInf_le (mem_image_of_mem leftSurreal hy)
     simpa using (H₁.trans_lt h).trans_le H₂
-  trans ((ofSets s t H).birthday : WithTop NatOrdinal)
+  trans ((ofSets (Player.cases s t) H).birthday : WithTop NatOrdinal)
   · rw [WithTop.coe_le_coe]
     apply birthday_simplestBtwn_le_of_fits
     unfold Fits

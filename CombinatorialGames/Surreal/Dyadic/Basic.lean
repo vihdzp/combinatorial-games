@@ -208,7 +208,7 @@ private theorem numeric_lower (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
   by_cases h : x.den = 1
   · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast]
     infer_instance
-  · apply hx.of_mem_leftMoves
+  · apply hx.of_mem_moves (p := left)
     simp [toIGame_of_den_ne_one h]
 
 private theorem numeric_upper (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
@@ -290,7 +290,7 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
-  · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
+  · rw [Fits, forall_moves_add, forall_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
@@ -473,12 +473,12 @@ namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
   have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_leftMoves y.2
-    have := Short.of_mem_leftMoves y.2
+    have := Numeric.of_mem_moves y.2
+    have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_rightMoves y.2
-    have := Short.of_mem_rightMoves y.2
+    have := Numeric.of_mem_moves y.2
+    have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   choose f hf using H₁
   choose g hg using H₂
