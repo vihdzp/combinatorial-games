@@ -786,7 +786,7 @@ theorem movesSingle_comp_prodMap
   simp_rw [funext_iff, Function.comp_apply, movesSingle, movesSet] at *
   rintro ⟨p', x⟩
   ext
-  simp only [Prod.map_apply, id_eq, Prod.map_fst, Prod.map_snd, mem_image, Prod.exists, hf, hg]
+  simp_rw [Prod.map_apply, id_eq, Prod.map_fst, Prod.map_snd, mem_image, Prod.exists, hf, hg]
   clear hf hg
   cases p <;> cases p' <;> aesop
 

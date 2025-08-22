@@ -37,6 +37,8 @@ functor.
 
 universe u
 
+/-! ### Players -/
+
 /-- Either the Left or Right player. -/
 @[aesop safe cases]
 inductive Player where
@@ -121,6 +123,8 @@ end Player
 
 open Player
 
+/-! ### OfSets -/
+
 /--
 Type class for the `ofSets` operation.
 Used to implement the `!{st}` and `!{s | t}` syntax.
@@ -176,6 +180,8 @@ theorem ofSets_eq_ofSets_cases {α} {Valid : (Player → Set α) → Prop} [OfSe
     (st : Player → Set α) (h : Valid st) [Small (st left)] [Small (st right)] :
     !{st} = !{st left | st right}'(by convert h; aesop) := by
   congr; ext1 p; cases p <;> rfl
+
+/-! ### Game Functor -/
 
 /-- The functor from a type into the subtype of small pairs of sets in that type.
 
