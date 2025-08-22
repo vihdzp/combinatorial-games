@@ -201,7 +201,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_leftMoves_nim]
+  · rw [forall_moves_nim]
     intro a ha
     rw [← H] at ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
@@ -218,7 +218,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
       ← grundyAux_eq_grundy left]
     exact H ▸ grundyAux_ne hy
-  · rw [forall_rightMoves_nim]
+  · rw [forall_moves_nim]
     intro a ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h right y hy
