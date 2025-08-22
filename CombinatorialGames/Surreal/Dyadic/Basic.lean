@@ -125,7 +125,7 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
 * If `x : ℤ`, then `toIGame x = ↑x`.
-* Otherwise, if `x = m / n` with `n` even, then `toIGame x = {(m - 1) / n | (m + 1) / n}ᴵ`. Note
+* Otherwise, if `x = m / n` with `n` even, then `toIGame x = !{(m - 1) / n | (m + 1) / n}`. Note
   that both options will have smaller denominators. -/
 @[coe]
 noncomputable def toIGame (x : Dyadic) : IGame :=
@@ -176,7 +176,7 @@ theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ r
   have : -y ∈ leftMoves (-x : Dyadic) := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
 
-/-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
+/-- A dyadic number `x` is always equivalent to `!{lower x | upper x}`, though this may not
 necessarily be the canonical form. -/
 theorem toIGame_equiv_lower_upper (x : Dyadic) :
     (x : IGame) ≈ !{{(lower x : IGame)} | {(upper x : IGame)}} := by

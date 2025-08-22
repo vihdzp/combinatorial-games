@@ -36,7 +36,7 @@ recommended_spelling "wpow" for "ω^" in [«termω^_»]
 noncomputable section
 namespace IGame
 
-/-- The ω-map on games, which is defined so that `ω^ {s | t}ᴵ = {0, r * ω^ a | r * ω^ b}` for
+/-- The ω-map on games, which is defined so that `ω^ !{s | t} = {0, r * ω^ a | r * ω^ b}` for
 `a ∈ s`, `b ∈ t`, and `r` ranging over positive dyadic rationals.
 
 The standard definition in the literature instead has `r` ranging over positive reals,

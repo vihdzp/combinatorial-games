@@ -819,7 +819,7 @@ theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
 theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
   sub_congr .rfl h
 
-/-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
+/-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = !{{↑n} | ∅}`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = !{Iio n | ∅}`.
 For that, use `NatOrdinal.toIGame`. -/
