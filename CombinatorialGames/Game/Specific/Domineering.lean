@@ -159,5 +159,4 @@ open IGame Domineering
 
 /-- The game of domineering. -/
 def ConcreteGame.domineering : ConcreteGame Domineering where
-  leftMoves x := {y | relLeft y x}
-  rightMoves x :=  {y | relRight y x}
+  moves p x := p.cases {y | relLeft y x} {y | relRight y x}
