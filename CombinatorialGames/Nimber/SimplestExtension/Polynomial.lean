@@ -40,6 +40,14 @@ theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
 
 end Polynomial
 
+-- Generalize to a SuccAddOrder
+@[simp]
+theorem WithBot.lt_add_one {x : WithBot ℕ} (n : ℕ) : x < WithBot.some n + 1 ↔ x ≤ n := by
+  cases x
+  · simp [bot_lt_iff_ne_bot]
+  · rw [← WithBot.coe_add_one, WithBot.coe_lt_coe]
+    simp
+
 namespace Nimber
 
 /-! ### Basic results -/
