@@ -53,7 +53,7 @@ namespace Real
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
 rationals. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame.{u} :=
-  {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴵ
+  !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
@@ -280,7 +280,7 @@ instance : Coe ℝ Game := ⟨toGame⟩
 @[simp] theorem _root_.Game.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
 
 theorem toGame_def (x : ℝ) :
-    toGame x = {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴳ := by
+    toGame x = !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}} := by
   rw [← Game.mk_real_toIGame, toIGame]
   simp [Set.image_image]
 
@@ -347,8 +347,7 @@ private theorem toSurreal_def_aux {x : ℝ} :
 @[simp] theorem toGame_toSurreal (x : ℝ) : x.toSurreal.toGame = x.toGame := rfl
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
-    .ofSets (Player.cases ((↑) '' {q : Dyadic | q < x}) ((↑) '' {q : Dyadic | x < q}))
-      toSurreal_def_aux := by
+    !{(↑) '' {q : Dyadic | q < x} | ((↑) '' {q : Dyadic | x < q})}'toSurreal_def_aux := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
   congr! <;> aesop
 

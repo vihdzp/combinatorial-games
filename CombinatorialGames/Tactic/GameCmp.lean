@@ -19,7 +19,7 @@ Tests for the tactic are found in the `CombinatorialGames.Test` file.
 This tactic works by repeatedly unfolding the definition of `≤` and applying `simp` lemmas tagged
 with `game_cmp` until the goal is solved. It is effective on any game whose moves can be
 "enumerated" by `simp`, in the sense that a quantifier over its moves can be written in a
-quantifier-less way. For instance, `∀ y ∈ leftMoves {{0, 1} | {2, 3}}ᴵ, P y` can be simplified into
+quantifier-less way. For instance, `∀ y ∈ leftMoves !{{0, 1} | {2, 3}}, P y` can be simplified into
 `P 0 ∧ P 1`.
 
 ## Which lemmas to tag

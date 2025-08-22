@@ -20,7 +20,7 @@ The basic theory of combinatorial games, following Conway's book `On Numbers and
 
 In ZFC, games are built inductively out of two other sets of games, representing the options for two
 players Left and Right. In Lean, we instead define the type of games `IGame` as arising from two
-`Small` sets of games, with notation `{s | t}ᴵ` (see `IGame.ofSets`). A `u`-small type `α : Type v`
+`Small` sets of games, with notation `!{s | t}`. A `u`-small type `α : Type v`
 is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
 a given universe closely mimics the ZFC distinction between sets and proper classes.
 
@@ -64,8 +64,8 @@ repeatedly unfolds the definition of `≤` and applies `simp` until it solves th
 ## Algebraic structures
 
 Most of the usual arithmetic operations can be defined for games. Addition is defined for
-`x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` by `x + y = {s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴵ`. Negation is
-defined by `-{s | t}ᴵ = {-t | -s}ᴵ`.
+`x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` by `x + y = !{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. Negation is
+defined by `-!{s | t} = !{-t | -s}`.
 
 The order structures interact in the expected way with arithmetic. In particular, `Game` is an
 `OrderedAddCommGroup`. Meanwhile, `IGame` satisfies the slightly weaker axioms of a
@@ -108,15 +108,10 @@ export Player (left right)
 
 /-- Construct an `IGame` from its left and right sets.
 
-This is given notation `{s | t}ᴵ`, where the superscript `I` is to disambiguate from set builder
-notation, and from the analogous constructors on other game types.
-
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
-def ofSets (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] : IGame.{u} :=
-  QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
-
-@[inherit_doc] notation "{" s " | " t "}ᴵ" => ofSets (Player.cases s t)
+instance : OfSets IGame fun _ ↦ True where
+  ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
@@ -130,23 +125,23 @@ abbrev rightMoves (x : IGame.{u}) : Set IGame.{u} := x.moves right
 instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 @[simp, game_cmp]
-theorem moves_ofSets (p) (st : Player → Set _) [Small.{u} (st left)] [Small.{u} (st right)] :
-    (ofSets st).moves p = st p := by
-  ext; rw [moves, ofSets, QPF.Fix.dest_mk]
+theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
+    !{st}.moves p = st p := by
+  dsimp [ofSets]; ext; rw [moves, QPF.Fix.dest_mk]
 
 @[simp]
-theorem ofSets_moves (x : IGame) : ofSets x.moves = x := x.mk_dest
+theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
 
 @[simp, game_cmp]
-theorem leftMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.leftMoves = s :=
+theorem leftMoves_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}.leftMoves = s :=
   moves_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_ofSets (s t : Set _) [Small.{u} s] [Small.{u} t] : {s | t}ᴵ.rightMoves = t :=
+theorem rightMoves_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}.rightMoves = t :=
   moves_ofSets ..
 
 @[simp]
-theorem ofSets_leftMoves_rightMoves (x : IGame) : {x.leftMoves | x.rightMoves}ᴵ = x := by
+theorem ofSets_leftMoves_rightMoves (x : IGame) : !{x.leftMoves | x.rightMoves} = x := by
   convert x.ofSets_moves with p
   cases p <;> rfl
 
@@ -161,17 +156,13 @@ theorem ext {x y : IGame.{u}} (h : ∀ p, x.moves p = y.moves p) :
   simp_rw [funext h]
 
 @[simp]
-theorem ofSets_inj' {st₁ st₂ : Player → Set _}
+theorem ofSets_inj' {st₁ st₂ : Player → Set IGame}
     [Small (st₁ left)] [Small (st₁ right)] [Small (st₂ left)] [Small (st₂ right)] :
-    ofSets st₁ = ofSets st₂ ↔ st₁ = st₂ := by
+    !{st₁} = !{st₂} ↔ st₁ = st₂ := by
   simp_rw [IGame.ext_iff, moves_ofSets, funext_iff]
 
-theorem ofSets_eq_ofSets_cases (st : Player → Set _) [Small (st left)] [Small (st right)] :
-    ofSets st = {st left | st right}ᴵ := by
-  congr; ext1 p; cases p <;> rfl
-
-theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set _} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
-    {s₁ | t₁}ᴵ = {s₂ | t₂}ᴵ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set IGame} [Small s₁] [Small s₂] [Small t₁] [Small t₂] :
+    !{s₁ | t₁} = !{s₂ | t₂} ↔ s₁ = s₂ ∧ t₁ = t₂ := by
   simp
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
@@ -233,19 +224,19 @@ things for you.
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
 def ofSetsRecOn {motive : IGame.{u} → Sort*} (x)
-    (mk : Π (s t : Set _) [Small s] [Small t],
-      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
+    (mk : Π (s t : Set IGame) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
     motive x :=
-  cast (by simp) <| moveRecOn (motive := fun x ↦ motive {x.leftMoves | x.rightMoves}ᴵ) x
+  cast (by simp) <| moveRecOn (motive := fun x ↦ motive !{x.leftMoves | x.rightMoves}) x
     fun x IH ↦ mk _ _
       (fun y hy ↦ cast (by simp) (IH left y hy)) (fun y hy ↦ cast (by simp) (IH right y hy))
 
 @[simp]
 theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
     (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (mk : Π (s t : Set _) [Small s] [Small t],
-      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive {s | t}ᴵ) :
-    ofSetsRecOn {s | t}ᴵ mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
+    (mk : Π (s t : Set IGame) [Small s] [Small t],
+      (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
+    ofSetsRecOn !{s | t} mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   congr
   any_goals simp
@@ -284,20 +275,20 @@ macro "igame_wf" : tactic =>
 
 /-! ### Basic games -/
 
-/-- The game `0 = {∅ | ∅}ᴵ`. -/
-instance : Zero IGame := ⟨{∅ | ∅}ᴵ⟩
+/-- The game `0 = !{∅ | ∅}`. -/
+instance : Zero IGame := ⟨!{∅ | ∅}⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴵ := rfl
+theorem zero_def : (0 : IGame) = !{∅ | ∅} := rfl
 
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
 
 instance : Inhabited IGame := ⟨0⟩
 
-/-- The game `1 = {{0} | ∅}ᴵ`. -/
-instance : One IGame := ⟨{{0} | ∅}ᴵ⟩
+/-- The game `1 = !{{0} | ∅}`. -/
+instance : One IGame := ⟨!{{0} | ∅}⟩
 
-theorem one_def : 1 = {{0} | ∅}ᴵ := rfl
+theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
@@ -485,16 +476,16 @@ instance : ZeroLEOneClass IGame where
 /-! ### Negation -/
 
 private def neg' (x : IGame) : IGame :=
-  {range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}ᴵ
+  !{range fun y : x.rightMoves ↦ neg' y.1 | range fun y : x.leftMoves ↦ neg' y.1}
 termination_by x
 decreasing_by igame_wf
 
-/-- The negative of a game is defined by `-{s | t}ᴵ = {-t | -s}ᴵ`. -/
+/-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
 instance : Neg IGame where
   neg := neg'
 
-private theorem neg_ofSets'' (s t : Set _) [Small s] [Small t] :
-    -{s | t}ᴵ = {Neg.neg '' t | Neg.neg '' s}ᴵ := by
+private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
+    -!{s | t} = !{Neg.neg '' t | Neg.neg '' s} := by
   change neg' _ = _
   rw [neg']
   simp [Neg.neg, Set.ext_iff]
@@ -505,21 +496,21 @@ instance : InvolutiveNeg IGame where
     aesop (add simp [neg_ofSets''])
 
 @[simp]
-theorem neg_ofSets (s t : Set _) [Small s] [Small t] : -{s | t}ᴵ = {-t | -s}ᴵ := by
+theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
   simp_rw [neg_ofSets'', Set.image_neg_eq_neg]
 
-theorem neg_ofSets' (st : Player → Set _) [Small (st left)] [Small (st right)] :
-    -ofSets st = ofSets fun p ↦ -st (-p) := by
+theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st right)] :
+    -!{st} = !{fun p ↦ -st (-p)} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
   dsimp
 
 instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def]
 
-theorem neg_eq (x : IGame) : -x = {-x.rightMoves | -x.leftMoves}ᴵ := by
+theorem neg_eq (x : IGame) : -x = !{-x.rightMoves | -x.leftMoves} := by
   rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
 
-theorem neg_eq' (x : IGame) : -x = ofSets fun p ↦ -x.moves (-p) := by
+theorem neg_eq' (x : IGame) : -x = !{fun p ↦ -x.moves (-p)} := by
   rw [neg_eq, ofSets_eq_ofSets_cases (fun _ ↦ -_)]; rfl
 
 @[simp]
@@ -596,38 +587,38 @@ theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
 /-! ### Addition and subtraction -/
 
 private def add' (x y : IGame) : IGame :=
-  {(range fun z : x.leftMoves ↦ add' z y) ∪ (range fun z : y.leftMoves ↦ add' x z) |
-    (range fun z : x.rightMoves ↦ add' z y) ∪ (range fun z : y.rightMoves ↦ add' x z)}ᴵ
+  !{(range fun z : x.leftMoves ↦ add' z y) ∪ (range fun z : y.leftMoves ↦ add' x z) |
+    (range fun z : x.rightMoves ↦ add' z y) ∪ (range fun z : y.rightMoves ↦ add' x z)}
 termination_by (x, y)
 decreasing_by igame_wf
 
-/-- The sum of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴵ`. -/
+/-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
 instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
-    {(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
-      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves}ᴵ := by
+    !{(· + y) '' x.leftMoves ∪ (x + ·) '' y.leftMoves |
+      (· + y) '' x.rightMoves ∪ (x + ·) '' y.rightMoves} := by
   change add' _ _ = _
   rw [add']
   simp [HAdd.hAdd, Add.add, Set.ext_iff]
 
 theorem add_eq' (x y : IGame) : x + y =
-    ofSets fun p ↦ (· + y) '' x.moves p ∪ (x + ·) '' y.moves p := by
+    !{fun p ↦ (· + y) '' x.moves p ∪ (x + ·) '' y.moves p} := by
   rw [add_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ ∪ _)]
 
 theorem ofSets_add_ofSets
     (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
-    {s₁ | t₁}ᴵ + {s₂ | t₂}ᴵ =
-      {(· + {s₂ | t₂}ᴵ) '' s₁ ∪ ({s₁ | t₁}ᴵ + ·) '' s₂ |
-        (· + {s₂ | t₂}ᴵ) '' t₁ ∪ ({s₁ | t₁}ᴵ + ·) '' t₂}ᴵ := by
+    !{s₁ | t₁} + !{s₂ | t₂} =
+      !{(· + !{s₂ | t₂}) '' s₁ ∪ (!{s₁ | t₁} + ·) '' s₂ |
+        (· + !{s₂ | t₂}) '' t₁ ∪ (!{s₁ | t₁} + ·) '' t₂} := by
   rw [add_eq]
   simp
 
-theorem ofSets_add_ofSets' (st₁ st₂ : Player → Set _)
+theorem ofSets_add_ofSets' (st₁ st₂ : Player → Set IGame)
     [Small (st₁ left)] [Small (st₂ left)] [Small (st₁ right)] [Small (st₂ right)] :
-    ofSets st₁ + ofSets st₂ =
-      ofSets fun p ↦ (· + ofSets st₂) '' st₁ p ∪ (ofSets st₁ + ·) '' st₂ p := by
+    !{st₁} + !{st₂} =
+      !{fun p ↦ (· + !{st₂}) '' st₁ p ∪ (!{st₁} + ·) '' st₂ p} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases st₂, ofSets_eq_ofSets_cases (fun _ ↦ _ ∪ _),
     ofSets_add_ofSets]
 
@@ -828,9 +819,9 @@ theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
 theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
   sub_congr .rfl h
 
-/-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = {{↑n} | ∅}ᴵ`.
+/-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = !{{↑n} | ∅}`.
 
-Note that this is equivalent, but not identical, to the more common definition `↑n = {Iio n | ∅}ᴵ`.
+Note that this is equivalent, but not identical, to the more common definition `↑n = !{Iio n | ∅}`.
 For that, use `NatOrdinal.toIGame`. -/
 instance : AddCommMonoidWithOne IGame where
 
@@ -863,7 +854,7 @@ theorem leftMoves_ofNat (n : ℕ) [n.AtLeastTwo] : leftMoves ofNat(n) = {((n - 1
 theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
   rightMoves_natCast n
 
-theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = {{(n : IGame)} | ∅}ᴵ := by
+theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = !{{(n : IGame)} | ∅} := by
   ext p; cases p <;> simp
 
 /-- Every left option of a natural number is equal to a smaller natural number. -/
@@ -929,19 +920,19 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ r
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
 def mul' (x y : IGame) : IGame :=
-  {(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
+  !{(range fun a : (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves :) ↦
-    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}ᴵ
+    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}
 termination_by (x, y)
 decreasing_by all_goals aesop
 
-/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
-`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+/-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
+`!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `IGame.mulOption`, this can alternatively be written as
-`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
+`x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 instance : Mul IGame where
   mul := mul'
 
@@ -952,23 +943,23 @@ def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
 theorem mul_eq (x y : IGame) : x * y =
-    {(fun a ↦ mulOption x y a.1 a.2) ''
+    !{(fun a ↦ mulOption x y a.1 a.2) ''
       (x.leftMoves ×ˢ y.leftMoves ∪ x.rightMoves ×ˢ y.rightMoves) |
     (fun a ↦ mulOption x y a.1 a.2) ''
-      (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves)}ᴵ := by
+      (x.leftMoves ×ˢ y.rightMoves ∪ x.rightMoves ×ˢ y.leftMoves)} := by
   change mul' _ _ = _
   rw [mul']
   simp [mulOption, HMul.hMul, Mul.mul, Set.ext_iff]
 
 theorem mul_eq' (x y : IGame) : x * y =
-    ofSets fun p ↦ (fun a ↦ mulOption x y a.1 a.2) ''
-      (x.leftMoves ×ˢ y.moves p ∪ x.rightMoves ×ˢ y.moves (-p)) := by
+    !{fun p ↦ (fun a ↦ mulOption x y a.1 a.2) ''
+      (x.leftMoves ×ˢ y.moves p ∪ x.rightMoves ×ˢ y.moves (-p))} := by
   rw [mul_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]; rfl
 
 theorem ofSets_mul_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
-    {s₁ | t₁}ᴵ * {s₂ | t₂}ᴵ =
-      {(fun a ↦ mulOption {s₁ | t₁}ᴵ {s₂ | t₂}ᴵ a.1 a.2) '' (s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂) |
-      (fun a ↦ mulOption {s₁ | t₁}ᴵ {s₂ | t₂}ᴵ a.1 a.2) '' (s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂)}ᴵ := by
+    !{s₁ | t₁} * !{s₂ | t₂} =
+      !{(fun a ↦ mulOption !{s₁ | t₁} !{s₂ | t₂} a.1 a.2) '' (s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂) |
+      (fun a ↦ mulOption !{s₁ | t₁} !{s₂ | t₂} a.1 a.2) '' (s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂)} := by
   rw [mul_eq]
   simp
 
@@ -1093,7 +1084,7 @@ private def InvTy.val' {x : IGame}
 private def inv' (x : IGame.{u}) : IGame.{u} :=
   let IH (p) : Shrink {y ∈ x.moves p | 0 < y} → IGame :=
     fun x ↦ inv' (Subtype.val <| (equivShrink _).symm x)
-  {.range (InvTy.val' IH left) | .range (InvTy.val' IH right)}ᴵ
+  !{.range (InvTy.val' IH left) | .range (InvTy.val' IH right)}
 termination_by x
 decreasing_by exact .of_mem_moves ((equivShrink _).symm x).2.1
 
@@ -1101,7 +1092,7 @@ private abbrev InvTy.val (x : IGame) (b : Player)
     (i : InvTy (fun p ↦ Shrink {y ∈ x.moves p | 0 < y}) b) : IGame :=
   i.val' (fun _ ↦ inv' ∘ Subtype.val ∘ (equivShrink _).symm) b
 
-/-- The inverse of a positive game `x = {s | t}ᴵ` is `{s' | t'}ᴵ`, where `s'` and `t'` are the
+/-- The inverse of a positive game `x = !{s | t}` is `!{s' | t'}`, where `s'` and `t'` are the
 smallest sets such that `0 ∈ s'`, and such that `(1 + (z - x) * a) / z, (1 + (y - x) * b) / y ∈ s'`
 and `(1 + (y - x) * a) / y, (1 + (z - x) * b) / z ∈ t'` for `y ∈ s` positive, `z ∈ t`, `a ∈ s'`, and
 `b ∈ t'`.
@@ -1122,12 +1113,12 @@ private theorem inv_eq'' {x : IGame} :
   rfl
 
 private theorem inv_eq {x : IGame.{u}} (hx : 0 < x) :
-    x⁻¹ = {.range (InvTy.val x left) | .range (InvTy.val x right)}ᴵ := by
+    x⁻¹ = !{.range (InvTy.val x left) | .range (InvTy.val x right)} := by
   rw [inv_eq'', if_pos hx, inv']
   rfl
 
 private theorem inv_eq' {x : IGame.{u}} (hx : 0 < x) :
-    x⁻¹ = ofSets fun p ↦ .range (InvTy.val x p) := by
+    x⁻¹ = !{fun p ↦ .range (InvTy.val x p)} := by
   rw [inv_eq hx, ofSets_eq_ofSets_cases fun _ ↦ range _]
 
 protected theorem div_eq_mul_inv (x y : IGame) : x / y = x * y⁻¹ := rfl

@@ -21,18 +21,18 @@ noncomputable section
 namespace IGame
 
 private def toLGame' (x : IGame) : LGame :=
-  {range fun y : x.leftMoves ↦ toLGame' y | range fun y : x.rightMoves ↦ toLGame' y}ᴸ
+  !{range fun y : x.leftMoves ↦ toLGame' y | range fun y : x.rightMoves ↦ toLGame' y}
 termination_by x
 decreasing_by igame_wf
 
 private theorem toLGame'_def (x : IGame) :
-    x.toLGame' = {toLGame' '' x.leftMoves | toLGame' '' x.rightMoves}ᴸ := by
+    x.toLGame' = !{toLGame' '' x.leftMoves | toLGame' '' x.rightMoves} := by
   rw [toLGame']
   simp_rw [image_eq_range]
 
 private theorem toLGame'_def' (x : IGame) :
-    x.toLGame' = .ofSets fun p ↦ toLGame' '' x.moves p := by
-  rw [toLGame'_def, LGame.ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]
+    x.toLGame' = !{fun p ↦ toLGame' '' x.moves p} := by
+  rw [toLGame'_def, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]
 
 private theorem toLGame'_inj {x y : IGame} (h : x.toLGame' = y.toLGame') : x = y := by
   rw [toLGame'_def', toLGame'_def'] at h
@@ -54,7 +54,7 @@ def toLGame : IGame ↪ LGame where
 instance : Coe IGame LGame := ⟨toLGame⟩
 
 theorem toLGame_def (x : IGame) :
-    x.toLGame = {toLGame '' x.leftMoves | toLGame '' x.rightMoves}ᴸ :=
+    x.toLGame = !{toLGame '' x.leftMoves | toLGame '' x.rightMoves} :=
   toLGame'_def x
 
 @[simp]
@@ -70,7 +70,7 @@ theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGam
   mp := by rintro ⟨x, rfl⟩; exact x.acc_toLGame
   mpr h := h.rec fun x _ ih ↦ by
     choose f hf using ih
-    use ofSets fun p ↦ range fun y : x.moves p ↦ f y (by aesop)
+    use !{fun p ↦ range fun y : x.moves p ↦ f y (by aesop)}
     ext1
     simp only [moves_toLGame, moves_ofSets, ← range_comp]
     convert Subtype.range_val

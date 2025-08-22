@@ -73,10 +73,9 @@ theorem birthday_one : birthday 1 = 1 := by
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
-    (ofSets (Player.cases s t) H).birthday ≤
-      max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+    !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   choose f hf using birthday_eq_iGameBirthday
-  have : Numeric {f '' s | f '' t}ᴵ := by
+  have : Numeric !{f '' s | f '' t} := by
     rw [numeric_def]
     simp_rw [moves_ofSets]
     refine ⟨?_, ?_⟩
@@ -89,7 +88,7 @@ theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     all_goals
       obtain ⟨hy, _, _⟩ := hf y
       exact hy
-  have : ofSets (Player.cases s t) H = mk {f '' s | f '' t}ᴵ := by
+  have : !{s | t} = mk !{f '' s | f '' t} := by
     rw [← toGame_inj, toGame_ofSets, toGame_mk, Game.mk_ofSets]
     simp_rw [image_image]
     congr! with a ha a ha

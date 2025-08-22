@@ -48,10 +48,10 @@ namespace NatOrdinal
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
 private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
-  {.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}ᴵ
+  !{.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}
 termination_by o
 
-private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
+private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = !{toIGame' '' Iio o | ∅} := by
   rw [toIGame']; simp [image_eq_range]
 
 private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
@@ -73,7 +73,7 @@ termination_by a => a
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
-theorem toIGame_def (o : NatOrdinal) : o.toIGame = {toIGame '' Iio o | ∅}ᴵ :=
+theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
 @[simp]
@@ -127,7 +127,7 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
 
 @[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
+theorem toGame_def (o : NatOrdinal) : o.toGame = !{toGame '' Iio o | ∅} := by
   rw [← Game.mk_natOrdinal_toIGame, toIGame_def]
   simp [image_image]
 

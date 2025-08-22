@@ -106,7 +106,7 @@ termination_by x
 decreasing_by igame_wf
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
-    birthday {s | t}ᴵ = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+    birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
   simp [iSup, image_eq_range]
 
@@ -210,7 +210,8 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   induction o using SuccOrder.prelimitRecOn with
   | succ o _ ih =>
     apply small_subset
-      (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦ {s.1 | s.2}ᴵ)
+      (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦
+        (!{s.1 | ↑s.2} : IGame))
     refine fun x hx ↦ ⟨((↑) ⁻¹' x.leftMoves, (↑) ⁻¹' x.rightMoves), ?_⟩
     simp_rw [lt_succ_iff, birthday_le_iff] at hx
     ext p; cases p <;> simp_all
@@ -238,10 +239,10 @@ instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthd
 noncomputable def birthdayFinset : ℕ → Finset IGame.{u}
   | 0 => {0}
   | n + 1 => ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
-    ⟨fun ⟨a, b⟩ => {a | b}ᴵ, fun a b hab => by aesop⟩
+    ⟨fun a => !{a.1 | a.2}, fun a b hab => by aesop⟩
 
 theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n + 1) ↔
-    ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ {l | r}ᴵ = x := by
+    ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
   simp [birthdayFinset]
 
 @[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
@@ -383,10 +384,10 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
     exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
 
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
-    birthday {s | t}ᴳ ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+    birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   choose f hf using birthday_eq_iGameBirthday
-  trans {f '' s | f '' t}ᴵ.birthday
-  · convert birthday_mk_le {f '' s | f '' t}ᴵ using 2
+  trans !{f '' s | f '' t}.birthday
+  · convert birthday_mk_le !{f '' s | f '' t} using 2
     simp_rw [mk_ofSets, image_image]
     aesop
   · simp_rw [IGame.birthday_ofSets, image_comp]
