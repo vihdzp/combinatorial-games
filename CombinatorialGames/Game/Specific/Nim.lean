@@ -28,13 +28,11 @@ open Nimber Set
 namespace ConcreteGame
 
 /-- The game of nim as a `ConcreteGame`. -/
-abbrev nim : ConcreteGame Nimber :=
-  .ofImpartial Iio
+abbrev nim : ConcreteGame Nimber where
+  moves _ := Iio
 
-instance : IsWellFounded _ nim.IsOption := by
-  rw [ConcreteGame.isOption_ofImpartial]
-  change WellFoundedLT Nimber
-  infer_instance
+instance : IsWellFounded _ nim.IsOption :=
+  isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
 
 end ConcreteGame
 
@@ -48,7 +46,7 @@ noncomputable def nim : Nimber.{u} → IGame.{u} :=
   ConcreteGame.nim.toIGame
 
 theorem nim_def (o : Nimber) : nim o = !{nim '' Iio o | nim '' Iio o} :=
-  ConcreteGame.toIGame_def o
+  ConcreteGame.toIGame_def (c := .nim) o
 
 @[simp]
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
@@ -138,10 +136,10 @@ termination_by o
 
 @[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  ConcreteGame.neg_toIGame_ofImpartial ..
+  ConcreteGame.neg_toIGame rfl ..
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
-  ConcreteGame.impartial_toIGame_ofImpartial ..
+  ConcreteGame.impartial_toIGame rfl ..
 
 protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
   rw [dicotic_def]
