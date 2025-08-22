@@ -442,24 +442,23 @@ theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
-    toGame (ofSets (Player.cases s t) H) = !{toGame '' s | toGame '' t} := by
+    toGame !{s | t} = !{toGame '' s | toGame '' t} := by
   rw [toGame_ofSets']
   congr; aesop
 
 theorem mk_ofSets' {st : Player → Set IGame.{u}}
     [Small.{u} (st left)] [Small.{u} (st right)] {H : Numeric !{st}} :
     mk !{st} =
-      !{fun p ↦ .range fun x : st p ↦ mk x (h := H.of_mem_moves (p := p) (by simp))}'(by
-        have := @H.leftMove_lt_rightMove; aesop) := by
+      !{fun p ↦ .range fun x : st p ↦ mk x (h := H.of_mem_moves (p := p) (by simp))}'
+      (by have := @H.leftMove_lt_rightMove; aesop) := by
   change _ = @mk _ (_)
   simp_rw [← toGame_inj, toGame_mk, Game.mk_ofSets']
   congr; aesop
 
 theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric !{s | t}} :
-    mk !{s | t} = ofSets
-      (Player.cases
-        (.range fun x : s ↦ mk x (h := H.of_mem_moves (p := left) (by simp)))
-        (.range fun x : t ↦ mk x (h := H.of_mem_moves (p := right) (by simp))))
+    mk !{s | t} =
+      !{.range fun x : s ↦ mk x (h := H.of_mem_moves (p := left) (by simp)) |
+        .range fun x : t ↦ mk x (h := H.of_mem_moves (p := right) (by simp))}'
       (by have := @H.leftMove_lt_rightMove; aesop) := by
   rw [mk_ofSets']
   congr!; aesop
@@ -467,14 +466,14 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
 @[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) :
-    x < ofSets (Player.cases s t) H := by
+    x < !{s | t} := by
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
 
 @[aesop apply unsafe]
 theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) :
-    ofSets (Player.cases s t) H < x := by
+    !{s | t} < x := by
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 

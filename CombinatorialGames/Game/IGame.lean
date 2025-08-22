@@ -20,7 +20,7 @@ The basic theory of combinatorial games, following Conway's book `On Numbers and
 
 In ZFC, games are built inductively out of two other sets of games, representing the options for two
 players Left and Right. In Lean, we instead define the type of games `IGame` as arising from two
-`Small` sets of games, with notation `!{s | t}` (see `IGame.ofSets`). A `u`-small type `α : Type v`
+`Small` sets of games, with notation `!{s | t}`. A `u`-small type `α : Type v`
 is one that is equivalent to some `β : Type u`, and the distinction between small and large types in
 a given universe closely mimics the ZFC distinction between sets and proper classes.
 
@@ -111,7 +111,7 @@ export Player (left right)
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
 instance : OfSets IGame fun _ ↦ True where
-  ofSets st _ _ _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
+  ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
