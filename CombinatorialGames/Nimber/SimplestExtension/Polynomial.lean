@@ -4,10 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Nimber.SimplestExtension.Basic
-import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Degree.Domain
+import Mathlib.Algebra.Polynomial.Degree.Lemmas
+import Mathlib.Algebra.Polynomial.EraseLead
 import Mathlib.Algebra.Polynomial.Eval.Coeff
+import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Data.Finsupp.WellFounded
 
 /-!
@@ -38,6 +39,10 @@ theorem coeffs_nonempty_iff : p.coeffs.Nonempty ↔ p ≠ 0 := by
 theorem natDegree_eq_zero_iff : p.natDegree = 0 ↔ p = 0 ∨ p.degree = 0 := by
   rw [p.natDegree_eq_zero_iff_degree_le_zero, le_iff_lt_or_eq, ← WithBot.coe_zero, ← bot_eq_zero',
     WithBot.lt_coe_bot, p.degree_eq_bot]
+
+theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
+    p - X ^ p.natDegree = p.eraseLead := by
+  rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
 end Polynomial
 
