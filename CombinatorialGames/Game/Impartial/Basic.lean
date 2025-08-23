@@ -89,10 +89,9 @@ protected instance star : Impartial ⋆ := by
 protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
   apply mk
   · simp
-  on_goal 1 => rw [moves_neg]
-  on_goal 2 => rw [moves_neg]
   all_goals
-  · intro y hy
+  · rw [moves_neg]
+    intro y hy
     try have := Impartial.of_mem_moves hy
     try have := Impartial.of_mem_moves hy
     rw [← neg_neg y]
@@ -104,10 +103,9 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   apply mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
-  on_goal 1 => rw [moves_add]
-  on_goal 2 => rw [moves_add]
   all_goals
-  · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
+  · rw [moves_add]
+    rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
     · try have := Impartial.of_mem_moves hz
       try have := Impartial.of_mem_moves hz
       exact .add ..

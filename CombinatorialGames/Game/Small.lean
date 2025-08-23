@@ -38,8 +38,7 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 theorem dicotic_def' {x : IGame} : Dicotic x ↔
-    (xᴸ = ∅ ↔ xᴿ = ∅) ∧
-      (∀ l ∈ xᴸ, Dicotic l) ∧ (∀ r ∈ xᴿ, Dicotic r) := by
+    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ l ∈ xᴸ, Dicotic l) ∧ (∀ r ∈ xᴿ, Dicotic r) := by
   rw [dicotic_def, Player.forall]
 
 namespace Dicotic

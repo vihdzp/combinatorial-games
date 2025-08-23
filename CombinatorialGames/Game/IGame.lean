@@ -170,8 +170,7 @@ def IsOption (x y : IGame) : Prop :=
   x ∈ ⋃ p, y.moves p
 
 @[aesop simp]
-lemma isOption_iff_mem_union {x y : IGame} :
-    IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
+lemma isOption_iff_mem_union {x y : IGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
   simp [IsOption, Player.exists]
 
 theorem IsOption.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : IsOption x y :=
@@ -448,24 +447,18 @@ def delabFuzzy : Delab := do
   catch _ => failure -- fail over to the default delaborator
 
 theorem equiv_of_forall_lf {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ,  ¬y ≤ a)
-    (hr₁ : ∀ a ∈ xᴿ, ¬a ≤ y)
-    (hl₂ : ∀ b ∈ yᴸ,  ¬x ≤ b)
-    (hr₂ : ∀ b ∈ yᴿ, ¬b ≤ x) : x ≈ y := by
+    (hl₁ : ∀ a ∈ xᴸ, a ⧏ y) (hr₁ : ∀ a ∈ xᴿ, y ⧏ a)
+    (hl₂ : ∀ b ∈ yᴸ, b ⧏ x) (hr₂ : ∀ b ∈ yᴿ, x ⧏ b) : x ≈ y := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
 
 theorem equiv_of_exists_le {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ,  ∃ b ∈ yᴸ,  a ≤ b)
-    (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, b ≤ a)
-    (hl₂ : ∀ b ∈ yᴸ,  ∃ a ∈ xᴸ,  b ≤ a)
-    (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≤ b) : x ≈ y := by
+    (hl₁ : ∀ a ∈ xᴸ, ∃ b ∈ yᴸ, a ≤ b) (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, b ≤ a)
+    (hl₂ : ∀ b ∈ yᴸ, ∃ a ∈ xᴸ, b ≤ a) (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≤ b) : x ≈ y := by
   apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
 
 theorem equiv_of_exists {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ,  ∃ b ∈ yᴸ,  a ≈ b)
-    (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, a ≈ b)
-    (hl₂ : ∀ b ∈ yᴸ,  ∃ a ∈ xᴸ,  a ≈ b)
-    (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≈ b) : x ≈ y := by
+    (hl₁ : ∀ a ∈ xᴸ, ∃ b ∈ yᴸ, a ≈ b) (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, a ≈ b)
+    (hl₂ : ∀ b ∈ yᴸ, ∃ a ∈ xᴸ, a ≈ b) (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≈ b) : x ≈ y := by
   apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]
@@ -605,8 +598,7 @@ instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
-    !{(· + y) '' xᴸ ∪ (x + ·) '' yᴸ |
-      (· + y) '' xᴿ ∪ (x + ·) '' yᴿ} := by
+    !{(· + y) '' xᴸ ∪ (x + ·) '' yᴸ | (· + y) '' xᴿ ∪ (x + ·) '' yᴿ} := by
   change add' _ _ = _
   rw [add']
   simp [HAdd.hAdd, Add.add, Set.ext_iff]
@@ -951,10 +943,8 @@ def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
 theorem mul_eq (x y : IGame) : x * y =
-    !{(fun a ↦ mulOption x y a.1 a.2) ''
-      (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ) |
-    (fun a ↦ mulOption x y a.1 a.2) ''
-      (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ)} := by
+    !{(fun a ↦ mulOption x y a.1 a.2) '' (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ) |
+    (fun a ↦ mulOption x y a.1 a.2) '' (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ)} := by
   change mul' _ _ = _
   rw [mul']
   simp [mulOption, HMul.hMul, Mul.mul, Set.ext_iff]

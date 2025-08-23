@@ -99,8 +99,7 @@ def IsOption (x y : LGame) : Prop :=
   x ∈ ⋃ p, y.moves p
 
 @[aesop simp]
-lemma isOption_iff_mem_union {x y : LGame} :
-    IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
+lemma isOption_iff_mem_union {x y : LGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
   simp [IsOption, Player.exists]
 
 theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
@@ -307,15 +306,13 @@ theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
-@[simp]
 theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
-    !{l | r}ᴸ = l := by
-  rw [moves_ofSets]
+    !{l | r}ᴸ = l :=
+  moves_ofSets ..
 
-@[simp]
 theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
-    !{l | r}ᴿ = r := by
-  rw [moves_ofSets]
+    !{l | r}ᴿ = r :=
+  moves_ofSets ..
 
 /-! ### Basic games -/
 

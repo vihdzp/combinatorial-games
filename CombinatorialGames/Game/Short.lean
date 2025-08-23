@@ -36,8 +36,7 @@ theorem short_def {x : IGame} : Short x ↔
   simp_rw [short_iff_aux]; rw [ShortAux]
 
 theorem short_def' {x : IGame} : Short x ↔
-    xᴸ.Finite ∧ xᴿ.Finite ∧
-      (∀ y ∈ xᴸ, Short y) ∧ (∀ y ∈ xᴿ, Short y) := by
+    xᴸ.Finite ∧ xᴿ.Finite ∧ (∀ y ∈ xᴸ, Short y) ∧ (∀ y ∈ xᴿ, Short y) := by
   rw [short_def, Player.forall]
   tauto
 
