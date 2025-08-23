@@ -45,7 +45,7 @@ noncomputable section
 namespace IGame
 
 private def NumericAux (x : IGame) : Prop :=
-  (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, NumericAux y)
+  (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ moves p x, NumericAux y)
 termination_by x
 decreasing_by igame_wf
 
@@ -58,26 +58,26 @@ class Numeric (x : IGame) : Prop where of_NumericAux ::
   out : NumericAux x
 
 theorem numeric_def {x : IGame} : Numeric x ↔
-    (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, Numeric y) := by
+    (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ moves p x, Numeric y) := by
   simp_rw [numeric_iff_aux]; rw [NumericAux]
 
 theorem numeric_def' {x : IGame} : Numeric x ↔
-    (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧
-    (∀ y ∈ x.leftMoves, Numeric y) ∧ (∀ y ∈ x.rightMoves, Numeric y) := by
+    (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧
+    (∀ y ∈ xᴸ, Numeric y) ∧ (∀ y ∈ xᴿ, Numeric y) := by
   rw [numeric_def]; aesop
 
 namespace Numeric
 variable {x y z : IGame}
 
-theorem mk (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
-    (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
+theorem mk (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z)
+    (h₂ : ∀ y ∈ xᴸ, Numeric y) (h₃ : ∀ y ∈ xᴿ, Numeric y) : Numeric x :=
   numeric_def'.2 ⟨h₁, h₂, h₃⟩
 
 theorem leftMove_lt_rightMove [h : Numeric x]
-    (hy : y ∈ x.leftMoves) (hz : z ∈ x.rightMoves) : y < z :=
+    (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
   (numeric_def.1 h).1 y hy z hz
 
-protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves p) : Numeric y :=
+protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ moves p x) : Numeric y :=
   (numeric_def.1 h).2 p y hy
 
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
@@ -144,25 +144,25 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
 
 /-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
 to the right options.-/
-theorem mk_of_lf (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y ⧏ z)
-    (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
+theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z)
+    (h₂ : ∀ y ∈ xᴸ, Numeric y) (h₃ : ∀ y ∈ xᴿ, Numeric y) : Numeric x :=
   mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
-    x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
+    x ≤ y ↔ (∀ z ∈ xᴸ, z < y) ∧ (∀ z ∈ yᴿ, x < z) := by
   rw [le_iff_forall_lf]
   congr! with z hz z hz
   · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
   · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
 
 theorem lt_iff_exists_le [Numeric x] [Numeric y] :
-    x < y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
+    x < y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ xᴿ, z ≤ y) := by
   rw [← Numeric.not_le, lf_iff_exists_le]
 
-theorem leftMove_lt [Numeric x] (h : y ∈ x.leftMoves) : y < x := by
+theorem leftMove_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
   have := Numeric.of_mem_moves h; simpa using leftMove_lf h
 
-theorem lt_rightMove [Numeric x] (h : y ∈ x.rightMoves) : x < y := by
+theorem lt_rightMove [Numeric x] (h : y ∈ xᴿ) : x < y := by
   have := Numeric.of_mem_moves h; simpa using lf_rightMove h
 
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
@@ -215,14 +215,14 @@ end Numeric
 
 /-! ### Simplicity theorem -/
 
-/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ y.leftMoves`, and `y ⧏ z` for every
-`z ∈ y.rightMoves`.
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `y ⧏ z` for every
+`z ∈ yᴿ`.
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
 the games are equivalent. In particular, a numeric game is equivalent to the game of the least
 birthday that fits in it -/
 def Fits (x y : IGame) : Prop :=
-  (∀ z ∈ y.leftMoves, z ⧏ x) ∧ (∀ z ∈ y.rightMoves, x ⧏ z)
+  (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
 theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y :=
   ⟨fun _ hz ↦ not_le_of_not_le_of_le (leftMove_lf hz) h.ge,
@@ -240,11 +240,11 @@ theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
 alias ⟨_, Fits.neg⟩ := fits_neg_iff
 
 theorem not_fits_iff {x y : IGame} :
-    ¬ Fits x y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ y.rightMoves, z ≤ x) := by
+    ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
   rw [Fits, not_and_or]; simp
 
 theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
-    (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) : x ≤ y := by
+    (hl : ∀ z ∈ xᴸ, ¬ z.Fits y) : x ≤ y := by
   simp_rw [not_fits_iff] at hl
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
   obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
@@ -252,7 +252,7 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   · cases hx.2 w hw <| (hw'.trans_lt (Numeric.leftMove_lt hz)).le
 
 theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
-    (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : y ≤ x := by
+    (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : y ≤ x := by
   rw [← IGame.neg_le_neg_iff]
   apply hx.neg.le_of_forall_leftMoves_not_fits
   simpa only [fits_neg_iff, forall_moves_neg]
@@ -260,16 +260,15 @@ theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
-    (hl : ∀ z ∈ x.leftMoves, ¬ z.Fits y) (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : x ≈ y :=
+    (hl : ∀ z ∈ xᴸ, ¬ z.Fits y) (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : x ≈ y :=
   ⟨hx.le_of_forall_leftMoves_not_fits hl, hx.le_of_forall_rightMoves_not_fits hr⟩
 
 /-- A variant of the **simplicity theorem**: if `x` is the numeric game with the least birthday that
 fits within `y`, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits y)
     (H : ∀ z, Numeric z → z.Fits y → x.birthday ≤ z.birthday) : x ≈ y := by
-  apply hx.equiv_of_forall_not_fits
-  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_ge <| H z (.of_mem_moves hz) h
-  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_ge <| H z (.of_mem_moves hz) h
+  apply hx.equiv_of_forall_not_fits <;>
+    exact fun z hz h ↦ (birthday_lt_of_mem_moves hz).not_ge <| H z (.of_mem_moves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
@@ -428,7 +427,7 @@ a unique "canonical" form!) -/
 instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
   ofSets st H _ _ := by
     refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp) (by simp))
-    rw [leftMoves, moves_ofSets, rightMoves, moves_ofSets]
+    rw [moves_ofSets, moves_ofSets]
     rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
     rw [← Surreal.mk_lt_mk, out_eq, out_eq]
     exact H x hx y hy

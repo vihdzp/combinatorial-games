@@ -21,7 +21,7 @@ universe u
 namespace IGame
 
 def ShortAux (x : IGame) : Prop :=
-  ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, ShortAux y
+  ∀ p, (moves p x).Finite ∧ ∀ y ∈ moves p x, ShortAux y
 termination_by x
 decreasing_by igame_wf
 
@@ -32,36 +32,35 @@ class Short (x : IGame) : Prop where of_shortAux ::
   out : ShortAux x
 
 theorem short_def {x : IGame} : Short x ↔
-    ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, Short y := by
+    ∀ p, (moves p x).Finite ∧ ∀ y ∈ moves p x, Short y := by
   simp_rw [short_iff_aux]; rw [ShortAux]
 
 theorem short_def' {x : IGame} : Short x ↔
-    x.leftMoves.Finite ∧ x.rightMoves.Finite ∧
-      (∀ y ∈ x.leftMoves, Short y) ∧ (∀ y ∈ x.rightMoves, Short y) := by
+    xᴸ.Finite ∧ xᴿ.Finite ∧ (∀ y ∈ xᴸ, Short y) ∧ (∀ y ∈ xᴿ, Short y) := by
   rw [short_def, Player.forall]
   tauto
 
 namespace Short
 variable {x y : IGame}
 
-theorem mk (h₁ : x.leftMoves.Finite) (h₂ : x.rightMoves.Finite)
-    (h₃ : ∀ y ∈ x.leftMoves, Short y) (h₄ : ∀ y ∈ x.rightMoves, Short y) : Short x :=
+theorem mk (h₁ : xᴸ.Finite) (h₂ : xᴿ.Finite)
+    (h₃ : ∀ y ∈ xᴸ, Short y) (h₄ : ∀ y ∈ xᴿ, Short y) : Short x :=
   short_def'.2 ⟨h₁, h₂, h₃, h₄⟩
 
-theorem finite_moves (p : Player) (x : IGame) [h : Short x] : (x.moves p).Finite :=
+theorem finite_moves (p : Player) (x : IGame) [h : Short x] : (moves p x).Finite :=
   (short_def.1 h p).1
 
 theorem finite_setOf_isOption (x : IGame) [Short x] : {y | IsOption y x}.Finite := by
   simp_rw [isOption_iff_mem_union]
   exact (finite_moves _ x).union (finite_moves _ x)
 
-instance (p : Player) (x : IGame) [Short x] : Finite (x.moves p) :=
+instance (p : Player) (x : IGame) [Short x] : Finite (moves p x) :=
   (Short.finite_moves _ x).to_subtype
 
 instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
   (Short.finite_setOf_isOption x).to_subtype
 
-protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short y :=
+protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ moves p x) : Short y :=
   (short_def.1 h p).2 y hy
 
 protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
@@ -116,14 +115,11 @@ protected instance one : Short 1 := by
 
 protected instance neg (x : IGame) [Short x] : Short (-x) := by
   apply mk
-  · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · rw [forall_moves_neg]
+  any_goals
+    rw [forall_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
-  · rw [forall_moves_neg]
-    intro y hy
-    simpa using (Short.of_mem_moves hy).neg
+  all_goals simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
 termination_by x
 decreasing_by igame_wf
 
@@ -167,8 +163,7 @@ protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
       ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
         (finite_moves _ x).image2 _ (finite_moves _ y)⟩
   rw [forall_moves_mul]
-  intro p'
-  intro a ha b hb
+  intro p' a ha b hb
   replace ha := Short.of_mem_moves ha
   replace hb := Short.of_mem_moves hb
   have := Short.mul a y; have := Short.mul x b; have := Short.mul a b

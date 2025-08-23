@@ -493,11 +493,15 @@ instance : InvolutiveNeg IGame where
 theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
   simp_rw [neg_ofSets'', Set.image_neg_eq_neg]
 
-@[simp]
 theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st right)] :
     -!{st} = !{fun p ↦ -st (-p)} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
   rfl
+
+@[simp]
+theorem neg_ofSets_const (s : Set IGame) [Small s] :
+    -!{fun _ ↦ s} = !{fun _ ↦ -s} := by
+  simp [neg_ofSets']
 
 instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def]

@@ -24,8 +24,7 @@ namespace IGame
 /-! ### Dicotic games -/
 
 private def DicoticAux (x : IGame) : Prop :=
-  (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
-    (∀ l ∈ x.leftMoves, DicoticAux l) ∧ (∀ r ∈ x.rightMoves, DicoticAux r)
+  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ l ∈ xᴸ, DicoticAux l) ∧ (∀ r ∈ xᴿ, DicoticAux r)
 termination_by x
 decreasing_by igame_wf
 
@@ -35,34 +34,34 @@ class Dicotic (x : IGame) : Prop where
   out : DicoticAux x
 
 theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
-      (∀ l ∈ x.leftMoves, Dicotic l) ∧ (∀ r ∈ x.rightMoves, Dicotic r) := by
+    (xᴸ = ∅ ↔ xᴿ = ∅) ∧
+      (∀ l ∈ xᴸ, Dicotic l) ∧ (∀ r ∈ xᴿ, Dicotic r) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 namespace Dicotic
 variable {x y z : IGame}
 
-theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ x.leftMoves = ∅ ∨ x.rightMoves = ∅ := by
+theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ xᴸ = ∅ ∨ xᴿ = ∅ := by
   rw [dicotic_def] at hx
   simp_all [IGame.ext_iff]
 
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ xᴸ ≠ ∅ ∧ xᴿ ≠ ∅ := by
   simpa using eq_zero_iff.not
 
-theorem mk' (h : x.leftMoves = ∅ ↔ x.rightMoves = ∅)
-    (hl : ∀ y ∈ x.leftMoves, Dicotic y) (hr : ∀ y ∈ x.rightMoves, Dicotic y) : Dicotic x :=
+theorem mk' (h : xᴸ = ∅ ↔ xᴿ = ∅)
+    (hl : ∀ y ∈ xᴸ, Dicotic y) (hr : ∀ y ∈ xᴿ, Dicotic y) : Dicotic x :=
   dicotic_def.2 ⟨h, hl, hr⟩
 
-theorem leftMoves_eq_empty_iff [hx : Dicotic x] : x.leftMoves = ∅ ↔ x.rightMoves = ∅ :=
+theorem leftMoves_eq_empty_iff [hx : Dicotic x] : xᴸ = ∅ ↔ xᴿ = ∅ :=
   (dicotic_def.1 hx).1
 
-theorem rightMoves_eq_empty_iff [hx : Dicotic x] : x.rightMoves = ∅ ↔ x.leftMoves = ∅ :=
+theorem rightMoves_eq_empty_iff [hx : Dicotic x] : xᴿ = ∅ ↔ xᴸ = ∅ :=
   leftMoves_eq_empty_iff.symm
 
-protected theorem of_mem_leftMoves [hx : Dicotic x] (h : y ∈ x.leftMoves) : Dicotic y :=
+protected theorem of_mem_leftMoves [hx : Dicotic x] (h : y ∈ xᴸ) : Dicotic y :=
   (dicotic_def.1 hx).2.1 y h
 
-protected theorem of_mem_rightMoves [hx : Dicotic x] (h : y ∈ x.rightMoves) : Dicotic y :=
+protected theorem of_mem_rightMoves [hx : Dicotic x] (h : y ∈ xᴿ) : Dicotic y :=
   (dicotic_def.1 hx).2.2 y h
 
 @[simp]
