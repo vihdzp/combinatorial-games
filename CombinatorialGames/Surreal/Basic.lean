@@ -159,10 +159,10 @@ theorem lt_iff_exists_le [Numeric x] [Numeric y] :
   rw [← Numeric.not_le, lf_iff_exists_le]
 
 theorem left_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
-  have := Numeric.of_mem_moves h; simpa using leftMove_lf h
+  have := Numeric.of_mem_moves h; simpa using left_lf h
 
 theorem lt_right [Numeric x] (h : y ∈ xᴿ) : x < y := by
-  have := Numeric.of_mem_moves h; simpa using lf_rightMove h
+  have := Numeric.of_mem_moves h; simpa using lf_right h
 
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_ ?_
