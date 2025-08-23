@@ -285,7 +285,7 @@ instance : One IGame := ⟨!{{0} | ∅}⟩
 theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 
 @[simp, game_cmp] theorem moves_left_one : (1 : IGame)ᴸ = {0} := moves_left_ofSets ..
-@[simp, game_cmp] theorem rightMoves_one : (1 : IGame)ᴿ = ∅ := moves_right_ofSets ..
+@[simp, game_cmp] theorem moves_right_one : (1 : IGame)ᴿ = ∅ := moves_right_ofSets ..
 
 /-! ### Order relations -/
 
@@ -502,14 +502,13 @@ instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def, neg_ofSets']
 
 theorem neg_eq (x : IGame) : -x = !{-xᴿ | -xᴸ} := by
-  rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
+  rw [← neg_ofSets, ofSets_moves']
 
-theorem neg_eq' (x : IGame) : -x = !{fun p ↦ -x.moves (-p)} := by
+theorem neg_eq' (x : IGame) : -x = !{fun p ↦ -moves (-p) x} := by
   rw [neg_eq, ofSets_eq_ofSets_cases (fun _ ↦ -_)]; rfl
 
 @[simp]
-theorem moves_neg (p : Player) (x : IGame) :
-    (-x).moves p = -x.moves (-p) := by
+theorem moves_neg (p : Player) (x : IGame) : moves p (-x) = -moves (-p) x := by
   rw [neg_eq', moves_ofSets]
 
 theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
@@ -521,12 +520,12 @@ theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := 
 
 @[game_cmp]
 theorem forall_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
-    (∀ y ∈ (-x).moves p, P y) ↔ (∀ y ∈ x.moves (-p), P (-y)) := by
+    (∀ y ∈ moves p (-x), P y) ↔ (∀ y ∈ moves (-p) x, P (-y)) := by
   simp
 
 @[game_cmp]
 theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
-    (∃ y ∈ (-x).moves p, P y) ↔ (∃ y ∈ x.moves (-p), P (-y)) := by
+    (∃ y ∈ moves p (-x), P y) ↔ (∃ y ∈ moves (-p) x, P (-y)) := by
   simp
 
 @[simp]
@@ -580,6 +579,7 @@ theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
 
 /-! ### Addition and subtraction -/
 
+set_option maxHeartbeats 300000 in
 private def add' (x y : IGame) : IGame :=
   !{(range fun z : xᴸ ↦ add' z y) ∪ (range fun z : yᴸ ↦ add' x z) |
     (range fun z : xᴿ ↦ add' z y) ∪ (range fun z : yᴿ ↦ add' x z)}
@@ -591,8 +591,7 @@ instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
-    !{(· + y) '' xᴸ ∪ (x + ·) '' yᴸ |
-      (· + y) '' xᴿ ∪ (x + ·) '' yᴿ} := by
+    !{(· + y) '' xᴸ ∪ (x + ·) '' yᴸ | (· + y) '' xᴿ ∪ (x + ·) '' yᴿ} := by
   change add' _ _ = _
   rw [add']
   simp [HAdd.hAdd, Add.add, Set.ext_iff]
@@ -618,15 +617,15 @@ theorem ofSets_add_ofSets' (st₁ st₂ : Player → Set IGame)
 
 @[simp]
 theorem moves_add (p : Player) (x y : IGame) :
-    (x + y).moves p = (· + y) '' moves p x ∪ (x + ·) '' moves p y := by
+    moves p (x + y) = (· + y) '' moves p x ∪ (x + ·) '' moves p y := by
   rw [add_eq', moves_ofSets]
 
 theorem add_left_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ moves p y) (z : IGame) :
-    z + x ∈ (z + y).moves p := by
+    z + x ∈ moves p (z + y) := by
   rw [moves_add]; right; use x
 
 theorem add_right_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ moves p y) (z : IGame) :
-    x + z ∈ (y + z).moves p := by
+    x + z ∈ moves p (y + z) := by
   rw [moves_add]; left; use x
 
 theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
@@ -637,13 +636,13 @@ theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z)
 
 @[game_cmp]
 theorem forall_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x + y).moves p, P a) ↔
+    (∀ a ∈ moves p (x + y), P a) ↔
       (∀ a ∈ moves p x, P (a + y)) ∧ (∀ b ∈ moves p y, P (x + b)) := by
   aesop
 
 @[game_cmp]
 theorem exists_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x + y).moves p, P a) ↔
+    (∃ a ∈ moves p (x + y), P a) ↔
       (∃ a ∈ moves p x, P (a + y)) ∨ (∃ b ∈ moves p y, P (x + b)) := by
   aesop
 
@@ -687,19 +686,19 @@ instance : SubNegMonoid IGame where
 
 @[simp]
 theorem moves_sub (p : Player) (x y : IGame) :
-    (x - y).moves p = (· - y) '' moves p x ∪ (x + ·) '' (-y.moves (-p)) := by
+    moves p (x - y) = (· - y) '' moves p x ∪ (x + ·) '' (-moves (-p) y) := by
   simp [sub_eq_add_neg]
 
 theorem sub_left_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ moves p y) (z : IGame) :
-    z - x ∈ (z - y).moves (-p) := by
+    z - x ∈ moves (-p) (z - y) := by
   apply add_left_mem_moves_add; simpa
 
-theorem sub_left_mem_moves_sub_neg {p : Player} {x y : IGame} (h : x ∈ y.moves (-p)) (z : IGame) :
-    z - x ∈ (z - y).moves p := by
+theorem sub_left_mem_moves_sub_neg {p : Player} {x y : IGame} (h : x ∈ moves (-p) y) (z : IGame) :
+    z - x ∈ moves p (z - y) := by
   apply add_left_mem_moves_add; simpa
 
 theorem sub_right_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ moves p y) (z : IGame) :
-    x - z ∈ (y - z).moves p :=
+    x - z ∈ moves p (y - z) :=
   add_right_mem_moves_add h _
 
 private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
@@ -718,7 +717,7 @@ instance : SubtractionCommMonoid IGame where
   add_comm := add_comm
 
 private theorem sub_self_le (x : IGame) : x - x ≤ 0 := by
-  rw [le_zero, leftMoves, moves_sub]
+  rw [le_zero, moves_sub]
   rintro _ (⟨y, hy, rfl⟩ | ⟨y, hy, rfl⟩)
   · exact lf_of_rightMove_le (sub_self_le y) (sub_left_mem_moves_sub hy y)
   · apply lf_of_rightMove_le (sub_self_le (-y))
@@ -738,7 +737,7 @@ theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
   simpa [add_comm] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
-  rw [le_iff_forall_lf, leftMoves, rightMoves, moves_add, moves_add]
+  rw [le_iff_forall_lf, moves_add, moves_add]
   refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
   · exact lf_of_le_leftMove (add_le_add_left' h a) (add_right_mem_moves_add ha y)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (leftMove_lf_of_le h ha)
@@ -821,38 +820,38 @@ instance : AddCommMonoidWithOne IGame where
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
 @[game_cmp]
-theorem leftMoves_natCast_succ' : ∀ n : ℕ, leftMoves n.succ = {(n : IGame)}
+theorem moves_left_natCast_succ' : ∀ n : ℕ, (n.succ : IGame)ᴸ = {(n : IGame)}
   | 0 => by simp
   | n + 1 => by
-    rw [Nat.cast_succ, leftMoves, moves_add, ← leftMoves, leftMoves_natCast_succ']
+    rw [Nat.cast_succ, moves_add, moves_left_natCast_succ']
     simp
 
-@[simp 1100] -- This should trigger before `leftMoves_add`.
-theorem leftMoves_natCast_succ (n : ℕ) : leftMoves (n + 1) = {(n : IGame)} :=
-  leftMoves_natCast_succ' n
+@[simp 1100] -- This should trigger before `moves_left_add`.
+theorem moves_left_natCast_succ (n : ℕ) : (n + 1 : IGame)ᴸ = {(n : IGame)} :=
+  moves_left_natCast_succ' n
 
-@[simp 1100, game_cmp] -- This should trigger before `rightMoves_add`.
-theorem rightMoves_natCast : ∀ n : ℕ, rightMoves n = ∅
+@[simp 1100, game_cmp] -- This should trigger before `moves_right_add`.
+theorem moves_right_natCast : ∀ n : ℕ, (n : IGame)ᴿ = ∅
   | 0 => by simp
   | n + 1 => by
-    rw [Nat.cast_succ, rightMoves, moves_add, ← rightMoves, rightMoves_natCast]
+    rw [Nat.cast_succ, moves_add, moves_right_natCast]
     simp
 
 @[simp 1100, game_cmp]
-theorem leftMoves_ofNat (n : ℕ) [n.AtLeastTwo] : leftMoves ofNat(n) = {((n - 1 : ℕ) : IGame)} := by
-  change leftMoves n = _
-  rw [← Nat.succ_pred (NeZero.out (n := n)), leftMoves_natCast_succ']
-  simp
+theorem moves_left_ofNat (n : ℕ) [n.AtLeastTwo] : ofNat(n)ᴸ = {((n - 1 : ℕ) : IGame)} := by
+  convert moves_left_natCast_succ' (n - 1)
+  dsimp [OfNat.ofNat]
+  rw [Nat.sub_add_cancel NeZero.one_le]
 
 @[simp 1100, game_cmp]
-theorem rightMoves_ofNat (n : ℕ) [n.AtLeastTwo] : rightMoves ofNat(n) = ∅ :=
-  rightMoves_natCast n
+theorem moves_right_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : IGame)ᴿ = ∅ :=
+  moves_right_natCast n
 
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = !{{(n : IGame)} | ∅} := by
   ext p; cases p <;> simp
 
 /-- Every left option of a natural number is equal to a smaller natural number. -/
-theorem eq_natCast_of_mem_leftMoves_natCast {n : ℕ} {x : IGame} (hx : x ∈ leftMoves n) :
+theorem eq_natCast_of_mem_moves_left_natCast {n : ℕ} {x : IGame} (hx : x ∈ (n : IGame)ᴸ) :
     ∃ m : ℕ, m < n ∧ m = x := by
   cases n with
   | zero => simp at hx
@@ -881,7 +880,7 @@ theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
     | succ n => rfl
   | negSucc n => exact (neg_neg _).symm
 
-theorem eq_sub_one_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
+theorem eq_sub_one_of_mem_moves_left_intCast {n : ℤ} {x : IGame} (hx : x ∈ (n : IGame)ᴸ) :
     x = (n - 1 : ℤ) := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg
   · cases n
@@ -890,23 +889,23 @@ theorem eq_sub_one_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ le
       simp_all
   · simp at hx
 
-theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
+theorem eq_add_one_of_mem_moves_right_intCast {n : ℤ} {x : IGame} (hx : x ∈ (n : IGame)ᴿ) :
     x = (n + 1 : ℤ) := by
-  have : -x ∈ leftMoves (-n : ℤ) := by simpa
+  have : -x ∈ ((-n :) : IGame)ᴸ := by simpa
   rw [← neg_inj]
-  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_moves_left_intCast this
 
 /-- Every left option of an integer is equal to a smaller integer. -/
-theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ leftMoves n) :
+theorem eq_intCast_of_mem_moves_left_intCast {n : ℤ} {x : IGame} (hx : x ∈ (n : IGame)ᴸ) :
     ∃ m : ℤ, m < n ∧ m = x := by
   use n - 1
-  simp [eq_sub_one_of_mem_leftMoves_intCast hx]
+  simp [eq_sub_one_of_mem_moves_left_intCast hx]
 
 /-- Every right option of an integer is equal to a larger integer. -/
-theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ rightMoves n) :
+theorem eq_intCast_of_mem_moves_right_intCast {n : ℤ} {x : IGame} (hx : x ∈ (n : IGame)ᴿ) :
     ∃ m : ℤ, n < m ∧ m = x := by
   use n + 1
-  simp [eq_add_one_of_mem_rightMoves_intCast hx]
+  simp [eq_add_one_of_mem_moves_right_intCast hx]
 
 /-! ### Multiplication -/
 
@@ -947,7 +946,7 @@ theorem mul_eq (x y : IGame) : x * y =
 
 theorem mul_eq' (x y : IGame) : x * y =
     !{fun p ↦ (fun a ↦ mulOption x y a.1 a.2) ''
-      (xᴸ ×ˢ moves p y ∪ xᴿ ×ˢ y.moves (-p))} := by
+      (xᴸ ×ˢ moves p y ∪ xᴿ ×ˢ moves (-p) y)} := by
   rw [mul_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]; rfl
 
 theorem ofSets_mul_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
@@ -959,17 +958,18 @@ theorem ofSets_mul_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small 
 
 @[simp]
 theorem moves_mul (p : Player) (x y : IGame) :
-    (x * y).moves p = (fun a ↦ mulOption x y a.1 a.2) ''
-      (xᴸ ×ˢ moves p y ∪ xᴿ ×ˢ y.moves (-p)) := by
+    moves p (x * y) = (fun a ↦ mulOption x y a.1 a.2) ''
+      (xᴸ ×ˢ moves p y ∪ xᴿ ×ˢ moves (-p) y) := by
   rw [mul_eq', moves_ofSets]
 
+/-- This lemma allows `simp` to unfold `mulOption` in the context of `moves`. -/
 @[simp]
 theorem moves_mulOption (p : Player) (x y a b : IGame) :
-    (mulOption x y a b).moves p = (a * y + x * b - a * b).moves p :=
+    moves p (mulOption x y a b) = moves p (a * y + x * b - a * b) :=
   rfl
 
 theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
-    (h₁ : a ∈ moves p xx) (h₂ : b ∈ moves p yy) : mulOption x y a b ∈ (x * y).moves (px * py) := by
+    (h₁ : a ∈ moves px x) (h₂ : b ∈ moves py y) : mulOption x y a b ∈ moves (px * py) (x * y) := by
   rw [moves_mul]; use (a, b); cases px <;> cases py <;> simp_all
 
 theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
@@ -978,14 +978,14 @@ theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b 
 
 @[game_cmp]
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x * y).moves p, P a) ↔
-      (∀ p', ∀ a ∈ moves p x', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
+    (∀ a ∈ moves p (x * y), P a) ↔
+      (∀ p', ∀ a ∈ moves p' x, ∀ b ∈ moves (p' * p) y, P (mulOption x y a b)) := by
   aesop
 
 @[game_cmp]
 theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
-    (∃ a ∈ (x * y).moves p, P a) ↔
-      (∃ p', ∃ a ∈ moves p x', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
+    (∃ a ∈ moves p (x * y), P a) ↔
+      (∃ p', ∃ a ∈ moves p' x, ∃ b ∈ moves (p' * p) y, P (mulOption x y a b)) := by
   aesop
 
 private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
@@ -1027,8 +1027,7 @@ private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
   ext
   simp only [moves_mul, moves_neg, mem_image, mem_union, mem_prod, mem_neg, Prod.exists]
   rw [← (Equiv.neg _).exists_congr_right]
-  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
-  simp only [Equiv.neg_apply, neg_neg, mulOption, or_comm]
+  simp only [Player.neg_left, Player.neg_right, Equiv.neg_apply, neg_neg, mulOption, or_comm]
   congr! 4
   rw [and_congr_right_iff]
   rintro (⟨_, _⟩ | ⟨_, _⟩)
@@ -1142,27 +1141,27 @@ private theorem invOption_eq {x y a : IGame} (hy : 0 < y) :
     invOption x y a = (1 + (y - x) * a) * inv' y := by
   rw [invOption, IGame.div_eq_mul_inv, inv_eq'', if_pos hy]
 
-theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
-  rw [inv_eq hx, leftMoves_ofSets]
+theorem zero_mem_moves_left_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
+  rw [inv_eq hx, moves_left_ofSets]
   exact ⟨InvTy.zero, rfl⟩
 
 theorem inv_nonneg {x : IGame} (hx : 0 < x) : 0 ⧏ x⁻¹ :=
-  leftMove_lf (zero_mem_leftMoves_inv hx)
+  leftMove_lf (zero_mem_moves_left_inv hx)
 
 theorem invOption_mem_moves_inv {x y a : IGame} {p₁ p₂} (hx : 0 < x) (hy : 0 < y)
-    (hyx : y ∈ x.moves (-(p₁ * p₂))) (ha : a ∈ x⁻¹.moves p₁) :
-    invOption x y a ∈ x⁻¹.moves p₂ := by
+    (hyx : y ∈ moves (-(p₁ * p₂)) x) (ha : a ∈ moves p₁ x⁻¹) :
+    invOption x y a ∈ moves p₂ x⁻¹ := by
   rw [inv_eq' hx, moves_ofSets] at *
   obtain ⟨i, rfl⟩ := ha
   use InvTy.mk _ _ (equivShrink _ ⟨_, (by simpa [mul_left_comm p₂]), hy⟩) i
   simp [InvTy.val, InvTy.val', invOption_eq hy]
 
 private theorem invRec' {x : IGame.{u}} (hx : 0 < x)
-    {P : ∀ p, ∀ y ∈ x⁻¹.moves p, Prop}
-    (zero : P left 0 (zero_mem_leftMoves_inv hx))
-    (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ x.moves (-(p₁ * p₂))), ∀ a (ha : a ∈ x⁻¹.moves p₁),
+    {P : ∀ p, ∀ y ∈ moves p x⁻¹, Prop}
+    (zero : P left 0 (zero_mem_moves_left_inv hx))
+    (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ moves (-(p₁ * p₂)) x), ∀ a (ha : a ∈ moves p₁ x⁻¹),
       P p₁ a ha → P p₂ _ (invOption_eq hy ▸ invOption_mem_moves_inv hx hy hyx ha)) :
-    (∀ p y (hy : y ∈ x⁻¹.moves p), P p y hy) := by
+    (∀ p y (hy : y ∈ moves p x⁻¹), P p y hy) := by
   suffices ∀ p : Player, ∀ i, P p (InvTy.val x p i) (by cases p <;> simp [inv_eq hx]) by
     intro p y hy
     rw [inv_eq' hx, moves_ofSets] at hy
@@ -1178,11 +1177,11 @@ private theorem invRec' {x : IGame.{u}} (hx : 0 < x)
 
 /-- An induction principle on left and right moves of `x⁻¹`. -/
 theorem invRec {x : IGame} (hx : 0 < x)
-    {P : ∀ p, ∀ y ∈ x⁻¹.moves p, Prop}
-    (zero : P left 0 (zero_mem_leftMoves_inv hx))
-    (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ x.moves (-(p₁ * p₂))), ∀ a (ha : a ∈ x⁻¹.moves p₁),
+    {P : ∀ p, ∀ y ∈ moves p x⁻¹, Prop}
+    (zero : P left 0 (zero_mem_moves_left_inv hx))
+    (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ moves (-(p₁ * p₂)) x), ∀ a (ha : a ∈ moves p₁ x⁻¹),
       P p₁ a ha → P p₂ _ (invOption_mem_moves_inv hx hy hyx ha)) :
-    (∀ p y (hy : y ∈ x⁻¹.moves p), P p y hy) := by
+    (∀ p y (hy : y ∈ moves p x⁻¹), P p y hy) := by
   apply invRec' hx zero
   convert mk using 8 with _ _ _ ha
   simp_rw [invOption_eq ha]
