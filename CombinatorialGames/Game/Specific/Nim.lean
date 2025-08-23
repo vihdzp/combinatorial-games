@@ -49,39 +49,39 @@ theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
   ConcreteGame.toIGame_def' ..
 
 @[simp]
-theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
+theorem moves_nim (p : Player) (o : Nimber) : moves p (nim o) = nim '' Iio o :=
   ConcreteGame.moves_toIGame ..
 
 theorem forall_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
-    (∀ x ∈ (nim o).moves p, P x) ↔ (∀ a < o, P (nim a)) := by
+    (∀ x ∈ moves p (nim o), P x) ↔ (∀ a < o, P (nim a)) := by
   simp
 
 theorem exists_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
-    (∃ x ∈ (nim o).moves p, P x) ↔ (∃ a < o, P (nim a)) := by
+    (∃ x ∈ moves p (nim o), P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
 @[game_cmp]
 theorem forall_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
-    (∀ x ∈ (nim (∗n)).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) := by
+    (∀ x ∈ moves p (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem exists_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
-    (∃ x ∈ (nim (∗n)).moves p, P x) ↔ (∃ m < n, P (nim (∗m))) := by
+    (∃ x ∈ moves p (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
 theorem forall_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) :=
+    (∀ x ∈ moves p (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
   forall_moves_nim_natCast
 
 @[game_cmp]
 theorem exists_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∃ m < n, P (nim (∗m)) :=
+    (∃ x ∈ moves p (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
   exists_moves_nim_natCast
 
 theorem mem_moves_nim_of_lt {a b : Nimber} (p : Player) (h : a < b) :
-    (nim a) ∈ (nim b).moves p := by
+    (nim a) ∈ moves p (nim b) := by
   simpa using ⟨_, h, rfl⟩
 
 theorem nim_injective : Function.Injective nim := by

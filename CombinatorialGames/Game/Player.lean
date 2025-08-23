@@ -26,7 +26,7 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq
+deriving DecidableEq, Inhabited
 
 namespace Player
 
@@ -162,7 +162,7 @@ theorem ofSets_eq_ofSets_cases {α} {Valid : (Player → Set α) → Prop} [OfSe
 /-- Typeclass for the `moves` operation. Used to implement the `xᴸ` and `xᴿ` syntax. -/
 class Moves (α : Type*) where
   /-- Either the set of left or right moves of a game. -/
-  moves (p : Player) (x : α) : Set α
+  moves : Player → α → Set α
 export Moves (moves)
 
 /-- The set of left moves of the game. -/

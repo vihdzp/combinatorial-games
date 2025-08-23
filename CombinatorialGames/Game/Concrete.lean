@@ -39,7 +39,7 @@ You can use `ConcreteGame.toLGame` and `ConcreteGame.toIGame` to turn this struc
 appropriate game type. -/
 structure ConcreteGame (α : Type v) : Type v where
   /-- The sets of options for the players. -/
-  moves : Player → α → Set α
+  protected moves : Player → α → Set α
 
 namespace ConcreteGame
 variable {c : ConcreteGame.{v} α} {p : Player}
@@ -77,7 +77,7 @@ def toLGame (a : α) : LGame.{u} :=
 
 variable (c p) in
 @[simp]
-theorem moves_toLGame (a : α) : (c.toLGame a).moves p = c.toLGame '' c.moves p a :=
+theorem moves_toLGame (a : α) : moves p (c.toLGame a) = c.toLGame '' c.moves p a :=
   LGame.moves_corec ..
 
 theorem toLGame_def' (a : α) : c.toLGame a =
@@ -89,7 +89,7 @@ theorem toLGame_def (a : α) : c.toLGame a =
   ext p; cases p <;> simp
 
 theorem mem_moves_toLGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
-    c.toLGame b ∈ (c.toLGame a).moves p := by
+    c.toLGame b ∈ moves p (c.toLGame a) := by
   rw [moves_toLGame]
   exact ⟨b, hab, rfl⟩
 
@@ -131,11 +131,11 @@ theorem toIGame_def (a : α) : c.toIGame a =
 
 variable (c p) in
 @[simp]
-theorem moves_toIGame (a : α) : (c.toIGame a).moves p = c.toIGame '' c.moves p a := by
+theorem moves_toIGame (a : α) : moves p (c.toIGame a) = c.toIGame '' c.moves p a := by
   rw [toIGame_def']; simp
 
 theorem mem_moves_toIGame_of_mem {a b : α} (hab : b ∈ c.moves p a) :
-    c.toIGame b ∈ (c.toIGame a).moves p := by
+    c.toIGame b ∈ moves p (c.toIGame a) := by
   rw [moves_toIGame]
   exact ⟨b, hab, rfl⟩
 
