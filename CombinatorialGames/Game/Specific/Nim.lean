@@ -28,13 +28,11 @@ open Nimber Set
 namespace ConcreteGame
 
 /-- The game of nim as a `ConcreteGame`. -/
-abbrev nim : ConcreteGame Nimber :=
-  .ofImpartial Iio
+abbrev nim : ConcreteGame Nimber where
+  moves _ := Iio
 
-instance : IsWellFounded _ nim.IsOption := by
-  rw [ConcreteGame.isOption_ofImpartial]
-  change WellFoundedLT Nimber
-  infer_instance
+instance : IsWellFounded _ nim.IsOption :=
+  isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
 
 end ConcreteGame
 
@@ -47,8 +45,8 @@ take a positive number of stones from it on their turn. -/
 noncomputable def nim : Nimber.{u} → IGame.{u} :=
   ConcreteGame.nim.toIGame
 
-theorem nim_def (o : Nimber) : nim o = !{nim '' Iio o | nim '' Iio o} :=
-  ConcreteGame.toIGame_def o
+theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
+  ConcreteGame.toIGame_def' ..
 
 @[simp]
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
@@ -98,11 +96,12 @@ theorem nim_injective : Function.Injective nim := by
 @[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp [eq_comm]
 
 @[simp]
-theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
-  rw [nim_def, birthday_ofSets, max_self, image_image, sSup_image']
-  convert iSup_succ o with _ x
-  cases x
-  exact congrArg _ (birthday_nim _)
+theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
+  rw [nim_def, ofSets_eq_ofSets_cases, birthday_ofSets, max_self, image_image]
+  conv_rhs => rw [← iSup_succ o, iSup]
+  simp_rw [Function.comp_apply, ← image_eq_range]
+  congr!
+  rw [birthday_nim]
 termination_by o
 
 /-- This would show that the birthday of an impartial game equals its Grundy value! -/
@@ -110,10 +109,10 @@ proof_wanted _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o))
 
 @[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  ConcreteGame.neg_toIGame_ofImpartial ..
+  ConcreteGame.neg_toIGame rfl ..
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
-  ConcreteGame.impartial_toIGame_ofImpartial ..
+  ConcreteGame.impartial_toIGame rfl ..
 
 protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
   rw [dicotic_def]
