@@ -193,13 +193,12 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
     ac_rfl
   simp only [e1, e2]
   congrm !{?_ | ?_} <;>
-  · apply Set.image_congr
-    intro ⟨⟨x, y⟩, z⟩ hxyz
+  · refine Set.image_congr fun ⟨⟨x, y⟩, z⟩ hxyz => ?_
     obtain ⟨hx, hy, hz⟩ : (x ∈ xL ∨ x ∈ xR) ∧ (y ∈ yL ∨ y ∈ yR) ∧ (z ∈ zL ∨ z ∈ zR) := by
       simp only [mem_union, mem_prod] at hxyz
       tauto
-    simp only [mulOption, mk_sub_mul, mk_add_mul, mk_mul_sub, mk_mul_add]
-    simp only [hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
+    simp only [mulOption, mk_sub_mul, mk_add_mul, mk_mul_sub, mk_mul_add,
+      hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
     abel
 
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
