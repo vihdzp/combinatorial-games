@@ -84,10 +84,10 @@ theorem birthday_eq_max (x : IGame) : birthday x =
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
-@[aesop apply unsafe 50%]
-theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ moves p x) :
+@[aesop apply unsafe]
+theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
     y.birthday < x.birthday :=
-  lt_birthday_iff'.2 ⟨_, .of_mem_moves hy, le_rfl⟩
+  lt_birthday_iff'.2 ⟨y, .of_mem_moves hy, le_rfl⟩
 
 theorem birthday_lt_of_isOption {x y : IGame} (hy : IsOption y x) : y.birthday < x.birthday :=
   lt_birthday_iff'.2 ⟨y, hy, le_rfl⟩

@@ -501,10 +501,10 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
   use z
   apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
   · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
-    have hz' := birthday_lt_of_mem_leftMoves hz'
+    have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
   · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
-    have hz' := birthday_lt_of_mem_rightMoves hz'
+    have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
 termination_by x
 decreasing_by igame_wf
