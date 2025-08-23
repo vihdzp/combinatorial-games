@@ -127,14 +127,14 @@ def grundy (x : IGame) [Impartial x] : Nimber :=
 /-- The **Sprague-Grundy theorem** states that every impartial game is equivalent to a game of nim,
 namely the game of nim for the game's Grundy value. -/
 theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
-  rw [equiv_iff_forall_fuzzy]
+  rw [equiv_iff_forall_fuzzy default]
   constructor <;> intro y hy
-  · rw [leftMoves, moves_nim] at hy
+  · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
     have := Impartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
-    exact rightMove_fuzzy hz
+    exact fuzzy_of_mem_moves hz
   · have := Impartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
@@ -201,7 +201,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_leftMoves_nim]
+  · rw [forall_moves_nim]
     intro a ha
     rw [← H] at ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
@@ -218,7 +218,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
       ← grundyAux_eq_grundy left]
     exact H ▸ grundyAux_ne hy
-  · rw [forall_rightMoves_nim]
+  · rw [forall_moves_nim]
     intro a ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h right y hy
