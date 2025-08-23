@@ -103,7 +103,7 @@ def toIGameEmbedding : ℝ ↪o IGame := by
   refine .ofStrictMono toIGame fun x y h ↦ ?_
   obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
   trans (q : IGame)
-  · apply Numeric.lt_rightMove
+  · apply Numeric.lt_right
     simpa [toIGame]
   · apply Numeric.left_lt
     simpa [toIGame]
