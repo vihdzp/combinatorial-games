@@ -223,7 +223,7 @@ private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x 
 
 @[simp]
 theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
-  rw [LGame.moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
+  rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   cases p <;>
     simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right]
@@ -240,12 +240,12 @@ theorem hom_unique_apply {mov : Player → α → Set α}
   change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x)) =
     (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x))
   apply unique <;> ext z p
-  · change _ ∈ (LGame.moves p ∘ f) _ ↔ _
+  · change _ ∈ (moves p ∘ f) _ ↔ _
     rw [hf]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
         fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).2
-  · change _ ∈ (LGame.moves p ∘ g) _ ↔ _
+  · change _ ∈ (moves p ∘ g) _ ↔ _
     rw [hg]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
@@ -696,8 +696,8 @@ theorem movesSet_neg (x : Player × α × β) :
   · obtain ⟨_ | _, _, _⟩ := x <;> rfl
 
 theorem movesSet_neg' (x : Player × LGame × LGame) :
-    movesSet p LGame.moves LGame.moves (x.1, -x.2.1, x.2.2) =
-    (fun y ↦ (-y.1, y.2)) '' movesSet (-p) LGame.moves LGame.moves x := by
+    movesSet p moves moves (x.1, -x.2.1, x.2.2) =
+    (fun y ↦ (-y.1, y.2)) '' movesSet (-p) moves moves x := by
   obtain ⟨_ | _, _, _⟩ := x <;> aesop (add simp [movesSet])
 
 theorem movesSet_swap (x : Player × α × β) :
@@ -715,8 +715,8 @@ theorem movesSingle_neg (x : Player × α × β) :
   simp [image_image, ← image_neg_eq_neg]
 
 theorem movesSingle_neg' (x : Player × LGame × LGame) :
-    movesSingle p LGame.moves LGame.moves (x.1, -x.2.1, x.2.2) =
-    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' movesSingle (-p) LGame.moves LGame.moves x := by
+    movesSingle p moves moves (x.1, -x.2.1, x.2.2) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' movesSingle (-p) moves moves x := by
   rw [movesSingle, movesSingle, movesSet_neg']
   simp [image_image, mulOption]
 
@@ -742,7 +742,7 @@ theorem moves_neg (x : MulTy α β) :
   simp [← image_neg_eq_neg, image_iUnion, image_image, movesSingle_neg, ← neg_def]
 
 theorem moves_neg' (x : MulTy LGame LGame) :
-    MulTy.moves p moves LGame.moves (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
+    MulTy.moves p moves moves (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
     (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' x.moves (-p) moves moves := by
   rw [MulTy.moves, MulTy.moves, Multiset.iUnion_map]
   simp only [movesSingle_neg', image_image, image_iUnion, Multiset.map_add]
@@ -908,7 +908,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 instance _root_.LGame.instMul : Mul LGame where
-  mul x y := toLGame LGame.moves LGame.moves (right, x, y)
+  mul x y := toLGame moves moves (right, x, y)
 
 theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
     corec movα initα * corec movβ initβ =
