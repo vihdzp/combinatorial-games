@@ -322,7 +322,7 @@ theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
 /-- The game `0 = !{∅ | ∅}`. -/
 instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : (0 : LGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
+theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
@@ -426,8 +426,13 @@ theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
 theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -!{s | t} = !{-t | -s} := by
   ext p; cases p <;> simp
 
+theorem neg_ofSets' (st : Player → Set LGame) [Small (st left)] [Small (st right)] :
+    -!{st} = !{fun p ↦ -st (-p)} := by
+  rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
+  dsimp
+
 @[simp]
-theorem neg_ofSets_const (s : Set IGame) [Small s] :
+theorem neg_ofSets_const (s : Set LGame) [Small s] :
     -!{fun _ ↦ s} = !{fun _ ↦ -s} := by
   simp [neg_ofSets']
 
