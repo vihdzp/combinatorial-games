@@ -97,7 +97,7 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
-  rw [nim_def, birthday_ofSets_const, max_self, image_image, sSup_image']
+  rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
   convert iSup_succ o with _ x
   cases x
   exact congrArg _ (birthday_nim _)

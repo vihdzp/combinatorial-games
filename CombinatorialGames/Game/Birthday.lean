@@ -105,6 +105,10 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
   simp [iSup, image_eq_range]
 
+theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
+    birthday !{fun _ ↦ s} = sSup (succ ∘ birthday '' s) := by
+  rw [ofSets_eq_ofSets_cases, birthday_ofSets, max_self]
+
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
   rw [birthday, iSup_eq_zero_iff, IGame.ext_iff]
