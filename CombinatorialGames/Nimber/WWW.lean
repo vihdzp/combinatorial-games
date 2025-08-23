@@ -3,12 +3,13 @@ Copyright (c) 2025 Django Peeters. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Django Peeters
 -/
+import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Data.Nat.Nth
 import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
-import Mathlib.Data.Nat.Nth
-import CombinatorialGames.Nimber.Simplicity
+import Mathlib.FieldTheory.Finite.Basic
 import Mathlib.FieldTheory.Minpoly.Field
-import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.NumberTheory.PrimeCounting
 import Mathlib.SetTheory.Ordinal.CantorNormalForm
 
@@ -43,6 +44,25 @@ theorem one_lt_nth_prime (k : ℕ) : 1 < nth Nat.Prime k := by
 theorem nth_prime_ne_zero (k : ℕ) : nth Nat.Prime k ≠ 0 := by
   rw [Nat.ne_zero_iff_zero_lt]
   exact lt_trans zero_lt_one (one_lt_nth_prime k)
+
+/-! ### Finite Field lemmas -/
+
+namespace FiniteField
+
+theorem CharTwo.cuberoot_of_cubic_extension
+  (K : Type*) [Field K] [Fintype K] [CharP K 2]
+  (L : Type*) [Field L] [Algebra K L] (h : Module.finrank K L = 3) :
+  ∃ (x : L) (y : K), x ^ 3 = Algebra.algebraMap y := by
+  sorry
+
+theorem CharTwo.pthroot_of_degree_p_extension
+  (K : Type*) [Field K] [Fintype K] [CharP K 2]
+  (L : Type*) [Field L] [Algebra K L]
+  {p : ℕ} [Fact (Nat.Prime p)] (h : Module.finrank K L = p) (pne2 : p ≠ 2) :
+  ∃ (x : L) (y : K), x ^ p = Algebra.algebraMap y := by
+  sorry
+
+end FiniteField
 
 /-! ### Main lemmas -/
 
@@ -105,7 +125,7 @@ protected def alpha_p (k : ℕ) : Nimber.{u} :=
 protected theorem alpha_p_zero : Nimber.alpha_p 0 = ∗2 := by
   sorry
 
-theorem omega0_cubed_eq_three : (∗ω) ^ 3 = ∗2 := by
+theorem omega0_cubed_eq_two : (∗ω) ^ 3 = ∗2 := by
   sorry
 
 /-- Theorem 4.5 on p. 446. -/
@@ -115,15 +135,20 @@ protected theorem kappa_q_pow_reduce :
   (Nimber.kappa_q.{u} (k + 1) n) ∧ IsField (Nimber.kappa_q.{u} (k + 1) n)) ∧
   IsNthDegreeClosed (nth Nat.Prime (k + 1)) (Nimber.kappa_q.{u} (k + 2) 0) := by
   intro k
-  induction k with
+  induction k using Nat.strong_induction_on with
+  | h k ih =>
+
+    sorry
+  /-
   | zero =>
     simp [Nimber.kappa_q]
     rw [opow_omega0 (by simp) (by exact nat_lt_omega0 2)]
-    refine ⟨omega0_cubed_eq_three, ?_, ?_⟩
+    refine ⟨omega0_cubed_eq_two, ?_, ?_⟩
     · sorry
     · sorry
   | succ k ih =>
     sorry
+  -/
 
 protected theorem kappa_q_pow_eq_alpha (k : ℕ) :
   (Nimber.kappa_q.{u} (k + 1) 0) ^ (nth Nat.Prime (k + 1)) =
@@ -145,14 +170,14 @@ protected theorem base_two_expansion (x : Nimber.{u}) :
 private def tau : Nimber.{u} := ∗(ω ^ (ω ^ ω))
 
 private def tau' : Nimber.{u} :=
-  sInf {x | IsAlgClosed x}
+  sInf {x | IsAlgClosed x ∧ 1 < x}
 
 private theorem tau'_eq_tau : tau' = tau := by
   sorry
 
 /-- public name is more explicit -/
 theorem wpow_wpow_w_first_isAlgClosed :
-  sInf {x | IsAlgClosed x} = ∗(ω ^ (ω ^ ω)) := by exact tau'_eq_tau
+  sInf {x | IsAlgClosed x ∧ 1 < x} = ∗(ω ^ (ω ^ ω)) := by exact tau'_eq_tau
 
 /- Then we prove effective arithmetic. -/
 
