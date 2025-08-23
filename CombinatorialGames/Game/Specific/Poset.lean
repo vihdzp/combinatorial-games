@@ -107,11 +107,11 @@ noncomputable def toIGame (s : Set α) : IGame :=
   (poset α).toIGame s
 
 @[simp]
-theorem moves_toIGame (p) (s : Set α) : (toIGame s).moves p = toIGame '' {t | Rel t s} :=
+theorem moves_toIGame (p) (s : Set α) : moves p (toIGame s) = toIGame '' {t | Rel t s} :=
   ConcreteGame.moves_toIGame ..
 
 theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
-    toIGame t ∈ (toIGame s).moves p :=
+    toIGame t ∈ moves p (toIGame s) :=
   ConcreteGame.mem_moves_toIGame_of_mem h
 
 @[simp]

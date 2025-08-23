@@ -24,7 +24,7 @@ namespace IGame
 /-! ### Dicotic games -/
 
 private def DicoticAux (x : IGame) : Prop :=
-  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
+  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ moves p x, DicoticAux l)
 termination_by x
 decreasing_by igame_wf
 
@@ -34,7 +34,7 @@ class Dicotic (x : IGame) : Prop where of_DicoticAux ::
   out : DicoticAux x
 
 theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
+    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ moves p x, Dicotic l) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 theorem dicotic_def' {x : IGame} : Dicotic x ↔

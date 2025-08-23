@@ -37,38 +37,38 @@ namespace IGame
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
 def grundyAux (p : Player) (x : IGame.{u}) : Nimber.{u} :=
-  sInf (Set.range fun y : x.moves p ↦ grundyAux p y.1)ᶜ
+  sInf (Set.range fun y : moves p x ↦ grundyAux p y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
 
-theorem grundyAux_def (p) (x : IGame) : grundyAux p x = sInf (grundyAux p '' x.moves p)ᶜ := by
+theorem grundyAux_def (p) (x : IGame) : grundyAux p x = sInf (grundyAux p '' moves p x)ᶜ := by
   rw [grundyAux, image_eq_range]
 
 theorem le_grundyAux_iff {p : Player} {x : IGame} {o : Nimber} :
-    o ≤ grundyAux p x ↔ Iio o ⊆ grundyAux p '' x.moves p := by
+    o ≤ grundyAux p x ↔ Iio o ⊆ grundyAux p '' moves p x := by
   rw [grundyAux_def, le_csInf_iff'']
   · rw [← compl_subset_compl (t := Iio o), subset_def]
     simp
   · exact nonempty_of_not_bddAbove (Nimber.not_bddAbove_compl_of_small _)
 
 theorem lt_grundyAux_iff {p : Player} {x : IGame} {o : Nimber} :
-    o < grundyAux p x ↔ Iic o ⊆ grundyAux p '' x.moves p := by
+    o < grundyAux p x ↔ Iic o ⊆ grundyAux p '' moves p x := by
   simpa using le_grundyAux_iff (o := Order.succ o)
 
 theorem mem_grundyAux_image_of_lt {p : Player} {x : IGame} {o : Nimber} (h : o < grundyAux p x) :
-    o ∈ grundyAux p '' x.moves p :=
+    o ∈ grundyAux p '' moves p x :=
   le_grundyAux_iff.1 le_rfl h
 
 theorem grundyAux_le_of_notMem {p : Player} {x : IGame} {o : Nimber}
-    (h : o ∉ grundyAux p '' x.moves p) :
+    (h : o ∉ grundyAux p '' moves p x) :
     grundyAux p x ≤ o :=
   le_of_not_gt <| mt mem_grundyAux_image_of_lt h
 
-theorem grundyAux_ne {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
+theorem grundyAux_ne {p : Player} {x y : IGame} (hy : y ∈ moves p x) :
     grundyAux p y ≠ grundyAux p x := by
   conv_rhs => rw [grundyAux_def]
   have := csInf_mem (nonempty_of_not_bddAbove <|
-    Nimber.not_bddAbove_compl_of_small (grundyAux p '' x.moves p))
+    Nimber.not_bddAbove_compl_of_small (grundyAux p '' moves p x))
   simp_all
 
 @[simp]
@@ -134,7 +134,7 @@ theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
     have := Impartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
-    exact right_fuzzy hz
+    exact fuzzy_of_mem_moves hz
   · have := Impartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
@@ -178,7 +178,7 @@ theorem _root_.IGame.nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_add]
   exact (nim_grundy_equiv _).symm
 
-theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.moves p) :
+theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ moves p x) :
     have := Impartial.of_mem_moves hy; grundy y ≠ grundy x := by
   cases p with
   | left =>
@@ -198,7 +198,7 @@ protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y
   exact Dicotic.lt_of_numeric_of_neg _ hy
 
 private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
-    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
+    (h : ∀ p, ∀ y ∈ moves p x, Impartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
   · rw [forall_moves_nim]
@@ -227,7 +227,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
 /-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
 value, then it's impartial. -/
 theorem of_grundyAux_left_eq_grundyAux_right {x : IGame}
-    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
+    (h : ∀ p, ∀ y ∈ moves p x, Impartial y)
     (H : grundyAux left x = grundyAux right x) : Impartial x :=
   have H := of_grundyAux_left_eq_grundyAux_right' h H
   .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) (h _) (h _)
