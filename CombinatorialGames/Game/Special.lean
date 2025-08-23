@@ -180,7 +180,7 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 
 @[simp]
 theorem switch_zero : ±0 = ⋆ := by
-  ext p; cases p <;> simp [star, switch]
+  ext p; cases p <;> simp
 
 end IGame
 end
