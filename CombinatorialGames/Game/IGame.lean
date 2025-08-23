@@ -117,10 +117,10 @@ instance : OfSets IGame fun _ ↦ True where
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
 
 /-- The set of left moves of the game. -/
-scoped postfix:max "ᴸ" => moves left
+scoped notation:max x:max "ᴸ" => moves left x
 
 /-- The set of right moves of the game. -/
-scoped postfix:max "ᴿ" => moves right
+scoped notation:max x:max "ᴿ" => moves right x
 
 instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 

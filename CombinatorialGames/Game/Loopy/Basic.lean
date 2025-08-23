@@ -87,10 +87,10 @@ instance : DecidableEq LGame := Classical.decEq _
 def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
 
 /-- The set of left moves of the game. -/
-scoped postfix:max "ᴸ" => moves left
+scoped notation:max x:max "ᴸ" => moves left x
 
 /-- The set of right moves of the game. -/
-scoped postfix:max "ᴿ" => moves right
+scoped notation:max x:max "ᴿ" => moves right x
 
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
