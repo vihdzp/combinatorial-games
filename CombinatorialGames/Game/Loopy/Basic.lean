@@ -93,8 +93,8 @@ instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (moves p x) := x.d
 def IsOption (x y : LGame) : Prop :=
   x ∈ yᴸ ∪ yᴿ
 
-theorem IsOption.of_mem_leftMoves {x y : LGame} : x ∈ yᴸ → IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : LGame} : x ∈ yᴿ → IsOption x y := .inr
+theorem IsOption.of_mem_moves_left {x y : LGame} : x ∈ yᴸ → IsOption x y := .inl
+theorem IsOption.of_mem_moves_right {x y : LGame} : x ∈ yᴿ → IsOption x y := .inr
 
 instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
   inferInstanceAs (Small (xᴸ ∪ xᴿ :))
@@ -104,12 +104,12 @@ def Subposition : LGame → LGame → Prop :=
   Relation.TransGen IsOption
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_leftMoves {x y : LGame} (h : x ∈ yᴸ) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_leftMoves h)
+theorem Subposition.of_mem_moves_left {x y : LGame} (h : x ∈ yᴸ) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves_left h)
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_rightMoves {x y : LGame} (h : x ∈ yᴿ) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_rightMoves h)
+theorem Subposition.of_mem_moves_right {x y : LGame} (h : x ∈ yᴿ) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves_right h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -831,7 +831,7 @@ theorem moves_toLGame (x : Player × α × β) :
 
 @[simp]
 theorem corec_zero : corec (MulTy.moves · movα movβ) 0 = 0 := by
-  ext p; cases p <;> simp [moves]
+  ext p; cases p <;> simp [MulTy.moves]
 
 theorem corec_neg (init : MulTy α β) :
     corec (MulTy.moves · movα movβ) (-init) = -corec (MulTy.moves · movα movβ) init := by

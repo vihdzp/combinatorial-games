@@ -23,10 +23,10 @@ universe u
 
 namespace IGame
 
-/-- Undominating a game. This returns garbage values on non-short games -/
+/-- Undominating a game. This returns garbage values on non-short games. -/
 noncomputable def undominate (x : IGame) : IGame :=
-  !{{y ∈ Set.range fun z : x.leftMoves ↦ undominate z | ∀ z ∈ x.leftMoves, ¬y < z} |
-    {y ∈ Set.range fun z : x.rightMoves ↦ undominate z | ∀ z ∈ x.rightMoves, ¬z < y}}
+  !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
+    {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
 termination_by x
 decreasing_by igame_wf
 
@@ -38,22 +38,22 @@ termination_by x
 decreasing_by igame_wf
 
 theorem undominate_def {x : IGame} : x.undominate =
-    !{{y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} |
-      {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y}} := by
+    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} |
+      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
   rw [undominate]
   simp
 
 @[simp]
-theorem leftMoves_undominate {x : IGame} :
-    x.undominate.leftMoves = {y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} := by
+theorem moves_left_undominate {x : IGame} :
+    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
   rw [undominate_def]
-  exact leftMoves_ofSets ..
+  exact moves_left_ofSets ..
 
 @[simp]
-theorem rightMoves_undominate {x : IGame} :
-    x.undominate.rightMoves = {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y} := by
+theorem moves_right_undominate {x : IGame} :
+    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
   rw [undominate_def]
-  exact rightMoves_ofSets ..
+  exact moves_right_ofSets ..
 
 instance {x : IGame} [hx : Short x] : Short (undominate x) := by
   rw [short_iff_birthday_finite] at hx ⊢
@@ -68,7 +68,7 @@ termination_by x
 decreasing_by igame_wf
 
 private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
-  rw [le_def, leftMoves_undominate, rightMoves_undominate]
+  rw [le_def, moves_left_undominate, moves_right_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
     have := Short.of_mem_moves hz

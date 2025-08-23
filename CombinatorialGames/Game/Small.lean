@@ -52,16 +52,16 @@ theorem mk' (h : xᴸ = ∅ ↔ xᴿ = ∅)
     (hl : ∀ y ∈ xᴸ, Dicotic y) (hr : ∀ y ∈ xᴿ, Dicotic y) : Dicotic x :=
   dicotic_def.2 ⟨h, hl, hr⟩
 
-theorem leftMoves_eq_empty_iff [hx : Dicotic x] : xᴸ = ∅ ↔ xᴿ = ∅ :=
+theorem moves_left_eq_empty_iff [hx : Dicotic x] : xᴸ = ∅ ↔ xᴿ = ∅ :=
   (dicotic_def.1 hx).1
 
-theorem rightMoves_eq_empty_iff [hx : Dicotic x] : xᴿ = ∅ ↔ xᴸ = ∅ :=
-  leftMoves_eq_empty_iff.symm
+theorem moves_right_eq_empty_iff [hx : Dicotic x] : xᴿ = ∅ ↔ xᴸ = ∅ :=
+  moves_left_eq_empty_iff.symm
 
-protected theorem of_mem_leftMoves [hx : Dicotic x] (h : y ∈ xᴸ) : Dicotic y :=
+protected theorem of_mem_moves_left [hx : Dicotic x] (h : y ∈ xᴸ) : Dicotic y :=
   (dicotic_def.1 hx).2.1 y h
 
-protected theorem of_mem_rightMoves [hx : Dicotic x] (h : y ∈ xᴿ) : Dicotic y :=
+protected theorem of_mem_moves_right [hx : Dicotic x] (h : y ∈ xᴿ) : Dicotic y :=
   (dicotic_def.1 hx).2.2 y h
 
 @[simp]
@@ -71,10 +71,10 @@ protected instance zero : Dicotic 0 := by
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   rw [dicotic_def, forall_moves_neg, forall_moves_neg]
-  refine ⟨by simp [leftMoves_eq_empty_iff], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
-  · have := Dicotic.of_mem_rightMoves hy
+  refine ⟨by simp [moves_left_eq_empty_iff], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+  · have := Dicotic.of_mem_moves_right hy
     exact .neg y
-  · have := Dicotic.of_mem_leftMoves hy
+  · have := Dicotic.of_mem_moves_left hy
     exact .neg y
 termination_by x
 decreasing_by igame_wf
@@ -86,7 +86,7 @@ any dicotic game is smaller than any positive numeric game.
 theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · have := Dicotic.of_mem_leftMoves hz
+  · have := Dicotic.of_mem_moves_left hz
     exact (lt_of_numeric_of_pos z hy).not_ge
   · have := Numeric.of_mem_moves hz
     obtain (h | h) := Numeric.le_or_gt z 0
@@ -96,7 +96,7 @@ theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < 
     · exact hy.not_ge
     · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
       obtain ⟨z, hz⟩ := h.2
-      have := Dicotic.of_mem_rightMoves hz
+      have := Dicotic.of_mem_moves_right hz
       exact lf_of_rightMove_le (lt_of_numeric_of_pos z hy).le hz
 termination_by (x, y)
 decreasing_by igame_wf
