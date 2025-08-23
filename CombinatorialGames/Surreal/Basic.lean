@@ -477,7 +477,7 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
-theorem zero_def : (0 : Surreal) = !{∅ | ∅} := by apply (mk_ofSets ..).trans; congr! <;> simp
+theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
 theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop
 
 instance : DenselyOrdered Surreal where
