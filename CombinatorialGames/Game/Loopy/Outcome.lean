@@ -17,51 +17,51 @@ namespace LGame
 mutual
   /-- `IsLeftWin x` means that left wins `x` going first. -/
   inductive IsLeftWin : LGame → Prop where
-    | intro (x y : LGame) : y ∈ x.leftMoves → IsRightLoss y → IsLeftWin x
+    | intro (x y : LGame) : y ∈ xᴸ → IsRightLoss y → IsLeftWin x
   /-- `IsRightLoss x` means that right loses `x` going first. -/
   inductive IsRightLoss : LGame → Prop where
-    | intro (x : LGame) : (∀ y ∈ x.rightMoves, IsLeftWin y) → IsRightLoss x
+    | intro (x : LGame) : (∀ y ∈ xᴿ, IsLeftWin y) → IsRightLoss x
 end
 
 mutual
   /-- `IsRightWin x` means that right wins `x` going first. -/
   inductive IsRightWin : LGame → Prop where
-    | intro (x y : LGame) : y ∈ x.rightMoves → IsLeftLoss y → IsRightWin x
+    | intro (x y : LGame) : y ∈ xᴿ → IsLeftLoss y → IsRightWin x
   /-- `IsLeftLoss x` means that left loses `x` going first. -/
   inductive IsLeftLoss : LGame → Prop where
-    | intro (x : LGame) : (∀ y ∈ x.leftMoves, IsRightWin y) → IsLeftLoss x
+    | intro (x : LGame) : (∀ y ∈ xᴸ, IsRightWin y) → IsLeftLoss x
 end
 
-theorem isLeftWin_iff_exists {x : LGame} : IsLeftWin x ↔ ∃ y ∈ x.leftMoves, IsRightLoss y where
+theorem isLeftWin_iff_exists {x : LGame} : IsLeftWin x ↔ ∃ y ∈ xᴸ, IsRightLoss y where
   mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩) fun _ _ _ ↦ ⟨⟩
   mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
 
-theorem isRightWin_iff_exists {x : LGame} : IsRightWin x ↔ ∃ y ∈ x.rightMoves, IsLeftLoss y where
+theorem isRightWin_iff_exists {x : LGame} : IsRightWin x ↔ ∃ y ∈ xᴿ, IsLeftLoss y where
   mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩) fun _ _ _ ↦ ⟨⟩
   mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
 
-theorem isLeftLoss_iff_forall {x : LGame} : IsLeftLoss x ↔ ∀ y ∈ x.leftMoves, IsRightWin y where
+theorem isLeftLoss_iff_forall {x : LGame} : IsLeftLoss x ↔ ∀ y ∈ xᴸ, IsRightWin y where
   mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ _ _ ↦ ⟨⟩) fun _ h _ ↦ h
   mpr := .intro x
 
-theorem isRightLoss_iff_forall {x : LGame} : IsRightLoss x ↔ ∀ y ∈ x.rightMoves, IsLeftWin y where
+theorem isRightLoss_iff_forall {x : LGame} : IsRightLoss x ↔ ∀ y ∈ xᴿ, IsLeftWin y where
   mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ _ _ ↦ ⟨⟩) fun _ h _ ↦ h
   mpr := .intro x
 
 theorem not_isLeftWin_iff_forall {x : LGame} :
-    ¬ IsLeftWin x ↔ ∀ y ∈ x.leftMoves, ¬ IsRightLoss y := by
+    ¬ IsLeftWin x ↔ ∀ y ∈ xᴸ, ¬ IsRightLoss y := by
   simp [isLeftWin_iff_exists]
 
 theorem not_isRightWin_iff_forall {x : LGame} :
-    ¬ IsRightWin x ↔ ∀ y ∈ x.rightMoves, ¬ IsLeftLoss y := by
+    ¬ IsRightWin x ↔ ∀ y ∈ xᴿ, ¬ IsLeftLoss y := by
   simp [isRightWin_iff_exists]
 
 theorem not_isLeftLoss_iff_exists {x : LGame} :
-    ¬ IsLeftLoss x ↔ ∃ y ∈ x.leftMoves, ¬ IsRightWin y := by
+    ¬ IsLeftLoss x ↔ ∃ y ∈ xᴸ, ¬ IsRightWin y := by
   simp [isLeftLoss_iff_forall]
 
 theorem not_isRightLoss_iff_exists {x : LGame} :
-    ¬ IsRightLoss x ↔ ∃ y ∈ x.rightMoves, ¬ IsLeftWin y := by
+    ¬ IsRightLoss x ↔ ∃ y ∈ xᴿ, ¬ IsLeftWin y := by
   simp [isRightLoss_iff_forall]
 
 /-- A surviving strategy for Left, going second.
@@ -72,7 +72,7 @@ to the set.
 You can think of this as a nonconstructive version of the more common definition of a strategy,
 which gives an explicit answer for every reachable state. -/
 def IsLeftStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ y.rightMoves, ∃ r ∈ z.leftMoves, r ∈ s
+  ∀ y ∈ s, ∀ z ∈ yᴿ, ∃ r ∈ zᴸ, r ∈ s
 
 /-- A surviving strategy for Right, going second.
 
@@ -82,7 +82,7 @@ to the set.
 You can think of this as a nonconstructive version of the more common definition of a strategy,
 which gives an explicit answer for every reachable state. -/
 def IsRightStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ y.leftMoves, ∃ r ∈ z.rightMoves, r ∈ s
+  ∀ y ∈ s, ∀ z ∈ yᴸ, ∃ r ∈ zᴿ, r ∈ s
 
 @[simp]
 theorem isLeftStrategy_neg {s : Set LGame} : IsLeftStrategy (-s) ↔ IsRightStrategy s := by
@@ -199,9 +199,9 @@ theorem rightOutcome_eq_draw_iff {x : LGame} : rightOutcome x = .draw ↔ IsRigh
 
 /-- If there is no infinite play starting by from `x` with right going second,
 then `x` cannot end in a draw with right going second. -/
--- Note: the spelling `Relation.Comp (· ∈ ·.rightMoves) (· ∈ ·.leftMoves)` is slightly longer
+-- Note: the spelling `Relation.Comp (· ∈ ·ᴿ) (· ∈ ·ᴸ)` is slightly longer
 theorem not_isLeftDraw_of_acc_comp {x : LGame}
-    (h : Acc (fun z x ↦ ∃ y ∈ x.leftMoves, z ∈ y.rightMoves) x) : ¬ IsLeftDraw x :=
+    (h : Acc (fun z x ↦ ∃ y ∈ xᴸ, z ∈ yᴿ) x) : ¬ IsLeftDraw x :=
   h.rec fun _x _ ih ⟨nw, nl⟩ ↦
     have ⟨y, hyx, hy⟩ := not_isLeftLoss_iff_exists.mp nl
     have ⟨z, hzy, hz⟩ := not_isRightLoss_iff_exists.mp (not_isLeftWin_iff_forall.mp nw y hyx)
@@ -210,7 +210,7 @@ theorem not_isLeftDraw_of_acc_comp {x : LGame}
 /-- If there is no infinite play starting from `x` with right going first,
 then `x` cannot end in a draw with right going first. -/
 theorem not_isRightDraw_of_acc_comp {x : LGame}
-    (h : Acc (fun z x ↦ ∃ y ∈ x.rightMoves, z ∈ y.leftMoves) x) : ¬ IsRightDraw x :=
+    (h : Acc (fun z x ↦ ∃ y ∈ xᴿ, z ∈ yᴸ) x) : ¬ IsRightDraw x :=
   h.rec fun _x _ ih ⟨nw, nl⟩ ↦
     have ⟨y, hyx, hy⟩ := not_isRightLoss_iff_exists.mp nl
     have ⟨z, hzy, hz⟩ := not_isLeftLoss_iff_exists.mp (not_isRightWin_iff_forall.mp nw y hyx)
@@ -218,11 +218,11 @@ theorem not_isRightDraw_of_acc_comp {x : LGame}
 
 theorem not_isLeftDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsLeftDraw x :=
   not_isLeftDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inr hzy) (.inl hyx)) h.transGen
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
 
 theorem not_isRightDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsRightDraw x :=
   not_isRightDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inl hzy) (.inr hyx)) h.transGen
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
 
 end LGame
 
@@ -241,8 +241,7 @@ private theorem win_loss_iff {x : IGame} :
     ((IsRightWin x ↔ x ⧏ 0) ∧ (IsRightLoss x ↔ 0 ≤ x)) :=
   x.moveRecOn fun x h ↦ by
     rw [isLeftWin_iff_exists, isLeftLoss_iff_forall, isRightWin_iff_exists, isRightLoss_iff_forall,
-      zero_lf, lf_zero, le_zero, zero_le, LGame.leftMoves, LGame.rightMoves, moves_toLGame,
-      moves_toLGame]
+      zero_lf, lf_zero, le_zero, zero_le, moves_toLGame, moves_toLGame]
     simp_rw [Set.forall_mem_image, Set.exists_mem_image]
     constructor <;>
       refine ⟨exists_congr fun y ↦ and_congr_right fun hy ↦ ?_, forall₂_congr fun y hy ↦ ?_⟩
