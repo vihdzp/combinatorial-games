@@ -118,11 +118,19 @@ instance : Moves IGame where
 
 instance (p : Player) (x : IGame.{u}) : Small.{u} (moves p x) := x.dest.2 p
 
-@[simp, game_cmp]
+@[simp]
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
     moves p !{st} = st p := by
   dsimp [ofSets, moves]
   rw [QPF.Fix.dest_mk]
+
+@[game_cmp]
+theorem moves_left_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴸ = s :=
+  moves_ofSets ..
+
+@[game_cmp]
+theorem moves_right_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴿ = t :=
+  moves_ofSets ..
 
 @[simp]
 theorem ofSets_moves (x : IGame) : !{fun p ↦ moves p x} = x :=
@@ -132,14 +140,6 @@ theorem ofSets_moves (x : IGame) : !{fun p ↦ moves p x} = x :=
 theorem ofSets_moves' (x : IGame) : !{xᴸ | xᴿ} = x := by
   convert x.ofSets_moves with p
   cases p <;> rfl
-
-@[simp, game_cmp]
-theorem moves_left_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴸ = s :=
-  moves_ofSets ..
-
-@[simp, game_cmp]
-theorem moves_right_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴿ = t :=
-  moves_ofSets ..
 
 /-- Two `IGame`s are equal when their move sets are.
 
@@ -493,13 +493,14 @@ instance : InvolutiveNeg IGame where
 theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
   simp_rw [neg_ofSets'', Set.image_neg_eq_neg]
 
+@[simp]
 theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st right)] :
     -!{st} = !{fun p ↦ -st (-p)} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
-  dsimp
+  rfl
 
 instance : NegZeroClass IGame where
-  neg_zero := by simp [zero_def, neg_ofSets']
+  neg_zero := by simp [zero_def]
 
 theorem neg_eq (x : IGame) : -x = !{-xᴿ | -xᴸ} := by
   rw [← neg_ofSets, ofSets_moves']
