@@ -202,13 +202,13 @@ theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {
     (h : x ∈ s) : x ⧏ !{s | t} := by
   rw [ofSets_cases]
   have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using leftMove_lf this
+  simpa [← mk_le_mk] using left_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : !{s | t} ⧏ x := by
   rw [ofSets_cases]
   have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using lf_rightMove this
+  simpa [← mk_le_mk] using lf_right this
 
 end Game
 

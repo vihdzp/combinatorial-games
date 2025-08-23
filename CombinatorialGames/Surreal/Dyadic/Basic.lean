@@ -222,7 +222,7 @@ private theorem lower_lt_aux (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
   · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast,
       toIGame_of_den_eq_one h]
     simp
-  · apply hx.leftMove_lt
+  · apply hx.left_lt
     simp [toIGame_of_den_ne_one h]
 
 private theorem lt_upper_aux (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
@@ -487,7 +487,7 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
     obtain ⟨a, rfl⟩ := hx
     obtain ⟨b, rfl⟩ := hy
     rw [← Dyadic.toIGame_lt_toIGame, ← (hf _).lt_congr_left, ← (hg _).lt_congr_right]
-    exact Numeric.leftMove_lt_rightMove a.2 b.2
+    exact Numeric.left_lt_right a.2 b.2
   have : ∃ y, Fits (Dyadic.toIGame y) x := by
     use y
     constructor <;> intro z hz

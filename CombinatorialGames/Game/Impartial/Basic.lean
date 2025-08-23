@@ -164,18 +164,18 @@ theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
 theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
 theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
-theorem fuzzy_leftMove {y : IGame} (hy : y ∈ xᴸ) : x ‖ y := by
+theorem fuzzy_left {y : IGame} (hy : y ∈ xᴸ) : x ‖ y := by
   have := hx.of_mem_moves hy
-  simpa using leftMove_lf hy
+  simpa using left_lf hy
 
-theorem leftMove_fuzzy {y : IGame} (hy : y ∈ xᴸ) : y ‖ x :=
+theorem left_fuzzy {y : IGame} (hy : y ∈ xᴸ) : y ‖ x :=
   (fuzzy_leftMove hy).symm
 
-theorem rightMove_fuzzy {y : IGame} (hy : y ∈ xᴿ) : y ‖ x := by
+theorem right_fuzzy {y : IGame} (hy : y ∈ xᴿ) : y ‖ x := by
   have := hx.of_mem_moves hy
-  simpa using lf_rightMove hy
+  simpa using lf_right hy
 
-theorem fuzzy_rightMove {y : IGame} (hy : y ∈ xᴿ) : x ‖ y :=
+theorem fuzzy_right {y : IGame} (hy : y ∈ xᴿ) : x ‖ y :=
   (rightMove_fuzzy hy).symm
 
 /-- This version is stated in terms of left moves of `x` and right moves of `y`. -/

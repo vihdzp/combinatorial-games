@@ -105,7 +105,7 @@ def toIGameEmbedding : ℝ ↪o IGame := by
   trans (q : IGame)
   · apply Numeric.lt_rightMove
     simpa [toIGame]
-  · apply Numeric.leftMove_lt
+  · apply Numeric.left_lt
     simpa [toIGame]
 
 @[simp, norm_cast]
@@ -137,14 +137,14 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
   · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt, ← hr'.lt_congr_right] at hs'
-    apply lf_of_rightMove_le (z := s)
+    apply lf_of_right_le (z := s)
     · rw [Rat.cast_eq_id, id, ← s.toIGame_equiv.lt_congr_left] at hs'
       exact hs'.le
     · simpa
   · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt, ← hr'.lt_congr_left] at hs
-    apply lf_of_le_leftMove (z := s)
+    apply lf_of_le_left (z := s)
     · rw [Rat.cast_eq_id, id, ← s.toIGame_equiv.lt_congr_right] at hs
       exact hs.le
     · simpa
