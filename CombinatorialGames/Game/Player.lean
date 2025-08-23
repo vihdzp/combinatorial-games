@@ -167,9 +167,11 @@ export Moves (moves)
 
 /-- The set of left moves of the game. -/
 postfix:max "ᴸ" => Moves.moves left
+recommended_spelling "moves_left" for "ᴸ" in [«term_ᴸ»]
 
 /-- The set of right moves of the game. -/
 postfix:max "ᴿ" => Moves.moves right
+recommended_spelling "moves_right" for "ᴿ" in [«term_ᴿ»]
 
 open Lean PrettyPrinter Delaborator SubExpr in
 @[app_delab Moves.moves]

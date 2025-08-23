@@ -420,7 +420,7 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
     rintro (_ | _) (_ | _) <;> try (· simp)
     all_goals
       dsimp
-      simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
+      simp_rw [Nat.cast_add, Nat.cast_one, moves_left_natCast_succ, forall_exists_index]
       rintro _ hn rfl x hx q hq
       use (1 + -q) / n
       have := Numeric.of_mem_moves hx
