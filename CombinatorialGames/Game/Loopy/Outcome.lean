@@ -218,11 +218,11 @@ theorem not_isRightDraw_of_acc_comp {x : LGame}
 
 theorem not_isLeftDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsLeftDraw x :=
   not_isLeftDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inr hzy) (.inl hyx)) h.transGen
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
 
 theorem not_isRightDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsRightDraw x :=
   not_isRightDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .inl hzy) (.inr hyx)) h.transGen
+    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
 
 end LGame
 
