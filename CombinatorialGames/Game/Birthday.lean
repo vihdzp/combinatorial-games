@@ -84,15 +84,10 @@ theorem birthday_eq_max (x : IGame) : birthday x =
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
-@[aesop apply unsafe 50%]
-theorem birthday_lt_of_mem_leftMoves {x y : IGame} (hy : y ∈ x.leftMoves) :
+@[aesop apply unsafe]
+theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
     y.birthday < x.birthday :=
-  lt_birthday_iff.2 (.inl ⟨y, hy, le_rfl⟩)
-
-@[aesop apply unsafe 50%]
-theorem birthday_lt_of_mem_rightMoves {x y : IGame} (hy : y ∈ x.rightMoves) :
-    y.birthday < x.birthday :=
-  lt_birthday_iff.2 (.inr ⟨y, hy, le_rfl⟩)
+  lt_birthday_iff'.2 ⟨y, .of_mem_moves hy, le_rfl⟩
 
 theorem birthday_lt_of_isOption {x y : IGame} (hy : IsOption y x) : y.birthday < x.birthday :=
   lt_birthday_iff'.2 ⟨y, hy, le_rfl⟩
@@ -158,7 +153,7 @@ termination_by o
 theorem le_toIGame_birthday (x : IGame) : x ≤ x.birthday.toIGame := by
   rw [le_iff_forall_lf]
   refine ⟨fun y hy ↦ ((le_toIGame_birthday y).trans_lt ?_).not_ge, ?_⟩
-  · simpa using birthday_lt_of_mem_leftMoves hy
+  · simpa using birthday_lt_of_mem_moves hy
   · simp
 termination_by x
 decreasing_by igame_wf
