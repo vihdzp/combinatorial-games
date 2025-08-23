@@ -63,6 +63,7 @@ theorem moves_toLGame (p : Player) (x : IGame) : x.toLGame.moves p = toLGame '' 
 
 theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
   refine x.moveRecOn fun x h ↦ .intro _ fun y ↦ ?_
+  rw [LGame.isOption_iff_mem_union]
   rintro (hy | hy) <;> simp only [moves_toLGame] at hy <;> obtain ⟨y, hy, rfl⟩ := hy
   exacts [h _ y hy, h _ y hy]
 
