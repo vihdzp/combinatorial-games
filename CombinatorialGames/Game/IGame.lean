@@ -275,11 +275,7 @@ instance : Zero IGame := ⟨!{fun _ ↦ ∅}⟩
 
 theorem zero_def : (0 : IGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
 
-@[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := moves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := moves_ofSets ..
-
--- TODO: remove the former?
-@[simp, game_cmp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
+@[simp, game_cmp] theorem moves_zero (p : Player) : moves p (0 : IGame) = ∅ := moves_ofSets ..
 
 instance : Inhabited IGame := ⟨0⟩
 
