@@ -129,12 +129,12 @@ namely the game of nim for the game's Grundy value. -/
 theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
   rw [equiv_iff_forall_fuzzy]
   constructor <;> intro y hy
-  · rw [leftMoves, moves_nim] at hy
+  · rw [moves_left, moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
     have := Impartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
-    exact rightMove_fuzzy hz
+    exact right_fuzzy hz
   · have := Impartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
@@ -201,13 +201,13 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_leftMoves_nim]
+  · rw [forall_moves_left_nim]
     intro a ha
     rw [← H] at ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h left y hy
     rw [grundyAux_eq_grundy]
-    exact lf_of_le_leftMove (nim_grundy_equiv y).le hy
+    exact lf_of_le_left (nim_grundy_equiv y).le hy
   · intro y hy
     have := h right y hy
     rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff,
@@ -218,11 +218,11 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
       ← grundyAux_eq_grundy left]
     exact H ▸ grundyAux_ne hy
-  · rw [forall_rightMoves_nim]
+  · rw [forall_moves_right_nim]
     intro a ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h right y hy
-    exact lf_of_rightMove_le (nim_grundy_equiv y).ge hy
+    exact lf_of_right_le (nim_grundy_equiv y).ge hy
 
 /-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
 value, then it's impartial. -/

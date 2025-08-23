@@ -36,16 +36,16 @@ theorem short_def {x : IGame} : Short x ↔
   simp_rw [short_iff_aux]; rw [ShortAux]
 
 theorem short_def' {x : IGame} : Short x ↔
-    x.leftMoves.Finite ∧ x.rightMoves.Finite ∧
-      (∀ y ∈ x.leftMoves, Short y) ∧ (∀ y ∈ x.rightMoves, Short y) := by
+    x.moves_left.Finite ∧ x.moves_right.Finite ∧
+      (∀ y ∈ x.moves_left, Short y) ∧ (∀ y ∈ x.moves_right, Short y) := by
   rw [short_def, Player.forall]
   tauto
 
 namespace Short
 variable {x y : IGame}
 
-theorem mk (h₁ : x.leftMoves.Finite) (h₂ : x.rightMoves.Finite)
-    (h₃ : ∀ y ∈ x.leftMoves, Short y) (h₄ : ∀ y ∈ x.rightMoves, Short y) : Short x :=
+theorem mk (h₁ : x.moves_left.Finite) (h₂ : x.moves_right.Finite)
+    (h₃ : ∀ y ∈ x.moves_left, Short y) (h₄ : ∀ y ∈ x.moves_right, Short y) : Short x :=
   short_def'.2 ⟨h₁, h₂, h₃, h₄⟩
 
 theorem finite_moves (p : Player) (x : IGame) [h : Short x] : (x.moves p).Finite :=

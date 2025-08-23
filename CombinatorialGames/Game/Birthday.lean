@@ -72,15 +72,15 @@ theorem birthday_le_iff' {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
   simpa using lt_birthday_iff'.not
 
 theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
-    (∃ y ∈ x.leftMoves, o ≤ y.birthday) ∨ (∃ y ∈ x.rightMoves, o ≤ y.birthday) := by
+    (∃ y ∈ x.moves_left, o ≤ y.birthday) ∨ (∃ y ∈ x.moves_right, o ≤ y.birthday) := by
   simp [lt_birthday_iff', isOption_iff_mem_union, or_and_right, exists_or]
 
 theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
-    (∀ y ∈ x.leftMoves, y.birthday < o) ∧ (∀ y ∈ x.rightMoves, y.birthday < o) := by
+    (∀ y ∈ x.moves_left, y.birthday < o) ∧ (∀ y ∈ x.moves_right, y.birthday < o) := by
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
-    max (⨆ y : x.leftMoves, succ y.1.birthday) (⨆ y : x.rightMoves, succ y.1.birthday) := by
+    max (⨆ y : x.moves_left, succ y.1.birthday) (⨆ y : x.moves_right, succ y.1.birthday) := by
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
@@ -102,7 +102,7 @@ decreasing_by igame_wf
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
+  rw [birthday_eq_max, moves_left_ofSets, moves_right_ofSets]
   simp [iSup, image_eq_range]
 
 @[simp]
@@ -207,7 +207,7 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
     apply small_subset
       (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦
         (!{s.1 | ↑s.2} : IGame))
-    refine fun x hx ↦ ⟨((↑) ⁻¹' x.leftMoves, (↑) ⁻¹' x.rightMoves), ?_⟩
+    refine fun x hx ↦ ⟨((↑) ⁻¹' x.moves_left, (↑) ⁻¹' x.moves_right), ?_⟩
     simp_rw [lt_succ_iff, birthday_le_iff] at hx
     ext p; cases p <;> simp_all
   | isSuccPrelimit o ho ih =>
@@ -269,12 +269,12 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
     constructor
     · aesop
     · rintro ⟨hl, hr⟩
-      have hxl : x.leftMoves ⊆ birthdayFinset n := by intro y; simp_all
-      have hxr : x.rightMoves ⊆ birthdayFinset n := by intro y; simp_all
+      have hxl : x.moves_left ⊆ birthdayFinset n := by intro y; simp_all
+      have hxr : x.moves_right ⊆ birthdayFinset n := by intro y; simp_all
       classical
       have := Set.fintypeSubset _ hxl
       have := Set.fintypeSubset _ hxr
-      use x.leftMoves.toFinset, x.rightMoves.toFinset
+      use x.moves_left.toFinset, x.moves_right.toFinset
       aesop
 
 theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by

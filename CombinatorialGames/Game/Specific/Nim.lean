@@ -52,73 +52,73 @@ theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
   ConcreteGame.moves_toIGame ..
 
-theorem forall_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
-    (∀ x ∈ (nim o).leftMoves, P x) ↔ (∀ a < o, P (nim a)) := by
+theorem forall_moves_left_nim {P : IGame → Prop} {o : Nimber} :
+    (∀ x ∈ (nim o).moves_left, P x) ↔ (∀ a < o, P (nim a)) := by
   simp
 
-theorem forall_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
-    (∀ x ∈ (nim o).rightMoves, P x) ↔ (∀ a < o, P (nim a)) := by
+theorem forall_moves_right_nim {P : IGame → Prop} {o : Nimber} :
+    (∀ x ∈ (nim o).moves_right, P x) ↔ (∀ a < o, P (nim a)) := by
   simp
 
-theorem exists_leftMoves_nim {P : IGame → Prop} {o : Nimber} :
-    (∃ x ∈ (nim o).leftMoves, P x) ↔ (∃ a < o, P (nim a)) := by
+theorem exists_moves_left_nim {P : IGame → Prop} {o : Nimber} :
+    (∃ x ∈ (nim o).moves_left, P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
-theorem exists_rightMoves_nim {P : IGame → Prop} {o : Nimber} :
-    (∃ x ∈ (nim o).rightMoves, P x) ↔ (∃ a < o, P (nim a)) := by
+theorem exists_moves_right_nim {P : IGame → Prop} {o : Nimber} :
+    (∃ x ∈ (nim o).moves_right, P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
 @[game_cmp]
-theorem forall_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
-    (∀ x ∈ leftMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
+theorem forall_moves_left_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ moves_left (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
-theorem forall_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
-    (∀ x ∈ rightMoves (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
+theorem forall_moves_right_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∀ x ∈ moves_right (nim (∗n)), P x) ↔ ∀ m < n, P (nim (∗m)) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
-theorem exists_leftMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
-    (∃ x ∈ leftMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
+theorem exists_moves_left_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ moves_left (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
-theorem exists_rightMoves_nim_natCast {P : IGame → Prop} {n : ℕ} :
-    (∃ x ∈ rightMoves (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
+theorem exists_moves_right_nim_natCast {P : IGame → Prop} {n : ℕ} :
+    (∃ x ∈ moves_right (nim (∗n)), P x) ↔ (∃ m < n, P (nim (∗m))) := by
   simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
 
 @[game_cmp]
-theorem forall_leftMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ x ∈ leftMoves (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
-  forall_leftMoves_nim_natCast
+theorem forall_moves_left_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ x ∈ moves_left (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
+  forall_moves_left_nim_natCast
 
 @[game_cmp]
-theorem forall_rightMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ x ∈ rightMoves (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
-  forall_rightMoves_nim_natCast
+theorem forall_moves_right_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∀ x ∈ moves_right (nim (∗ofNat(n))), P x) ↔ ∀ m < n, P (nim (∗m)) :=
+  forall_moves_right_nim_natCast
 
 @[game_cmp]
-theorem exists_leftMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ x ∈ leftMoves (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
-  exists_leftMoves_nim_natCast
+theorem exists_moves_left_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ x ∈ moves_left (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
+  exists_moves_left_nim_natCast
 
 @[game_cmp]
-theorem exists_rightMoves_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ x ∈ rightMoves (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
-  exists_rightMoves_nim_natCast
+theorem exists_moves_right_nim_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+    (∃ x ∈ moves_right (nim (∗ofNat(n))), P x) ↔ ∃ m < n, P (nim (∗m)) :=
+  exists_moves_right_nim_natCast
 
-theorem mem_leftMoves_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).leftMoves := by
+theorem mem_moves_left_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).moves_left := by
   simpa using ⟨_, h, rfl⟩
 
-theorem mem_rightMoves_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).rightMoves := by
+theorem mem_moves_right_nim_of_lt {a b : Nimber} (h : a < b) : (nim a) ∈ (nim b).moves_right := by
   simpa using ⟨_, h, rfl⟩
 
 theorem nim_injective : Function.Injective nim := by
   intro a b h'
   obtain h | rfl | h := lt_trichotomy a b
   on_goal 2 => rfl
-  all_goals cases self_notMem_moves _ _ <| h' ▸ mem_leftMoves_nim_of_lt h
+  all_goals cases self_notMem_moves _ _ <| h' ▸ mem_moves_left_nim_of_lt h
 
 @[simp] theorem nim_inj {a b : Nimber} : nim a = nim b ↔ a = b := nim_injective.eq_iff
 
@@ -147,7 +147,7 @@ protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
-  Impartial.leftMove_fuzzy (mem_leftMoves_nim_of_lt h)
+  Impartial.left_fuzzy (mem_moves_left_nim_of_lt h)
 
 @[simp]
 theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by

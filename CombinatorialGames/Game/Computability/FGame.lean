@@ -71,8 +71,8 @@ def moveLeft : ∀ g : SGame, Fin g.LeftMoves → SGame
 def moveRight : ∀ g : SGame, Fin g.RightMoves → SGame
   | mk _ _ _ g => g
 
-@[simp] theorem leftMoves_mk (m n f g) : (mk m n f g).LeftMoves = m := rfl
-@[simp] theorem rightMoves_mk (m n f g) : (mk m n f g).RightMoves = n := rfl
+@[simp] theorem moves_left_mk (m n f g) : (mk m n f g).LeftMoves = m := rfl
+@[simp] theorem moves_right_mk (m n f g) : (mk m n f g).RightMoves = n := rfl
 @[simp] theorem moveLeft_mk (m n f g) : (mk m n f g).moveLeft = f := rfl
 @[simp] theorem moveRight_mk (m n f g) : (mk m n f g).moveRight = g := rfl
 
@@ -193,7 +193,7 @@ noncomputable def out (x : FGame) : SGame := Quotient.out x
 @[simp] theorem out_eq (x : FGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The finset of left moves of the game. -/
-def leftMoves : FGame → Finset FGame :=
+def moves_left : FGame → Finset FGame :=
   Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveLeft y)) fun x y h ↦ by
     ext z
     simp_rw [Finset.mem_image, Finset.mem_univ, true_and]
@@ -204,7 +204,7 @@ def leftMoves : FGame → Finset FGame :=
       exact ⟨j, hj.mk_eq⟩
 
 /-- The finset of right moves of the game. -/
-def rightMoves : FGame → Finset FGame :=
+def moves_right : FGame → Finset FGame :=
   Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveRight y)) fun x y h ↦ by
     ext z
     simp_rw [Finset.mem_image, Finset.mem_univ, true_and]
@@ -214,13 +214,13 @@ def rightMoves : FGame → Finset FGame :=
     · obtain ⟨j, hj⟩ := h.moveRight_symm i
       exact ⟨j, hj.mk_eq⟩
 
-@[simp] theorem leftMoves_mk (x : SGame) :
-    leftMoves (mk x) = Finset.univ.image (mk ∘ x.moveLeft) := rfl
-@[simp] theorem rightMoves_mk (x : SGame) :
-    rightMoves (mk x) = Finset.univ.image (mk ∘ x.moveRight) := rfl
+@[simp] theorem moves_left_mk (x : SGame) :
+    moves_left (mk x) = Finset.univ.image (mk ∘ x.moveLeft) := rfl
+@[simp] theorem moves_right_mk (x : SGame) :
+    moves_right (mk x) = Finset.univ.image (mk ∘ x.moveRight) := rfl
 
 @[ext]
-theorem ext {x y : FGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = y.rightMoves) :
+theorem ext {x y : FGame} (hl : x.moves_left = y.moves_left) (hr : x.moves_right = y.moves_right) :
     x = y := by
   cases x with | H x =>
   cases y with | H y =>
@@ -246,10 +246,10 @@ theorem ext {x y : FGame} (hl : x.leftMoves = y.leftMoves) (hr : x.rightMoves = 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
 @[aesop simp]
 def IsOption (x y : FGame) : Prop :=
-  x ∈ y.leftMoves ∨ x ∈ y.rightMoves
+  x ∈ y.moves_left ∨ x ∈ y.moves_right
 
-theorem IsOption.of_mem_leftMoves {x y : FGame} : x ∈ y.leftMoves → IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : FGame} : x ∈ y.rightMoves → IsOption x y := .inr
+theorem IsOption.of_mem_moves_left {x y : FGame} : x ∈ y.moves_left → IsOption x y := .inl
+theorem IsOption.of_mem_moves_right {x y : FGame} : x ∈ y.moves_right → IsOption x y := .inr
 
 theorem isOption_wf : WellFounded IsOption := by
   refine ⟨ind fun x ↦ ?_⟩
@@ -257,20 +257,20 @@ theorem isOption_wf : WellFounded IsOption := by
   | mk x _ _ _ hl hr =>
     constructor
     rintro ⟨y⟩ (h | h)
-    · rw [leftMoves_mk, Finset.mem_image] at h
+    · rw [moves_left_mk, Finset.mem_image] at h
       exact h.choose_spec.2 ▸ hl h.choose
-    · rw [rightMoves_mk, Finset.mem_image] at h
+    · rw [moves_right_mk, Finset.mem_image] at h
       exact h.choose_spec.2 ▸ hr h.choose
 
 instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
 
 theorem IsOption.irrefl (x : FGame) : ¬ IsOption x x := _root_.irrefl x
 
-theorem self_notMem_leftMoves (x : FGame) : x ∉ x.leftMoves :=
-  fun hx ↦ IsOption.irrefl x (.of_mem_leftMoves hx)
+theorem self_notMem_moves_left (x : FGame) : x ∉ x.moves_left :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_moves_left hx)
 
-theorem self_notMem_rightMoves (x : FGame) : x ∉ x.rightMoves :=
-  fun hx ↦ IsOption.irrefl x (.of_mem_rightMoves hx)
+theorem self_notMem_moves_right (x : FGame) : x ∉ x.moves_right :=
+  fun hx ↦ IsOption.irrefl x (.of_mem_moves_right hx)
 
 /-- Construct a `FGame` from its left and right lists. This is an auxiliary definition
 used to define the more general `FGame.ofFinsets`. -/
@@ -281,8 +281,8 @@ def ofLists (s t : List FGame.{u}) : FGame.{u} :=
     ext x <;> aesop (add simp [mk_eq_mk])
 
 private theorem ofLists_moves {s t : List FGame} :
-    (ofLists s t).leftMoves = s.toFinset ∧ (ofLists s t).rightMoves = t.toFinset := by
-  unfold ofLists leftMoves rightMoves FGame.mk
+    (ofLists s t).moves_left = s.toFinset ∧ (ofLists s t).moves_right = t.toFinset := by
+  unfold ofLists moves_left moves_right FGame.mk
   generalize hs : s.get = sf
   generalize ht : t.get = tf
   induction sf using Quotient.induction_on_pi
@@ -291,11 +291,11 @@ private theorem ofLists_moves {s t : List FGame} :
   aesop (add simp [hs.symm, ht.symm])
 
 @[simp]
-theorem leftMoves_ofLists {s t : List FGame} : (ofLists s t).leftMoves = s.toFinset :=
+theorem moves_left_ofLists {s t : List FGame} : (ofLists s t).moves_left = s.toFinset :=
   ofLists_moves.1
 
 @[simp]
-theorem rightMoves_ofLists {s t : List FGame} : (ofLists s t).rightMoves = t.toFinset :=
+theorem moves_right_ofLists {s t : List FGame} : (ofLists s t).moves_right = t.toFinset :=
   ofLists_moves.2
 
 /-- Construct a `FGame` from its left and right finsets.
@@ -305,14 +305,14 @@ notation, and from the analogous constructors on other game types. -/
 def ofFinsets (s t : Finset FGame) : FGame :=
   Quotient.liftOn₂ s.1 t.1 ofLists fun a₁ b₁ a₂ b₂ ha hb ↦ by
     rw [← Quotient.eq_iff_equiv, Multiset.quot_mk_to_coe, Multiset.quot_mk_to_coe] at ha hb
-    simp_rw [FGame.ext_iff, leftMoves_ofLists, rightMoves_ofLists, ← List.toFinset_coe]
+    simp_rw [FGame.ext_iff, moves_left_ofLists, moves_right_ofLists, ← List.toFinset_coe]
     exact ⟨congrArg Multiset.toFinset ha, congrArg Multiset.toFinset hb⟩
 
 @[inherit_doc] notation "{" s " | " t "}ꟳ" => ofFinsets s t
 recommended_spelling "ofFinsets" for "{· | ·}ꟳ" in [«term{_|_}ꟳ»]
 
 private def moves_ofFinsets {s t : Finset FGame} :
-    {s | t}ꟳ.leftMoves = s ∧ {s | t}ꟳ.rightMoves = t := by
+    {s | t}ꟳ.moves_left = s ∧ {s | t}ꟳ.moves_right = t := by
   unfold ofFinsets
   generalize hs : s.val = sf
   generalize ht : t.val = tf
@@ -322,22 +322,22 @@ private def moves_ofFinsets {s t : Finset FGame} :
   simp [List.toFinset, ← hs, ← ht]
 
 @[simp]
-theorem leftMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.leftMoves = s := moves_ofFinsets.1
+theorem moves_left_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.moves_left = s := moves_ofFinsets.1
 
 @[simp]
-theorem rightMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.rightMoves = t := moves_ofFinsets.2
+theorem moves_right_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.moves_right = t := moves_ofFinsets.2
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : FGame → FGame → Prop :=
   Relation.TransGen IsOption
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_leftMoves {x y : FGame} (h : x ∈ y.leftMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_leftMoves h)
+theorem Subposition.of_mem_moves_left {x y : FGame} (h : x ∈ y.moves_left) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves_left h)
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_rightMoves {x y : FGame} (h : x ∈ y.rightMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_rightMoves h)
+theorem Subposition.of_mem_moves_right {x y : FGame} (h : x ∈ y.moves_right) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves_right h)
 
 theorem Subposition.trans {x y z : FGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -352,7 +352,7 @@ of definitions using well-founded recursion on `FGame`. -/
 macro "fgame_wf" : tactic =>
   `(tactic| all_goals solve_by_elim (maxDepth := 8)
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
-    Subposition.of_mem_leftMoves, Subposition.of_mem_rightMoves, Subposition.trans, Subtype.prop] )
+    Subposition.of_mem_moves_left, Subposition.of_mem_moves_right, Subposition.trans, Subtype.prop] )
 
 /-! ### Basic games -/
 
@@ -361,16 +361,16 @@ instance : Zero FGame := ⟨{∅ | ∅}ꟳ⟩
 
 theorem zero_def : 0 = {∅ | ∅}ꟳ := rfl
 
-@[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofFinsets ..
-@[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofFinsets ..
+@[simp, game_cmp] theorem moves_left_zero : moves_left 0 = ∅ := moves_left_ofFinsets ..
+@[simp, game_cmp] theorem moves_right_zero : moves_right 0 = ∅ := moves_right_ofFinsets ..
 
 /-- The game `1 = {{0} | ∅}ꟳ`. -/
 instance : One FGame := ⟨{{0} | ∅}ꟳ⟩
 
 theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 
-@[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
-@[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
+@[simp, game_cmp] theorem moves_left_one : moves_left 1 = {0} := moves_left_ofFinsets ..
+@[simp, game_cmp] theorem moves_right_one : moves_right 1 = ∅ := moves_right_ofFinsets ..
 
 /-! ### Repr -/
 
@@ -384,8 +384,8 @@ private unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Mult
 -- TODO: can we hook into delab?
 private unsafe def instRepr_aux : FGame → Std.Format :=
   fun g ↦ "{" ++
-    Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
-    Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
+    Multiset.repr_or_emptyset.reprPrec (g.moves_left.val.map instRepr_aux) 0 ++ " | " ++
+    Multiset.repr_or_emptyset.reprPrec (g.moves_right.val.map instRepr_aux) 0 ++ "}"
 
 /-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
 and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one

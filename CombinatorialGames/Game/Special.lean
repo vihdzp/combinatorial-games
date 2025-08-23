@@ -31,8 +31,8 @@ def star : IGame :=
 @[inherit_doc] notation "⋆" => star
 recommended_spelling "star" for "⋆" in [«term⋆»]
 
-@[simp, game_cmp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_star : moves_left ⋆ = {0} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_star : moves_right ⋆ = {0} := moves_right_ofSets ..
 
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 @[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
@@ -55,8 +55,8 @@ def half : IGame :=
 @[inherit_doc] notation "½" => half
 recommended_spelling "half" for "½" in [«term½»]
 
-@[simp, game_cmp] theorem leftMoves_half : leftMoves ½ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_half : rightMoves ½ = {1} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_half : moves_left ½ = {0} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_half : moves_right ½ = {1} := moves_right_ofSets ..
 
 theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
@@ -73,8 +73,8 @@ def up : IGame :=
 @[inherit_doc] notation "↑" => up
 recommended_spelling "up" for "↑" in [«term↑»]
 
-@[simp, game_cmp] theorem leftMoves_up : leftMoves ↑ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_up : rightMoves ↑ = {⋆} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_up : moves_left ↑ = {0} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_up : moves_right ↑ = {⋆} := moves_right_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
@@ -89,8 +89,8 @@ def down : IGame :=
 @[inherit_doc] notation "↓" => down
 recommended_spelling "down" for "↓" in [«term↓»]
 
-@[simp, game_cmp] theorem leftMoves_down : leftMoves ↓ = {⋆} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_down : rightMoves ↓ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_down : moves_left ↓ = {⋆} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_down : moves_right ↓ = {0} := moves_right_ofSets ..
 
 @[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
 @[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
@@ -112,12 +112,12 @@ def tiny (x : IGame) : IGame :=
 recommended_spelling "tiny" for "⧾" in [«term⧾_»]
 
 @[simp, game_cmp]
-theorem leftMoves_tiny (x : IGame) : leftMoves (⧾x) = {0} :=
-  leftMoves_ofSets ..
+theorem moves_left_tiny (x : IGame) : moves_left (⧾x) = {0} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_tiny (x : IGame) : rightMoves (⧾x) = {!{{0} | {-x}}} :=
-  rightMoves_ofSets ..
+theorem moves_right_tiny (x : IGame) : moves_right (⧾x) = {!{{0} | {-x}}} :=
+  moves_right_ofSets ..
 
 instance (x : IGame) [Short x] : Short (⧾x) := by
   have : !{{0} | {-x}}.Short := by rw [short_def]; simpa
@@ -132,12 +132,12 @@ def miny (x : IGame) : IGame :=
 recommended_spelling "miny" for "⧿" in [«term⧿_»]
 
 @[simp, game_cmp]
-theorem leftMoves_miny (x : IGame) : leftMoves (⧿x) = {!{{x} | {0}}} :=
-  leftMoves_ofSets ..
+theorem moves_left_miny (x : IGame) : moves_left (⧿x) = {!{{x} | {0}}} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_miny (x : IGame) : rightMoves (⧿x) = {0} :=
-  rightMoves_ofSets ..
+theorem moves_right_miny (x : IGame) : moves_right (⧿x) = {0} :=
+  moves_right_ofSets ..
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
@@ -163,12 +163,12 @@ def switch (x : IGame) : IGame :=
 recommended_spelling "switch" for "±" in [«term±_»]
 
 @[simp, game_cmp]
-theorem leftMoves_switch (x : IGame) : leftMoves (±x) = {x} :=
-  leftMoves_ofSets ..
+theorem moves_left_switch (x : IGame) : moves_left (±x) = {x} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_switch (x : IGame) : rightMoves (±x) = {-x} :=
-  rightMoves_ofSets ..
+theorem moves_right_switch (x : IGame) : moves_right (±x) = {-x} :=
+  moves_right_ofSets ..
 
 @[simp]
 theorem neg_switch (x : IGame) : -±x = ±x := by
