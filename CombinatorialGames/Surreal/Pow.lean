@@ -42,8 +42,8 @@ namespace IGame
 The standard definition in the literature instead has `r` ranging over positive reals,
 but this makes no difference as to the equivalence class of the games. -/
 private def wpow (x : IGame.{u}) : IGame.{u} :=
-  !{insert 0 (range (fun y : Ioi (0 : Dyadic) × x.leftMoves ↦ y.1 * wpow y.2)) |
-    range (fun y : Ioi (0 : Dyadic) × x.rightMoves ↦ y.1 * wpow y.2)}
+  !{insert 0 (range (fun y : Ioi (0 : Dyadic) × xᴸ ↦ y.1 * wpow y.2)) |
+    range (fun y : Ioi (0 : Dyadic) × xᴿ ↦ y.1 * wpow y.2)}
 termination_by x
 decreasing_by igame_wf
 
@@ -51,51 +51,51 @@ instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
-    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) x.leftMoves) |
-      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) x.rightMoves} := by
+    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) |
+      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) xᴿ} := by
   change wpow _ = _
   rw [wpow]
   simp_rw [Set.image2_eq_range]
   rfl
 
-theorem leftMoves_wpow (x : IGame) : leftMoves (ω^ x) =
-    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) x.leftMoves) := by
-  rw [wpow_def, leftMoves_ofSets, Set.image2_eq_range]
+theorem leftMoves_wpow (x : IGame) : (ω^ x)ᴸ =
+    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) := by
+  rw [wpow_def, moves_left_ofSets, Set.image2_eq_range]
 
-theorem rightMoves_wpow (x : IGame) : rightMoves (ω^ x) =
-    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) x.rightMoves := by
-  rw [wpow_def, rightMoves_ofSets, Set.image2_eq_range]
+theorem rightMoves_wpow (x : IGame) : (ω^ x)ᴿ =
+    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴿ := by
+  rw [wpow_def, moves_right_ofSets, Set.image2_eq_range]
 
 @[simp]
-theorem forall_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ leftMoves (ω^ x), P y) ↔
-    P 0 ∧ ∀ r : Dyadic, 0 < r → ∀ y ∈ x.leftMoves, P (r * ω^ y) := by
+theorem forall_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴸ, P y) ↔
+    P 0 ∧ ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, forall_mem_insert, forall_mem_image2]
   rfl
 
 @[simp]
-theorem forall_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ rightMoves (ω^ x), P y) ↔
-    ∀ r : Dyadic, 0 < r → ∀ y ∈ x.rightMoves, P (r * ω^ y) := by
+theorem forall_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴿ, P y) ↔
+    ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact forall_mem_image2
 
 @[simp]
-theorem exists_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ leftMoves (ω^ x), P y) ↔
-    P 0 ∨ ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ x.leftMoves, P (r * ω^ y) := by
+theorem exists_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴸ, P y) ↔
+    P 0 ∨ ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, exists_mem_insert, exists_mem_image2]
   rfl
 
 @[simp]
-theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ rightMoves (ω^ x), P y) ↔
-    ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ x.rightMoves, P (r * ω^ y) := by
+theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴿ, P y) ↔
+    ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact exists_mem_image2
 
 @[simp]
-theorem zero_mem_leftMoves_wpow (x : IGame) : 0 ∈ leftMoves (ω^ x) := by
+theorem zero_mem_leftMoves_wpow (x : IGame) : 0 ∈ (ω^ x)ᴸ := by
   simp [leftMoves_wpow]
 
 theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 ≤ r)
-    (hy : y ∈ x.leftMoves) : r * ω^ y ∈ leftMoves (ω^ x) := by
+    (hy : y ∈ xᴸ) : r * ω^ y ∈ (ω^ x)ᴸ := by
   obtain rfl | hr := hr.eq_or_lt
   · simp
   · rw [leftMoves_wpow]
@@ -103,24 +103,22 @@ theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 ≤ r)
     use r, hr, y
 
 theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 < r)
-    (hy : y ∈ x.rightMoves) : r * ω^ y ∈ rightMoves (ω^ x) := by
+    (hy : y ∈ xᴿ) : r * ω^ y ∈ (ω^ x)ᴿ := by
   rw [rightMoves_wpow]
   use r, hr, y
 
-theorem natCast_mul_wpow_mem_leftMoves_wpow {x y : IGame} (n : ℕ) (hy : y ∈ x.leftMoves) :
-    n * ω^ y ∈ leftMoves (ω^ x) := by
+theorem natCast_mul_wpow_mem_leftMoves_wpow {x y : IGame} (n : ℕ) (hy : y ∈ xᴸ) :
+    n * ω^ y ∈ (ω^ x)ᴸ := by
   simpa using mul_wpow_mem_leftMoves_wpow n.cast_nonneg hy
 
 theorem natCast_mul_wpow_mem_rightMoves_wpow {x y : IGame} {n : ℕ} (hn : 0 < n)
-    (hy : y ∈ x.rightMoves) : n * ω^ y ∈ rightMoves (ω^ x) := by
+    (hy : y ∈ xᴿ) : n * ω^ y ∈ (ω^ x)ᴿ := by
   simpa using mul_wpow_mem_rightMoves_wpow (n.cast_pos.2 hn) hy
 
-theorem wpow_mem_leftMoves_wpow {x y : IGame} (hy : y ∈ x.leftMoves) :
-    ω^ y ∈ leftMoves (ω^ x) := by
+theorem wpow_mem_leftMoves_wpow {x y : IGame} (hy : y ∈ xᴸ) : ω^ y ∈ (ω^ x)ᴸ := by
   simpa using natCast_mul_wpow_mem_leftMoves_wpow 1 hy
 
-theorem wpow_mem_rightMoves_wpow {x y : IGame} (hy : y ∈ x.rightMoves) :
-    ω^ y ∈ rightMoves (ω^ x) := by
+theorem wpow_mem_rightMoves_wpow {x y : IGame} (hy : y ∈ xᴿ) : ω^ y ∈ (ω^ x)ᴿ := by
   simpa using natCast_mul_wpow_mem_rightMoves_wpow one_pos hy
 
 theorem zero_lf_wpow (x : IGame) : 0 ⧏ ω^ x :=

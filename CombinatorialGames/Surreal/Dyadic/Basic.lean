@@ -163,18 +163,18 @@ theorem toIGame_neg (x : Dyadic) : (-x : Dyadic) = -(x : IGame) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ leftMoves x) :
+theorem eq_lower_of_mem_moves_left_toIGame {x : Dyadic} {y : IGame} (h : y ∈ (x : IGame)ᴸ) :
     y = lower x := by
   by_cases hx : x.den = 1
   · rw [toIGame_of_den_eq_one hx] at h
-    rw [lower_eq_of_den_eq_one hx, eq_sub_one_of_mem_leftMoves_intCast h,
+    rw [lower_eq_of_den_eq_one hx, eq_sub_one_of_mem_moves_left_intCast h,
       ← Int.cast_one (R := Dyadic), ← Int.cast_sub, toIGame_intCast]
   · simpa [toIGame_of_den_ne_one hx] using h
 
-theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ rightMoves x) :
+theorem eq_upper_of_mem_moves_right_toIGame {x : Dyadic} {y : IGame} (h : y ∈ (x : IGame)ᴿ) :
     y = upper x := by
-  have : -y ∈ leftMoves (-x : Dyadic) := by simpa
-  simpa using eq_lower_of_mem_leftMoves_toIGame this
+  have : -y ∈ ((-x :) : IGame)ᴸ := by simpa
+  simpa using eq_lower_of_mem_moves_left_toIGame this
 
 /-- A dyadic number `x` is always equivalent to `!{lower x | upper x}`, though this may not
 necessarily be the canonical form. -/
@@ -187,10 +187,10 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
     apply Fits.equiv_of_forall_not_fits
     · simp [Fits]
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_moves_left_intCast hm
       simp_all [Fits, Int.sub_one_lt_iff]
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
+      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_moves_right_intCast hm
       simp_all [Fits, Int.lt_add_one_iff]
   · rfl
 
@@ -293,43 +293,43 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   · rw [Fits, forall_moves_add, forall_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
     any_goals
-      obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+      obtain rfl := eq_lower_of_mem_moves_left_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_right]
       simp
     all_goals
-      obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+      obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
       rw [← (toIGame_add_equiv _ _).le_congr_left]
       simp
   · intro z hz
-    obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+    obtain rfl := eq_lower_of_mem_moves_left_toIGame hz
     rw [not_fits_iff]
     left
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; simp_all
       use x + lower y
       have hy := toIGame_of_den_ne_one hy
-      have : (lower y : IGame) ∈ leftMoves y := by rw [hy]; simp
+      have : (lower y : IGame) ∈ (y : IGame)ᴸ := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hy]
       simpa using lower_add_le_of_den_le h
     · use lower x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : (lower x : IGame) ∈ leftMoves x := by rw [hx]; simp
+      have : (lower x : IGame) ∈ (x : IGame)ᴸ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
   · intro z hz
-    obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+    obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
     rw [not_fits_iff]
     right
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; simp_all
       use x + upper y
       have hy := toIGame_of_den_ne_one hy
-      have : (upper y : IGame) ∈ rightMoves y := by rw [hy]; simp
+      have : (upper y : IGame) ∈ (y : IGame)ᴿ := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
     · use upper x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : (upper x : IGame) ∈ rightMoves x := by rw [hx]; simp
+      have : (upper x : IGame) ∈ (x : IGame)ᴿ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hx]
       simpa using le_upper_add_of_den_ge h.le
 termination_by ((x : IGame.{u}), (y : IGame.{u}))
@@ -472,11 +472,11 @@ end Dyadic
 namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
-  have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
-  have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
@@ -500,10 +500,10 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
   obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic.toIGame) this
   use z
   apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
-  · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
+  · obtain rfl := Dyadic.eq_lower_of_mem_moves_left_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
-  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
+  · obtain rfl := Dyadic.eq_upper_of_mem_moves_right_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
 termination_by x

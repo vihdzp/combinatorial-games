@@ -59,42 +59,42 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
-  apply Numeric.mk <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
+  apply Numeric.mk <;> simp only [moves_ofSets, Set.forall_mem_image]
   · intro x hx y hy
     dsimp at *
     simpa using hx.trans hy
   all_goals infer_instance
 
 @[simp]
-theorem leftMoves_toIGame (x : ℝ) : leftMoves x = (↑) '' {q : Dyadic | q < x} :=
-  leftMoves_ofSets ..
+theorem leftMoves_toIGame (x : ℝ) : (x : IGame)ᴸ = (↑) '' {q : Dyadic | q < x} :=
+  moves_ofSets ..
 
 @[simp]
-theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : Dyadic | x < q} :=
-  rightMoves_ofSets ..
+theorem rightMoves_toIGame (x : ℝ) : (x : IGame)ᴿ = (↑) '' {q : Dyadic | x < q} :=
+  moves_ofSets ..
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ leftMoves x, P y) ↔ ∀ q : Dyadic, q < x → P q := by
+    (∀ y ∈ (x : IGame)ᴸ, P y) ↔ ∀ q : Dyadic, q < x → P q := by
   aesop
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ leftMoves x, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
+    (∃ y ∈ (x : IGame)ᴸ, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
   aesop
 
 theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ rightMoves x, P y) ↔ ∀ q : Dyadic, x < q → P q := by
+    (∀ y ∈ (x : IGame)ᴿ, P y) ↔ ∀ q : Dyadic, x < q → P q := by
   aesop
 
 theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ rightMoves x, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
+    (∃ y ∈ (x : IGame)ᴿ, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
   aesop
 
 theorem mem_leftMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : q < x) :
-    (q : IGame) ∈ leftMoves x := by
+    (q : IGame) ∈ (x : IGame)ᴸ := by
   simpa
 
 theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q) :
-    (q : IGame) ∈ rightMoves x := by
+    (q : IGame) ∈ (x : IGame)ᴿ := by
   simpa
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
@@ -103,7 +103,7 @@ def toIGameEmbedding : ℝ ↪o IGame := by
   refine .ofStrictMono toIGame fun x y h ↦ ?_
   obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
   trans (q : IGame)
-  · apply Numeric.lt_rightMove
+  · apply Numeric.lt_right
     simpa [toIGame]
   · apply Numeric.left_lt
     simpa [toIGame]
