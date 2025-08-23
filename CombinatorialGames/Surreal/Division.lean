@@ -445,7 +445,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
       simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/
-theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ (q : IGame.{u})ᴸ) :
+theorem equiv_ratCast_of_mem_moves_left_ratCast {q : ℚ} {x : IGame} (hx : x ∈ (q : IGame.{u})ᴸ) :
     ∃ r : ℚ, r < q ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
   refine ⟨r, ?_, hr⟩
@@ -453,7 +453,7 @@ theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈
   simpa using Numeric.left_lt hx
 
 /-- Every right option of a rational number is equivalent to a larger rational number. -/
-theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ (q : IGame.{u})ᴿ) :
+theorem equiv_ratCast_of_mem_moves_right_ratCast {q : ℚ} {x : IGame} (hx : x ∈ (q : IGame.{u})ᴿ) :
     ∃ r : ℚ, q < r ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
   refine ⟨r, ?_, hr⟩
