@@ -72,8 +72,7 @@ instance : InvolutiveNeg Player where
 The multiplication of `Player`s is used to state the lemmas about the multiplication of
 combinatorial games, such as `IGame.mulOption_mem_moves_mul`.
 -/
-instance : Mul Player where
-  mul
+instance : Mul Player where mul
   | left, p => p
   | right, p => -p
 
