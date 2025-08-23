@@ -26,13 +26,16 @@ namespace IGame
 
 /-- The game `⋆ = {0 | 0}`, which is fuzzy with zero. -/
 def star : IGame :=
-  !{{0} | {0}}
+  !{fun _ ↦ {0}}
 
 @[inherit_doc] notation "⋆" => star
 recommended_spelling "star" for "⋆" in [«term⋆»]
 
-@[simp, game_cmp] theorem leftMoves_star : leftMoves ⋆ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_star : rightMoves ⋆ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem leftMoves_star : leftMoves ⋆ = {0} := moves_ofSets ..
+@[simp, game_cmp] theorem rightMoves_star : rightMoves ⋆ = {0} := moves_ofSets ..
+
+-- TODO: remove the above theorems
+@[simp, game_cmp] theorem moves_star (p : Player) : moves p ⋆ = {0} := moves_ofSets ..
 
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 @[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
@@ -177,7 +180,7 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 
 @[simp]
 theorem switch_zero : ±0 = ⋆ := by
-  simp_rw [switch, star, neg_zero]
+  ext p; cases p <;> simp
 
 end IGame
 end
