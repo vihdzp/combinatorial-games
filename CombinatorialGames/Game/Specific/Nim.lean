@@ -147,7 +147,7 @@ protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
 termination_by o
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
-  Impartial.leftMove_fuzzy (mem_leftMoves_nim_of_lt h)
+  Impartial.left_fuzzy (mem_leftMoves_nim_of_lt h)
 
 @[simp]
 theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
