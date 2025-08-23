@@ -73,8 +73,7 @@ theorem mk (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z)
     (h₂ : ∀ y ∈ xᴸ, Numeric y) (h₃ : ∀ y ∈ xᴿ, Numeric y) : Numeric x :=
   numeric_def'.2 ⟨h₁, h₂, h₃⟩
 
-theorem leftMove_lt_rightMove [h : Numeric x]
-    (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
+theorem left_lt_right [h : Numeric x] (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
   (numeric_def.1 h).1 y hy z hz
 
 protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ moves p x) : Numeric y :=
@@ -243,7 +242,7 @@ theorem not_fits_iff {x y : IGame} :
     ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
   rw [Fits, not_and_or]; simp
 
-theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
+theorem Fits.le_of_forall_moves_left_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ¬ z.Fits y) : x ≤ y := by
   simp_rw [not_fits_iff] at hl
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
@@ -251,17 +250,17 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   · exact not_le_of_le_of_not_le hw' (leftMove_lf hw)
   · cases hx.2 w hw <| (hw'.trans_lt (Numeric.leftMove_lt hz)).le
 
-theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
+theorem Fits.le_of_forall_moves_right_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : y ≤ x := by
   rw [← IGame.neg_le_neg_iff]
-  apply hx.neg.le_of_forall_leftMoves_not_fits
+  apply hx.neg.le_of_forall_moves_left_not_fits
   simpa only [fits_neg_iff, forall_moves_neg]
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ¬ z.Fits y) (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : x ≈ y :=
-  ⟨hx.le_of_forall_leftMoves_not_fits hl, hx.le_of_forall_rightMoves_not_fits hr⟩
+  ⟨hx.le_of_forall_moves_left_not_fits hl, hx.le_of_forall_moves_right_not_fits hr⟩
 
 /-- A variant of the **simplicity theorem**: if `x` is the numeric game with the least birthday that
 fits within `y`, then `x ≈ y`. -/
