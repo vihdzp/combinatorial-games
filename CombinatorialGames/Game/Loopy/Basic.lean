@@ -87,10 +87,10 @@ instance : DecidableEq LGame := Classical.decEq _
 def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
 
 /-- The set of left moves of the game. -/
-abbrev leftMoves (x : LGame.{u}) : Set LGame.{u} := x.moves left
+scoped notation:max x:max "ᴸ" => moves left x
 
 /-- The set of right moves of the game. -/
-abbrev rightMoves (x : LGame.{u}) : Set LGame.{u} := x.moves right
+scoped notation:max x:max "ᴿ" => moves right x
 
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
@@ -99,8 +99,7 @@ def IsOption (x y : LGame) : Prop :=
   x ∈ ⋃ p, y.moves p
 
 @[aesop simp]
-lemma isOption_iff_mem_union {x y : LGame} :
-    IsOption x y ↔ x ∈ y.leftMoves ∪ y.rightMoves := by
+lemma isOption_iff_mem_union {x y : LGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
   simp [IsOption, Player.exists]
 
 theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
@@ -307,15 +306,13 @@ theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
-@[simp]
 theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
-    !{l | r}.leftMoves = l := by
-  rw [leftMoves, moves_ofSets]
+    !{l | r}ᴸ = l :=
+  moves_ofSets ..
 
-@[simp]
 theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
-    !{l | r}.rightMoves = r := by
-  rw [rightMoves, moves_ofSets]
+    !{l | r}ᴿ = r :=
+  moves_ofSets ..
 
 /-! ### Basic games -/
 
@@ -324,8 +321,8 @@ instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
 theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 
-@[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
-@[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+@[simp] theorem leftMoves_zero : 0ᴸ = ∅ := leftMoves_ofSets ..
+@[simp] theorem rightMoves_zero : 0ᴿ = ∅ := rightMoves_ofSets ..
 
 -- TODO: remove the former?
 @[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
@@ -337,17 +334,17 @@ instance : One LGame := ⟨!{{0} | ∅}⟩
 
 theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 
-@[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
+@[simp] theorem leftMoves_one : 1ᴸ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_one : 1ᴿ = ∅ := rightMoves_ofSets ..
 
 /-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
-@[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
-@[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
+@[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
+@[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
-theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
+theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ ⟨rfl, rfl⟩
@@ -357,11 +354,11 @@ theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ 
 /-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
-@[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
-@[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
+@[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
+@[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
-theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
+theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ ⟨rfl, rfl⟩
@@ -371,11 +368,11 @@ theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x
 /-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
-@[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
-@[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
+@[simp] theorem leftMoves_dud : dudᴸ = {dud} := by simp [dud]
+@[simp] theorem rightMoves_dud : dudᴿ = {dud} := by simp [dud]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
-theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
+theorem eq_dud {x : LGame} : x = dud ↔ xᴸ = {x} ∧ xᴿ = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ ⟨rfl, rfl⟩
@@ -387,12 +384,12 @@ def tis : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} �
 /-- The game `tisn = !{∅ | {tis}}`, where `tis = !{{tisn} | ∅}`. -/
 def tisn : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) false
 
-@[simp] theorem leftMoves_tis : leftMoves tis = {tisn} := by simp [tis, tisn]
-@[simp] theorem rightMoves_tis : rightMoves tis = ∅ := by simp [tis]
+@[simp] theorem leftMoves_tis : tisᴸ = {tisn} := by simp [tis, tisn]
+@[simp] theorem rightMoves_tis : tisᴿ = ∅ := by simp [tis]
 theorem tis_eq : tis = !{{tisn} | ∅} := by ext p; cases p <;> simp
 
-@[simp] theorem leftMoves_tisn : leftMoves tisn = ∅ := by simp [tisn]
-@[simp] theorem rightMoves_tisn : rightMoves tisn = {tis} := by simp [tis, tisn]
+@[simp] theorem leftMoves_tisn : tisnᴸ = ∅ := by simp [tisn]
+@[simp] theorem rightMoves_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
 theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 
 /-! ### Negation -/
@@ -940,7 +937,7 @@ def mulOption (x y a b : LGame) : LGame :=
 @[simp]
 theorem moves_mul (p : Player) (x y : LGame) :
     (x * y).moves p = (fun a ↦ mulOption x y a.1 a.2) ''
-      (x.leftMoves ×ˢ y.moves p ∪ x.rightMoves ×ˢ y.moves (-p)) := by
+      (xᴸ ×ˢ y.moves p ∪ xᴿ ×ˢ y.moves (-p)) := by
   apply (moves_corec ..).trans
   simp [MulTy.moves, MulTy.movesSingle, MulTy.corec_mulOption, image_image]
   cases p <;> rfl

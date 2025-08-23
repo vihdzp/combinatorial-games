@@ -142,7 +142,7 @@ instance : CharZero Game := AddMonoidWithOne.toCharZero
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq' (x * y), mul_eq']
   simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
-  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
+  dsimp
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
@@ -204,13 +204,13 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ s) : x ⧏ !{s | t} := by
   rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}.leftMoves := by simpa using mem_image_of_mem _ h
+  have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using leftMove_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : !{s | t} ⧏ x := by
   rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}.rightMoves := by simpa using mem_image_of_mem _ h
+  have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_rightMove this
 
 end Game

@@ -24,7 +24,7 @@ namespace IGame
 /-! ### Dicotic games -/
 
 private def DicoticAux (x : IGame) : Prop :=
-  (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
+  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
 termination_by x
 decreasing_by igame_wf
 
@@ -34,26 +34,25 @@ class Dicotic (x : IGame) : Prop where of_DicoticAux ::
   out : DicoticAux x
 
 theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
+    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
 theorem dicotic_def' {x : IGame} : Dicotic x ↔
-    (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
-      (∀ l ∈ x.leftMoves, Dicotic l) ∧ (∀ r ∈ x.rightMoves, Dicotic r) := by
+    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ l ∈ xᴸ, Dicotic l) ∧ (∀ r ∈ xᴿ, Dicotic r) := by
   rw [dicotic_def, Player.forall]
 
 namespace Dicotic
 variable {x y z : IGame}
 
-theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ x.leftMoves = ∅ ∨ x.rightMoves = ∅ := by
+theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ xᴸ = ∅ ∨ xᴿ = ∅ := by
   rw [dicotic_def] at hx
   simp_all [IGame.ext_iff]
 
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ x.leftMoves ≠ ∅ ∧ x.rightMoves ≠ ∅ := by
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ xᴸ ≠ ∅ ∧ xᴿ ≠ ∅ := by
   simpa using eq_zero_iff.not
 
-theorem mk (h : x.leftMoves = ∅ ↔ x.rightMoves = ∅)
-    (hl : ∀ y ∈ x.leftMoves, Dicotic y) (hr : ∀ y ∈ x.rightMoves, Dicotic y) : Dicotic x :=
+theorem mk (h : xᴸ = ∅ ↔ xᴿ = ∅)
+    (hl : ∀ y ∈ xᴸ, Dicotic y) (hr : ∀ y ∈ xᴿ, Dicotic y) : Dicotic x :=
   dicotic_def'.2 ⟨h, hl, hr⟩
 
 theorem moves_eq_empty_iff {p : Player} [hx : Dicotic x] : x.moves p = ∅ ↔ x.moves (-p) = ∅ := by
