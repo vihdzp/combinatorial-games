@@ -89,27 +89,27 @@ instance : Moves LGame where
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (moves p x) := x.dest.2 p
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-@[aesop simp]
 def IsOption (x y : LGame) : Prop :=
-  x ∈ yᴸ ∪ yᴿ
+  x ∈ ⋃ p, moves p y
 
-theorem IsOption.of_mem_moves_left {x y : LGame} : x ∈ yᴸ → IsOption x y := .inl
-theorem IsOption.of_mem_moves_right {x y : LGame} : x ∈ yᴿ → IsOption x y := .inr
+@[aesop simp]
+lemma isOption_iff_mem_union {x y : LGame} :
+    IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
+  simp [IsOption]
+
+theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ moves p y) : IsOption x y :=
+  ⟨_, ⟨p, rfl⟩, h⟩
 
 instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (xᴸ ∪ xᴿ :))
+  inferInstanceAs (Small (⋃ p, moves p x))
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : LGame → LGame → Prop :=
   Relation.TransGen IsOption
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_moves_left {x y : LGame} (h : x ∈ yᴸ) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves_left h)
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_moves_right {x y : LGame} (h : x ∈ yᴿ) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves_right h)
+theorem Subposition.of_mem_moves {p} {x y : LGame} (h : x ∈ moves p y) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
