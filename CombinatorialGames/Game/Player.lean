@@ -104,10 +104,7 @@ open Player
 
 /-! ### OfSets -/
 
-/--
-Type class for the `ofSets` operation.
-Used to implement the `!{st}` and `!{s | t}` syntax.
--/
+/-- Typeclass for the `ofSets` operation. Used to implement the `!{st}` and `!{s | t}` syntax. -/
 class OfSets (α : Type (u + 1)) (Valid : outParam ((Player → Set α) → Prop)) where
   /-- Construct a combinatorial game from its left and right sets. -/
   ofSets (st : Player → Set α) (h : Valid st) [Small.{u} (st left)] [Small.{u} (st right)] : α
@@ -159,3 +156,29 @@ theorem ofSets_eq_ofSets_cases {α} {Valid : (Player → Set α) → Prop} [OfSe
     (st : Player → Set α) (h : Valid st) [Small (st left)] [Small (st right)] :
     !{st} = !{st left | st right}'(by convert h; aesop) := by
   congr; ext1 p; cases p <;> rfl
+
+/-! ### Moves -/
+
+/-- Typeclass for the `moves` operation. Used to implement the `xᴸ` and `xᴿ` syntax. -/
+class Moves (α : Type*) where
+  /-- Either the set of left or right moves of a game. -/
+  moves (p : Player) (x : α) : Set α
+export Moves (moves)
+
+/-- The set of left moves of the game. -/
+postfix:max "ᴸ" => Moves.moves left
+
+/-- The set of right moves of the game. -/
+postfix:max "ᴿ" => Moves.moves right
+
+open Lean PrettyPrinter Delaborator SubExpr in
+@[app_delab Moves.moves]
+def delabMoves : Delab := do
+  let e ← getExpr
+  guard <| e.isAppOfArity' ``Moves.moves 4
+  let x ← withNaryArg 3 delab
+  withNaryArg 2 do
+    let p ← getExpr
+    if p.isAppOf ``Player.left then `($xᴸ)
+    else if p.isAppOf ``Player.right then `($xᴿ)
+    else failure -- fail over to the default delaborator
