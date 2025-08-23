@@ -13,6 +13,7 @@ import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Loopy.Outcome
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Player
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
