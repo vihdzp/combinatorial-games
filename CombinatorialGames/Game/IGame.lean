@@ -364,7 +364,7 @@ theorem left_lf_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ x.leftMoves) : z
 theorem lf_right_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ y.rightMoves) : x ⧏ z :=
   (le_iff_forall_lf.1 h).2 z h'
 
-theorem lf_of_le_leftMove {x y z : IGame} (h : x ≤ z) (h' : z ∈ y.leftMoves) : x ⧏ y :=
+theorem lf_of_le_left {x y z : IGame} (h : x ≤ z) (h' : z ∈ y.leftMoves) : x ⧏ y :=
   lf_iff_exists_le.2 <| Or.inl ⟨z, h', h⟩
 
 theorem lf_of_right_le {x y z : IGame} (h : z ≤ y) (h' : z ∈ x.rightMoves) : x ⧏ y :=
@@ -373,7 +373,7 @@ theorem lf_of_right_le {x y z : IGame} (h : z ≤ y) (h' : z ∈ x.rightMoves) :
 private theorem le_rfl' {x : IGame} : x ≤ x := by
   rw [le_iff_forall_lf]
   constructor <;> intro y hy
-  exacts [lf_of_le_leftMove le_rfl' hy, lf_of_right_le le_rfl' hy]
+  exacts [lf_of_le_left le_rfl' hy, lf_of_right_le le_rfl' hy]
 termination_by x
 decreasing_by igame_wf
 
@@ -392,7 +392,7 @@ instance : Preorder IGame where
   le_trans x y z := le_trans'
 
 theorem left_lf {x y : IGame} (h : y ∈ x.leftMoves) : y ⧏ x :=
-  lf_of_le_leftMove le_rfl h
+  lf_of_le_left le_rfl h
 
 theorem lf_right {x y : IGame} (h : y ∈ x.rightMoves) : x ⧏ y :=
   lf_of_right_le le_rfl h
@@ -749,13 +749,13 @@ theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
   rw [le_iff_forall_lf, leftMoves, rightMoves, moves_add, moves_add]
   refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
-  · exact lf_of_le_leftMove (add_le_add_left' h a) (add_right_mem_moves_add ha y)
+  · exact lf_of_le_left (add_le_add_left' h a) (add_right_mem_moves_add ha y)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (left_lf_of_le h ha)
-    · exact lf_of_le_leftMove (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
+    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
     · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
   · exact lf_of_right_le (add_le_add_left' h a) (add_right_mem_moves_add ha x)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (lf_right_of_le h ha)
-    · exact lf_of_le_leftMove (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
+    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
     · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
 termination_by (x, y, z)
 decreasing_by igame_wf

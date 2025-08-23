@@ -41,9 +41,9 @@ theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.to
 
 theorem lf_miny_of_not_nonneg_of_forall_le {x a : IGame} (hx : x ⧏ 0)
     (ha : ∀ y ∈ x.leftMoves, y ≤ a) : x ⧏ ⧿a := by
-  refine lf_of_le_leftMove ?_ (leftMoves_miny _ ▸ Set.mem_singleton _)
+  refine lf_of_le_left ?_ (leftMoves_miny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
-  simpa using ⟨fun z hz ↦ lf_of_le_leftMove (ha z hz) (by simp), hx⟩
+  simpa using ⟨fun z hz ↦ lf_of_le_left (ha z hz) (by simp), hx⟩
 
 theorem le_miny_of_neg_of_forall_le_neg {x a : IGame} (hx : x < 0)
     (ha : ∀ y ∈ x.leftMoves, ∀ z ∈ y.leftMoves, z ≤ a) : x ≤ ⧿a := by
