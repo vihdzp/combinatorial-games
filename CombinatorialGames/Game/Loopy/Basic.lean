@@ -322,7 +322,7 @@ theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
 /-- The game `0 = !{∅ | ∅}`. -/
 instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : (0 : LGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
+theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..

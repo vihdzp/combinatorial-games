@@ -278,7 +278,7 @@ macro "igame_wf" : tactic =>
 /-- The game `0 = !{∅ | ∅}`. -/
 instance : Zero IGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : (0 : IGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
+theorem zero_def : (0 : IGame) = !{fun _ ↦ ∅} := rfl
 
 @[simp, game_cmp] theorem leftMoves_zero : leftMoves 0 = ∅ := moves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_zero : rightMoves 0 = ∅ := moves_ofSets ..
@@ -508,7 +508,7 @@ theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st rig
   dsimp
 
 instance : NegZeroClass IGame where
-  neg_zero := by simp [zero_def]
+  neg_zero := by simp [zero_def, neg_ofSets']
 
 theorem neg_eq (x : IGame) : -x = !{-x.rightMoves | -x.leftMoves} := by
   rw [← neg_ofSets, ofSets_leftMoves_rightMoves]
