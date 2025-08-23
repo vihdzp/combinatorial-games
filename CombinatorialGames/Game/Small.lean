@@ -40,7 +40,7 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
 theorem dicotic_def' {x : IGame} : Dicotic x ↔
     (x.leftMoves = ∅ ↔ x.rightMoves = ∅) ∧
       (∀ l ∈ x.leftMoves, Dicotic l) ∧ (∀ r ∈ x.rightMoves, Dicotic r) := by
-  rw [dicotic_def]; aesop
+  rw [dicotic_def, Player.forall]
 
 namespace Dicotic
 variable {x y z : IGame}
