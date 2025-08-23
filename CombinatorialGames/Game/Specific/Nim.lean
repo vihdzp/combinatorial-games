@@ -46,7 +46,7 @@ noncomputable def nim : Nimber.{u} → IGame.{u} :=
   ConcreteGame.nim.toIGame
 
 theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
-  ConcreteGame.toIGame_def' o
+  ConcreteGame.toIGame_def' ..
 
 @[simp]
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
