@@ -95,27 +95,27 @@ abbrev rightMoves (x : LGame.{u}) : Set LGame.{u} := x.moves right
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-@[aesop simp]
 def IsOption (x y : LGame) : Prop :=
-  x ∈ y.leftMoves ∪ y.rightMoves
+  x ∈ ⋃ p, y.moves p
 
-theorem IsOption.of_mem_leftMoves {x y : LGame} : x ∈ y.leftMoves → IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : LGame} : x ∈ y.rightMoves → IsOption x y := .inr
+@[aesop simp]
+lemma isOption_iff_mem_union {x y : LGame} :
+    IsOption x y ↔ x ∈ y.leftMoves ∪ y.rightMoves := by
+  simp [IsOption, Player.exists]
+
+theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
+  ⟨_, ⟨p, rfl⟩, h⟩
 
 instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+  inferInstanceAs (Small (⋃ p, x.moves p))
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : LGame → LGame → Prop :=
   Relation.TransGen IsOption
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_leftMoves {x y : LGame} (h : x ∈ y.leftMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_leftMoves h)
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_rightMoves {x y : LGame} (h : x ∈ y.rightMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_rightMoves h)
+theorem Subposition.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -320,12 +320,15 @@ theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
 /-! ### Basic games -/
 
 /-- The game `0 = !{∅ | ∅}`. -/
-instance : Zero LGame := ⟨!{∅ | ∅}⟩
+instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : (0 : LGame) = !{∅ | ∅} := rfl
+theorem zero_def : (0 : LGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+
+-- TODO: remove the former?
+@[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
 instance : Inhabited LGame := ⟨0⟩
 

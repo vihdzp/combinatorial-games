@@ -267,9 +267,8 @@ theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
 fits within `y`, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits y)
     (H : ∀ z, Numeric z → z.Fits y → x.birthday ≤ z.birthday) : x ≈ y := by
-  apply hx.equiv_of_forall_not_fits
-  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_ge <| H z (.of_mem_moves hz) h
-  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_ge <| H z (.of_mem_moves hz) h
+  apply hx.equiv_of_forall_not_fits <;>
+    exact fun z hz h ↦ (birthday_lt_of_mem_moves hz).not_ge <| H z (.of_mem_moves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
@@ -477,7 +476,7 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
-theorem zero_def : (0 : Surreal) = !{∅ | ∅} := by apply (mk_ofSets ..).trans; congr! <;> simp
+theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
 theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop
 
 instance : DenselyOrdered Surreal where
