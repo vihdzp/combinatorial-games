@@ -51,7 +51,7 @@ def IsOption (c : ConcreteGame α) (a b : α) : Prop :=
 @[aesop simp]
 theorem isOption_iff_mem_union {a b : α} :
     c.IsOption a b ↔ a ∈ c.moves left b ∪ c.moves right b := by
-  simp [IsOption, Player.exists]
+  simp [IsOption]
 
 theorem IsOption.of_mem_moves {p} {a b : α} (h : a ∈ c.moves p b) : c.IsOption a b :=
   ⟨_, ⟨p, rfl⟩, h⟩

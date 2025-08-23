@@ -166,7 +166,7 @@ def IsOption (x y : IGame) : Prop :=
 
 @[aesop simp]
 lemma isOption_iff_mem_union {x y : IGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
-  simp [IsOption, Player.exists]
+  simp [IsOption]
 
 theorem IsOption.of_mem_moves {p} {x y : IGame} (h : x ∈ moves p y) : IsOption x y :=
   ⟨_, ⟨p, rfl⟩, h⟩
