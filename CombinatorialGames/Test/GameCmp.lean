@@ -19,7 +19,7 @@ example : (-3 : ℤ) ≤ (3 : IGame) := by game_cmp
 example : 1 ≥ ½ := by game_cmp
 example : ↑ > 0 := by game_cmp
 example : ⋆ ⧏ ⧾⋆ := by game_cmp
-example : {{1} | {2}}ᴵ ≈ {{0, 1} | {2, 3}}ᴵ := by game_cmp
+example : (!{{1} | {2}} : IGame) ≈ !{{0, 1} | {2, 3}} := by game_cmp
 example : ⋆ ‖ 0 := by game_cmp
 
 -- Arithmetic

@@ -363,7 +363,7 @@ theorem rightSurreal_mem_of_sInf_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s
     use y
     simp_all
   choose f hf using this
-  suffices rightSurreal {{x} | range f}ˢ ≤ sInf s by
+  suffices rightSurreal !{{x} | range f} ≤ sInf s by
     apply this.not_gt
     simp_all [lt_ofSets_of_mem_left]
   simp_rw [le_sInf_iff, rightSurreal_le_iff, ← leftSurreal_lt_iff]

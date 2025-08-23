@@ -34,7 +34,6 @@ form a linear ordered commutative ring.
 - Prove that surreals with finite birthday are dyadic rationals.
 - Build the embedding from reals into surreals.
 - Define sign sequences.
-- Redefine `Numeric` in terms of `IGame.moves`.
 -/
 
 universe u
@@ -46,46 +45,45 @@ noncomputable section
 namespace IGame
 
 private def NumericAux (x : IGame) : Prop :=
-  (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧
-  (∀ y ∈ x.leftMoves, NumericAux y) ∧ (∀ y ∈ x.rightMoves, NumericAux y)
+  (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, NumericAux y)
 termination_by x
 decreasing_by igame_wf
 
-/-- A game `{s | t}ᴵ` is numeric if everything in `s` is less than everything in `t`, and all the
+/-- A game `!{s | t}` is numeric if everything in `s` is less than everything in `t`, and all the
 elements of these sets are also numeric.
 
 The `Surreal` numbers are built as the quotient of numeric games under equivalence. -/
 @[mk_iff numeric_iff_aux]
-class Numeric (x : IGame) : Prop where
+class Numeric (x : IGame) : Prop where of_NumericAux ::
   out : NumericAux x
 
 theorem numeric_def {x : IGame} : Numeric x ↔
+    (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, Numeric y) := by
+  simp_rw [numeric_iff_aux]; rw [NumericAux]
+
+theorem numeric_def' {x : IGame} : Numeric x ↔
     (∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z) ∧
     (∀ y ∈ x.leftMoves, Numeric y) ∧ (∀ y ∈ x.rightMoves, Numeric y) := by
-  simp_rw [numeric_iff_aux]; rw [NumericAux]
+  rw [numeric_def]; aesop
 
 namespace Numeric
 variable {x y z : IGame}
 
-theorem mk' (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
+theorem mk (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y < z)
     (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
-  numeric_def.2 ⟨h₁, h₂, h₃⟩
+  numeric_def'.2 ⟨h₁, h₂, h₃⟩
 
 theorem leftMove_lt_rightMove [h : Numeric x]
     (hy : y ∈ x.leftMoves) (hz : z ∈ x.rightMoves) : y < z :=
   (numeric_def.1 h).1 y hy z hz
 
-protected theorem of_mem_leftMoves [h : Numeric x] (hy : y ∈ x.leftMoves) : Numeric y :=
-  (numeric_def.1 h).2.1 y hy
-
-protected theorem of_mem_rightMoves [h : Numeric x] (hy : y ∈ x.rightMoves) : Numeric y :=
-  (numeric_def.1 h).2.2 y hy
+protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves p) : Numeric y :=
+  (numeric_def.1 h).2 p y hy
 
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   rw [isOption_iff_mem_union] at h
   cases h with
-  | inl h => exact .of_mem_leftMoves h
-  | inr h => exact .of_mem_rightMoves h
+  | _ h => exact .of_mem_moves h
 
 alias _root_.IGame.IsOption.numeric := Numeric.isOption
 
@@ -106,11 +104,11 @@ protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
-  · have := Numeric.of_mem_leftMoves hz; have := Numeric.of_mem_leftMoves ha
+  · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
     exact (leftMove_lf_of_le h' hz) (Numeric.le_of_not_le (leftMove_lf_of_le h ha))
   · exact (leftMove_lt_rightMove hz ha).not_ge (h'.trans h)
   · exact (leftMove_lt_rightMove ha hz).not_ge (h.trans h')
-  · have := Numeric.of_mem_rightMoves hz; have := Numeric.of_mem_rightMoves ha
+  · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
     exact (lf_rightMove_of_le h' hz) (Numeric.le_of_not_le (lf_rightMove_of_le h ha))
 termination_by x
 decreasing_by igame_wf
@@ -148,34 +146,33 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
 to the right options.-/
 theorem mk_of_lf (h₁ : ∀ y ∈ x.leftMoves, ∀ z ∈ x.rightMoves, y ⧏ z)
     (h₂ : ∀ y ∈ x.leftMoves, Numeric y) (h₃ : ∀ y ∈ x.rightMoves, Numeric y) : Numeric x :=
-  mk' (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
+  mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ x.leftMoves, z < y) ∧ (∀ z ∈ y.rightMoves, x < z) := by
   rw [le_iff_forall_lf]
   congr! with z hz z hz
-  · have := Numeric.of_mem_leftMoves hz; rw [Numeric.not_le]
-  · have := Numeric.of_mem_rightMoves hz; rw [Numeric.not_le]
+  · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
+  · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
 
 theorem lt_iff_exists_le [Numeric x] [Numeric y] :
     x < y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
   rw [← Numeric.not_le, lf_iff_exists_le]
 
 theorem leftMove_lt [Numeric x] (h : y ∈ x.leftMoves) : y < x := by
-  have := Numeric.of_mem_leftMoves h; simpa using leftMove_lf h
+  have := Numeric.of_mem_moves h; simpa using leftMove_lf h
 
 theorem lt_rightMove [Numeric x] (h : y ∈ x.rightMoves) : x < y := by
-  have := Numeric.of_mem_rightMoves h; simpa using lf_rightMove h
+  have := Numeric.of_mem_moves h; simpa using lf_rightMove h
 
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
-  refine mk' (fun y hy z hz ↦ ?_) ?_ ?_
+  refine mk (fun y hy z hz ↦ ?_) ?_ ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @leftMove_lt_rightMove x <;> simp_all
   all_goals
     intro y hy
-    simp only [leftMoves_neg, rightMoves_neg] at hy
-    try have := Numeric.of_mem_leftMoves hy
-    try have := Numeric.of_mem_rightMoves hy
+    simp only [moves_neg] at hy
+    have := Numeric.of_mem_moves hy
     simpa using Numeric.neg (-y)
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
@@ -185,7 +182,7 @@ theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
   ⟨fun _ ↦ by simpa using Numeric.neg (-x), fun _ ↦ Numeric.neg x⟩
 
 protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
-  apply mk' <;> simp only [leftMoves_add, rightMoves_add, Set.mem_union, Set.mem_image]
+  apply mk <;> simp only [moves_add, Set.mem_union, Set.mem_image]
   · rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
     any_goals simpa using leftMove_lt_rightMove ha hb
     all_goals
@@ -195,8 +192,7 @@ protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) :
   all_goals
     rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩)
     all_goals
-      try have := Numeric.of_mem_leftMoves hz;
-      try have := Numeric.of_mem_rightMoves hz;
+      have := Numeric.of_mem_moves hz
       exact Numeric.add ..
 termination_by (x, y)
 decreasing_by igame_wf
@@ -239,7 +235,7 @@ theorem Fits.refl (x : IGame) : x.Fits x :=
 
 @[simp]
 theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
-  rw [Fits, forall_leftMoves_neg, forall_rightMoves_neg, and_comm]; simp [Fits]
+  rw [Fits, forall_moves_neg, forall_moves_neg, and_comm]; simp [Fits]
 
 alias ⟨_, Fits.neg⟩ := fits_neg_iff
 
@@ -259,7 +255,7 @@ theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.
     (hr : ∀ z ∈ x.rightMoves, ¬ z.Fits y) : y ≤ x := by
   rw [← IGame.neg_le_neg_iff]
   apply hx.neg.le_of_forall_leftMoves_not_fits
-  simpa only [fits_neg_iff, forall_leftMoves_neg]
+  simpa only [fits_neg_iff, forall_moves_neg]
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`. -/
@@ -271,9 +267,8 @@ theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
 fits within `y`, then `x ≈ y`. -/
 theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits y)
     (H : ∀ z, Numeric z → z.Fits y → x.birthday ≤ z.birthday) : x ≈ y := by
-  apply hx.equiv_of_forall_not_fits
-  · exact fun z hz h ↦ (birthday_lt_of_mem_leftMoves hz).not_ge <| H z (.of_mem_leftMoves hz) h
-  · exact fun z hz h ↦ (birthday_lt_of_mem_rightMoves hz).not_ge <| H z (.of_mem_rightMoves hz) h
+  apply hx.equiv_of_forall_not_fits <;>
+    exact fun z hz h ↦ (birthday_lt_of_mem_moves hz).not_ge <| H z (.of_mem_moves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
@@ -426,54 +421,66 @@ theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
-This is given notation `{s | t}ˢ`, where the superscript `s` is to disambiguate from set builder
-notation, and from the analogous constructors on other game types. This notation will attempt to
-construct the relevant proof using `aesop`.
-
 Note that although this function is well-defined, this function isn't injective, nor do equivalence
 classes in Surreal have a canonical representative. (Note however that every short numeric game has
 a unique "canonical" form!) -/
-def ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
-    (H : ∀ x ∈ s, ∀ y ∈ t, x < y) : Surreal.{u} := by
-  refine @mk {out '' s | out '' t}ᴵ (.mk' ?_ (by simp) (by simp))
-  rw [leftMoves_ofSets, rightMoves_ofSets]
-  rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
-  rw [← Surreal.mk_lt_mk, out_eq, out_eq]
-  exact H x hx y hy
+instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
+  ofSets st H _ _ := by
+    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp) (by simp))
+    rw [leftMoves, moves_ofSets, rightMoves, moves_ofSets]
+    rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
+    rw [← Surreal.mk_lt_mk, out_eq, out_eq]
+    exact H x hx y hy
 
-@[inherit_doc] notation "{" s " | " t "}ˢ" => ofSets s t (by aesop)
-recommended_spelling "ofSets" for "{· | ·}ˢ" in [«term{_|_}ˢ»]
+theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
+    {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    toGame !{st} = !{fun p ↦ toGame '' st p} := by
+  change toGame (@mk _ (_)) = _
+  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, game_out_eq]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]
-    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} : toGame (ofSets s t H) = {toGame '' s | toGame '' t}ᴳ := by
-  simp_rw [ofSets, toGame_mk, Game.mk_ofSets, Set.image_image, game_out_eq]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
+    toGame !{s | t} = !{toGame '' s | toGame '' t} := by
+  rw [toGame_ofSets']
+  congr; aesop
 
-theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric {s | t}ᴵ} :
-    mk {s | t}ᴵ = ofSets
-      (.range fun x : s ↦ have : Numeric x := H.of_mem_leftMoves (by simp); mk x)
-      (.range fun x : t ↦ have : Numeric x := H.of_mem_rightMoves (by simp); mk x)
+theorem mk_ofSets' {st : Player → Set IGame.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] {H : Numeric !{st}} :
+    mk !{st} =
+      !{fun p ↦ .range fun x : st p ↦ mk x (h := H.of_mem_moves (p := p) (by simp))}'
       (by have := @H.leftMove_lt_rightMove; aesop) := by
-  simp_rw [ofSets, ← toGame_inj, toGame_mk, Game.mk_ofSets]
-  congr <;> aesop
+  change _ = @mk _ (_)
+  simp_rw [← toGame_inj, toGame_mk, Game.mk_ofSets']
+  congr; aesop
+
+theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric !{s | t}} :
+    mk !{s | t} =
+      !{.range fun x : s ↦ mk x (h := H.of_mem_moves (p := left) (by simp)) |
+        .range fun x : t ↦ mk x (h := H.of_mem_moves (p := right) (by simp))}'
+      (by have := @H.leftMove_lt_rightMove; aesop) := by
+  rw [mk_ofSets']
+  congr!; aesop
 
 @[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
-    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) : x < ofSets s t H := by
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) :
+    x < !{s | t} := by
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
 
 @[aesop apply unsafe]
 theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
-    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) : ofSets s t H < x := by
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) :
+    !{s | t} < x := by
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
-theorem zero_def : 0 = {∅ | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> simp
-theorem one_def : 1 = {{0} | ∅}ˢ := by apply (mk_ofSets ..).trans; congr <;> aesop
+theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
+theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop
 
 instance : DenselyOrdered Surreal where
-  dense a b hab := ⟨{{a} | {b}}ˢ,
+  dense a b hab := ⟨!{{a} | {b}},
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
 end Surreal

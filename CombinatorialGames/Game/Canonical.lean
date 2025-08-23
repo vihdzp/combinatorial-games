@@ -25,8 +25,8 @@ namespace IGame
 
 /-- Undominating a game. This returns garbage values on non-short games -/
 noncomputable def undominate (x : IGame) : IGame :=
-  {{y ∈ Set.range fun z : x.leftMoves ↦ undominate z | ∀ z ∈ x.leftMoves, ¬y < z} |
-    {y ∈ Set.range fun z : x.rightMoves ↦ undominate z | ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ
+  !{{y ∈ Set.range fun z : x.leftMoves ↦ undominate z | ∀ z ∈ x.leftMoves, ¬y < z} |
+    {y ∈ Set.range fun z : x.rightMoves ↦ undominate z | ∀ z ∈ x.rightMoves, ¬z < y}}
 termination_by x
 decreasing_by igame_wf
 
@@ -38,8 +38,8 @@ termination_by x
 decreasing_by igame_wf
 
 theorem undominate_def {x : IGame} : x.undominate =
-    {{y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} |
-      {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ := by
+    !{{y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} |
+      {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y}} := by
   rw [undominate]
   simp
 
@@ -61,8 +61,7 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
-  have := leftMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  have := rightMoves_neg x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
   rw [undominate_def, undominate_def]
   simp_all [IGame.lt_neg, IGame.neg_lt]
 termination_by x

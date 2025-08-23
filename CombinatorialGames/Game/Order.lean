@@ -34,10 +34,10 @@ theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.to
   apply lt_of_le_not_ge
   · refine tiny_le_of_pos_of_forall_neg_le hx
       fun y hy z hz ↦ (neg_toIGame_birthday_le z).trans' ?_
-    simpa using ((birthday_lt_of_mem_rightMoves hz).trans (birthday_lt_of_mem_rightMoves hy)).le
+    simpa using ((birthday_lt_of_mem_moves hz).trans (birthday_lt_of_mem_moves hy)).le
   · refine tiny_lf_of_not_nonpos_of_forall_neg_le hx.not_ge
       fun y hy ↦ (neg_toIGame_birthday_le y).trans' ?_
-    simpa using (birthday_lt_of_mem_rightMoves hy).le
+    simpa using (birthday_lt_of_mem_moves hy).le
 
 theorem lf_miny_of_not_nonneg_of_forall_le {x a : IGame} (hx : x ⧏ 0)
     (ha : ∀ y ∈ x.leftMoves, y ≤ a) : x ⧏ ⧿a := by

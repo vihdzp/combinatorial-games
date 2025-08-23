@@ -125,11 +125,11 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
 * If `x : ℤ`, then `toIGame x = ↑x`.
-* Otherwise, if `x = m / n` with `n` even, then `toIGame x = {(m - 1) / n | (m + 1) / n}ᴵ`. Note
+* Otherwise, if `x = m / n` with `n` even, then `toIGame x = !{(m - 1) / n | (m + 1) / n}`. Note
   that both options will have smaller denominators. -/
 @[coe]
 noncomputable def toIGame (x : Dyadic) : IGame :=
-  if _ : x.den = 1 then x.num else {{toIGame (lower x)} | {toIGame (upper x)}}ᴵ
+  if _ : x.den = 1 then x.num else !{{toIGame (lower x)} | {toIGame (upper x)}}
 termination_by x.den
 decreasing_by dyadic_wf
 
@@ -145,7 +145,7 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 @[simp] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by simpa using toIGame_natCast 1
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
-    x = {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ :=
+    x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
   by rw [toIGame, dif_neg hx]
 
 @[simp]
@@ -176,10 +176,10 @@ theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ r
   have : -y ∈ leftMoves (-x : Dyadic) := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
 
-/-- A dyadic number `x` is always equivalent to `{lower x | upper x}ᴵ`, though this may not
+/-- A dyadic number `x` is always equivalent to `!{lower x | upper x}`, though this may not
 necessarily be the canonical form. -/
 theorem toIGame_equiv_lower_upper (x : Dyadic) :
-    (x : IGame) ≈ {{(lower x : IGame)} | {(upper x : IGame)}}ᴵ := by
+    (x : IGame) ≈ !{{(lower x : IGame)} | {(upper x : IGame)}} := by
   rw [toIGame]
   split_ifs with h
   · unfold lower upper
@@ -208,7 +208,7 @@ private theorem numeric_lower (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
   by_cases h : x.den = 1
   · rw [lower_eq_of_den_eq_one h, ← Int.cast_one, ← Int.cast_sub, toIGame_intCast]
     infer_instance
-  · apply hx.of_mem_leftMoves
+  · apply hx.of_mem_moves (p := left)
     simp [toIGame_of_den_ne_one h]
 
 private theorem numeric_upper (x : Dyadic) [hx : Numeric (x : IGame.{u})] :
@@ -290,7 +290,7 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
-  · rw [Fits, forall_leftMoves_add, forall_rightMoves_add]
+  · rw [Fits, forall_moves_add, forall_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
@@ -473,11 +473,11 @@ namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
   have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_leftMoves y.2
+    have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_rightMoves y.2
+    have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
   choose f hf using H₁
@@ -501,10 +501,10 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
   use z
   apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
   · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
-    have hz' := birthday_lt_of_mem_leftMoves hz'
+    have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
   · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
-    have hz' := birthday_lt_of_mem_rightMoves hz'
+    have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
 termination_by x
 decreasing_by igame_wf

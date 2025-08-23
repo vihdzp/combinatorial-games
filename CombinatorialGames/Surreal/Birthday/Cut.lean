@@ -226,7 +226,7 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
     have H₁ := le_sSup (mem_image_of_mem rightSurreal hx)
     have H₂ := sInf_le (mem_image_of_mem leftSurreal hy)
     simpa using (H₁.trans_lt h).trans_le H₂
-  trans ((ofSets s t H).birthday : WithTop NatOrdinal)
+  trans (!{s | t}.birthday : WithTop NatOrdinal)
   · rw [WithTop.coe_le_coe]
     apply birthday_simplestBtwn_le_of_fits
     unfold Fits
@@ -241,12 +241,12 @@ private theorem birthday_game_le (x : IGame) :
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_leftMoves i.2
+    exact IGame.birthday_lt_of_mem_moves i.2
   have H₂ : (infRight x).birthday ≤ x.birthday := by
     rw [infRight, iInf_subtype']
     apply (birthday_iInf_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.1.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_rightMoves i.2
+    exact IGame.birthday_lt_of_mem_moves i.2
   use H₁, H₂
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]

@@ -3,7 +3,7 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios, Yuyang Zhao
 -/
-import Mathlib.Algebra.Ring.Defs
+import CombinatorialGames.Game.Player
 import Mathlib.Data.QPF.Univariate.Basic
 import Mathlib.Logic.Small.Set
 
@@ -11,11 +11,11 @@ import Mathlib.Logic.Small.Set
 # Game functor
 
 The type of games `IGame` is an inductive type, with a single constructor `ofSets` taking in two
-small sets of games and outputting a new game. This suggests the definition:
+small sets of games (one for each player) and outputting a new game. This suggests the definition:
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : IGame
+  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
 ```
 
 However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
@@ -26,7 +26,7 @@ limitation using the machinery of `QPF`s (quotients of polynomial functors). We 
 
 ```
 def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
-  {s : Set α × Set α // Small.{u} s.1 ∧ Small.{u} s.2}
+  {st : Player → Set α // Small.{u} (st left) ∧ Small.{u} (st right)}
 ```
 
 We can prove that this is a `QPF`, which then allows us to build its initial algebra through
@@ -37,51 +37,7 @@ functor.
 
 universe u
 
-/-- Either the Left or Right player. -/
-inductive Player where
-  /-- The Left player. -/
-  | left  : Player
-  /-- The Right player. -/
-  | right : Player
-
-namespace Player
-
-@[simp]
-protected lemma «forall» {p : Player → Prop} :
-    (∀ x, p x) ↔ p left ∧ p right :=
-  ⟨fun h ↦ ⟨h left, h right⟩, fun ⟨hl, hr⟩ ↦ fun | left => hl | right => hr⟩
-
-@[simp]
-protected lemma «exists» {p : Player → Prop} :
-    (∃ x, p x) ↔ p left ∨ p right :=
-  ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
-
-instance : Neg Player where
-  neg := fun
-    | left => right
-    | right => left
-
-@[simp] lemma neg_left : -left = right := rfl
-@[simp] lemma neg_right : -right = left := rfl
-
-instance : InvolutiveNeg Player where
-  neg_neg := fun | left | right => rfl
-
-instance : Mul Player where
-  mul := fun
-    | left, p => p
-    | right, p => -p
-
-@[simp] lemma left_mul (p : Player) : left * p = p := rfl
-@[simp] lemma right_mul (p : Player) : right * p = -p := rfl
-@[simp] lemma mul_left (p : Player) : p * left = p := by cases p <;> rfl
-@[simp] lemma mul_right (p : Player) : p * right = -p := by cases p <;> rfl
-
-instance : HasDistribNeg Player where
-  neg_mul x y := by cases x <;> cases y <;> rfl
-  mul_neg x y := by cases x <;> cases y <;> rfl
-
-end Player
+/-! ### Game Functor -/
 
 /-- The functor from a type into the subtype of small pairs of sets in that type.
 
@@ -94,10 +50,10 @@ to various Lean limitations):
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : IGame
+  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
 
 coinductive LGame : Type (u + 1)
-  | ofSets (s t : Set LGame) [Small.{u} s] [Small.{u} t] : LGame
+  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : LGame
 ```
 -/
 def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
