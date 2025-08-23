@@ -320,12 +320,15 @@ theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
 /-! ### Basic games -/
 
 /-- The game `0 = !{∅ | ∅}`. -/
-instance : Zero LGame := ⟨!{∅ | ∅}⟩
+instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : (0 : LGame) = !{∅ | ∅} := rfl
+theorem zero_def : (0 : LGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
 
 @[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
 @[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+
+-- TODO: remove the former?
+@[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
 instance : Inhabited LGame := ⟨0⟩
 

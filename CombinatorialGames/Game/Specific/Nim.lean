@@ -47,8 +47,8 @@ take a positive number of stones from it on their turn. -/
 noncomputable def nim : Nimber.{u} → IGame.{u} :=
   ConcreteGame.nim.toIGame
 
-theorem nim_def (o : Nimber) : nim o = !{nim '' Iio o | nim '' Iio o} :=
-  ConcreteGame.toIGame_def o
+theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
+  ConcreteGame.toIGame_def' o
 
 @[simp]
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
@@ -129,7 +129,7 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
-  rw [nim_def, birthday_ofSets, max_self, image_image]
+  rw [nim_def, ofSets_eq_ofSets_cases, birthday_ofSets, max_self, image_image]
   conv_rhs => rw [← iSup_succ o, iSup]
   simp_rw [Function.comp_apply, ← image_eq_range]
   congr!
