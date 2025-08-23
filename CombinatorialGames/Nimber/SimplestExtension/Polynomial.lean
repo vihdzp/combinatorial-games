@@ -55,7 +55,7 @@ theorem WithBot.coe_add_one (n : ℕ) : WithBot.some (n + 1) = WithBot.some n + 
 theorem WithBot.natCast_eq_coe (n : ℕ) : (n : WithBot ℕ) = WithBot.some n :=
   rfl
 
--- Generalize to a SuccAddOrder
+-- TODO: Generalize to a SuccAddOrder
 @[simp]
 theorem WithBot.lt_add_one {x : WithBot ℕ} (n : ℕ) : x < WithBot.some n + 1 ↔ x ≤ n := by
   cases x
@@ -359,7 +359,7 @@ theorem mul_leadingCoeff_inv_lt {p : Nimber[X]} (h₀ : p ≠ 0) (h₁ : ¬p.Mon
     rwa [natDegree_mul_leadingCoeff_inv _ h₀]
   · obtain hp₁ | hp₁ := le_or_gt p.leadingCoeff 1
     · obtain _ | _ := le_one_iff.1 hp₁ <;> simp_all [Monic]
-    · aesop
+    · simp_all
 
 theorem mul_leadingCoeff_inv_le (p : Nimber[X]) :
     p * C p.leadingCoeff⁻¹ ≤ p := by
@@ -373,8 +373,8 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
   refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
+  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
