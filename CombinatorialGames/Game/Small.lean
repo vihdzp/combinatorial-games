@@ -56,11 +56,10 @@ theorem mk (h : x.leftMoves = ∅ ↔ x.rightMoves = ∅)
     (hl : ∀ y ∈ x.leftMoves, Dicotic y) (hr : ∀ y ∈ x.rightMoves, Dicotic y) : Dicotic x :=
   dicotic_def'.2 ⟨h, hl, hr⟩
 
-theorem leftMoves_eq_empty_iff [hx : Dicotic x] : x.leftMoves = ∅ ↔ x.rightMoves = ∅ :=
-  (dicotic_def.1 hx).1
-
-theorem rightMoves_eq_empty_iff [hx : Dicotic x] : x.rightMoves = ∅ ↔ x.leftMoves = ∅ :=
-  leftMoves_eq_empty_iff.symm
+theorem moves_eq_empty_iff {p : Player} [hx : Dicotic x] : x.moves p = ∅ ↔ x.moves (-p) = ∅ := by
+  induction p with
+  | left => exact (dicotic_def.1 hx).1
+  | right => exact (dicotic_def.1 hx).1.symm
 
 protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves p) : Dicotic y :=
   (dicotic_def.1 hx).2 p y h
@@ -72,7 +71,7 @@ protected instance zero : Dicotic 0 := by
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   rw [dicotic_def', forall_moves_neg, forall_moves_neg]
-  refine ⟨by simp [leftMoves_eq_empty_iff], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+  refine ⟨by simp [moves_eq_empty_iff (p := .left)], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
   all_goals
     have := Dicotic.of_mem_moves hy
     exact .neg y
