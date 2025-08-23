@@ -507,6 +507,11 @@ theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st rig
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
   dsimp
 
+@[simp]
+theorem neg_ofSets_const (s : Set IGame) [Small s] :
+    -!{fun _ ↦ s} = !{fun _ ↦ -s} := by
+  simp [neg_ofSets']
+
 instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def]
 
