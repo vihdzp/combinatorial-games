@@ -163,7 +163,7 @@ theorem toIGame_neg (x : Dyadic) : (-x : Dyadic) = -(x : IGame) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ leftMoves x) :
+theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴸ) :
     y = lower x := by
   by_cases hx : x.den = 1
   · rw [toIGame_of_den_eq_one hx] at h
@@ -171,9 +171,9 @@ theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ le
       ← Int.cast_one (R := Dyadic), ← Int.cast_sub, toIGame_intCast]
   · simpa [toIGame_of_den_ne_one hx] using h
 
-theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ rightMoves x) :
+theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴿ) :
     y = upper x := by
-  have : -y ∈ leftMoves (-x : Dyadic) := by simpa
+  have : -y ∈ (-x : Dyadic)ᴸ := by simpa
   simpa using eq_lower_of_mem_leftMoves_toIGame this
 
 /-- A dyadic number `x` is always equivalent to `!{lower x | upper x}`, though this may not
@@ -308,12 +308,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
     · by_cases hy : y.den = 1; simp_all
       use x + lower y
       have hy := toIGame_of_den_ne_one hy
-      have : (lower y : IGame) ∈ leftMoves y := by rw [hy]; simp
+      have : (lower y : IGame) ∈ yᴸ := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hy]
       simpa using lower_add_le_of_den_le h
     · use lower x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : (lower x : IGame) ∈ leftMoves x := by rw [hx]; simp
+      have : (lower x : IGame) ∈ xᴸ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
   · intro z hz
@@ -324,12 +324,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
     · by_cases hy : y.den = 1; simp_all
       use x + upper y
       have hy := toIGame_of_den_ne_one hy
-      have : (upper y : IGame) ∈ rightMoves y := by rw [hy]; simp
+      have : (upper y : IGame) ∈ yᴿ := by rw [hy]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
     · use upper x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
-      have : (upper x : IGame) ∈ rightMoves x := by rw [hx]; simp
+      have : (upper x : IGame) ∈ xᴿ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_left, hx]
       simpa using le_upper_add_of_den_ge h.le
 termination_by ((x : IGame.{u}), (y : IGame.{u}))
@@ -472,11 +472,11 @@ end Dyadic
 namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
-  have H₁ (y : x.leftMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
-  have H₂ (y : x.rightMoves) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
+  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
     have := Numeric.of_mem_moves y.2
     have := Short.of_mem_moves y.2
     exact IGame.equiv_dyadic _
