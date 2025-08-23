@@ -13,6 +13,7 @@ import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Loopy.Outcome
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
+import CombinatorialGames.Game.Player
 import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
@@ -29,7 +30,10 @@ import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
-import CombinatorialGames.Nimber.Simplicity
+import CombinatorialGames.Nimber.Nat
+import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+import CombinatorialGames.Nimber.SimplestExtension.Basic
+import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut

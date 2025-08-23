@@ -48,10 +48,10 @@ namespace NatOrdinal
 
 /-- We make this private until we can build the `OrderEmbedding`. -/
 private def toIGame' (o : NatOrdinal.{u}) : IGame.{u} :=
-  {.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}ᴵ
+  !{.range fun (⟨x, _⟩ : Iio o) ↦ toIGame' x | ∅}
 termination_by o
 
-private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = {toIGame' '' Iio o | ∅}ᴵ := by
+private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = !{toIGame' '' Iio o | ∅} := by
   rw [toIGame']; simp [image_eq_range]
 
 private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
@@ -73,7 +73,7 @@ termination_by a => a
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
-theorem toIGame_def (o : NatOrdinal) : o.toIGame = {toIGame '' Iio o | ∅}ᴵ :=
+theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
 @[simp]
@@ -108,8 +108,8 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGame.leftMoves := by
   simpa
 
-@[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext <;> simp
-@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext <;> simp [eq_comm]
+@[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext p; cases p <;> simp
+@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp [eq_comm]
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
@@ -127,7 +127,7 @@ noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
 
 @[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
-theorem toGame_def (o : NatOrdinal) : o.toGame = {toGame '' Iio o | ∅}ᴳ := by
+theorem toGame_def (o : NatOrdinal) : o.toGame = !{toGame '' Iio o | ∅} := by
   rw [← Game.mk_natOrdinal_toIGame, toIGame_def]
   simp [image_image]
 
@@ -173,7 +173,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
-    exact leftMove_lf <| mulOption_left_left_mem_leftMoves_mul
+    exact leftMove_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
@@ -211,7 +211,7 @@ open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
   have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
-    have := Short.of_mem_leftMoves y.2
+    have := Short.of_mem_moves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove
