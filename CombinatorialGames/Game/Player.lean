@@ -26,7 +26,7 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq
+deriving DecidableEq, Inhabited
 
 namespace Player
 
