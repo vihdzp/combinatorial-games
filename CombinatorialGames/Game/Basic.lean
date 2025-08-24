@@ -181,10 +181,10 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
   induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
   induction z using IGame.ofSetsRecOn with | mk zL zR ihzl ihzr
-  simp only [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption]
-  simp only [← Set.image_union, ← ofSets_mul_ofSets]
-  simp only [Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union]
-  simp only [← Equiv.prod_assoc_image, ← Set.image_union, Set.image_image, Equiv.prodAssoc_apply]
+  simp_rw [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption,
+    ← Set.image_union, ← ofSets_mul_ofSets,
+    Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union,
+    ← Equiv.prod_assoc_image, ← Set.image_union, Set.image_image, Equiv.prodAssoc_apply]
   have e1 : (xL ×ˢ yL) ×ˢ zL ∪ (xR ×ˢ yR) ×ˢ zL ∪ ((xL ×ˢ yR) ×ˢ zR ∪ (xR ×ˢ yL) ×ˢ zR) =
       (xL ×ˢ yL) ×ˢ zL ∪ (xL ×ˢ yR) ×ˢ zR ∪ ((xR ×ˢ yL) ×ˢ zR ∪ (xR ×ˢ yR) ×ˢ zL) := by
     ac_rfl
