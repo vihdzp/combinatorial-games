@@ -3,11 +3,14 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Quotient
 import Mathlib.Data.Multiset.Sort
+import Mathlib.Algebra.Group.Pointwise.Finset.Basic
+
+import CombinatorialGames.Game.Short
+import CombinatorialGames.Mathlib.Finlift
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 # Computably short games
@@ -38,6 +41,17 @@ instance {α β : Type*} (r : α → β → Prop)
     [H₁ : Decidable (∀ a, ∃ b, r a b)] [H : Decidable (∀ b, ∃ a, r a b)] :
     Decidable (Relator.BiTotal r) :=
   inferInstanceAs (Decidable (_ ∧ _))
+
+@[simp]
+theorem Finset.image_attach_comp {α β : Type*} [DecidableEq β] (s : Finset α) (f : α → β) :
+    s.attach.image (f ∘ Subtype.val) = s.image f := by
+  classical
+  rw [← Finset.image_image, Finset.attach_image_val]
+
+@[simp]
+theorem Finset.image_attach {α β : Type*} [DecidableEq β] (s : Finset α) (f : α → β) :
+    s.attach.image (fun x ↦ f x.1) = s.image f :=
+  s.image_attach_comp f
 
 universe u
 
@@ -148,6 +162,7 @@ theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i
 theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
   | mk .., mk .., ⟨_, hr⟩ => hr.2
 
+@[semireducible]
 instance Identical.instDecidable (a b) : Decidable (a ≡ b) :=
   let : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
   let : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
@@ -327,6 +342,15 @@ theorem leftMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.leftMoves = s := m
 @[simp]
 theorem rightMoves_ofFinsets {s t : Finset FGame} : {s | t}ꟳ.rightMoves = t := moves_ofFinsets.2
 
+@[simp]
+theorem ofFinsets_leftMoves_rightMoves (x : FGame) : {x.leftMoves | x.rightMoves}ꟳ = x := by
+  ext <;> simp
+
+@[simp]
+theorem ofFinsets_inj {s₁ s₂ t₁ t₂ : Finset _}:
+    {s₁ | t₁}ꟳ = {s₂ | t₂}ꟳ ↔ s₁ = s₂ ∧ t₁ = t₂ := by
+  simp [FGame.ext_iff]
+
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : FGame → FGame → Prop :=
   Relation.TransGen IsOption
@@ -372,6 +396,130 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 @[simp, game_cmp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofFinsets ..
 @[simp, game_cmp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofFinsets ..
 
+/-! ### Order relations -/
+
+/-- The less or equal relation on games.
+
+If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
+instance : LE FGame where
+  le := Sym2.GameAdd.fix isOption_wf fun x y le ↦
+    (∀ z (h : z ∈ x.leftMoves),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_leftMoves h))) ∧
+    (∀ z (h : z ∈ y.rightMoves), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_rightMoves h)))
+
+/-- The less or fuzzy relation on pre-games. `x ⧏ y` is notation for `¬ y ≤ x`.
+
+If `0 ⧏ x`, then Left can win `x` as the first player. `x ⧏ y` means that `0 ⧏ y - x`. -/
+macro_rules | `($x ⧏ $y) => `(¬$y ≤ $x)
+
+/-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
+theorem le_iff_forall_lf {x y : FGame} :
+    x ≤ y ↔ (∀ z ∈ x.leftMoves, z ⧏ y) ∧ (∀ z ∈ y.rightMoves, x ⧏ z) :=
+  propext_iff.1 <| Sym2.GameAdd.fix_eq ..
+
+/-- Definition of `x ⧏ y` on games, in terms of `≤`. -/
+theorem lf_iff_exists_le {x y : FGame} :
+    x ⧏ y ↔ (∃ z ∈ y.leftMoves, x ≤ z) ∨ (∃ z ∈ x.rightMoves, z ≤ y) := by
+  simpa [not_and_or, -not_and] using le_iff_forall_lf.not
+
+/-- The definition of `x ≤ y` on games, in terms of `≤` two moves later.
+
+Note that it's often more convenient to use `le_iff_forall_lf`, which only unfolds the definition by
+one step. -/
+theorem le_def {x y : FGame} : x ≤ y ↔
+    (∀ a ∈ x.leftMoves, (∃ b ∈ y.leftMoves, a ≤ b) ∨ (∃ b ∈ a.rightMoves, b ≤ y)) ∧
+    (∀ a ∈ y.rightMoves, (∃ b ∈ a.leftMoves, x ≤ b) ∨ (∃ b ∈ x.rightMoves, b ≤ a)) := by
+  rw [le_iff_forall_lf]
+  congr! 2 <;> rw [lf_iff_exists_le]
+
+/-! ### Negation -/
+
+/-- A "naive" auxiliary definition of negation, which uses the less efficient `Finset.image` instead
+of `Finset.map`. -/
+private def neg' (x : FGame.{u}) : FGame.{u} :=
+  {x.rightMoves.attach.image (fun x ↦ neg' x.1) | x.leftMoves.attach.image (fun x ↦ neg' x.1)}ꟳ
+termination_by x
+decreasing_by fgame_wf
+
+private theorem neg'_def (x : FGame) :
+    neg' x = {x.rightMoves.image neg' | x.leftMoves.image neg'}ꟳ := by
+  rw [neg', Finset.image_attach, Finset.image_attach]
+
+private theorem neg'_neg' (x : FGame) : neg' (neg' x) = x := by
+  simp_rw [neg'_def, leftMoves_ofFinsets, rightMoves_ofFinsets, Finset.image_image]
+  rw [← ofFinsets_leftMoves_rightMoves x, ofFinsets_inj]
+  have (a) (_ : IsOption a x) : neg' (neg' a) = a := neg'_neg' a
+  aesop
+termination_by x
+decreasing_by fgame_wf
+
+/-- A more efficient definition for negation, which makes use of injectivity. -/
+private def negEmbedding {x : FGame} :
+    {f : {y // Subposition y x} ↪ FGame // ⇑f = neg' ∘ Subtype.val} := by
+  let f := fun y : {y // Subposition y x} ↦ have := y.2;
+    {(y.1.rightMoves.attach.map
+      (Subtype.impEmbedding _ _ fun _ ↦ .of_mem_rightMoves)).map negEmbedding.1 |
+    (y.1.leftMoves.attach.map
+      (Subtype.impEmbedding _ _ fun _ ↦ .of_mem_leftMoves)).map negEmbedding.1}ꟳ
+  have hf : f = neg' ∘ Subtype.val := by
+    refine funext fun ⟨y, _⟩ ↦ ?_
+    rw [Function.comp_apply, neg'_def]
+    simp_rw [f, Finset.map_eq_image, Finset.image_image]
+    repeat rw [negEmbedding.2]
+    simp [Subtype.impEmbedding, Function.comp_def]
+  refine ⟨⟨f, fun y z h ↦ ?_⟩, hf⟩
+  rw [← Subtype.coe_inj]
+  simp_rw [hf] at h
+  exact Function.Involutive.injective neg'_neg' h
+termination_by x
+
+instance : Neg FGame where
+  neg x := (negEmbedding (x := {{x} | ∅}ꟳ)).1 ⟨x, by aesop⟩
+
+private theorem neg_eq_neg' : (- ·) = neg' := by
+  refine funext fun x ↦ ?_
+  change negEmbedding.1 _ = _
+  rw [negEmbedding.2]
+  rfl
+
+open Pointwise
+
+theorem neg_def (x : FGame) : -x = {-x.rightMoves | -x.leftMoves}ꟳ := by
+  simp_rw [Finset.neg_def]
+  convert neg'_def x <;> exact neg_eq_neg'
+
+instance : InvolutiveNeg FGame where
+  neg_neg x := by convert neg'_neg' x <;> exact neg_eq_neg'
+
+@[simp, game_cmp]
+theorem leftMoves_neg (x : FGame) : (-x).leftMoves = -x.rightMoves := by
+  rw [neg_def, leftMoves_ofFinsets]
+
+@[simp, game_cmp]
+theorem rightMoves_neg (x : FGame) : (-x).rightMoves = -x.leftMoves := by
+  rw [neg_def, rightMoves_ofFinsets]
+
+/-! ### Addition and subtraction -/
+
+@[semireducible]
+private def add' (x y : FGame.{u}) : FGame.{u} :=
+  {x.leftMoves.attach.image (fun z ↦ add' z.1 y) ∪ y.leftMoves.attach.image (fun z ↦ add' x z.1) |
+    x.rightMoves.attach.image (fun z ↦ add' z.1 y) ∪ y.rightMoves.attach.image (fun z ↦ add' x z.1)}ꟳ
+termination_by (x, y)
+decreasing_by fgame_wf
+
+instance : Add FGame where
+  add := add'
+
+theorem add_def (x y : FGame) : x + y =
+    {x.leftMoves.image (· + y) ∪ y.leftMoves.image (x + ·) |
+      x.rightMoves.image (· + y) ∪ y.rightMoves.image (x + ·)}ꟳ := by
+  change add' .. = _
+  rw [add']
+  aesop
+
+instance : Sub FGame where
+  sub x y := x + -y
+
 /-! ### Repr -/
 
 -- Allows us to recursively represent `FGame`s. This doesn't seem very idiomatic,
@@ -387,7 +535,19 @@ private unsafe def instRepr_aux : FGame → Std.Format :=
     Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
     Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
 
-/-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
-and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
-{a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
-unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
+/-- The Repr of FGame. We prefer our notation of games {{a, b, c} | {d, e, f}} over the usual
+flattened out {a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
+unsafe instance : Repr FGame := ⟨fun g _ ↦ instRepr_aux g⟩
+
+/-! ### Results on `IGame`s -/
+
+/-- Noncomputably turn `FGame`s into `IGame`s. -/
+noncomputable def toIGame (x : FGame) : IGame :=
+  !{Set.range fun y : x.leftMoves ↦ toIGame y | Set.range fun y : x.rightMoves ↦ toIGame y}
+termination_by x
+decreasing_by fgame_wf
+
+theorem toIGame_def {x : FGame} :
+    x.toIGame = !{toIGame '' x.leftMoves | toIGame '' x.rightMoves} := by
+  rw [toIGame]
+  aesop

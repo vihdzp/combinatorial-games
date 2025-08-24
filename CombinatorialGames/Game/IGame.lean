@@ -342,7 +342,7 @@ theorem lf_zero {x : IGame} : x ⧏ 0 ↔ ∃ y ∈ xᴿ, y ≤ 0 := by
 Note that it's often more convenient to use `le_iff_forall_lf`, which only unfolds the definition by
 one step. -/
 theorem le_def {x y : IGame} : x ≤ y ↔
-    (∀ a ∈ xᴸ,  (∃ b ∈ yᴸ, a ≤ b) ∨ (∃ b ∈ aᴿ, b ≤ y)) ∧
+    (∀ a ∈ xᴸ, (∃ b ∈ yᴸ, a ≤ b) ∨ (∃ b ∈ aᴿ, b ≤ y)) ∧
     (∀ a ∈ yᴿ, (∃ b ∈ aᴸ, x ≤ b) ∨ (∃ b ∈ xᴿ, b ≤ a)) := by
   rw [le_iff_forall_lf]
   congr! 2 <;> rw [lf_iff_exists_le]
