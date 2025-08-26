@@ -53,48 +53,48 @@ namespace Real
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
 rationals. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame.{u} :=
-  {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴵ
+  !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
-  apply Numeric.mk' <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
+  apply Numeric.mk <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
   · intro x hx y hy
     dsimp at *
     simpa using hx.trans hy
   all_goals infer_instance
 
 @[simp]
-theorem leftMoves_toIGame (x : ℝ) : leftMoves x = (↑) '' {q : Dyadic | q < x} :=
+theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic | q < x} :=
   leftMoves_ofSets ..
 
 @[simp]
-theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : Dyadic | x < q} :=
+theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic | x < q} :=
   rightMoves_ofSets ..
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ leftMoves x, P y) ↔ ∀ q : Dyadic, q < x → P q := by
+    (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic, q < x → P q := by
   aesop
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ leftMoves x, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
+    (∃ y ∈ xᴸ, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
   aesop
 
 theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ rightMoves x, P y) ↔ ∀ q : Dyadic, x < q → P q := by
+    (∀ y ∈ xᴿ, P y) ↔ ∀ q : Dyadic, x < q → P q := by
   aesop
 
 theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ rightMoves x, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
+    (∃ y ∈ xᴿ, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
   aesop
 
 theorem mem_leftMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : q < x) :
-    (q : IGame) ∈ leftMoves x := by
+    (q : IGame) ∈ xᴸ := by
   simpa
 
 theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q) :
-    (q : IGame) ∈ rightMoves x := by
+    (q : IGame) ∈ xᴿ := by
   simpa
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
@@ -181,7 +181,7 @@ theorem toIGame_one_equiv : toIGame 1 ≈ 1 := by simpa using toIGame_natCast_eq
   simp [AntisymmRel, le_antisymm_iff]
 
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
-  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_add, forall_moves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
   refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩, ⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
   · rw [r.toIGame_equiv.lt_congr_left, ← IGame.sub_lt_iff_lt_add,
@@ -225,7 +225,7 @@ theorem toIGame_dyadic_add_equiv (q : Dyadic) (x : ℝ) : toIGame (q + x) ≈ q 
   simpa [add_comm] using toIGame_add_dyadic_equiv x q
 
 theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
-  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_add, forall_rightMoves_add]
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_add, forall_moves_add]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
   refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩ <;> intro q hq
   · rw [← sub_lt_iff_lt_add] at hq
@@ -280,7 +280,7 @@ instance : Coe ℝ Game := ⟨toGame⟩
 @[simp] theorem _root_.Game.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
 
 theorem toGame_def (x : ℝ) :
-    toGame x = {(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}ᴳ := by
+    toGame x = !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}} := by
   rw [← Game.mk_real_toIGame, toIGame]
   simp [Set.image_image]
 
@@ -347,9 +347,9 @@ private theorem toSurreal_def_aux {x : ℝ} :
 @[simp] theorem toGame_toSurreal (x : ℝ) : x.toSurreal.toGame = x.toGame := rfl
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
-    .ofSets ((↑) '' {q : Dyadic | q < x}) ((↑) '' {q : Dyadic | x < q}) toSurreal_def_aux := by
+    !{(↑) '' {q : Dyadic | q < x} | ((↑) '' {q : Dyadic | x < q})}'toSurreal_def_aux := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
-  congr <;> aesop
+  congr! <;> aesop
 
 /-- `Real.toSurreal` as an `OrderEmbedding`. -/
 @[simps!]
@@ -400,6 +400,11 @@ theorem toSurreal_sub (x y : ℝ) : toSurreal (x - y) = x - y :=
 
 @[simp]
 theorem toSurreal_max (x y : ℝ) : max x y = max (toSurreal x) (toSurreal y) := by
+  have := le_total x y
+  aesop
+
+@[simp]
+theorem toSurreal_min (x y : ℝ) : min x y = min (toSurreal x) (toSurreal y) := by
   have := le_total x y
   aesop
 
@@ -461,7 +466,8 @@ private theorem toIGame_lt_mulOption {x : ℝ} {q r s : ℚ} (h : x * q - r * q 
     simp_all [mulOption, ← Surreal.mk_le_mk]
 
 theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * q := by
-  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
+    Player.forall, Player.forall]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
   refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
   · intro r h
@@ -476,7 +482,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
       rw [← Numeric.div_lt_iff (by simpa), ← (ratCast_div_equiv ..).lt_congr_left]
       simpa
   · intro r hr y hy
-    have := Numeric.of_mem_rightMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_left,
       (Numeric.mulOption_congr₄ hy).le_congr_left]
@@ -484,7 +490,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (s - q) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
-    have := Numeric.of_mem_leftMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_left,
       (Numeric.mulOption_congr₄ hy).le_congr_left]
@@ -492,7 +498,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (s - q) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
   · intro r hr y hy
-    have := Numeric.of_mem_leftMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_right,
       (Numeric.mulOption_congr₄ hy).le_congr_right]
@@ -500,7 +506,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
     have : 0 < (x - r) * (q - s) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
   · intro r hr y hy
-    have := Numeric.of_mem_rightMoves hy
+    have := Numeric.of_mem_moves hy
     obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     rw [(Numeric.mulOption_congr₃ r.toIGame_equiv).le_congr_right,
       (Numeric.mulOption_congr₄ hy).le_congr_right]
@@ -585,7 +591,9 @@ private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : Dyadic} :
   simp [← Surreal.mk_eq_mk, mulOption, mul_comm, toSurreal_mul_ratCast]
 
 theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x * y := by
-  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_leftMoves_mul, forall_rightMoves_mul]
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
+    Player.forall, Player.forall]
+  dsimp
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
   refine ⟨⟨dyadic_lt_mul_toIGame, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, mul_toIGame_lt_dyadic⟩⟩ <;>
     intro q hq r hr

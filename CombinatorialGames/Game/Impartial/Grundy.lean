@@ -31,129 +31,86 @@ namespace IGame
 
 /-! ### Grundy value -/
 
-/-- The left Grundy value of a game is recursively defined as the minimum excluded value
-(the infimum of the complement) of the left Grundy values of its left options.
+/-- The left or right Grundy value of a game is recursively defined as the minimum excluded value
+(the infimum of the complement) of the left or right Grundy values of its left or right options.
 
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
-def leftGrundy (x : IGame.{u}) : Nimber.{u} :=
-  sInf (Set.range fun y : x.leftMoves ↦ leftGrundy y.1)ᶜ
+def grundyAux (p : Player) (x : IGame.{u}) : Nimber.{u} :=
+  sInf (Set.range fun y : x.moves p ↦ grundyAux p y.1)ᶜ
 termination_by x
 decreasing_by igame_wf
 
-theorem leftGrundy_def (x : IGame) : leftGrundy x = sInf (leftGrundy '' x.leftMoves)ᶜ := by
-  rw [leftGrundy, image_eq_range]
+theorem grundyAux_def (p) (x : IGame) : grundyAux p x = sInf (grundyAux p '' x.moves p)ᶜ := by
+  rw [grundyAux, image_eq_range]
 
-theorem le_leftGrundy_iff {x : IGame} {o : Nimber} :
-    o ≤ leftGrundy x ↔ Iio o ⊆ leftGrundy '' x.leftMoves := by
-  rw [leftGrundy_def, le_csInf_iff'']
+theorem le_grundyAux_iff {p : Player} {x : IGame} {o : Nimber} :
+    o ≤ grundyAux p x ↔ Iio o ⊆ grundyAux p '' x.moves p := by
+  rw [grundyAux_def, le_csInf_iff'']
   · rw [← compl_subset_compl (t := Iio o), subset_def]
     simp
   · exact nonempty_of_not_bddAbove (Nimber.not_bddAbove_compl_of_small _)
 
-theorem lt_leftGrundy_iff {x : IGame} {o : Nimber} :
-    o < leftGrundy x ↔ Iic o ⊆ leftGrundy '' x.leftMoves := by
-  simpa using le_leftGrundy_iff (o := Order.succ o)
+theorem lt_grundyAux_iff {p : Player} {x : IGame} {o : Nimber} :
+    o < grundyAux p x ↔ Iic o ⊆ grundyAux p '' x.moves p := by
+  simpa using le_grundyAux_iff (o := Order.succ o)
 
-theorem mem_leftGrundy_image_of_lt {x : IGame} {o : Nimber} (h : o < leftGrundy x) :
-    o ∈ leftGrundy '' x.leftMoves :=
-  le_leftGrundy_iff.1 le_rfl h
+theorem mem_grundyAux_image_of_lt {p : Player} {x : IGame} {o : Nimber} (h : o < grundyAux p x) :
+    o ∈ grundyAux p '' x.moves p :=
+  le_grundyAux_iff.1 le_rfl h
 
-theorem leftGrundy_le_of_notMem {x : IGame} {o : Nimber} (h : o ∉ leftGrundy '' x.leftMoves) :
-    leftGrundy x ≤ o :=
-  le_of_not_gt <| mt mem_leftGrundy_image_of_lt h
+theorem grundyAux_le_of_notMem {p : Player} {x : IGame} {o : Nimber}
+    (h : o ∉ grundyAux p '' x.moves p) :
+    grundyAux p x ≤ o :=
+  le_of_not_gt <| mt mem_grundyAux_image_of_lt h
 
-theorem leftGrundy_ne {x y : IGame} (hy : y ∈ x.leftMoves) : leftGrundy y ≠ leftGrundy x := by
-  conv_rhs => rw [leftGrundy_def]
+theorem grundyAux_ne {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
+    grundyAux p y ≠ grundyAux p x := by
+  conv_rhs => rw [grundyAux_def]
   have := csInf_mem (nonempty_of_not_bddAbove <|
-    Nimber.not_bddAbove_compl_of_small (leftGrundy '' x.leftMoves))
+    Nimber.not_bddAbove_compl_of_small (grundyAux p '' x.moves p))
   simp_all
 
 @[simp]
-theorem leftGrundy_add (x y : IGame) : (x + y).leftGrundy = x.leftGrundy + y.leftGrundy := by
+theorem grundyAux_add (p : Player) (x y : IGame) :
+    (x + y).grundyAux p = x.grundyAux p + y.grundyAux p := by
   apply le_antisymm
-  · apply leftGrundy_le_of_notMem
-    rw [leftMoves_add]
+  · apply grundyAux_le_of_notMem
+    rw [moves_add]
     rintro ⟨_, (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩), ha'⟩
-    · rw [leftGrundy_add, add_left_inj] at ha'
-      exact leftGrundy_ne ha ha'
-    · rw [leftGrundy_add, add_right_inj] at ha'
-      exact leftGrundy_ne ha ha'
-  · rw [le_leftGrundy_iff]
+    · rw [grundyAux_add, add_left_inj] at ha'
+      exact grundyAux_ne ha ha'
+    · rw [grundyAux_add, add_right_inj] at ha'
+      exact grundyAux_ne ha ha'
+  · rw [le_grundyAux_iff]
     intro a ha
     obtain ha | ha := Nimber.lt_add_cases ha
-    · obtain ⟨z, hz, hz'⟩  := mem_leftGrundy_image_of_lt ha
-      refine ⟨_, add_right_mem_leftMoves_add hz y, ?_⟩
-      rw [leftGrundy_add, hz', add_cancel_right]
-    · obtain ⟨z, hz, hz'⟩  := mem_leftGrundy_image_of_lt ha
-      refine ⟨_, add_left_mem_leftMoves_add hz x, ?_⟩
-      rw [leftGrundy_add, hz', add_comm, add_cancel_right]
+    · obtain ⟨z, hz, hz'⟩  := mem_grundyAux_image_of_lt ha
+      refine ⟨_, add_right_mem_moves_add hz y, ?_⟩
+      rw [grundyAux_add, hz', add_cancel_right]
+    · obtain ⟨z, hz, hz'⟩  := mem_grundyAux_image_of_lt ha
+      refine ⟨_, add_left_mem_moves_add hz x, ?_⟩
+      rw [grundyAux_add, hz', add_comm, add_cancel_right]
 termination_by (x, y)
 decreasing_by igame_wf
 
-/-- The right Grundy value of a game is recursively defined as the minimum excluded value
-(the infimum of the complement) of the right Grundy values of its right options.
-
-This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
-`Impartial.grundy` for an impartial game. -/
-def rightGrundy (x : IGame.{u}) : Nimber.{u} :=
-  sInf (Set.range fun y : x.rightMoves ↦ rightGrundy y.1)ᶜ
-termination_by x
-decreasing_by igame_wf
-
-theorem rightGrundy_def (x : IGame) : rightGrundy x = sInf (rightGrundy '' x.rightMoves)ᶜ := by
-  rw [rightGrundy, image_eq_range]
-
 @[simp]
-theorem leftGrundy_neg (x : IGame) : leftGrundy (-x) = rightGrundy x := by
-  rw [leftGrundy_def, rightGrundy_def, leftMoves_neg]
+theorem grundyAux_neg (p : Player) (x : IGame) : grundyAux p (-x) = grundyAux (-p) x := by
+  rw [grundyAux_def, grundyAux_def, moves_neg]
   congr
-  exact image_neg_of_apply_neg_eq fun _ _ ↦ leftGrundy_neg _
+  exact image_neg_of_apply_neg_eq fun _ _ ↦ grundyAux_neg p _
 termination_by x
 decreasing_by igame_wf
 
 @[simp]
-theorem rightGrundy_neg (x : IGame) : rightGrundy (-x) = leftGrundy x := by
-  rw [← leftGrundy_neg, neg_neg]
+theorem grundyAux_image_neg (p : Player) (s : Set IGame) :
+    grundyAux p '' (-s) = grundyAux (-p) '' s :=
+  image_neg_of_apply_neg_eq fun _ _ ↦ grundyAux_neg _ _
 
 @[simp]
-theorem leftGrundy_image_neg (s : Set IGame) : leftGrundy '' (-s) = rightGrundy '' s :=
-  image_neg_of_apply_neg_eq fun _ _ ↦ leftGrundy_neg _
-
-@[simp]
-theorem rightGrundy_image_neg (s : Set IGame) : rightGrundy '' (-s) = leftGrundy '' s :=
-  image_neg_of_apply_neg_eq fun _ _ ↦ rightGrundy_neg _
-
-theorem le_rightGrundy_iff {x : IGame} {o : Nimber} :
-    o ≤ rightGrundy x ↔ Iio o ⊆ rightGrundy '' x.rightMoves := by
-  simpa using @le_leftGrundy_iff (-x) o
-
-theorem lt_rightGrundy_iff {x : IGame} {o : Nimber} :
-    o < rightGrundy x ↔ Iic o ⊆ rightGrundy '' x.rightMoves := by
-  simpa using le_rightGrundy_iff (o := Order.succ o)
-
-theorem mem_rightGrundy_image_of_lt {x : IGame} {o : Nimber} (h : o < rightGrundy x) :
-    o ∈ rightGrundy '' x.rightMoves :=
-  le_rightGrundy_iff.1 le_rfl h
-
-theorem rightGrundy_le_of_notMem {x : IGame} {o : Nimber} (h : o ∉ rightGrundy '' x.rightMoves) :
-    rightGrundy x ≤ o :=
-  le_of_not_gt <| mt mem_rightGrundy_image_of_lt h
-
-theorem rightGrundy_ne {x y : IGame} : y ∈ x.rightMoves → rightGrundy y ≠ rightGrundy x := by
-  simpa using @leftGrundy_ne (-x) (-y)
-
-@[simp]
-theorem rightGrundy_add (x y : IGame) : (x + y).rightGrundy = x.rightGrundy + y.rightGrundy := by
-  rw [← leftGrundy_neg, neg_add, leftGrundy_add, leftGrundy_neg, leftGrundy_neg]
-
-@[simp]
-theorem leftGrundy_sub (x y : IGame) : (x - y).leftGrundy = x.leftGrundy + y.rightGrundy := by
-  rw [sub_eq_add_neg, leftGrundy_add, leftGrundy_neg]
-
-@[simp]
-theorem rightGrundy_sub (x y : IGame) : (x - y).rightGrundy = x.rightGrundy + y.leftGrundy := by
-  rw [sub_eq_add_neg, rightGrundy_add, rightGrundy_neg]
+theorem grundyAux_sub (p : Player) (x y : IGame) :
+    (x - y).grundyAux p = x.grundyAux p + y.grundyAux (-p) := by
+  rw [sub_eq_add_neg, grundyAux_add, grundyAux_neg]
 
 namespace Impartial
 
@@ -161,26 +118,26 @@ namespace Impartial
 (the infimum of the complement) of the Grundy values of its options.
 
 This definition enforces that `x` is impartial. If you want to talk about the left or right Grundy
-values of a game (e.g. if you don't yet know it to be impartial), use `leftGrundy` or `rightGrundy`.
-The lemmas `leftGrundy_eq_grundy` and `rightGrundy_eq_grundy` show that both definitions match in
+values of a game (e.g. if you don't yet know it to be impartial), use `grundyAux`.
+The lemma `grundyAux_eq_grundy` shows that both definitions match in
 the case of an impartial game. -/
 def grundy (x : IGame) [Impartial x] : Nimber :=
-  x.rightGrundy
+  x.grundyAux right
 
 /-- The **Sprague-Grundy theorem** states that every impartial game is equivalent to a game of nim,
 namely the game of nim for the game's Grundy value. -/
 theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
   rw [equiv_iff_forall_fuzzy]
   constructor <;> intro y hy
-  · rw [leftMoves_nim] at hy
+  · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
-    obtain ⟨z, hz, rfl⟩ := mem_rightGrundy_image_of_lt ho
-    have := Impartial.of_mem_rightMoves hz
+    obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
+    have := Impartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
     exact rightMove_fuzzy hz
-  · have := Impartial.of_mem_rightMoves hy
+  · have := Impartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
-    exact (rightGrundy_ne hy).symm
+    exact (grundyAux_ne hy).symm
 termination_by x
 decreasing_by igame_wf
 
@@ -207,30 +164,28 @@ theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
   rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
 
 @[simp]
-theorem leftGrundy_eq_grundy (x : IGame) [Impartial x] : leftGrundy x = grundy x := by
-  rw [← grundy_neg, grundy, rightGrundy_neg]
-
-@[simp]
-theorem rightGrundy_eq_grundy (x : IGame) [Impartial x] : rightGrundy x = grundy x :=
-  rfl
+theorem grundyAux_eq_grundy (p) (x : IGame) [Impartial x] : grundyAux p x = grundy x := by
+  cases p with
+  | left => rw [← grundy_neg, grundy, grundyAux_neg, Player.neg_right]
+  | right => rfl
 
 @[simp]
 theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
     grundy (x + y) = grundy x + grundy y :=
-  rightGrundy_add x y
+  grundyAux_add _ x y
 
 theorem _root_.IGame.nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b) := by
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_add]
   exact (nim_grundy_equiv _).symm
 
-theorem grundy_leftMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.leftMoves) :
-    have := Impartial.of_mem_leftMoves hy; grundy y ≠ grundy x := by
-  simp_rw [← leftGrundy_eq_grundy]
-  exact leftGrundy_ne hy
-
-theorem grundy_rightMove_ne {x y : IGame} [Impartial x] (hy : y ∈ x.rightMoves) :
-    have := Impartial.of_mem_rightMoves hy; grundy y ≠ grundy x :=
-  rightGrundy_ne hy
+theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.moves p) :
+    have := Impartial.of_mem_moves hy; grundy y ≠ grundy x := by
+  cases p with
+  | left =>
+    simp_rw [← grundyAux_eq_grundy left]
+    exact grundyAux_ne hy
+  | right =>
+    exact grundyAux_ne hy
 
 /-- One half of the **lawnmower theorem** for impartial games. -/
 protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
@@ -242,112 +197,87 @@ protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y
   rw [← (nim_grundy_equiv x).lt_congr_right]
   exact Dicotic.lt_of_numeric_of_neg _ hy
 
-private theorem of_leftGrundy_eq_rightGrundy' {x : IGame}
-    (hl : ∀ y ∈ x.leftMoves, Impartial y) (hr : ∀ y ∈ x.rightMoves, Impartial y)
-    (H : leftGrundy x = rightGrundy x) : nim (rightGrundy x) ≈ x := by
+private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
+    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
+    (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_leftMoves_nim]
+  · rw [forall_moves_nim]
     intro a ha
     rw [← H] at ha
-    obtain ⟨y, hy, rfl⟩ := mem_leftGrundy_image_of_lt ha
-    have := hl y hy
-    rw [leftGrundy_eq_grundy]
+    obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
+    have := h left y hy
+    rw [grundyAux_eq_grundy]
     exact lf_of_le_leftMove (nim_grundy_equiv y).le hy
   · intro y hy
-    have := hr y hy
-    rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff, ← rightGrundy_eq_grundy]
-    exact (rightGrundy_ne hy).symm
+    have := h right y hy
+    rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff,
+      ← grundyAux_eq_grundy right]
+    exact (grundyAux_ne hy).symm
   · intro y hy
-    have := hl y hy
-    rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff, ← leftGrundy_eq_grundy]
-    exact H ▸ leftGrundy_ne hy
-  · rw [forall_rightMoves_nim]
+    have := h left y hy
+    rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
+      ← grundyAux_eq_grundy left]
+    exact H ▸ grundyAux_ne hy
+  · rw [forall_moves_nim]
     intro a ha
-    obtain ⟨y, hy, rfl⟩ := mem_rightGrundy_image_of_lt ha
-    have := hr y hy
+    obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
+    have := h right y hy
     exact lf_of_rightMove_le (nim_grundy_equiv y).ge hy
 
 /-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
 value, then it's impartial. -/
-theorem of_leftGrundy_eq_rightGrundy {x : IGame}
-    (hl : ∀ y ∈ x.leftMoves, Impartial y) (hr : ∀ y ∈ x.rightMoves, Impartial y)
-    (H : leftGrundy x = rightGrundy x) : Impartial x :=
-  have H := of_leftGrundy_eq_rightGrundy' hl hr H
-  .mk' ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) hl hr
+theorem of_grundyAux_left_eq_grundyAux_right {x : IGame}
+    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
+    (H : grundyAux left x = grundyAux right x) : Impartial x :=
+  have H := of_grundyAux_left_eq_grundyAux_right' h H
+  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) (h _) (h _)
 
 /-! ### Multiplication -/
 
-set_option maxHeartbeats 500000 in
 private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
-    Impartial (x * y) ∧ rightGrundy (x * y) = rightGrundy x * rightGrundy y := by
-  have h₁ : leftGrundy (x * y) = leftGrundy x * leftGrundy y := by
+    Impartial (x * y) ∧ grundyAux right (x * y) = grundyAux right x * grundyAux right y := by
+  have h (p) : grundyAux p (x * y) = grundyAux p x * grundyAux p y := by
     apply le_antisymm
-    · apply leftGrundy_le_of_notMem
+    · apply grundyAux_le_of_notMem
       intro ⟨z, hz, hz'⟩
-      rw [leftMoves_mul] at hz
+      rw [moves_mul] at hz
       obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
       all_goals
-        first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-        first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
+        have := Impartial.of_mem_moves ha
+        have := Impartial.of_mem_moves hb
         have := (mul' a y).1
         have := (mul' x b).1
-        simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
-          leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
-        repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
-    · rw [le_leftGrundy_iff]
-      intro a h
-      obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
-      obtain ⟨b, hb', rfl⟩ := mem_leftGrundy_image_of_lt hb
-      refine ⟨_, mulOption_left_left_mem_leftMoves_mul ha' hb', ?_⟩
-      have := Impartial.of_mem_leftMoves ha'
-      have := Impartial.of_mem_leftMoves hb'
-      have := (mul' a y).1
-      have := (mul' x b).1
-      simp_rw [mulOption, leftGrundy_sub, leftGrundy_add,
-        leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
-      repeat rw [(mul' ..).2]
-  have h₂ : rightGrundy (x * y) = rightGrundy x * rightGrundy y := by
-    apply le_antisymm
-    · apply rightGrundy_le_of_notMem
-      intro ⟨z, hz, hz'⟩
-      rw [rightMoves_mul] at hz
-      obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
-      all_goals
-        first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-        first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
         have := (mul' a b).1
-        simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
-          leftGrundy_eq_grundy, ← rightGrundy_eq_grundy] at hz'
+        simp_rw [mulOption, grundyAux_sub, grundyAux_add, grundyAux_eq_grundy,
+          ← grundyAux_eq_grundy right] at hz'
         repeat rw [(mul' ..).2] at hz'
-        apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_leftMove_ne, grundy_rightMove_ne]
-    · rw [le_rightGrundy_iff]
+        apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_moves_ne]
+    · rw [le_grundyAux_iff]
       intro a h
       obtain ⟨a, ha, b, hb, rfl⟩ := exists_of_lt_mul h
-      rw [rightGrundy_eq_grundy, ← leftGrundy_eq_grundy] at ha
-      obtain ⟨a, ha', rfl⟩ := mem_leftGrundy_image_of_lt ha
-      obtain ⟨b, hb', rfl⟩ := mem_rightGrundy_image_of_lt hb
-      refine ⟨_, mulOption_left_right_mem_rightMoves_mul ha' hb', ?_⟩
-      have := Impartial.of_mem_leftMoves ha'
-      have := Impartial.of_mem_rightMoves hb'
-      have := (mul' a b).1
-      simp_rw [mulOption, rightGrundy_sub, rightGrundy_add,
-        leftGrundy_eq_grundy, ← rightGrundy_eq_grundy]
-      repeat rw [(mul' ..).2]
-  simp_rw [leftGrundy_eq_grundy, rightGrundy_eq_grundy] at h₁ h₂
-  refine ⟨of_leftGrundy_eq_rightGrundy ?_ ?_ (h₁.trans h₂.symm), h₂⟩
-  all_goals
-    simp only [forall_leftMoves_mul, forall_rightMoves_mul, mulOption]
-    constructor
-    all_goals
-      intro a ha b hb
-      first | have := Impartial.of_mem_leftMoves ha | have := Impartial.of_mem_rightMoves ha
-      first | have := Impartial.of_mem_leftMoves hb | have := Impartial.of_mem_rightMoves hb
+      rw [grundyAux_eq_grundy, ← grundyAux_eq_grundy left] at ha
+      obtain ⟨a, ha', rfl⟩ := mem_grundyAux_image_of_lt ha
+      obtain ⟨b, hb', rfl⟩ := mem_grundyAux_image_of_lt hb
+      refine ⟨_, mulOption_mem_moves_mul ha' hb', ?_⟩
+      have := Impartial.of_mem_moves ha'
+      have := Impartial.of_mem_moves hb'
       have := (mul' a y).1
       have := (mul' x b).1
       have := (mul' a b).1
-      infer_instance
+      simp_rw [mulOption, grundyAux_sub, grundyAux_add, grundyAux_eq_grundy,
+        ← grundyAux_eq_grundy right]
+      repeat rw [(mul' ..).2]
+  simp_rw [grundyAux_eq_grundy] at h
+  refine ⟨of_grundyAux_left_eq_grundyAux_right ?_ ((h left).trans (h right).symm), h right⟩
+  intro p
+  simp only [forall_moves_mul, mulOption]
+  intro p' a ha b hb
+  have := Impartial.of_mem_moves ha
+  have := Impartial.of_mem_moves hb
+  have := (mul' a y).1
+  have := (mul' x b).1
+  have := (mul' a b).1
+  infer_instance
 termination_by (x, y)
 decreasing_by igame_wf
 

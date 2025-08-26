@@ -1,8 +1,9 @@
 {
     "ignoreImport": [
         "Aesop",
-        "CombinatorialGames.Game.Tactic",
-        "CombinatorialGames.Register",
+        "CombinatorialGames.Tactic.GameCmp",
+        "CombinatorialGames.Tactic.OrdinalAlias",
+        "CombinatorialGames.Tactic.Register",
         "Init",
         "Lean.Meta.Tactic.Simp.RegisterCommand",
         "Mathlib.Tactic.DeriveFintype",
@@ -10,8 +11,12 @@
         "Mathlib.Tactic.Ring.Basic"
     ],
     "ignore": {
-        "CombinatorialGames.Game.Tactic": [
+        "CombinatorialGames.Tactic.GameCmp": [
             "CombinatorialGames.Game.IGame"
+        ],
+        "CombinatorialGames.Tactic.OrdinalAlias": [
+            "Mathlib.Data.Nat.Lattice",
+            "Mathlib.SetTheory.Ordinal.Family"
         ]
     }
 }

@@ -12,7 +12,7 @@ import CombinatorialGames.Surreal.Birthday.Cut
 We prove that a surreal number has a finite birthday iff it's a dyadic number.
 -/
 
-local notation "ω" => Ordinal.omega0.toNatOrdinal
+local notation "ω" => NatOrdinal.of Ordinal.omega0
 
 @[simp]
 theorem Game.birthday_ratCast (x : ℚ) : Game.birthday x = Surreal.birthday x := by
