@@ -104,8 +104,11 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
   all_goals
-  · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
-    · have := Impartial.of_mem_moves hz
+  · rw [forall_moves_add]
+    constructor
+    all_goals
+      intro z hz
+      have := Impartial.of_mem_moves hz
       exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
@@ -170,7 +173,7 @@ theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y �
   | right => simpa using lf_rightMove hy
 
 private theorem equiv_iff_forall_fuzzy' :
-    x ≈ y ↔ (∀ z ∈ x.leftMoves, z ‖ y) ∧ (∀ z ∈ y.rightMoves, x ‖ z) := by
+    x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
   rw [← le_iff_equiv, le_iff_forall_lf]
   congr! with z hz z hz
   all_goals have := Impartial.of_mem_moves hz; simp [incompRel_comm]
