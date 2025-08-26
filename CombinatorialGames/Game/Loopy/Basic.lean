@@ -327,9 +327,6 @@ theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 -- TODO: remove the former?
 @[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
--- TODO: remove the former?
-@[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
-
 instance : Inhabited LGame := ⟨0⟩
 
 /-- The game `1 = !{{0} | ∅}`. -/
