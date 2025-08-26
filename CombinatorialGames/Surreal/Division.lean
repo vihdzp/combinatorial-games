@@ -18,8 +18,8 @@ to define the field structure on `Surreal`.
 This is Theorem 1.10 in ONAG, and we follow the broad strokes of the proof. We prove
 by simultaneous induction that if `x` is positive and numeric, then (ii) `x⁻¹` is numeric, and (iv)
 `x * x⁻¹ ≈ 1`. We do this by showing the inductive hypothesis implies that (i) `x * y < 1` for
-`y ∈ x⁻¹.leftMoves` and `1 < x * y` for `y ∈ x⁻¹.rightMoves`, and that (iv) `y < 1` for
-`y ∈ (x * x⁻¹).leftMoves` and `1 < y` for `y ∈ (x * x⁻¹.rightMoves)`.
+`y ∈ x⁻¹ᴸ` and `1 < x * y` for `y ∈ x⁻¹ᴿ`, and that (iv) `y < 1` for
+`y ∈ (x * x⁻¹)ᴸ` and `1 < y` for `y ∈ (x * x⁻¹ᴿ)`.
 
 An important difference is that Conway assumes that `x` has no negative left options, while we don't
 make use of this assumption. This is because our definition of the inverse is tweaked to ensure that
@@ -93,7 +93,7 @@ theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeri
 /-! ### Inductive proof -/
 
 lemma numeric_option_inv {x : IGame} [Numeric x] (hx : 0 < x)
-    (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹) :
+    (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹) :
     (∀ p, ∀ y ∈ x⁻¹.moves p, Numeric y) := by
   apply invRec (P := fun p y hy ↦ Numeric y) hx Numeric.zero
   intro p₁ p₂ y hy hyx
@@ -107,9 +107,9 @@ lemma numeric_option_inv {x : IGame} [Numeric x] (hx : 0 < x)
     infer_instance
 
 lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
-    (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
-    (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
-    (∀ y ∈ x⁻¹.leftMoves, x * y < 1) ∧ (∀ y ∈ x⁻¹.rightMoves, 1 < x * y) := by
+    (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
+    (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
+    (∀ y ∈ x⁻¹ᴸ, x * y < 1) ∧ (∀ y ∈ x⁻¹ᴿ, 1 < x * y) := by
   suffices ∀ p y, y ∈ x⁻¹.moves p → p.cases (x * y < 1) (1 < x * y) by
     exact ⟨this left, this right⟩
   apply invRec (P := fun p y hy ↦ p.cases (x * y < 1) (1 < x * y)) hx
@@ -149,8 +149,8 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
       exact Numeric.lt_right hyx
 
 lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
-    (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
-    (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
+    (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
+    (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     Numeric x⁻¹ := by
   obtain ⟨Hl, Hr⟩ := mul_inv_option_mem hx hl hr hl' hr'
   obtain H' := numeric_option_inv hx hl hr
@@ -160,9 +160,9 @@ lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
   exact (Numeric.mul_lt_mul_left hx).1 <| (Hl y hy).trans (Hr z hz)
 
 lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
-    (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
-    (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
-    (∀ y ∈ (x * x⁻¹).leftMoves, y < 1) ∧ (∀ y ∈ (x * x⁻¹).rightMoves, 1 < y) := by
+    (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
+    (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
+    (∀ y ∈ (x * x⁻¹)ᴸ, y < 1) ∧ (∀ y ∈ (x * x⁻¹)ᴿ, 1 < y) := by
   have := numeric_inv hx hl hr hl' hr'
   obtain H := numeric_option_inv hx hl hr
   rw [forall_moves_mul, forall_moves_mul]
@@ -202,8 +202,8 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     exact Numeric.left_lt (invOption_mem_moves_inv (p₁ := left) hx hy hyx ha)
 
 lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
-    (hl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ x.rightMoves, Numeric y⁻¹)
-    (hl' : ∀ y ∈ x.leftMoves, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ x.rightMoves, y * y⁻¹ ≈ 1) :
+    (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
+    (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     x * x⁻¹ ≈ 1 := by
   obtain ⟨Hl, Hr⟩ := option_mul_inv_lt hx hl hr hl' hr'
   have := numeric_inv hx hl hr hl' hr'
@@ -212,9 +212,9 @@ lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
   exact ⟨hx.not_antisymmRel_symm, (inv_pos' hx).not_antisymmRel_symm⟩
 
 theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻¹ ≈ 1 := by
-  have IHl : ∀ y ∈ x.leftMoves, 0 < y → Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
+  have IHl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
     fun y hy hy' ↦ have := Numeric.of_mem_moves hy; main hy'
-  have IHr : ∀ y ∈ x.rightMoves, Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
+  have IHr : ∀ y ∈ xᴿ, Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
     fun y hy ↦ have := Numeric.of_mem_moves hy; main (hx.trans (Numeric.lt_right hy))
   have hl := fun y hy hy' ↦ (IHl y hy hy').1
   have hr := fun y hy ↦ (IHr y hy).1
@@ -427,7 +427,7 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
       simp_all [invOption, ← Surreal.mk_eq_mk]
 
 private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
-    (∀ x ∈ leftMoves.{u} q, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ rightMoves.{u} q, ∃ r : ℚ, x ≈ r) := by
+    (∀ x ∈ (q : IGame.{u})ᴸ, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ (q : IGame.{u})ᴿ, ∃ r : ℚ, x ≈ r) := by
   constructor
   all_goals
     rw [ratCast_def]
@@ -445,7 +445,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
       simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/
-theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ leftMoves q) :
+theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴸ) :
     ∃ r : ℚ, r < q ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
   refine ⟨r, ?_, hr⟩
@@ -453,7 +453,7 @@ theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈
   simpa using Numeric.left_lt hx
 
 /-- Every right option of a rational number is equivalent to a larger rational number. -/
-theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ rightMoves q) :
+theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴿ) :
     ∃ r : ℚ, q < r ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
   refine ⟨r, ?_, hr⟩

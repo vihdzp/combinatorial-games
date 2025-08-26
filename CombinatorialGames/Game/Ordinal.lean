@@ -54,10 +54,10 @@ termination_by o
 private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = !{toIGame' '' Iio o | ∅} := by
   rw [toIGame']; simp [image_eq_range]
 
-private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'.leftMoves = toIGame' '' Iio o := by
+private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'ᴸ = toIGame' '' Iio o := by
   rw [toIGame'_def]; exact leftMoves_ofSets ..
 
-private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'.rightMoves = ∅ := by
+private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'ᴿ = ∅ := by
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
@@ -77,35 +77,35 @@ theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
 @[simp]
-theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGame.leftMoves = toIGame '' Iio o :=
+theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
   leftMoves_toIGame' o
 
 @[simp, game_cmp]
-theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGame.rightMoves = ∅ :=
+theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
   rightMoves_toIGame' o
 
 @[game_cmp]
 theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
-    (∀ x ∈ leftMoves (toIGame n), P x) ↔ ∀ m < n, P (toIGame m) := by
+    (∀ x ∈ (toIGame n)ᴸ, P x) ↔ ∀ m < n, P (toIGame m) := by
   simp
 
 @[game_cmp]
 theorem exists_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
-    (∃ x ∈ leftMoves (toIGame n), P x) ↔ (∃ m < n, P (toIGame m)) := by
+    (∃ x ∈ (toIGame n)ᴸ, P x) ↔ (∃ m < n, P (toIGame m)) := by
   simp
 
 @[game_cmp]
 theorem forall_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∀ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∀ m < n, P (toIGame m) :=
+    (∀ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∀ m < n, P (toIGame m) :=
   forall_leftMoves_toIGame_natCast
 
 @[game_cmp]
 theorem exists_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
-    (∃ x ∈ leftMoves (toIGame ofNat(n)), P x) ↔ ∃ m < n, P (toIGame m) :=
+    (∃ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∃ m < n, P (toIGame m) :=
   exists_leftMoves_toIGame_natCast
 
 theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
-    a.toIGame ∈ b.toIGame.leftMoves := by
+    a.toIGame ∈ b.toIGameᴸ := by
   simpa
 
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext p; cases p <;> simp
@@ -210,7 +210,7 @@ namespace IGame
 open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
-  have (y : x.leftMoves) : ∃ n : ℕ, y.1 < n := by
+  have (y : xᴸ) : ∃ n : ℕ, y.1 < n := by
     have := Short.of_mem_moves y.2
     exact Short.exists_lt_natCast y
   choose f hf using this

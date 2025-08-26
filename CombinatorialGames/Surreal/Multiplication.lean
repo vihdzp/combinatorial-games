@@ -26,18 +26,18 @@ an axiom that needs to be satisfied for the surreals to be a `OrderedRing`.
 We follow the proof in [SchleicherStoll], except that we use the well-foundedness of the hydra
 relation `CutExpand` on `Multiset PGame` instead of the argument based on a depth function in the
 paper. As in said argument, P3 is proven by proxy of an auxiliary P4, which states that for
-`x₁ < x₂` and `y`, then `x₁ * y + x₂ * a < x₁ * a + x₂ * y` when `a ∈ y.leftMoves`, and
-`x₁ * b + x₂ * y < x₁ * y + x₂ * b` when `b ∈ y.rightMoves`.
+`x₁ < x₂` and `y`, then `x₁ * y + x₂ * a < x₁ * a + x₂ * y` when `a ∈ yᴸ`, and
+`x₁ * b + x₂ * y < x₁ * y + x₂ * b` when `b ∈ yᴿ`.
 
 ## Reducing casework
 
 This argument is very casework heavy in a way that's difficult to automate. For instance, in P1, we
 have to prove four different inequalities of the form
-`a ∈ (x * y).leftMoves → b ∈ (x * y).rightMoves → a < b`, and depending on what form the options of
+`a ∈ (x * y)ᴸ → b ∈ (x * y)ᴿ → a < b`, and depending on what form the options of
 `x * y` take, we have to apply different instantiations of the inductive hypothesis.
 
 To greatly simplify things, we work uniquely in terms of left options, which we achieve by rewriting
-`a ∈ x.rightMoves` as `-a ∈ (-x).leftMoves`. We then show that our distinct lemmas and inductive
+`a ∈ xᴿ` as `-a ∈ (-x)ᴸ`. We then show that our distinct lemmas and inductive
 hypotheses are invariant under the appropriate sign changes. In the P1 example, this makes it so
 that one case (`mulOption_lt_of_lt`) is enough to conclude the others (`mulOption_lt`), and the same
 goes for the other parts of the proof.
@@ -52,17 +52,17 @@ open Game IGame Relation WellFounded
 
 /-- A characterization of left moves of `x * y` in terms only of left moves. -/
 private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x * y).leftMoves, P a) ↔
-      (∀ a ∈ x.leftMoves, ∀ b ∈ y.leftMoves, P (mulOption x y a b)) ∧
-      (∀ a ∈ (-x).leftMoves, ∀ b ∈ (-y).leftMoves, P (mulOption (-x) (-y) a b)) := by
+    (∀ a ∈ (x * y)ᴸ, P a) ↔
+      (∀ a ∈ xᴸ, ∀ b ∈ yᴸ, P (mulOption x y a b)) ∧
+      (∀ a ∈ (-x)ᴸ, ∀ b ∈ (-y)ᴸ, P (mulOption (-x) (-y) a b)) := by
   rw [forall_moves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
 private lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
-    (∀ a ∈ (x * y).rightMoves, P a) ↔
-      (∀ a ∈ x.leftMoves, ∀ b ∈ (-y).leftMoves, P (-mulOption x (-y) a b)) ∧
-      (∀ a ∈ (-x).leftMoves, ∀ b ∈ y.leftMoves, P (-mulOption (-x) y a b)) := by
+    (∀ a ∈ (x * y)ᴿ, P a) ↔
+      (∀ a ∈ xᴸ, ∀ b ∈ (-y)ᴸ, P (-mulOption x (-y) a b)) ∧
+      (∀ a ∈ (-x)ᴸ, ∀ b ∈ yᴸ, P (-mulOption (-x) y a b)) := by
   rw [forall_moves_mul]
   simp [mulOption_neg_right, mulOption_neg_left]
 
@@ -84,13 +84,13 @@ is equivalent to `(x₁ - x₂) * (y₁ - y₂) > 0`. -/
 def P3 (x₁ x₂ y₁ y₂ : IGame) :=
   Game.mk (x₁ * y₂) + Game.mk (x₂ * y₁) < Game.mk (x₁ * y₁) + Game.mk (x₂ * y₂)
 
-/-- `P4 x₁ x₂ y` states that if `x₁ < x₂`, then `P3 x₁ x₂ a y` when `a ∈ y.leftMoves`, and
-`P3 x₁ x₂ b y` when `b ∈ y.rightMoves`.
+/-- `P4 x₁ x₂ y` states that if `x₁ < x₂`, then `P3 x₁ x₂ a y` when `a ∈ yᴸ`, and
+`P3 x₁ x₂ b y` when `b ∈ yᴿ`.
 
-Note that we instead write this second part as `P3 x₁ x₂ b (-y)` when `b ∈ (-y).leftMoves`. See the
+Note that we instead write this second part as `P3 x₁ x₂ b (-y)` when `b ∈ (-y)ᴸ`. See the
 module docstring for an explanation. -/
 def P4 (x₁ x₂ y : IGame) :=
-  x₁ < x₂ → (∀ a ∈ y.leftMoves, P3 x₁ x₂ a y) ∧ (∀ b ∈ (-y).leftMoves, P3 x₁ x₂ b (-y))
+  x₁ < x₂ → (∀ a ∈ yᴸ, P3 x₁ x₂ a y) ∧ (∀ b ∈ (-y)ᴸ, P3 x₁ x₂ b (-y))
 
 /-- The conjunction of `P2` and `P4`. Both statements have the same amount of arguments and satisfy
 similar symmetry properties, so we can slightly simplify the argument by merging them. -/
@@ -223,13 +223,13 @@ lemma P1_of_P3 (h₁ : P3 x₃ x₂ y₂ y₃) (h₂ : P3 x₁ x₃ y₂ y₁) :
   convert add_lt_add h₁ h₂ using 1 <;> abel
 
 lemma P3_of_IH1 [Numeric y] (ihyx : IH1 y x)
-    (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hd : d ∈ (-y).leftMoves) : P3 a x b (-d) := by
+    (ha : a ∈ xᴸ) (hb : b ∈ yᴸ) (hd : d ∈ (-y)ᴸ) : P3 a x b (-d) := by
   rw [P3_comm]
-  rw [leftMoves, moves_neg] at hd
+  rw [moves_neg] at hd
   refine ((ihyx (.of_mem_moves hb) (.of_mem_moves hd) <| Or.inl rfl).2 ?_).1 a ha
   exact Numeric.left_lt_right hb hd
 
-lemma P24_of_IH1 (ihxy : IH1 x y) (ha : a ∈ x.leftMoves) (hb : b ∈ x.leftMoves) : P24 a b y :=
+lemma P24_of_IH1 (ihxy : IH1 x y) (ha : a ∈ xᴸ) (hb : b ∈ xᴸ) : P24 a b y :=
   ihxy (.of_mem_moves ha) (.of_mem_moves hb) (Or.inl rfl)
 
 lemma mulOption_lt_iff_P1 :
@@ -237,13 +237,13 @@ lemma mulOption_lt_iff_P1 :
   simp [P1, mulOption, sub_eq_add_neg, add_comm]
 
 lemma mulOption_lt_of_lt [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d} (h : a < c)
-    (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hc : c ∈ x.leftMoves) (hd : d ∈ (-y).leftMoves) :
+    (ha : a ∈ xᴸ) (hb : b ∈ yᴸ) (hc : c ∈ xᴸ) (hd : d ∈ (-y)ᴸ) :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) := by
   rw [mulOption_lt_iff_P1]
   exact P1_of_P3 (P3_of_IH1 ihyx hc hb hd) <| ((P24_of_IH1 ihxy ha hc).2 h).1 b hb
 
 lemma mulOption_lt [Numeric x] [Numeric y] (ihxy : IH1 x y) (ihyx : IH1 y x) {a b c d}
-    (ha : a ∈ x.leftMoves) (hb : b ∈ y.leftMoves) (hc : c ∈ x.leftMoves) (hd : d ∈ (-y).leftMoves) :
+    (ha : a ∈ xᴸ) (hb : b ∈ yᴸ) (hc : c ∈ xᴸ) (hd : d ∈ (-y)ᴸ) :
     Game.mk (mulOption x y a b) < -Game.mk (mulOption x (-y) c d) := by
   have := Numeric.of_mem_moves ha
   have := Numeric.of_mem_moves hc
@@ -340,7 +340,7 @@ lemma IH4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y)
   · convert h h' using 2 <;> rw [P2_neg_right]
 
 lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁ ≈ x₂)
-    (hi : a ∈ x₁.leftMoves) (hj : b ∈ y.leftMoves) :
+    (hi : a ∈ x₁ᴸ) (hj : b ∈ yᴸ) :
     Game.mk (mulOption x₁ y a b) < Game.mk (x₂ * y) := by
   convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_moves hi)).2 _).1 b hj) using 1
   · rw [← (h.2.2 (.of_mem_moves hj)).1 he]
@@ -380,7 +380,7 @@ def IH3 (x₁ x' x₂ y₁ y₂ : IGame) : Prop :=
 
 /-- `IH3` follows from the induction hypothesis for `P24 x₁ x₂ y`. -/
 lemma IH3_of_IH (ih24 : IH24 x₁ x₂ y) (ih4 : IH4 x₁ x₂ y)
-    (hi : a ∈ x₂.leftMoves) (hb : b ∈ y.leftMoves) (hl : mulOption x₂ y a b < x₂ * y) :
+    (hi : a ∈ x₂ᴸ) (hb : b ∈ yᴸ) (hl : mulOption x₂ y a b < x₂ * y) :
     IH3 x₁ a x₂ b y :=
   have h24 := ih24.2.1 (.of_mem_moves hi)
   ⟨(ih4 <| .of_mem_moves hb).2 (.of_mem_moves hi), h24.1,
@@ -394,8 +394,8 @@ lemma P3_of_le_left {y₁ y₂} (i) (h : IH3 x₁ i x₂ y₁ y₂) (hl : x₁ �
 
 /-- P3 follows from `IH3`, so P4 (with `y₁` a left option of `y₂`) follows from the induction
 hypothesis. -/
-lemma P3_of_IH3 {y₁ y₂} (h : ∀ i ∈ x₂.leftMoves, IH3 x₁ i x₂ y₁ y₂)
-    (hs : ∀ i ∈ (-x₁).leftMoves, IH3 (-x₂) i (-x₁) y₁ y₂) (hl : x₁ < x₂) : P3 x₁ x₂ y₁ y₂ := by
+lemma P3_of_IH3 {y₁ y₂} (h : ∀ i ∈ x₂ᴸ, IH3 x₁ i x₂ y₁ y₂)
+    (hs : ∀ i ∈ (-x₁)ᴸ, IH3 (-x₂) i (-x₁) y₁ y₂) (hl : x₁ < x₂) : P3 x₁ x₂ y₁ y₂ := by
   obtain (⟨i, hi, hi'⟩ | ⟨i, hi, hi'⟩) := lf_iff_exists_le.1 hl.not_ge
   · exact P3_of_le_left i (h i hi) hi'
   · refine P3_neg.1 <| P3_of_le_left _ (hs (-i) ?_) ?_ <;> simpa
@@ -454,7 +454,7 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
     rw [← P3_neg, neg_neg]
     exact P3_of_lt_of_lt h hy
 termination_by (x₁, x₂)
-decreasing_by all_goals (try rw [leftMoves, moves_neg] at *); igame_wf
+decreasing_by all_goals (try rw [moves_neg] at *); igame_wf
 
 end Surreal.Multiplication
 

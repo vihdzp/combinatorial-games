@@ -18,13 +18,13 @@ noncomputable section
 namespace IGame
 
 theorem tiny_lf_of_not_nonpos_of_forall_neg_le {x a : IGame} (hx : 0 ⧏ x)
-    (ha : ∀ y ∈ x.rightMoves, -a ≤ y) : ⧾a ⧏ x := by
+    (ha : ∀ y ∈ xᴿ, -a ≤ y) : ⧾a ⧏ x := by
   refine lf_of_right_le ?_ (rightMoves_tiny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   simpa using ⟨hx, fun z hz ↦ lf_of_right_le (ha z hz) (by simp)⟩
 
 theorem tiny_le_of_pos_of_forall_neg_le {x a : IGame} (hx : 0 < x)
-    (ha : ∀ y ∈ x.rightMoves, ∀ z ∈ y.rightMoves, -a ≤ z) : ⧾a ≤ x := by
+    (ha : ∀ y ∈ xᴿ, ∀ z ∈ yᴿ, -a ≤ z) : ⧾a ≤ x := by
   rw [le_iff_forall_lf]
   constructor
   · simpa using hx.not_ge
@@ -40,13 +40,13 @@ theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.to
     simpa using (birthday_lt_of_mem_moves hy).le
 
 theorem lf_miny_of_not_nonneg_of_forall_le {x a : IGame} (hx : x ⧏ 0)
-    (ha : ∀ y ∈ x.leftMoves, y ≤ a) : x ⧏ ⧿a := by
+    (ha : ∀ y ∈ xᴸ, y ≤ a) : x ⧏ ⧿a := by
   refine lf_of_le_left ?_ (leftMoves_miny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   simpa using ⟨fun z hz ↦ lf_of_le_left (ha z hz) (by simp), hx⟩
 
 theorem le_miny_of_neg_of_forall_le_neg {x a : IGame} (hx : x < 0)
-    (ha : ∀ y ∈ x.leftMoves, ∀ z ∈ y.leftMoves, z ≤ a) : x ≤ ⧿a := by
+    (ha : ∀ y ∈ xᴸ, ∀ z ∈ yᴸ, z ≤ a) : x ≤ ⧿a := by
   rw [le_iff_forall_lf]
   constructor
   · exact fun y hy ↦ lf_miny_of_not_nonneg_of_forall_le (left_lf_of_le hx.le hy) (ha y hy)

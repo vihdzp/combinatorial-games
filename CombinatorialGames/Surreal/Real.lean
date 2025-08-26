@@ -66,35 +66,35 @@ instance Numeric.toIGame (x : ℝ) : Numeric x := by
   all_goals infer_instance
 
 @[simp]
-theorem leftMoves_toIGame (x : ℝ) : leftMoves x = (↑) '' {q : Dyadic | q < x} :=
+theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic | q < x} :=
   leftMoves_ofSets ..
 
 @[simp]
-theorem rightMoves_toIGame (x : ℝ) : rightMoves x = (↑) '' {q : Dyadic | x < q} :=
+theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic | x < q} :=
   rightMoves_ofSets ..
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ leftMoves x, P y) ↔ ∀ q : Dyadic, q < x → P q := by
+    (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic, q < x → P q := by
   aesop
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ leftMoves x, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
+    (∃ y ∈ xᴸ, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
   aesop
 
 theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ rightMoves x, P y) ↔ ∀ q : Dyadic, x < q → P q := by
+    (∀ y ∈ xᴿ, P y) ↔ ∀ q : Dyadic, x < q → P q := by
   aesop
 
 theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ rightMoves x, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
+    (∃ y ∈ xᴿ, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
   aesop
 
 theorem mem_leftMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : q < x) :
-    (q : IGame) ∈ leftMoves x := by
+    (q : IGame) ∈ xᴸ := by
   simpa
 
 theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q) :
-    (q : IGame) ∈ rightMoves x := by
+    (q : IGame) ∈ xᴿ := by
   simpa
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/

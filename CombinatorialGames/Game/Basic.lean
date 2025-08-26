@@ -142,7 +142,7 @@ instance : CharZero Game := AddMonoidWithOne.toCharZero
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq' (x * y), mul_eq']
   simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
-  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
+  dsimp
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
@@ -177,38 +177,40 @@ theorem _root_.Set.prod_image_right {α β γ : Type*} (f : α → γ) (s : Set 
     t ×ˢ (f '' s) = (fun x ↦ (x.1, f x.2)) '' t ×ˢ s := by
   aesop
 
-set_option maxHeartbeats 500000 in
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
-  rw [mul_eq', mul_eq' x (y * z)]
-  simp only [moves_mul, union_prod, prod_union, union_assoc, image_image, image_union, mk_ofSets']
-  dsimp only [leftMoves, rightMoves, Player.neg_left, Player.neg_right]
-  congr! 2
-  ext
-  nth_rewrite 2 [union_left_comm]
-  nth_rewrite 3 [union_comm]
-  congrm _ ∈ ?_ ∪ (?_ ∪ (?_ ∪ ?_))
-  all_goals
-    simp_rw [prod_image_left, prod_image_right, image_image]
-    ext
-    simp only [mem_image, mem_prod, and_assoc, Prod.exists, exists_and_left, neg_neg]
-    iterate 3 (congr! 2; rw [and_congr_right_iff]; intros)
-    simp only [mulOption, mk_mul_add, mk_add_mul, mk_mul_sub, mk_sub_mul,
-      mk_add, mk_sub]
-    iterate 7 rw [mk_mul_assoc]
-    abel_nf
-termination_by (x, y, z)
-decreasing_by igame_wf
+  induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
+  induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
+  induction z using IGame.ofSetsRecOn with | mk zL zR ihzl ihzr
+  simp_rw [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption,
+    ← Set.image_union, ← ofSets_mul_ofSets,
+    Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union,
+    ← Equiv.prod_assoc_image, ← Set.image_union, Set.image_image, Equiv.prodAssoc_apply]
+  have e1 : (xL ×ˢ yL) ×ˢ zL ∪ (xR ×ˢ yR) ×ˢ zL ∪ ((xL ×ˢ yR) ×ˢ zR ∪ (xR ×ˢ yL) ×ˢ zR) =
+      (xL ×ˢ yL) ×ˢ zL ∪ (xL ×ˢ yR) ×ˢ zR ∪ ((xR ×ˢ yL) ×ˢ zR ∪ (xR ×ˢ yR) ×ˢ zL) := by
+    ac_rfl
+  have e2 : (xL ×ˢ yL) ×ˢ zR ∪ (xR ×ˢ yR) ×ˢ zR ∪ ((xL ×ˢ yR) ×ˢ zL ∪ (xR ×ˢ yL) ×ˢ zL) =
+      (xL ×ˢ yL) ×ˢ zR ∪ (xL ×ˢ yR) ×ˢ zL ∪ ((xR ×ˢ yL) ×ˢ zL ∪ (xR ×ˢ yR) ×ˢ zR) := by
+    ac_rfl
+  simp only [e1, e2]
+  congrm !{?_ | ?_} <;>
+  · refine Set.image_congr fun ⟨⟨x, y⟩, z⟩ hxyz => ?_
+    obtain ⟨hx, hy, hz⟩ : (x ∈ xL ∨ x ∈ xR) ∧ (y ∈ yL ∨ y ∈ yR) ∧ (z ∈ zL ∨ z ∈ zR) := by
+      simp only [mem_union, mem_prod] at hxyz
+      tauto
+    simp only [mulOption, mk_sub_mul, mk_add_mul, mk_mul_sub, mk_mul_add,
+      hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
+    abel
 
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ s) : x ⧏ !{s | t} := by
   rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}.leftMoves := by simpa using mem_image_of_mem _ h
+  have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using left_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : !{s | t} ⧏ x := by
   rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}.rightMoves := by simpa using mem_image_of_mem _ h
+  have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_right this
 
 end Game
