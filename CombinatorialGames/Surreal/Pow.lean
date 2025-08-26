@@ -38,8 +38,12 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
+@[simp]
+theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
+  simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
+
 -- TODO: generalize, upstream.
-theorem mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
+theorem mk_le_mk_of_pos {x y : Surreal} {R : Type*} [Ring R] (f : R →+ Surreal) (h : 0 < y) :
     mk x ≤ mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
   constructor
   · rintro ⟨n, hn⟩
@@ -54,6 +58,7 @@ theorem mk_le_mk_of_pos {x y : Surreal} (h : 0 < y) :
     rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
     exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
 
+#exit
 --  TODO: golf using the previous theorem somehow?
 /-- A version of `ArchimedeanClass.mk_le_mk_of_pos` with dyadic rationals. -/
 theorem mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
@@ -76,17 +81,6 @@ theorem mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
     simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
     rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
     exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
-
--- TODO: is there any reasonable way to generalize this?
-@[simp]
-theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
-  apply le_antisymm
-  · obtain ⟨n, hn⟩ := exists_nat_gt |r|⁻¹
-    use n
-    simpa using Real.toSurreal_le_iff.2 <| ((inv_lt_iff_one_lt_mul₀ (abs_pos.2 h)).1 hn).le
-  · obtain ⟨n, hn⟩ := exists_nat_gt |r|
-    use n
-    simpa using Real.toSurreal_le_iff.2 hn.le
 
 -- TODO: generalize, upstream.
 @[simp]
