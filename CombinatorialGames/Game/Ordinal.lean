@@ -61,7 +61,7 @@ private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'ᴿ = ∅ := by
   rw [toIGame'_def]; exact rightMoves_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
-  refine fun a b h ↦ lt_of_le_not_ge ?_ (leftMove_lf ?_)
+  refine fun a b h ↦ lt_of_le_not_ge ?_ (left_lf ?_)
   · rw [le_iff_forall_lf]
     simpa [leftMoves_toIGame', rightMoves_toIGame'] using
       fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_ge
@@ -173,7 +173,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
     apply not_le_of_le_of_not_le he
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
-    exact leftMove_lf <| mulOption_mem_moves_mul
+    exact left_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
   · rintro _ _ _ c hc rfl d hd rfl rfl
     rw [IGame.le_sub_iff_add_le,
