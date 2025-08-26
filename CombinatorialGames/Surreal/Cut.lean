@@ -386,14 +386,14 @@ theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s]
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
 def supLeft (x : IGame) : Cut :=
-  ⨆ i ∈ x.leftMoves, rightGame (.mk i)
+  ⨆ i ∈ xᴸ, rightGame (.mk i)
 
 theorem left_supLeft (x : IGame) :
-    (supLeft x).left = ⋃ i ∈ x.leftMoves, {y | y.toGame ≤ .mk i} := by
+    (supLeft x).left = ⋃ i ∈ xᴸ, {y | y.toGame ≤ .mk i} := by
   simp [supLeft]
 
 theorem right_supLeft (x : IGame) :
-    (supLeft x).right = ⋂ i ∈ x.leftMoves, {y | .mk i ⧏ y.toGame} := by
+    (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
 /-- The infimum of all left cuts of right options of `x`.
@@ -401,14 +401,14 @@ theorem right_supLeft (x : IGame) :
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
 def infRight (x : IGame) : Cut :=
-  ⨅ i ∈ x.rightMoves, leftGame (.mk i)
+  ⨅ i ∈ xᴿ, leftGame (.mk i)
 
 theorem left_infRight (x : IGame) :
-    (infRight x).left = ⋂ i ∈ x.rightMoves, {y | y.toGame ⧏ .mk i} := by
+    (infRight x).left = ⋂ i ∈ xᴿ, {y | y.toGame ⧏ .mk i} := by
   simp [infRight]
 
 theorem right_infRight (x : IGame) :
-    (infRight x).right = ⋃ i ∈ x.rightMoves, {y | .mk i ≤ y.toGame} := by
+    (infRight x).right = ⋃ i ∈ xᴿ, {y | .mk i ≤ y.toGame} := by
   simp [infRight]
 
 @[simp]

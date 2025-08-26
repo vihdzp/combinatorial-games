@@ -13,8 +13,9 @@
     "ignore": {
         "CombinatorialGames.Tactic.GameCmp": [
             "CombinatorialGames.Game.IGame"
-        ],        
+        ],
         "CombinatorialGames.Tactic.OrdinalAlias": [
+            "Mathlib.Data.Nat.Lattice",
             "Mathlib.SetTheory.Ordinal.Family"
         ]
     }

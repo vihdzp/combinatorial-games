@@ -96,12 +96,11 @@ theorem nim_injective : Function.Injective nim := by
 @[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp [eq_comm]
 
 @[simp]
-theorem birthday_nim (o : Nimber) : (nim o).birthday = o := by
-  rw [nim_def, ofSets_eq_ofSets_cases, birthday_ofSets, max_self, image_image]
-  conv_rhs => rw [← iSup_succ o, iSup]
-  simp_rw [Function.comp_apply, ← image_eq_range]
-  congr!
-  rw [birthday_nim]
+theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
+  rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
+  convert iSup_succ o with _ x
+  cases x
+  exact congrArg _ (birthday_nim _)
 termination_by o
 
 /-- This would show that the birthday of an impartial game equals its Grundy value! -/

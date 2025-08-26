@@ -72,27 +72,22 @@ theorem birthday_le_iff' {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
   simpa using lt_birthday_iff'.not
 
 theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
-    (∃ y ∈ x.leftMoves, o ≤ y.birthday) ∨ (∃ y ∈ x.rightMoves, o ≤ y.birthday) := by
+    (∃ y ∈ xᴸ, o ≤ y.birthday) ∨ (∃ y ∈ xᴿ, o ≤ y.birthday) := by
   simp [lt_birthday_iff', isOption_iff_mem_union, or_and_right, exists_or]
 
 theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
-    (∀ y ∈ x.leftMoves, y.birthday < o) ∧ (∀ y ∈ x.rightMoves, y.birthday < o) := by
+    (∀ y ∈ xᴸ, y.birthday < o) ∧ (∀ y ∈ xᴿ, y.birthday < o) := by
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
-    max (⨆ y : x.leftMoves, succ y.1.birthday) (⨆ y : x.rightMoves, succ y.1.birthday) := by
+    max (⨆ y : xᴸ, succ y.1.birthday) (⨆ y : xᴿ, succ y.1.birthday) := by
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
-@[aesop apply unsafe 50%]
-theorem birthday_lt_of_mem_leftMoves {x y : IGame} (hy : y ∈ x.leftMoves) :
+@[aesop apply unsafe]
+theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
     y.birthday < x.birthday :=
-  lt_birthday_iff.2 (.inl ⟨y, hy, le_rfl⟩)
-
-@[aesop apply unsafe 50%]
-theorem birthday_lt_of_mem_rightMoves {x y : IGame} (hy : y ∈ x.rightMoves) :
-    y.birthday < x.birthday :=
-  lt_birthday_iff.2 (.inr ⟨y, hy, le_rfl⟩)
+  lt_birthday_iff'.2 ⟨y, .of_mem_moves hy, le_rfl⟩
 
 theorem birthday_lt_of_isOption {x y : IGame} (hy : IsOption y x) : y.birthday < x.birthday :=
   lt_birthday_iff'.2 ⟨y, hy, le_rfl⟩
@@ -110,6 +105,10 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
   simp [iSup, image_eq_range]
 
+theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
+    birthday !{fun _ ↦ s} = sSup (succ ∘ birthday '' s) := by
+  rw [ofSets_eq_ofSets_cases, birthday_ofSets, max_self]
+
 @[simp]
 theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
   rw [birthday, iSup_eq_zero_iff, IGame.ext_iff]
@@ -117,7 +116,7 @@ theorem birthday_eq_zero {x : IGame} : birthday x = 0 ↔ x = 0 := by
 
 @[simp] theorem birthday_zero : birthday 0 = 0 := by simp
 @[simp] theorem birthday_one : birthday 1 = 1 := by rw [one_def, birthday_ofSets]; simp
-@[simp] theorem birthday_star : birthday ⋆ = 1 := by rw [star, birthday_ofSets]; simp
+@[simp] theorem birthday_star : birthday ⋆ = 1 := by rw [star, birthday_ofSets_const]; simp
 
 @[simp]
 theorem birthday_half : birthday ½ = 2 := by
@@ -158,7 +157,7 @@ termination_by o
 theorem le_toIGame_birthday (x : IGame) : x ≤ x.birthday.toIGame := by
   rw [le_iff_forall_lf]
   refine ⟨fun y hy ↦ ((le_toIGame_birthday y).trans_lt ?_).not_ge, ?_⟩
-  · simpa using birthday_lt_of_mem_leftMoves hy
+  · simpa using birthday_lt_of_mem_moves hy
   · simp
 termination_by x
 decreasing_by igame_wf
@@ -212,7 +211,7 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
     apply small_subset
       (s := range fun s : Set {x | birthday x < o} × Set {x | birthday x < o} ↦
         (!{s.1 | ↑s.2} : IGame))
-    refine fun x hx ↦ ⟨((↑) ⁻¹' x.leftMoves, (↑) ⁻¹' x.rightMoves), ?_⟩
+    refine fun x hx ↦ ⟨((↑) ⁻¹' xᴸ, (↑) ⁻¹' xᴿ), ?_⟩
     simp_rw [lt_succ_iff, birthday_le_iff] at hx
     ext p; cases p <;> simp_all
   | isSuccPrelimit o ho ih =>
@@ -274,12 +273,12 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
     constructor
     · aesop
     · rintro ⟨hl, hr⟩
-      have hxl : x.leftMoves ⊆ birthdayFinset n := by intro y; simp_all
-      have hxr : x.rightMoves ⊆ birthdayFinset n := by intro y; simp_all
+      have hxl : xᴸ ⊆ birthdayFinset n := by intro y; simp_all
+      have hxr : xᴿ ⊆ birthdayFinset n := by intro y; simp_all
       classical
       have := Set.fintypeSubset _ hxl
       have := Set.fintypeSubset _ hxr
-      use x.leftMoves.toFinset, x.rightMoves.toFinset
+      use xᴸ.toFinset, xᴿ.toFinset
       aesop
 
 theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by

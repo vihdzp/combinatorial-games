@@ -21,12 +21,12 @@ noncomputable section
 namespace IGame
 
 private def toLGame' (x : IGame) : LGame :=
-  !{range fun y : x.leftMoves ↦ toLGame' y | range fun y : x.rightMoves ↦ toLGame' y}
+  !{range fun y : xᴸ ↦ toLGame' y | range fun y : xᴿ ↦ toLGame' y}
 termination_by x
 decreasing_by igame_wf
 
 private theorem toLGame'_def (x : IGame) :
-    x.toLGame' = !{toLGame' '' x.leftMoves | toLGame' '' x.rightMoves} := by
+    x.toLGame' = !{toLGame' '' xᴸ | toLGame' '' xᴿ} := by
   rw [toLGame']
   simp_rw [image_eq_range]
 
@@ -54,7 +54,7 @@ def toLGame : IGame ↪ LGame where
 instance : Coe IGame LGame := ⟨toLGame⟩
 
 theorem toLGame_def (x : IGame) :
-    x.toLGame = !{toLGame '' x.leftMoves | toLGame '' x.rightMoves} :=
+    x.toLGame = !{toLGame '' xᴸ | toLGame '' xᴿ} :=
   toLGame'_def x
 
 @[simp]
@@ -63,6 +63,7 @@ theorem moves_toLGame (p : Player) (x : IGame) : x.toLGame.moves p = toLGame '' 
 
 theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
   refine x.moveRecOn fun x h ↦ .intro _ fun y ↦ ?_
+  rw [LGame.isOption_iff_mem_union]
   rintro (hy | hy) <;> simp only [moves_toLGame] at hy <;> obtain ⟨y, hy, rfl⟩ := hy
   exacts [h _ y hy, h _ y hy]
 

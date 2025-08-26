@@ -42,14 +42,14 @@ theorem impartial_def {x : IGame} :
   rw [ImpartialAux]
 
 theorem impartial_def' {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ (∀ i ∈ x.leftMoves, Impartial i) ∧ ∀ j ∈ x.rightMoves, Impartial j := by
+    x.Impartial ↔ -x ≈ x ∧ (∀ i ∈ xᴸ, Impartial i) ∧ ∀ j ∈ xᴿ, Impartial j := by
   rw [impartial_def, Player.forall]
 
 namespace Impartial
 variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
 
 theorem mk {x : IGame} (h₁ : -x ≈ x)
-    (h₂ : ∀ i ∈ x.leftMoves, Impartial i) (h₃ : ∀ j ∈ x.rightMoves, Impartial j) : Impartial x :=
+    (h₂ : ∀ i ∈ xᴸ, Impartial i) (h₃ : ∀ j ∈ xᴿ, Impartial j) : Impartial x :=
   impartial_def'.2 ⟨h₁, h₂, h₃⟩
 
 @[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
@@ -89,10 +89,9 @@ protected instance star : Impartial ⋆ := by
 protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
   apply mk
   · simp
-  on_goal 1 => rw [leftMoves, moves_neg]
-  on_goal 2 => rw [rightMoves, moves_neg]
   all_goals
-  · intro y hy
+  · rw [moves_neg]
+    intro y hy
     try have := Impartial.of_mem_moves hy
     try have := Impartial.of_mem_moves hy
     rw [← neg_neg y]
@@ -104,8 +103,6 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   apply mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
-  on_goal 1 => rw [leftMoves, moves_add]
-  on_goal 2 => rw [rightMoves, moves_add]
   all_goals
   · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
     · have := Impartial.of_mem_moves hz
