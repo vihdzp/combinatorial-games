@@ -12,13 +12,13 @@ import CombinatorialGames.Nimber.Field
 The Grundy value of an impartial game is recursively defined as the least nimber not among the
 Grundy values of either its left or right options. This map respects addition and multiplication.
 
-We provide three definitions for the Grundy value. `leftGrundy` and `rightGrundy` are computed using
-the left/right options of the game respectively, and are defined for all games. To make the API
-symmetric, we also provide `Impartial.grundy`, which enforces that the game is impartial, and is
-thus equal to either of `leftGrundy` or `rightGrundy`.
+We provide two definitions for the Grundy value. `grundyAux` is computed using either the left or
+right options of the game, and is defined for all games. To make the API symmetric, we also provide
+`Impartial.grundy`, which enforces that the game is impartial, and is thus equal to either of
+`grundyAux left` or `grundyAux right`.
 
-The **Sprague-Grundy** theorem `nim_grundy_equiv` shows that any impartial game is equivalent to a
-game of Nim, namely that corresponding to its Grundy value.
+The **Sprague-Grundy** theorem `Impartial.nim_grundy_equiv` shows that any impartial game is
+equivalent to a game of Nim, namely that corresponding to its Grundy value.
 -/
 
 universe u
@@ -230,7 +230,7 @@ theorem of_grundyAux_left_eq_grundyAux_right {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : Impartial x :=
   have H := of_grundyAux_left_eq_grundyAux_right' h H
-  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) (h _) (h _)
+  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) h
 
 /-! ### Multiplication -/
 

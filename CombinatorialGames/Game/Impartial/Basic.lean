@@ -32,7 +32,7 @@ namespace IGame
 /-! ### Weakly impartial games -/
 
 private def WeaklyImpartialAux (x : IGame) : Prop :=
-  -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, WeaklyImpartialAux i
+  -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, WeaklyImpartialAux y
 termination_by x
 decreasing_by igame_wf
 
@@ -49,17 +49,13 @@ class WeaklyImpartial (x : IGame) : Prop where of_WeaklyImpartialAux ::
   out : WeaklyImpartialAux x
 
 theorem weaklyImpartial_def {x : IGame} :
-    x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, WeaklyImpartial i := by
+    x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y := by
   simp_rw [weaklyImpartial_iff_aux]
   rw [WeaklyImpartialAux]
 
-theorem weaklyImpartial_def' {x : IGame} :
-    x.WeaklyImpartial ↔ -x ≈ x ∧ (∀ i ∈ xᴸ, WeaklyImpartial i) ∧ ∀ j ∈ xᴿ, WeaklyImpartial j := by
-  rw [weaklyImpartial_def, Player.forall]
-
 theorem WeaklyImpartial.mk {x : IGame} (h₁ : -x ≈ x)
-    (h₂ : ∀ i ∈ xᴸ, WeaklyImpartial i) (h₃ : ∀ j ∈ xᴿ, WeaklyImpartial j) : WeaklyImpartial x :=
-  weaklyImpartial_def'.2 ⟨h₁, h₂, h₃⟩
+    (h₂ : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y) : WeaklyImpartial x :=
+  weaklyImpartial_def.2 ⟨h₁, h₂⟩
 
 namespace Impartial
 variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
@@ -97,9 +93,8 @@ protected instance _root_.IGame.WeaklyImpartial.neg (x : IGame) [WeaklyImpartial
     WeaklyImpartial (-x) := by
   apply WeaklyImpartial.mk
   · simp
-  all_goals
-  · rw [moves_neg]
-    intro y hy
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
     have := WeaklyImpartial.of_mem_moves hy
     rw [← neg_neg y]
     exact .neg _
@@ -111,8 +106,8 @@ protected instance _root_.IGame.WeaklyImpartial.add (x y : IGame)
   apply WeaklyImpartial.mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
-  all_goals
-  · rw [forall_moves_add]
+  · simp_rw [forall_moves_add]
+    intro p
     constructor
     all_goals
       intro z hz
@@ -239,17 +234,13 @@ class Impartial (x : IGame) : Prop where of_ImpartialAux ::
   out : ImpartialAux x
 
 theorem impartial_def {x : IGame} :
-    x.Impartial ↔ xᴸ = xᴿ ∧ ∀ p, ∀ i ∈ x.moves p, Impartial i := by
+    x.Impartial ↔ xᴸ = xᴿ ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y := by
   simp_rw [impartial_iff_aux]
   rw [ImpartialAux]
 
-theorem impartial_def' {x : IGame} :
-    x.Impartial ↔ xᴸ = xᴿ ∧ (∀ i ∈ xᴸ, Impartial i) ∧ ∀ j ∈ xᴿ, Impartial j := by
-  rw [impartial_def, Player.forall]
-
 theorem Impartial.mk {x : IGame} (h₁ : xᴸ = xᴿ)
-    (h₂ : ∀ i ∈ xᴸ, Impartial i) (h₃ : ∀ j ∈ xᴿ, Impartial j) : Impartial x :=
-  impartial_def'.2 ⟨h₁, h₂, h₃⟩
+    (h₂ : ∀ p, ∀ y ∈ x.moves p, Impartial y) : Impartial x :=
+  impartial_def.2 ⟨h₁, h₂⟩
 
 namespace Impartial
 variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
@@ -296,10 +287,8 @@ protected instance neg (x : IGame) [hx : Impartial x] : Impartial (-x) := by
   rwa [neg_eq]
 
 protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
-  apply WeaklyImpartial.mk
-  · rw [neg_add]
-    exact add_congr (neg_equiv x) (neg_equiv y)
-  all_goals
+  apply Impartial.mk
+  · simp_rw [moves_add, moves_const _ left right]
   · rw [forall_moves_add]
     constructor
     all_goals
