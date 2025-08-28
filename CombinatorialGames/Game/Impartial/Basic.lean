@@ -9,50 +9,62 @@ import CombinatorialGames.Game.Special
 /-!
 # Basic definitions about impartial games
 
-We will define an impartial game, one in which left and right can make exactly the same moves.
-Our definition differs slightly by saying that the game is always equivalent to its negative,
-no matter what moves are played. This allows for games such as poker-nim to be classified as
-impartial.
+In the literature, an impartial game is defined so that its left and right moves are equal, and
+every left or right move is also impartial.
+
+However, a weaker definition suffices to prove most of the results of interest: instead of requiring
+`-x = x`, we can require `-x ≈ x`. These "weakly impartial" games are closed under negation,
+addition, multiplication, and satisfy the Sprague--Grundy theorem.
+
+As such, this file provides two typeclasses: `Impartial` for the standard notion in the literature,
+and `WeaklyImpartial` for games satisfying the weaker `-x ≈ x` condition.
+
+## Implementation notes
+
+For discoverability, we put all theorems about either weakly impartial or impartial games in the
+common `Impartial` namespace.
 -/
 
 universe u
 
 namespace IGame
 
-private def ImpartialAux (x : IGame) : Prop :=
-  -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, ImpartialAux i
+/-! ### Weakly impartial games -/
+
+private def WeaklyImpartialAux (x : IGame) : Prop :=
+  -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, WeaklyImpartialAux i
 termination_by x
 decreasing_by igame_wf
 
-/-- An impartial game is one that's equivalent to its negative, such that each left and right move
-is also impartial.
+/-- A weakly impartial game is one that's **equivalent** to its negative, such that each left and
+right move is also weakly impartial.
 
-Note that this is a slightly more general definition than the one that's usually in the literature,
-as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still holds: see
-`IGame.equiv_nim_grundyValue`.
+This is a sufficient condition for proving the Sprague--Grundy theorem: see
+`Impartial.nim_grundy_equiv`.
 
-In such a game, both players have the same payoffs at any subposition. -/
-@[mk_iff impartial_iff_aux]
-class Impartial (x : IGame) : Prop where of_ImpartialAux ::
-  out : ImpartialAux x
+For the stronger notion of impartiality in the literature, which requires the game to be **equal**
+to its negative, see `Impartial`. -/
+@[mk_iff weaklyImpartial_iff_aux]
+class WeaklyImpartial (x : IGame) : Prop where of_WeaklyImpartialAux ::
+  out : WeaklyImpartialAux x
 
-theorem impartial_def {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, Impartial i := by
-  simp_rw [impartial_iff_aux]
-  rw [ImpartialAux]
+theorem weaklyImpartial_def {x : IGame} :
+    x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, WeaklyImpartial i := by
+  simp_rw [weaklyImpartial_iff_aux]
+  rw [WeaklyImpartialAux]
 
-theorem impartial_def' {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ (∀ i ∈ xᴸ, Impartial i) ∧ ∀ j ∈ xᴿ, Impartial j := by
-  rw [impartial_def, Player.forall]
+theorem weaklyImpartial_def' {x : IGame} :
+    x.WeaklyImpartial ↔ -x ≈ x ∧ (∀ i ∈ xᴸ, WeaklyImpartial i) ∧ ∀ j ∈ xᴿ, WeaklyImpartial j := by
+  rw [weaklyImpartial_def, Player.forall]
+
+theorem WeaklyImpartial.mk {x : IGame} (h₁ : -x ≈ x)
+    (h₂ : ∀ i ∈ xᴸ, WeaklyImpartial i) (h₃ : ∀ j ∈ xᴿ, WeaklyImpartial j) : WeaklyImpartial x :=
+  weaklyImpartial_def'.2 ⟨h₁, h₂, h₃⟩
 
 namespace Impartial
-variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
+variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
 
-theorem mk {x : IGame} (h₁ : -x ≈ x)
-    (h₂ : ∀ i ∈ xᴸ, Impartial i) (h₃ : ∀ j ∈ xᴿ, Impartial j) : Impartial x :=
-  impartial_def'.2 ⟨h₁, h₂, h₃⟩
-
-@[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
+@[simp] theorem neg_equiv : -x ≈ x := (weaklyImpartial_def.1 hx).1
 @[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
 
 omit hx in
@@ -70,54 +82,50 @@ theorem sub_mk (x : Game) : x - Game.mk y = x + Game.mk y := by
 theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
   rw [add_eq_zero_iff_neg_eq, neg_mk]
 
-theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
+theorem add_self_equiv (x : IGame) [WeaklyImpartial x] : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
 
 @[aesop unsafe 50% apply]
-protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
-    y ∈ x.moves p → Impartial y :=
-  (impartial_def.1 h).2 p y
+protected theorem _root_.IGame.WeaklyImpartial.of_mem_moves {p} {x y : IGame}
+    [h : WeaklyImpartial x] : y ∈ x.moves p → WeaklyImpartial y :=
+  (weaklyImpartial_def.1 h).2 p y
 
-protected instance zero : Impartial 0 := by
-  rw [impartial_def]
-  simp
+protected instance _root_.IGame.WeaklyImpartial.zero : WeaklyImpartial 0 := by
+  rw [weaklyImpartial_def]; simp
 
-protected instance star : Impartial ⋆ := by
-  rw [impartial_def]
-  simp [Impartial.zero]
-
-protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
-  apply mk
+protected instance _root_.IGame.WeaklyImpartial.neg (x : IGame) [WeaklyImpartial x] :
+    WeaklyImpartial (-x) := by
+  apply WeaklyImpartial.mk
   · simp
   all_goals
   · rw [moves_neg]
     intro y hy
-    try have := Impartial.of_mem_moves hy
-    try have := Impartial.of_mem_moves hy
+    have := WeaklyImpartial.of_mem_moves hy
     rw [← neg_neg y]
     exact .neg _
 termination_by x
 decreasing_by igame_wf
 
-protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
-  apply mk
+protected instance _root_.IGame.WeaklyImpartial.add (x y : IGame)
+    [WeaklyImpartial x] [WeaklyImpartial y] : WeaklyImpartial (x + y) := by
+  apply WeaklyImpartial.mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
   all_goals
   · rw [moves_add]
     rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
-    · try have := Impartial.of_mem_moves hz
-      try have := Impartial.of_mem_moves hz
+    · have := WeaklyImpartial.of_mem_moves hz
       exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
-protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
+protected instance _root_.IGame.WeaklyImpartial.sub (x y : IGame)
+    [WeaklyImpartial x] [WeaklyImpartial y] : WeaklyImpartial (x - y) :=
   .add x (-y)
 
 /-- The product instance is proven in `Game.Impartial.Grundy`. -/
 
-theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x := by
+theorem le_comm {x y} [WeaklyImpartial x] [WeaklyImpartial y] : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
 
 @[simp]
@@ -135,11 +143,11 @@ theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y := by
   · exact .inr h
 
 /-- This lemma doesn't require `x` to be impartial. -/
-theorem equiv_iff_add_equiv_zero {x y : IGame} [Impartial y] : x ≈ y ↔ x + y ≈ 0 := by
+theorem equiv_iff_add_equiv_zero {x y : IGame} [WeaklyImpartial y] : x ≈ y ↔ x + y ≈ 0 := by
   rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, Game.mk_add, Game.mk_zero, add_eq_zero_iff_eq_neg, neg_mk]
 
 /-- This lemma doesn't require `y` to be impartial. -/
-theorem equiv_iff_add_equiv_zero' {x y : IGame} [Impartial x] : x ≈ y ↔ x + y ≈ 0 := by
+theorem equiv_iff_add_equiv_zero' {x y : IGame} [WeaklyImpartial x] : x ≈ y ↔ x + y ≈ 0 := by
   rw [antisymmRel_comm, add_comm, equiv_iff_add_equiv_zero]
 
 variable {x y}
@@ -233,7 +241,7 @@ This version of the theorem is stated exclusively in terms of left moves; see
 theorem fuzzy_zero_of_forall_exists_moveLeft {y} (hy : y ∈ xᴸ)
     (H : ∀ z ∈ yᴸ, ∃ w ∈ xᴸ, z ≈ w) : x ‖ 0 := by
   apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
-  have := Impartial.of_mem_moves hy
+  have := WeaklyImpartial.of_mem_moves hy
   rw [equiv_zero] at hx
   obtain ⟨z, hz, hz'⟩ := fuzzy_zero.1 (hx y hy)
   obtain ⟨w, hw, hw'⟩ := H z hz
@@ -251,5 +259,51 @@ theorem fuzzy_zero_of_forall_exists_moveRight {y} (hy : y ∈ xᴿ)
   · simpa
   · simpa only [forall_moves_neg, exists_moves_neg, neg_equiv_neg_iff]
 
+
+
+
 end Impartial
+
+/-! ### Impartial games -/
+
+private def ImpartialAux (x : IGame) : Prop :=
+  xᴸ = xᴿ ∧ ∀ p, ∀ i ∈ x.moves p, ImpartialAux i
+termination_by x
+decreasing_by igame_wf
+
+/-- An impartial game is one that's **equal** to its negative, such that each left and right move is
+also impartial.
+
+For a weaker notion of impartiality, which only requires the game to be **equivalent** to its
+negative, see `Impartial`. -/
+@[mk_iff impartial_iff_aux]
+class Impartial (x : IGame) : Prop where of_ImpartialAux ::
+  out : ImpartialAux x
+
+theorem impartial_def {x : IGame} :
+    x.Impartial ↔ xᴸ = xᴿ ∧ ∀ p, ∀ i ∈ x.moves p, Impartial i := by
+  simp_rw [impartial_iff_aux]
+  rw [ImpartialAux]
+
+theorem impartial_def' {x : IGame} :
+    x.Impartial ↔ xᴸ = xᴿ ∧ (∀ i ∈ xᴸ, Impartial i) ∧ ∀ j ∈ xᴿ, Impartial j := by
+  rw [impartial_def, Player.forall]
+
+theorem Impartial.mk {x : IGame} (h₁ : xᴸ = xᴿ)
+    (h₂ : ∀ i ∈ xᴸ, Impartial i) (h₃ : ∀ j ∈ xᴿ, Impartial j) : Impartial x :=
+  impartial_def'.2 ⟨h₁, h₂, h₃⟩
+
+namespace Impartial
+
+
+protected instance zero : Impartial 0 := by
+  rw [impartial_def]
+  simp
+
+protected instance star : Impartial ⋆ := by
+  rw [impartial_def]
+  simp [Impartial.zero]
+
+end Impartial
+
 end IGame
