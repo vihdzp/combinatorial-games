@@ -58,13 +58,11 @@ protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves 
 
 @[simp]
 protected instance zero : Dicotic 0 := by
-  rw [dicotic_def]
-  simp
+  apply mk <;> simp
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
-  rw [dicotic_def]
-  refine ⟨by simp [moves_eq_empty_iff .left .right], ?_⟩
-  all_goals
+  apply mk
+  · simp [moves_eq_empty_iff .left .right]
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
     have := Dicotic.of_mem_moves hy
