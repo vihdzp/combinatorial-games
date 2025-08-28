@@ -113,11 +113,6 @@ protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
   Impartial.neg_eq _
 
-protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
-  rw [dicotic_def]
-  simpa using fun a ha ↦ .nim a
-termination_by o
-
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
   Impartial.fuzzy_of_mem_moves (mem_moves_nim_of_lt default h)
 

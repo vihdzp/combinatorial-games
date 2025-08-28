@@ -321,6 +321,12 @@ decreasing_by igame_wf
 
 protected instance dicotic (x : IGame) [Impartial x] : Dicotic x := by
   apply Dicotic.mk
+  · rw [moves_const _ left right]
+  · intro p y hy
+    have := Impartial.of_mem_moves hy
+    exact Impartial.dicotic y
+termination_by x
+decreasing_by igame_wf
 
 end Impartial
 end IGame
