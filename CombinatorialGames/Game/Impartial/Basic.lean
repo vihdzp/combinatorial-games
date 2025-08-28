@@ -20,7 +20,7 @@ universe u
 namespace IGame
 
 private def ImpartialAux (x : IGame) : Prop :=
-  -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, ImpartialAux i
+  -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, ImpartialAux y
 termination_by x
 decreasing_by igame_wf
 
@@ -37,14 +37,14 @@ class Impartial (x : IGame) : Prop where of_ImpartialAux ::
   out : ImpartialAux x
 
 theorem impartial_def {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ i ∈ x.moves p, Impartial i := by
+    x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y := by
   simp_rw [impartial_iff_aux]
   rw [ImpartialAux]
 
 namespace Impartial
 variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
 
-theorem mk {x : IGame} (h₁ : -x ≈ x) (h₂ : ∀ p, ∀ i ∈ x.moves p, Impartial i) : Impartial x :=
+theorem mk {x : IGame} (h₁ : -x ≈ x) (h₂ : ∀ p, ∀ y ∈ x.moves p, Impartial y) : Impartial x :=
   impartial_def.2 ⟨h₁, h₂⟩
 
 @[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
