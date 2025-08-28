@@ -7,6 +7,7 @@ import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Fintype.Defs
 import Mathlib.Data.Finset.Insert
 import Mathlib.Logic.Small.Defs
+import Mathlib.Tactic.DeriveFintype
 
 /-!
 # Type of players
@@ -26,7 +27,7 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Inhabited
+deriving DecidableEq, Fintype, Inhabited
 
 namespace Player
 
@@ -45,9 +46,12 @@ theorem cases_inj {α : Sort*} {l₁ r₁ l₂ r₂ : α} :
     cases l₁ r₁ = cases l₂ r₂ ↔ l₁ = l₂ ∧ r₁ = r₂ :=
   ⟨fun h ↦ ⟨congr($h left), congr($h right)⟩, fun ⟨hl, hr⟩ ↦ hl ▸ hr ▸ rfl⟩
 
-instance : Fintype Player where
-  elems := {left, right}
-  complete := by aesop
+theorem const_of_left_eq_right {α : Sort*} {f : Player → α}
+    (h : f .left = f .right) (x y : Player) : f x = f y :=
+  match x, y with
+  | left, left | right, right => rfl
+  | left, right => h
+  | right, left => h.symm
 
 @[simp]
 protected lemma «forall» {p : Player → Prop} :
