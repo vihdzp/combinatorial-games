@@ -59,11 +59,11 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
-  apply Numeric.mk <;> simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image]
-  · intro x hx y hy
-    dsimp at *
+  apply Numeric.mk
+  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]
+    intro x hx y hy
     simpa using hx.trans hy
-  all_goals infer_instance
+  · aesop (add simp [Numeric.dyadic])
 
 @[simp]
 theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic | q < x} :=
