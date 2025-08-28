@@ -3,7 +3,7 @@ Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Basic
+import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
 
 /-!
@@ -57,16 +57,58 @@ theorem WeaklyImpartial.mk {x : IGame} (h₁ : -x ≈ x)
     (h₂ : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y) : WeaklyImpartial x :=
   weaklyImpartial_def.2 ⟨h₁, h₂⟩
 
-namespace Impartial
-variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
+@[simp] theorem Impartial.neg_equiv (x : IGame) [hx : WeaklyImpartial x] : -x ≈ x :=
+  (weaklyImpartial_def.1 hx).1
+@[simp] theorem Impartial.equiv_neg (x : IGame) [hx : WeaklyImpartial x] : x ≈ -x :=
+  (Impartial.neg_equiv x).symm
+
+namespace WeaklyImpartial
 
 @[aesop unsafe 50% apply]
-protected theorem _root_.IGame.WeaklyImpartial.of_mem_moves {p} {x y : IGame}
-    [h : WeaklyImpartial x] : y ∈ x.moves p → WeaklyImpartial y :=
+protected theorem of_mem_moves {p} {x y : IGame} [h : WeaklyImpartial x] :
+    y ∈ x.moves p → WeaklyImpartial y :=
   (weaklyImpartial_def.1 h).2 p y
 
-@[simp] theorem neg_equiv : -x ≈ x := (weaklyImpartial_def.1 hx).1
-@[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
+protected instance zero : WeaklyImpartial 0 := by
+  rw [weaklyImpartial_def]; simp
+
+protected instance neg (x : IGame) [WeaklyImpartial x] :
+    WeaklyImpartial (-x) := by
+  apply WeaklyImpartial.mk
+  · simp
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
+    have := WeaklyImpartial.of_mem_moves hy
+    rw [← neg_neg y]
+    exact .neg _
+termination_by x
+decreasing_by igame_wf
+
+protected instance add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x + y) := by
+  apply WeaklyImpartial.mk
+  · rw [neg_add]
+    exact add_congr (Impartial.neg_equiv x) (Impartial.neg_equiv y)
+  · simp_rw [forall_moves_add]
+    intro p
+    constructor
+    all_goals
+      intro z hz
+      have := WeaklyImpartial.of_mem_moves hz
+      exact .add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x - y) :=
+  .add x (-y)
+
+/- The product instance is proven in `Game.Impartial.Grundy`. -/
+
+end WeaklyImpartial
+
+namespace Impartial
+variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
 
 omit hx in
 theorem sub_equiv : x - y ≈ x + y := add_congr_right (neg_equiv y)
@@ -85,42 +127,6 @@ theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
 
 theorem add_self_equiv (x : IGame) [WeaklyImpartial x] : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
-
-protected instance _root_.IGame.WeaklyImpartial.zero : WeaklyImpartial 0 := by
-  rw [weaklyImpartial_def]; simp
-
-protected instance _root_.IGame.WeaklyImpartial.neg (x : IGame) [WeaklyImpartial x] :
-    WeaklyImpartial (-x) := by
-  apply WeaklyImpartial.mk
-  · simp
-  · simp_rw [moves_neg, Set.mem_neg]
-    intro p y hy
-    have := WeaklyImpartial.of_mem_moves hy
-    rw [← neg_neg y]
-    exact .neg _
-termination_by x
-decreasing_by igame_wf
-
-protected instance _root_.IGame.WeaklyImpartial.add (x y : IGame)
-    [WeaklyImpartial x] [WeaklyImpartial y] : WeaklyImpartial (x + y) := by
-  apply WeaklyImpartial.mk
-  · rw [neg_add]
-    exact add_congr (neg_equiv x) (neg_equiv y)
-  · simp_rw [forall_moves_add]
-    intro p
-    constructor
-    all_goals
-      intro z hz
-      have := WeaklyImpartial.of_mem_moves hz
-      exact .add ..
-termination_by (x, y)
-decreasing_by igame_wf
-
-protected instance _root_.IGame.WeaklyImpartial.sub (x y : IGame)
-    [WeaklyImpartial x] [WeaklyImpartial y] : WeaklyImpartial (x - y) :=
-  .add x (-y)
-
-/-- The product instance is proven in `Game.Impartial.Grundy`. -/
 
 theorem le_comm {x y} [WeaklyImpartial x] [WeaklyImpartial y] : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
@@ -268,7 +274,7 @@ omit hx in
 theorem sub_eq : x - y = x + y := by
   rw [sub_eq_add_neg, neg_eq]
 
-instance _root_.IGame.Impartial.toWeaklyImpartial (x : IGame) [Impartial x] : WeaklyImpartial x := by
+instance toWeaklyImpartial (x : IGame) [Impartial x] : WeaklyImpartial x := by
   rw [weaklyImpartial_def]
   refine ⟨?_, fun p y hy ↦ (Impartial.of_mem_moves hy).toWeaklyImpartial⟩
   rw [neg_eq]
@@ -287,20 +293,34 @@ protected instance neg (x : IGame) [hx : Impartial x] : Impartial (-x) := by
   rwa [neg_eq]
 
 protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
-  apply Impartial.mk
+  refine Impartial.mk ?_ fun p ↦ ?_
   · simp_rw [moves_add, moves_const _ left right]
   · rw [forall_moves_add]
     constructor
     all_goals
       intro z hz
-      have := WeaklyImpartial.of_mem_moves hz
+      have := Impartial.of_mem_moves hz
       exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
-protected instance _root_.IGame.WeaklyImpartial.sub (x y : IGame)
-    [WeaklyImpartial x] [WeaklyImpartial y] : WeaklyImpartial (x - y) :=
+protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
+
+protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x * y) := by
+  refine Impartial.mk ?_ fun p ↦ ?_
+  · simp_rw [moves_mul, Player.neg_left, Player.neg_right, moves_const _ left right]
+  · simp_rw [forall_moves_mul, mulOption]
+    intro p' a ha b hb
+    have := Impartial.of_mem_moves ha
+    have := Impartial.of_mem_moves hb
+    have := Impartial.mul a y; have := Impartial.mul x b; have := Impartial.mul a b;
+    infer_instance
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance dicotic (x : IGame) [Impartial x] : Dicotic x := by
+  apply Dicotic.mk
 
 end Impartial
 end IGame
