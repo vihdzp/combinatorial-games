@@ -163,7 +163,7 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   · rw [← IGame.neg_lt_neg_iff]
     apply @leftMove_lt_rightMove x <;> simp_all
   · intro p y hy
-    simp only [moves_neg] at hy
+    rw [moves_neg] at hy
     have := Numeric.of_mem_moves hy
     simpa using Numeric.neg (-y)
 termination_by x
