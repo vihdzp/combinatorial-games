@@ -173,8 +173,8 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance wpow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
-  rw [numeric_def']
-  simp_rw [forall_leftMoves_wpow, forall_rightMoves_wpow]
+  rw [numeric_def]
+  simp_rw [Player.forall, forall_leftMoves_wpow, forall_rightMoves_wpow]
   refine ⟨⟨fun r hr y hy ↦ ?_, fun r hr y hy s hs z hz ↦ ?_⟩,
     ⟨.zero, fun r hr y hy ↦ ?_⟩, fun r hr y hy ↦ ?_⟩
   all_goals

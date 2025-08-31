@@ -61,20 +61,13 @@ theorem numeric_def {x : IGame} : Numeric x ↔
     (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, Numeric y) := by
   simp_rw [numeric_iff_aux]; rw [NumericAux]
 
-theorem numeric_def' {x : IGame} : Numeric x ↔
-    (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧
-    (∀ y ∈ xᴸ, Numeric y) ∧ (∀ y ∈ xᴿ, Numeric y) := by
-  rw [numeric_def]; aesop
-
 namespace Numeric
 variable {x y z : IGame}
 
-theorem mk (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z)
-    (h₂ : ∀ y ∈ xᴸ, Numeric y) (h₃ : ∀ y ∈ xᴿ, Numeric y) : Numeric x :=
-  numeric_def'.2 ⟨h₁, h₂, h₃⟩
+theorem mk (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) : Numeric x :=
+  numeric_def.2 ⟨h₁, h₂⟩
 
-theorem leftMove_lt_rightMove [h : Numeric x]
-    (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
+theorem leftMove_lt_rightMove [h : Numeric x] (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
   (numeric_def.1 h).1 y hy z hz
 
 protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves p) : Numeric y :=
@@ -145,8 +138,8 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
 /-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
 to the right options.-/
 theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z)
-    (h₂ : ∀ y ∈ xᴸ, Numeric y) (h₃ : ∀ y ∈ xᴿ, Numeric y) : Numeric x :=
-  mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₃ z hz) (h₂ y hy)).1 (h₁ y hy z hz)) h₂ h₃
+    (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) : Numeric x :=
+  mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₂ _ z hz) (h₂ _ y hy)).1 (h₁ y hy z hz)) h₂
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ xᴸ, z < y) ∧ (∀ z ∈ yᴿ, x < z) := by
@@ -166,12 +159,11 @@ theorem lt_rightMove [Numeric x] (h : y ∈ xᴿ) : x < y := by
   have := Numeric.of_mem_moves h; simpa using lf_rightMove h
 
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
-  refine mk (fun y hy z hz ↦ ?_) ?_ ?_
+  refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @leftMove_lt_rightMove x <;> simp_all
-  all_goals
-    intro y hy
-    simp only [moves_neg] at hy
+  · intro p y hy
+    rw [moves_neg] at hy
     have := Numeric.of_mem_moves hy
     simpa using Numeric.neg (-y)
 termination_by x
@@ -189,8 +181,7 @@ protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) :
       trans (x + y)
       · simpa using leftMove_lt ha
       · simpa using lt_rightMove hb
-  all_goals
-    rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩)
+  · rintro p _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩)
     all_goals
       have := Numeric.of_mem_moves hz
       exact Numeric.add ..
@@ -426,7 +417,7 @@ classes in Surreal have a canonical representative. (Note however that every sho
 a unique "canonical" form!) -/
 instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
   ofSets st H _ _ := by
-    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp) (by simp))
+    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp))
     rw [moves_ofSets, moves_ofSets]
     rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
     rw [← Surreal.mk_lt_mk, out_eq, out_eq]

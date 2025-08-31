@@ -262,7 +262,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihyx := IH1_swap_of_IH IH
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
-  refine .mk ?_ ?_ ?_
+  refine .mk ?_ ?_
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
@@ -271,7 +271,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
       simpa [mulOption_comm] using mulOption_lt ihyxn ihxyn hb ha hd hc
     · rw [← neg_neg y] at hd
       simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
-  all_goals
+  · intro p
     simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
