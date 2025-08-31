@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Short
-import CombinatorialGames.NatOrdinal
+import CombinatorialGames.NatOrdinal.Basic
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
