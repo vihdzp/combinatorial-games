@@ -144,6 +144,13 @@ instance : IsOrderedCancelAddMonoid NatOrdinal where
 theorem le_add_left : a ≤ b + a := by simp
 theorem le_add_right : a ≤ a + b := by simp
 
+@[simp]
+theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
+  refine ⟨fun h ↦ ?_, ?_⟩
+  · simp_rw [← NatOrdinal.le_zero]
+    exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
+  · simp +contextual
+
 private theorem succ_eq_add_one' (a : NatOrdinal) : succ a = a + 1 := by
   rw [add_def, ciSup_unique (s := fun _ : Iio 1 ↦ _), Iio_one_default_eq, add_zero,
     eq_comm, max_eq_right_iff, iSup_le_iff]
@@ -169,7 +176,10 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
-@[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
+instance : CharZero NatOrdinal where
+  cast_injective m n h := by
+    apply_fun val at h
+    simpa using h
 
 @[simp]
 theorem natCast_image_Iio' (n : ℕ) : Nat.cast '' Iio n = Iio (n : Ordinal) := by
@@ -188,11 +198,6 @@ theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∀ a < ↑n, P
 theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P a) ↔ ∃ a < n, P a := by
   change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
   simp [← natCast_image_Iio]
-
-instance : CharZero NatOrdinal where
-  cast_injective m n h := by
-    apply_fun val at h
-    simpa using h
 
 @[simp]
 theorem of_add_natCast (a : Ordinal) (n : ℕ) : of (a + n) = of a + n := by
@@ -216,6 +221,31 @@ theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
 
 theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
   oadd_le_add' ..
+
+theorem zero_or_add_one_or_isSuccLimit (a : NatOrdinal) :
+    a = 0 ∨ a ∈ range (· + 1) ∨ IsSuccLimit a := by
+  simpa using Order.isMin_or_mem_range_succ_or_isSuccLimit a
+
+theorem isSuccPrelimit_add : IsSuccPrelimit (a + b) ↔ IsSuccPrelimit a ∧ IsSuccPrelimit b := by
+  refine ⟨?_, fun ⟨ha, hb⟩ ↦ ?_⟩
+  · contrapose
+    simp_rw [not_and_or, not_isSuccPrelimit_iff']
+    rintro (⟨a, rfl⟩ | ⟨b, rfl⟩)
+    all_goals
+      use a + b
+      simp_rw [succ_eq_add_one]
+      abel_nf
+  · rw [isSuccPrelimit_iff_succ_lt]
+    intro c hc
+    rw [lt_add_iff] at hc
+    obtain (⟨d, hd, hc⟩ | ⟨d, hd, hc⟩) := hc
+    · rw [← add_lt_add_iff_right (a := d), succ_eq_add_one]
+      convert add_lt_add_of_le_of_lt hc (ha.add_one_lt hd) using 1 <;> abel_nf
+    · rw [← add_lt_add_iff_right (a := d), succ_eq_add_one]
+      convert add_lt_add_of_le_of_lt hc (hb.add_one_lt hd) using 1 <;> abel_nf
+
+theorem isSuccLimit_add (ha : IsSuccLimit a) (hb : IsSuccLimit b) : IsSuccLimit (a + b) := by
+  simp_all [isSuccLimit_iff, isSuccPrelimit_add]
 
 /-! ### Natural multiplication -/
 

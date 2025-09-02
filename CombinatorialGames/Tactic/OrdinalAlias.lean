@@ -111,6 +111,26 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
   change Order.succ (0 : $Source) = 1
   simp
 
+@[simp]
+theorem $(mkIdent `isSuccPrelimit_of) (a : $Source) :
+    Order.IsSuccPrelimit ($(mkOf Alias) a) ↔ Order.IsSuccPrelimit a :=
+  .rfl
+
+@[simp]
+theorem $(mkIdent `isSuccLimit_of) (a : $Source) :
+    Order.IsSuccLimit ($(mkOf Alias) a) ↔ Order.IsSuccLimit a :=
+  .rfl
+
+@[simp]
+theorem $(mkIdent `isSuccPrelimit_val) (a : $Alias) :
+    Order.IsSuccPrelimit ($(mkVal Alias) a) ↔ Order.IsSuccPrelimit a :=
+  .rfl
+
+@[simp]
+theorem $(mkIdent `isSuccLimit_val) (a : $Alias) :
+    Order.IsSuccLimit ($(mkVal Alias) a) ↔ Order.IsSuccLimit a :=
+  .rfl
+
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
