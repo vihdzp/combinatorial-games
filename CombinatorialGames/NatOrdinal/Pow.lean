@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.NatOrdinal.Basic
 import Mathlib.Order.IsNormal
+import Mathlib.SetTheory.Ordinal.Exponential
 
 /-!
 # Natural exponentiation
@@ -30,7 +31,30 @@ with the same base. This allows us to conveniently state a full characterization
 arithmetic.
 -/
 
-open Order Set
+open Order Ordinal Set
+
+/-! ### For Mathlib -/
+
+/-! These lemmas exist in Mathlib already, we just need to wait for a new release. -/
+
+protected theorem Order.IsNormal.ext {f g : NatOrdinal → NatOrdinal}
+    (hf : IsNormal f) (hg : IsNormal g) :
+    f = g ↔ f ⊥ = g ⊥ ∧ ∀ a, f a = g a → f (succ a) = g (succ a) := by
+  constructor
+  · simp_all
+  rintro ⟨H₁, H₂⟩
+  ext a
+  induction a using SuccOrder.limitRecOn with
+  | isMin a ha => rw [ha.eq_bot, H₁]
+  | succ a ha IH => exact H₂ a IH
+  | isSuccLimit a ha IH =>
+    apply (hf.isLUB_image_Iio_of_isSuccLimit ha).unique
+    convert hg.isLUB_image_Iio_of_isSuccLimit ha using 1
+    aesop
+
+theorem _root_.Order.IsSuccLimit.nonempty_Iio {x : NatOrdinal} (H : IsSuccLimit x) :
+    Nonempty (Iio x) :=
+  ⟨⟨⊥, H.bot_lt⟩⟩
 
 namespace NatOrdinal
 
@@ -89,9 +113,8 @@ theorem lt_npow_iff (hx : x ≠ 0) (h : IsSuccLimit y) : z < x ^ y ↔ ∃ y' < 
   rw [npow_of_isSuccLimit hx h, lt_ciSup_iff' (bddAbove_of_small _)]
   simp
 
-/-- TOOO: update Mathlib -/
-private theorem _root_.Order.IsSuccLimit.nonempty_Iio (H : IsSuccLimit x) : Nonempty (Iio x) :=
-  ⟨⟨⊥, H.bot_lt⟩⟩
+theorem npow_le_iff (hx : x ≠ 0) (h : IsSuccLimit y) : x ^ y ≤ z ↔ ∀ y' < y, x ^ y' ≤ z := by
+  simpa using (lt_npow_iff hx h).not
 
 @[simp]
 theorem one_npow (x : NatOrdinal) : 1 ^ x = 1 := by
@@ -159,23 +182,20 @@ theorem npow_add (x y z : NatOrdinal) : x ^ (y + z) = x ^ y * x ^ z := by
       simp_rw [← add_assoc, npow_add_one, npow_add x y z, mul_assoc]
     have H := isSuccLimit_add hy hz
     have := H.nonempty_Iio
-    rw [npow_of_isSuccLimit hx₀ H]
     apply le_antisymm
-    · apply ciSup_le
-      rintro ⟨a, ha⟩
-      rw [mem_Iio, lt_add_iff] at ha
-      obtain ⟨b, hb, ha⟩ | ⟨b, hb, ha⟩ := ha
+    · simp_rw [npow_le_iff hx₀ H, lt_add_iff]
+      rintro a (⟨b, hb, ha⟩ | ⟨b, hb, ha⟩)
       all_goals
         apply (npow_le_npow_right hx₀ ha).trans
         rw [npow_add]
         have := npow_le_npow_right hx₀ hb.le
-        aesop (add simp [pos_iff_ne_zero])
+        aesop
     · simp_rw [mul_le_iff, lt_npow_iff hx₀ hy, lt_npow_iff hx₀ hz]
       rintro a ⟨b, hb, hab⟩ c ⟨d, hd, hcd⟩
       calc
-        _ < x ^ max (b + z) (y + d) + x ^ max (b + z) (y + d) := by
-          apply add_lt_add_of_lt_of_le
-          · apply (mul_lt_mul_of_pos_right hab (npow_pos hx₀ _)).trans_le
+        _ ≤ x ^ max (b + z) (y + d) + x ^ max (b + z) (y + d) := by
+          apply add_le_add
+          · apply (mul_right_mono hab.le).trans
             simp_rw [← npow_add x b z]
             exact npow_le_npow_right hx₀ (le_max_left ..)
           · apply (mul_left_mono hcd.le).trans
@@ -185,11 +205,14 @@ theorem npow_add (x y z : NatOrdinal) : x ^ (y + z) = x ^ y * x ^ z := by
           rw [← mul_two, npow_add_one]
           apply mul_left_mono
           rwa [← one_add_one_eq_two, add_one_le_iff]
-        _ ≤ _ := by
-          apply le_add_right.trans'
-          refine le_ciSup (f := fun a : Iio (y + z) ↦ x ^ a.1) (bddAbove_of_small _) ⟨_, ?_⟩
-          apply H.add_one_lt
+        _ < _ := by
+          apply (npow_lt_npow_right hx (H.add_one_lt _)).trans_le le_add_right
           simp_all
 termination_by (y, z)
+
+theorem of_omega_opow_val (x : NatOrdinal) : of (ω ^ x.val) = of ω ^ x := by
+  apply congrFun ((IsNormal.ext _ _).2 _) x
+  · convert isNormal_opow one_lt_omega0
+  sorry
 
 end NatOrdinal
