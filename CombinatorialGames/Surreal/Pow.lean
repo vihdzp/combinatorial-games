@@ -144,7 +144,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
   · obtain (⟨z, hz, hxz⟩ | ⟨z, hz, hzy⟩) := lf_iff_exists_le.1 hxy.not_ge
     · have := Numeric.of_mem_moves hz
       have := Numeric.of_mem_moves (wpow_mem_leftMoves_wpow hz)
-      apply ((Numeric.mul_le_mul_left (mod_cast hr)).2 (wpow_strictMono_aux.2 hxz)).trans_lt
+      apply ((Numeric.mul_le_mul_iff_right (mod_cast hr)).2 (wpow_strictMono_aux.2 hxz)).trans_lt
       obtain ⟨n, hn⟩ := exists_nat_gt r
       exact ((Numeric.mul_lt_mul_right (wpow_pos' z)).2 (mod_cast hn)).trans
         (Numeric.leftMove_lt (natCast_mul_wpow_mem_leftMoves_wpow n hz))
