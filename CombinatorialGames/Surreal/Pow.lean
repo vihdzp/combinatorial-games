@@ -144,7 +144,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
   · obtain (⟨z, hz, hxz⟩ | ⟨z, hz, hzy⟩) := lf_iff_exists_le.1 hxy.not_ge
     · have := Numeric.of_mem_moves hz
       have := Numeric.of_mem_moves (wpow_mem_leftMoves_wpow hz)
-      apply ((Numeric.mul_le_mul_left (mod_cast hr)).2 (wpow_strictMono_aux.2 hxz)).trans_lt
+      apply ((Numeric.mul_le_mul_iff_right (mod_cast hr)).2 (wpow_strictMono_aux.2 hxz)).trans_lt
       obtain ⟨n, hn⟩ := exists_nat_gt r
       exact ((Numeric.mul_lt_mul_right (wpow_pos' z)).2 (mod_cast hn)).trans
         (Numeric.leftMove_lt (natCast_mul_wpow_mem_leftMoves_wpow n hz))
@@ -173,8 +173,8 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance wpow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
-  rw [numeric_def']
-  simp_rw [forall_leftMoves_wpow, forall_rightMoves_wpow]
+  rw [numeric_def]
+  simp_rw [Player.forall, forall_leftMoves_wpow, forall_rightMoves_wpow]
   refine ⟨⟨fun r hr y hy ↦ ?_, fun r hr y hy s hs z hz ↦ ?_⟩,
     ⟨.zero, fun r hr y hy ↦ ?_⟩, fun r hr y hy ↦ ?_⟩
   all_goals
