@@ -33,29 +33,6 @@ arithmetic.
 
 open Order Ordinal Set
 
-/-! ### For Mathlib -/
-
-/-! These lemmas exist in Mathlib already, we just need to wait for a new release. -/
-
-protected theorem Order.IsNormal.ext {f g : NatOrdinal → NatOrdinal}
-    (hf : IsNormal f) (hg : IsNormal g) :
-    f = g ↔ f ⊥ = g ⊥ ∧ ∀ a, f a = g a → f (succ a) = g (succ a) := by
-  constructor
-  · simp_all
-  rintro ⟨H₁, H₂⟩
-  ext a
-  induction a using SuccOrder.limitRecOn with
-  | isMin a ha => rw [ha.eq_bot, H₁]
-  | succ a ha IH => exact H₂ a IH
-  | isSuccLimit a ha IH =>
-    apply (hf.isLUB_image_Iio_of_isSuccLimit ha).unique
-    convert hg.isLUB_image_Iio_of_isSuccLimit ha using 1
-    aesop
-
-theorem _root_.Order.IsSuccLimit.nonempty_Iio {x : NatOrdinal} (H : IsSuccLimit x) :
-    Nonempty (Iio x) :=
-  ⟨⟨⊥, H.bot_lt⟩⟩
-
 namespace NatOrdinal
 
 variable {x y z : NatOrdinal}
@@ -121,7 +98,7 @@ theorem one_npow (x : NatOrdinal) : 1 ^ x = 1 := by
   induction x using SuccOrder.limitRecOn with
   | isMin _ _ | succ _ _ _ => simp_all
   | isSuccLimit x hx IH =>
-    have := hx.nonempty_Iio
+    have := hx.nonempty_Iio.to_subtype
     rw [npow_of_isSuccLimit one_ne_zero hx, iSup_congr fun z ↦ IH _ z.2, ciSup_const]
 
 theorem npow_le_npow_left (h : x ≤ y) (z : NatOrdinal) : x ^ z ≤ y ^ z := by
@@ -181,7 +158,6 @@ theorem npow_add (x y z : NatOrdinal) : x ^ (y + z) = x ^ y * x ^ z := by
     · have := lt_add_one z
       simp_rw [← add_assoc, npow_add_one, npow_add x y z, mul_assoc]
     have H := isSuccLimit_add hy hz
-    have := H.nonempty_Iio
     apply le_antisymm
     · simp_rw [npow_le_iff hx₀ H, lt_add_iff]
       rintro a (⟨b, hb, ha⟩ | ⟨b, hb, ha⟩)
@@ -210,9 +186,47 @@ theorem npow_add (x y z : NatOrdinal) : x ^ (y + z) = x ^ y * x ^ z := by
           simp_all
 termination_by (y, z)
 
-theorem of_omega_opow_val (x : NatOrdinal) : of (ω ^ x.val) = of ω ^ x := by
-  apply congrFun ((IsNormal.ext _ _).2 _) x
-  · convert isNormal_opow one_lt_omega0
-  sorry
+attribute [-simp] Ordinal.add_one_eq_succ
+
+theorem of_omega0_opow_val (x : NatOrdinal) : of (ω ^ x.val) = of ω ^ x := by
+  apply congrFun ((IsNormal.ext ?_ ?_).2 ⟨?_, fun x IH ↦ ?_⟩) x
+  · exact isNormal_opow one_lt_omega0
+  · exact isNormal_npow one_lt_omega0
+  · simp
+  · rw [succ_eq_add_one, npow_add_one]
+    refine eq_of_forall_lt_iff fun y ↦ ⟨?_, ?_⟩ <;> intro hy
+    · induction y with | mk y
+      rw [of.lt_iff_lt, val_add_one, ← succ_eq_add_one, lt_omega0_opow_succ] at hy
+      obtain ⟨n, hn⟩ := hy
+      rw [of_lt_iff]
+      apply hn.trans_le ((omul_le_mul' ..).trans _)
+      rw [val.le_iff_le, of_natCast, IH]
+      apply mul_le_mul_left'
+      rw [← val_le_iff, val_natCast]
+      exact (nat_lt_omega0 n).le
+    · obtain rfl | hx := eq_or_ne x 0
+      · simp_all
+      rw [lt_mul_iff] at hy
+      obtain ⟨a, ha, b, hb, h⟩ := hy
+      induction a with | mk a
+      induction b with | mk b
+      rw [val_add_one, opow_add, opow_one]
+      rw [of.lt_iff_lt, lt_omega0] at hb
+      rw [← IH, of.lt_iff_lt, lt_omega0_opow] at ha
+      · obtain ⟨c, hc, m, hm⟩ := ha
+        obtain ⟨n, rfl⟩ := hb
+        apply (le_add_right.trans h).trans_lt
+        sorry
+      · assumption
+
+theorem of_omega0_opow (x : Ordinal) : of (ω ^ x) = of ω ^ of x :=
+  of_omega0_opow_val _
+
+theorem of_omega0_opow_add_omega0_opow {x y : Ordinal} (h : x ≤ y) :
+    of (ω ^ y + ω ^ x) = of ω ^ of y + of ω ^ of x := by
+  conv_rhs => rw [← Ordinal.add_sub_cancel_of_le h]
+  simp_rw [← of_omega0_opow, opow_add]
+
+
 
 end NatOrdinal
