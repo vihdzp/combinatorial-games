@@ -551,14 +551,14 @@ protected theorem mul_right_cancel {x y z : IGame} [Numeric x] [Numeric y] [Nume
   exact mul_right_cancel₀ hx h
 
 @[simp]
-protected theorem mul_le_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
-    (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
-  mul_le_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+protected theorem mul_le_mul_iff_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
+  mul_le_mul_iff_left₀ (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
 @[simp]
-protected theorem mul_le_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
-    (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
-  mul_le_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+protected theorem mul_le_mul_iff_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
+  mul_le_mul_iff_right₀ (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
 @[simp]
 protected theorem mul_lt_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]

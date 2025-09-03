@@ -72,7 +72,7 @@ theorem rel_univ_of_rel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {
   simp
 
 theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
-  rw [WellFounded.wellFounded_iff_no_descending_seq]
+  rw [wellFounded_iff_isEmpty_descending_chain]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
   choose g hg using id hf
   obtain ⟨m, n, h, h'⟩ := wellQuasiOrdered_le g
