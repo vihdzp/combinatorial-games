@@ -31,6 +31,29 @@ open Order Polynomial
 -- TODO: should some of these be global?
 attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
 
+-- TODO: after #29084, we can remove the commutativity hypothesis from `List.le_sum_of_mem`, and
+-- this lemma will no longer be needed.
+theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
+    [AddLeftMono M] [AddRightMono M]
+    (hm : (⊥ : M) = 0) {xs : List M} {x : M} (h₁ : x ∈ xs) : x ≤ xs.sum := by
+  induction xs with
+  | nil => simp at h₁
+  | cons y ys ih =>
+    simp only [List.mem_cons] at h₁
+    rcases h₁ with (rfl | h₁)
+    · rw [List.sum_cons]
+      conv_lhs => rw [← add_zero x]
+      apply add_left_mono
+      rw [← hm]
+      exact bot_le
+    · specialize ih h₁
+      simp only [List.sum_cons]
+      apply ih.trans
+      conv_lhs => rw [← zero_add ys.sum]
+      apply add_right_mono
+      rw [← hm]
+      exact bot_le
+
 namespace Polynomial
 
 variable {R : Type*} [Semiring R] {p : R[X]}
@@ -63,6 +86,15 @@ theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
     have hpn : p.eraseLead.degree < .some n := hn ▸ degree_eraseLead_lt hp₀
     apply add _ _ _ ((degree_eraseLead_lt hp₀).trans_eq _) (IH _ hpn _ rfl)
     rw [hn, natDegree_eq_of_degree_eq_some hn]
+
+theorem eq_add_C_mul_X_pow_of_degree_le {p : R[X]} {n : ℕ} (h : p.degree ≤ n) :
+    ∃ (a : R) (q : R[X]), p = q + C a * X ^ n ∧ q.degree < n := by
+  obtain hp | hp := h.lt_or_eq
+  · use 0, p
+    simpa
+  · refine ⟨p.leadingCoeff, p.eraseLead, ?_, hp ▸ degree_eraseLead_lt ?_⟩
+    · rw [← natDegree_eq_of_degree_eq_some hp, eraseLead_add_C_mul_X_pow]
+    · aesop
 
 end Polynomial
 
@@ -541,8 +573,8 @@ theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
   | zero => simp_all
   | succ n IH =>
     have hn' : p.degree ≤ n := le_of_lt_succ hn
-    obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hn'
-    rw [oeval_C_mul_X_pow_add hq, val_of, pow_succ]
+    obtain ⟨a, q, rfl, hq⟩ := eq_add_C_mul_X_pow_of_degree_le hn'
+    rw [add_comm, oeval_C_mul_X_pow_add hq, val_of, pow_succ]
     refine Ordinal.mul_add_lt (IH (fun k ↦ ?_) hq) ?_
     · obtain h | h := lt_or_ge k n
       · convert hpk k using 1
