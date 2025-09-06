@@ -51,6 +51,19 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
 theorem _root_.CharTwo.add_cancel_left [CharP R 2] (a b : R) : a + (a + b) = b := by
   rw [← add_assoc, CharTwo.add_self_eq_zero, zero_add]
 
+theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
+    (add : ∀ a n q, degree q < .some n → motive q → motive (C a * X ^ n + q)) (p : R[X]) :
+    motive p := by
+  induction hn : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
+  cases n with
+  | bot => simp_all
+  | coe n =>
+    rw [← eraseLead_add_C_mul_X_pow p, add_comm]
+    have hp₀ : p ≠ 0 := by aesop
+    have hpn : p.eraseLead.degree < .some n := hn ▸ degree_eraseLead_lt hp₀
+    apply add _ _ _ ((degree_eraseLead_lt hp₀).trans_eq _) (IH _ hpn _ rfl)
+    rw [hn, natDegree_eq_of_degree_eq_some hn]
+
 end Polynomial
 
 theorem WithBot.coe_add_one (n : ℕ) : WithBot.some (n + 1) = WithBot.some n + 1 :=
