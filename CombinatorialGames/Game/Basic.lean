@@ -21,8 +21,6 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
-noncomputable section
-
 open IGame Set Pointwise
 
 /-- Games up to equivalence.
@@ -51,7 +49,7 @@ theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : mo
   Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Game) : IGame := Quotient.out x
+noncomputable def out (x : Game) : IGame := Quotient.out x
 @[simp] theorem out_eq (x : Game) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) : (mk x).out ≈ x := Quotient.mk_out (s := AntisymmRel.setoid ..) x
@@ -98,7 +96,7 @@ instance : AddCommGroupWithOne Game where
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
 
-instance : RatCast Game where
+noncomputable instance : RatCast Game where
   ratCast q := mk q
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
@@ -320,4 +318,3 @@ theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
 end IGame
-end

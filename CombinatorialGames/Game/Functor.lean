@@ -72,7 +72,7 @@ theorem map_def {α β} (f : α → β) (s : GameFunctor α) :
     f <$> s = ⟨(f '' s.1 ·), fun _ => inferInstance⟩ :=
   rfl
 
-noncomputable instance : QPF GameFunctor where
+instance : QPF GameFunctor where
   P := ⟨Player → Type u, fun x ↦ Σ p, PLift (x p)⟩
   abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ inferInstance⟩
   repr x := ⟨fun p ↦ Shrink (x.1 p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.1).1)⟩

@@ -16,7 +16,6 @@ is colloquially known as `star`, so we use the name `star'` for the second. We p
 `star ≈ star'` and `star * star ≈ star`, but `star' * star ≉ star`.
 -/
 
-noncomputable section
 open IGame
 
 namespace IGame

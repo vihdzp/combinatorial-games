@@ -27,8 +27,6 @@ directly most of the time.
 
 universe u v
 
-noncomputable section
-
 open IGame Set
 
 variable {α : Type v}

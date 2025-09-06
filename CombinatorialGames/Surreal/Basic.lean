@@ -38,8 +38,6 @@ form a linear ordered commutative ring.
 
 universe u
 
-noncomputable section
-
 /-! ### Numeric games -/
 
 namespace IGame
@@ -295,7 +293,7 @@ theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) 
     motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Surreal) : IGame := (Quotient.out x).1
+noncomputable def out (x : Surreal) : IGame := (Quotient.out x).1
 @[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
@@ -318,7 +316,7 @@ instance : Neg Surreal where
 instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))
 
-instance : LinearOrder Surreal where
+noncomputable instance : LinearOrder Surreal where
   le_total := by rintro ⟨x⟩ ⟨y⟩; exact Numeric.le_total x y
   toDecidableLE := Classical.decRel _
 
@@ -475,4 +473,3 @@ instance : DenselyOrdered Surreal where
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
 end Surreal
-end
