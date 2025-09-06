@@ -10,6 +10,7 @@ import Mathlib.Algebra.Polynomial.EraseLead
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.Tactic.ComputeDegree
 
 /-!
 # Nimber polynomials
@@ -18,7 +19,7 @@ This file contains multiple auxiliary results and definitions for working with n
 
 - `IsField.embed`: embeds a polynomial `p : Nimber[X]` into the subfield `Iio x`, for `IsField x`.
 - `Lex.instLinearOrderPolynomial`: a linear order instance on nimber polynomials, defined as the
-  lexicographic ordering.
+  colexicographic ordering.
 -/
 
 universe u
@@ -162,7 +163,9 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nim
 
 namespace Lex
 
-/-- The lexicographic ordering on nimber polynomials. -/
+/-- The colexicographic ordering on nimber polynomials.
+
+TODO: Use `Colex` to define the ordering instead of `Lex` once it's available. -/
 noncomputable instance : LinearOrder (Nimber[X]) where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
@@ -422,5 +425,259 @@ theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) : succ
   aesop
 
 end Lex
+
+/-- Evaluate a nimber polynomial using ordinal arithmetic.
+
+TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this.  -/
+def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
+  ∗((List.range (p.natDegree + 1)).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum
+
+@[simp]
+theorem oeval_zero (x : Nimber) : oeval x 0 = 0 := by
+  simp [oeval]
+
+theorem oeval_eq_of_natDegree_le {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 ≤ n) (x : Nimber) :
+    oeval x p = ∗((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
+  induction n with
+  | zero => simp at h
+  | succ n IH =>
+    obtain h | h := h.eq_or_lt
+    · rw [oeval, h]
+    · rw [add_lt_add_iff_right] at h
+      rw [List.range_succ]
+      simpa [p.coeff_eq_zero_of_natDegree_lt h] using IH h
+
+theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a : Nimber) :
+    oeval x (C a * X ^ n + p) = ∗(x.val ^ n * a.val + val (oeval x p)) := by
+  obtain rfl | ha := eq_or_ne a 0; simp [oeval]
+  · have hp' : p.natDegree ≤ n := p.natDegree_le_of_degree_le hp.le
+    have hp'' : (C a * X ^ n + p).natDegree ≤ n := by compute_degree!
+    rw [oeval_eq_of_natDegree_le (add_right_mono hp'),
+      oeval_eq_of_natDegree_le (add_right_mono hp'')]
+    cases n with
+    | zero => simp_all
+    | succ n =>
+      suffices (List.range n).map
+        (fun k ↦ val x ^ k * val ((if k = n + 1 then a else 0) + p.coeff k)) =
+      (List.range n).map (fun k ↦ val x ^ k * val (p.coeff k)) by
+        simp [List.range_succ, p.coeff_eq_zero_of_degree_lt hp, this]
+      apply List.map_congr_left
+      aesop
+
+theorem oeval_eq (x : Nimber) (p : Nimber[X]) :
+    oeval x p = ∗(x.val ^ p.natDegree * p.leadingCoeff.val + val (oeval x p.eraseLead)) := by
+  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  conv_lhs => rw [← eraseLead_add_C_mul_X_pow p, add_comm]
+  exact oeval_C_mul_X_pow_add ((degree_eraseLead_lt hp₀).trans_eq (degree_eq_natDegree hp₀)) ..
+
+@[simp]
+theorem oeval_X_pow_mul (x : Nimber) (n : ℕ) (p : Nimber[X]) :
+    oeval x (X ^ n * p) = ∗(x.val ^ n * (oeval x p).val) := by
+  induction p using monomial_induction with
+  | zero => simp
+  | add a m p hp IH =>
+    rw [mul_add, mul_comm, mul_assoc, ← pow_add, oeval_C_mul_X_pow_add, oeval_C_mul_X_pow_add hp, IH]
+    · simp [mul_add, ← mul_assoc, ← pow_add, add_comm]
+    · rwa [degree_mul, degree_X_pow, add_comm, WithBot.natCast_eq_coe, WithBot.natCast_eq_coe,
+        WithBot.coe_add, WithBot.add_lt_add_iff_right WithBot.coe_ne_bot]
+
+@[simp]
+theorem oeval_mul_X_pow (x : Nimber) (n : ℕ) (p : Nimber[X]) :
+    oeval x (p * X ^ n) = ∗(x.val ^ n * (oeval x p).val) := by
+  rw [mul_comm, oeval_X_pow_mul]
+
+theorem oeval_C_mul_X_pow (x a : Nimber) (n : ℕ) :
+    oeval x (C a * X ^ n) = ∗(x.val ^ n * a.val) := by
+  simpa using oeval_C_mul_X_pow_add (p := 0) (WithBot.bot_lt_coe n) x a
+
+@[simp]
+theorem oeval_X_pow (x : Nimber) (n : ℕ) : oeval x (X ^ n) = ∗(x.val ^ n) := by
+  simpa using oeval_C_mul_X_pow x 1 n
+
+@[simp]
+theorem oeval_X (x : Nimber) : oeval x X = x := by
+  simpa using oeval_X_pow x 1
+
+@[simp]
+theorem oeval_C (x a : Nimber) : oeval x (C a) = a := by
+  simpa using oeval_C_mul_X_pow x a 0
+
+@[simp]
+theorem oeval_one (x : Nimber) : oeval x 1 = 1 := by
+  simpa using oeval_C x 1
+
+theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
+    ∗(x.val ^ k * (p.coeff k).val) ≤ oeval x p := by
+  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain hk | hk := le_or_gt k p.natDegree
+  · rw [oeval, of.le_iff_le]
+    apply List.le_sum_of_mem' rfl
+    aesop
+  · rw [p.coeff_eq_zero_of_natDegree_lt hk]
+    simp
+
+theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
+    ∗(x.val ^ p.natDegree) ≤ oeval x p := by
+  apply (Ordinal.le_mul_left ..).trans (mul_coeff_le_oeval x p p.natDegree)
+  simpa [Ordinal.pos_iff_ne_zero]
+
+theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
+    (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
+  obtain rfl | hx₀ := x.eq_zero_or_pos; simp at hpk
+  induction n generalizing p with
+  | zero => simp_all
+  | succ n IH =>
+    have hn' : p.degree ≤ n := le_of_lt_succ hn
+    obtain ⟨a, q, rfl, hq⟩ := eq_C_mul_X_pow_add_of_degree_le hn'
+    rw [oeval_C_mul_X_pow_add hq, val_of, pow_succ]
+    refine Ordinal.mul_add_lt (IH (fun k ↦ ?_) hq) ?_
+    · obtain h | h := lt_or_ge k n
+      · convert hpk k using 1
+        aesop
+      · rwa [q.coeff_eq_zero_of_degree_lt (hq.trans_le (mod_cast h))]
+    · simpa [q.coeff_eq_zero_of_degree_lt hq] using hpk n
+
+theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
+    (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
+  mp H := by
+    obtain rfl | hp₀ := eq_or_ne p 0; simp
+    obtain hx₁ | hx₁ := le_or_gt x 1; cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
+    have H' := (opow_natDegree_le_oeval x hp₀).trans_lt H
+    rw [of.lt_iff_lt, ← Ordinal.opow_natCast, ← Ordinal.opow_natCast,
+      Ordinal.opow_lt_opow_iff_right (a := x.val) hx₁] at H'
+    rw [← natDegree_lt_iff_degree_lt hp₀]
+    simpa using H'
+  mpr := oeval_lt_opow hpk
+
+theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
+  rw [Nimber.Lex.lt_def] at h
+  obtain ⟨n, hnl, hnr⟩ := h
+  have hx : 0 < x := (zero_le (p.coeff 0)).trans_lt (hpk 0)
+  induction hk : p.natDegree - n using Nat.caseStrongRecOn generalizing p q with
+  | zero =>
+    rw [Nat.sub_eq_zero_iff_le] at hk
+    apply (mul_coeff_le_oeval x q n).trans_lt'
+    have hpn : (erase n p).degree < n := by
+      apply lt_of_le_of_ne ((p.degree_erase_le n).trans
+        (degree_le_natDegree.trans (WithBot.coe_mono hk)))
+      intro hdd
+      exact coeff_ne_zero_of_eq_degree hdd (erase_same p n)
+    rw [← p.monomial_add_erase n, ← C_mul_X_pow_eq_monomial]
+    rw [oeval_C_mul_X_pow_add hpn, of.lt_iff_lt]
+    have hpe (k : Nat) : (p.erase n).coeff k < x := by
+      rw [p.coeff_erase]
+      split <;> simp [hpk, hx]
+    apply (add_lt_add_left (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
+    rw [← mul_add_one]
+    apply mul_le_mul_left'
+    rwa [add_one_le_iff, val.lt_iff_lt]
+  | ind k ih =>
+    have hp0 : p ≠ 0 := by rintro rfl; simp at hk
+    have hq0 : q ≠ 0 := by rintro rfl; simp at hnr
+    have hqd : n ≤ q.natDegree := by
+      by_contra! hn
+      apply coeff_eq_zero_of_natDegree_lt at hn
+      simp [hn] at hnr
+    have hpqd : p.natDegree ≤ q.natDegree := by
+      rw [Polynomial.natDegree_le_iff_coeff_eq_zero]
+      intro N hN
+      exact (hnl N (hqd.trans_lt hN)).trans (coeff_eq_zero_of_natDegree_lt hN)
+    replace hqd : n < q.natDegree := by
+      apply lt_of_le_of_ne hqd
+      rintro rfl
+      simp [hpqd] at hk
+    replace hpqd : p.natDegree = q.natDegree := by
+      apply Polynomial.natDegree_eq_of_le_of_coeff_ne_zero hpqd
+      rw [hnl _ hqd]
+      simp [hq0]
+    rw [← p.eraseLead_add_C_mul_X_pow, add_comm p.eraseLead,
+      ← q.eraseLead_add_C_mul_X_pow, add_comm q.eraseLead]
+    rw [oeval_C_mul_X_pow_add ((degree_eraseLead_lt hp0).trans_le degree_le_natDegree),
+      oeval_C_mul_X_pow_add ((degree_eraseLead_lt hq0).trans_le degree_le_natDegree)]
+    rw [hpqd, ← coeff_natDegree, hpqd, (hnl _ hqd), coeff_natDegree, of.lt_iff_lt,
+      add_lt_add_iff_left, val.lt_iff_lt]
+    by_cases hpe : p.eraseLead = 0
+    · rw [hpe, oeval_zero]
+      rw [← eraseLead_coeff_of_ne n (hqd.trans_eq hpqd.symm).ne, hpe, coeff_zero,
+        ← eraseLead_coeff_of_ne n hqd.ne] at hnr
+      have hqe : q.eraseLead ≠ 0 := fun h => by simp [h] at hnr
+      apply (opow_natDegree_le_oeval x hqe).trans_lt'
+      rw [← val_lt_iff, val_zero, ← Ordinal.opow_natCast]
+      apply Ordinal.opow_pos
+      rwa [← of_lt_iff, of_zero]
+    apply ih (p.eraseLead.natDegree - n)
+    · rw [Nat.sub_le_iff_le_add, ← Nat.lt_succ_iff,
+        ← Nat.succ_add, ← hk, Nat.sub_add_cancel (hqd.le.trans_eq hpqd.symm)]
+      exact p.eraseLead_natDegree_lt_or_eraseLead_eq_zero.resolve_right hpe
+    · intro u
+      rw [eraseLead_coeff]
+      split <;> simp [hx, hpk]
+    · intro u
+      rw [eraseLead_coeff]
+      split <;> simp [hx, hqk]
+    · intro u hu
+      rw [eraseLead_coeff, eraseLead_coeff, hpqd]
+      split
+      · rfl
+      · exact hnl u hu
+    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, if_neg hqd.ne, if_neg hqd.ne]
+    · rfl
+
+theorem oeval_le_oeval {x : Nimber} {p q : Nimber[X]} (h : p ≤ q)
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q := by
+  obtain rfl | h := h.eq_or_lt
+  · rfl
+  · exact (oeval_lt_oeval h hpk hqk).le
+
+theorem oeval_lt_oeval_iff {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q ↔ p < q where
+  mpr h := oeval_lt_oeval h hpk hqk
+  mp h := by
+    by_contra! h'
+    exact h.not_ge (oeval_le_oeval h' hqk hpk)
+
+theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q ↔ p ≤ q :=
+  le_iff_le_iff_lt_iff_lt.2 (oeval_lt_oeval_iff hqk hpk)
+
+/-- A version of `eq_oeval_of_lt_opow` stated in terms of `Ordinal`. -/
+theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
+  induction n generalizing y with
+  | zero => use 0; simp_all [Ordinal.pos_iff_ne_zero]
+  | succ n IH =>
+    obtain ⟨p, hpn, hpk, hp⟩ := IH (Ordinal.mod_lt y (pow_ne_zero n hx₀))
+    refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
+    · compute_degree!
+      exact hpn.le
+    · rw [coeff_add, coeff_C_mul, coeff_X_pow]
+      split_ifs with h
+      · subst h
+        rw [p.coeff_eq_zero_of_degree_lt hpn, add_zero, mul_one, val_of]
+        rwa [Ordinal.div_lt (pow_ne_zero k hx₀), ← pow_succ]
+      · simpa using hpk k
+    · rw [oeval_C_mul_X_pow_add hpn, hp]
+      exact Ordinal.div_add_mod ..
+
+theorem eq_oeval_of_lt_opow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < of (x.val ^ n)) :
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y :=
+  eq_oeval_of_lt_opow' hx₀ h
+
+theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
+    (hpk : ∀ k, p.coeff k < x) (h : y < oeval x p) :
+    ∃ q : Nimber[X], q < p ∧ (∀ k, q.coeff k < x) ∧ oeval x q = y := by
+  have hpd : p.degree < (p.natDegree + 1 :) := by simpa using degree_le_natDegree
+  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_opow hx₀ <| h.trans (oeval_lt_opow hpk hpd)
+  refine ⟨q, ?_, hqk, rfl⟩
+  rwa [oeval_lt_oeval_iff hqk hpk] at h
+
+theorem forall_lt_oeval_iff {x : Nimber} (hx₁ : 1 < x) {P : Ordinal → Prop}
+    {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
+    (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
+  mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk
+  mpr H y hy := by
+    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₁.ne_bot hpk hy
+    exact H q hqn hqk
 
 end Nimber
