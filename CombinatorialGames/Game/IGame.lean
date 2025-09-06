@@ -70,6 +70,13 @@ defined by `-!{s | t} = !{-t | -s}`.
 The order structures interact in the expected way with arithmetic. In particular, `Game` is an
 `OrderedAddCommGroup`. Meanwhile, `IGame` satisfies the slightly weaker axioms of a
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
+
+## Computability
+
+The type `IGame` and the constructor arising from the `OfSets` instance are computable, yet carry
+no meaningful data. This is because `Set α` itself carries no meaningful data - it's defined as
+`α → Prop`, and any term in `Prop` is erased by the compiler. To perform comparisons between
+"simple" games, you can use the `game_cmp` tactic as described above.
 -/
 
 universe u
@@ -103,10 +110,7 @@ def IGame : Type (u + 1) :=
 namespace IGame
 export Player (left right)
 
-/-- Construct an `IGame` from its left and right sets.
-
-This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+/-- Construct an `IGame` from its left and right sets. -/
 instance : OfSets IGame fun _ ↦ True where
   ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
