@@ -507,6 +507,7 @@ theorem IsField.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsField y)
     (hyx : y ≤ x) (hzy : z < y) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy.toIsGroup hyx hzy fun _ hw ↦ (hy.inv_lt hw).trans_le hyx
 
+/-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsField.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsField (∗y))
     (hyx : y ≤ x) (hzy : z < y) : x * z = val (∗x * ∗z) :=
   hy.mul_eq_of_lt hx hyx hzy
