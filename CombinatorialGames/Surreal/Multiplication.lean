@@ -24,7 +24,7 @@ well-defined as an operation on the quotient by `IGame.Equiv`, namely the surrea
 an axiom that needs to be satisfied for the surreals to be a `OrderedRing`.
 
 We follow the proof in [SchleicherStoll], except that we use the well-foundedness of the hydra
-relation `CutExpand` on `Multiset PGame` instead of the argument based on a depth function in the
+relation `CutExpand` on `Multiset IGame` instead of the argument based on a depth function in the
 paper. As in said argument, P3 is proven by proxy of an auxiliary P4, which states that for
 `x₁ < x₂` and `y`, then `x₁ * y + x₂ * a < x₁ * a + x₂ * y` when `a ∈ yᴸ`, and
 `x₁ * b + x₂ * y < x₁ * y + x₂ * b` when `b ∈ yᴿ`.
