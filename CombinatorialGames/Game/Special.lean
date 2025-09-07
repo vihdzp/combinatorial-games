@@ -12,7 +12,6 @@ import CombinatorialGames.Tactic.GameCmp
 This file defines some simple yet notable combinatorial games:
 
 * `⋆ = {0 | 0}`
-* `¼ = {0 | 1}`
 * `↑ = {0 | ⋆}`
 * `↓ = {⋆ | 0}`
 -/
