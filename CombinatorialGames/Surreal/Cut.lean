@@ -94,7 +94,7 @@ noncomputable instance : LinearOrder Cut :=
 noncomputable instance : CompleteLinearOrder Cut where
   __ := instLinearOrder
   __ := Concept.instCompleteLattice
-  __ := LinearOrder.toBiheytingAlgebra
+  __ := LinearOrder.toBiheytingAlgebra _
 
 @[simp] theorem left_min (x y : Cut) : (min x y).left = x.left ∩ y.left := rfl
 @[simp] theorem right_min (x y : Cut) : (min x y).right = x.right ∪ y.right := by

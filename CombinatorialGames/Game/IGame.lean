@@ -70,14 +70,18 @@ defined by `-!{s | t} = !{-t | -s}`.
 The order structures interact in the expected way with arithmetic. In particular, `Game` is an
 `OrderedAddCommGroup`. Meanwhile, `IGame` satisfies the slightly weaker axioms of a
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
+
+## Computability
+
+The type `IGame` and the constructor arising from the `OfSets` instance are computable, yet carry
+no meaningful data. This is because `Set α` itself carries no meaningful data - it's defined as
+`α → Prop`, and any term in `Prop` is erased by the compiler. To perform comparisons between
+"simple" games, you can use the `game_cmp` tactic as described above.
 -/
 
 universe u
 
 open Set Pointwise
-
--- Computations can be performed through the `game_cmp` tactic.
-noncomputable section
 
 /-! ### Game moves -/
 
@@ -106,10 +110,7 @@ def IGame : Type (u + 1) :=
 namespace IGame
 export Player (left right)
 
-/-- Construct an `IGame` from its left and right sets.
-
-This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
-Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+/-- Construct an `IGame` from its left and right sets. -/
 instance : OfSets IGame fun _ ↦ True where
   ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
@@ -200,6 +201,32 @@ theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
 theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
   fun hx ↦ IsOption.irrefl x (.of_mem_moves hx)
 
+/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+def Subposition : IGame → IGame → Prop :=
+  Relation.TransGen IsOption
+
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves h)
+
+theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
+    Subposition x z :=
+  Relation.TransGen.trans h₁ h₂
+
+instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
+  small_transGen' _ x
+
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
+instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
+
+/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
+of definitions using well-founded recursion on `IGame`. -/
+macro "igame_wf" : tactic =>
+  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
+    Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
+
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
 things for you.
@@ -207,14 +234,15 @@ things for you.
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
 def moveRecOn {motive : IGame → Sort*} (x)
-    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
-    motive x :=
-  isOption_wf.recursion x fun x IH ↦ mk x (fun _ _ h ↦ IH _ (.of_mem_moves h))
+    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) : motive x :=
+  mk x (fun p y _ ↦ moveRecOn y mk)
+termination_by x
+decreasing_by igame_wf
 
 theorem moveRecOn_eq {motive : IGame → Sort*} (x)
     (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
-    moveRecOn x mk = mk x (fun _ y _ ↦ moveRecOn y mk) :=
-  isOption_wf.fix_eq ..
+    moveRecOn x mk = mk x (fun _ y _ ↦ moveRecOn y mk) := by
+  rw [moveRecOn]
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -245,32 +273,6 @@ theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
     refine Function.hfunext ?_ fun _ _ _ ↦ ?_
     · simp
     · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
-
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
-def Subposition : IGame → IGame → Prop :=
-  Relation.TransGen IsOption
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves h)
-
-theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
-    Subposition x z :=
-  Relation.TransGen.trans h₁ h₂
-
-instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_transGen' _ x
-
-instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
-instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
-instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
-
-/-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
-of definitions using well-founded recursion on `IGame`. -/
-macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim (maxDepth := 8)
-    [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
-    Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
 
 /-! ### Basic games -/
 
@@ -1099,10 +1101,10 @@ If `x` is negative, we define `x⁻¹ = -(-x)⁻¹`. For any other game, we set 
 
 If `x` is a non-zero numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any non-numeric
 game should be treated as a junk value. -/
-instance : Inv IGame where
+noncomputable instance : Inv IGame where
   inv x := by classical exact if 0 < x then inv' x else if x < 0 then -inv' (-x) else 0
 
-instance : Div IGame where
+noncomputable instance : Div IGame where
   div x y := x * y⁻¹
 
 open Classical in
@@ -1139,7 +1141,7 @@ protected theorem inv_neg (x : IGame) : (-x)⁻¹ = -x⁻¹ := by
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
 `a` some other "earlier" option of `x⁻¹`. -/
 @[pp_nodot]
-def invOption (x y a : IGame) : IGame :=
+noncomputable def invOption (x y a : IGame) : IGame :=
   (1 + (y - x) * a) / y
 
 private theorem invOption_eq {x y a : IGame} (hy : 0 < y) :
@@ -1191,7 +1193,7 @@ theorem invRec {x : IGame} (hx : 0 < x)
   convert mk using 8 with _ _ _ ha
   simp_rw [invOption_eq ha]
 
-instance : RatCast IGame where
+noncomputable instance : RatCast IGame where
   ratCast q := q.num / q.den
 
 theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
@@ -1200,4 +1202,3 @@ theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
 @[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
 
 end IGame
-end

@@ -153,8 +153,8 @@ lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
     (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     Numeric x⁻¹ := by
   obtain ⟨Hl, Hr⟩ := mul_inv_option_mem hx hl hr hl' hr'
-  obtain H' := numeric_option_inv hx hl hr
-  refine Numeric.mk (fun y hy z hz ↦ ?_) (H' _) (H' _)
+  have H' := numeric_option_inv hx hl hr
+  refine Numeric.mk (fun y hy z hz ↦ ?_) H'
   have := H' _ y hy
   have := H' _ z hz
   exact (Numeric.mul_lt_mul_left hx).1 <| (Hl y hy).trans (Hr z hz)

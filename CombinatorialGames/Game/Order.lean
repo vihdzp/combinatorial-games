@@ -14,7 +14,6 @@ We provide instances of `DenselyOrdered` for `IGame` and `Game`.
 
 universe u
 
-noncomputable section
 namespace IGame
 
 theorem tiny_lf_of_not_nonpos_of_forall_neg_le {x a : IGame} (hx : 0 ⧏ x)

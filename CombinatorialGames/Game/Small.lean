@@ -37,49 +37,42 @@ theorem dicotic_def {x : IGame} : Dicotic x ↔
     (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
   simp_rw [dicotic_iff_aux]; rw [DicoticAux]
 
-theorem dicotic_def' {x : IGame} : Dicotic x ↔
-    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ l ∈ xᴸ, Dicotic l) ∧ (∀ r ∈ xᴿ, Dicotic r) := by
-  rw [dicotic_def, Player.forall]
-
 namespace Dicotic
 variable {x y z : IGame}
 
-theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ xᴸ = ∅ ∨ xᴿ = ∅ := by
-  rw [dicotic_def] at hx
-  simp_all [IGame.ext_iff]
+theorem mk (h₁ : xᴸ = ∅ ↔ xᴿ = ∅) (h₂ : ∀ p, ∀ y ∈ x.moves p, Dicotic y) : Dicotic x :=
+  dicotic_def.2 ⟨h₁, h₂⟩
 
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ xᴸ ≠ ∅ ∧ xᴿ ≠ ∅ := by
+theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
+  rw [dicotic_def] at hx
+  simp_all [Player.exists, IGame.ext_iff]
+
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
   simpa using eq_zero_iff.not
 
-theorem mk (h : xᴸ = ∅ ↔ xᴿ = ∅)
-    (hl : ∀ y ∈ xᴸ, Dicotic y) (hr : ∀ y ∈ xᴿ, Dicotic y) : Dicotic x :=
-  dicotic_def'.2 ⟨h, hl, hr⟩
-
-theorem moves_eq_empty_iff {p : Player} [hx : Dicotic x] : x.moves p = ∅ ↔ x.moves (-p) = ∅ := by
-  induction p with
-  | left => exact (dicotic_def.1 hx).1
-  | right => exact (dicotic_def.1 hx).1.symm
+theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
+  Player.const_of_left_eq_right' (dicotic_def.1 hx).1
 
 protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves p) : Dicotic y :=
   (dicotic_def.1 hx).2 p y h
 
 @[simp]
 protected instance zero : Dicotic 0 := by
-  rw [dicotic_def]
-  simp
+  apply mk <;> simp
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
-  rw [dicotic_def', forall_moves_neg, forall_moves_neg]
-  refine ⟨by simp [moves_eq_empty_iff (p := .left)], fun y hy ↦ ?_, fun y hy ↦ ?_⟩
-  all_goals
+  apply mk
+  · simp [moves_eq_empty_iff .left .right]
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
     have := Dicotic.of_mem_moves hy
-    exact .neg y
+    rw [← neg_neg y]
+    exact .neg _
 termination_by x
 decreasing_by igame_wf
 
 /--
-One half of the **lawnmower theorem**:
-any dicotic game is smaller than any positive numeric game.
+One half of the **lawnmower theorem**: any dicotic game is smaller than any positive numeric game.
 -/
 theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf]
@@ -93,15 +86,14 @@ theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < 
   · obtain rfl | h := eq_or_ne x 0
     · exact hy.not_ge
     · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
-      obtain ⟨z, hz⟩ := h.2
+      obtain ⟨z, hz⟩ := h right
       have := Dicotic.of_mem_moves hz
       exact lf_of_right_le (lt_of_numeric_of_pos z hy).le hz
 termination_by (x, y)
 decreasing_by igame_wf
 
 /--
-One half of the **lawnmower theorem**:
-any dicotic game is greater than any negative numeric game.
+One half of the **lawnmower theorem**: any dicotic game is greater than any negative numeric game.
 -/
 theorem lt_of_numeric_of_neg (x) [Dicotic x] {y} [Numeric y] (hy : y < 0) : y < x := by
   have := lt_of_numeric_of_pos (-x) (y := -y); simp_all

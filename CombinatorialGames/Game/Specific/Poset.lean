@@ -72,7 +72,7 @@ theorem rel_univ_of_rel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {
   simp
 
 theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
-  rw [WellFounded.wellFounded_iff_no_descending_seq]
+  rw [wellFounded_iff_isEmpty_descending_chain]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
   choose g hg using id hf
   obtain ⟨m, n, h, h'⟩ := wellQuasiOrdered_le g
@@ -128,8 +128,8 @@ protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (@univ α) ‖ 0 := by
-  apply IGame.Impartial.fuzzy_zero_of_forall_exists_moveLeft
-    (mem_moves_toIGame_of_rel _ top_compl_rel_univ)
+  apply IGame.Impartial.fuzzy_zero_of_forall_exists
+    (mem_moves_toIGame_of_rel default top_compl_rel_univ)
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [moves_toIGame, mem_image] at hz ⊢
   exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩

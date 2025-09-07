@@ -12,13 +12,13 @@ import CombinatorialGames.Nimber.Field
 The Grundy value of an impartial game is recursively defined as the least nimber not among the
 Grundy values of either its left or right options. This map respects addition and multiplication.
 
-We provide three definitions for the Grundy value. `leftGrundy` and `rightGrundy` are computed using
-the left/right options of the game respectively, and are defined for all games. To make the API
-symmetric, we also provide `Impartial.grundy`, which enforces that the game is impartial, and is
-thus equal to either of `leftGrundy` or `rightGrundy`.
+We provide two definitions for the Grundy value. `grundyAux` is computed using either the left or
+right options of the game, and is defined for all games. To make the API symmetric, we also provide
+`Impartial.grundy`, which enforces that the game is impartial, and is thus equal to either of
+`grundyAux left` or `grundyAux right`.
 
-The **Sprague-Grundy** theorem `nim_grundy_equiv` shows that any impartial game is equivalent to a
-game of Nim, namely that corresponding to its Grundy value.
+The **Sprague-Grundy** theorem `Impartial.nim_grundy_equiv` shows that any impartial game is
+equivalent to a game of Nim, namely that corresponding to its Grundy value.
 -/
 
 universe u
@@ -97,7 +97,7 @@ decreasing_by igame_wf
 @[simp]
 theorem grundyAux_neg (p : Player) (x : IGame) : grundyAux p (-x) = grundyAux (-p) x := by
   rw [grundyAux_def, grundyAux_def, moves_neg]
-  congr
+  congr 2
   exact image_neg_of_apply_neg_eq fun _ _ ↦ grundyAux_neg p _
 termination_by x
 decreasing_by igame_wf
@@ -127,14 +127,14 @@ def grundy (x : IGame) [Impartial x] : Nimber :=
 /-- The **Sprague-Grundy theorem** states that every impartial game is equivalent to a game of nim,
 namely the game of nim for the game's Grundy value. -/
 theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
-  rw [equiv_iff_forall_fuzzy]
+  rw [equiv_iff_forall_fuzzy default]
   constructor <;> intro y hy
   · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
     have := Impartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
-    exact right_fuzzy hz
+    exact fuzzy_of_mem_moves hz
   · have := Impartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
@@ -230,7 +230,7 @@ theorem of_grundyAux_left_eq_grundyAux_right {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : Impartial x :=
   have H := of_grundyAux_left_eq_grundyAux_right' h H
-  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) (h _) (h _)
+  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) h
 
 /-! ### Multiplication -/
 

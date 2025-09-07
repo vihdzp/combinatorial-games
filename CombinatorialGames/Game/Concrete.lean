@@ -27,8 +27,6 @@ directly most of the time.
 
 universe u v
 
-noncomputable section
-
 open IGame Set
 
 variable {α : Type v}
@@ -157,7 +155,7 @@ theorem neg_toIGame (h : c.moves left = c.moves right) (a : α) : -c.toIGame a =
 
 theorem impartial_toIGame (h : c.moves left = c.moves right) (a : α) : Impartial (c.toIGame a) := by
   refine c.moveRecOn a fun b IH ↦ ?_
-  rw [impartial_def', neg_toIGame h]
+  rw [impartial_def, neg_toIGame h]
   simp_all
 
 end ConcreteGame
