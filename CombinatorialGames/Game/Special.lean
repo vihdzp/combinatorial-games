@@ -13,12 +13,10 @@ This file defines some simple yet notable combinatorial games:
 
 * `⋆ = {0 | 0}`
 * `↑ = {0 | ⋆}`
-* `↓ = {⋆ | 0}`.
+* `↓ = {⋆ | 0}`
 -/
 
 universe u
-
-noncomputable section
 
 namespace IGame
 
@@ -183,4 +181,3 @@ theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
 
 end IGame
-end
