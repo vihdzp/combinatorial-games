@@ -120,22 +120,16 @@ instance : IsRightCancelAdd Nimber where
     exact add_left_cancel h
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
-  constructor <;>
-    intro hab
-  · obtain h | rfl | h := lt_trichotomy a b
-    · have ha : a + a = 0 := add_eq_zero.2 rfl
-      rwa [← ha, add_right_inj, eq_comm] at hab
+  constructor
+  · intro hab
+    obtain h | rfl | h := lt_trichotomy a b
+    · rwa [← (add_eq_zero (a := a)).2 rfl, add_right_inj, eq_comm] at hab
     · rfl
-    · have hb : b + b = 0 := add_eq_zero.2 rfl
-      rwa [← hb, add_left_inj] at hab
-  · rw [← Nimber.le_zero]
-    apply add_le_of_forall_ne <;>
-    simp_rw [ne_eq] <;>
-    intro x hx
-    · rw [add_eq_zero, ← hab]
-      exact hx.ne
-    · rw [add_eq_zero, hab]
-      exact hx.ne'
+    · rwa [← (add_eq_zero (a := b)).2 rfl, add_left_inj] at hab
+  · rintro rfl
+    rw [← Nimber.le_zero]
+    apply add_le_of_forall_ne <;> intro x hx <;> rw [add_eq_zero.ne]
+    exacts [hx.ne, hx.ne']
 termination_by (a, b)
 
 theorem add_ne_zero_iff : a + b ≠ 0 ↔ a ≠ b :=
@@ -161,12 +155,10 @@ termination_by (a, b, c)
 
 protected theorem add_zero (a : Nimber) : a + 0 = a := by
   apply le_antisymm
-  · apply add_le_of_forall_ne
-    · intro a' ha
-      rw [Nimber.add_zero]
+  · refine add_le_of_forall_ne (fun a' ha ↦ ?_) ?_
+    · rw [Nimber.add_zero]
       exact ha.ne
-    · intro _ h
-      exact (Nimber.not_lt_zero _ h).elim
+    · simp
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := Nimber.add_zero (a + 0)
