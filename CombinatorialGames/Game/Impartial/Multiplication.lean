@@ -62,8 +62,7 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
 termination_by (x, y)
 decreasing_by igame_wf
 
-protected instance mul (x y : IGame) [Impartial x] [Impartial y] :
-    Impartial (x * y) :=
+protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x * y) :=
   (mul' x y).1
 
 end Impartial
