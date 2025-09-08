@@ -114,12 +114,11 @@ theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
     toIGame t ∈ (toIGame s).moves p :=
   ConcreteGame.mem_moves_toIGame_of_mem h
 
-@[simp]
-protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
-  neg_toIGame rfl ..
-
 protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
   impartial_toIGame rfl ..
+
+protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
+  IGame.Impartial.neg_eq ..
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
