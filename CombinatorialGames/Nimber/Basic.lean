@@ -3,23 +3,25 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Tactic.OrdinalAlias
-import CombinatorialGames.Tactic.Register
+import CombinatorialGames.Game.Impartial.Grundy
 import Mathlib.Data.Nat.Bitwise
 import Mathlib.SetTheory.Ordinal.Family
 
 /-!
-# Nimbers
+# Nimber addition
 
-The goal of this file is to define the nimbers, constructed as ordinals endowed with new
-arithmetical operations. The nim sum `a + b` is recursively defined as the least ordinal not equal
-to any `a' + b` or `a + b'` for `a' < a` and `b' < b`. There is also a nim product, defined in the
-`CombinatorialGames.Nimber.Field` file.
+The goal of this file is to define nimber addition. Nimbers were "constructed" in
+`CombinatorialGames.Nimber.Defs` as a type alias for `Ordinal`. Using this barebones definition, we
+proved the Sprague-Grundy theorem, which allows us to simply define the nim sum `a + b` as the
+Grundy value of `nim a + nim b`.
 
-Nim arithmetic arises within the context of impartial games. By the Sprague-Grundy theorem, each
-impartial game is equivalent to some game of nim. If `x ≈ nim o₁` and `y ≈ nim o₂`, then
-`x + y ≈ nim (o₁ + o₂)` and `x * y ≈ nim (o₁ * o₂)`, where the ordinals are summed or multiplied
-together as nimbers.
+The nim sum `a + b` can alternatively be recursively defined as the least nimber not equal
+to any `a' + b` or `a + b'` for `a' < a` and `b' < b`. However, this definition requires more setup,
+as theorems like commutativity or associativity are nontrivial. The equivalence between both
+definitions is a simple consequence of `Nimber.add_le_of_forall_ne` alongside cancellativity, so we
+don't bother to state it verbatim.
+
+The nim product and inverse are defined in the `CombinatorialGames.Nimber.Field` file.
 
 ## Notation
 
@@ -39,54 +41,50 @@ isomorphisms `Nimber.of` and `Nimber.val` allow us to cast between them whenever
 
 universe u v
 
-open Function Order
+open IGame
 
 noncomputable section
 
-/-! ### Basic casts between `Ordinal` and `Nimber` -/
+/-! ### Grundy value of sum -/
 
-ordinal_alias!
-  /-- A type synonym for ordinals with nimber addition and multiplication. -/ Nimber
+/-- Nimber addition `a + b` is defined as the Grundy value of `nim a + nim b`. -/
+instance : Add Nimber where
+  add a b := Impartial.grundy (nim a + nim b)
 
-namespace Nimber
+namespace IGame.Impartial
 
-attribute [game_cmp] of_zero of_one
+theorem grundy_nim_add_nim (a b : Nimber) : grundy (nim a + nim b) = a + b :=
+  rfl
 
-@[inherit_doc] scoped prefix:75 "∗" => of
-recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
+@[simp]
+theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
+    grundy (x + y) = grundy x + grundy y := by
+  rw [← grundy_nim_add_nim]
+  apply grundy_congr (add_congr ..) <;> exact (nim_grundy_equiv _).symm
+
+@[simp]
+theorem grundy_sub (x y : IGame) [Impartial x] [Impartial y] :
+    grundy (x - y) = grundy x + grundy y :=
+  (grundy_congr (sub_equiv x y)).trans (grundy_add x y)
+
+end IGame.Impartial
+
+theorem IGame.nim_add_equiv (a b : Nimber) : nim (a + b) ≈ nim a + nim b := by
+  rw [← Impartial.grundy_eq_iff_equiv, Impartial.grundy_nim, Impartial.grundy_nim_add_nim]
+
+@[simp]
+theorem Game.mk_nim_add (a b : Nimber) : mk (nim (a + b)) = mk (nim a) + mk (nim b) :=
+  Game.mk_eq (IGame.nim_add_equiv a b)
 
 /-! ### Nimber addition -/
 
+namespace Nimber
+
 variable {a b c : Nimber.{u}}
 
-/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
-`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
--- We write the binders like this so that the termination checker works.
-protected def add (a b : Nimber.{u}) : Nimber.{u} :=
-  sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
-    ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
-termination_by (a, b)
-
-instance : Add Nimber :=
-  ⟨Nimber.add⟩
-
-theorem add_def (a b : Nimber) :
-    a + b = sInf {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ := by
-  change Nimber.add a b = _
-  rw [Nimber.add]
-  simp_rw [exists_prop]
-  rfl
-
-/-- The set in the definition of `Nimber.add` is nonempty. -/
-private theorem add_nonempty (a b : Nimber.{u}) :
-    {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ.Nonempty :=
-  nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
-    ((· + b) '' Set.Iio a ∪ (a + ·) '' Set.Iio b)
-
 theorem exists_of_lt_add (h : c < a + b) : (∃ a' < a, a' + b = c) ∨ ∃ b' < b, a + b' = c := by
-  rw [add_def] at h
-  have := notMem_of_lt_csInf' h
-  rwa [Set.mem_compl_iff, not_not] at this
+  have := mem_grundyAux_image_of_lt h
+  aesop
 
 theorem add_le_of_forall_ne (h₁ : ∀ a' < a, a' + b ≠ c) (h₂ : ∀ b' < b, a + b' ≠ c) :
     a + b ≤ c := by
@@ -94,43 +92,12 @@ theorem add_le_of_forall_ne (h₁ : ∀ a' < a, a' + b ≠ c) (h₂ : ∀ b' < b
   have := exists_of_lt_add h
   tauto
 
-private theorem add_ne_of_lt (a b : Nimber) :
-    (∀ a' < a, a' + b ≠ a + b) ∧ ∀ b' < b, a + b' ≠ a + b := by
-  have H := csInf_mem (add_nonempty a b)
-  rw [← add_def] at H
-  simpa using H
-
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
-  rw [add_def, add_def]
-  simp_rw [or_comm]
-  congr! 7 <;>
-    (rw [and_congr_right_iff]; intro; rw [Nimber.add_comm])
-termination_by (a, b)
-
-instance : IsLeftCancelAdd Nimber where
-  add_left_cancel a b c h := by
-    apply le_antisymm <;>
-    apply le_of_not_gt
-    · exact fun hc ↦ (add_ne_of_lt a b).2 c hc h.symm
-    · exact fun hb ↦ (add_ne_of_lt a c).2 b hb h
-
-instance : IsRightCancelAdd Nimber where
-  add_right_cancel a b c h := by
-    simp_rw [Nimber.add_comm] at h
-    exact add_left_cancel h
+  simp_rw [← Impartial.grundy_nim_add_nim, add_comm]
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
-  constructor
-  · intro hab
-    obtain h | rfl | h := lt_trichotomy a b
-    · rwa [← (add_eq_zero (a := a)).2 rfl, add_right_inj, eq_comm] at hab
-    · rfl
-    · rwa [← (add_eq_zero (a := b)).2 rfl, add_left_inj] at hab
-  · rintro rfl
-    rw [← Nimber.le_zero]
-    apply add_le_of_forall_ne <;> intro x hx <;> rw [add_eq_zero.ne]
-    exacts [hx.ne, hx.ne']
-termination_by (a, b)
+  rw [← Impartial.grundy_nim_add_nim, Impartial.grundy_eq_zero_iff,
+    ← Impartial.equiv_iff_add_equiv_zero, nim_equiv_iff]
 
 theorem add_ne_zero_iff : a + b ≠ 0 ↔ a ≠ b :=
   add_eq_zero.not
@@ -140,31 +107,12 @@ theorem add_self (a : Nimber) : a + a = 0 :=
   add_eq_zero.2 rfl
 
 protected theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
-  apply le_antisymm <;>
-    apply add_le_of_forall_ne <;>
-    intro x hx <;>
-    try obtain ⟨y, hy, rfl⟩ | ⟨y, hy, rfl⟩ := exists_of_lt_add hx
-  on_goal 1 => rw [Nimber.add_assoc y, add_ne_add_left]
-  on_goal 2 => rw [Nimber.add_assoc _ y, add_ne_add_right, add_ne_add_left]
-  on_goal 3 => rw [Nimber.add_assoc _ _ x, add_ne_add_right, add_ne_add_right]
-  on_goal 4 => rw [← Nimber.add_assoc x, add_ne_add_left, add_ne_add_left]
-  on_goal 5 => rw [← Nimber.add_assoc _ y, add_ne_add_left, add_ne_add_right]
-  on_goal 6 => rw [← Nimber.add_assoc _ _ y, add_ne_add_right]
-  all_goals apply ne_of_lt; assumption
-termination_by (a, b, c)
+  simp_rw [← Impartial.grundy_nim_add_nim, Impartial.grundy_eq_iff_equiv,
+    Impartial.grundy_nim_add_nim, ← Game.mk_eq_mk]
+  simp [add_assoc]
 
 protected theorem add_zero (a : Nimber) : a + 0 = a := by
-  apply le_antisymm
-  · refine add_le_of_forall_ne (fun a' ha ↦ ?_) ?_
-    · rw [Nimber.add_zero]
-      exact ha.ne
-    · simp
-  · by_contra! h
-    replace h := h -- needed to remind `termination_by`
-    have := Nimber.add_zero (a + 0)
-    rw [add_left_inj] at this
-    exact this.not_lt h
-termination_by a
+  simp [← Impartial.grundy_nim_add_nim]
 
 protected theorem zero_add (a : Nimber) : 0 + a = a := by
   rw [Nimber.add_comm, Nimber.add_zero]
@@ -246,3 +194,35 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
       simpa [Nat.xor_comm, Nat.xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
 
 end Nimber
+
+namespace IGame.Impartial
+
+@[simp]
+theorem grundyAux_add (p : Player) (x y : IGame) :
+    (x + y).grundyAux p = x.grundyAux p + y.grundyAux p := by
+  apply le_antisymm
+  · apply grundyAux_le_of_notMem
+    rw [moves_add]
+    rintro ⟨_, (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩), ha'⟩
+    · rw [grundyAux_add, add_left_inj] at ha'
+      exact grundyAux_ne ha ha'
+    · rw [grundyAux_add, add_right_inj] at ha'
+      exact grundyAux_ne ha ha'
+  · rw [le_grundyAux_iff]
+    intro a ha
+    obtain ha | ha := Nimber.lt_add_cases ha
+    · obtain ⟨z, hz, hz'⟩  := mem_grundyAux_image_of_lt ha
+      refine ⟨_, add_right_mem_moves_add hz y, ?_⟩
+      rw [grundyAux_add, hz', Nimber.add_cancel_right]
+    · obtain ⟨z, hz, hz'⟩  := mem_grundyAux_image_of_lt ha
+      refine ⟨_, add_left_mem_moves_add hz x, ?_⟩
+      rw [grundyAux_add, hz', add_comm, Nimber.add_cancel_right]
+termination_by (x, y)
+decreasing_by igame_wf
+
+@[simp]
+theorem grundyAux_sub (p : Player) (x y : IGame) :
+    (x - y).grundyAux p = x.grundyAux p + y.grundyAux (-p) := by
+  rw [sub_eq_add_neg, grundyAux_add, grundyAux_neg]
+
+end IGame.Impartial

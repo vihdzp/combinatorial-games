@@ -6,7 +6,7 @@ Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Small
-import CombinatorialGames.Nimber.Basic
+import CombinatorialGames.Nimber.Defs
 
 /-!
 # Nim
