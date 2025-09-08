@@ -72,8 +72,7 @@ protected theorem of_mem_moves {p} {x y : IGame} [h : WeaklyImpartial x] :
 protected instance zero : WeaklyImpartial 0 := by
   rw [weaklyImpartial_def]; simp
 
-protected instance neg (x : IGame) [WeaklyImpartial x] :
-    WeaklyImpartial (-x) := by
+protected instance neg (x : IGame) [WeaklyImpartial x] : WeaklyImpartial (-x) := by
   apply WeaklyImpartial.mk
   · simp
   · simp_rw [moves_neg, Set.mem_neg]
@@ -125,7 +124,7 @@ theorem sub_mk (x : Game) : x - Game.mk y = x + Game.mk y := by
 theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
   rw [add_eq_zero_iff_neg_eq, neg_mk]
 
-theorem add_self_equiv (x : IGame) [WeaklyImpartial x] : x + x ≈ 0 :=
+theorem add_self_equiv : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
 
 theorem le_comm {x y} [WeaklyImpartial x] [WeaklyImpartial y] : x ≤ y ↔ y ≤ x := by
@@ -145,15 +144,15 @@ theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y := by
   · cases not_lt y x h
   · exact .inr h
 
+variable {x y}
+
 /-- This lemma doesn't require `x` to be impartial. -/
-theorem equiv_iff_add_equiv_zero {x y : IGame} [WeaklyImpartial y] : x ≈ y ↔ x + y ≈ 0 := by
+theorem equiv_iff_add_equiv_zero {x : IGame} : x ≈ y ↔ x + y ≈ 0 := by
   rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, Game.mk_add, Game.mk_zero, add_eq_zero_iff_eq_neg, neg_mk]
 
 /-- This lemma doesn't require `y` to be impartial. -/
-theorem equiv_iff_add_equiv_zero' {x y : IGame} [WeaklyImpartial x] : x ≈ y ↔ x + y ≈ 0 := by
+theorem equiv_iff_add_equiv_zero' {y : IGame} : x ≈ y ↔ x + y ≈ 0 := by
   rw [antisymmRel_comm, add_comm, equiv_iff_add_equiv_zero]
-
-variable {x y}
 
 @[simp]
 theorem not_equiv_iff : ¬ x ≈ y ↔ x ‖ y :=
@@ -164,7 +163,7 @@ theorem not_fuzzy_iff : ¬ x ‖ y ↔ x ≈ y :=
   not_iff_comm.1 not_equiv_iff
 
 theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
-  simpa using (@equiv_iff_add_equiv_zero x y).not
+  simpa using (@equiv_iff_add_equiv_zero y _ x).not
 
 @[simp]
 theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
