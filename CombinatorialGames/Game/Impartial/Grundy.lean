@@ -8,9 +8,9 @@ import CombinatorialGames.Game.Specific.Nim
 /-!
 # Grundy value
 
-The Grundy value of an impartial game is recursively defined as the least nimber not among the
-Grundy values of either its left or right options. This map respects (by definition!) addition and
-multiplication.
+The Grundy value of a (weakly) impartial game is recursively defined as the least nimber not among
+the Grundy values of either its left or right options. This map respects (definitionally!) nimber
+addition and multiplication.
 
 We provide two definitions for the Grundy value. `grundyAux` is computed using either the left or
 right options of the game, and is defined for all games. To make the API symmetric, we also provide
@@ -86,44 +86,44 @@ theorem grundyAux_image_neg (p : Player) (s : Set IGame) :
 
 namespace Impartial
 
-/-- The Grundy value of an impartial game is recursively defined as the minimum excluded value
-(the infimum of the complement) of the Grundy values of its options.
+/-- The Grundy value of a (weakly) impartial game is recursively defined as the minimum excluded
+value (the infimum of the complement) of the Grundy values of its options.
 
 This definition enforces that `x` is impartial. If you want to talk about the left or right Grundy
 values of a game (e.g. if you don't yet know it to be impartial), use `grundyAux`.
 The lemma `grundyAux_eq_grundy` shows that both definitions match in
 the case of an impartial game. -/
-def grundy (x : IGame) [Impartial x] : Nimber :=
+def grundy (x : IGame) [WeaklyImpartial x] : Nimber :=
   x.grundyAux right
 
 /-- The **Sprague-Grundy theorem** states that every impartial game is equivalent to a game of nim,
 namely the game of nim for the game's Grundy value. -/
-theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
+theorem nim_grundy_equiv (x : IGame) [WeaklyImpartial x] : nim (grundy x) ≈ x := by
   rw [equiv_iff_forall_fuzzy default]
   constructor <;> intro y hy
   · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
-    have := Impartial.of_mem_moves hz
+    have := WeaklyImpartial.of_mem_moves hz
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
     exact fuzzy_of_mem_moves hz
-  · have := Impartial.of_mem_moves hy
+  · have := WeaklyImpartial.of_mem_moves hy
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
 termination_by x
 decreasing_by igame_wf
 
-theorem grundy_eq_iff_equiv_nim {x : IGame} [Impartial x] {o : Nimber} :
+theorem grundy_eq_iff_equiv_nim {x : IGame} [WeaklyImpartial x] {o : Nimber} :
     grundy x = o ↔ x ≈ nim o := by
   rw [← (nim_grundy_equiv x).antisymmRel_congr_left, nim_equiv_iff]
 
 alias ⟨_, grundy_eq⟩ := grundy_eq_iff_equiv_nim
 
-theorem grundy_eq_zero_iff {x : IGame} [Impartial x] : grundy x = 0 ↔ x ≈ 0 := by
+theorem grundy_eq_zero_iff {x : IGame} [WeaklyImpartial x] : grundy x = 0 ↔ x ≈ 0 := by
   simpa using grundy_eq_iff_equiv_nim (o := 0)
 
 @[simp]
-theorem grundy_eq_iff_equiv {x y : IGame} [Impartial x] [Impartial y] :
+theorem grundy_eq_iff_equiv {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y] :
     grundy x = grundy y ↔ x ≈ y := by
   rw [grundy_eq_iff_equiv_nim, (nim_grundy_equiv _).antisymmRel_congr_right]
 
@@ -134,17 +134,17 @@ alias ⟨_, grundy_congr⟩ := grundy_eq_iff_equiv
 @[simp] theorem grundy_star : grundy ⋆ = 1 := by simpa using grundy_nim 1
 
 @[simp]
-theorem grundy_neg (x : IGame) [Impartial x] : grundy (-x) = grundy x := by
+theorem grundy_neg (x : IGame) [WeaklyImpartial x] : grundy (-x) = grundy x := by
   rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
 
 @[simp]
-theorem grundyAux_eq_grundy (p) (x : IGame) [Impartial x] : grundyAux p x = grundy x := by
+theorem grundyAux_eq_grundy (p) (x : IGame) [WeaklyImpartial x] : grundyAux p x = grundy x := by
   cases p with
   | left => rw [← grundy_neg, grundy, grundyAux_neg, Player.neg_right]
   | right => rfl
 
-theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.moves p) :
-    have := Impartial.of_mem_moves hy; grundy y ≠ grundy x := by
+theorem grundy_moves_ne {p : Player} {x y : IGame} [WeaklyImpartial x] (hy : y ∈ x.moves p) :
+    have := WeaklyImpartial.of_mem_moves hy; grundy y ≠ grundy x := by
   cases p with
   | left =>
     simp_rw [← grundyAux_eq_grundy left]
@@ -153,17 +153,19 @@ theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.m
     exact grundyAux_ne hy
 
 /-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+protected theorem lt_of_numeric_of_pos (x) [WeaklyImpartial x] {y} [Numeric y] (hy : 0 < y) :
+    x < y := by
   rw [← (nim_grundy_equiv x).lt_congr_left]
   exact Dicotic.lt_of_numeric_of_pos _ hy
 
 /-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
+protected theorem lt_of_numeric_of_neg (x) [WeaklyImpartial x] {y} [Numeric y] (hy : y < 0) :
+    y < x := by
   rw [← (nim_grundy_equiv x).lt_congr_right]
   exact Dicotic.lt_of_numeric_of_neg _ hy
 
 private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
-    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
+    (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
   · rw [forall_moves_nim]
@@ -189,11 +191,11 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     have := h right y hy
     exact lf_of_rightMove_le (nim_grundy_equiv y).ge hy
 
-/-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
-value, then it's impartial. -/
+/-- If a game `x` has only weakly impartial options, and its left Grundy value equals its right
+Grundy value, then it's weakly impartial. -/
 theorem of_grundyAux_left_eq_grundyAux_right {x : IGame}
-    (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
-    (H : grundyAux left x = grundyAux right x) : Impartial x :=
+    (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
+    (H : grundyAux left x = grundyAux right x) : WeaklyImpartial x :=
   have H := of_grundyAux_left_eq_grundyAux_right' h H
   .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) h
 

@@ -69,7 +69,7 @@ instance (b : α) : Small.{u} {a // c.IsOption a b} := by
 /-! ### Loopy games -/
 
 variable (c) in
-/-- Turns a state of a `ConcreteLGame` into an `LGame`. -/
+/-- Turns a state of a `ConcreteGame` into an `LGame`. -/
 def toLGame (a : α) : LGame.{u} :=
   .corec c.moves a
 
@@ -149,13 +149,9 @@ theorem toLGame_toIGame (a : α) : (c.toIGame a).toLGame = c.toLGame a := by
   · rintro ⟨x, hx, rfl⟩
     exact ⟨_, mem_image_of_mem _ hx, IH _ _ hx⟩
 
-theorem neg_toIGame (h : c.moves left = c.moves right) (a : α) : -c.toIGame a = c.toIGame a := by
-  rw [← IGame.toLGame.injective.eq_iff]
-  simpa using neg_toLGame h a
-
 theorem impartial_toIGame (h : c.moves left = c.moves right) (a : α) : Impartial (c.toIGame a) := by
   refine c.moveRecOn a fun b IH ↦ ?_
-  rw [impartial_def, neg_toIGame h]
+  rw [impartial_def]
   simp_all
 
 end ConcreteGame
