@@ -57,13 +57,13 @@ theorem grundy_nim_add_nim (a b : Nimber) : grundy (nim a + nim b) = a + b :=
   rfl
 
 @[simp]
-theorem grundy_add (x y : IGame) [Impartial x] [Impartial y] :
+theorem grundy_add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     grundy (x + y) = grundy x + grundy y := by
   rw [← grundy_nim_add_nim]
   apply grundy_congr (add_congr ..) <;> exact (nim_grundy_equiv _).symm
 
 @[simp]
-theorem grundy_sub (x y : IGame) [Impartial x] [Impartial y] :
+theorem grundy_sub (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     grundy (x - y) = grundy x + grundy y :=
   (grundy_congr (sub_equiv x y)).trans (grundy_add x y)
 
@@ -195,7 +195,9 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
 
 end Nimber
 
-namespace IGame.Impartial
+/-! ### Extra properties of Grundy value -/
+
+namespace IGame
 
 @[simp]
 theorem grundyAux_add (p : Player) (x y : IGame) :
@@ -225,4 +227,4 @@ theorem grundyAux_sub (p : Player) (x y : IGame) :
     (x - y).grundyAux p = x.grundyAux p + y.grundyAux (-p) := by
   rw [sub_eq_add_neg, grundyAux_add, grundyAux_neg]
 
-end IGame.Impartial
+end IGame

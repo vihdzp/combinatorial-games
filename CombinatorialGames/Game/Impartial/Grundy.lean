@@ -9,8 +9,8 @@ import CombinatorialGames.Game.Specific.Nim
 # Grundy value
 
 The Grundy value of a (weakly) impartial game is recursively defined as the least nimber not among
-the Grundy values of either its left or right options. This map respects (definitionally!) nimber
-addition and multiplication.
+the Grundy values of either its left or right options. This map respects nimber addition and
+multiplication.
 
 We provide two definitions for the Grundy value. `grundyAux` is computed using either the left or
 right options of the game, and is defined for all games. To make the API symmetric, we also provide
