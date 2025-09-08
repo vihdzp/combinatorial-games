@@ -100,28 +100,24 @@ private theorem add_ne_of_lt (a b : Nimber) :
   rw [← add_def] at H
   simpa using H
 
-instance : IsLeftCancelAdd Nimber := by
-  constructor
-  intro a b c h
-  apply le_antisymm <;>
-  apply le_of_not_gt
-  · exact fun hc ↦ (add_ne_of_lt a b).2 c hc h.symm
-  · exact fun hb ↦ (add_ne_of_lt a c).2 b hb h
-
-instance : IsRightCancelAdd Nimber := by
-  constructor
-  intro a b c h
-  apply le_antisymm <;>
-  apply le_of_not_gt
-  · exact fun hc ↦ (add_ne_of_lt a b).1 c hc h.symm
-  · exact fun ha ↦ (add_ne_of_lt c b).1 a ha h
-
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
   congr! 7 <;>
     (rw [and_congr_right_iff]; intro; rw [Nimber.add_comm])
 termination_by (a, b)
+
+instance : IsLeftCancelAdd Nimber where
+  add_left_cancel a b c h := by
+    apply le_antisymm <;>
+    apply le_of_not_gt
+    · exact fun hc ↦ (add_ne_of_lt a b).2 c hc h.symm
+    · exact fun hb ↦ (add_ne_of_lt a c).2 b hb h
+
+instance : IsRightCancelAdd Nimber where
+  add_right_cancel a b c h := by
+    simp_rw [Nimber.add_comm] at h
+    exact add_left_cancel h
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
   constructor <;>

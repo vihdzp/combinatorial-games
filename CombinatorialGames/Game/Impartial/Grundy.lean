@@ -98,7 +98,7 @@ decreasing_by igame_wf
 @[simp]
 theorem grundyAux_neg (p : Player) (x : IGame) : grundyAux p (-x) = grundyAux (-p) x := by
   rw [grundyAux_def, grundyAux_def, moves_neg]
-  congr
+  congr 2
   exact image_neg_of_apply_neg_eq fun _ _ ↦ grundyAux_neg p _
 termination_by x
 decreasing_by igame_wf

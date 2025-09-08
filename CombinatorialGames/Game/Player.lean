@@ -52,10 +52,8 @@ theorem const_of_left_eq_right {α : Sort*} {f : Player → α} (hf : f left = f
   | left, right => hf
   | right, left => hf.symm
 
-theorem const_of_left_eq_right' {f : Player → Prop} (hf : f left ↔ f right) :
-    ∀ p q, f p ↔ f q := by
-  simp_rw [← propext_iff] at *
-  exact const_of_left_eq_right hf
+theorem const_of_left_eq_right' {f : Player → Prop} (hf : f left ↔ f right) (p q) : f p ↔ f q :=
+  (const_of_left_eq_right hf.eq ..).to_iff
 
 @[simp]
 protected lemma «forall» {p : Player → Prop} :

@@ -14,7 +14,7 @@ There are broadly four things this repository aims to formalize:
 
 - The theory of [general combinatorial games](https://github.com/users/vihdzp/projects/3) (temperature, dominated positions, reversible positions, etc.)
 - The theory of [specific combinatorial games](https://github.com/users/vihdzp/projects/7) (poset games, Hackenbush, tic-tac-toe, etc.)
-- The theory of [nimbers](https://github.com/users/vihdzp/projects/8) (prove their algebraic completeness, prove the simplicity theorems)
+- The theory of [nimbers](https://github.com/users/vihdzp/projects/8) (prove them algebraically closed, prove the simplest extension theorems)
 - The theory of [surreal numbers](https://github.com/users/vihdzp/projects/9) (set up their field structure, prove their representations as Hahn series)
 
 ## References
