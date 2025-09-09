@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Concrete
+import CombinatorialGames.Game.GameGraph
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 

@@ -3,8 +3,8 @@ import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Canonical
 import CombinatorialGames.Game.Computability.FGame
-import CombinatorialGames.Game.Concrete
 import CombinatorialGames.Game.Functor
+import CombinatorialGames.Game.GameGraph
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
