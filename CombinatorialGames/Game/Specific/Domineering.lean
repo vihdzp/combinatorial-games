@@ -3,7 +3,7 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.GameGraph
+import CombinatorialGames.Game.Graph
 import Mathlib.Algebra.Group.Units.Equiv
 import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Data.Finset.Sort
@@ -23,7 +23,7 @@ disjoint parts of the chessboard give sums of games.
 
 ## Todo
 
-Refactor this file to adhere to the design notes specified in `CombinatorialGames.Game.GameGraph`.
+Refactor this file to adhere to the design notes specified in `CombinatorialGames.Game.Graph`.
 -/
 
 namespace IGame
