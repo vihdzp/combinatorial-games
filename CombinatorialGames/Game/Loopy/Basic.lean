@@ -1003,7 +1003,9 @@ def Stopper (x : LGame) : Prop :=
 theorem Stopper.stopperFor {p : Player} {x : LGame} (h : Stopper x) : StopperFor p x :=
   h p
 
-/-- Note that this is not an iff, as e.g. `{ | { | dud}}` is a stopper, but `{ | dud}` isn't. -/
+/-- A game is a stopper when all its options are stoppers.
+
+Note that this is not an iff, as e.g. `{ | { | dud}}` is a stopper, but `{ | dud}` isn't. -/
 theorem Stopper.mk {x : LGame} (H : ∀ p, ∀ y ∈ x.moves p, Stopper y) : Stopper x :=
   fun p ↦ .mk fun y hy ↦ H p y hy _
 
