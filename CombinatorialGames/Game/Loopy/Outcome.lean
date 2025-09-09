@@ -75,77 +75,43 @@ theorem isStrategy_setOf_not_isWin (p : Player) : IsStrategy p {x | ¬ IsWin (-p
     simpa using hx
 
 theorem not_isWin_iff_mem_Strategy {p : Player} {x : LGame} :
-    ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s := by
-  conv_lhs => rw [← neg_neg p]
-  constructor
-  · exact fun h ↦ ⟨_, h, isStrategy_setOf_not_isWin _⟩
-  · exact fun ls ll ↦ ll.rec (motive_2 := fun _ _ _ ↦ _) (@fun p x y hyx hy ⟨s, hx, hs⟩ ↦
-    have ⟨r, hr⟩ := hs x hx y (by simpa); hy r hr.1 ⟨s, hr.2, hs⟩) (fun _ ↦ id) ls
+    ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s where
+  mp h := ⟨_, by simpa, isStrategy_setOf_not_isWin _⟩
+  mpr ls ll := ll.rec (motive_2 := fun _ _ _ ↦ _) (@fun p x y hyx _ hy ⟨s, hx, hs⟩ ↦
+    have hp := (neg_neg p).symm
+    have ⟨r, hr⟩ := hs x hx y (hp ▸ hyx); hy r hr.1 ⟨s, hr.2, hp ▸ hs⟩) (fun _ ↦ id) ls
 
-#exit
+@[simp]
+theorem not_isLoss_of_isWin {p : Player} {x : LGame} (h : IsWin p x) : ¬ IsLoss p x :=
+  fun h' ↦ not_isWin_iff_mem_Strategy.mpr ⟨_, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
 
-theorem not_isLeftWin_iff_mem_rightStrategy {x : LGame} :
-    ¬ IsLeftWin x ↔ ∃ s, x ∈ s ∧ IsRightStrategy s where
-  mp h := ⟨_, h, isRightStrategy_not_isLeftWin⟩
-  mpr ls ll := ll.rec (motive_2 := fun _ _ ↦ _) (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦
-    have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) (fun _ _ ↦ id) ls
+@[simp]
+theorem not_isWin_of_isLoss {p : Player} {x : LGame} (h : IsLoss p x) : ¬ IsWin p x :=
+  imp_not_comm.1 not_isLoss_of_isWin h
 
-theorem not_isLeftWin_and_isLeftLoss {x : LGame} : ¬ (IsLeftWin x ∧ IsLeftLoss x) :=
-  fun ⟨w, l⟩ ↦ not_isLeftWin_iff_mem_rightStrategy.mpr ⟨_, l, isRightStrategy_isLeftLoss⟩ w
-
-theorem not_isRightWin_and_isRightLoss {x : LGame} : ¬ (IsRightWin x ∧ IsRightLoss x) :=
-  fun ⟨w, l⟩ ↦ not_isRightWin_iff_mem_leftStrategy.mpr ⟨_, l, isLeftStrategy_isRightLoss⟩ w
-
-/-- `IsLeftDraw x` means that left draws `x` going first. -/
-def IsLeftDraw (x : LGame) : Prop := ¬ IsLeftWin x ∧ ¬ IsLeftLoss x
-
-/-- `IsRightDraw x` means that right draws `x` going first. -/
-def IsRightDraw (x : LGame) : Prop := ¬ IsRightWin x ∧ ¬ IsRightLoss x
+/-- `IsDraw p x` means that `p` draws `x` going first. -/
+def IsDraw (p : Player) (x : LGame) : Prop := ¬ IsWin p x ∧ ¬ IsLoss p x
 
 /-- The three possible outcomes of a game. -/
 inductive Outcome : Type | win | draw | loss
 
-/-- `leftOutcome x` is the outcome of `x` with left going first. -/
-noncomputable def leftOutcome (x : LGame) : Outcome := by classical
-  exact if IsLeftWin x then .win else if IsLeftLoss x then .loss else .draw
+/-- `outcomeFor p x` is the outcome of `x` with `p` going first. -/
+noncomputable def outcomeFor (p : Player) (x : LGame) : Outcome := by classical
+  exact if IsWin p x then .win else if IsLoss p x then .loss else .draw
 
-/-- `rightOutcome x` is the outcome of `x` with right going first. -/
-noncomputable def rightOutcome (x : LGame) : Outcome := by classical
-  exact if IsRightWin x then .win else if IsRightLoss x then .loss else .draw
+@[simp]
+theorem outcomeFor_eq_win_iff {p : Player} {x : LGame} : outcomeFor p x = .win ↔ IsWin p x := by
+  aesop (add simp [outcomeFor])
 
-theorem leftOutcome_eq_win_iff {x : LGame} : leftOutcome x = .win ↔ IsLeftWin x := by
-  classical rw [leftOutcome, Ne.ite_eq_left_iff]
-  split_ifs <;> rintro ⟨_⟩
+@[simp]
+theorem outcomeFor_eq_loss_iff {p : Player} {x : LGame} : outcomeFor p x = .loss ↔ IsLoss p x := by
+  aesop (add simp [outcomeFor])
 
-theorem rightOutcome_eq_win_iff {x : LGame} : rightOutcome x = .win ↔ IsRightWin x := by
-  classical rw [rightOutcome, Ne.ite_eq_left_iff]
-  split_ifs <;> rintro ⟨_⟩
+@[simp]
+theorem outcomeFor_eq_draw_iff {p : Player} {x : LGame} : outcomeFor p x = .draw ↔ IsDraw p x := by
+  aesop (add simp [outcomeFor, IsDraw])
 
-theorem leftOutcome_eq_loss_iff {x : LGame} : leftOutcome x = .loss ↔ IsLeftLoss x := by
-  classical rw [leftOutcome]
-  split_ifs with w l
-  · exact false_iff _ ▸ fun l ↦ not_isLeftWin_and_isLeftLoss ⟨w, l⟩
-  all_goals simpa
-
-theorem rightOutcome_eq_loss_iff {x : LGame} : rightOutcome x = .loss ↔ IsRightLoss x := by
-  classical rw [rightOutcome]
-  split_ifs with w l
-  · exact false_iff _ ▸ fun l ↦ not_isRightWin_and_isRightLoss ⟨w, l⟩
-  all_goals simpa
-
-theorem leftOutcome_eq_draw_iff {x : LGame} : leftOutcome x = .draw ↔ IsLeftDraw x := by
-  classical rw [leftOutcome]
-  split_ifs with w l
-  on_goal 3 => simpa using ⟨w, l⟩
-  all_goals rw [false_iff]
-  exacts [(·.1 w), (·.2 l)]
-
-theorem rightOutcome_eq_draw_iff {x : LGame} : rightOutcome x = .draw ↔ IsRightDraw x := by
-  classical rw [rightOutcome]
-  split_ifs with w l
-  on_goal 3 => simpa using ⟨w, l⟩
-  all_goals rw [false_iff]
-  exacts [(·.1 w), (·.2 l)]
+#exit
 
 /-- If there is no infinite play starting by from `x` with right going second,
 then `x` cannot end in a draw with right going second. -/
