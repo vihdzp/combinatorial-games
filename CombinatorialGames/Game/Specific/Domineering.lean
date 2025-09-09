@@ -158,5 +158,5 @@ open IGame Domineering
 -- TODO: this should probably go much earlier in the file.
 
 /-- The game of domineering. -/
-def ConcreteGame.domineering : ConcreteGame Domineering where
+def GameGraph.domineering : GameGraph Domineering where
   moves p x := p.cases {y | relLeft y x} {y | relRight y x}

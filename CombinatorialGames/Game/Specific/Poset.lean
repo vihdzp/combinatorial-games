@@ -23,8 +23,8 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 
 ## Main results
 
-* `ConcreteGame.Poset.impartial_toIGame`: poset games are impartial
-* `ConcreteGame.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second
+* `GameGraph.Poset.impartial_toIGame`: poset games are impartial
+* `GameGraph.Poset.univ_fuzzy_zero`: any poset game with a top element is won by the second
   player, shown via a strategy stealing argument
 -/
 
@@ -32,7 +32,7 @@ variable {α : Type*} [Preorder α]
 
 open Set
 
-namespace ConcreteGame.Poset
+namespace GameGraph.Poset
 
 /-! ### Poset relation -/
 
@@ -96,7 +96,7 @@ variable [WellQuasiOrderedLE α]
 
 variable (α) in
 /-- The poset game, played on a poset `α`. -/
-abbrev _root_.ConcreteGame.poset : ConcreteGame (Set α) where
+abbrev _root_.GameGraph.poset : GameGraph (Set α) where
   moves _ x := {y | Poset.Rel y x}
 
 instance : IsWellFounded _ (poset α).IsOption :=
@@ -108,11 +108,11 @@ noncomputable def toIGame (s : Set α) : IGame :=
 
 @[simp]
 theorem moves_toIGame (p) (s : Set α) : (toIGame s).moves p = toIGame '' {t | Rel t s} :=
-  ConcreteGame.moves_toIGame ..
+  GameGraph.moves_toIGame ..
 
 theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
     toIGame t ∈ (toIGame s).moves p :=
-  ConcreteGame.mem_moves_toIGame_of_mem h
+  GameGraph.mem_moves_toIGame_of_mem h
 
 @[simp]
 protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
@@ -135,4 +135,4 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
   exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 
 end IGame
-end ConcreteGame.Poset
+end GameGraph.Poset
