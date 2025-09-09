@@ -31,6 +31,8 @@ theorem isLoss_iff_forall {p : Player} {x : LGame} : IsLoss p x ↔ ∀ y ∈ x.
   mp h := h.rec (motive_1 := fun _ _ _ ↦ True) (fun _ _ _ ↦ ⟨⟩) fun h _ ↦ h
   mpr := .intro
 
+alias ⟨IsLoss.isWin_of_mem_moves, _⟩ := isLoss_iff_forall
+
 theorem not_isWin_iff_forall {p : Player} {x : LGame} :
     ¬ IsWin p x ↔ ∀ y ∈ x.moves p, ¬ IsLoss (-p) y := by
   simp [isWin_iff_exists]
@@ -92,6 +94,11 @@ theorem not_isWin_of_isLoss {p : Player} {x : LGame} (h : IsLoss p x) : ¬ IsWin
 /-- `IsDraw p x` means that `p` draws `x` going first. -/
 def IsDraw (p : Player) (x : LGame) : Prop := ¬ IsWin p x ∧ ¬ IsLoss p x
 
+@[simp] theorem IsDraw.not_isWin {p : Player} {x : LGame} (h : IsDraw p x) : ¬ IsWin p x := h.1
+@[simp] theorem IsDraw.not_isLoss {p : Player} {x : LGame} (h : IsDraw p x) : ¬ IsLoss p x := h.2
+theorem not_isDraw_iff {p : Player} {x : LGame} : ¬ IsDraw p x ↔ IsWin p x ∨ IsLoss p x := by
+  rw [IsDraw]; tauto
+
 /-- The three possible outcomes of a game. -/
 inductive Outcome : Type | win | draw | loss
 
@@ -111,37 +118,17 @@ theorem outcomeFor_eq_loss_iff {p : Player} {x : LGame} : outcomeFor p x = .loss
 theorem outcomeFor_eq_draw_iff {p : Player} {x : LGame} : outcomeFor p x = .draw ↔ IsDraw p x := by
   aesop (add simp [outcomeFor, IsDraw])
 
-#exit
+theorem StopperFor.not_isDraw {p : Player} {x : LGame} (h : StopperFor p x) : ¬ IsDraw p x := by
+  induction h with | @mk p x h IH
+  rintro ⟨hw, hl⟩
+  obtain ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
+  obtain ⟨z, hzy, hz⟩ := not_isLoss_iff_exists.mp (not_isWin_iff_forall.mp hw y hyx)
+  obtain h | h := not_isDraw_iff.1 <| IH y hyx
+  · contradiction
+  · exact hz <| h.isWin_of_mem_moves z hzy
 
-/-- If there is no infinite play starting by from `x` with right going second,
-then `x` cannot end in a draw with right going second.
-
-TODO: rewrite the assumption as `StopperFor left x`. -/
-theorem not_isLeftDraw_of_acc_comp {x : LGame}
-    (h : Acc (fun z x ↦ ∃ y ∈ xᴸ, z ∈ yᴿ) x) : ¬ IsLeftDraw x :=
-  h.rec fun _x _ ih ⟨nw, nl⟩ ↦
-    have ⟨y, hyx, hy⟩ := not_isLeftLoss_iff_exists.mp nl
-    have ⟨z, hzy, hz⟩ := not_isRightLoss_iff_exists.mp (not_isLeftWin_iff_forall.mp nw y hyx)
-    ih z ⟨y, hyx, hzy⟩ ⟨hz, not_isRightWin_iff_forall.mp hy z hzy⟩
-
-/-- If there is no infinite play starting from `x` with right going first,
-then `x` cannot end in a draw with right going first.
-
-TODO: rewrite the assumption as `StopperFor right x`. -/
-theorem not_isRightDraw_of_acc_comp {x : LGame}
-    (h : Acc (fun z x ↦ ∃ y ∈ xᴿ, z ∈ yᴸ) x) : ¬ IsRightDraw x :=
-  h.rec fun _x _ ih ⟨nw, nl⟩ ↦
-    have ⟨y, hyx, hy⟩ := not_isRightLoss_iff_exists.mp nl
-    have ⟨z, hzy, hz⟩ := not_isLeftLoss_iff_exists.mp (not_isRightWin_iff_forall.mp nw y hyx)
-    ih z ⟨y, hyx, hzy⟩ ⟨hz, not_isLeftWin_iff_forall.mp hy z hzy⟩
-
-theorem not_isLeftDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsLeftDraw x :=
-  not_isLeftDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
-
-theorem not_isRightDraw_of_acc_isOption {x : LGame} (h : Acc IsOption x) : ¬ IsRightDraw x :=
-  not_isRightDraw_of_acc_comp <| Subrelation.accessible
-    (fun ⟨_, hyx, hzy⟩ ↦ .tail (.single <| .of_mem_moves hzy) (.of_mem_moves hyx)) h.transGen
+theorem Stopper.not_isDraw (p : Player) {x : LGame} (h : Stopper x) : ¬ IsDraw p x :=
+  (h p).not_isDraw
 
 end LGame
 
@@ -149,38 +136,33 @@ namespace IGame
 
 open LGame
 
-theorem not_isLeftDraw (x : IGame) : ¬ IsLeftDraw x :=
-  LGame.not_isLeftDraw_of_acc_isOption x.acc_toLGame
-
-theorem not_isRightDraw (x : IGame) : ¬ IsRightDraw x :=
-  LGame.not_isRightDraw_of_acc_isOption x.acc_toLGame
+@[simp]
+theorem not_isDraw (p : Player) (x : IGame) : ¬ IsDraw p x :=
+  (stopper_toLGame x).not_isDraw p
 
 private theorem win_loss_iff {x : IGame} :
-    ((IsLeftWin x ↔ 0 ⧏ x) ∧ (IsLeftLoss x ↔ x ≤ 0)) ∧
-    ((IsRightWin x ↔ x ⧏ 0) ∧ (IsRightLoss x ↔ 0 ≤ x)) :=
+    ((IsWin left x ↔ 0 ⧏ x) ∧ (IsLoss left x ↔ x ≤ 0)) ∧
+    ((IsWin right x ↔ x ⧏ 0) ∧ (IsLoss right x ↔ 0 ≤ x)) :=
   x.moveRecOn fun x h ↦ by
-    rw [isLeftWin_iff_exists, isLeftLoss_iff_forall, isRightWin_iff_exists, isRightLoss_iff_forall,
+    rw [isWin_iff_exists, isLoss_iff_forall, isWin_iff_exists, isLoss_iff_forall,
       zero_lf, lf_zero, le_zero, zero_le, moves_toLGame, moves_toLGame]
     simp_rw [Set.forall_mem_image, Set.exists_mem_image]
     constructor <;>
       refine ⟨exists_congr fun y ↦ and_congr_right fun hy ↦ ?_, forall₂_congr fun y hy ↦ ?_⟩
     exacts [(h _ y hy).2.2, (h _ y hy).2.1, (h _ y hy).1.2, (h _ y hy).1.1]
 
-theorem isLeftWin_iff_zero_lf {x : IGame} : IsLeftWin x ↔ 0 ⧏ x := win_loss_iff.1.1
-theorem isLeftLoss_iff_le_zero {x : IGame} : IsLeftLoss x ↔ x ≤ 0 := win_loss_iff.1.2
-theorem isRightWin_iff_lf_zero {x : IGame} : IsRightWin x ↔ x ⧏ 0 := win_loss_iff.2.1
-theorem isRightLoss_iff_zero_le {x : IGame} : IsRightLoss x ↔ 0 ≤ x := win_loss_iff.2.2
+@[simp] theorem isWin_left_iff_zero_lf {x : IGame} : IsWin left x ↔ 0 ⧏ x := win_loss_iff.1.1
+@[simp] theorem isLoss_left_iff_le_zero {x : IGame} : IsLoss left x ↔ x ≤ 0 := win_loss_iff.1.2
+@[simp] theorem isWin_right_iff_lf_zero {x : IGame} : IsWin right x ↔ x ⧏ 0 := win_loss_iff.2.1
+@[simp] theorem isLoss_right_iff_zero_le {x : IGame} : IsLoss right x ↔ 0 ≤ x := win_loss_iff.2.2
 
-theorem fuzzy_zero_iff_and {x : IGame} : x ‖ 0 ↔ IsLeftWin x ∧ IsRightWin x := by
-  rw [IncompRel, isLeftWin_iff_zero_lf, isRightWin_iff_lf_zero]
+theorem fuzzy_zero_iff_isWin {x : IGame} : x ‖ 0 ↔ ∀ p, IsWin p x := by simp [IncompRel]
+theorem equiv_zero_iff_isLoss {x : IGame} : x ≈ 0 ↔ ∀ p, IsLoss p x := by simp [AntisymmRel]
 
-theorem equiv_zero_iff_and {x : IGame} : x ≈ 0 ↔ IsLeftLoss x ∧ IsRightLoss x := by
-  rw [AntisymmRel, isLeftLoss_iff_le_zero, isRightLoss_iff_zero_le]
+theorem lt_zero_iff_isLoss_and_isWin {x : IGame} : x < 0 ↔ IsLoss left x ∧ IsWin right x := by
+  simp [lt_iff_le_not_ge]
 
-theorem lt_zero_iff_and {x : IGame} : x < 0 ↔ IsLeftLoss x ∧ IsRightWin x := by
-  rw [lt_iff_le_not_ge, isLeftLoss_iff_le_zero, isRightWin_iff_lf_zero]
-
-theorem zero_lt_iff_and {x : IGame} : 0 < x ↔ IsLeftWin x ∧ IsRightLoss x := by
-  rw [lt_iff_le_not_ge, isLeftWin_iff_zero_lf, isRightLoss_iff_zero_le, and_comm]
+theorem zero_lt_iff_isWin_and_isLoss {x : IGame} : 0 < x ↔ IsWin left x ∧ IsLoss right x := by
+  simp [lt_iff_le_not_ge, and_comm]
 
 end IGame
