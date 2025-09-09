@@ -15,124 +15,74 @@ We define when a loopy game is a win, a draw, or a loss with each player going f
 namespace LGame
 
 mutual
-  /-- `IsLeftWin x` means that left wins `x` going first. -/
-  inductive IsLeftWin : LGame → Prop where
-    | intro (x y : LGame) : y ∈ xᴸ → IsRightLoss y → IsLeftWin x
-  /-- `IsRightLoss x` means that right loses `x` going first. -/
-  inductive IsRightLoss : LGame → Prop where
-    | intro (x : LGame) : (∀ y ∈ xᴿ, IsLeftWin y) → IsRightLoss x
+  /-- `IsWin p x` means that player `p` wins `x` going first. -/
+  inductive IsWin : Player → LGame → Prop where
+    | intro {p : Player} {x y : LGame} : y ∈ x.moves p → IsLoss (-p) y → IsWin p x
+  /-- `IsLoss p x` means that player `p` loses `x` going first. -/
+  inductive IsLoss : Player → LGame → Prop where
+    | intro {p : Player} {x : LGame} : (∀ y ∈ x.moves p, IsWin (-p) y) → IsLoss p x
 end
 
-mutual
-  /-- `IsRightWin x` means that right wins `x` going first. -/
-  inductive IsRightWin : LGame → Prop where
-    | intro (x y : LGame) : y ∈ xᴿ → IsLeftLoss y → IsRightWin x
-  /-- `IsLeftLoss x` means that left loses `x` going first. -/
-  inductive IsLeftLoss : LGame → Prop where
-    | intro (x : LGame) : (∀ y ∈ xᴸ, IsRightWin y) → IsLeftLoss x
-end
+theorem isWin_iff_exists {p : Player} {x : LGame} : IsWin p x ↔ ∃ y ∈ x.moves p, IsLoss (-p) y where
+  mp h := h.rec (motive_2 := fun _ _ _ ↦ True) (fun hyx hy _ ↦ ⟨_, hyx, hy⟩) fun _ _ ↦ ⟨⟩
+  mpr := fun ⟨_, hyx, hy⟩ ↦ .intro hyx hy
 
-theorem isLeftWin_iff_exists {x : LGame} : IsLeftWin x ↔ ∃ y ∈ xᴸ, IsRightLoss y where
-  mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩) fun _ _ _ ↦ ⟨⟩
-  mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
+theorem isLoss_iff_forall {p : Player} {x : LGame} : IsLoss p x ↔ ∀ y ∈ x.moves p, IsWin (-p) y where
+  mp h := h.rec (motive_1 := fun _ _ _ ↦ True) (fun _ _ _ ↦ ⟨⟩) fun h _ ↦ h
+  mpr := .intro
 
-theorem isRightWin_iff_exists {x : LGame} : IsRightWin x ↔ ∃ y ∈ xᴿ, IsLeftLoss y where
-  mp h := h.rec (motive_2 := fun _ _ ↦ True) (fun _x y hyx hy _ ↦ ⟨y, hyx, hy⟩) fun _ _ _ ↦ ⟨⟩
-  mpr := fun ⟨y, hyx, hy⟩ ↦ .intro x y hyx hy
+theorem not_isWin_iff_forall {p : Player} {x : LGame} :
+    ¬ IsWin p x ↔ ∀ y ∈ x.moves p, ¬ IsLoss (-p) y := by
+  simp [isWin_iff_exists]
 
-theorem isLeftLoss_iff_forall {x : LGame} : IsLeftLoss x ↔ ∀ y ∈ xᴸ, IsRightWin y where
-  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ _ _ ↦ ⟨⟩) fun _ h _ ↦ h
-  mpr := .intro x
+theorem not_isLoss_iff_exists {p : Player} {x : LGame} :
+    ¬ IsLoss p x ↔ ∃ y ∈ x.moves p, ¬ IsWin (-p) y := by
+  simp [isLoss_iff_forall]
 
-theorem isRightLoss_iff_forall {x : LGame} : IsRightLoss x ↔ ∀ y ∈ xᴿ, IsLeftWin y where
-  mp h := h.rec (motive_1 := fun _ _ ↦ True) (fun _ _ _ _ _ ↦ ⟨⟩) fun _ h _ ↦ h
-  mpr := .intro x
+/-- A surviving strategy for player `p`, going second.
 
-theorem not_isLeftWin_iff_forall {x : LGame} :
-    ¬ IsLeftWin x ↔ ∀ y ∈ xᴸ, ¬ IsRightLoss y := by
-  simp [isLeftWin_iff_exists]
-
-theorem not_isRightWin_iff_forall {x : LGame} :
-    ¬ IsRightWin x ↔ ∀ y ∈ xᴿ, ¬ IsLeftLoss y := by
-  simp [isRightWin_iff_exists]
-
-theorem not_isLeftLoss_iff_exists {x : LGame} :
-    ¬ IsLeftLoss x ↔ ∃ y ∈ xᴸ, ¬ IsRightWin y := by
-  simp [isLeftLoss_iff_forall]
-
-theorem not_isRightLoss_iff_exists {x : LGame} :
-    ¬ IsRightLoss x ↔ ∃ y ∈ xᴿ, ¬ IsLeftWin y := by
-  simp [isRightLoss_iff_forall]
-
-/-- A surviving strategy for Left, going second.
-
-This is a set of states, such that for every move Right makes, Left can bring it back
+This is a set of states, such that for every move the opposite player makes, `p` can bring it back
 to the set.
 
 You can think of this as a nonconstructive version of the more common definition of a strategy,
 which gives an explicit answer for every reachable state. -/
-def IsLeftStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ yᴿ, ∃ r ∈ zᴸ, r ∈ s
+def IsStrategy (p : Player) (s : Set LGame) : Prop :=
+  ∀ y ∈ s, ∀ z ∈ y.moves (-p), ∃ r ∈ z.moves p, r ∈ s
 
-/-- A surviving strategy for Right, going second.
-
-This is a set of states, such that for every move Left makes, Right can bring it back
-to the set.
-
-You can think of this as a nonconstructive version of the more common definition of a strategy,
-which gives an explicit answer for every reachable state. -/
-def IsRightStrategy (s : Set LGame) : Prop :=
-  ∀ y ∈ s, ∀ z ∈ yᴸ, ∃ r ∈ zᴿ, r ∈ s
+theorem IsStrategy.neg {p : Player} {s : Set LGame} (h : IsStrategy p s) : IsStrategy (-p) (-s) := by
+  aesop (add simp [IsStrategy])
 
 @[simp]
-theorem isLeftStrategy_neg {s : Set LGame} : IsLeftStrategy (-s) ↔ IsRightStrategy s := by
-  simp [IsLeftStrategy, IsRightStrategy]
+theorem isStrategy_neg {p : Player} {s : Set LGame} : IsStrategy p (-s) ↔ IsStrategy (-p) s := by
+  constructor <;> intro h <;> simpa using h.neg
 
-@[simp]
-theorem isRightStrategy_neg {s : Set LGame} : IsRightStrategy (-s) ↔ IsLeftStrategy s := by
-  rw [← isLeftStrategy_neg, neg_neg]
-
-theorem IsLeftStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsLeftStrategy (s i)) :
-    IsLeftStrategy (⋃ i, s i) :=
+theorem IsStrategy.iUnion {p : Player} {ι} {s : ι → Set LGame} (h : ∀ i, IsStrategy p (s i)) :
+    IsStrategy p (⋃ i, s i) :=
   fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
     have ⟨r, hrz, hr⟩ := h i y hi z hz
     ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
 
-theorem IsRightStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsRightStrategy (s i)) :
-    IsRightStrategy (⋃ i, s i) :=
-  fun y hy z hz ↦ have ⟨i, hi⟩ := Set.mem_iUnion.mp hy
-    have ⟨r, hrz, hr⟩ := h i y hi z hz
-    ⟨r, hrz, Set.mem_iUnion_of_mem i hr⟩
-
-theorem IsLeftStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsLeftStrategy s) :
-    IsLeftStrategy (⋃₀ S) :=
+theorem IsStrategy.sUnion {p : Player} {S : Set (Set LGame)} (h : ∀ s ∈ S, IsStrategy p s) :
+    IsStrategy p (⋃₀ S) :=
   Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
 
-theorem IsRightStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsRightStrategy s) :
-    IsRightStrategy (⋃₀ S) :=
-  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
+theorem isStrategy_setOf_isLoss (p : Player) : IsStrategy p {x | IsLoss (-p) x} :=
+  fun _ ↦ (isLoss_iff_forall.trans (by simp [isWin_iff_exists])).mp
 
-theorem isLeftStrategy_isRightLoss : IsLeftStrategy {x | IsRightLoss x} :=
-  fun _ ↦ (isRightLoss_iff_forall.trans (by simp [isLeftWin_iff_exists])).mp
-
-theorem isRightStrategy_isLeftLoss : IsRightStrategy {x | IsLeftLoss x} :=
-  fun _ ↦ (isLeftLoss_iff_forall.trans (by simp [isRightWin_iff_exists])).mp
-
-theorem isLeftStrategy_not_isRightWin : IsLeftStrategy {x | ¬ IsRightWin x} :=
+theorem isStrategy_setOf_not_isWin (p : Player) : IsStrategy p {x | ¬ IsWin (-p) x} :=
   fun x hx ↦ by
-    simp_rw [Set.mem_setOf, isRightWin_iff_exists, isLeftLoss_iff_forall] at hx
+    simp_rw [Set.mem_setOf, isWin_iff_exists, isLoss_iff_forall] at hx
     simpa using hx
 
-theorem isRightStrategy_not_isLeftWin : IsRightStrategy {x | ¬ IsLeftWin x} :=
-  fun x hx ↦ by
-    simp_rw [Set.mem_setOf, isLeftWin_iff_exists, isRightLoss_iff_forall] at hx
-    simpa using hx
+theorem not_isWin_iff_mem_Strategy {p : Player} {x : LGame} :
+    ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s := by
+  conv_lhs => rw [← neg_neg p]
+  constructor
+  · exact fun h ↦ ⟨_, h, isStrategy_setOf_not_isWin _⟩
+  · exact fun ls ll ↦ ll.rec (motive_2 := fun _ _ _ ↦ _) (@fun p x y hyx hy ⟨s, hx, hs⟩ ↦
+    have ⟨r, hr⟩ := hs x hx y (by simpa); hy r hr.1 ⟨s, hr.2, hs⟩) (fun _ ↦ id) ls
 
-theorem not_isRightWin_iff_mem_leftStrategy {x : LGame} :
-    ¬ IsRightWin x ↔ ∃ s, x ∈ s ∧ IsLeftStrategy s where
-  mp h := ⟨_, h, isLeftStrategy_not_isRightWin⟩
-  mpr ls ll := ll.rec (motive_2 := fun _ _ ↦ _) (fun x y hyx _ hy ⟨s, hx, hs⟩ ↦
-    have ⟨r, hr⟩ := hs x hx y hyx; hy r hr.1 ⟨s, hr.2, hs⟩) (fun _ _ ↦ id) ls
+#exit
 
 theorem not_isLeftWin_iff_mem_rightStrategy {x : LGame} :
     ¬ IsLeftWin x ↔ ∃ s, x ∈ s ∧ IsRightStrategy s where
