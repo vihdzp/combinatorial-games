@@ -31,7 +31,9 @@ theorem isLoss_iff_forall {p : Player} {x : LGame} : IsLoss p x ↔ ∀ y ∈ x.
   mp h := h.rec (motive_1 := fun _ _ _ ↦ True) (fun _ _ _ ↦ ⟨⟩) fun h _ ↦ h
   mpr := .intro
 
-alias ⟨IsLoss.isWin_of_mem_moves, _⟩ := isLoss_iff_forall
+theorem IsLoss.isWin_of_mem_moves {p : Player} {x y : LGame} (h : IsLoss p x) (hy : y ∈ x.moves p) :
+    IsWin (-p) y :=
+  isLoss_iff_forall.1 h y hy
 
 theorem not_isWin_iff_forall {p : Player} {x : LGame} :
     ¬ IsWin p x ↔ ∀ y ∈ x.moves p, ¬ IsLoss (-p) y := by
@@ -123,7 +125,7 @@ theorem StopperFor.not_isDraw {p : Player} {x : LGame} (h : StopperFor p x) : ¬
   rintro ⟨hw, hl⟩
   obtain ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
   obtain ⟨z, hzy, hz⟩ := not_isLoss_iff_exists.mp (not_isWin_iff_forall.mp hw y hyx)
-  exact hz <| ((not_isDraw_iff.1 <| IH y hyx).resolve_left hy).isWin_of_mem_moves z hzy
+  exact hz <| ((not_isDraw_iff.1 <| IH y hyx).resolve_left hy).isWin_of_mem_moves hzy
 
 theorem Stopper.not_isDraw (p : Player) {x : LGame} (h : Stopper x) : ¬ IsDraw p x :=
   (h p).not_isDraw
