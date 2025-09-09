@@ -999,6 +999,7 @@ theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ Stop
 def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 
+@[simp]
 theorem Stopper.stopperFor {p : Player} {x : LGame} (h : Stopper x) : StopperFor p x :=
   h p
 
@@ -1019,9 +1020,7 @@ theorem stopper_zero : Stopper 0 :=
 @[simp]
 theorem stopper_one : Stopper 1 := by
   refine fun p ↦ .mk ?_
-  cases p with
-  | left => simpa using stopper_zero _
-  | right => simp
+  cases p <;> simp
 
 @[simp]
 theorem stopper_on : Stopper.{u} on := by
