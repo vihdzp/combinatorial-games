@@ -77,6 +77,16 @@ theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGam
     apply hf
 
 @[simp]
+theorem stopper_toLGame (x : IGame) : LGame.Stopper x := by
+  refine fun p ↦ .mk fun y h ↦ ?_
+  obtain ⟨-, ⟨⟨p', rfl⟩, h⟩⟩ := h
+  simp_rw [moves_toLGame] at h
+  obtain ⟨y, hy, rfl⟩ := h
+  exact stopper_toLGame y _
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
 theorem toLGame_zero : toLGame 0 = 0 := by
   ext p; cases p <;> simp
 

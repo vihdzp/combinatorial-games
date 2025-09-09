@@ -319,10 +319,6 @@ instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
 theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 
-@[simp] theorem leftMoves_zero : 0ᴸ = ∅ := leftMoves_ofSets ..
-@[simp] theorem rightMoves_zero : 0ᴿ = ∅ := rightMoves_ofSets ..
-
--- TODO: remove the former?
 @[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
 instance : Inhabited LGame := ⟨0⟩
@@ -340,6 +336,7 @@ def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
 @[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
 @[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
+@[simp] theorem isOption_on_iff {x : LGame} : IsOption x on ↔ x = on := by simp [IsOption]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
@@ -354,6 +351,7 @@ def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
 @[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
 @[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
+@[simp] theorem isOption_off_iff {x : LGame} : IsOption x off ↔ x = off := by simp [IsOption]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
@@ -366,8 +364,8 @@ theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
 /-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
-@[simp] theorem leftMoves_dud : dudᴸ = {dud} := by simp [dud]
-@[simp] theorem rightMoves_dud : dudᴿ = {dud} := by simp [dud]
+@[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
+@[simp] theorem isOption_dud_iff {x : LGame} : IsOption x dud ↔ x = dud := by simp [IsOption]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
 theorem eq_dud {x : LGame} : x = dud ↔ xᴸ = {x} ∧ xᴿ = {x} := by
@@ -974,5 +972,94 @@ private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
 instance : HasDistribNeg LGame where
   neg_mul := neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
+
+/-! ### Stoppers -/
+
+/-- A game is a stopper for player `p` when an alternating sequence of moves starting with said
+player always terminates. -/
+@[mk_iff]
+inductive StopperFor : Player → LGame → Prop
+  | mk {p : Player} {x : LGame} : (∀ y ∈ x.moves p, StopperFor (-p) y) → StopperFor p x
+
+theorem StopperFor.of_mem_moves {p : Player} {x y : LGame} (h : StopperFor p x)
+    (hy : y ∈ x.moves p) : StopperFor (-p) y := by
+  induction h with | mk IH
+  exact IH y hy
+
+theorem StopperFor.neg {p : Player} {x : LGame} (h : StopperFor p x) : StopperFor (-p) (-x) := by
+  induction h with | @mk p' x h IH
+  refine .mk ?_
+  simp_all
+
+@[simp]
+theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ StopperFor (-p) x := by
+  constructor <;> intro h <;> simpa using h.neg
+
+/-- A game is a stopper when it's `StopperFor` for both players. -/
+abbrev Stopper (x : LGame) : Prop :=
+  ∀ p, StopperFor p x
+
+theorem Stopper.stopperFor {p : Player} {x : LGame} (h : Stopper x) : StopperFor p x :=
+  h p
+
+theorem Stopper.mk {x : LGame} (H : ∀ p, ∀ y ∈ x.moves p, Stopper y) : Stopper x :=
+  fun p ↦ .mk fun y hy ↦ H p y hy _
+
+theorem Stopper.neg {x : LGame} (h : Stopper x) : Stopper (-x) := by
+  simp_all
+
+@[simp]
+theorem stopper_neg_iff {x : LGame} : Stopper (-x) ↔ Stopper x := by
+  constructor <;> intro h <;> simpa using h.neg
+
+@[simp]
+theorem stopper_zero : Stopper 0 :=
+  fun p ↦ .mk <| by simp
+
+@[simp]
+theorem stopper_one : Stopper 1 := by
+  refine fun p ↦ .mk ?_
+  cases p <;> simp
+
+@[simp]
+theorem stopper_on : Stopper.{u} on := by
+  have : StopperFor.{u} right on := by refine .mk ?_; simp
+  refine fun p ↦ .mk fun y h ↦ ?_
+  cases p <;> simp_all
+
+@[simp]
+theorem stopper_off : Stopper off := by
+  simpa using stopper_on.neg
+
+@[simp]
+theorem not_stopper_dud : ¬ Stopper dud := by
+  refine fun h ↦ (h default).rec (motive := fun _ x _ ↦ x ≠ dud) ?_ rfl
+  aesop
+
+@[simp]
+theorem stopperFor_right_tis : StopperFor right tis :=
+  .mk <| by simp
+
+@[simp]
+theorem not_stopperFor_left_tis : ¬ StopperFor left tis := by
+  refine fun h ↦ h.rec (motive := fun p x _ ↦ p.cases (x ≠ tis) (x ≠ tisn)) ?_ rfl
+  aesop
+
+@[simp]
+theorem not_stopper_tis : ¬ Stopper tis := by
+  simp
+
+@[simp]
+theorem stopperFor_left_tisn : StopperFor left tisn :=
+  .mk <| by simp
+
+@[simp]
+theorem not_stopperFor_right_tisn : ¬ StopperFor right tisn := by
+  refine fun h ↦ not_stopperFor_left_tis <| h.of_mem_moves ?_
+  simp
+
+@[simp]
+theorem not_stopper_tisn : ¬ Stopper tisn := by
+  simp
 
 end LGame
