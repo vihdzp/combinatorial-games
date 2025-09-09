@@ -198,8 +198,9 @@ theorem rightOutcome_eq_draw_iff {x : LGame} : rightOutcome x = .draw ↔ IsRigh
   exacts [(·.1 w), (·.2 l)]
 
 /-- If there is no infinite play starting by from `x` with right going second,
-then `x` cannot end in a draw with right going second. -/
--- Note: the spelling `Relation.Comp (· ∈ ·ᴿ) (· ∈ ·ᴸ)` is slightly longer
+then `x` cannot end in a draw with right going second.
+
+TODO: rewrite the assumption as `StopperFor left x`. -/
 theorem not_isLeftDraw_of_acc_comp {x : LGame}
     (h : Acc (fun z x ↦ ∃ y ∈ xᴸ, z ∈ yᴿ) x) : ¬ IsLeftDraw x :=
   h.rec fun _x _ ih ⟨nw, nl⟩ ↦
@@ -208,7 +209,9 @@ theorem not_isLeftDraw_of_acc_comp {x : LGame}
     ih z ⟨y, hyx, hzy⟩ ⟨hz, not_isRightWin_iff_forall.mp hy z hzy⟩
 
 /-- If there is no infinite play starting from `x` with right going first,
-then `x` cannot end in a draw with right going first. -/
+then `x` cannot end in a draw with right going first.
+
+TODO: rewrite the assumption as `StopperFor right x`. -/
 theorem not_isRightDraw_of_acc_comp {x : LGame}
     (h : Acc (fun z x ↦ ∃ y ∈ xᴿ, z ∈ yᴸ) x) : ¬ IsRightDraw x :=
   h.rec fun _x _ ih ⟨nw, nl⟩ ↦
