@@ -1000,7 +1000,7 @@ def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 
 @[simp]
-theorem Stopper.stopperFor {p : Player} {x : LGame} (h : Stopper x) : StopperFor p x :=
+theorem Stopper.stopperFor (p : Player) {x : LGame} (h : Stopper x) : StopperFor p x :=
   h p
 
 /-- A game is a stopper when all its options are stoppers.
