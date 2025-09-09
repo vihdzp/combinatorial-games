@@ -996,7 +996,7 @@ theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ Stop
   constructor <;> intro h <;> simpa using h.neg
 
 /-- A game is a stopper when it's `StopperFor` for both players. -/
-abbrev Stopper (x : LGame) : Prop :=
+def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 
 theorem Stopper.stopperFor {p : Player} {x : LGame} (h : Stopper x) : StopperFor p x :=
@@ -1006,7 +1006,7 @@ theorem Stopper.mk {x : LGame} (H : ∀ p, ∀ y ∈ x.moves p, Stopper y) : Sto
   fun p ↦ .mk fun y hy ↦ H p y hy _
 
 theorem Stopper.neg {x : LGame} (h : Stopper x) : Stopper (-x) := by
-  simp_all
+  simp_all [Stopper]
 
 @[simp]
 theorem stopper_neg_iff {x : LGame} : Stopper (-x) ↔ Stopper x := by
@@ -1019,7 +1019,9 @@ theorem stopper_zero : Stopper 0 :=
 @[simp]
 theorem stopper_one : Stopper 1 := by
   refine fun p ↦ .mk ?_
-  cases p <;> simp
+  cases p with
+  | left => simpa using stopper_zero _
+  | right => simp
 
 @[simp]
 theorem stopper_on : Stopper.{u} on := by
@@ -1032,13 +1034,14 @@ theorem stopper_off : Stopper off := by
   simpa using stopper_on.neg
 
 @[simp]
-theorem not_stopper_dud : ¬ Stopper dud := by
-  refine fun h ↦ (h default).rec (motive := fun _ x _ ↦ x ≠ dud) ?_ rfl
+theorem not_stopperFor_dud (p : Player) : ¬ StopperFor p dud := by
+  refine fun h ↦ h.rec (motive := fun _ x _ ↦ x ≠ dud) ?_ rfl
   aesop
 
-@[simp]
-theorem stopperFor_right_tis : StopperFor right tis :=
-  .mk <| by simp
+@[simp] theorem not_stopper_dud : ¬ Stopper dud := by simp [Stopper]
+
+@[simp] theorem stopperFor_right_tis : StopperFor right tis := .mk <| by simp
+@[simp] theorem stopperFor_left_tisn : StopperFor left tisn := .mk <| by simp
 
 @[simp]
 theorem not_stopperFor_left_tis : ¬ StopperFor left tis := by
@@ -1046,20 +1049,11 @@ theorem not_stopperFor_left_tis : ¬ StopperFor left tis := by
   aesop
 
 @[simp]
-theorem not_stopper_tis : ¬ Stopper tis := by
-  simp
-
-@[simp]
-theorem stopperFor_left_tisn : StopperFor left tisn :=
-  .mk <| by simp
-
-@[simp]
 theorem not_stopperFor_right_tisn : ¬ StopperFor right tisn := by
   refine fun h ↦ not_stopperFor_left_tis <| h.of_mem_moves ?_
   simp
 
-@[simp]
-theorem not_stopper_tisn : ¬ Stopper tisn := by
-  simp
+@[simp] theorem not_stopper_tis : ¬ Stopper tis := by simp [Stopper]
+@[simp] theorem not_stopper_tisn : ¬ Stopper tisn := by simp [Stopper]
 
 end LGame
