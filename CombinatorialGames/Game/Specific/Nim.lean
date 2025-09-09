@@ -106,17 +106,12 @@ termination_by o
 /-- This would show that the birthday of an impartial game equals its Grundy value! -/
 proof_wanted _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val
 
-@[simp, game_cmp]
-theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  ConcreteGame.neg_toIGame rfl ..
-
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
   ConcreteGame.impartial_toIGame rfl ..
 
-protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
-  rw [dicotic_def]
-  simpa using fun a ha ↦ .nim a
-termination_by o
+@[simp, game_cmp]
+theorem neg_nim (o : Nimber) : -nim o = nim o :=
+  Impartial.neg_eq _
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
   Impartial.fuzzy_of_mem_moves (mem_moves_nim_of_lt default h)
