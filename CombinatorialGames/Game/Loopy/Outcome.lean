@@ -123,9 +123,7 @@ theorem StopperFor.not_isDraw {p : Player} {x : LGame} (h : StopperFor p x) : ¬
   rintro ⟨hw, hl⟩
   obtain ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
   obtain ⟨z, hzy, hz⟩ := not_isLoss_iff_exists.mp (not_isWin_iff_forall.mp hw y hyx)
-  obtain h | h := not_isDraw_iff.1 <| IH y hyx
-  · contradiction
-  · exact hz <| h.isWin_of_mem_moves z hzy
+  exact hz <| ((not_isDraw_iff.1 <| IH y hyx).resolve_left hy).isWin_of_mem_moves z hzy
 
 theorem Stopper.not_isDraw (p : Player) {x : LGame} (h : Stopper x) : ¬ IsDraw p x :=
   (h p).not_isDraw
