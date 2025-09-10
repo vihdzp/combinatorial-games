@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Concrete
+import CombinatorialGames.Game.Graph
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 
@@ -25,16 +25,16 @@ universe u
 
 open Nimber Set
 
-namespace ConcreteGame
+namespace GameGraph
 
-/-- The game of nim as a `ConcreteGame`. -/
-abbrev nim : ConcreteGame Nimber where
+/-- The game of nim as a `GameGraph`. -/
+abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
 instance : IsWellFounded _ nim.IsOption :=
   isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
 
-end ConcreteGame
+end GameGraph
 
 namespace IGame
 
@@ -43,14 +43,14 @@ namespace IGame
 /-- The definition of single-heap nim, which can be viewed as a pile of stones where each player can
 take a positive number of stones from it on their turn. -/
 noncomputable def nim : Nimber.{u} → IGame.{u} :=
-  ConcreteGame.nim.toIGame
+  GameGraph.nim.toIGame
 
 theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
-  ConcreteGame.toIGame_def' ..
+  GameGraph.toIGame_def' ..
 
 @[simp]
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
-  ConcreteGame.moves_toIGame ..
+  GameGraph.moves_toIGame ..
 
 theorem forall_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
     (∀ x ∈ (nim o).moves p, P x) ↔ (∀ a < o, P (nim a)) := by
@@ -108,10 +108,10 @@ proof_wanted _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o))
 
 @[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  ConcreteGame.neg_toIGame rfl ..
+  GameGraph.neg_toIGame rfl ..
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
-  ConcreteGame.impartial_toIGame rfl ..
+  GameGraph.impartial_toIGame rfl ..
 
 protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
   rw [dicotic_def]

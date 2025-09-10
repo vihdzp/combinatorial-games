@@ -10,18 +10,18 @@ import CombinatorialGames.Game.Impartial.Basic
 # Combinatorial games from a type of states
 
 In the literature, mathematicians often describe games as graphs, consisting of a set of states, as
-well as move relations for the left and right players. We define a structure `ConcreteGame` which
+well as move relations for the left and right players. We define a structure `GameGraph` which
 facilitates this construction, bundling the left and right set functions along with the type, as
-well as functions `ConcreteGame.toLGame` and `ConcreteGame.toIGame` which turn them into the
-appropriate type of game.
+well as functions `GameGraph.toLGame` and `GameGraph.toIGame` which turn them into the appropriate
+type of game.
 
-Mathematically, `ConcreteGame.toLGame` is nothing but the corecursor on loopy games, while
-`ConcreteGame.toIGame` is defined inductively.
+Mathematically, `GameGraph.toLGame` is nothing but the corecursor on loopy games, while
+`GameGraph.toIGame` is defined inductively.
 
 ## Design notes
 
-When working with any "specific" game (nim, domineering, etc.) you can use  `ConcreteGame` to set up
-the basic theorems and definitions, but the intent is that you're not working with `ConcreteGame`
+When working with any "specific" game (nim, domineering, etc.) you can use  `GameGraph` to set up
+the basic theorems and definitions, but the intent is that you're not working with `GameGraph`
 directly most of the time.
 -/
 
@@ -31,19 +31,19 @@ open IGame Set
 
 variable {α : Type v}
 
-/-- A "concrete" game is a type of states endowed with move sets for the left and right players.
+/-- A game graph is a type of states endowed with move sets for the left and right players.
 
-You can use `ConcreteGame.toLGame` and `ConcreteGame.toIGame` to turn this structure into the
+You can use `GameGraph.toLGame` and `GameGraph.toIGame` to turn this structure into the
 appropriate game type. -/
-structure ConcreteGame (α : Type v) : Type v where
+structure GameGraph (α : Type v) : Type v where
   /-- The sets of options for the players. -/
   moves : Player → α → Set α
 
-namespace ConcreteGame
-variable {c : ConcreteGame.{v} α} {p : Player}
+namespace GameGraph
+variable {c : GameGraph.{v} α} {p : Player}
 
 /-- `IsOption a b` means that `a` is either a left or a right move for `b`. -/
-def IsOption (c : ConcreteGame α) (a b : α) : Prop :=
+def IsOption (c : GameGraph α) (a b : α) : Prop :=
   a ∈ ⋃ p, c.moves p b
 
 @[aesop simp]
@@ -69,7 +69,7 @@ instance (b : α) : Small.{u} {a // c.IsOption a b} := by
 /-! ### Loopy games -/
 
 variable (c) in
-/-- Turns a state of a `ConcreteLGame` into an `LGame`. -/
+/-- Turns a state of a `GameGraph` into an `LGame`. -/
 def toLGame (a : α) : LGame.{u} :=
   .corec c.moves a
 
@@ -115,7 +115,7 @@ theorem moveRecOn_eq {motive : α → Sort*} (x)
   rfl
 
 variable (c) in
-/-- Turns a state of a `ConcreteIGame` into an `IGame`. -/
+/-- Turns a state of a `GameGraph` into an `IGame`. -/
 def toIGame (a : α) : IGame.{u} :=
   c.moveRecOn a fun x IH ↦ !{fun p ↦ .range fun b : c.moves p x ↦ IH p b b.2}
 
@@ -158,4 +158,4 @@ theorem impartial_toIGame (h : c.moves left = c.moves right) (a : α) : Impartia
   rw [impartial_def, neg_toIGame h]
   simp_all
 
-end ConcreteGame
+end GameGraph
