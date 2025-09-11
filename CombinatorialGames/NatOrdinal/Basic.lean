@@ -31,11 +31,6 @@ needed.
 
 For similar reasons, most results about ordinals and games are written using `NatOrdinal` rather
 than `Ordinal` (except when `Nimber` would make more sense).
-
-## Todo
-
-- Prove the characterizations of natural addition and multiplication in terms of the Cantor normal
-  form.
 -/
 
 universe u v
