@@ -351,16 +351,15 @@ end Numeric
 
 open NatOrdinal in
 theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame := by
+  have H {y} (h : y < x) (n : ℕ) : toIGame (ω^ y * n) ≈ ω^ y.toIGame * n :=
+    (toIGame_mul ..).trans <| Numeric.mul_congr (toIGame_wpow_equiv y) (toIGame_natCast_equiv n)
   obtain rfl | hx := eq_or_ne x 0; simp
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
   · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
     rintro z ⟨y, hy, n, hz⟩
     apply ((toIGame.strictMono hz).trans_le _).not_ge
-    rw [(toIGame_mul ..).le_congr_left,
-      (Numeric.mul_congr (toIGame_wpow_equiv y) (toIGame_natCast_equiv n)).le_congr_left,
-      ← Dyadic.toIGame_natCast, mul_comm]
-    apply (Numeric.mul_wpow_lt_wpow' n _).le
-    simpa
+    rw [(H hy n).le_congr_left, mul_comm]
+    simpa using (Numeric.mul_wpow_lt_wpow' n (toIGame.strictMono hy)).le
   · simp
   · simp_rw [forall_leftMoves_wpow, forall_leftMoves_toIGame]
     constructor
@@ -368,13 +367,14 @@ theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame 
       simp
     · intro r hr y hy
       obtain ⟨n, hn⟩ := exists_nat_gt r
-      apply not_le_of_gt
       rw [mul_comm]
-
+      apply ((toIGame.strictMono <| wpow_mul_natCast_lt hy n).trans' _).not_ge
+      rw [(H hy n).lt_congr_right, Numeric.mul_lt_mul_left]
+      · exact_mod_cast hn
+      · exact Numeric.wpow_pos _
   · simp
 termination_by x
 
-#exit
 end IGame
 
 namespace Surreal
