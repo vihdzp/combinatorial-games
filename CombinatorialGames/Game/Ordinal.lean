@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Short
-import CombinatorialGames.NatOrdinal
+import CombinatorialGames.NatOrdinal.Basic
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
@@ -73,6 +73,9 @@ termination_by a => a
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
+instance : Coe NatOrdinal IGame where
+  coe x := toIGame x
+
 theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
@@ -83,6 +86,14 @@ theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
 @[simp, game_cmp]
 theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
   rightMoves_toIGame' o
+
+theorem forall_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+    (∀ x ∈ (toIGame o)ᴸ, P x) ↔ ∀ a < o, P (toIGame a) := by
+  simp
+
+theorem exists_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+    (∃ x ∈ (toIGame o)ᴸ, P x) ↔ ∃ a < o, P (toIGame a) := by
+  simp
 
 @[game_cmp]
 theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
@@ -124,6 +135,9 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 /-- Converts an ordinal into the corresponding game. -/
 noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
+
+instance : Coe NatOrdinal Game where
+  coe x := toGame x
 
 @[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 

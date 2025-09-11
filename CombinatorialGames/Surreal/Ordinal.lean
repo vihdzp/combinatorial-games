@@ -29,6 +29,9 @@ namespace NatOrdinal
 def toSurreal : NatOrdinal ↪o Surreal :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
+instance : Coe NatOrdinal Surreal where
+  coe x := toSurreal x
+
 @[simp]
 theorem _root_.Surreal.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toSurreal :=
   rfl
