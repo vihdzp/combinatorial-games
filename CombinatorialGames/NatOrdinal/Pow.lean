@@ -181,7 +181,25 @@ theorem wpow_add_wpow {x y : NatOrdinal} (h : x ≤ y) : ω^ y + ω^ x = of (ω 
   simpa using Order.lt_succ_of_le h
 
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
+  obtain rfl | hx := eq_or_ne x 0; simp
+  obtain rfl | hy := eq_or_ne y 0; simp
+  have h : x + y ≠ 0 := by simp_all
   apply le_antisymm
-  · rw [wpow_le_iff, lt_add_iff]
+  · simp_rw [wpow_le_iff h, lt_add_iff]
+    rintro z (⟨a, ha, hz⟩ | ⟨a, ha, hz⟩) n <;> apply (mul_le_mul_right' (wpow_le_wpow.2 hz) _).trans
+    · rw [wpow_add, mul_comm, ← mul_assoc, mul_comm _ (ω^ a)]
+      exact mul_le_mul_right' (wpow_mul_natCast_lt ha n).le _
+    · rw [wpow_add, mul_assoc]
+      exact mul_le_mul_left' (wpow_mul_natCast_lt ha n).le _
+  · simp_rw [mul_le_iff, lt_wpow_iff hx, lt_wpow_iff hy]
+    rintro z ⟨a, ha, n, hz⟩ w ⟨b, hb, m, hw⟩
+    apply (add_lt_wpow _ _).trans_le  (le_add_right ..)
+    · apply (mul_le_mul_right' hz.le _).trans_lt
+      rw [← mul_comm, ← mul_assoc, mul_comm (ω^ y), ← wpow_add]
+      exact wpow_mul_natCast_lt (add_lt_add_right ha y) n
+    · apply (mul_le_mul_left' hw.le _).trans_lt
+      rw [← mul_assoc, ← wpow_add]
+      exact wpow_mul_natCast_lt (add_lt_add_left hb x) m
+termination_by (x, y)
 
 end NatOrdinal

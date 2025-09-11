@@ -87,6 +87,14 @@ theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
 theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
   rightMoves_toIGame' o
 
+theorem forall_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+    (∀ x ∈ (toIGame o)ᴸ, P x) ↔ ∀ a < o, P (toIGame a) := by
+  simp
+
+theorem exists_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+    (∃ x ∈ (toIGame o)ᴸ, P x) ↔ ∃ a < o, P (toIGame a) := by
+  simp
+
 @[game_cmp]
 theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (toIGame n)ᴸ, P x) ↔ ∀ m < n, P (toIGame m) := by

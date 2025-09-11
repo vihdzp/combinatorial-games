@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
+import CombinatorialGames.NatOrdinal.Pow
 
 /-!
 # Surreal exponentiation
@@ -12,7 +14,6 @@ We define here the ω-map on games and on surreal numbers, representing exponent
 
 ## Todo
 
-- Prove that `ω^ x` matches ordinal exponentiation for ordinal `x`.
 - Define commensurate surreals and prove properties relating to `ω^ x`.
 - Define the normal form of a surreal number.
 -/
@@ -347,6 +348,33 @@ theorem wpow_sub_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x - y) ≈ �
   (wpow_add_equiv ..).trans (mul_congr_right (wpow_neg_equiv _))
 
 end Numeric
+
+open NatOrdinal in
+theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame := by
+  obtain rfl | hx := eq_or_ne x 0; simp
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
+  · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
+    rintro z ⟨y, hy, n, hz⟩
+    apply ((toIGame.strictMono hz).trans_le _).not_ge
+    rw [(toIGame_mul ..).le_congr_left,
+      (Numeric.mul_congr (toIGame_wpow_equiv y) (toIGame_natCast_equiv n)).le_congr_left,
+      ← Dyadic.toIGame_natCast, mul_comm]
+    apply (Numeric.mul_wpow_lt_wpow' n _).le
+    simpa
+  · simp
+  · simp_rw [forall_leftMoves_wpow, forall_leftMoves_toIGame]
+    constructor
+    · rw [← toIGame_zero, toIGame.le_iff_le]
+      simp
+    · intro r hr y hy
+      obtain ⟨n, hn⟩ := exists_nat_gt r
+      apply not_le_of_gt
+      rw [mul_comm]
+
+  · simp
+termination_by x
+
+#exit
 end IGame
 
 namespace Surreal
@@ -398,6 +426,10 @@ theorem wpow_neg : ∀ x : Surreal, ω^ -x = (ω^ x)⁻¹ := by
 theorem wpow_sub : ∀ x y : Surreal, ω^ (x - y) = ω^ x / ω^ y := by
   rintro ⟨x, _⟩ ⟨y, _⟩
   exact Surreal.mk_eq (Numeric.wpow_sub_equiv x y)
+
+@[simp]
+theorem toSurreal_wpow (x : NatOrdinal) : (ω^ x).toSurreal = ω^ x.toSurreal :=
+  Surreal.mk_eq (toIGame_wpow_equiv x)
 
 end Surreal
 end
