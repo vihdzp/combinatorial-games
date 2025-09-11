@@ -73,6 +73,9 @@ termination_by a => a
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
+instance : Coe NatOrdinal IGame where
+  coe x := toIGame x
+
 theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
@@ -124,6 +127,9 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 /-- Converts an ordinal into the corresponding game. -/
 noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
+
+instance : Coe NatOrdinal Game where
+  coe x := toGame x
 
 @[simp] theorem _root_.Game.mk_natOrdinal_toIGame (o : NatOrdinal) : .mk o.toIGame = o.toGame := rfl
 
