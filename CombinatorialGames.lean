@@ -27,7 +27,7 @@ import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
-import CombinatorialGames.NatOrdinal
+import CombinatorialGames.NatOrdinal.Basic
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Nimber.Nat

@@ -26,13 +26,6 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
     Set.image2 f s t = Set.range (fun x : s × t ↦ f x.1 x.2) := by
   aesop
 
-/-- A typeclass for the the `ω^` notation. -/
-class Wpow (α : Type*) where
-  wpow : α → α
-
-prefix:75 "ω^ " => Wpow.wpow
-recommended_spelling "wpow" for "ω^" in [«termω^_»]
-
 noncomputable section
 namespace IGame
 
