@@ -162,8 +162,8 @@ theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
   have := hx.of_mem_moves hy
   induction p with
-  | left => symm; simpa using leftMove_lf hy
-  | right => simpa using lf_rightMove hy
+  | left => symm; simpa using left_lf hy
+  | right => simpa using lf_right hy
 
 private theorem equiv_iff_forall_fuzzy' :
     x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
