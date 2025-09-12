@@ -4,236 +4,95 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Weiyi Wang, Violeta Hernández Palacios
 -/
 import Mathlib.Algebra.Order.Archimedean.Class
-import Mathlib.Algebra.Order.Ring.Basic
-import Mathlib.RingTheory.Valuation.Basic
+import Mathlib.Algebra.Order.Hom.Ring
+import Mathlib.Algebra.Order.Ring.Archimedean
+import Mathlib.Algebra.Order.Group.DenselyOrdered
 
 -- https://github.com/leanprover-community/mathlib4/pull/28187
 
-variable {M : Type*} [LinearOrder M]
+variable {R S : Type*} [LinearOrder R] [LinearOrder S]
+variable [CommRing R] [IsStrictOrderedRing R]
 
 namespace ArchimedeanClass
-
-attribute [induction_eliminator] ind
-
-section AddCommGroup
-
-variable [AddCommGroup M] [IsOrderedAddMonoid M] {a b : M}
-
-/-- Lift a `M → M → α` function to `ArchimedeanClass M → ArchimedeanClass M → α`. -/
-def lift₂ {α : Type*} (f : M → M → α)
-    (h : ∀ a₁ b₁ a₂ b₂, mk a₁ = mk b₁ → mk a₂ = mk b₂ → f a₁ a₂ = f b₁ b₂) :
-    ArchimedeanClass M → ArchimedeanClass M → α :=
-  Quotient.lift₂ f fun _ _ _ _ h₁ h₂ ↦ h _ _ _ _ (mk_eq_mk.mpr h₁) (mk_eq_mk.mpr h₂)
-
-theorem lift₂_mk {α : Type*} (f : M → M → α)
-    (h : ∀ a₁ b₁ a₂ b₂, mk a₁ = mk b₁ → mk a₂ = mk b₂ → f a₁ a₂ = f b₁ b₂)
-    (a b : M) : lift₂ f h (mk a) (mk b) = f a b := by
-  unfold lift₂
-  exact Quotient.lift₂_mk f (fun _ _ _ _ h₁ h₂ ↦ h _ _ _ _ (mk_eq_mk.mpr h₁) (mk_eq_mk.mpr h₂)) a b
-
-end AddCommGroup
-
 section Ring
-variable [CommRing M]
 
-section IsOrderedRing
-variable [IsStrictOrderedRing M]
-
-instance : Zero (ArchimedeanClass M) where
-  zero := mk 1
-
-@[simp] theorem mk_one : mk (1 : M) = 0 := rfl
+variable [CommRing S] [IsStrictOrderedRing S]
 
 @[simp]
-theorem top_eq_mk_iff {a : M} : ⊤ = mk a ↔ a = 0 := by
-  rw [eq_comm, mk_eq_top_iff]
-
-private theorem mk_mul_le_of_le {x₁ y₁ x₂ y₂ : M} (hx : mk x₁ ≤ mk x₂) (hy : mk y₁ ≤ mk y₂) :
-    mk (x₁ * y₁) ≤ mk (x₂ * y₂) := by
-  obtain ⟨m, hm⟩ := hx
-  obtain ⟨n, hn⟩ := hy
-  use m * n
-  convert mul_le_mul hm hn (abs_nonneg _) (nsmul_nonneg (abs_nonneg _) _) using 1 <;>
-    simp_rw [ArchimedeanOrder.val_of, abs_mul]
-  ring
-
-/-- Multipilication in `M` transfers to Addition in `ArchimedeanClass M`. -/
-instance : Add (ArchimedeanClass M) where
-  add := lift₂ (fun x y ↦ .mk <| x * y) fun _ _ _ _ hx hy ↦
-    (mk_mul_le_of_le hx.le hy.le).antisymm (mk_mul_le_of_le hx.ge hy.ge)
-
-@[simp] theorem mk_mul (x y : M) : mk (x * y) = mk x + mk y := rfl
-
-instance : SMul ℕ (ArchimedeanClass M) where
-  smul n := lift (fun x ↦ mk (x ^ n)) fun x y h ↦ by
-    induction n with
-    | zero => simp
-    | succ n IH => simp_rw [pow_succ, mk_mul, IH, h]
-
-@[simp] theorem mk_pow (n : ℕ) (x : M) : mk (x ^ n) = n • mk x := rfl
-
-instance : AddCommMagma (ArchimedeanClass M) where
-  add_comm x y := by
-    induction x with | mk x
-    induction y with | mk y
-    rw [← mk_mul, mul_comm, mk_mul]
-
-private theorem zero_add' (x : ArchimedeanClass M) : 0 + x = x := by
-  induction x with | mk x
-  rw [← mk_one, ← mk_mul, one_mul]
-
-private theorem add_assoc' (x y z : ArchimedeanClass M) : x + y + z = x + (y + z) := by
-  induction x with | mk x
-  induction y with | mk y
-  induction z with | mk z
-  simp_rw [← mk_mul, mul_assoc]
-
-instance : AddCommMonoid (ArchimedeanClass M) where
-  add_assoc := add_assoc'
-  zero_add := zero_add'
-  add_zero x := add_comm x _ ▸ zero_add' x
-  nsmul n x := n • x
-  nsmul_zero x := by induction x with | mk x => rw [← mk_pow, pow_zero, mk_one]
-  nsmul_succ n x := by induction x with | mk x => rw [← mk_pow, pow_succ, mk_mul, mk_pow]
-
-instance : IsOrderedAddMonoid (ArchimedeanClass M) where
-  add_le_add_left x y h z := by
-    induction x with | mk x
-    induction y with | mk y
-    induction z with | mk z
-    rw [← mk_mul, ← mk_mul]
-    exact mk_mul_le_of_le le_rfl h
-
-noncomputable instance : LinearOrderedAddCommMonoidWithTop (ArchimedeanClass M) where
-  top_add' x := by induction x with | mk x => rw [← mk_zero, ← mk_mul, zero_mul]
-
-variable (M) in
-/-- `ArchimedeanClass.mk` defines an `AddValuation` on the ring `M`. -/
-noncomputable def addValuation : AddValuation M (ArchimedeanClass M) := AddValuation.of mk
-  rfl rfl min_le_mk_add mk_mul
-
-@[simp] theorem addValuation_apply (a : M) : addValuation M a = mk a := rfl
-
-variable {R : Type*} [LinearOrder R] [CommRing R] [IsOrderedRing R]
-
-@[simp]
-theorem orderHom_zero (f : M →+o R) : orderHom f 0 = mk (f 1) := by
+theorem orderHom_zero (f : S →+o R) : orderHom f 0 = mk (f 1) := by
   rw [← mk_one, orderHom_mk]
 
-variable [NeZero (1 : M)]
-
 @[simp]
-theorem mk_eq_zero_of_archimedean [Archimedean M] {x : M} (h : x ≠ 0) : mk x = 0 :=
-  mk_eq_mk_of_archimedean h one_ne_zero
+theorem mk_eq_zero_of_archimedean [Archimedean S] {x : S} (h : x ≠ 0) : mk x = 0 := by
+  have : Nontrivial S := ⟨_, _, h⟩
+  exact mk_eq_mk_of_archimedean h one_ne_zero
 
-theorem eq_zero_or_top_of_archimedean [Archimedean M] (x : ArchimedeanClass M) : x = 0 ∨ x = ⊤ := by
+theorem eq_zero_or_top_of_archimedean [Archimedean S] (x : ArchimedeanClass S) : x = 0 ∨ x = ⊤ := by
   induction x with | mk x
   obtain rfl | h := eq_or_ne x 0 <;> simp_all
 
-theorem mk_map_of_archimedean [Archimedean M] (f : M →+o R) {x : M} (h : x ≠ 0) :
+/-- See `mk_map_of_archimedean'` for a version taking `M →+*o R`. -/
+theorem mk_map_of_archimedean [Archimedean S] (f : S →+o R) {x : S} (h : x ≠ 0) :
     mk (f x) = mk (f 1) := by
   rw [← orderHom_mk, mk_eq_zero_of_archimedean h, orderHom_zero]
 
-@[simp]
-theorem mk_intCast {n : ℤ} (h : n ≠ 0) : mk (n : M) = 0 := by
-  simpa using mk_map_of_archimedean ⟨Int.castAddHom M, fun _ ↦ by simp⟩ h
+/-- See `mk_map_of_archimedean` for a version taking `M →+o R`. -/
+theorem mk_map_of_archimedean' [Archimedean S] (f : S →+*o R) {x : S} (h : x ≠ 0) :
+    mk (f x) = 0 := by
+  simpa using mk_map_of_archimedean f.toOrderAddMonoidHom h
 
 @[simp]
-theorem mk_natCast {n : ℕ} (h : n ≠ 0) : mk (n : M) = 0 := by
+theorem mk_intCast {n : ℤ} (h : n ≠ 0) : mk (n : S) = 0 :=
+  mk_map_of_archimedean' ⟨Int.castRingHom S, fun _ ↦ by simp⟩ h
+
+@[simp]
+theorem mk_natCast {n : ℕ} (h : n ≠ 0) : mk (n : S) = 0 := by
   rw [← Int.cast_natCast]
   exact mk_intCast (mod_cast h)
 
-end IsOrderedRing
-
-section IsStrictOrderedRing
-variable [IsStrictOrderedRing M]
-
-theorem add_left_cancel_of_ne_top {x y z : ArchimedeanClass M} (hx : x ≠ ⊤) (h : x + y = x + z) :
-    y = z := by
-  induction x with | mk x
-  induction y with | mk y
-  induction z with | mk z
-  simp_rw [← mk_mul, mk_eq_mk] at h
-  obtain ⟨⟨m, hm⟩, ⟨n, hn⟩⟩ := h
-  simp_rw [abs_mul, mul_comm |x|, nsmul_eq_mul, ← mul_assoc, ← nsmul_eq_mul] at hm hn
-  refine mk_eq_mk.2 ⟨⟨m, ?_⟩, ⟨n, ?_⟩⟩ <;> exact le_of_mul_le_mul_right ‹_› (by simpa using hx)
-
-theorem add_right_cancel_of_ne_top {x y z : ArchimedeanClass M} (hx : x ≠ ⊤) (h : y + x = z + x) :
-    y = z := by
-  simp_rw [← add_comm x] at h
-  exact add_left_cancel_of_ne_top hx h
-
-end IsStrictOrderedRing
 end Ring
 
-section Field
-variable [Field M] [IsOrderedRing M]
+section Ring
 
-attribute [local instance] IsOrderedRing.toIsStrictOrderedRing
+variable [Ring S] [IsStrictOrderedRing S]
 
-instance : Neg (ArchimedeanClass M) where
-  neg := lift (fun x ↦ mk x⁻¹) fun x y h ↦ by
-    obtain rfl | hx := eq_or_ne x 0
-    · simp_all
-    obtain rfl | hy := eq_or_ne y 0
-    · simp_all
-    have hx' : mk x ≠ ⊤ := by simpa using hx
-    apply add_left_cancel_of_ne_top hx'
-    nth_rw 2 [h]
-    simp [← mk_mul, hx, hy]
-
-@[simp] theorem mk_inv (x : M) : mk x⁻¹ = -mk x := rfl
-
-instance : SMul ℤ (ArchimedeanClass M) where
-  smul n := lift (fun x ↦ mk (x ^ n)) fun x y h ↦ by
-    obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp [h]
-
-@[simp] theorem mk_zpow (n : ℤ) (x : M) : mk (x ^ n) = n • mk x := rfl
-
-private theorem zsmul_succ' (n : ℕ) (x : ArchimedeanClass M) :
-    (n.succ : ℤ) • x = (n : ℤ) • x + x := by
-  induction x with | mk x
-  rw [← mk_zpow, Nat.cast_succ]
-  obtain rfl | hx := eq_or_ne x 0
-  · simp [zero_zpow _ n.cast_add_one_ne_zero]
-  · rw [zpow_add_one₀ hx, mk_mul, mk_zpow]
-
-noncomputable instance : LinearOrderedAddCommGroupWithTop (ArchimedeanClass M) where
-  neg_top := by simp [← mk_zero, ← mk_inv]
-  add_neg_cancel x h := by
-    induction x with | mk x
-    simp [← mk_inv, ← mk_mul, mul_inv_cancel₀ (mk_eq_top_iff.not.1 h)]
-  zsmul n x := n • x
-  zsmul_zero' x := by induction x with | mk x => rw [← mk_zpow, zpow_zero, mk_one]
-  zsmul_succ' := zsmul_succ'
-  zsmul_neg' n x := by
-    induction x with | mk x
-    rw [← mk_zpow, zpow_negSucc, pow_succ, zsmul_succ', mk_inv, mk_mul, ← zpow_natCast, mk_zpow]
-
-@[simp]
-theorem mk_ratCast {q : ℚ} (h : q ≠ 0) : mk (q : M) = 0 := by
-  simpa using mk_map_of_archimedean ⟨(Rat.castHom M : ℚ →+ M), fun _ ↦ by simp⟩ h
-
-theorem mk_le_mk_iff_ratCast {x y : M} : mk x ≤ mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
+private theorem mk_le_mk_iff_denselyOrdered' [DenselyOrdered R] [Archimedean R] {x y : S}
+    (f : R →+*o S) (hf : StrictMono f) (h : 0 < y) :
+    mk x ≤ mk y ↔ ∃ q : R, 0 < f q ∧ f q * |y| ≤ |x| := by
+  have H {q} : 0 < f q ↔ 0 < q := by simpa using hf.lt_iff_lt (a := 0)
   constructor
-  · rintro ⟨n, hn⟩
-    obtain rfl | hn₀ := n.eq_zero_or_pos
-    · have := exists_gt (0 : ℚ)
-      simp_all
-    · use (n : ℚ)⁻¹
-      aesop (add simp [inv_mul_le_iff₀])
+  · rintro ⟨(_ | n), hn⟩
+    · simp_all
+    · obtain ⟨q, hq₀, hq⟩ := exists_nsmul_lt_of_pos (one_pos (α := R)) (n + 1)
+      refine ⟨q, H.2 hq₀, le_of_mul_le_mul_left ?_ n.cast_add_one_pos⟩
+      simpa [← mul_assoc] using mul_le_mul (hf hq).le hn (abs_nonneg y) (by simp)
   · rintro ⟨q, hq₀, hq⟩
-    obtain ⟨n, hn⟩ := exists_nat_gt q⁻¹
-    use n
-    simp_rw [ArchimedeanOrder.val_of, nsmul_eq_mul]
-    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
-    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
+    have hq₀' := H.1 hq₀
+    obtain ⟨n, hn⟩ := exists_lt_nsmul hq₀' 1
+    refine ⟨n, le_of_mul_le_mul_left ?_ hq₀⟩
+    have h : 0 ≤ f (n • q) := by
+      rw [← f.map_zero]
+      exact f.monotone' (nsmul_nonneg hq₀'.le n)
+    simpa [mul_comm, mul_assoc] using mul_le_mul (hf hn).le hq (mul_nonneg hq₀.le (abs_nonneg y)) h
 
-theorem mk_lt_mk_iff_ratCast {x y : M} : mk x < mk y ↔ ∀ q : ℚ, q * |y| < |x| := by
-  refine ⟨fun H q ↦ ?_, fun H n ↦ by simpa using H n⟩
-  obtain ⟨n, hn⟩ := exists_nat_gt q
-  apply (H n).trans_le'
-  simpa using mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg y)
+theorem mk_le_mk_iff_denselyOrdered [DenselyOrdered R] [Archimedean R] {x y : S}
+    (f : R →+*o S) (hf : StrictMono f) :
+    mk x ≤ mk y ↔ ∃ q : R, 0 < f q ∧ f q * |y| ≤ |x| := by
+  obtain hy | rfl | hy := lt_trichotomy y 0
+  · simpa using mk_le_mk_iff_denselyOrdered' f hf (neg_pos.2 hy)
+  · have : ∃ q, 0 < f q := ⟨1, by simp⟩
+    simpa
+  · exact mk_le_mk_iff_denselyOrdered' f hf hy
 
-end Field
+def _root_.Rat.castOrderRingHom [Field R] [IsStrictOrderedRing R] : ℚ →+*o R where
+  monotone' := Rat.cast_mono
+  __ := Rat.castHom _
+
+end Ring
+
+theorem mk_le_mk_iff_ratCast [Field S] [IsOrderedRing S] {x y : S} :
+    mk x ≤ mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
+  have := IsOrderedRing.toIsStrictOrderedRing S
+  simpa using mk_le_mk_iff_denselyOrdered Rat.castOrderRingHom Rat.cast_strictMono (x := x) (y := y)
+
 end ArchimedeanClass

@@ -43,8 +43,10 @@ theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 -- TODO: generalize, upstream.
-theorem mk_le_mk_of_pos {x y : Surreal} {R : Type*} [Ring R] (f : R →+ Surreal) (h : 0 < y) :
-    mk x ≤ mk y ↔ ∃ q : ℚ, 0 < q ∧ q * |y| ≤ |x| := by
+theorem mk_le_mk_of_pos {x y : Surreal} {R : Type*}
+    [Ring R] [LinearOrder R] [IsOrderedRing R] [DenselyOrdered R] (f : R →+ Surreal) (h : 0 < y) :
+    mk x ≤ mk y ↔ ∃ q : R, 0 < f q ∧ f q * |y| ≤ |x| := by
+  have := exists_nsmul_lt_of_pos h
   constructor
   · rintro ⟨n, hn⟩
     obtain rfl | hn₀ := n.eq_zero_or_pos
