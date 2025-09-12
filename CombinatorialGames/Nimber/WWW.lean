@@ -5,12 +5,16 @@ Authors: Django Peeters
 -/
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.Group.Defs
 import Mathlib.Data.Nat.Nth
 import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.FieldTheory.Finite.Basic
+import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.Minpoly.Field
+import Mathlib.Logic.Function.Defs
 import Mathlib.NumberTheory.PrimeCounting
+import Mathlib.RingTheory.RootsOfUnity.PrimitiveRoots
 import Mathlib.SetTheory.Ordinal.CantorNormalForm
 
 /-!
@@ -32,7 +36,7 @@ Formalize pp.444-450.
 
 universe u
 
-open Ordinal
+open Ordinal Polynomial Function
 open Nat (nth)
 
 /-! ### Prime lemmas -/
@@ -45,24 +49,63 @@ theorem nth_prime_ne_zero (k : ℕ) : nth Nat.Prime k ≠ 0 := by
   rw [Nat.ne_zero_iff_zero_lt]
   exact lt_trans zero_lt_one (one_lt_nth_prime k)
 
+/-! ### Field lemmas -/
+
+theorem splits_or_irreducible_of_primitive_pth_root
+  (F : Type*) [Field F]
+  {p : ℕ} [Fact (Nat.Prime p)]
+  (h : ∃ ζ : F, IsPrimitiveRoot ζ p) (a : F) :
+  (X ^ p - C a).Splits (RingHom.id F) ∨ Irreducible (X ^ p - C a) := by
+  sorry
+
 /-! ### Finite Field lemmas -/
 
-namespace FiniteField
-
-theorem CharTwo.cuberoot_of_cubic_extension
-  (K : Type*) [Field K] [Fintype K] [CharP K 2]
+/- testing
+theorem cuberoot_extension_iff_three_dvd_of_cubic_extension
+  (K : Type*) [Field K] [Fintype K]
   (L : Type*) [Field L] [Algebra K L] (h : Module.finrank K L = 3) :
-  ∃ (x : L) (y : K), x ^ 3 = Algebra.algebraMap y := by
+  3 ∣ Fintype.card K - 1 ↔ ∃ a : K, Irreducible (X ^ 3 - C a) := by
+  sorry
+-/
+
+noncomputable section
+
+instance (F : Type*) [Field F] [Fintype F] :
+  IsCyclic (Fˣ) := by
   sorry
 
-theorem CharTwo.pthroot_of_degree_p_extension
-  (K : Type*) [Field K] [Fintype K] [CharP K 2]
-  (L : Type*) [Field L] [Algebra K L]
-  {p : ℕ} [Fact (Nat.Prime p)] (h : Module.finrank K L = p) (pne2 : p ≠ 2) :
-  ∃ (x : L) (y : K), x ^ p = Algebra.algebraMap y := by
+theorem p_dvd_card_minus_one_iff_primitive_root
+  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  p ∣ Fintype.card F - 1 ↔ ∃ ζ : F, IsPrimitiveRoot ζ p := by
+  constructor
+  · intro ⟨a, ha⟩
+    have ⟨g, hg⟩ := IsCyclic.exists_zpow_surjective (G := Fˣ)
+    use (g ^ a)
+    constructor
+    · rw [← pow_mul, mul_comm, ← ha]
+      #check Fintype.card_units
+      sorry
+    · sorry
+  · intro ⟨ζ, hζ⟩
+    have ⟨ha, hb⟩ := hζ
+    sorry
+
+end
+
+theorem primitive_root_iff_not_surjective
+  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  ∃ ζ : F, IsPrimitiveRoot ζ p ↔ ¬Surjective (fun x : F ↦ x ^ p) := by
   sorry
 
-end FiniteField
+theorem not_surjective_iff_irreducible
+  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  ¬Surjective (fun x : F ↦ x ^ p) ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
+  sorry
+
+theorem p_dvd_card_minus_one_iff_irreducible
+  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  p ∣ Fintype.card F - 1 ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
+  sorry
 
 /-! ### Main lemmas -/
 
