@@ -147,27 +147,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
     · exact log_eq_zero' hb
     · exact log_eq_zero hb
 
-instance : CanonicallyOrderedAdd Ordinal where
-  le_self_add := le_add_right
-
-protected theorem Principal.sSup {op : Ordinal → Ordinal → Ordinal} {s : Set Ordinal}
-    (H : ∀ x ∈ s, Principal op x) : Principal op (sSup s) := by
-  have : Principal op (sSup ∅) := by simp
-  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
-  refine fun x y hx hy ↦ ?_
-  rw [lt_csSup_iff hs hs'] at *
-  obtain ⟨a, has, ha⟩ := hx
-  obtain ⟨b, hbs, hb⟩ := hy
-  refine ⟨_, max_rec' _ has hbs, max_rec ?_ ?_⟩ <;> intro hab
-  · exact H a has ha (hb.trans_le hab)
-  · exact H b hbs (ha.trans_le hab) hb
-
-protected theorem Principal.iSup {op : Ordinal → Ordinal → Ordinal} {ι} {f : ι → Ordinal}
-    (H : ∀ i, Principal op (f i)) : Principal op (⨆ i, f i) := by
-  apply Principal.sSup
-  simpa
-
 end Ordinal
 
 theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
@@ -524,13 +503,14 @@ theorem IsField.one : IsField 1 where
 theorem IsField.of_le_one {x : Nimber} (h : x ≤ 1) : IsField x := by
   cases Nimber.le_one_iff.1 h <;> simp_all
 
-theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
-  h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+theorem IsField.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsField y)
+    (hyx : y ≤ x) (hzy : z < y) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt hy.toIsGroup hyx hzy fun _ hw ↦ (hy.inv_lt hw).trans_le hyx
 
 /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
-    x * y = val (∗x * ∗y) :=
-  hx.mul_eq_of_lt hyx
+theorem IsField.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsField (∗y))
+    (hyx : y ≤ x) (hzy : z < y) : x * z = val (∗x * ∗z) :=
+  hy.mul_eq_of_lt hx hyx hzy
 
 private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
     x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by

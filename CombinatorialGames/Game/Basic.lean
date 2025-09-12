@@ -21,8 +21,6 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
-noncomputable section
-
 open IGame Set Pointwise
 
 /-- Games up to equivalence.
@@ -51,7 +49,7 @@ theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : mo
   Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Game) : IGame := Quotient.out x
+noncomputable def out (x : Game) : IGame := Quotient.out x
 @[simp] theorem out_eq (x : Game) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) : (mk x).out ≈ x := Quotient.mk_out (s := AntisymmRel.setoid ..) x
@@ -98,7 +96,7 @@ instance : AddCommGroupWithOne Game where
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
 
-instance : RatCast Game where
+noncomputable instance : RatCast Game where
   ratCast q := mk q
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
@@ -181,10 +179,10 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
   induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
   induction z using IGame.ofSetsRecOn with | mk zL zR ihzl ihzr
-  simp only [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption]
-  simp only [← Set.image_union, ← ofSets_mul_ofSets]
-  simp only [Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union]
-  simp only [← Equiv.prod_assoc_image, ← Set.image_union, Set.image_image, Equiv.prodAssoc_apply]
+  simp_rw [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption,
+    ← Set.image_union, ← ofSets_mul_ofSets,
+    Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union,
+    ← Equiv.prod_assoc_image, ← Set.image_union, Set.image_image, Equiv.prodAssoc_apply]
   have e1 : (xL ×ˢ yL) ×ˢ zL ∪ (xR ×ˢ yR) ×ˢ zL ∪ ((xL ×ˢ yR) ×ˢ zR ∪ (xR ×ˢ yL) ×ˢ zR) =
       (xL ×ˢ yL) ×ˢ zL ∪ (xL ×ˢ yR) ×ˢ zR ∪ ((xR ×ˢ yL) ×ˢ zR ∪ (xR ×ˢ yR) ×ˢ zL) := by
     ac_rfl
@@ -320,4 +318,3 @@ theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
 end IGame
-end

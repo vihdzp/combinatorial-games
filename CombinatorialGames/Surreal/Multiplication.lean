@@ -24,7 +24,7 @@ well-defined as an operation on the quotient by `IGame.Equiv`, namely the surrea
 an axiom that needs to be satisfied for the surreals to be a `OrderedRing`.
 
 We follow the proof in [SchleicherStoll], except that we use the well-foundedness of the hydra
-relation `CutExpand` on `Multiset PGame` instead of the argument based on a depth function in the
+relation `CutExpand` on `Multiset IGame` instead of the argument based on a depth function in the
 paper. As in said argument, P3 is proven by proxy of an auxiliary P4, which states that for
 `x₁ < x₂` and `y`, then `x₁ * y + x₂ * a < x₁ * a + x₂ * y` when `a ∈ yᴸ`, and
 `x₁ * b + x₂ * y < x₁ * y + x₂ * b` when `b ∈ yᴿ`.
@@ -262,7 +262,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihyx := IH1_swap_of_IH IH
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
-  refine .mk ?_ ?_ ?_
+  refine .mk ?_ ?_
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
@@ -271,7 +271,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
       simpa [mulOption_comm] using mulOption_lt ihyxn ihxyn hb ha hd hc
     · rw [← neg_neg y] at hd
       simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
-  all_goals
+  · intro p
     simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
@@ -551,14 +551,14 @@ protected theorem mul_right_cancel {x y z : IGame} [Numeric x] [Numeric y] [Nume
   exact mul_right_cancel₀ hx h
 
 @[simp]
-protected theorem mul_le_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
-    (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
-  mul_le_mul_left (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+protected theorem mul_le_mul_iff_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
+  mul_le_mul_iff_left₀ (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
 @[simp]
-protected theorem mul_le_mul_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
-    (hx : 0 < x) : y * x ≤ z * x ↔ y ≤ z :=
-  mul_le_mul_right (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
+protected theorem mul_le_mul_iff_right {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]
+    (hx : 0 < x) : x * y ≤ x * z ↔ y ≤ z :=
+  mul_le_mul_iff_right₀ (a := Surreal.mk x) (b := Surreal.mk y) (c := Surreal.mk z) hx
 
 @[simp]
 protected theorem mul_lt_mul_left {x y z : IGame} [Numeric x] [Numeric y] [Numeric z]

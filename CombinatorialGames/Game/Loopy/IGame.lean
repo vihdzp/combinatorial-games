@@ -16,8 +16,6 @@ arithmetic.
 
 open Set
 
-noncomputable section
-
 namespace IGame
 
 private def toLGame' (x : IGame) : LGame :=
@@ -148,4 +146,3 @@ theorem toLGame_mulOption (x y a b : IGame) :
   simp [mulOption, LGame.mulOption]
 
 end IGame
-end
