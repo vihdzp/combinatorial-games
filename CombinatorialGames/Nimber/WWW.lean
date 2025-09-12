@@ -6,6 +6,8 @@ Authors: Django Peeters
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.Algebra.Group.Defs
+import Mathlib.Data.Finite.Defs
+import Mathlib.Data.Fintype.Units
 import Mathlib.Data.Nat.Nth
 import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
@@ -70,21 +72,20 @@ theorem cuberoot_extension_iff_three_dvd_of_cubic_extension
 
 noncomputable section
 
-instance (F : Type*) [Field F] [Fintype F] :
-  IsCyclic (Fˣ) := by
-  sorry
+theorem card_units_eq_card_minus_one
+  (F : Type*) [Field F] [Finite F] : Nat.card Fˣ = Nat.card F - 1 := by
+  exact Nat.card_units F
 
 theorem p_dvd_card_minus_one_iff_primitive_root
-  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
-  p ∣ Fintype.card F - 1 ↔ ∃ ζ : F, IsPrimitiveRoot ζ p := by
+  (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
+  p ∣ Nat.card F - 1 ↔ ∃ ζ : F, IsPrimitiveRoot ζ p := by
   constructor
   · intro ⟨a, ha⟩
     have ⟨g, hg⟩ := IsCyclic.exists_zpow_surjective (G := Fˣ)
     use (g ^ a)
     constructor
-    · rw [← pow_mul, mul_comm, ← ha]
-      #check Fintype.card_units
-      sorry
+    · rw [← pow_mul, mul_comm, ← ha, ← card_units_eq_card_minus_one F, ← Units.val_pow_eq_pow_val]
+      simp only [pow_card_eq_one', Units.val_one]
     · sorry
   · intro ⟨ζ, hζ⟩
     have ⟨ha, hb⟩ := hζ
@@ -93,18 +94,18 @@ theorem p_dvd_card_minus_one_iff_primitive_root
 end
 
 theorem primitive_root_iff_not_surjective
-  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
   ∃ ζ : F, IsPrimitiveRoot ζ p ↔ ¬Surjective (fun x : F ↦ x ^ p) := by
   sorry
 
 theorem not_surjective_iff_irreducible
-  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
+  (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
   ¬Surjective (fun x : F ↦ x ^ p) ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
   sorry
 
 theorem p_dvd_card_minus_one_iff_irreducible
-  (F : Type*) [Field F] [Fintype F] {p : ℕ} [Fact (Nat.Prime p)] :
-  p ∣ Fintype.card F - 1 ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
+  (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
+  p ∣ Nat.card F - 1 ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
   sorry
 
 /-! ### Main lemmas -/
