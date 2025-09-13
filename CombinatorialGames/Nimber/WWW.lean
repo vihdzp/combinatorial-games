@@ -70,7 +70,7 @@ theorem cuberoot_extension_iff_three_dvd_of_cubic_extension
   sorry
 -/
 
-noncomputable section
+--noncomputable section
 
 theorem card_units_eq_card_minus_one
   (F : Type*) [Field F] [Finite F] : Nat.card Fˣ = Nat.card F - 1 := by
@@ -79,23 +79,57 @@ theorem card_units_eq_card_minus_one
 theorem p_dvd_card_minus_one_iff_primitive_root
   (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
   p ∣ Nat.card F - 1 ↔ ∃ ζ : F, IsPrimitiveRoot ζ p := by
+  haveI fcyclic : IsCyclic (Fˣ) := inferInstance
+  let ffintype := Fintype.ofFinite F
   constructor
   · intro ⟨a, ha⟩
-    have ⟨g, hg⟩ := IsCyclic.exists_zpow_surjective (G := Fˣ)
+    have ⟨g, hg⟩ := (isCyclic_iff_exists_orderOf_eq_natCard (α := Fˣ)).1 fcyclic
     use (g ^ a)
-    constructor
-    · rw [← pow_mul, mul_comm, ← ha, ← card_units_eq_card_minus_one F, ← Units.val_pow_eq_pow_val]
-      simp only [pow_card_eq_one', Units.val_one]
-    · sorry
+    have : (g ^ a) ^ p = 1 := by
+      rw [← pow_mul, mul_comm, ← ha, ← card_units_eq_card_minus_one F]
+      simp only [pow_card_eq_one']
+    apply IsPrimitiveRoot.mk_of_lt _ ?_ ?_ ?_
+    · exact Nat.Prime.pos Fact.out
+    · rw [← Units.val_pow_eq_pow_val, ← Units.val_pow_eq_pow_val, this, Units.val_one]
+    · intro l lpos lltp h
+      rw [← Units.val_pow_eq_pow_val, ← Units.val_pow_eq_pow_val, Units.val_eq_one] at h
+      have hga := pow_gcd_eq_one (g ^ a) this h
+      have hpl : p.gcd l = 1 := by
+        apply Nat.gcd_eq_one_of_lt_minFac
+        · exact Nat.ne_zero_iff_zero_lt.2 lpos
+        · rwa [Nat.Prime.minFac_eq Fact.out]
+      rw [hpl, pow_one] at hga
+      have hga' := orderOf_dvd_of_pow_eq_one hga
+      rw [hg, card_units_eq_card_minus_one F, ha] at hga'
+      have apos : 0 < a := by
+        rw [← Nat.ne_zero_iff_zero_lt]
+        rintro rfl
+        rw [mul_zero] at ha
+        have ffinite : Finite F := inferInstance
+        have fcard : Nat.card F = Fintype.card F := by
+          haveI ffinitede : Decidable (Finite F) := Decidable.isTrue inferInstance
+          rw [Nat.card_eq F]
+          simp only [ffinite, ↓reduceDIte]
+        have two_le_card := IsPrimePow.two_le <| FiniteField.isPrimePow_card F
+        rw [← fcard] at two_le_card
+        have : 1 ≤ Nat.card F := by linarith
+        rw [Nat.sub_eq_iff_eq_add this, zero_add] at ha
+        rw [ha] at two_le_card
+        linarith
+      have ⟨b, hb⟩ := hga'
+      rw [mul_assoc, ← mul_one a, mul_assoc a, one_mul, mul_comm p, mul_assoc, Eq.comm] at hb
+      apply Nat.mul_left_cancel apos at hb
+      apply Nat.eq_one_of_mul_eq_one_left at hb
+      exact Nat.Prime.ne_one Fact.out hb
   · intro ⟨ζ, hζ⟩
     have ⟨ha, hb⟩ := hζ
     sorry
 
-end
+--end
 
 theorem primitive_root_iff_not_surjective
   (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
-  ∃ ζ : F, IsPrimitiveRoot ζ p ↔ ¬Surjective (fun x : F ↦ x ^ p) := by
+  (∃ ζ : F, IsPrimitiveRoot ζ p) ↔ ¬Surjective (fun x : F ↦ x ^ p) := by
   sorry
 
 theorem not_surjective_iff_irreducible
@@ -106,7 +140,8 @@ theorem not_surjective_iff_irreducible
 theorem p_dvd_card_minus_one_iff_irreducible
   (F : Type*) [Field F] [Finite F] {p : ℕ} [Fact (Nat.Prime p)] :
   p ∣ Nat.card F - 1 ↔ ∃ a : F, Irreducible (X ^ p - C a) := by
-  sorry
+  rw [p_dvd_card_minus_one_iff_primitive_root, primitive_root_iff_not_surjective,
+  not_surjective_iff_irreducible]
 
 /-! ### Main lemmas -/
 
