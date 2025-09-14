@@ -42,29 +42,10 @@ namespace ArchimedeanClass
 theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
--- TODO: generalize, upstream.
-theorem mk_le_mk_of_pos {x y : Surreal} {R : Type*}
-    [Ring R] [LinearOrder R] [IsOrderedRing R] [DenselyOrdered R] (f : R →+ Surreal) (h : 0 < y) :
-    mk x ≤ mk y ↔ ∃ q : R, 0 < f q ∧ f q * |y| ≤ |x| := by
-  have := exists_nsmul_lt_of_pos h
-  constructor
-  · rintro ⟨n, hn⟩
-    obtain rfl | hn₀ := n.eq_zero_or_pos
-    · simp_all
-    · use (n : ℚ)⁻¹
-      aesop (add simp [inv_mul_le_iff₀])
-  · rintro ⟨q, hq₀, hq⟩
-    obtain ⟨n, hn⟩ := exists_nat_gt q⁻¹
-    use n
-    simp only [ArchimedeanOrder.val_of, nsmul_eq_mul]
-    rw [← le_inv_mul_iff₀ (mod_cast hq₀)] at hq
-    exact hq.trans (mul_le_mul_of_nonneg_right (mod_cast hn.le) (abs_nonneg x))
-
 #exit
 --  TODO: golf using the previous theorem somehow?
 /-- A version of `ArchimedeanClass.mk_le_mk_of_pos` with dyadic rationals. -/
-theorem mk_le_mk_of_pos' {x y : Surreal} (h : 0 < y) :
-    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
+theorem mk_le_mk_iff_dyadic {x y : Surreal} : mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
   constructor
   · rintro ⟨n, hn⟩
     obtain rfl | hn₀ := n.eq_zero_or_pos
