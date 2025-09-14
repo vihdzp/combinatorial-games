@@ -65,6 +65,8 @@ theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
   rw [hf, hg, ← QPF.comp_map, ← QPF.comp_map]
   exact ⟨rfl, rfl⟩
 
+noncomputable section
+
 /-! ### Game moves -/
 
 /-- The type of loopy games.
@@ -79,7 +81,7 @@ def LGame := QPF.Cofix GameFunctor
 namespace LGame
 export Player (left right)
 
-noncomputable instance : DecidableEq LGame := Classical.decEq _
+instance : DecidableEq LGame := Classical.decEq _
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
@@ -910,7 +912,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
-noncomputable instance _root_.LGame.instMul : Mul LGame where
+instance _root_.LGame.instMul : Mul LGame where
   mul x y := toLGame moves moves (right, x, y)
 
 theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
@@ -926,7 +928,7 @@ end MulTy
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
 @[pp_nodot]
-noncomputable def mulOption (x y a b : LGame) : LGame :=
+def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
 
 @[simp]
@@ -942,10 +944,10 @@ theorem moves_mulOption (p : Player) (x y a b : LGame) :
     (mulOption x y a b).moves p = (a * y + x * b - a * b).moves p :=
   rfl
 
-noncomputable instance : CommMagma LGame where
+instance : CommMagma LGame where
   mul_comm _ _ := (MulTy.corec_swap ..).symm
 
-noncomputable instance : MulZeroClass LGame where
+instance : MulZeroClass LGame where
   zero_mul x := by ext p; cases p <;> simp
   mul_zero x := by ext p; cases p <;> simp
 
@@ -955,7 +957,7 @@ private theorem one_mul' (x : LGame) : 1 * x = x := by
   use (fun z ↦ (1 * z, z)) '' x.moves p
   aesop
 
-noncomputable instance : MulOneClass LGame where
+instance : MulOneClass LGame where
   one_mul := one_mul'
   mul_one x := mul_comm x _ ▸ one_mul' x
 
