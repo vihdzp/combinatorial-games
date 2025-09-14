@@ -424,7 +424,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
   refine ext' (Set.ext fun y ↦ ⟨fun hy ↦ ?_, fun hy ↦ ?_⟩)
   · rw [right_supLeft, mem_iInter₂]
-    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (leftMove_lf hi)) hy
+    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (left_lf hi)) hy
   · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
     constructor <;> intro z hz
     · rw [right_supLeft, mem_iInter₂] at hy
@@ -435,7 +435,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
       rw [right_infRight, mem_iUnion₂] at hy
       obtain ⟨i, hi, hy⟩ := hy
       rw [mem_setOf, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
-      exact lf_of_rightMove_le (hy.trans (Numeric.lt_rightMove hz).le) hi
+      exact lf_of_right_le (hy.trans (Numeric.lt_right hz).le) hi
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by

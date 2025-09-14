@@ -207,7 +207,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h left y hy
     rw [grundyAux_eq_grundy]
-    exact lf_of_le_leftMove (nim_grundy_equiv y).le hy
+    exact lf_of_le_left (nim_grundy_equiv y).le hy
   · intro y hy
     have := h right y hy
     rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff,
@@ -222,7 +222,7 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     intro a ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyAux_image_of_lt ha
     have := h right y hy
-    exact lf_of_rightMove_le (nim_grundy_equiv y).ge hy
+    exact lf_of_right_le (nim_grundy_equiv y).ge hy
 
 /-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
 value, then it's impartial. -/
