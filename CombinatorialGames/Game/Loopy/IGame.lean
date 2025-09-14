@@ -16,6 +16,8 @@ arithmetic.
 
 open Set
 
+noncomputable section
+
 namespace IGame
 
 private def toLGame' (x : IGame) : LGame :=
@@ -75,6 +77,15 @@ theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGam
     convert Subtype.range_val
     ext1
     apply hf
+
+@[simp]
+theorem stopper_toLGame (x : IGame) : LGame.Stopper x := by
+  refine .mk fun p y h ↦ ?_
+  rw [moves_toLGame] at h
+  obtain ⟨y, hy, rfl⟩ := h
+  exact stopper_toLGame y
+termination_by x
+decreasing_by igame_wf
 
 @[simp]
 theorem toLGame_zero : toLGame 0 = 0 := by
@@ -146,3 +157,4 @@ theorem toLGame_mulOption (x y a b : IGame) :
   simp [mulOption, LGame.mulOption]
 
 end IGame
+end
