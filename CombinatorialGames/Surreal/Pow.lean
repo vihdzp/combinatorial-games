@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
+import CombinatorialGames.NatOrdinal.Pow
 
 /-!
 # Surreal exponentiation
@@ -12,7 +14,6 @@ We define here the ω-map on games and on surreal numbers, representing exponent
 
 ## Todo
 
-- Prove that `ω^ x` matches ordinal exponentiation for ordinal `x`.
 - Define commensurate surreals and prove properties relating to `ω^ x`.
 - Define the normal form of a surreal number.
 -/
@@ -25,13 +26,6 @@ open Set
 theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set α) (t : Set β) :
     Set.image2 f s t = Set.range (fun x : s × t ↦ f x.1 x.2) := by
   aesop
-
-/-- A typeclass for the the `ω^` notation. -/
-class Wpow (α : Type*) where
-  wpow : α → α
-
-prefix:75 "ω^ " => Wpow.wpow
-recommended_spelling "wpow" for "ω^" in [«termω^_»]
 
 noncomputable section
 namespace IGame
@@ -354,6 +348,33 @@ theorem wpow_sub_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x - y) ≈ �
   (wpow_add_equiv ..).trans (mul_congr_right (wpow_neg_equiv _))
 
 end Numeric
+
+open NatOrdinal in
+theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame := by
+  have H {y} (h : y < x) (n : ℕ) : toIGame (ω^ y * n) ≈ ω^ y.toIGame * n :=
+    (toIGame_mul ..).trans <| Numeric.mul_congr (toIGame_wpow_equiv y) (toIGame_natCast_equiv n)
+  obtain rfl | hx := eq_or_ne x 0; simp
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
+  · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
+    rintro z ⟨y, hy, n, hz⟩
+    apply ((toIGame.strictMono hz).trans_le _).not_ge
+    rw [(H hy n).le_congr_left, mul_comm]
+    simpa using (Numeric.mul_wpow_lt_wpow' n (toIGame.strictMono hy)).le
+  · simp
+  · simp_rw [forall_leftMoves_wpow, forall_leftMoves_toIGame]
+    constructor
+    · rw [← toIGame_zero, toIGame.le_iff_le]
+      simp
+    · intro r hr y hy
+      obtain ⟨n, hn⟩ := exists_nat_gt r
+      rw [mul_comm]
+      apply ((toIGame.strictMono <| wpow_mul_natCast_lt hy n).trans' _).not_ge
+      rw [(H hy n).lt_congr_right, Numeric.mul_lt_mul_left]
+      · exact_mod_cast hn
+      · exact Numeric.wpow_pos _
+  · simp
+termination_by x
+
 end IGame
 
 namespace Surreal
@@ -405,6 +426,10 @@ theorem wpow_neg : ∀ x : Surreal, ω^ -x = (ω^ x)⁻¹ := by
 theorem wpow_sub : ∀ x y : Surreal, ω^ (x - y) = ω^ x / ω^ y := by
   rintro ⟨x, _⟩ ⟨y, _⟩
   exact Surreal.mk_eq (Numeric.wpow_sub_equiv x y)
+
+@[simp]
+theorem toSurreal_wpow (x : NatOrdinal) : (ω^ x).toSurreal = ω^ x.toSurreal :=
+  Surreal.mk_eq (toIGame_wpow_equiv x)
 
 end Surreal
 end

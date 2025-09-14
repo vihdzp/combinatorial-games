@@ -346,6 +346,11 @@ instance : DenselyOrdered Dyadic where
     · simpa [inv_mul_eq_div] using left_lt_add_div_two.2 h
     · simpa [inv_mul_eq_div] using add_div_two_lt_right.2 h
 
+instance : Archimedean Dyadic where
+  arch x y h := by
+    obtain ⟨n, hn⟩ := exists_lt_nsmul (M := ℚ) h x
+    exact ⟨n, hn.le⟩
+
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
