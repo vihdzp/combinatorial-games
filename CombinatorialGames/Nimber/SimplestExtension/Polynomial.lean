@@ -46,10 +46,6 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
--- leanprover-community/mathlib4#28589
-theorem _root_.CharTwo.add_cancel_left [CharP R 2] (a b : R) : a + (a + b) = b := by
-  rw [← add_assoc, CharTwo.add_self_eq_zero, zero_add]
-
 end Polynomial
 
 theorem WithBot.coe_add_one (n : ℕ) : WithBot.some (n + 1) = WithBot.some n + 1 :=

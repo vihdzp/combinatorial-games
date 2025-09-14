@@ -317,21 +317,21 @@ theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ �
     exact mul_wpow_lt_wpow' r (Numeric.left_lt hz)
   · rw [mulOption_zero_left, mul_comm (r : IGame), ← (mul_assoc_equiv ..).lt_congr_right, mul_comm,
       ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
-    exact wpow_lt_mul_wpow' hr (add_left_strictMono (Numeric.lt_right hz))
+    exact wpow_lt_mul_wpow' hr (add_right_strictMono (Numeric.lt_right hz))
   · rw [mulOption_comm, add_comm]
     apply wpow_lt_mulOption hs hr (Numeric.lt_right hw) (Numeric.left_lt hz) <;>
       rw [add_comm, mul_comm] <;> exact wpow_add_equiv ..
   · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_right,
       ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
-    exact wpow_lt_mul_wpow' hr (add_right_strictMono (Numeric.lt_right hz))
+    exact wpow_lt_mul_wpow' hr (add_left_strictMono (Numeric.lt_right hz))
   · exact wpow_lt_mulOption hr hs (Numeric.lt_right hz) (Numeric.left_lt hw)
       (wpow_add_equiv ..) (wpow_add_equiv ..)
   · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_left,
       ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
-    exact mul_wpow_lt_wpow' r (add_right_strictMono (Numeric.left_lt hz))
+    exact mul_wpow_lt_wpow' r (add_left_strictMono (Numeric.left_lt hz))
   · rw [mulOption_zero_left, mul_comm, (mul_assoc_equiv ..).lt_congr_left, mul_comm (ω^ z),
       ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
-    exact mul_wpow_lt_wpow' _ (add_left_strictMono (Numeric.left_lt hz))
+    exact mul_wpow_lt_wpow' _ (add_right_strictMono (Numeric.left_lt hz))
   · exact mulOption_lt_wpow' hr hs (Numeric.left_lt hz) (Numeric.left_lt hw)
       (wpow_add_equiv ..) (wpow_add_equiv ..) (wpow_add_equiv ..)
   · exact mulOption_lt_wpow hr hs (Numeric.lt_right hz) (Numeric.lt_right hw)
