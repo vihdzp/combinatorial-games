@@ -404,4 +404,13 @@ theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den 
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
 
+/-- Coercion as a `RingHom`. -/
+@[simps]
+def coeRingHom : Dyadic →+* ℚ where
+  toFun := (↑)
+  map_zero' := rfl
+  map_one' := rfl
+  map_add' _ _ := rfl
+  map_mul' _ _ := rfl
+
 end Dyadic
