@@ -625,7 +625,7 @@ theorem wlog_zero : wlog 0 = 0 :=
   dif_pos rfl
 
 @[simp]
-theorem mk_wpow_log (h : x ≠ 0) : ArchimedeanClass.mk (ω^ wlog x) = ArchimedeanClass.mk x := by
+theorem mk_wpow_wlog (h : x ≠ 0) : ArchimedeanClass.mk (ω^ wlog x) = ArchimedeanClass.mk x := by
   rw [wlog, dif_neg h]
   exact Classical.choose_spec (exists_mk_wpow_eq h)
 
@@ -633,12 +633,12 @@ theorem wlog_eq_of_mk_eq_mk (h : ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.
     wlog x = y := by
   obtain rfl | hx := eq_or_ne x 0
   · simp at h
-  · rwa [← mk_wpow_log hx, eq_comm, mk_wpow_inj] at h
+  · rwa [← mk_wpow_wlog hx, eq_comm, mk_wpow_inj] at h
 
 @[simp]
 theorem wlog_eq_iff (h : x ≠ 0) :
     wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
-  ⟨fun hy ↦ hy ▸ mk_wpow_log h, wlog_eq_of_mk_eq_mk⟩
+  ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
 
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
   simp
@@ -648,7 +648,7 @@ theorem wlog_neg (x : Surreal) : wlog (-x) = wlog x := by
   obtain rfl | hx := eq_or_ne x 0
   · simp
   · apply wlog_eq_of_mk_eq_mk
-    simpa using mk_wpow_log hx
+    simpa using mk_wpow_wlog hx
 
 @[simp]
 theorem wlog_abs (x : Surreal) : wlog |x| = wlog x :=
@@ -659,7 +659,7 @@ theorem wlog_surjective : Function.Surjective wlog :=
 
 theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
   intro a ha b hb h
-  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_log ha.ne', mk_wpow_log hb.ne']
+  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_wlog ha.ne', mk_wpow_wlog hb.ne']
   apply mk_antitoneOn ha.le hb.le h
 
 theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
@@ -670,7 +670,7 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
   apply wlog_eq_of_mk_eq_mk
-  simp_rw [wpow_add, ArchimedeanClass.mk_mul, mk_wpow_log hx, mk_wpow_log hy]
+  simp_rw [wpow_add, ArchimedeanClass.mk_mul, mk_wpow_wlog hx, mk_wpow_wlog hy]
 
 @[simp]
 theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
@@ -688,17 +688,17 @@ private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
       range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, (Numeric.of_mem_moves x.2).wlog⟩)} := by
   congr! <;> exact image_eq_range ..
 
-private theorem mk_wpow_log_left {x : IGame} [Numeric x] :
+private theorem mk_wpow_wlog_left {x : IGame} [Numeric x] :
     ∀ y : (xᴸ ∩ Ioi 0 :), ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
   intro ⟨y, hy, hy'⟩
   have := Numeric.of_mem_moves hy
-  rw [mk_wlog, mk_wpow_log hy'.ne']
+  rw [mk_wlog, mk_wpow_wlog hy'.ne']
 
-private theorem mk_wpow_log_right {x : IGame} [Numeric x] (h : 0 < x) :
+private theorem mk_wpow_wlog_right {x : IGame} [Numeric x] (h : 0 < x) :
     ∀ y : xᴿ, ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
   intro ⟨y, hy⟩
   have := Numeric.of_mem_moves hy
-  rw [mk_wlog, mk_wpow_log]
+  rw [mk_wlog, mk_wpow_wlog]
   simpa [← mk_eq_mk] using (h.trans (Numeric.lt_right hy)).not_antisymmRel_symm
 
 theorem numeric_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
@@ -708,7 +708,7 @@ theorem numeric_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
       ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x)) :
     Numeric !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} := by
   rw [ofSets_wlog_eq]
-  exact numeric_of_forall_mk_ne_mk' h mk_wpow_log_left (mk_wpow_log_right h) Hl Hr
+  exact numeric_of_forall_mk_ne_mk' h mk_wpow_wlog_left (mk_wpow_wlog_right h) Hl Hr
 
 theorem wpow_equiv_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
     (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y →
@@ -717,7 +717,7 @@ theorem wpow_equiv_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
       ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x)) :
     ω^ !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} ≈ x := by
   rw [ofSets_wlog_eq]
-  exact wpow_equiv_of_forall_mk_ne_mk' h mk_wpow_log_left (mk_wpow_log_right h) Hl Hr
+  exact wpow_equiv_of_forall_mk_ne_mk' h mk_wpow_wlog_left (mk_wpow_wlog_right h) Hl Hr
 
 /-- A game not commensurate with its positive options is a power of `ω`. -/
 theorem mem_range_wpow_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
