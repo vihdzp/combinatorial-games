@@ -93,6 +93,8 @@ protected instance half : Numeric ½ := by
   rw [numeric_def]; simp
 
 protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
+protected instance moves {x : IGame} [Numeric x] {p : Player} (y : x.moves p) : Numeric y :=
+  .of_mem_moves y.2
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
