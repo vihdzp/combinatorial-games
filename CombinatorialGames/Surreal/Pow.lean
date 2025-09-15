@@ -660,7 +660,7 @@ theorem wlog_surjective : Function.Surjective wlog :=
 theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
   intro a ha b hb h
   rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_log ha.ne', mk_wpow_log hb.ne']
-  apply ArchimedeanClass.mk_antitoneOn ha.le hb.le h
+  apply mk_antitoneOn ha.le hb.le h
 
 theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
@@ -676,8 +676,7 @@ theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = 
 theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
   obtain rfl | hr := eq_or_ne r 0
   · simp
-  · rw [wlog_eq_iff (mod_cast hr), ArchimedeanClass.mk_realCast hr, wpow_zero,
-      ArchimedeanClass.mk_one]
+  · rw [wlog_eq_iff (mod_cast hr), mk_realCast hr, wpow_zero, ArchimedeanClass.mk_one]
 
 @[simp] theorem wlog_ratCast (q : ℚ) : wlog q = 0 := by simpa using wlog_realCast q
 @[simp] theorem wlog_intCast (n : ℤ) : wlog n = 0 := by simpa using wlog_realCast n
