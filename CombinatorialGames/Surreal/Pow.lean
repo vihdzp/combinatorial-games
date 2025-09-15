@@ -617,7 +617,7 @@ instance _root_.IGame.Numeric.wlog (x : IGame) [h : Numeric x] : Numeric x.wlog 
   infer_instance
 
 @[simp]
-theorem mk_wlog (x : IGame) [h : Numeric x] : Surreal.mk x.wlog = (Surreal.mk x).wlog := by
+theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
   simp_rw [IGame.wlog, dif_pos h, Surreal.out_eq]
 
 @[simp]
@@ -685,7 +685,7 @@ theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
 
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
-    !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0:) ↦ ⟨_, (Numeric.of_mem_moves x.2.1).wlog⟩) |
+    !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, (Numeric.of_mem_moves x.2.1).wlog⟩) |
       range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, (Numeric.of_mem_moves x.2).wlog⟩)} := by
   congr! <;> exact image_eq_range ..
 
