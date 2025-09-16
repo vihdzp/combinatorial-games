@@ -612,9 +612,9 @@ def wlog (x : Surreal) : Surreal :=
 def _root_.IGame.wlog (x : IGame) : IGame := by
   classical exact if _ : Numeric x then (Surreal.mk x).wlog.out else 0
 
-instance _root_.IGame.Numeric.wlog (x : IGame) [h : Numeric x] : Numeric x.wlog := by
-  rw [IGame.wlog, dif_pos h]
-  infer_instance
+instance _root_.IGame.Numeric.wlog (x : IGame) : Numeric x.wlog := by
+  rw [IGame.wlog]
+  split_ifs <;> infer_instance
 
 @[simp]
 theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
@@ -684,8 +684,8 @@ theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
 
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
-    !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, (Numeric.of_mem_moves x.2.1).wlog⟩) |
-      range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, (Numeric.of_mem_moves x.2).wlog⟩)} := by
+    !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
+      range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, Numeric.wlog x⟩)} := by
   congr! <;> exact image_eq_range ..
 
 private theorem mk_wpow_wlog_left {x : IGame} [Numeric x] :
