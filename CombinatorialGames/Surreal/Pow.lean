@@ -38,7 +38,6 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-@[simp]
 theorem mk_dyadic {r : Dyadic} (h : r ≠ 0) : mk (r : Surreal) = 0 :=
   mk_ratCast (mod_cast h)
 
