@@ -12,6 +12,7 @@ import Mathlib.Data.Nat.Nth
 import Mathlib.Data.Nat.Prime.Defs
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.FieldTheory.Finite.Basic
+import Mathlib.FieldTheory.KummerExtension
 import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.Minpoly.Field
 import Mathlib.Logic.Function.Defs
@@ -52,6 +53,8 @@ theorem nth_prime_ne_zero (k : ℕ) : nth Nat.Prime k ≠ 0 := by
   exact lt_trans zero_lt_one (one_lt_nth_prime k)
 
 /-! ### Field lemmas -/
+
+#check X_pow_sub_C_splits_of_isPrimitiveRoot
 
 theorem splits_or_irreducible_of_primitive_pth_root
   (F : Type*) [Field F]
@@ -105,13 +108,8 @@ theorem p_dvd_card_minus_one_iff_primitive_root
         rw [← Nat.ne_zero_iff_zero_lt]
         rintro rfl
         rw [mul_zero] at ha
-        have ffinite : Finite F := inferInstance
-        have fcard : Nat.card F = Fintype.card F := by
-          haveI ffinitede : Decidable (Finite F) := Decidable.isTrue inferInstance
-          rw [Nat.card_eq F]
-          simp only [ffinite, ↓reduceDIte]
         have two_le_card := IsPrimePow.two_le <| FiniteField.isPrimePow_card F
-        rw [← fcard] at two_le_card
+        rw [← Nat.card_eq_fintype_card] at two_le_card
         have : 1 ≤ Nat.card F := by linarith
         rw [Nat.sub_eq_iff_eq_add this, zero_add] at ha
         rw [ha] at two_le_card
@@ -123,6 +121,64 @@ theorem p_dvd_card_minus_one_iff_primitive_root
       exact Nat.Prime.ne_one Fact.out hb
   · intro ⟨ζ, hζ⟩
     have ⟨ha, hb⟩ := hζ
+    let fp : Fˣ →* Fˣ := ⟨⟨fun x ↦ x ^ p, one_pow p⟩, fun x y ↦ mul_pow x y p⟩
+    rw [← card_units_eq_card_minus_one F, dvd_def]
+    have fp1pre : Nat.card (fp ⁻¹' {1}) = p := by
+      simp only [Set.preimage, MonoidHom.coe_mk, OneHom.coe_mk, Set.mem_singleton_iff,
+        Set.coe_setOf, fp]
+      sorry
+      /-
+      haveI : Fintype (fp ⁻¹' {1}) := Fintype.ofFinite (fp ⁻¹' {1})
+      haveI : Fintype (Fˣ) := Fintype.ofFinite (Fˣ)
+      rw [Nat.card_eq_fintype_card]
+      apply eq_of_le_of_ge
+      --apply Nat.eq_of_le_of_not_gt
+      · apply Nat.le_of_dvd (Nat.pos_of_ne_zero (Nat.Prime.ne_zero Fact.out))
+        apply orderOf_dvd_card_of_mem
+        rw [Set.mem_preimage, Set.mem_singleton_iff, MonoidHom.mem_ker]
+        simp only [Units.ext_iff]
+        rw [← Units.val_pow_eq_pow_val, Units.val_eq_one]
+        exact ha
+      · intro hgt
+        have one_lt_order := Nat.Prime.one_lt_order Fact.out ha
+        linarith
+      -/
+    have fpcount : ∀ y : fp.range, Nat.card (fp ⁻¹' {y.val}) = p := by
+      intro y
+      sorry
+      /-
+      haveI : Fintype (fp ⁻¹' {y.val}) := Fintype.ofFinite (fp ⁻¹' {y.val})
+      haveI : Fintype (Fˣ) := Fintype.ofFinite (Fˣ)
+      haveI : Fintype (fp.range) := Fintype.ofFinite (fp.range)
+      haveI : Finite (fp.range) := inferInstance
+      haveI : Finite (Fˣ) := inferInstance
+      rw [Nat.card_eq_fintype_card]
+      apply Finset.card_preimage_eq_of_injective_on_fiber
+      · intro x hx x' hx' h
+        rw [Set.mem_preimage, Set.mem_singleton_iff] at hx hx'
+        rw [hx, hx'] at h
+        have : x / x' ∈ fp.ker := by
+          rw [MonoidHom.mem_ker, Units.ext_iff] at h ⊢
+          simp only [Units.val_mul, Units.val_inv, mul_pow, one_pow, mul_one, h]
+        rw [Set.mem_setOf_eq] at this
+        have ker_subgroup : Subgroup fp.ker := Subgroup.ker fp
+        have ker_finite : Finite fp.ker := Subgroup.finite_of_fintype ker_subgroup
+        have ker_card : Nat.card fp.ker = p := by
+          haveI : Fintype fp.ker := Fintype.ofFinite fp.ker
+          haveI : Finite fp.ker := inferInstance
+          rw [Nat.card_eq_fintype_card]
+          apply Nat.eq_of_le_of_not_gt
+          · apply Nat.le_of_dvd (Nat.pos_of_ne_zero (Nat.Prime.ne_zero Fact.out))
+            apply orderOf_dvd_card_of_mem
+            exact Subgroup.mem_ker.mp this
+          · intro hgt
+            have one_lt_order := Nat.Prime.one_lt_order Fact.out (Subgroup.mem_ker.mp this)
+            linarith
+        rw [← Units.ext_iff]
+        have : x / x' ∈ fp.ker := by
+          rw [Set.mem_setOf_eq]
+      -/
+    #check Nat.card_prod
     sorry
 
 --end
