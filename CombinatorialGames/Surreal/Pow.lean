@@ -639,6 +639,7 @@ theorem wlog_eq_iff (h : x ≠ 0) :
     wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
 
+@[simp]
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
   simp
 
