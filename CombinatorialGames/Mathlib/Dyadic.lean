@@ -21,7 +21,9 @@ This material belongs in Mathlib, though we do need to consider if the definitio
 here is the best one.
 -/
 
-/-! ### For Mathlib -/
+/-! ### For Mathlib
+
+Most of these are no longer needed, but perhaps they'd make good contributions regardless? -/
 
 theorem le_of_le_of_lt_of_lt {α β : Type*} [PartialOrder α] [Preorder β] {x y : α}
     {f : α → β} (h : x < y → f x < f y) (hxy : x ≤ y) : f x ≤ f y := by
@@ -42,15 +44,7 @@ theorem Nat.pow_log_eq_self_iff {b n : ℕ} (hb : b ≠ 0) :
 theorem Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] {x y : β}
     (hp : ∃ a, p a) (hn : ∃ a, ¬ p a) :
     Set.range (fun a ↦ if p a then x else y) = {x, y} := by
-  ext
-  constructor
-  · rintro ⟨a, rfl⟩
-    dsimp
-    split_ifs <;> simp
-  · rintro (rfl | rfl)
-    on_goal 1 => obtain ⟨a, ha⟩ := hp
-    on_goal 2 => obtain ⟨a, ha⟩ := hn
-    all_goals use a; simp_all
+  grind
 
 theorem range_zero_pow {M : Type*} [MonoidWithZero M] : Set.range ((0 : M) ^ ·) = {1, 0} := by
   simp_rw [zero_pow_eq]
@@ -76,276 +70,169 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
 
 /-! ### Dyadic numbers -/
 
-/-- A dyadic rational number is one whose denominator is a power of two. -/
-def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
-
-instance {m n : ℕ} : Decidable (m ∈ Submonoid.powers n) :=
-  decidable_of_iff (m ∈ Set.range (n ^ ·)) (Submonoid.mem_powers_iff m n)
-
-instance : DecidablePred IsDyadic :=
-  fun x ↦ inferInstanceAs (Decidable (x.den ∈ _))
-
-theorem IsDyadic.mkRat (x : ℤ) {y : ℕ} (hy : y ∈ Submonoid.powers 2) : IsDyadic (mkRat x y) := by
-  obtain ⟨n, rfl⟩ := hy
-  have := Rat.den_dvd x (2 ^ n)
-  rw [dvd_prime_pow Int.prime_two] at this
-  obtain ⟨m, -, hm⟩ := this
-  obtain hm | hm := Int.associated_iff.1 hm
-  · use m
-    rw [Rat.mkRat_eq_divInt, Nat.cast_pow, Nat.cast_ofNat, ← Nat.cast_inj (R := ℤ), hm]
-    simp
-  · rw [← Nat.cast_ofNat, ← Nat.cast_pow 2 m, Nat.cast_eq_neg_cast] at hm
-    simp_all
-
-theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
-@[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
-
-theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
-theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
-
-theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
-  rw [Rat.add_def']
-  exact .mkRat _ (Submonoid.mul_mem _ hx hy)
-
-theorem IsDyadic.sub {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x - y) := by
-  rw [sub_eq_add_neg]
-  exact hx.add hy.neg
-
-theorem IsDyadic.mul {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x * y) := by
-  rw [Rat.mul_def, Rat.normalize_eq_mkRat]
-  exact .mkRat _ (Submonoid.mul_mem _ hx hy)
-
-theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  simpa using .mul (.natCast n) hx
-
-theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  simpa using .mul (.intCast n) hx
-
-theorem IsDyadic.pow {x : ℚ} (hx : IsDyadic x) (n : ℕ) : IsDyadic (x ^ n) := by
-  induction n with
-  | zero => exact ⟨0, rfl⟩
-  | succ n ih =>
-    rw [pow_succ]
-    exact ih.mul hx
-
-/-- The subtype of `IsDyadic` numbers.
-
-We don't use `Localization.Away 2`, as this would not give us any computability, nor would it allow
-us to talk about numerators and denominators. -/
-abbrev Dyadic := Subtype IsDyadic
-
 namespace Dyadic
 
-theorem le_def {x y : Dyadic} : x ≤ y ↔ x.1 ≤ y.1 := .rfl
-theorem lt_def {x y : Dyadic} : x < y ↔ x.1 < y.1 := .rfl
-
-/-- Numerator of a dyadic number. -/
-abbrev num (x : Dyadic) : ℤ := x.1.num
-/-- Denominator of a dyadic number. -/
-abbrev den (x : Dyadic) : ℕ := x.1.den
-
-theorem den_ne_zero (x : Dyadic) : x.den ≠ 0 := x.1.den_ne_zero
-theorem den_pos (x : Dyadic) : 0 < x.den := x.1.den_pos
-theorem den_mem_powers (x : Dyadic) : x.den ∈ Submonoid.powers 2 := x.2
-theorem one_le_den (x : Dyadic) : 1 ≤ x.den := x.den_pos
-
-@[simp]
-theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
-  simp_rw [Nat.le_one_iff_eq_zero_or_eq_one, x.den_ne_zero, false_or]
-
-@[simp]
-theorem one_lt_den_iff_ne_one {x : Dyadic} : 1 < x.den ↔ x.den ≠ 1 := by
-  simp [← den_le_one_iff_eq_one]
-
-theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 := by
-  simpa using (one_le_den x).trans_lt h
-
-@[ext] theorem ext {x y : Dyadic} (h : x.val = y.val) : x = y := Subtype.ext h
-
-instance : NatCast Dyadic where
-  natCast n := ⟨n, .natCast n⟩
-
-@[simp, norm_cast] theorem val_natCast (n : ℕ) : (n : Dyadic).val = n := rfl
-@[simp, norm_cast] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := rfl
-@[simp, norm_cast] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 := rfl
-
-@[simp] theorem val_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).val = n := rfl
-@[simp] theorem num_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).num = n := rfl
-@[simp] theorem den_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).den = 1 := rfl
-
-@[simp, norm_cast] theorem natCast_lt_val {x : ℕ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
-@[simp, norm_cast] theorem natCast_le_val {x : ℕ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
-@[simp, norm_cast] theorem val_lt_natCast {x : Dyadic} {y : ℕ} : x.1 < y ↔ x < y := .rfl
-@[simp, norm_cast] theorem val_le_natCast {x : Dyadic} {y : ℕ} : x.1 ≤ y ↔ x ≤ y := .rfl
-
-@[simp, norm_cast] theorem val_eq_natCast {x : Dyadic} {y : ℕ} : x.1 = y ↔ x = y :=
-  @Subtype.val_inj _ _ x y
-@[simp, norm_cast] theorem natCast_eq_val {x : ℕ} {y : Dyadic} : x = y.1 ↔ x = y := by
-  simp [eq_comm]
-
-instance : IntCast Dyadic where
-  intCast n := ⟨n, .intCast n⟩
-
-@[simp] theorem val_intCast (n : ℤ) : (n : Dyadic).val = n := rfl
-@[simp] theorem mk_intCast {n : ℤ} (h : IsDyadic n) : (⟨n, h⟩ : Dyadic) = n := rfl
-@[simp] theorem num_intCast (n : ℤ) : (n : Dyadic).num = n := rfl
-@[simp] theorem den_intCast (n : ℤ) : (n : Dyadic).den = 1 := rfl
-
-@[simp, norm_cast] theorem intCast_lt_val {x : ℤ} {y : Dyadic} : x < y.1 ↔ x < y := .rfl
-@[simp, norm_cast] theorem intCast_le_val {x : ℤ} {y : Dyadic} : x ≤ y.1 ↔ x ≤ y := .rfl
-@[simp, norm_cast] theorem val_lt_intCast {x : Dyadic} {y : ℤ} : x.1 < y ↔ x < y := .rfl
-@[simp, norm_cast] theorem val_le_intCast {x : Dyadic} {y : ℤ} : x.1 ≤ y ↔ x ≤ y := .rfl
-@[simp, norm_cast] theorem val_eq_intCast {x : Dyadic} {y : ℤ} : x.1 = y ↔ x = y :=
-  @Subtype.val_inj _ _ x y
-@[simp, norm_cast] theorem intCast_eq_val {x : ℤ} {y : Dyadic} : x = y.1 ↔ x = y := by
-  simp [eq_comm]
-
-instance : Zero Dyadic where
-  zero := (0 : ℕ)
+attribute [coe] Dyadic.toRat
+instance : Coe Dyadic ℚ := ⟨Dyadic.toRat⟩
 
 instance : Inhabited Dyadic := ⟨0⟩
+instance : Nontrivial Dyadic := ⟨0, 1, by decide⟩
 
-@[simp, norm_cast] theorem val_zero : (0 : Dyadic).val = 0 := rfl
-@[simp] theorem mk_zero (h : IsDyadic 0) : (⟨0, h⟩ : Dyadic) = 0 := rfl
-@[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
-@[simp] theorem den_zero : (0 : Dyadic).den = 1 := rfl
+@[simp, norm_cast] theorem coe_inj {x y : Dyadic} : (x : ℚ) = y ↔ x = y := toRat_inj
+@[simp, norm_cast] theorem coe_lt_coe {x y : Dyadic} : (x : ℚ) < y ↔ x < y := lt_iff_toRat.symm
+@[simp, norm_cast] theorem coe_le_coe {x y : Dyadic} : (x : ℚ) ≤ y ↔ x ≤ y := le_iff_toRat.symm
 
-@[simp, norm_cast] theorem zero_lt_val {x : Dyadic} : 0 < x.1 ↔ 0 < x := .rfl
-@[simp, norm_cast] theorem zero_le_val {x : Dyadic} : 0 ≤ x.1 ↔ 0 ≤ x := .rfl
-@[simp, norm_cast] theorem val_lt_zero {x : Dyadic} : x.1 < 0 ↔ x < 0 := .rfl
-@[simp, norm_cast] theorem val_le_zero {x : Dyadic} : x.1 ≤ 0 ↔ x ≤ 0 := .rfl
-@[simp, norm_cast] theorem val_eq_zero {x : Dyadic} : x.1 = 0 ↔ x = 0 := val_eq_intCast
-@[simp, norm_cast] theorem zero_eq_val {x : Dyadic} : 0 = x.1 ↔ 0 = x := intCast_eq_val
+@[simp, norm_cast] theorem coe_zero : ((0 : Dyadic) : ℚ) = 0 := rfl
+@[simp, norm_cast] theorem coe_one : ((1 : Dyadic) : ℚ) = 1 := rfl
 
-instance : One Dyadic where
-  one := (1 : ℕ)
+@[simp, norm_cast] theorem coe_natCast (n : ℕ) : ((n : Dyadic) : ℚ) = n := toRat_natCast n
+@[simp] theorem coe_ofNat (n : ℕ) [n.AtLeastTwo] : ((ofNat(n) : Dyadic) : ℚ) = n := coe_natCast n
 
-@[simp, norm_cast] theorem val_one : (1 : Dyadic).val = 1 := rfl
-@[simp] theorem mk_one (h : IsDyadic 1) : (⟨1, h⟩ : Dyadic) = 1 := rfl
-@[simp] theorem num_one : (1 : Dyadic).num = 1 := rfl
-@[simp] theorem den_one : (1 : Dyadic).den = 1 := rfl
+@[simp, norm_cast] theorem coe_intCast (n : ℤ) : ((n : Dyadic) : ℚ) = n := toRat_intCast n
 
-@[simp, norm_cast] theorem one_lt_val {x : Dyadic} : 1 < x.1 ↔ 1 < x := .rfl
-@[simp, norm_cast] theorem one_le_val {x : Dyadic} : 1 ≤ x.1 ↔ 1 ≤ x := .rfl
-@[simp, norm_cast] theorem val_lt_one {x : Dyadic} : x.1 < 1 ↔ x < 1 := .rfl
-@[simp, norm_cast] theorem val_le_one {x : Dyadic} : x.1 ≤ 1 ↔ x ≤ 1 := .rfl
-@[simp, norm_cast] theorem val_eq_one {x : Dyadic} : x.1 = 1 ↔ x = 1 := val_eq_intCast
-@[simp, norm_cast] theorem one_eq_val {x : Dyadic} : 1 = x.1 ↔ 1 = x := intCast_eq_val
+@[simp] theorem natCast_lt_coe {x : ℕ} {y : Dyadic} : x < (y : ℚ) ↔ x < y := by norm_cast
+@[simp] theorem natCast_le_coe {x : ℕ} {y : Dyadic} : x ≤ (y : ℚ) ↔ x ≤ y := by norm_cast
+@[simp] theorem coe_lt_natCast {x : Dyadic} {y : ℕ} : (x : ℚ) < y ↔ x < y := by norm_cast
+@[simp] theorem coe_le_natCast {x : Dyadic} {y : ℕ} : (x : ℚ) ≤ y ↔ x ≤ y := by norm_cast
+@[simp] theorem coe_eq_natCast {x : Dyadic} {y : ℕ} : (x : ℚ) = y ↔ x = y := by norm_cast
+@[simp] theorem natCast_eq_coe {x : ℕ} {y : Dyadic} : x = (y : ℚ) ↔ x = y := by norm_cast
 
-instance : Nontrivial Dyadic where
-  exists_pair_ne := ⟨0, 1, by decide⟩
+@[simp] theorem intCast_lt_coe {x : ℤ} {y : Dyadic} : x < (y : ℚ) ↔ x < y := by norm_cast
+@[simp] theorem intCast_le_coe {x : ℤ} {y : Dyadic} : x ≤ (y : ℚ) ↔ x ≤ y := by norm_cast
+@[simp] theorem coe_lt_intCast {x : Dyadic} {y : ℤ} : (x : ℚ) < y ↔ x < y := by norm_cast
+@[simp] theorem coe_le_intCast {x : Dyadic} {y : ℤ} : (x : ℚ) ≤ y ↔ x ≤ y := by norm_cast
+@[simp] theorem coe_eq_intCast {x : Dyadic} {y : ℤ} : (x : ℚ) = y ↔ x = y := by norm_cast
+@[simp] theorem intCast_eq_coe {x : ℤ} {y : Dyadic} : x = (y : ℚ) ↔ x = y := by norm_cast
 
-instance : Neg Dyadic where
-  neg x := ⟨_, x.2.neg⟩
+@[simp] theorem zero_lt_coe {x : Dyadic} : 0 < (x : ℚ) ↔ 0 < x := natCast_lt_coe
+@[simp] theorem zero_le_coe {x : Dyadic} : 0 ≤ (x : ℚ) ↔ 0 ≤ x := natCast_le_coe
+@[simp] theorem coe_lt_zero {x : Dyadic} : (x : ℚ) < 0 ↔ x < 0 := coe_lt_natCast
+@[simp] theorem coe_le_zero {x : Dyadic} : (x : ℚ) ≤ 0 ↔ x ≤ 0 := coe_le_natCast
+@[simp] theorem coe_eq_zero {x : Dyadic} : (x : ℚ) = 0 ↔ x = 0 := coe_eq_intCast
+@[simp] theorem zero_eq_coe {x : Dyadic} : 0 = (x : ℚ) ↔ 0 = x := intCast_eq_coe
 
-@[simp] theorem val_neg (x : Dyadic) : (-x).val = -x.val := rfl
-@[simp] theorem neg_mk {x : ℚ} (hx : IsDyadic x) : -(⟨x, hx⟩ : Dyadic) = ⟨-x, hx.neg⟩ := rfl
-@[simp] theorem num_neg (x : Dyadic) : (-x).num = -x.num := rfl
-@[simp] theorem den_neg (x : Dyadic) : (-x).den = x.den := rfl
+@[simp] theorem one_lt_coe {x : Dyadic} : 1 < (x : ℚ) ↔ 1 < x := natCast_lt_coe
+@[simp] theorem one_le_one {x : Dyadic} : 1 ≤ (x : ℚ) ↔ 1 ≤ x := natCast_le_coe
+@[simp] theorem coe_lt_one {x : Dyadic} : (x : ℚ) < 1 ↔ x < 1 := coe_lt_natCast
+@[simp] theorem coe_le_one {x : Dyadic} : (x : ℚ) ≤ 1 ↔ x ≤ 1 := coe_le_natCast
+@[simp] theorem coe_eq_one {x : Dyadic} : (x : ℚ) = 1 ↔ x = 1 := coe_eq_intCast
+@[simp] theorem one_eq_coe {x : Dyadic} : 1 = (x : ℚ) ↔ 1 = x := intCast_eq_coe
 
-instance : Add Dyadic where
-  add x y := ⟨_, x.2.add y.2⟩
-
-@[simp] theorem val_add (x y : Dyadic) : (x + y).val = x.val + y.val := rfl
-
-instance : Sub Dyadic where
-  sub x y := ⟨_, x.2.sub y.2⟩
-
-@[simp] theorem val_sub (x y : Dyadic) : (x - y).val = x.val - y.val := rfl
-
-instance : Mul Dyadic where
-  mul x y := ⟨_, x.2.mul y.2⟩
-
-@[simp] theorem val_mul (x y : Dyadic) : (x * y).val = x.val * y.val := rfl
-
-instance : SMul Nat Dyadic where
-  smul x y := ⟨_, y.2.nsmul x⟩
-
-@[simp] theorem val_nsmul (x : ℕ) (y : Dyadic) : (x • y).val = x • y.val := rfl
-
-instance : SMul Int Dyadic where
-  smul x y := ⟨_, y.2.zsmul x⟩
-
-@[simp] theorem val_zsmul (x : ℤ) (y : Dyadic) : (x • y).val = x • y.val := rfl
-
-instance : NatPow Dyadic where
-  pow x y := ⟨_, x.2.pow y⟩
-
-@[simp] theorem val_pow (x : Dyadic) (y : ℕ) : (x ^ y).val = x.val ^ y := rfl
+@[simp, norm_cast] theorem coe_neg (x : Dyadic) : ((-x : Dyadic) : ℚ) = -x := toRat_neg x
+@[simp, norm_cast] theorem coe_add (x y : Dyadic) : ((x + y : Dyadic) : ℚ) = x + y := toRat_add x y
+@[simp, norm_cast] theorem coe_sub (x y : Dyadic) : ((x - y : Dyadic) : ℚ) = x - y := toRat_sub x y
+@[simp, norm_cast] theorem coe_mul (x y : Dyadic) : ((x * y : Dyadic) : ℚ) = x * y := toRat_mul x y
+@[simp, norm_cast] theorem coe_pow (x : Dyadic) (n : ℕ) : ((x ^ n : Dyadic) : ℚ) = x ^ n :=
+  toRat_pow x n
 
 /-- The dyadic number ½. -/
-def half : Dyadic := ⟨2⁻¹, ⟨1, by simp⟩⟩
-
-@[simp] theorem val_half : half.val = 2⁻¹ := rfl
-@[simp] theorem num_half : half.num = 1 := show ((2 : ℚ)⁻¹).num = 1 by simp
-@[simp] theorem num_den : half.den = 2 := show ((2 : ℚ)⁻¹).den = 2 by simp
-
-/-- Constructor for the fraction `m / n`. -/
-protected def mkRat (m : ℤ) {n : ℕ} (h : n ∈ Submonoid.powers 2) : Dyadic :=
-  ⟨mkRat m n, .mkRat m h⟩
+def half : Dyadic := .ofOdd 1 1 rfl
 
 @[simp]
-theorem val_mkRat (m : ℤ) {n : ℕ} (h : n ∈ Submonoid.powers 2) :
-    (Dyadic.mkRat m h).val = mkRat m n :=
+theorem coe_half : (half : ℚ) = 2⁻¹ := by
+  rw [Rat.inv_def]
   rfl
 
-@[simp] theorem mkRat_self (x : Dyadic) : Dyadic.mkRat x.num x.2 = x := by ext; simp
-
-@[simp]
-theorem mkRat_one (m : ℤ) (h : 1 ∈ Submonoid.powers 2) : Dyadic.mkRat m h = m := by
-  ext; simp
-
-@[simp]
-theorem mkRat_lt_mkRat {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers 2) :
-    Dyadic.mkRat m h₁ < Dyadic.mkRat n h₂ ↔ m < n := by
-  simp_rw [Dyadic.mkRat, Rat.mkRat_eq_div]
-  rw [Subtype.mk_lt_mk, div_lt_div_iff_of_pos_right (mod_cast pos_of_mem_powers h₁), Int.cast_lt]
-
-@[simp]
-theorem mkRat_le_mkRat {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers 2) :
-    Dyadic.mkRat m h₁ ≤ Dyadic.mkRat n h₂ ↔ m ≤ n :=
-  le_iff_le_iff_lt_iff_lt.2 (mkRat_lt_mkRat h₁ h₂)
-
-theorem mkRat_add_mkRat_self {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.powers 2) :
-    Dyadic.mkRat m h₁ + Dyadic.mkRat n h₂ = .mkRat (m + n) h₁ := by
-  ext; simp [Rat.mkRat_eq_div, div_add_div_same]
+instance : LinearOrder Dyadic where
+  le_refl := Dyadic.le_refl
+  le_trans _ _ _ := Dyadic.le_trans
+  le_antisymm _ _ := Dyadic.le_antisymm
+  le_total := Dyadic.le_total
+  lt_iff_le_not_ge x y := by simp_rw [← coe_lt_coe, ← coe_le_coe, lt_iff_le_not_ge]
+  toDecidableLE := inferInstance
 
 instance : CommRing Dyadic where
-  add_assoc x y z := by ext; simp [add_assoc]
-  zero_add x := by ext; simp
-  add_zero x := by ext; simp
-  add_comm x y := by ext; simp [add_comm]
-  mul_comm x y := by ext; simp [mul_comm]
-  left_distrib x y z := by ext; simp [mul_add]
-  right_distrib x y z := by ext; simp [add_mul]
-  zero_mul x := by ext; simp
-  mul_zero x := by ext; simp
-  mul_assoc x y z := by ext; simp [mul_assoc]
-  one_mul x := by ext; simp
-  mul_one x := by ext; simp
-  neg_add_cancel x := by ext; simp
-  sub_eq_add_neg x y := by ext; simp [sub_eq_add_neg]
-  natCast_succ n := by ext; simp
-  nsmul n x := n • x
-  zsmul n x := n • x
-  npow n x := x ^ n
-  npow_succ n x := by ext; simp [pow_succ]
+  zero_add := Dyadic.zero_add
+  add_zero := Dyadic.add_zero
+  add_comm := Dyadic.add_comm
+  add_assoc := Dyadic.add_assoc
+  zero_mul := Dyadic.zero_mul
+  mul_zero := Dyadic.mul_zero
+  one_mul := Dyadic.one_mul
+  mul_one := Dyadic.mul_one
+  mul_comm := Dyadic.mul_comm
+  mul_assoc := Dyadic.mul_assoc
+  left_distrib := Dyadic.mul_add
+  right_distrib := Dyadic.add_mul
+  neg_add_cancel := Dyadic.neg_add_cancel
+  natCast_succ n := by rw [← coe_inj, coe_natCast]; simp
+  intCast_negSucc n := by rw [← coe_inj, coe_intCast]; simp
+  nsmul := nsmulRec
+  zsmul := zsmulRec
 
 instance : IsStrictOrderedRing Dyadic where
-  add_le_add_left x y h z := add_le_add_left (α := ℚ) h z
-  le_of_add_le_add_left x y z := le_of_add_le_add_left (α := ℚ)
-  mul_lt_mul_of_pos_left x y z := mul_lt_mul_of_pos_left (α := ℚ)
-  mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
-  zero_le_one := by decide
+  add_le_add_left x y := by simp_rw [← coe_le_coe, coe_add]; exact fun h _ ↦ add_le_add_left h _
+  le_of_add_le_add_left x y z := by simp_rw [← coe_le_coe, coe_add]; exact le_of_add_le_add_left
+  mul_lt_mul_of_pos_left x y z := by simp_rw [← coe_lt_coe, coe_mul]; exact mul_lt_mul_of_pos_left
+  mul_lt_mul_of_pos_right x y z := by simp_rw [← coe_lt_coe, coe_mul]; exact mul_lt_mul_of_pos_right
+  zero_le_one := rfl
 
 instance : DenselyOrdered Dyadic where
   dense x y h := by
     use half * (x + y)
-    simp_rw [lt_def] at *
+    simp_rw [← coe_lt_coe] at *
     constructor
     · simpa [inv_mul_eq_div] using left_lt_add_div_two.2 h
     · simpa [inv_mul_eq_div] using add_div_two_lt_right.2 h
 
+instance : Archimedean Dyadic where
+  arch x y h := by
+    obtain ⟨n, hn⟩ := exists_lt_nsmul (zero_lt_coe.2 h) x
+    use n
+    simpa [← coe_le_coe] using hn.le
+
+/-- Numerator of a dyadic number. -/
+def num (x : Dyadic) : ℤ := (x : ℚ).num
+/-- The base 2 logarithm of the denominator of a dyadic number. -/
+def den : Dyadic → ℕ
+  | 0 | .ofOdd _ (-((k : ℕ) + 1)) _ => 0
+  | .ofOdd _ (k : ℕ) _ => k
+
+@[simp] theorem num_coe (x : Dyadic) : (x : ℚ).num = x.num := rfl
+@[simp] theorem den_coe : ∀ x : Dyadic, (x : ℚ).den = 2 ^ x.den
+  | 0 | .ofOdd _ (-((k : ℕ) + 1)) _ | .ofOdd _ (k : ℕ) _ => rfl
+
+@[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
+@[simp] theorem den_zero : (0 : Dyadic).den = 0 := rfl
+
+@[simp] theorem num_one : (1 : Dyadic).num = 1 := rfl
+@[simp] theorem den_one : (1 : Dyadic).den = 0 := rfl
+
+@[simp] theorem num_half : half.num = 1 := rfl
+@[simp] theorem den_half : half.den = 1 := rfl
+
+@[simp] theorem num_ofOdd (n : ℤ) (k : ℕ) (h : n % 2 = 1) : (Dyadic.ofOdd n k h).num = n := rfl
+@[simp] theorem den_ofOdd (n : ℤ) (k : ℕ) (h : n % 2 = 1) : (Dyadic.ofOdd n k h).den = k := rfl
+
+@[simp]
+theorem num_ofOdd_neg (n : ℤ) (k : ℕ) (hn : n % 2 = 1) :
+    (Dyadic.ofOdd n (-k) hn).num = n * 2 ^ k := by
+  cases k
+  · rw [pow_zero, _root_.mul_one]; rfl
+  · rw [← Nat.cast_ofNat (n := 2), ← Nat.cast_pow]; rfl
+
+@[simp]
+theorem den_ofOdd_neg (n : ℤ) (k : ℕ) (hn : n % 2 = 1) :
+    (Dyadic.ofOdd n (-k) hn).den = 0 := by
+  cases k <;> rfl
+
+@[simp, norm_cast] theorem num_intCast (n : ℤ) : (n : Dyadic).num = n := by
+  rw [← num_coe, toRat_intCast, Rat.num_intCast]
+@[simp, norm_cast] theorem den_intCast (n : ℤ) : (n : Dyadic).den = 0 := by
+  rw [← Nat.pow_right_inj one_lt_two, ← den_coe, toRat_intCast, Rat.den_intCast, pow_zero]
+
+@[simp, norm_cast] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n := num_intCast n
+@[simp, norm_cast] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 0 := den_intCast n
+
+@[simp] theorem num_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).num = n := num_natCast n
+@[simp] theorem den_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).den = 0 := den_natCast n
+
+@[simp] theorem num_neg (x : Dyadic) : (-x).num = -x.num := by
+  rw [← num_coe, toRat_neg, Rat.num_neg_eq_neg_num, num_coe]
+@[simp] theorem den_neg (x : Dyadic) : (-x).den = x.den := by
+  rw [← Nat.pow_right_inj one_lt_two, ← den_coe, toRat_neg, Rat.den_neg_eq_den, den_coe]
+
+/-
 theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
@@ -398,5 +285,6 @@ theorem den_add_le_den_right {x y : Dyadic} (h : x.den ≤ y.den) : (x + y).den 
   obtain ⟨n, hn⟩ := eq_mkRat_of_den_le h y.den_mem_powers
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
+-/
 
 end Dyadic

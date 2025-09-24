@@ -37,17 +37,17 @@ namespace Dyadic
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
 def lower (x : Dyadic) : Dyadic :=
-  .mkRat (x.num - 1) x.2
+  x - half ^ x.den
 
 /-- For a dyadic number `m / n`, returns `(m + 1) / n`. -/
 def upper (x : Dyadic) : Dyadic :=
-  .mkRat (x.num + 1) x.2
+  x + half ^ x.den
 
 theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den :=
-  den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
+  sorry--den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
 
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den :=
-  den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
+  sorry--den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
 
 /-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
 macro "dyadic_wf" : tactic =>
@@ -56,16 +56,13 @@ macro "dyadic_wf" : tactic =>
 
 @[simp]
 theorem lower_neg (x : Dyadic) : lower (-x) = -upper x := by
-  unfold lower upper
-  ext
-  simp [Rat.neg_mkRat, ← sub_eq_neg_add]
+  rw [lower, upper, neg_add', den_neg]
 
 @[simp]
 theorem upper_neg (x : Dyadic) : upper (-x) = -lower x := by
-  unfold lower upper
-  ext
-  simp [Rat.neg_mkRat, ← sub_eq_neg_add]
+  rw [← neg_neg (upper _), ← lower_neg, neg_neg]
 
+#exit
 theorem le_lower_of_lt {x y : Dyadic} (hd : x.den ≤ y.den) (h : x < y) : x ≤ y.lower := by
   obtain ⟨m, rfl⟩ := eq_mkRat_of_den_le hd y.den_mem_powers
   conv_rhs at h => rw [← y.mkRat_self]

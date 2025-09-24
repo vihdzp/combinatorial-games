@@ -157,7 +157,7 @@ lemma numeric_inv {x : IGame} [Numeric x] (hx : 0 < x)
   refine Numeric.mk (fun y hy z hz ↦ ?_) H'
   have := H' _ y hy
   have := H' _ z hz
-  exact (Numeric.mul_lt_mul_left hx).1 <| (Hl y hy).trans (Hr z hz)
+  exact (Numeric.mul_lt_mul_iff_right hx).1 <| (Hl y hy).trans (Hr z hz)
 
 lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
