@@ -120,12 +120,11 @@ theorem outcomeFor_eq_loss_iff {p : Player} {x : LGame} : outcomeFor p x = .loss
 theorem outcomeFor_eq_draw_iff {p : Player} {x : LGame} : outcomeFor p x = .draw ↔ IsDraw p x := by
   aesop (add simp [outcomeFor, IsDraw])
 
-theorem StopperFor.not_isDraw {p : Player} {x : LGame} (h : StopperFor p x) : ¬ IsDraw p x := by
-  induction h with | @mk p x h IH
-  rintro ⟨hw, hl⟩
-  obtain ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
-  obtain ⟨z, hzy, hz⟩ := not_isLoss_iff_exists.mp (not_isWin_iff_forall.mp hw y hyx)
-  exact hz <| ((not_isDraw_iff.1 <| IH y hyx).resolve_left hy).isWin_of_mem_moves hzy
+theorem StopperFor.not_isDraw {p : Player} {x : LGame} (h : StopperFor p x) : ¬ IsDraw p x :=
+  h.rec fun _h IH ⟨hw, hl⟩ ↦
+    have ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
+    have ⟨_, hzy, hz⟩ := not_isLoss_iff_exists.mp (not_isWin_iff_forall.mp hw y hyx)
+    hz <| ((not_isDraw_iff.1 <| IH y hyx).resolve_left hy).isWin_of_mem_moves hzy
 
 theorem Stopper.not_isDraw (p : Player) {x : LGame} (h : Stopper x) : ¬ IsDraw p x :=
   (h p).not_isDraw
