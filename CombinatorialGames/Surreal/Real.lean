@@ -152,19 +152,19 @@ theorem toIGame_intCast_equiv (n : ℤ) : toIGame n ≈ n := by
 theorem toIGame_zero_equiv : toIGame 0 ≈ 0 := by simpa using toIGame_natCast_equiv 0
 theorem toIGame_one_equiv : toIGame 1 ≈ 1 := by simpa using toIGame_natCast_equiv 1
 
-@[simp] theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < (x : IGame) ↔ q < x := by
+@[simp, norm_cast] theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < (x : IGame) ↔ q < x := by
   rw [← (toIGame_ratCast_equiv q).lt_congr_left, toIGame_lt_iff]
-@[simp] theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : (x : IGame) < q ↔ x < q := by
+@[simp, norm_cast] theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : (x : IGame) < q ↔ x < q := by
   rw [← (toIGame_ratCast_equiv q).lt_congr_right, toIGame_lt_iff]
 
-@[simp] theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
+@[simp, norm_cast] theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
   simp [← not_lt, ← Numeric.not_lt]
-@[simp] theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
+@[simp, norm_cast] theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
   simp [← not_lt, ← Numeric.not_lt]
 
-@[simp] theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
+@[simp, norm_cast] theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
   simp [AntisymmRel, le_antisymm_iff]
-@[simp] theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
+@[simp, norm_cast] theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
@@ -680,37 +680,25 @@ theorem toIGame_div_equiv (x y : ℝ) : (x / y).toIGame ≈ x / y := by
 
 /-! #### 0 -/
 
-@[simp, norm_cast] theorem toIGame_lt_zero {x : ℝ} : (x : IGame) < 0 ↔ x < 0 := by
-  simpa using toIGame_lt_natCast (y := 0)
-@[simp, norm_cast] theorem toIGame_le_zero {x : ℝ} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by
-  simpa using toIGame_le_natCast (y := 0)
+@[simp] theorem toIGame_lt_zero {x : ℝ} : (x : IGame) < 0 ↔ x < 0 := by norm_cast
+@[simp] theorem toIGame_le_zero {x : ℝ} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by norm_cast
 
-@[simp, norm_cast] theorem zero_lt_toIGame {x : ℝ} : 0 < (x : IGame) ↔ 0 < x := by
-  simpa using natCast_lt_toIGame (x := 0)
-@[simp, norm_cast] theorem zero_le_toIGame {x : ℝ} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by
-  simpa using natCast_le_toIGame (x := 0)
+@[simp] theorem zero_lt_toIGame {x : ℝ} : 0 < (x : IGame) ↔ 0 < x := by norm_cast
+@[simp] theorem zero_le_toIGame {x : ℝ} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by norm_cast
 
-@[simp, norm_cast] theorem toIGame_equiv_zero {x : ℝ} : (x : IGame) ≈ 0 ↔ x = 0 := by
-  simpa using toIGame_equiv_natCast (y := 0)
-@[simp, norm_cast] theorem zero_equiv_toIGame {x : ℝ} : 0 ≈ (x : IGame) ↔ 0 = x := by
-  simpa using natCast_equiv_toIGame (x := 0)
+@[simp] theorem toIGame_equiv_zero {x : ℝ} : (x : IGame) ≈ 0 ↔ x = 0 := by norm_cast
+@[simp] theorem zero_equiv_toIGame {x : ℝ} : 0 ≈ (x : IGame) ↔ 0 = x := by norm_cast
 
 /-! #### 1 -/
 
-@[simp, norm_cast] theorem toIGame_lt_one {x : ℝ} : (x : IGame) < 1 ↔ x < 1 := by
-  simpa using toIGame_lt_natCast (y := 1)
-@[simp, norm_cast] theorem toIGame_le_one {x : ℝ} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by
-  simpa using toIGame_le_natCast (y := 1)
+@[simp] theorem toIGame_lt_one {x : ℝ} : (x : IGame) < 1 ↔ x < 1 := by norm_cast
+@[simp] theorem toIGame_le_one {x : ℝ} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by norm_cast
 
-@[simp, norm_cast] theorem one_lt_toIGame {x : ℝ} : 1 < (x : IGame) ↔ 1 < x := by
-  simpa using natCast_lt_toIGame (x := 1)
-@[simp, norm_cast] theorem one_le_toIGame {x : ℝ} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by
-  simpa using natCast_le_toIGame (x := 1)
+@[simp] theorem one_lt_toIGame {x : ℝ} : 1 < (x : IGame) ↔ 1 < x := by norm_cast
+@[simp] theorem one_le_toIGame {x : ℝ} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by norm_cast
 
-@[simp, norm_cast] theorem toIGame_equiv_one {x : ℝ} : (x : IGame) ≈ 1 ↔ x = 1 := by
-  simpa using toIGame_equiv_natCast (y := 1)
-@[simp, norm_cast] theorem one_equiv_toIGame {x : ℝ} : 1 ≈ (x : IGame) ↔ 1 = x := by
-  simpa using natCast_equiv_toIGame (x := 1)
+@[simp] theorem toIGame_equiv_one {x : ℝ} : (x : IGame) ≈ 1 ↔ x = 1 := by norm_cast
+@[simp] theorem one_equiv_toIGame {x : ℝ} : 1 ≈ (x : IGame) ↔ 1 = x := by norm_cast
 
 end Real
 end
