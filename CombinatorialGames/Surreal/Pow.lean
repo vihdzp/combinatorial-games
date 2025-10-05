@@ -398,7 +398,7 @@ theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame 
       obtain ⟨n, hn⟩ := exists_nat_gt r
       rw [mul_comm]
       apply ((toIGame.strictMono <| wpow_mul_natCast_lt hy n).trans' _).not_ge
-      rw [(H hy n).lt_congr_right, Numeric.mul_lt_mul_left]
+      rw [(H hy n).lt_congr_right, Numeric.mul_lt_mul_iff_right]
       · exact_mod_cast hn
       · exact Numeric.wpow_pos _
   · simp
