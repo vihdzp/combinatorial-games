@@ -142,7 +142,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · simp_rw [← NatOrdinal.le_zero]
+  · repeat rw [← NatOrdinal.le_zero]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
