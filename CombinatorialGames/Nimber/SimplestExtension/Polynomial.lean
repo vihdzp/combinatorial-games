@@ -488,8 +488,8 @@ theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a
   obtain rfl | ha := eq_or_ne a 0; simp [oeval]
   · have hp' : p.natDegree ≤ n := p.natDegree_le_of_degree_le hp.le
     have hp'' : (C a * X ^ n + p).natDegree ≤ n := by compute_degree!
-    rw [oeval_eq_of_natDegree_le (add_right_mono hp'),
-      oeval_eq_of_natDegree_le (add_right_mono hp'')]
+    rw [oeval_eq_of_natDegree_le (add_left_mono hp'),
+      oeval_eq_of_natDegree_le (add_left_mono hp'')]
     cases n with
     | zero => simp_all
     | succ n =>
