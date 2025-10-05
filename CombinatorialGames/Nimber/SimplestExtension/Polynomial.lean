@@ -59,6 +59,10 @@ theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
       rw [← hm]
       exact bot_le
 
+theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [CanonicallyOrderedAdd α]
+    {x : WithBot α} : x ≤ 0 ↔ x = ⊥ ∨ x = 0 := by
+  cases x <;> simp
+
 namespace Polynomial
 
 variable {R : Type*} [Semiring R] {p : R[X]}
