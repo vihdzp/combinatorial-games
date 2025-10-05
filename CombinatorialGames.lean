@@ -21,7 +21,6 @@ import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
-import CombinatorialGames.Mathlib.Archimedean
 import CombinatorialGames.Mathlib.Concept
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
