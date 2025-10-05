@@ -22,6 +22,7 @@ This file contains multiple auxiliary results and definitions for working with n
 - `IsField.embed`: embeds a polynomial `p : Nimber[X]` into the subfield `Iio x`, for `IsField x`.
 - `Lex.instLinearOrderPolynomial`: a linear order instance on nimber polynomials, defined as the
   colexicographic ordering.
+- `leastNoRoots x`: the smallest non-constant polynomial in `x` without roots less than `x`.
 -/
 
 universe u
