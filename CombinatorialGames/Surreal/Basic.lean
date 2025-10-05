@@ -27,13 +27,8 @@ reals, and much else besides!
 In this file, we show that the surreals form a linear ordered commutative group.
 
 In `CombinatorialGames.Surreal.Multiplication`, we define multiplication and show that the surreals
-form a linear ordered commutative ring.
-
-## TODO
-
-- Prove that surreals with finite birthday are dyadic rationals.
-- Build the embedding from reals into surreals.
-- Define sign sequences.
+form a linear ordered commutative ring. In `CombinatorialGames.Surreal.Division` we further show the
+surreals are a field.
 -/
 
 universe u
