@@ -59,10 +59,6 @@ theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
       rw [← hm]
       exact bot_le
 
-theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [CanonicallyOrderedAdd α]
-    {x : WithBot α} : x ≤ 0 ↔ x = ⊥ ∨ x = 0 := by
-  cases x <;> simp
-
 namespace Polynomial
 
 variable {R : Type*} [Semiring R] {p : R[X]}
@@ -97,7 +93,13 @@ theorem eq_add_C_mul_X_pow_of_degree_le {p : R[X]} {n : ℕ} (h : p.degree ≤ n
     · rw [← natDegree_eq_of_degree_eq_some hp, eraseLead_add_C_mul_X_pow]
     · aesop
 
+alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
+
 end Polynomial
+
+theorem WithBot.le_zero_iff {α} [AddZeroClass α] [PartialOrder α] [CanonicallyOrderedAdd α]
+    {x : WithBot α} : x ≤ 0 ↔ x = ⊥ ∨ x = 0 := by
+  cases x <;> simp
 
 theorem WithBot.coe_add_one (n : ℕ) : WithBot.some (n + 1) = WithBot.some n + 1 :=
   rfl
@@ -113,6 +115,23 @@ theorem WithBot.lt_add_one {x : WithBot ℕ} (n : ℕ) : x < WithBot.some n + 1 
   · simp [bot_lt_iff_ne_bot]
   · rw [← WithBot.coe_add_one, WithBot.coe_lt_coe]
     simp
+
+-- TODO: PR this along with a `WithBot` version.
+@[simp]
+theorem WithTop.forall_lt_coe {α : Type*} {P : WithTop α → Prop} [Preorder α] {x : α} :
+    (∀ y < WithTop.some x, P y) ↔ ∀ y < x, P (.some y) := by
+  refine ⟨?_, fun h y ↦ ?_⟩
+  · aesop
+  · rw [WithTop.lt_iff_exists_coe]
+    aesop
+
+-- TODO: presumably we should PR this along with all the other versions.
+theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorder α] [AddLeftMono α]
+    {a b : WithBot α} (ha : 0 < a) (hb : 0 ≤ b) : 0 < a + b := by
+  obtain ⟨a, rfl, ha⟩ := WithBot.lt_iff_exists_coe.1 ha
+  obtain ⟨b, rfl, hb⟩ := WithBot.coe_le_iff.1 hb
+  rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
+  exact _root_.add_pos_of_pos_of_nonneg ha hb
 
 namespace Nimber
 
@@ -915,5 +934,8 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
   · have := @leastNoRoots_not_root_of_lt x
     aesop
+
+proof_wanted IsField.irreducible_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
+    Irreducible (x.leastNoRoots.untop ht)
 
 end Nimber
