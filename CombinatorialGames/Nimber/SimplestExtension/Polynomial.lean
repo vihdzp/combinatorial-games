@@ -3,12 +3,14 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import Mathlib.Algebra.Polynomial.Degree.Domain
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.EraseLead
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.Algebra.Polynomial.Eval.Defs
+import Mathlib.Algebra.Polynomial.Splits
 import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.Tactic.ComputeDegree
 
@@ -30,6 +32,9 @@ open Order Polynomial
 
 -- TODO: should some of these be global?
 attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
+
+-- TODO: upstream attr.
+attribute [simp] mem_lowerBounds
 
 -- TODO: after #29084, we can remove the commutativity hypothesis from `List.le_sum_of_mem`, and
 -- this lemma will no longer be needed.
@@ -718,6 +723,9 @@ theorem forall_lt_oeval_iff {x : Nimber} (hx₁ : 1 < x) {P : Ordinal → Prop}
 
 /-! ### Least irreducible polynomial -/
 
+attribute [simp] Polynomial.map_multiset_prod
+attribute [-simp] WithTop.coe_add WithTop.coe_mul WithTop.coe_pow
+
 /-- Returns the lexicographically earliest non-constant polynomial, all of whose coefficients are
 less than `x`, without any roots less than `x`. If none exists, returns `⊤`.
 
@@ -792,9 +800,6 @@ theorem leastNoRoots_ne_X_pow (x : Nimber) (n : ℕ) :
   rw [← WithTop.coe_untop _ ht, WithTop.coe_inj] at hp
   exact (leastNoRoots_ne_X_pow' _ _ _) hp
 
--- TODO: upstream attr.
-attribute [simp] mem_lowerBounds
-
 theorem leastNoRoots_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
     (hp₀ : 0 < p.degree) (hpk : ∀ k, p.coeff k < x) (hr : ∀ r < x, ¬ p.IsRoot r) :
     leastNoRoots x ≤ p := by
@@ -844,7 +849,6 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
   obtain hx₁ | hx₁ := le_or_gt x 1; simp [polynomial_eq_zero_of_le_one hx₁ hpk] at hr
   have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
 
-attribute [simp] Polynomial.map_multiset_prod
 theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
     {p : Nimber[X]} (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
@@ -853,8 +857,6 @@ theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
   have hs := h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)
   conv_lhs => rw [← h.map_embed hx₁ hpk, eq_prod_roots_of_splits_id hs]
   simp [h.roots_eq_map hx₁ hpn hpk]
-
-attribute [-simp] WithTop.coe_add WithTop.coe_mul WithTop.coe_pow
 
 theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
     leastNoRoots x = .some (C x⁻¹ * X + 1) := by
