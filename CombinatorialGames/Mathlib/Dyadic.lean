@@ -76,7 +76,7 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
   obtain ⟨n, rfl⟩ := hn
   simp_all [pow_dvd_pow_iff, pow_le_pow_iff_right₀]
 
-/-! ### Dyadic' numbers -/
+/-! ### Dyadic numbers -/
 
 /-- A dyadic rational number is one whose denominator is a power of two. -/
 def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
@@ -360,7 +360,7 @@ instance : Archimedean Dyadic' where
     have ⟨n, hn⟩ := exists_lt_nsmul (M := ℚ) h x
     ⟨n, hn.le⟩
 
-theorem even_den {x : Dyadic} (hx : x.den ≠ 1) : Even x.den := by
+theorem even_den {x : Dyadic'} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
   cases n

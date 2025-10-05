@@ -29,7 +29,7 @@ universe u
 
 open Set
 
-/-! ## For Mathlib-/
+/-! ## For Mathlib -/
 
 -- TODO: upstream
 theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set α) (t : Set β) :
@@ -38,15 +38,16 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-theorem mk_dyadic {r : Dyadic} (h : r ≠ 0) : mk (r : Surreal) = 0 :=
+theorem mk_dyadic {r : Dyadic'} (h : r ≠ 0) : mk (r : Surreal) = 0 :=
   mk_ratCast (mod_cast h)
 
 @[simp]
 theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
-theorem mk_le_mk_iff_dyadic {x y : Surreal} : mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
-  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
+theorem mk_le_mk_iff_dyadic {x y : Surreal} :
+    mk x ≤ mk y ↔ ∃ q : Dyadic', 0 < q ∧ q * |y| ≤ |x| := by
+  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic'.coeRingHom) (x := x) ?_
   · simp
   · exact Rat.cast_strictMono.comp fun x y ↦ id
 
