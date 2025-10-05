@@ -31,11 +31,6 @@ needed.
 
 For similar reasons, most results about ordinals and games are written using `NatOrdinal` rather
 than `Ordinal` (except when `Nimber` would make more sense).
-
-## Todo
-
-- Prove the characterizations of natural addition and multiplication in terms of the Cantor normal
-  form.
 -/
 
 universe u v
@@ -143,6 +138,13 @@ instance : IsOrderedCancelAddMonoid NatOrdinal where
 
 theorem le_add_left : a ≤ b + a := by simp
 theorem le_add_right : a ≤ a + b := by simp
+
+@[simp]
+theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
+  refine ⟨fun h ↦ ?_, ?_⟩
+  · repeat rw [← NatOrdinal.le_zero]
+    exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
+  · simp +contextual
 
 private theorem succ_eq_add_one' (a : NatOrdinal) : succ a = a + 1 := by
   rw [add_def, ciSup_unique (s := fun _ : Iio 1 ↦ _), Iio_one_default_eq, add_zero,
