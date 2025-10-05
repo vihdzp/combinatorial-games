@@ -356,7 +356,7 @@ theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame 
   obtain rfl | hx := eq_or_ne x 0; simp
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
   · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
-    rintro z ⟨y, hy, n, hz⟩
+    intro z ⟨y, hy, n, hz⟩
     apply ((toIGame.strictMono hz).trans_le _).not_ge
     rw [(H hy n).le_congr_left, mul_comm]
     simpa using (Numeric.mul_wpow_lt_wpow' n (toIGame.strictMono hy)).le
