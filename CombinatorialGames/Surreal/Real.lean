@@ -26,7 +26,7 @@ open IGame
 noncomputable section
 
 theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
-    [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic, x < q ∧ q < y := by
+    [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic', x < q ∧ q < y := by
   obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
   have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
   obtain ⟨z, hz, hz'⟩ := exists_div_btwn h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
@@ -40,7 +40,7 @@ namespace Real
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
 rationals. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame.{u} :=
-  !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}}
+  !{(↑) '' {q : Dyadic' | q < x} | (↑) '' {q : Dyadic' | x < q}}
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
@@ -53,34 +53,34 @@ instance Numeric.toIGame (x : ℝ) : Numeric x := by
   · aesop (add simp [Numeric.dyadic])
 
 @[simp]
-theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic | q < x} :=
+theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic' | q < x} :=
   leftMoves_ofSets ..
 
 @[simp]
-theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic | x < q} :=
+theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic' | x < q} :=
   rightMoves_ofSets ..
 
 theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic, q < x → P q := by
+    (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic', q < x → P q := by
   aesop
 
 theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ xᴸ, P y) ↔ ∃ q : Dyadic, q < x ∧ P q := by
+    (∃ y ∈ xᴸ, P y) ↔ ∃ q : Dyadic', q < x ∧ P q := by
   aesop
 
 theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ xᴿ, P y) ↔ ∀ q : Dyadic, x < q → P q := by
+    (∀ y ∈ xᴿ, P y) ↔ ∀ q : Dyadic', x < q → P q := by
   aesop
 
 theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ xᴿ, P y) ↔ ∃ q : Dyadic, x < q ∧ P q := by
+    (∃ y ∈ xᴿ, P y) ↔ ∃ q : Dyadic', x < q ∧ P q := by
   aesop
 
-theorem mem_leftMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : q < x) :
+theorem mem_leftMoves_toIGame_of_lt {q : Dyadic'} {x : ℝ} (h : q < x) :
     (q : IGame) ∈ xᴸ := by
   simpa
 
-theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q) :
+theorem mem_rightMoves_toIGame_of_lt {q : Dyadic'} {x : ℝ} (h : x < q) :
     (q : IGame) ∈ xᴿ := by
   simpa
 
@@ -90,9 +90,9 @@ def toIGameEmbedding : ℝ ↪o IGame := by
   refine .ofStrictMono toIGame fun x y h ↦ ?_
   obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
   trans (q : IGame)
-  · apply Numeric.lt_rightMove
+  · apply Numeric.lt_right
     simpa [toIGame]
-  · apply Numeric.leftMove_lt
+  · apply Numeric.left_lt
     simpa [toIGame]
 
 @[simp, norm_cast]
@@ -114,7 +114,7 @@ theorem toIGame_inj {x y : ℝ} : (x : IGame) = y ↔ x = y :=
 @[simp, norm_cast]
 theorem toIGame_neg (x : ℝ) : toIGame (-x) = -toIGame x := by
   simp_rw [toIGame, neg_ofSets, ofSets_inj,
-    ← Set.image_neg_of_apply_neg_eq_neg (fun _ _ ↦ Dyadic.toIGame_neg _)]
+    ← Set.image_neg_of_apply_neg_eq_neg (fun _ _ ↦ Dyadic'.toIGame_neg _)]
   aesop (add simp [lt_neg, neg_lt])
 
 theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
@@ -124,20 +124,20 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
   · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt, ← hr'.lt_congr_right] at hs'
-    apply lf_of_rightMove_le (z := s)
+    apply lf_of_right_le (z := s)
     · rw [Rat.cast_eq_id, id, ← s.toIGame_equiv.lt_congr_left] at hs'
       exact hs'.le
     · simpa
   · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt, ← hr'.lt_congr_left] at hs
-    apply lf_of_le_leftMove (z := s)
+    apply lf_of_le_left (z := s)
     · rw [Rat.cast_eq_id, id, ← s.toIGame_equiv.lt_congr_right] at hs
       exact hs.le
     · simpa
   · aesop
 
-theorem toIGame_dyadic_equiv (q : Dyadic) : toIGame q ≈ q := by
+theorem toIGame_dyadic_equiv (q : Dyadic') : toIGame q ≈ q := by
   rw [q.toIGame_equiv.antisymmRel_congr_right]
   exact toIGame_ratCast_equiv _
 
@@ -152,19 +152,19 @@ theorem toIGame_intCast_equiv (n : ℤ) : toIGame n ≈ n := by
 theorem toIGame_zero_equiv : toIGame 0 ≈ 0 := by simpa using toIGame_natCast_equiv 0
 theorem toIGame_one_equiv : toIGame 1 ≈ 1 := by simpa using toIGame_natCast_equiv 1
 
-@[simp] theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < (x : IGame) ↔ q < x := by
+@[simp, norm_cast] theorem ratCast_lt_toIGame {q : ℚ} {x : ℝ} : q < (x : IGame) ↔ q < x := by
   rw [← (toIGame_ratCast_equiv q).lt_congr_left, toIGame_lt_iff]
-@[simp] theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : (x : IGame) < q ↔ x < q := by
+@[simp, norm_cast] theorem toIGame_lt_ratCast {q : ℚ} {x : ℝ} : (x : IGame) < q ↔ x < q := by
   rw [← (toIGame_ratCast_equiv q).lt_congr_right, toIGame_lt_iff]
 
-@[simp] theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
+@[simp, norm_cast] theorem ratCast_le_toIGame {q : ℚ} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
   simp [← not_lt, ← Numeric.not_lt]
-@[simp] theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
+@[simp, norm_cast] theorem toIGame_le_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
   simp [← not_lt, ← Numeric.not_lt]
 
-@[simp] theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
+@[simp, norm_cast] theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) ↔ q = x := by
   simp [AntisymmRel, le_antisymm_iff]
-@[simp] theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
+@[simp, norm_cast] theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
@@ -205,10 +205,10 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
 theorem toIGame_ratCast_add_equiv (q : ℚ) (x : ℝ) : toIGame (q + x) ≈ q + x := by
   simpa [add_comm] using toIGame_add_ratCast_equiv x q
 
-theorem toIGame_add_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x + q) ≈ x + q :=
+theorem toIGame_add_dyadic_equiv (x : ℝ) (q : Dyadic') : toIGame (x + q) ≈ x + q :=
   (toIGame_add_ratCast_equiv _ _).trans (add_congr_right q.toIGame_equiv.symm)
 
-theorem toIGame_dyadic_add_equiv (q : Dyadic) (x : ℝ) : toIGame (q + x) ≈ q + x := by
+theorem toIGame_dyadic_add_equiv (q : Dyadic') (x : ℝ) : toIGame (q + x) ≈ q + x := by
   simpa [add_comm] using toIGame_add_dyadic_equiv x q
 
 theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
@@ -248,10 +248,10 @@ theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x - q) ≈ x - 
 theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : toIGame (q - x) ≈ q - x := by
   simpa using toIGame_ratCast_add_equiv q (-x)
 
-theorem toIGame_sub_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x - q) ≈ x - q := by
+theorem toIGame_sub_dyadic_equiv (x : ℝ) (q : Dyadic') : toIGame (x - q) ≈ x - q := by
   simpa using toIGame_add_dyadic_equiv x (-q)
 
-theorem toIGame_dyadic_sub_equiv (q : Dyadic) (x : ℝ) : toIGame (q - x) ≈ q - x := by
+theorem toIGame_dyadic_sub_equiv (q : Dyadic') (x : ℝ) : toIGame (q - x) ≈ q - x := by
   simpa using toIGame_dyadic_add_equiv q (-x)
 
 theorem toIGame_sub_equiv (x y : ℝ) : toIGame (x - y) ≈ x - y := by
@@ -267,7 +267,7 @@ instance : Coe ℝ Game := ⟨toGame⟩
 @[simp] theorem _root_.Game.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toGame := rfl
 
 theorem toGame_def (x : ℝ) :
-    toGame x = !{(↑) '' {q : Dyadic | q < x} | (↑) '' {q : Dyadic | x < q}} := by
+    toGame x = !{(↑) '' {q : Dyadic' | q < x} | (↑) '' {q : Dyadic' | x < q}} := by
   rw [← Game.mk_real_toIGame, toIGame]
   simp [Set.image_image]
 
@@ -325,8 +325,8 @@ instance : Coe ℝ Surreal := ⟨toSurreal⟩
 @[simp] theorem _root_.Surreal.mk_real_toIGame (x : ℝ) : .mk x.toIGame = x.toSurreal := rfl
 
 private theorem toSurreal_def_aux {x : ℝ} :
-    ∀ y ∈ ((↑) '' {q : Dyadic | q < x} : Set Surreal),
-    ∀ z ∈ (↑) '' {q : Dyadic | x < q}, y < z := by
+    ∀ y ∈ ((↑) '' {q : Dyadic' | q < x} : Set Surreal),
+    ∀ z ∈ (↑) '' {q : Dyadic' | x < q}, y < z := by
   rintro - ⟨q, hq, rfl⟩ - ⟨r, hr, rfl⟩
   dsimp at *
   exact_mod_cast hq.trans hr
@@ -334,7 +334,7 @@ private theorem toSurreal_def_aux {x : ℝ} :
 @[simp] theorem toGame_toSurreal (x : ℝ) : x.toSurreal.toGame = x.toGame := rfl
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
-    !{(↑) '' {q : Dyadic | q < x} | ((↑) '' {q : Dyadic | x < q})}'toSurreal_def_aux := by
+    !{(↑) '' {q : Dyadic' | q < x} | ((↑) '' {q : Dyadic' | x < q})}'toSurreal_def_aux := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
   congr! <;> aesop
 
@@ -514,7 +514,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
 theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
-private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic}
+private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic'}
     (hx : 0 < x) (hy : 0 < y) (h : q < x * y) : (q : IGame) < x * y := by
   rw [← div_lt_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn (max_lt h hx)
@@ -530,7 +530,7 @@ private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic}
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
 
-private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
+private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic'}
     (hx : 0 < x) (hy : 0 < y) (h : x * y < q) : x * y < (q : IGame) := by
   rw [← lt_div_iff₀ hy] at h
   obtain ⟨r, hr, hr'⟩ := exists_rat_btwn h
@@ -546,7 +546,7 @@ private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
       ← (ratCast_div_equiv ..).lt_congr_right] <;>
       simp_all [← Rat.cast_div]
 
-private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic) (h : q < x * y) :
+private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic') (h : q < x * y) :
     (q : IGame.{u}) < x * y := by
   obtain hx | rfl | hx := lt_trichotomy x 0
   · obtain hy | rfl | hy := lt_trichotomy y 0
@@ -565,7 +565,7 @@ private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic) (h : q < x * y) :
       simp_all
     · exact dyadic_lt_mul_toIGame' hx hy h
 
-private theorem mul_toIGame_lt_dyadic {x y : ℝ} (q : Dyadic) (h : x * y < q) :
+private theorem mul_toIGame_lt_dyadic {x y : ℝ} (q : Dyadic') (h : x * y < q) :
     x * y < (q : IGame.{u}) := by
   have := @dyadic_lt_mul_toIGame.{u} (-x) y (-q)
   simp_all
@@ -573,7 +573,7 @@ private theorem mul_toIGame_lt_dyadic {x y : ℝ} (q : Dyadic) (h : x * y < q) :
 private theorem toSurreal_mul_ratCast (x : ℝ) (q : ℚ) : toSurreal (x * q) = x * q := by
   simpa using Surreal.mk_eq (toIGame_mul_ratCast_equiv x q)
 
-private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : Dyadic} :
+private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : Dyadic'} :
     mulOption (toIGame x) (toIGame y) q r ≈ toIGame (q * y + x * r - q * r) := by
   simp [← Surreal.mk_eq_mk, mulOption, mul_comm, toSurreal_mul_ratCast]
 
@@ -627,21 +627,21 @@ theorem toIGame_div_equiv (x y : ℝ) : (x / y).toIGame ≈ x / y := by
 
 /-! ### Simp lemmas -/
 
-/-! #### Dyadic -/
+/-! #### Dyadic' -/
 
-@[simp, norm_cast] theorem dyadic_lt_toIGame {q : Dyadic} {x : ℝ} : q < (x : IGame) ↔ q < x := by
+@[simp, norm_cast] theorem dyadic_lt_toIGame {q : Dyadic'} {x : ℝ} : q < (x : IGame) ↔ q < x := by
   rw [← (toIGame_dyadic_equiv q).lt_congr_left, toIGame_lt_iff]
-@[simp, norm_cast] theorem toIGame_lt_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) < q ↔ x < q := by
+@[simp, norm_cast] theorem toIGame_lt_dyadic {q : Dyadic'} {x : ℝ} : (x : IGame) < q ↔ x < q := by
   rw [← (toIGame_dyadic_equiv q).lt_congr_right, toIGame_lt_iff]
 
-@[simp, norm_cast] theorem dyadic_le_toIGame {q : Dyadic} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
+@[simp, norm_cast] theorem dyadic_le_toIGame {q : Dyadic'} {x : ℝ} : q ≤ (x : IGame) ↔ q ≤ x := by
   simp [← not_lt, ← Numeric.not_lt]
-@[simp, norm_cast] theorem toIGame_le_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
+@[simp, norm_cast] theorem toIGame_le_dyadic {q : Dyadic'} {x : ℝ} : (x : IGame) ≤ q ↔ x ≤ q := by
   simp [← not_lt, ← Numeric.not_lt]
 
-@[simp, norm_cast] theorem dyadic_equiv_toIGame {q : Dyadic} {x : ℝ} : (q : IGame) ≈ x ↔ q = x := by
+@[simp, norm_cast] theorem dyadic_equiv_toIGame {q : Dyadic'} {x : ℝ} : (q : IGame) ≈ x ↔ q = x := by
   simp [AntisymmRel, le_antisymm_iff]
-@[simp, norm_cast] theorem toIGame_equiv_dyadic {q : Dyadic} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
+@[simp, norm_cast] theorem toIGame_equiv_dyadic {q : Dyadic'} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
 /-! #### ℤ -/
@@ -680,37 +680,25 @@ theorem toIGame_div_equiv (x y : ℝ) : (x / y).toIGame ≈ x / y := by
 
 /-! #### 0 -/
 
-@[simp, norm_cast] theorem toIGame_lt_zero {x : ℝ} : (x : IGame) < 0 ↔ x < 0 := by
-  simpa using toIGame_lt_natCast (y := 0)
-@[simp, norm_cast] theorem toIGame_le_zero {x : ℝ} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by
-  simpa using toIGame_le_natCast (y := 0)
+@[simp] theorem toIGame_lt_zero {x : ℝ} : (x : IGame) < 0 ↔ x < 0 := by norm_cast
+@[simp] theorem toIGame_le_zero {x : ℝ} : (x : IGame) ≤ 0 ↔ x ≤ 0 := by norm_cast
 
-@[simp, norm_cast] theorem zero_lt_toIGame {x : ℝ} : 0 < (x : IGame) ↔ 0 < x := by
-  simpa using natCast_lt_toIGame (x := 0)
-@[simp, norm_cast] theorem zero_le_toIGame {x : ℝ} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by
-  simpa using natCast_le_toIGame (x := 0)
+@[simp] theorem zero_lt_toIGame {x : ℝ} : 0 < (x : IGame) ↔ 0 < x := by norm_cast
+@[simp] theorem zero_le_toIGame {x : ℝ} : 0 ≤ (x : IGame) ↔ 0 ≤ x := by norm_cast
 
-@[simp, norm_cast] theorem toIGame_equiv_zero {x : ℝ} : (x : IGame) ≈ 0 ↔ x = 0 := by
-  simpa using toIGame_equiv_natCast (y := 0)
-@[simp, norm_cast] theorem zero_equiv_toIGame {x : ℝ} : 0 ≈ (x : IGame) ↔ 0 = x := by
-  simpa using natCast_equiv_toIGame (x := 0)
+@[simp] theorem toIGame_equiv_zero {x : ℝ} : (x : IGame) ≈ 0 ↔ x = 0 := by norm_cast
+@[simp] theorem zero_equiv_toIGame {x : ℝ} : 0 ≈ (x : IGame) ↔ 0 = x := by norm_cast
 
 /-! #### 1 -/
 
-@[simp, norm_cast] theorem toIGame_lt_one {x : ℝ} : (x : IGame) < 1 ↔ x < 1 := by
-  simpa using toIGame_lt_natCast (y := 1)
-@[simp, norm_cast] theorem toIGame_le_one {x : ℝ} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by
-  simpa using toIGame_le_natCast (y := 1)
+@[simp] theorem toIGame_lt_one {x : ℝ} : (x : IGame) < 1 ↔ x < 1 := by norm_cast
+@[simp] theorem toIGame_le_one {x : ℝ} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by norm_cast
 
-@[simp, norm_cast] theorem one_lt_toIGame {x : ℝ} : 1 < (x : IGame) ↔ 1 < x := by
-  simpa using natCast_lt_toIGame (x := 1)
-@[simp, norm_cast] theorem one_le_toIGame {x : ℝ} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by
-  simpa using natCast_le_toIGame (x := 1)
+@[simp] theorem one_lt_toIGame {x : ℝ} : 1 < (x : IGame) ↔ 1 < x := by norm_cast
+@[simp] theorem one_le_toIGame {x : ℝ} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by norm_cast
 
-@[simp, norm_cast] theorem toIGame_equiv_one {x : ℝ} : (x : IGame) ≈ 1 ↔ x = 1 := by
-  simpa using toIGame_equiv_natCast (y := 1)
-@[simp, norm_cast] theorem one_equiv_toIGame {x : ℝ} : 1 ≈ (x : IGame) ↔ 1 = x := by
-  simpa using natCast_equiv_toIGame (x := 1)
+@[simp] theorem toIGame_equiv_one {x : ℝ} : (x : IGame) ≈ 1 ↔ x = 1 := by norm_cast
+@[simp] theorem one_equiv_toIGame {x : ℝ} : 1 ≈ (x : IGame) ↔ 1 = x := by norm_cast
 
 end Real
 end

@@ -81,14 +81,14 @@ theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < 
     exact (lt_of_numeric_of_pos z hy).not_ge
   · have := Numeric.of_mem_moves hz
     obtain (h | h) := Numeric.le_or_gt z 0
-    · cases ((Numeric.lt_rightMove hz).trans_le h).not_gt hy
+    · cases ((Numeric.lt_right hz).trans_le h).not_gt hy
     · exact (lt_of_numeric_of_pos x h).not_ge
   · obtain rfl | h := eq_or_ne x 0
     · exact hy.not_ge
     · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
       obtain ⟨z, hz⟩ := h right
       have := Dicotic.of_mem_moves hz
-      exact lf_of_rightMove_le (lt_of_numeric_of_pos z hy).le hz
+      exact lf_of_right_le (lt_of_numeric_of_pos z hy).le hz
 termination_by (x, y)
 decreasing_by igame_wf
 

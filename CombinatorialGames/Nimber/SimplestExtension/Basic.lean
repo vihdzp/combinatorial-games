@@ -114,7 +114,7 @@ theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b
   obtain rfl | hb₀ := eq_or_ne b 0; simp
   refine ⟨fun h ↦ ⟨_, (Ordinal.div_lt hb₀).2 h, _, mod_lt a hb₀, (div_add_mod ..).symm⟩, ?_⟩
   rintro ⟨q, hq, r, hr, rfl⟩
-  apply (add_left_strictMono hr).trans_le
+  apply (add_right_strictMono hr).trans_le
   simp_rw [← mul_succ]
   exact mul_le_mul_left' (Order.succ_le_iff.mpr hq) _
 
@@ -287,7 +287,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
     rw [add_assoc]
     apply ((two_opow _).add_eq_of_lt H').symm.trans_lt
     rw [← val.lt_iff_lt] at H' ⊢
-    apply (add_left_strictMono H').trans_le
+    apply (add_right_strictMono H').trans_le
     dsimp
     rwa [← Ordinal.mul_two, ← opow_succ, opow_le_opow_iff_right one_lt_two, succ_le_iff]
   obtain hyz | hyz | hyz := lt_trichotomy (log 2 y) (log 2 z)
@@ -503,13 +503,14 @@ theorem IsField.one : IsField 1 where
 theorem IsField.of_le_one {x : Nimber} (h : x ≤ 1) : IsField x := by
   cases Nimber.le_one_iff.1 h <;> simp_all
 
-theorem IsField.mul_eq_of_lt {x y : Nimber} (h : IsField x) (hyx : y < x) : x *ₒ y = x * y :=
-  h.toIsRing.mul_eq_of_lt h.toIsGroup le_rfl hyx @h.inv_lt
+theorem IsField.mul_eq_of_lt {x y z : Nimber} (hx : IsRing x) (hy : IsField y)
+    (hyx : y ≤ x) (hzy : z < y) : x *ₒ z = x * z :=
+  hx.mul_eq_of_lt hy.toIsGroup hyx hzy fun _ hw ↦ (hy.inv_lt hw).trans_le hyx
 
 /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsField.mul_eq_of_lt' {x y : Ordinal} (hx : IsField (∗x)) (hyx : y < x) :
-    x * y = val (∗x * ∗y) :=
-  hx.mul_eq_of_lt hyx
+theorem IsField.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsField (∗y))
+    (hyx : y ≤ x) (hzy : z < y) : x * z = val (∗x * ∗z) :=
+  hy.mul_eq_of_lt hx hyx hzy
 
 private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) :
     x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by

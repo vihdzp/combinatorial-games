@@ -21,6 +21,8 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
+noncomputable section
+
 open IGame Set Pointwise
 
 /-- Games up to equivalence.
@@ -49,7 +51,7 @@ theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : mo
   Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-noncomputable def out (x : Game) : IGame := Quotient.out x
+def out (x : Game) : IGame := Quotient.out x
 @[simp] theorem out_eq (x : Game) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) : (mk x).out ≈ x := Quotient.mk_out (s := AntisymmRel.setoid ..) x
@@ -96,7 +98,7 @@ instance : AddCommGroupWithOne Game where
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
 
-noncomputable instance : RatCast Game where
+instance : RatCast Game where
   ratCast q := mk q
 
 @[simp] theorem mk_zero : mk 0 = 0 := rfl
@@ -113,17 +115,17 @@ theorem mk_mulOption (x y a b : IGame) :
 @[simp] theorem mk_lt_mk {x y : IGame} : mk x < mk y ↔ x < y := .rfl
 @[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
-@[simp]
+@[simp, norm_cast]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
   | 0 => rfl
   | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
 
-@[simp]
+@[simp, norm_cast]
 theorem mk_intCast (n : ℤ) : mk n = n := by
   cases n <;> simp
 
-@[simp] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
-@[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
+@[simp, norm_cast] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
+@[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
 
 theorem zero_def : (0 : Game) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; simp
 theorem one_def : (1 : Game) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; simp
@@ -203,13 +205,13 @@ theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {
     (h : x ∈ s) : x ⧏ !{s | t} := by
   rw [ofSets_cases]
   have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using leftMove_lf this
+  simpa [← mk_le_mk] using left_lf this
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
     (h : x ∈ t) : !{s | t} ⧏ x := by
   rw [ofSets_cases]
   have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using lf_rightMove this
+  simpa [← mk_le_mk] using lf_right this
 
 end Game
 
@@ -318,3 +320,4 @@ theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
 end IGame
+end
