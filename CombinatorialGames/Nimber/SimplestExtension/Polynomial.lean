@@ -39,15 +39,14 @@ theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
   induction xs with
   | nil => simp at h₁
   | cons y ys ih =>
-    simp only [List.mem_cons] at h₁
-    rcases h₁ with (rfl | h₁)
-    · rw [List.sum_cons]
-      conv_lhs => rw [← add_zero x]
+    rw [List.mem_cons] at h₁
+    rw [List.sum_cons]
+    rcases h₁ with rfl | h₁
+    · conv_lhs => rw [← add_zero x]
       apply add_left_mono
       rw [← hm]
       exact bot_le
     · specialize ih h₁
-      simp only [List.sum_cons]
       apply ih.trans
       conv_lhs => rw [← zero_add ys.sum]
       apply add_right_mono
