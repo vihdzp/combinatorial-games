@@ -76,7 +76,7 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
   obtain ⟨n, rfl⟩ := hn
   simp_all [pow_dvd_pow_iff, pow_le_pow_iff_right₀]
 
-/-! ### Dyadic' numbers -/
+/-! ### Dyadic numbers -/
 
 /-- A dyadic rational number is one whose denominator is a power of two. -/
 def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
@@ -355,6 +355,11 @@ instance : DenselyOrdered Dyadic' where
     · simpa [inv_mul_eq_div] using left_lt_add_div_two.2 h
     · simpa [inv_mul_eq_div] using add_div_two_lt_right.2 h
 
+instance : Archimedean Dyadic' where
+  arch x _ h :=
+    have ⟨n, hn⟩ := exists_lt_nsmul (M := ℚ) h x
+    ⟨n, hn.le⟩
+
 theorem even_den {x : Dyadic'} (hx : x.den ≠ 1) : Even x.den := by
   obtain ⟨n, hn⟩ := x.den_mem_powers
   rw [← hn]
@@ -407,5 +412,14 @@ theorem den_add_le_den_right {x y : Dyadic'} (h : x.den ≤ y.den) : (x + y).den
   obtain ⟨n, hn⟩ := eq_mkRat_of_den_le h y.den_mem_powers
   conv_lhs => rw [← y.mkRat_self, hn, mkRat_add_mkRat_self]
   exact den_mkRat_le _ y.den_ne_zero
+
+/-- Coercion as a `RingHom`. -/
+@[simps]
+def coeRingHom : Dyadic' →+* ℚ where
+  toFun := (↑)
+  map_zero' := rfl
+  map_one' := rfl
+  map_add' _ _ := rfl
+  map_mul' _ _ := rfl
 
 end Dyadic'

@@ -88,6 +88,8 @@ protected instance half : Numeric ½ := by
   rw [numeric_def]; simp
 
 protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
+protected instance moves {x : IGame} [Numeric x] {p : Player} (y : x.moves p) : Numeric y :=
+  .of_mem_moves y.2
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
@@ -257,6 +259,7 @@ theorem Fits.equiv_of_forall_birthday_le {x y : IGame} [Numeric x] (hx : x.Fits 
     exact fun z hz h ↦ (birthday_lt_of_mem_moves hz).not_ge <| H z (.of_mem_moves hz) h
 
 /-- A specialization of the simplicity theorem to `0`. -/
+@[simp]
 theorem fits_zero_iff_equiv {x : IGame} [Numeric x] : Fits 0 x ↔ x ≈ 0 := by
   refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
 
