@@ -5,7 +5,6 @@ Authors: Yuyang Zhao
 -/
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Fintype.Defs
-import Mathlib.Data.Finset.Insert
 import Mathlib.Logic.Small.Defs
 import Mathlib.Tactic.DeriveFintype
 
