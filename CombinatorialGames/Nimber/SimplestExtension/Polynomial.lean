@@ -888,7 +888,6 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
   apply le_antisymm
   · refine leastNoRoots_le_of_not_isRoot ?_ ?_ fun r hr H ↦ ?_
     · convert zero_lt_one' (WithBot ℕ)
-      dsimp
       compute_degree!
     · have := h.inv_lt_self_of_not_isField h'
       apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [Nimber.pos_iff_ne_zero])
