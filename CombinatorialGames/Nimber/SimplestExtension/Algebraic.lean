@@ -155,7 +155,7 @@ theorem IsNthDegreeClosed.ofMonic {n : ℕ} {x : Nimber} (h : IsField x)
 @[simp]
 theorem isNthDegreeClosed_zero_iff_isRing {x : Nimber} : IsNthDegreeClosed 0 x ↔ IsRing x := by
   refine ⟨IsNthDegreeClosed.toIsRing, fun h ↦ ⟨h, fun p ↦ ?_⟩⟩
-  cases _ : p.degree <;> aesop
+  cases p.degree <;> aesop
 
 theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hn : 1 ≤ n) :
     IsField x := by
@@ -178,7 +178,8 @@ theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClose
 theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x ↔ IsField x := by
   refine ⟨(IsNthDegreeClosed.toIsField · le_rfl), (.ofMonic · fun p hm hp₀ hp₁ hp ↦ ?_)⟩
   rw [Polynomial.eq_X_add_C_of_degree_le_one hp₁] at hp ⊢
-  have : p.natDegree = 1 := natDegree_eq_of_degree_eq_some <| by
+  have hd : p.natDegree = 1 := by
+    apply natDegree_eq_of_degree_eq_some
     rw [← succ_le_iff] at hp₀
     exact hp₁.antisymm hp₀
   rw [Monic, leadingCoeff] at hm
@@ -341,7 +342,6 @@ theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : �
   exists_root' _p hp₀ _ := h.exists_root' hp₀
   __ := h
 
-@[coe]
 theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x :=
   (h.toIsNthDegreeClosed 1).toIsField le_rfl
 
