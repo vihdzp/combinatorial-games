@@ -821,7 +821,7 @@ theorem leastNoRoots_ne_X_pow (x : Nimber) (n : ℕ) :
   intro hp
   have ht := hp ▸ WithTop.coe_ne_top
   rw [← WithTop.coe_untop _ ht, WithTop.coe_inj] at hp
-  exact (leastNoRoots_ne_X_pow' _ _ _) hp
+  exact leastNoRoots_ne_X_pow' _ _ _ hp
 
 theorem leastNoRoots_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
     (hp₀ : 0 < p.degree) (hpk : ∀ k, p.coeff k < x) (hr : ∀ r < x, ¬ p.IsRoot r) :
