@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 /-!

@@ -70,6 +70,12 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
+theorem degree_pos_of_mem_roots {R} [CommRing R] [IsDomain R] {p : R[X]} {r} (h : r ∈ p.roots) :
+    0 < p.degree := by
+  by_contra!
+  rw [p.eq_C_of_degree_le_zero this, roots_C] at h
+  cases h
+
 theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
     (add : ∀ a n q, degree q < .some n → motive q → motive (C a * X ^ n + q)) (p : R[X]) :
     motive p := by
