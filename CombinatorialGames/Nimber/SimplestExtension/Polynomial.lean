@@ -851,7 +851,7 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
   · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
   induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
   subst hp
-  obtain ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
+  have ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
   rw [← hr.mul_div_eq]
   apply splits_mul _ (splits_X_sub_C _)
   obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
