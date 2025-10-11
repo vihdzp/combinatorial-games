@@ -70,6 +70,8 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
+theorem eval_X_pow {R} [CommRing R] (x : R) (n : ℕ) : eval x (X ^ n : R[X]) = x ^ n := by simp
+
 theorem degree_pos_of_mem_roots {R} [CommRing R] [IsDomain R] {p : R[X]} {r} (h : r ∈ p.roots) :
     0 < p.degree := by
   by_contra!
