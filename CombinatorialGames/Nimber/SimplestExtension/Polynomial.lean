@@ -933,7 +933,4 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
   · have := @leastNoRoots_not_root_of_lt x
     aesop
 
-proof_wanted IsField.irreducible_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
-    Irreducible (x.leastNoRoots.untop ht)
-
 end Nimber
