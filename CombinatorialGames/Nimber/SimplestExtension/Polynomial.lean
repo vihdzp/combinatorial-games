@@ -806,7 +806,7 @@ theorem leastNoRoots_ne_zero' {x : Nimber} (ht) : x.leastNoRoots.untop ht ≠ 0 
   rw [← WithTop.coe_inj.ne]
   simp
 
-theorem leastNoRoots_ne_X_pow' (x : Nimber) (n : ℕ) (ht) :
+theorem leastNoRoots_ne_X_pow' (x : Nimber) (ht) (n : ℕ) :
     x.leastNoRoots.untop ht ≠ X ^ n := by
   cases n with
   | zero =>
