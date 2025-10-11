@@ -48,19 +48,8 @@ theorem finite_range (f : α →₀ β) : (range f).Finite := by
 
 end Finsupp
 
-namespace Polynomial
-
-variable {R : Type*}
-
-theorem Irreducible.degree_pos [DivisionSemiring R] {f : R[X]} (h : Irreducible f) :
-    0 < f.degree := by
-  rw [← natDegree_pos_iff_degree_pos]
-  exact h.natDegree_pos
-
-theorem finite_range_coeff [Semiring R] (p : R[X]) : (range p.coeff).Finite :=
+theorem Polynomial.finite_range_coeff {R : Type*} [Semiring R] (p : R[X]) : (range p.coeff).Finite :=
   Finsupp.finite_range _
-
-end Polynomial
 
 -- TODO: can we golf this using `finite_range_coeff`?
 private theorem Polynomial.exists_gt_of_forall_coeff_gt {s : Set Nimber} {p : Nimber[X]}
