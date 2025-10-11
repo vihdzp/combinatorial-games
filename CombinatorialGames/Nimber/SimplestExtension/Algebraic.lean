@@ -11,7 +11,7 @@ import Mathlib.FieldTheory.IsAlgClosed.Basic
 # Nimbers are algebraically closed
 
 This file proves the last part of the simplest extension theorem (see
-`CombinatorialGames.Nimber.SimplestExtension.Basic`), and deduces, as a corollary, that the nimbers
+`CombinatorialGames.Nimber.SimplestExtension.Basic`), and deduces as a corollary that the nimbers
 are algebraically closed.
 -/
 
@@ -22,10 +22,10 @@ open Order Ordinal Polynomial Set
 -- Why isn't this tagged?
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod
 
+/-! ### For Mathlib -/
+
 -- TODO: upstream to Mathlib
 attribute [aesop simp] coeff_C coeff_X coeff_one
-
-/-! ### For Mathlib -/
 
 namespace Finsupp
 
@@ -55,7 +55,6 @@ namespace Polynomial
 
 variable {R : Type*}
 
--- TODO: upstream
 theorem Irreducible.degree_pos [DivisionSemiring R] {f : R[X]} (h : Irreducible f) :
     0 < f.degree := by
   rw [← natDegree_pos_iff_degree_pos]
@@ -279,7 +278,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have IH := IH h' hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
         exact IH ▸ (oeval_lt_opow H (lt_succ_of_le hq')).ne
-    obtain ⟨a, q, rfl, hqn⟩ := eq_C_mul_X_pow_add_of_degree_le hpn
+    obtain ⟨a, q, rfl, hqn⟩ := eq_add_C_mul_X_pow_of_degree_le hpn
     have hqn' := hqn
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
     have hqk (k) : q.coeff k < x := by
@@ -287,11 +286,12 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
       · convert hpk k using 1
         aesop
       · rwa [q.coeff_eq_zero_of_degree_lt (hqn'.trans_lt (mod_cast hk))]
-    rw [eval_add, eval_mul, eval_C, eval_X_pow, oeval_C_mul_X_pow_add hqn, IH h' hqn' hqk,
+    rw [eval_add, eval_mul, eval_C, eval_X_pow, add_comm q, oeval_C_mul_X_pow_add hqn, IH h' hqn' hqk,
       (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
     · have hxn : val x ≤ val x ^ (n + 1) := by
         rw [← opow_natCast]
         exact left_le_opow _ (mod_cast n.succ_pos)
+      rw [add_comm]
       congr
       refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
