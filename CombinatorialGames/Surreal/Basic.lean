@@ -213,8 +213,7 @@ def Fits (x y : IGame) : Prop :=
   (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
 theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y :=
-  ⟨fun _ hz ↦ not_le_of_not_le_of_le (left_lf hz) h.ge,
-    fun _ hz ↦ not_le_of_le_of_not_le h.le (lf_right hz) ⟩
+  ⟨fun _ hz ↦ mt h.ge.trans (left_lf hz), fun _ hz ↦ mt h.le.trans' (lf_right hz) ⟩
 
 alias AntisymmRel.Fits := fits_of_equiv
 
@@ -236,7 +235,7 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   simp_rw [not_fits_iff] at hl
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
   obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
-  · exact not_le_of_le_of_not_le hw' (left_lf hw)
+  · exact mt hw'.trans' (left_lf hw)
   · cases hx.2 w hw <| (hw'.trans_lt (Numeric.left_lt hz)).le
 
 theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)

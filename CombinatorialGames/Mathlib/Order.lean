@@ -4,14 +4,6 @@ import Mathlib.Order.Antisymmetrization
 
 /-! ### Basic order theorems -/
 
-theorem not_le_of_le_of_not_le {α : Type*} [Preorder α] {a b c : α} (h₁ : a ≤ b) (h₂ : ¬ c ≤ b) :
-    ¬ c ≤ a :=
-  mt h₁.trans' h₂
-
-theorem not_le_of_not_le_of_le {α : Type*} [Preorder α] {a b c : α} (h₁ : ¬ b ≤ a) (h₂ : b ≤ c) :
-    ¬ c ≤ a :=
-  mt h₂.trans h₁
-
 theorem not_lt_of_antisymmRel {α} [Preorder α] {x y : α} (h : AntisymmRel (· ≤ ·) x y) : ¬ x < y :=
   h.ge.not_gt
 

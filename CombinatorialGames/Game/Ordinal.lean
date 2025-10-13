@@ -185,7 +185,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   · rintro _ e c hc d hd he rfl
     rw [← toIGame.le_iff_le, (toIGame_add ..).le_congr (toIGame_add ..)] at he
     rw [← add_le_add_iff_right (toIGame (c * d)), (add_congr_right (toIGame_mul ..)).le_congr_left]
-    apply not_le_of_le_of_not_le he
+    apply mt he.trans'
     rw [(add_congr (toIGame_mul ..) (toIGame_mul ..)).le_congr_right, ← IGame.le_sub_iff_add_le]
     exact left_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
