@@ -3,8 +3,8 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+import Mathlib.Order.Concept
 import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Mathlib.Concept
 import CombinatorialGames.Surreal.Birthday.Basic
 
 /-!
