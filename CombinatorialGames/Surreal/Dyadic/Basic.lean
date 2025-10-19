@@ -294,11 +294,11 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
     any_goals
       obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-      rw [← (toIGame_add_equiv _ _).le_congr_right]
+      grw [← toIGame_add_equiv]
       simp
     all_goals
       obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
-      rw [← (toIGame_add_equiv _ _).le_congr_left]
+      grw [← toIGame_add_equiv]
       simp
   · intro z hz
     obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
@@ -325,7 +325,7 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
       use x + upper y
       have hy := toIGame_of_den_ne_one hy
       have : (upper y : IGame) ∈ yᴿ := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, hy]
+      grw [← (toIGame_add_equiv ..).le_congr_left, hy]
       simpa using le_upper_add_of_den_le h
     · use upper x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
@@ -486,16 +486,19 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic'
     refine (Set.finite_range f).exists_between' (Set.finite_range g) (fun x hx y hy ↦ ?_)
     obtain ⟨a, rfl⟩ := hx
     obtain ⟨b, rfl⟩ := hy
-    rw [← Dyadic'.toIGame_lt_toIGame, ← (hf _).lt_congr_left, ← (hg _).lt_congr_right]
+    rw [← Dyadic'.toIGame_lt_toIGame]
+    grw [← hf, ← hg]
     exact Numeric.left_lt_right a.2 b.2
   have : ∃ y, Fits (Dyadic'.toIGame y) x := by
     use y
     constructor <;> intro z hz
     · have := hy₁ _ (Set.mem_range_self ⟨z, hz⟩)
-      rw [← Dyadic'.toIGame_lt_toIGame, ← (hf _).lt_congr_left] at this
+      rw [← Dyadic'.toIGame_lt_toIGame] at this
+      grw [← hf] at this
       exact this.not_ge
     · have := hy₂ _ (Set.mem_range_self ⟨z, hz⟩)
-      rw [← Dyadic'.toIGame_lt_toIGame, ← (hg _).lt_congr_right] at this
+      rw [← Dyadic'.toIGame_lt_toIGame] at this
+      grw [← hg] at this
       exact this.not_ge
   obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic'.toIGame) this
   use z

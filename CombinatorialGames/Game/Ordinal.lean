@@ -247,7 +247,7 @@ local notation "ω" => toIGame (NatOrdinal.of Ordinal.omega0)
 theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   obtain ⟨n, hn⟩ := exists_lt_natCast x
   apply hn.trans
-  grw [(toIGame_natCast_equiv n).ge]
+  grw [← toIGame_natCast_equiv n]
   rw [toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
   exact Ordinal.nat_lt_omega0 n
 

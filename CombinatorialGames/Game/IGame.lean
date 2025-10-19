@@ -793,7 +793,6 @@ instance : AddRightReflectLT IGame :=
 
 -- TODO: add the general versions of this to Mathlib
 
-@[gcongr]
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 

@@ -174,8 +174,8 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
     · have := Numeric.of_mem_moves hz
       have := Numeric.of_mem_moves (wpow_mem_rightMoves_wpow hz)
       apply (wpow_strictMono_aux.2 hzy).trans_lt'
-      rw [← Numeric.lt_div_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm,
-        ← (Numeric.mul_congr_left r.toIGame_inv_equiv).lt_congr_right]
+      rw [← Numeric.lt_div_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
+      grw [← Numeric.mul_congr_left r.toIGame_inv_equiv]
       obtain ⟨q, hq, hq'⟩ := exists_dyadic_btwn (inv_pos.2 hr)
       apply (Numeric.lt_right (mul_wpow_mem_rightMoves_wpow (mod_cast hq) hz)).trans
       rw [Numeric.mul_lt_mul_iff_left (wpow_pos' z)]
@@ -184,7 +184,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
     refine ⟨⟨zero_lf_wpow _, ?_⟩, ?_⟩ <;> intro r hr z hz
     · have := Numeric.of_mem_moves hz
       have := Numeric.of_mem_moves (wpow_mem_leftMoves_wpow hz)
-      rw [← (Numeric.mul_congr_left (Real.toIGame_dyadic_equiv r)).le_congr_right]
+      grw [← Numeric.mul_congr_left (Real.toIGame_dyadic_equiv r)]
       exact (wpow_strictMono_aux.1 ((Numeric.left_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := Numeric.of_mem_moves hz
       have := Numeric.of_mem_moves (wpow_mem_rightMoves_wpow hz)
@@ -332,38 +332,38 @@ theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ �
     intro s hs w hw
     have := Numeric.of_mem_moves hw
   all_goals apply not_le_of_gt
-  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_left, ← (mul_assoc_equiv ..).lt_congr_left,
-      Numeric.mul_lt_mul_iff_left (wpow_pos _)]
+  · grw [mul_congr_right (wpow_add_equiv ..), ← mul_assoc_equiv]
+    rw [Numeric.mul_lt_mul_iff_left (wpow_pos _)]
     exact mul_wpow_lt_wpow' r (Numeric.left_lt hz)
-  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_left, mul_comm (r : IGame),
-      (mul_assoc_equiv ..).lt_congr_left, Numeric.mul_lt_mul_iff_right (wpow_pos _), mul_comm]
+  · grw [mul_congr_right (wpow_add_equiv ..), mul_comm (r : IGame), mul_assoc_equiv]
+    rw [Numeric.mul_lt_mul_iff_right (wpow_pos _), mul_comm]
     exact mul_wpow_lt_wpow' r (Numeric.left_lt hz)
-  · rw [mulOption_zero_left, mul_comm (r : IGame), ← (mul_assoc_equiv ..).lt_congr_right, mul_comm,
-      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
+  · rw [mulOption_zero_left, mul_comm (r : IGame)]
+    grw [← mul_assoc_equiv, mul_comm, ← mul_congr_right (wpow_add_equiv ..)]
     exact wpow_lt_mul_wpow' hr (add_right_strictMono (Numeric.lt_right hz))
   · rw [mulOption_comm, add_comm]
     apply wpow_lt_mulOption hs hr (Numeric.lt_right hw) (Numeric.left_lt hz) <;>
       rw [add_comm, mul_comm] <;> exact wpow_add_equiv ..
-  · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_right,
-      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_right]
+  · rw [mulOption_zero_right]
+    grw [mul_assoc_equiv, ← mul_congr_right (wpow_add_equiv ..)]
     exact wpow_lt_mul_wpow' hr (add_left_strictMono (Numeric.lt_right hz))
   · exact wpow_lt_mulOption hr hs (Numeric.lt_right hz) (Numeric.left_lt hw)
       (wpow_add_equiv ..) (wpow_add_equiv ..)
-  · rw [mulOption_zero_right, (mul_assoc_equiv ..).lt_congr_left,
-      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
+  · rw [mulOption_zero_right]
+    grw [mul_assoc_equiv, ← mul_congr_right (wpow_add_equiv ..)]
     exact mul_wpow_lt_wpow' r (add_left_strictMono (Numeric.left_lt hz))
-  · rw [mulOption_zero_left, mul_comm, (mul_assoc_equiv ..).lt_congr_left, mul_comm (ω^ z),
-      ← (mul_congr_right (wpow_add_equiv ..)).lt_congr_left]
+  · rw [mulOption_zero_left, mul_comm]
+    grw [mul_assoc_equiv, mul_comm (ω^ z), ← mul_congr_right (wpow_add_equiv ..)]
     exact mul_wpow_lt_wpow' _ (add_right_strictMono (Numeric.left_lt hz))
   · exact mulOption_lt_wpow' hr hs (Numeric.left_lt hz) (Numeric.left_lt hw)
       (wpow_add_equiv ..) (wpow_add_equiv ..) (wpow_add_equiv ..)
   · exact mulOption_lt_wpow hr hs (Numeric.lt_right hz) (Numeric.lt_right hw)
       (wpow_add_equiv ..) (wpow_add_equiv ..) (wpow_add_equiv ..)
-  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_right, ← (mul_assoc_equiv ..).lt_congr_right,
-      Numeric.mul_lt_mul_iff_left (wpow_pos _)]
+  · grw [mul_congr_right (wpow_add_equiv ..), ← mul_assoc_equiv]
+    rw [Numeric.mul_lt_mul_iff_left (wpow_pos _)]
     exact wpow_lt_mul_wpow' hr (Numeric.lt_right hz)
-  · rw [(mul_congr_right (wpow_add_equiv ..)).lt_congr_right, mul_comm (r : IGame),
-      (mul_assoc_equiv ..).lt_congr_right, Numeric.mul_lt_mul_iff_right (wpow_pos _), mul_comm]
+  · grw [mul_congr_right (wpow_add_equiv ..), mul_comm (r : IGame), mul_assoc_equiv]
+    rw [Numeric.mul_lt_mul_iff_right (wpow_pos _), mul_comm]
     exact wpow_lt_mul_wpow' hr (Numeric.lt_right hz)
 termination_by (x, y)
 decreasing_by igame_wf
@@ -387,7 +387,8 @@ theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame 
   · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
     intro z ⟨y, hy, n, hz⟩
     apply ((toIGame.strictMono hz).trans_le _).not_ge
-    rw [(H hy n).le_congr_left, mul_comm]
+    grw [H hy n]
+    rw [mul_comm]
     simpa using (Numeric.mul_wpow_lt_wpow' n (toIGame.strictMono hy)).le
   · simp
   · simp_rw [forall_leftMoves_wpow, forall_leftMoves_toIGame]
@@ -398,7 +399,8 @@ theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame 
       obtain ⟨n, hn⟩ := exists_nat_gt r
       rw [mul_comm]
       apply ((toIGame.strictMono <| wpow_mul_natCast_lt hy n).trans' _).not_ge
-      rw [(H hy n).lt_congr_right, Numeric.mul_lt_mul_iff_right]
+      grw [H hy n]
+      rw [Numeric.mul_lt_mul_iff_right]
       · exact_mod_cast hn
       · exact Numeric.wpow_pos _
   · simp

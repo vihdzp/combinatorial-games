@@ -189,12 +189,12 @@ theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.m
 
 /-- One half of the **lawnmower theorem** for impartial games. -/
 protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
-  rw [← (nim_grundy_equiv x).lt_congr_left]
+  grw [← nim_grundy_equiv x]
   exact Dicotic.lt_of_numeric_of_pos _ hy
 
 /-- One half of the **lawnmower theorem** for impartial games. -/
 protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
-  rw [← (nim_grundy_equiv x).lt_congr_right]
+  grw [← nim_grundy_equiv x]
   exact Dicotic.lt_of_numeric_of_neg _ hy
 
 private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
@@ -210,13 +210,13 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     exact lf_of_le_left (nim_grundy_equiv y).le hy
   · intro y hy
     have := h right y hy
-    rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff,
-      ← grundyAux_eq_grundy right]
+    grw [← nim_grundy_equiv y]
+    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyAux_eq_grundy right]
     exact (grundyAux_ne hy).symm
   · intro y hy
     have := h left y hy
-    rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
-      ← grundyAux_eq_grundy left]
+    grw [← nim_grundy_equiv y]
+    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyAux_eq_grundy left]
     exact H ▸ grundyAux_ne hy
   · rw [forall_moves_nim]
     intro a ha
