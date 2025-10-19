@@ -1,4 +1,4 @@
-import CombinatorialGames.NatOrdinal
+import CombinatorialGames.NatOrdinal.Basic
 
 universe u
 open Set NatOrdinal WithTop

@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Tactic.GameCmp
 import CombinatorialGames.Mathlib.Finlift
+import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Quotient
 import Mathlib.Data.Multiset.Sort
@@ -42,9 +42,6 @@ instance {α β : Type*} (r : α → β → Prop)
 universe u
 
 /-- The type of "short pre-games", before we have quotiented by equivalence (`identicalSetoid`).
-
-This serves the exact purpose that `PGame` does for `IGame`. However, unlike `PGame`'s relatively
-short construction, we must prove some extra definitions for computing on top of `SGame`.
 
 This could perfectly well have been in `Type 0`, but we make it universe polymorphic for
 convenience when building quotient types. However, conversions from computable games to their
@@ -103,7 +100,7 @@ instance : DecidableEq SGame
       rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
   else .isFalse (by simp_all)
 
-/-- The identical relation on short games. See `PGame.Identical`. -/
+/-- The identical relation on short games. -/
 def Identical : SGame.{u} → SGame.{u} → Prop
   | mk _ _ xL xR, mk _ _ yL yR =>
       Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
@@ -162,9 +159,6 @@ end SGame
 /-! ### Game moves -/
 
 /-- Short games up to identity.
-
-`FGame` uses the set-theoretic notion of equality on short games,
-similarly to how `IGame` is defined on top of `PGame`.
 
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.

@@ -20,7 +20,7 @@ universe u
 namespace IGame
 
 private def ImpartialAux (x : IGame) : Prop :=
-  -x ≈ x ∧ (∀ i ∈ x.leftMoves, ImpartialAux i) ∧ (∀ j ∈ x.rightMoves, ImpartialAux j)
+  -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, ImpartialAux y
 termination_by x
 decreasing_by igame_wf
 
@@ -33,20 +33,19 @@ as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still hol
 
 In such a game, both players have the same payoffs at any subposition. -/
 @[mk_iff impartial_iff_aux]
-class Impartial (x : IGame) : Prop where
+class Impartial (x : IGame) : Prop where of_ImpartialAux ::
   out : ImpartialAux x
 
 theorem impartial_def {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ (∀ i ∈ x.leftMoves, Impartial i) ∧ ∀ j ∈ x.rightMoves, Impartial j := by
+    x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y := by
   simp_rw [impartial_iff_aux]
   rw [ImpartialAux]
 
 namespace Impartial
 variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
 
-theorem mk' {x : IGame} (h₁ : -x ≈ x)
-    (h₂ : ∀ i ∈ x.leftMoves, Impartial i) (h₃ : ∀ j ∈ x.rightMoves, Impartial j) : Impartial x :=
-  impartial_def.2 ⟨h₁, h₂, h₃⟩
+theorem mk {x : IGame} (h₁ : -x ≈ x) (h₂ : ∀ p, ∀ y ∈ x.moves p, Impartial y) : Impartial x :=
+  impartial_def.2 ⟨h₁, h₂⟩
 
 @[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
 @[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
@@ -70,14 +69,9 @@ theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
 
 @[aesop unsafe 50% apply]
-protected theorem of_mem_leftMoves {x y : IGame} [h : Impartial x] :
-    y ∈ x.leftMoves → Impartial y :=
-  (impartial_def.1 h).2.1 y
-
-@[aesop unsafe 50% apply]
-protected theorem of_mem_rightMoves {x y : IGame} [h : Impartial x] :
-    y ∈ x.rightMoves → Impartial y :=
-  (impartial_def.1 h).2.2 y
+protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
+    y ∈ x.moves p → Impartial y :=
+  (impartial_def.1 h).2 p y
 
 protected instance zero : Impartial 0 := by
   rw [impartial_def]
@@ -88,29 +82,26 @@ protected instance star : Impartial ⋆ := by
   simp [Impartial.zero]
 
 protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
-  apply mk'
+  apply mk
   · simp
-  on_goal 1 => rw [leftMoves_neg]
-  on_goal 2 => rw [rightMoves_neg]
-  all_goals
-  · intro y hy
-    try have := Impartial.of_mem_leftMoves hy
-    try have := Impartial.of_mem_rightMoves hy
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
+    have := Impartial.of_mem_moves hy
     rw [← neg_neg y]
     exact .neg _
 termination_by x
 decreasing_by igame_wf
 
 protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
-  apply mk'
+  apply mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
-  on_goal 1 => rw [leftMoves_add]
-  on_goal 2 => rw [rightMoves_add]
-  all_goals
-  · rintro _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩) <;>
-    · try have := Impartial.of_mem_leftMoves hz
-      try have := Impartial.of_mem_rightMoves hz
+  · simp_rw [forall_moves_add]
+    intro p
+    constructor
+    all_goals
+      intro z hz
+      have := Impartial.of_mem_moves hz
       exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
@@ -168,91 +159,50 @@ theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
 theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
 theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
-theorem fuzzy_leftMove {y : IGame} (hy : y ∈ x.leftMoves) : x ‖ y := by
-  have := hx.of_mem_leftMoves hy
-  simpa using leftMove_lf hy
+theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
+  have := hx.of_mem_moves hy
+  induction p with
+  | left => symm; simpa using left_lf hy
+  | right => simpa using lf_right hy
 
-theorem leftMove_fuzzy {y : IGame} (hy : y ∈ x.leftMoves) : y ‖ x :=
-  (fuzzy_leftMove hy).symm
-
-theorem rightMove_fuzzy {y : IGame} (hy : y ∈ x.rightMoves) : y ‖ x := by
-  have := hx.of_mem_rightMoves hy
-  simpa using lf_rightMove hy
-
-theorem fuzzy_rightMove {y : IGame} (hy : y ∈ x.rightMoves) : x ‖ y :=
-  (rightMove_fuzzy hy).symm
-
-/-- This version is stated in terms of left moves of `x` and right moves of `y`. -/
-theorem equiv_iff_forall_fuzzy :
-    x ≈ y ↔ (∀ z ∈ x.leftMoves, z ‖ y) ∧ (∀ z ∈ y.rightMoves, x ‖ z) := by
+private theorem equiv_iff_forall_fuzzy' :
+    x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
   rw [← le_iff_equiv, le_iff_forall_lf]
   congr! with z hz z hz
-  on_goal 1 => replace hz := hx.of_mem_leftMoves hz
-  on_goal 2 => replace hz := hy.of_mem_rightMoves hz
-  all_goals simp [incompRel_comm]
+  all_goals have := Impartial.of_mem_moves hz; simp [incompRel_comm]
 
-/-- This version is stated in terms of right moves of `x` and left moves of `y`. -/
-theorem equiv_iff_forall_fuzzy' :
-    x ≈ y ↔ (∀ z ∈ x.rightMoves, z ‖ y) ∧ (∀ z ∈ y.leftMoves, x ‖ z) := by
-  rw [antisymmRel_comm, equiv_iff_forall_fuzzy, and_comm]
-  simp_rw [incompRel_comm]
+theorem equiv_iff_forall_fuzzy (p : Player) :
+    x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
+  induction p with
+  | left => exact equiv_iff_forall_fuzzy'
+  | right =>
+    rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
+    simp_rw [incompRel_comm]
+    rfl
 
-/-- This version is stated in terms of left moves of `y` and right moves of `x`. -/
-theorem fuzzy_iff_exists_equiv' :
-    x ‖ y ↔ (∃ z ∈ y.leftMoves, x ≈ z) ∨ (∃ z ∈ x.rightMoves, z ≈ y) := by
-  rw [← lf_iff_fuzzy, lf_iff_exists_le]
-  congr! 3 with z z <;> rw [and_congr_right_iff] <;> intro hz
-  on_goal 1 => replace hz := hy.of_mem_leftMoves hz
-  on_goal 2 => replace hz := hx.of_mem_rightMoves hz
-  all_goals simp
+theorem fuzzy_iff_exists_equiv (p : Player) :
+    x ‖ y ↔ (∃ z ∈ x.moves p, z ≈ y) ∨ (∃ z ∈ y.moves (-p), x ≈ z) := by
+  rw [← not_equiv_iff, equiv_iff_forall_fuzzy p, not_and_or]
+  simp_rw [not_forall, ← exists_prop]
+  congr! 5 with _ h _ h
+  all_goals have := Impartial.of_mem_moves h; exact not_fuzzy_iff
 
-/-- This version is stated in terms of right moves of `y` and left moves of `x`. -/
-theorem fuzzy_iff_exists_equiv :
-    x ‖ y ↔ (∃ z ∈ y.rightMoves, x ≈ z) ∨ (∃ z ∈ x.leftMoves, z ≈ y) := by
-  rw [incompRel_comm, fuzzy_iff_exists_equiv', or_comm]
-  simp_rw [antisymmRel_comm]
+theorem equiv_zero (p : Player) : x ≈ 0 ↔ ∀ y ∈ x.moves p, y ‖ 0 := by
+  rw [equiv_iff_forall_fuzzy p]; simp
 
-/-- This version is stated in terms of left moves of `x`. -/
-theorem equiv_zero : x ≈ 0 ↔ ∀ y ∈ x.leftMoves, y ‖ 0 := by
-  rw [equiv_iff_forall_fuzzy]; simp
-
-/-- This version is stated in terms of right moves of `x`. -/
-theorem equiv_zero' : x ≈ 0 ↔ ∀ y ∈ x.rightMoves, y ‖ 0 := by
-  rw [equiv_iff_forall_fuzzy']; simp
-
-/-- This version is stated in terms of left moves of `x`. -/
-theorem fuzzy_zero : x ‖ 0 ↔ ∃ y ∈ x.leftMoves, y ≈ 0 := by
-  rw [fuzzy_iff_exists_equiv]; simp
-
-/-- This version is stated in terms of right moves of `x`. -/
-theorem fuzzy_zero' : x ‖ 0 ↔ ∃ y ∈ x.rightMoves, y ≈ 0 := by
-  rw [fuzzy_iff_exists_equiv']; simp
+theorem fuzzy_zero (p : Player) : x ‖ 0 ↔ ∃ y ∈ x.moves p, y ≈ 0 := by
+  rw [fuzzy_iff_exists_equiv p]; simp
 
 /-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
-have also been reached in the first turn, then `x` is won by the first player.
-
-This version of the theorem is stated exclusively in terms of left moves; see
-`fuzzy_zero_of_forall_exists_moveRight` for a version stated with right moves. -/
-theorem fuzzy_zero_of_forall_exists_moveLeft {y} (hy : y ∈ x.leftMoves)
-    (H : ∀ z ∈ y.leftMoves, ∃ w ∈ x.leftMoves, z ≈ w) : x ‖ 0 := by
+have also been reached in the first turn, then `x` is won by the first player. -/
+theorem fuzzy_zero_of_forall_exists {p : Player} {y} (hy : y ∈ x.moves p)
+    (H : ∀ z ∈ y.moves p, ∃ w ∈ x.moves p, z ≈ w) : x ‖ 0 := by
   apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
-  have := Impartial.of_mem_leftMoves hy
+  have := Impartial.of_mem_moves hy
   rw [equiv_zero] at hx
-  obtain ⟨z, hz, hz'⟩ := fuzzy_zero.1 (hx y hy)
+  obtain ⟨z, hz, hz'⟩ := (fuzzy_zero _).1 (hx y hy)
   obtain ⟨w, hw, hw'⟩ := H z hz
   exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
-
-/-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
-have also been reached in the first turn, then `x` is won by the first player.
-
-This version of the theorem is stated exclusively in terms of right moves; see
-`fuzzy_zero_of_forall_exists_moveLeft` for a version stated with left moves. -/
-theorem fuzzy_zero_of_forall_exists_moveRight {y} (hy : y ∈ x.rightMoves)
-    (H : ∀ z ∈ y.rightMoves, ∃ w ∈ x.rightMoves, z ≈ w) : x ‖ 0 := by
-  rw [← neg_fuzzy_zero]
-  apply fuzzy_zero_of_forall_exists_moveLeft (x := -x) (y := -y)
-  · simpa
-  · simpa only [forall_leftMoves_neg, exists_leftMoves_neg, neg_equiv_neg_iff]
 
 end Impartial
 end IGame

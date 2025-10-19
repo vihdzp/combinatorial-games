@@ -94,7 +94,7 @@ noncomputable instance : LinearOrder Cut :=
 noncomputable instance : CompleteLinearOrder Cut where
   __ := instLinearOrder
   __ := Concept.instCompleteLattice
-  __ := LinearOrder.toBiheytingAlgebra
+  __ := LinearOrder.toBiheytingAlgebra _
 
 @[simp] theorem left_min (x y : Cut) : (min x y).left = x.left ∩ y.left := rfl
 @[simp] theorem right_min (x y : Cut) : (min x y).right = x.right ∪ y.right := by
@@ -363,7 +363,7 @@ theorem rightSurreal_mem_of_sInf_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s
     use y
     simp_all
   choose f hf using this
-  suffices rightSurreal {{x} | range f}ˢ ≤ sInf s by
+  suffices rightSurreal !{{x} | range f} ≤ sInf s by
     apply this.not_gt
     simp_all [lt_ofSets_of_mem_left]
   simp_rw [le_sInf_iff, rightSurreal_le_iff, ← leftSurreal_lt_iff]
@@ -386,14 +386,14 @@ theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s]
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
 def supLeft (x : IGame) : Cut :=
-  ⨆ i ∈ x.leftMoves, rightGame (.mk i)
+  ⨆ i ∈ xᴸ, rightGame (.mk i)
 
 theorem left_supLeft (x : IGame) :
-    (supLeft x).left = ⋃ i ∈ x.leftMoves, {y | y.toGame ≤ .mk i} := by
+    (supLeft x).left = ⋃ i ∈ xᴸ, {y | y.toGame ≤ .mk i} := by
   simp [supLeft]
 
 theorem right_supLeft (x : IGame) :
-    (supLeft x).right = ⋂ i ∈ x.leftMoves, {y | .mk i ⧏ y.toGame} := by
+    (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
 /-- The infimum of all left cuts of right options of `x`.
@@ -401,14 +401,14 @@ theorem right_supLeft (x : IGame) :
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
 def infRight (x : IGame) : Cut :=
-  ⨅ i ∈ x.rightMoves, leftGame (.mk i)
+  ⨅ i ∈ xᴿ, leftGame (.mk i)
 
 theorem left_infRight (x : IGame) :
-    (infRight x).left = ⋂ i ∈ x.rightMoves, {y | y.toGame ⧏ .mk i} := by
+    (infRight x).left = ⋂ i ∈ xᴿ, {y | y.toGame ⧏ .mk i} := by
   simp [infRight]
 
 theorem right_infRight (x : IGame) :
-    (infRight x).right = ⋃ i ∈ x.rightMoves, {y | .mk i ≤ y.toGame} := by
+    (infRight x).right = ⋃ i ∈ xᴿ, {y | .mk i ≤ y.toGame} := by
   simp [infRight]
 
 @[simp]
@@ -424,7 +424,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
   refine ext' (Set.ext fun y ↦ ⟨fun hy ↦ ?_, fun hy ↦ ?_⟩)
   · rw [right_supLeft, mem_iInter₂]
-    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (leftMove_lf hi)) hy
+    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (left_lf hi)) hy
   · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
     constructor <;> intro z hz
     · rw [right_supLeft, mem_iInter₂] at hy
@@ -435,7 +435,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
       rw [right_infRight, mem_iUnion₂] at hy
       obtain ⟨i, hi, hy⟩ := hy
       rw [mem_setOf, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
-      exact lf_of_rightMove_le (hy.trans (Numeric.lt_rightMove hz).le) hi
+      exact lf_of_right_le (hy.trans (Numeric.lt_right hz).le) hi
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
