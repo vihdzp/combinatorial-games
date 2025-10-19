@@ -230,15 +230,8 @@ theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
         ← (ratCast_sub_equiv ..).lt_congr_left]
       simp_all [← Rat.cast_sub]
     · apply add_lt_add <;> simpa
-  · grw [← toIGame_dyadic_add_equiv]
-    simpa
-  · grw [← toIGame_add_dyadic_equiv]
-    simpa
-  · grw [← toIGame_dyadic_add_equiv]
-    simpa
-  · grw [← toIGame_add_dyadic_equiv]
-    simpa
-  · rw [← lt_sub_iff_add_lt] at hq
+  on_goal 5 =>
+    rw [← lt_sub_iff_add_lt] at hq
     obtain ⟨r, hr, hr'⟩ := exists_rat_btwn hq
     rw [lt_sub_comm] at hr'
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr'
@@ -248,6 +241,9 @@ theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
       rw [add_comm, ← IGame.lt_sub_iff_add_lt]
       grw [← ratCast_sub_equiv]
       simp_all [← Rat.cast_sub]
+  all_goals
+    first | grw [← toIGame_dyadic_add_equiv] | grw [← toIGame_add_dyadic_equiv]
+    simpa
 
 theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x - q) ≈ x - q := by
   simpa using toIGame_add_ratCast_equiv x (-q)
