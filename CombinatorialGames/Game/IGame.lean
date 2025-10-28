@@ -8,6 +8,7 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
+import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable
