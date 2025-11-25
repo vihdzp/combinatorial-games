@@ -132,11 +132,11 @@ theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Smal
 @[simp]
 theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
 
-@[simp, game_cmp]
+@[game_cmp]
 theorem leftMoves_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴸ = s :=
   moves_ofSets ..
 
-@[simp, game_cmp]
+@[game_cmp]
 theorem rightMoves_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴿ = t :=
   moves_ofSets ..
 
@@ -279,8 +279,8 @@ instance : Zero IGame := ⟨!{fun _ ↦ ∅}⟩
 
 theorem zero_def : (0 : IGame) = !{fun _ ↦ ∅} := rfl
 
-@[simp, game_cmp] theorem leftMoves_zero : 0ᴸ = ∅ := moves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_zero : 0ᴿ = ∅ := moves_ofSets ..
+@[game_cmp] theorem leftMoves_zero : 0ᴸ = ∅ := moves_ofSets ..
+@[game_cmp] theorem rightMoves_zero : 0ᴿ = ∅ := moves_ofSets ..
 
 -- TODO: remove the former?
 @[simp, game_cmp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
