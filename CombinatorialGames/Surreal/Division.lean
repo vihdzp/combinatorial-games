@@ -68,7 +68,7 @@ lemma mulOption_self_inv (x : IGame) {y : IGame} (hy : y * y⁻¹ ≈ 1) (a : IG
   simp only [sub_eq_add_neg, add_mul, neg_mul, mul_assoc, hy]
   ring
 
-lemma mulOption_le (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeric a] [Numeric b]
+lemma mulOption_le (x y : IGame) {a b : IGame} [Numeric y] [Numeric a] [Numeric b]
     (ha : a ≤ 0) (hb : b ≤ y) : mulOption x y a b ≤ x * b := by
   rw [mulOption, ← Game.mk_le_mk]
   dsimp
@@ -79,7 +79,7 @@ lemma mulOption_le (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeric 
   rw [← add_le_add_iff_left (Game.mk (x * b))] at this
   convert this using 1 <;> abel
 
-theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric x] [Numeric y] [Numeric a] [Numeric b]
+theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric y] [Numeric a] [Numeric b]
     (ha : a ≤ 0) (hb : y ≤ b) : x * b ≤ mulOption x y a b := by
   rw [mulOption, ← Game.mk_le_mk]
   dsimp

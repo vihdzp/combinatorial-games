@@ -121,6 +121,7 @@ This definition enforces that `x` is impartial. If you want to talk about the le
 values of a game (e.g. if you don't yet know it to be impartial), use `grundyAux`.
 The lemma `grundyAux_eq_grundy` shows that both definitions match in
 the case of an impartial game. -/
+@[nolint unusedArguments]
 def grundy (x : IGame) [Impartial x] : Nimber :=
   x.grundyAux right
 
