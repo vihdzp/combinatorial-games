@@ -287,7 +287,7 @@ theorem toGame_le_iff {x y : ℝ} : (x : Game) ≤ y ↔ x ≤ y :=
 theorem toGame_lt_iff {x y : ℝ} : (x : Game) < y ↔ x < y :=
   toGameEmbedding.lt_iff_lt
 
-@[simp, norm_cast]
+@[norm_cast]
 theorem toGame_equiv_iff {x y : ℝ} : (x : Game) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 
@@ -354,7 +354,7 @@ theorem toSurreal_le_iff {x y : ℝ} : (x : Surreal) ≤ y ↔ x ≤ y :=
 theorem toSurreal_lt_iff {x y : ℝ} : (x : Surreal) < y ↔ x < y :=
   toSurrealEmbedding.lt_iff_lt
 
-@[simp, norm_cast]
+@[norm_cast]
 theorem toSurreal_equiv_iff {x y : ℝ} : (x : Surreal) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 

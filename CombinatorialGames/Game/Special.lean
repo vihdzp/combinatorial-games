@@ -32,8 +32,8 @@ def star : IGame :=
 @[inherit_doc] notation "⋆" => star
 recommended_spelling "star" for "⋆" in [«term⋆»]
 
-@[simp, game_cmp] theorem leftMoves_star : ⋆ᴸ = {0} := moves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_star : ⋆ᴿ = {0} := moves_ofSets ..
+@[game_cmp] theorem leftMoves_star : ⋆ᴸ = {0} := moves_ofSets ..
+@[game_cmp] theorem rightMoves_star : ⋆ᴿ = {0} := moves_ofSets ..
 
 -- TODO: remove the above theorems
 @[simp, game_cmp] theorem moves_star (p : Player) : moves p ⋆ = {0} := moves_ofSets ..
