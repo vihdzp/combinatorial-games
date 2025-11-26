@@ -95,11 +95,11 @@ protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ 
   rw [lf_iff_exists_le, le_iff_forall_lf]
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
   · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
-    exact (left_lf_of_le h' hz) (Numeric.le_of_not_le (left_lf_of_le h ha))
+    exact left_lf_of_le h' hz (Numeric.le_of_not_le (left_lf_of_le h ha))
   · exact (left_lt_right hz ha).not_ge (h'.trans h)
   · exact (left_lt_right ha hz).not_ge (h.trans h')
   · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
-    exact (lf_right_of_le h' hz) (Numeric.le_of_not_le (lf_right_of_le h ha))
+    exact lf_right_of_le h' hz (Numeric.le_of_not_le (lf_right_of_le h ha))
 termination_by x
 decreasing_by igame_wf
 
