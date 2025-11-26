@@ -95,11 +95,11 @@ protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ 
   rw [lf_iff_exists_le, le_iff_forall_lf]
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
   · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
-    exact (left_lf_of_le h' hz) (Numeric.le_of_not_le (left_lf_of_le h ha))
+    exact left_lf_of_le h' hz (Numeric.le_of_not_le (left_lf_of_le h ha))
   · exact (left_lt_right hz ha).not_ge (h'.trans h)
   · exact (left_lt_right ha hz).not_ge (h.trans h')
   · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
-    exact (lf_right_of_le h' hz) (Numeric.le_of_not_le (lf_right_of_le h ha))
+    exact lf_right_of_le h' hz (Numeric.le_of_not_le (lf_right_of_le h ha))
 termination_by x
 decreasing_by igame_wf
 
@@ -203,7 +203,7 @@ end Numeric
 
 /-! ### Simplicity theorem -/
 
-/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `y ⧏ z` for every
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every
 `z ∈ yᴿ`.
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
@@ -236,7 +236,7 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
   obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
   · exact mt hw'.trans' (left_lf hw)
-  · cases hx.2 w hw <| (hw'.trans_lt (Numeric.left_lt hz)).le
+  · cases hx.2 w hw (hw'.trans_lt (Numeric.left_lt hz)).le
 
 theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : y ≤ x := by
@@ -263,7 +263,7 @@ theorem fits_zero_iff_equiv {x : IGame} : Fits 0 x ↔ x ≈ 0 := by
   refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
 
 /-- A specialization of the simplicity theorem to `1`. -/
-theorem equiv_one_of_fits {x : IGame} [Numeric x] (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
+theorem equiv_one_of_fits {x : IGame} (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
   apply (hx.equiv_of_forall_not_fits _ _).symm
   · simpa [fits_zero_iff_equiv]
   · simp
