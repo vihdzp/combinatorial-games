@@ -459,9 +459,9 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
     Player.forall, Player.forall]
   simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
-  refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩
-  · intro r h
-    grw [r.toIGame_equiv]
+  refine ⟨⟨fun r h ↦ ?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, fun r h ↦ ?_⟩⟩
+  any_goals intro r hr y hy; numeric
+  · grw [r.toIGame_equiv]
     obtain hq | rfl | hq := lt_trichotomy q 0
     · rw [← lt_div_iff_of_neg (mod_cast hq)] at h
       rw [← Numeric.lt_div_iff_of_neg (by simpa)]
@@ -472,36 +472,27 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
       rw [← Numeric.div_lt_iff (by simpa)]
       grw [← ratCast_div_equiv]
       simpa
-  · intro r hr y hy
-    have := Numeric.of_mem_moves hy
-    obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
+  · obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     grw [Numeric.mulOption_congr₃ r.toIGame_equiv, Numeric.mulOption_congr₄ hy]
     apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
-  · intro r hr y hy
-    have := Numeric.of_mem_moves hy
-    obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
+  · obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     grw [Numeric.mulOption_congr₃ r.toIGame_equiv, Numeric.mulOption_congr₄ hy]
     apply (toIGame_lt_mulOption _).not_ge
     have : 0 < (x - r) * (s - q) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, lt_sub_iff_add_lt]
-  · intro r hr y hy
-    have := Numeric.of_mem_moves hy
-    obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
+  · obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
     grw [Numeric.mulOption_congr₃ r.toIGame_equiv, Numeric.mulOption_congr₄ hy]
     apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
-  · intro r hr y hy
-    have := Numeric.of_mem_moves hy
-    obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
+  · obtain ⟨s, hs, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
     grw [Numeric.mulOption_congr₃ r.toIGame_equiv, Numeric.mulOption_congr₄ hy]
     apply (mulOption_lt_toIGame _).not_ge
     have : 0 < (x - r) * (q - s) := by apply mul_pos_of_neg_of_neg <;> simpa [sub_pos]
     simp_all [sub_mul, mul_sub, sub_lt_iff_lt_add]
-  · intro r h
-    rw [r.toIGame_equiv.lt_congr_right]
+  · rw [r.toIGame_equiv.lt_congr_right]
     obtain hq | rfl | hq := lt_trichotomy q 0
     · rw [← div_lt_iff_of_neg (mod_cast hq)] at h
       rw [← Numeric.div_lt_iff_of_neg (by simpa)]

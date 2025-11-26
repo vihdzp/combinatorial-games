@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
@@ -75,6 +76,10 @@ protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
 
 alias _root_.IGame.IsOption.numeric := Numeric.isOption
 
+/-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
+elab "numeric" : tactic =>
+  addInstances <| .mk [`IGame.Numeric.of_mem_moves]
+
 @[simp]
 protected instance zero : Numeric 0 := by
   rw [numeric_def]; simp
@@ -94,11 +99,11 @@ protected instance moves {x : IGame} [Numeric x] {p : Player} (y : x.moves p) : 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
-  · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
+  · numeric
     exact (left_lf_of_le h' hz) (Numeric.le_of_not_le (left_lf_of_le h ha))
   · exact (left_lt_right hz ha).not_ge (h'.trans h)
   · exact (left_lt_right ha hz).not_ge (h.trans h')
-  · have := Numeric.of_mem_moves hz; have := Numeric.of_mem_moves ha
+  · numeric
     exact (lf_right_of_le h' hz) (Numeric.le_of_not_le (lf_right_of_le h ha))
 termination_by x
 decreasing_by igame_wf
@@ -141,19 +146,17 @@ theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z)
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
     x ≤ y ↔ (∀ z ∈ xᴸ, z < y) ∧ (∀ z ∈ yᴿ, x < z) := by
   rw [le_iff_forall_lf]
-  congr! with z hz z hz
-  · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
-  · have := Numeric.of_mem_moves hz; rw [Numeric.not_le]
+  congr! with z hz z hz <;> numeric <;> rw [Numeric.not_le]
 
 theorem lt_iff_exists_le [Numeric x] [Numeric y] :
     x < y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ xᴿ, z ≤ y) := by
   rw [← Numeric.not_le, lf_iff_exists_le]
 
 theorem left_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
-  have := Numeric.of_mem_moves h; simpa using left_lf h
+  numeric; simpa using left_lf h
 
 theorem lt_right [Numeric x] (h : y ∈ xᴿ) : x < y := by
-  have := Numeric.of_mem_moves h; simpa using lf_right h
+  numeric; simpa using lf_right h
 
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
@@ -161,7 +164,7 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
     apply @left_lt_right x <;> simp_all
   · intro p y hy
     rw [moves_neg] at hy
-    have := Numeric.of_mem_moves hy
+    numeric
     simpa using Numeric.neg (-y)
 termination_by x
 decreasing_by all_goals simp_all; igame_wf
@@ -179,9 +182,7 @@ protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) :
       · simpa using left_lt ha
       · simpa using lt_right hb
   · rintro p _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩)
-    all_goals
-      have := Numeric.of_mem_moves hz
-      exact Numeric.add ..
+    all_goals numeric; exact Numeric.add ..
 termination_by (x, y)
 decreasing_by igame_wf
 

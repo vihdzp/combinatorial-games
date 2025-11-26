@@ -467,7 +467,7 @@ theorem toIGame_mul_equiv (x y : Dyadic') : ((x * y : Dyadic') : IGame) ≈ x * 
 
 end Dyadic'
 
-/-! ### Dyadic' games as numbers -/
+/-! ### Dyadic games as numbers -/
 
 namespace IGame
 
