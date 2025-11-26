@@ -237,7 +237,7 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
   obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
   · exact not_le_of_le_of_not_le hw' (left_lf hw)
-  · cases hx.2 w hw <| (hw'.trans_lt (Numeric.left_lt hz)).le
+  · cases hx.2 w hw (hw'.trans_lt (Numeric.left_lt hz)).le
 
 theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : y ≤ x := by
