@@ -345,7 +345,7 @@ lemma mulOption_lt_mul_of_equiv [Numeric x₁] (h : IH24 x₁ x₂ y) (he : x₁
   convert sub_lt_iff_lt_add'.2 (((h.1 (.of_mem_moves hi)).2 _).1 b hj) using 1
   · rw [← (h.2.2 (.of_mem_moves hj)).1 he]
     rfl
-  · rw [← he.lt_congr_right]
+  · grw [← he]
     exact Numeric.left_lt hi
 
 lemma mul_right_le_of_equiv [Numeric x₁] [Numeric x₂]
