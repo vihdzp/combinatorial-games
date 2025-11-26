@@ -203,7 +203,7 @@ end Numeric
 
 /-! ### Simplicity theorem -/
 
-/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `y ⧏ z` for every
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every
 `z ∈ yᴿ`.
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
