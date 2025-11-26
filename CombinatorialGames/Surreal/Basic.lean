@@ -69,16 +69,16 @@ theorem left_lt_right [h : Numeric x] (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < 
 protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves p) : Numeric y :=
   (numeric_def.1 h).2 p y hy
 
+/-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
+elab "numeric" : tactic =>
+  addInstances <| .mk [`IGame.Numeric.of_mem_moves]
+
 protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
   rw [isOption_iff_mem_union] at h
   cases h with
   | _ h => exact .of_mem_moves h
 
 alias _root_.IGame.IsOption.numeric := Numeric.isOption
-
-/-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
-elab "numeric" : tactic =>
-  addInstances <| .mk [`IGame.Numeric.of_mem_moves]
 
 @[simp]
 protected instance zero : Numeric 0 := by

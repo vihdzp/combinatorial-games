@@ -56,6 +56,10 @@ theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.mov
 protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves p) : Dicotic y :=
   (dicotic_def.1 hx).2 p y h
 
+/-- `dicotic` eagerly adds all possible `Dicotic` hypotheses. -/
+elab "dicotic" : tactic =>
+  addInstances <| .mk [`IGame.Dicotic.of_mem_moves]
+
 @[simp]
 protected instance zero : Dicotic 0 := by
   apply mk <;> simp
@@ -65,7 +69,7 @@ protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   · simp [moves_eq_empty_iff .left .right]
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
-    have := Dicotic.of_mem_moves hy
+    dicotic
     rw [← neg_neg y]
     exact .neg _
 termination_by x
@@ -77,7 +81,7 @@ One half of the **lawnmower theorem**: any dicotic game is smaller than any posi
 theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · have := Dicotic.of_mem_moves hz
+  · dicotic
     exact (lt_of_numeric_of_pos z hy).not_ge
   · numeric
     obtain (h | h) := Numeric.le_or_gt z 0
@@ -87,7 +91,7 @@ theorem lt_of_numeric_of_pos (x) [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < 
     · exact hy.not_ge
     · simp_rw [ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
       obtain ⟨z, hz⟩ := h right
-      have := Dicotic.of_mem_moves hz
+      dicotic
       exact lf_of_right_le (lt_of_numeric_of_pos z hy).le hz
 termination_by (x, y)
 decreasing_by igame_wf

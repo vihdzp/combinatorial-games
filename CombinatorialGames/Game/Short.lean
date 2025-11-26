@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison
 -/
 import CombinatorialGames.Game.IGame
+import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Data.Finite.Prod
 
 /-!
@@ -54,6 +55,10 @@ instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
 
 protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short y :=
   (short_def.1 h p).2 y hy
+
+/-- `short` eagerly adds all possible `Short` hypotheses. -/
+elab "short" : tactic =>
+  addInstances <| .mk [`IGame.Short.of_mem_moves]
 
 protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
   simp_rw [isOption_iff_mem_union] at h
@@ -119,14 +124,11 @@ theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
   ⟨fun _ ↦ by simpa using Short.neg (-x), fun _ ↦ Short.neg x⟩
 
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
-  refine mk fun p ↦ ⟨?_, ?_⟩ 
+  refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
   · rw [forall_moves_add]
     constructor
-    all_goals
-      intro z hz
-      have := Short.of_mem_moves hz
-      exact Short.add ..
+    all_goals intro z hz; short; exact Short.add ..
 termination_by (x, y)
 decreasing_by igame_wf
 

@@ -48,6 +48,7 @@ import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Pow
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.Surreal.Sign
+import CombinatorialGames.Tactic.AddInstances
 import CombinatorialGames.Tactic.GameCmp
 import CombinatorialGames.Tactic.OrdinalAlias
 import CombinatorialGames.Tactic.Register

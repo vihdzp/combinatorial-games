@@ -73,6 +73,10 @@ protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
     y ∈ x.moves p → Impartial y :=
   (impartial_def.1 h).2 p y
 
+/-- `impartial` eagerly adds all possible `Impartial` hypotheses. -/
+elab "impartial" : tactic =>
+  addInstances <| .mk [`IGame.Impartial.of_mem_moves]
+
 protected instance zero : Impartial 0 := by
   rw [impartial_def]
   simp
@@ -86,7 +90,7 @@ protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
   · simp
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
-    have := Impartial.of_mem_moves hy
+    impartial
     rw [← neg_neg y]
     exact .neg _
 termination_by x
@@ -99,10 +103,7 @@ protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   · simp_rw [forall_moves_add]
     intro p
     constructor
-    all_goals
-      intro z hz
-      have := Impartial.of_mem_moves hz
-      exact .add ..
+    all_goals intro z hz; impartial; exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
@@ -169,7 +170,7 @@ private theorem equiv_iff_forall_fuzzy' :
     x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
   rw [← le_iff_equiv, le_iff_forall_lf]
   congr! with z hz z hz
-  all_goals have := Impartial.of_mem_moves hz; simp [incompRel_comm]
+  all_goals impartial; simp [incompRel_comm]
 
 theorem equiv_iff_forall_fuzzy (p : Player) :
     x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
@@ -184,8 +185,8 @@ theorem fuzzy_iff_exists_equiv (p : Player) :
     x ‖ y ↔ (∃ z ∈ x.moves p, z ≈ y) ∨ (∃ z ∈ y.moves (-p), x ≈ z) := by
   rw [← not_equiv_iff, equiv_iff_forall_fuzzy p, not_and_or]
   simp_rw [not_forall, ← exists_prop]
-  congr! 5 with _ h _ h
-  all_goals have := Impartial.of_mem_moves h; exact not_fuzzy_iff
+  congr! with _ h _ h
+  all_goals impartial; exact not_fuzzy_iff
 
 theorem equiv_zero (p : Player) : x ≈ 0 ↔ ∀ y ∈ x.moves p, y ‖ 0 := by
   rw [equiv_iff_forall_fuzzy p]; simp
@@ -198,7 +199,7 @@ have also been reached in the first turn, then `x` is won by the first player. -
 theorem fuzzy_zero_of_forall_exists {p : Player} {y} (hy : y ∈ x.moves p)
     (H : ∀ z ∈ y.moves p, ∃ w ∈ x.moves p, z ≈ w) : x ‖ 0 := by
   apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
-  have := Impartial.of_mem_moves hy
+  impartial
   rw [equiv_zero] at hx
   obtain ⟨z, hz, hz'⟩ := (fuzzy_zero _).1 (hx y hy)
   obtain ⟨w, hw, hw'⟩ := H z hz

@@ -322,9 +322,9 @@ theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ �
   repeat any_goals constructor
   on_goal 1 => exact (Numeric.mul_pos (wpow_pos _) (wpow_pos _)).not_ge
   on_goal 7 => simp
-  all_goals numeric; intro r hr z hz
+  all_goals intro r hr z hz
   any_goals intro s hs w hw
-  all_goals apply not_le_of_gt
+  all_goals numeric; apply not_le_of_gt
   · grw [mul_congr_right (wpow_add_equiv ..), ← mul_assoc_equiv]
     rw [Numeric.mul_lt_mul_iff_left (wpow_pos _)]
     exact mul_wpow_lt_wpow' r (Numeric.left_lt hz)
@@ -553,8 +553,8 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
       · simpa [hr.ne', hg] using Hr' _ y.2
       · simpa using hr.le
   all_goals
-    numeric
     intro y hy
+    numeric
     simp only [not_fits_iff, exists_rightMoves_wpow, exists_leftMoves_wpow]
   · refine .inl <| or_iff_not_imp_left.2 fun hy' ↦ ?_
     rw [Numeric.not_le] at hy'
