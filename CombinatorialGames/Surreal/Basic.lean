@@ -264,7 +264,7 @@ theorem fits_zero_iff_equiv {x : IGame} : Fits 0 x ↔ x ≈ 0 := by
   refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
 
 /-- A specialization of the simplicity theorem to `1`. -/
-theorem equiv_one_of_fits {x : IGame} [Numeric x] (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
+theorem equiv_one_of_fits {x : IGame} (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
   apply (hx.equiv_of_forall_not_fits _ _).symm
   · simpa [fits_zero_iff_equiv]
   · simp
