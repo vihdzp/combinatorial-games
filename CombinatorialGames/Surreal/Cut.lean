@@ -184,12 +184,12 @@ def leftGame : Game →o Cut where
     upperPolar_extent := by
       refine Set.ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
       · simp_all [upperPolar, not_imp_comm]
-      · simpa using not_le_of_not_le_of_le hz hy
+      · simpa using mt hy.trans hz
     lowerPolar_intent := by
       refine Set.ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
-      simpa using not_le_of_not_le_of_le hy hz
+      simpa using mt hz.trans hy
   }
-  monotone' x y hy z hz := not_le_of_not_le_of_le hz hy
+  monotone' x y hy z hz := mt hy.trans hz
 
 /-- The right cut of a game `x` is such that its right set consists of surreals
 equal or lesser to it. -/
@@ -199,11 +199,11 @@ def rightGame : Game →o Cut where
     intent := {y | x ⧏ y.toGame}
     upperPolar_extent := by
       refine Set.ext fun y ↦ ⟨fun H hx ↦ (H hx).false, fun hy z hz ↦ ?_⟩
-      simpa using not_le_of_le_of_not_le hz hy
+      simpa using mt hz.trans' hy
     lowerPolar_intent := by
       refine Set.ext fun y ↦ ⟨?_, fun hy z hz ↦ ?_⟩
       · simp_all [lowerPolar, not_imp_comm]
-      · simpa using not_le_of_le_of_not_le hy hz
+      · simpa using mt hy.trans' hz
   }
   monotone' x y hy z := le_trans' hy
 
@@ -424,7 +424,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
   refine ext' (Set.ext fun y ↦ ⟨fun hy ↦ ?_, fun hy ↦ ?_⟩)
   · rw [right_supLeft, mem_iInter₂]
-    exact fun i hi ↦ not_le_of_not_le_of_le (mt Game.mk_le_mk.1 (left_lf hi)) hy
+    exact fun i hi ↦ mt hy.trans (mt Game.mk_le_mk.1 (left_lf hi))
   · rw [mem_right_leftGame, ← y.out_eq, toGame_mk, Game.mk_le_mk, le_iff_forall_lf]
     constructor <;> intro z hz
     · rw [right_supLeft, mem_iInter₂] at hy
