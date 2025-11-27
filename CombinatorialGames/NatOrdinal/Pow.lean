@@ -107,18 +107,18 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
             rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one] at ha
             obtain ⟨b, (hb : of b < ω^ x), hbw⟩ := ha
             rw [val_le_iff, ← val_of b, ← (wpow_mul_natCast_add_of_lt_aux hb n).2] at hbw
-            refine ⟨_, hb, hz.trans <| (add_le_add_right hbw _).trans ?_⟩
+            refine ⟨_, hb, hz.trans <| (add_le_add_left hbw _).trans ?_⟩
             rw [add_comm, ← add_assoc, ← mul_one_add, add_comm 1, ← Nat.cast_add_one]
           · exact h
         have ha' := H a ha
-        apply (add_le_add_right hz _).trans_lt
+        apply (add_le_add_left hz _).trans_lt
         rw [add_assoc, (wpow_mul_natCast_add_of_lt_aux ha' _).2, of.lt_iff_lt]
         apply (Ordinal.le_add_right ..).trans_lt'
         rw [Nat.cast_add_one (n + 1), mul_add]
         simpa
     · rw [(wpow_mul_natCast_add_of_lt_aux (hz.trans hy) n).2]
       simpa
-  · exact (oadd_le_add ..).trans (add_le_add_right (omul_le_mul ..) _)
+  · exact (oadd_le_add ..).trans (add_le_add_left (omul_le_mul ..) _)
 termination_by (x, n, y)
 
 theorem add_lt_wpow {x y z : NatOrdinal} (hx : x < ω^ z) (hy : y < ω^ z) : x + y < ω^ z :=
@@ -186,20 +186,20 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
   have h : x + y ≠ 0 := by simp_all
   apply le_antisymm
   · simp_rw [wpow_le_iff h, lt_add_iff]
-    rintro z (⟨a, ha, hz⟩ | ⟨a, ha, hz⟩) n <;> apply (mul_le_mul_right' (wpow_le_wpow.2 hz) _).trans
+    rintro z (⟨a, ha, hz⟩ | ⟨a, ha, hz⟩) n <;> apply (mul_le_mul_left (wpow_le_wpow.2 hz) _).trans
     · rw [wpow_add, mul_comm, ← mul_assoc, mul_comm _ (ω^ a)]
-      exact mul_le_mul_right' (wpow_mul_natCast_lt ha n).le _
+      exact mul_le_mul_left (wpow_mul_natCast_lt ha n).le _
     · rw [wpow_add, mul_assoc]
-      exact mul_le_mul_left' (wpow_mul_natCast_lt ha n).le _
+      exact mul_le_mul_right (wpow_mul_natCast_lt ha n).le _
   · simp_rw [mul_le_iff, lt_wpow_iff hx, lt_wpow_iff hy]
     rintro z ⟨a, ha, n, hz⟩ w ⟨b, hb, m, hw⟩
     apply (add_lt_wpow _ _).trans_le  (le_add_right ..)
-    · apply (mul_le_mul_right' hz.le _).trans_lt
+    · apply (mul_le_mul_left hz.le _).trans_lt
       rw [← mul_comm, ← mul_assoc, mul_comm (ω^ y), ← wpow_add]
-      exact wpow_mul_natCast_lt (add_lt_add_right ha y) n
-    · apply (mul_le_mul_left' hw.le _).trans_lt
+      exact wpow_mul_natCast_lt (add_lt_add_left ha y) n
+    · apply (mul_le_mul_right hw.le _).trans_lt
       rw [← mul_assoc, ← wpow_add]
-      exact wpow_mul_natCast_lt (add_lt_add_left hb x) m
+      exact wpow_mul_natCast_lt (add_lt_add_right hb x) m
 termination_by (x, y)
 
 end NatOrdinal
