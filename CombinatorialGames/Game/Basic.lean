@@ -142,7 +142,6 @@ instance : CharZero Game := AddMonoidWithOne.toCharZero
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq' (x * y), mul_eq']
   simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
-  dsimp
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
