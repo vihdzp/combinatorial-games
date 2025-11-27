@@ -762,18 +762,18 @@ instance : AddRightMono IGame := ⟨fun x _ _ h ↦ add_le_add_right' h x⟩
 instance : AddLeftReflectLE IGame where
   elim x y z h := by
     rw [← zero_add y, ← zero_add z]
-    apply (add_le_add_right (neg_add_equiv x).ge y).trans
+    apply (add_le_add_left (neg_add_equiv x).ge y).trans
     rw [add_assoc]
-    apply (add_le_add_left h (-x)).trans
+    apply (add_le_add_right h (-x)).trans
     rw [← add_assoc]
-    exact add_le_add_right (neg_add_equiv x).le z
+    exact add_le_add_left (neg_add_equiv x).le z
 
 instance : AddRightReflectLE IGame :=
   addRightReflectLE_of_addLeftReflectLE _
 
 instance : AddLeftStrictMono IGame where
   elim x y z h := by
-    apply lt_of_le_not_ge (add_le_add_left h.le x)
+    apply lt_of_le_not_ge (add_le_add_right h.le x)
     contrapose! h
     exact (le_of_add_le_add_left h).not_gt
 

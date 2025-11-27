@@ -826,7 +826,7 @@ instance (x : Player × α × β) :
 instance (x : MulTy α β) :
     Small.{u} (x.moves p movα movβ) := by
   simp_rw [MulTy.moves, ← Multiset.mem_toFinset]
-  exact small_biUnion.{u} (Multiset.toFinset x).toSet _
+  exact small_biUnion.{u} (ι := Player × α × β) (Multiset.toFinset x) _
 
 /-- The game `±xᵢ * yᵢ`. -/
 abbrev toLGame (x : Player × α × β) : LGame :=

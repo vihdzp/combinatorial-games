@@ -167,16 +167,6 @@ theorem mk_add_mul (x y z : IGame) : mk ((x + y) * z) = mk (x * z) + mk (y * z) 
 theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
   simpa using mk_add_mul x (-y) z
 
--- TODO: upstream
-theorem _root_.Set.prod_image_left {α β γ : Type*} (f : α → γ) (s : Set α) (t : Set β) :
-    (f '' s) ×ˢ t = (fun x ↦ (f x.1, x.2)) '' s ×ˢ t := by
-  aesop
-
--- TODO: upstream
-theorem _root_.Set.prod_image_right {α β γ : Type*} (f : α → γ) (s : Set α) (t : Set β) :
-    t ×ˢ (f '' s) = (fun x ↦ (x.1, f x.2)) '' t ×ˢ s := by
-  aesop
-
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
   induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
