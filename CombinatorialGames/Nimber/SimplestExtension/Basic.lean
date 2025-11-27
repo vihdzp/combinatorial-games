@@ -116,7 +116,7 @@ theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_right_strictMono hr).trans_le
   simp_rw [← mul_succ]
-  exact mul_le_mul_left' (Order.succ_le_iff.mpr hq) _
+  exact mul_le_mul_right (Order.succ_le_iff.mpr hq) _
 
 theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
     (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
@@ -131,7 +131,7 @@ theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
-  · apply mul_le_mul_left'
+  · apply mul_le_mul_right
     rwa [Order.succ_le_iff]
 
 -- TODO: come up with a better name, probably rename `log_eq_zero` while we're at it.
@@ -559,7 +559,7 @@ private theorem inv_lt_of_not_isField_aux {x : Nimber} (h' : IsRing x) (h : ¬ I
           exact add_comm ..
         · apply (h'.mul_lt hb (Hs ..)).ne
           rw [← add_comm, ← hy.add_eq_of_lt hay, of_lt_iff]
-          apply (add_lt_add_left ha _).trans_eq
+          apply (add_lt_add_right ha _).trans_eq
           rw [← of_eq_iff, hy.add_eq_of_lt hsy, add_comm, add_cancel_right]
 
 theorem IsRing.inv_lt_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x)
