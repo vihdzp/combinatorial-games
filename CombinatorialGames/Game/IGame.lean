@@ -298,7 +298,7 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 instance : LE IGame where
   le := Sym2.GameAdd.fix isOption_wf fun x y le ↦
-    (∀ z (h : z ∈ xᴸ),  ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_moves h))) ∧
+    (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_moves h))) ∧
     (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_moves h)))
 
 /-- The less or fuzzy relation on games. `x ⧏ y` is notation for `¬ y ≤ x`.
@@ -338,7 +338,7 @@ theorem lf_zero {x : IGame} : x ⧏ 0 ↔ ∃ y ∈ xᴿ, y ≤ 0 := by
 Note that it's often more convenient to use `le_iff_forall_lf`, which only unfolds the definition by
 one step. -/
 theorem le_def {x y : IGame} : x ≤ y ↔
-    (∀ a ∈ xᴸ,  (∃ b ∈ yᴸ, a ≤ b) ∨ (∃ b ∈ aᴿ, b ≤ y)) ∧
+    (∀ a ∈ xᴸ, (∃ b ∈ yᴸ, a ≤ b) ∨ (∃ b ∈ aᴿ, b ≤ y)) ∧
     (∀ a ∈ yᴿ, (∃ b ∈ aᴸ, x ≤ b) ∨ (∃ b ∈ xᴿ, b ≤ a)) := by
   rw [le_iff_forall_lf]
   congr! 2 <;> rw [lf_iff_exists_le]
@@ -348,7 +348,7 @@ theorem le_def {x y : IGame} : x ≤ y ↔
 Note that it's often more convenient to use `lf_iff_exists_le`, which only unfolds the definition by
 one step. -/
 theorem lf_def {x y : IGame} : x ⧏ y ↔
-    (∃ a ∈ yᴸ,  (∀ b ∈ xᴸ, b ⧏ a) ∧ (∀ b ∈ aᴿ, x ⧏ b)) ∨
+    (∃ a ∈ yᴸ, (∀ b ∈ xᴸ, b ⧏ a) ∧ (∀ b ∈ aᴿ, x ⧏ b)) ∨
     (∃ a ∈ xᴿ, (∀ b ∈ aᴸ, b ⧏ y) ∧ (∀ b ∈ yᴿ, a ⧏ b)) := by
   rw [lf_iff_exists_le]
   congr! <;> rw [le_iff_forall_lf]
@@ -378,8 +378,8 @@ private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x 
   exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
 termination_by isOption_wf.cutExpand.wrap {x, y, z}
 decreasing_by
-  on_goal 1 => convert (Relation.cutExpand_add_single {y, z} (IsOption.of_mem_moves ha))
-  on_goal 2 => convert (Relation.cutExpand_single_add (IsOption.of_mem_moves ha) {x, y})
+  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (IsOption.of_mem_moves ha)
+  on_goal 2 => convert Relation.cutExpand_single_add (IsOption.of_mem_moves ha) {x, y}
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
 instance : Preorder IGame where

@@ -100,11 +100,11 @@ protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ 
   rw [lf_iff_exists_le, le_iff_forall_lf]
   rintro (⟨z, hz, h⟩ | ⟨z, hz, h⟩) <;> constructor <;> intro a ha h'
   · numeric
-    exact (left_lf_of_le h' hz) (Numeric.le_of_not_le (left_lf_of_le h ha))
+    exact left_lf_of_le h' hz (Numeric.le_of_not_le (left_lf_of_le h ha))
   · exact (left_lt_right hz ha).not_ge (h'.trans h)
   · exact (left_lt_right ha hz).not_ge (h.trans h')
   · numeric
-    exact (lf_right_of_le h' hz) (Numeric.le_of_not_le (lf_right_of_le h ha))
+    exact lf_right_of_le h' hz (Numeric.le_of_not_le (lf_right_of_le h ha))
 termination_by x
 decreasing_by igame_wf
 
@@ -204,7 +204,7 @@ end Numeric
 
 /-! ### Simplicity theorem -/
 
-/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `y ⧏ z` for every
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every
 `z ∈ yᴿ`.
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
@@ -214,8 +214,7 @@ def Fits (x y : IGame) : Prop :=
   (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
 theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y :=
-  ⟨fun _ hz ↦ not_le_of_not_le_of_le (left_lf hz) h.ge,
-    fun _ hz ↦ not_le_of_le_of_not_le h.le (lf_right hz) ⟩
+  ⟨fun _ hz ↦ mt h.ge.trans (left_lf hz), fun _ hz ↦ mt h.le.trans' (lf_right hz) ⟩
 
 alias AntisymmRel.Fits := fits_of_equiv
 
@@ -237,8 +236,8 @@ theorem Fits.le_of_forall_leftMoves_not_fits {x y : IGame} [Numeric x] (hx : x.F
   simp_rw [not_fits_iff] at hl
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx.2⟩
   obtain (⟨w, hw, hw'⟩ | ⟨w, hw, hw'⟩) := hl z hz
-  · exact not_le_of_le_of_not_le hw' (left_lf hw)
-  · cases hx.2 w hw <| (hw'.trans_lt (Numeric.left_lt hz)).le
+  · exact mt hw'.trans' (left_lf hw)
+  · cases hx.2 w hw (hw'.trans_lt (Numeric.left_lt hz)).le
 
 theorem Fits.le_of_forall_rightMoves_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (hr : ∀ z ∈ xᴿ, ¬ z.Fits y) : y ≤ x := by
@@ -265,7 +264,7 @@ theorem fits_zero_iff_equiv {x : IGame} : Fits 0 x ↔ x ≈ 0 := by
   refine ⟨fun hx ↦ (hx.equiv_of_forall_not_fits ?_ ?_).symm, fun h ↦ fits_of_equiv h.symm⟩ <;> simp
 
 /-- A specialization of the simplicity theorem to `1`. -/
-theorem equiv_one_of_fits {x : IGame} [Numeric x] (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
+theorem equiv_one_of_fits {x : IGame} (hx : Fits 1 x) (h : ¬ x ≈ 0) : x ≈ 1 := by
   apply (hx.equiv_of_forall_not_fits _ _).symm
   · simpa [fits_zero_iff_equiv]
   · simp

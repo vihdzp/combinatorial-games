@@ -14,7 +14,7 @@ import Mathlib.Algebra.Order.Hom.Monoid
 We define the canonical map `NatOrdinal → IGame`, where every ordinal is mapped to the game whose
 left set consists of all previous ordinals. We make use of the type alias `NatOrdinal` rather than
 `Ordinal`, as this map also preserves addition, and in the case of surreals, multiplication. The map
-to surreals is defined in `NatOrdinal.toSurreal`.
+to surreals is defined in `CombinatorialGames.Surreal.Ordinal`.
 
 We also prove some properties about `NatCast`, which is related to the previous construction by
 `toIGame (↑n) ≈ ↑n`.
@@ -186,7 +186,7 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
     rw [← toIGame.le_iff_le] at he
     grw [toIGame_add, toIGame_add] at he
     rw [← add_le_add_iff_right (toIGame (c * d))]
-    apply not_le_of_le_of_not_le he
+    apply mt he.trans'
     grw [toIGame_mul, toIGame_mul, toIGame_mul]
     rw [← IGame.le_sub_iff_add_le]
     exact left_lf <| mulOption_mem_moves_mul
