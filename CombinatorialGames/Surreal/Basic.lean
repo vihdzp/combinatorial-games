@@ -220,6 +220,13 @@ alias AntisymmRel.Fits := fits_of_equiv
 theorem Fits.refl (x : IGame) : x.Fits x :=
   fits_of_equiv .rfl
 
+instance : IsRefl _ Fits where
+  refl := Fits.refl
+
+theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
+  rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
+  exact ⟨⟨h₂.1, h₁.2⟩, ⟨h₁.1, h₂.2⟩⟩
+
 @[simp]
 theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
   rw [Fits, forall_moves_neg, forall_moves_neg, and_comm]; simp [Fits]
