@@ -8,6 +8,7 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
+import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable
@@ -706,7 +707,7 @@ theorem sub_right_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ y.moves p)
 
 private theorem neg_add' (x y : IGame) : -(x + y) = -x + -y := by
   ext
-  simp only [moves_neg, moves_add, union_neg, mem_union, mem_neg, mem_image, exists_mem_neg]
+  simp only [moves_neg, moves_add, union_neg, mem_union, mem_neg, mem_image, exists_neg_mem]
   congr! 3 <;>
   · refine and_congr_right_iff.2 fun _ ↦ ?_
     rw [← neg_inj, neg_add', neg_neg]
