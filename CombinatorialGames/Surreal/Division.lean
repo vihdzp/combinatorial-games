@@ -18,8 +18,8 @@ to define the field structure on `Surreal`.
 This is Theorem 1.10 in ONAG, and we follow the broad strokes of the proof. We prove
 by simultaneous induction that if `x` is positive and numeric, then (ii) `x⁻¹` is numeric, and (iv)
 `x * x⁻¹ ≈ 1`. We do this by showing the inductive hypothesis implies that (i) `x * y < 1` for
-`y ∈ x⁻¹ᴸ` and `1 < x * y` for `y ∈ x⁻¹ᴿ`, and that (iv) `y < 1` for
-`y ∈ (x * x⁻¹)ᴸ` and `1 < y` for `y ∈ (x * x⁻¹ᴿ)`.
+`y ∈ x⁻¹ᴸ` and `1 < x * y` for `y ∈ x⁻¹ᴿ`, and that (iii) `y < 1` for `y ∈ (x * x⁻¹)ᴸ` and `1 < y`
+for `y ∈ (x * x⁻¹)ᴿ`.
 
 An important difference is that Conway assumes that `x` has no negative left options, while we don't
 make use of this assumption. This is because our definition of the inverse is tweaked to ensure that
@@ -224,10 +224,10 @@ theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻�
     fun y hy hy' ↦ have := Numeric.of_mem_moves hy; main hy'
   have IHr : ∀ y ∈ xᴿ, Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=
     fun y hy ↦ have := Numeric.of_mem_moves hy; main (hx.trans (Numeric.lt_right hy))
-  have hl := fun y hy hy' ↦ (IHl y hy hy').1
-  have hr := fun y hy ↦ (IHr y hy).1
-  have hl' := fun y hy hy' ↦ (IHl y hy hy').2
-  have hr' := fun y hy ↦ (IHr y hy).2
+  have hl y hy hy' := (IHl y hy hy').1
+  have hr y hy := (IHr y hy).1
+  have hl' y hy hy' := (IHl y hy hy').2
+  have hr' y hy := (IHr y hy).2
   exact ⟨numeric_inv hx hl hr hl' hr', mul_inv_self hx hl hr hl' hr'⟩
 termination_by x
 decreasing_by igame_wf

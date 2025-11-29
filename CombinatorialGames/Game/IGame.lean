@@ -1067,7 +1067,7 @@ theorem mulOption_zero_right (x y a : IGame) : mulOption x y a 0 = a * y := by
 /-- An auxiliary inductive type to enumerate the options of `IGame.inv`. -/
 private inductive InvTy (lr : Player → Type u) : Player → Type u
   | zero : InvTy lr left
-  | mk (p₁ p₂) : (lr (-(p₁ * p₂))) → InvTy lr p₁ → InvTy lr p₂
+  | mk (p₁ p₂) : lr (-(p₁ * p₂)) → InvTy lr p₁ → InvTy lr p₂
 
 private def InvTy.val' {x : IGame}
     (IH : ∀ p, Shrink {y ∈ x.moves p | 0 < y} → IGame) (b : Player) :
@@ -1162,7 +1162,7 @@ private theorem invRec' {x : IGame.{u}} (hx : 0 < x)
     (zero : P left 0 (zero_mem_leftMoves_inv hx))
     (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ x.moves (-(p₁ * p₂))), ∀ a (ha : a ∈ x⁻¹.moves p₁),
       P p₁ a ha → P p₂ _ (invOption_eq hy ▸ invOption_mem_moves_inv hx hy hyx ha)) :
-    (∀ p y (hy : y ∈ x⁻¹.moves p), P p y hy) := by
+    ∀ p y hy, P p y hy := by
   suffices ∀ p : Player, ∀ i, P p (InvTy.val x p i) (by cases p <;> simp [inv_eq hx]) by
     intro p y hy
     rw [inv_eq' hx, moves_ofSets] at hy
@@ -1182,7 +1182,7 @@ theorem invRec {x : IGame} (hx : 0 < x)
     (zero : P left 0 (zero_mem_leftMoves_inv hx))
     (mk : ∀ p₁ p₂, ∀ y (hy : 0 < y) (hyx : y ∈ x.moves (-(p₁ * p₂))), ∀ a (ha : a ∈ x⁻¹.moves p₁),
       P p₁ a ha → P p₂ _ (invOption_mem_moves_inv hx hy hyx ha)) :
-    (∀ p y (hy : y ∈ x⁻¹.moves p), P p y hy) := by
+    ∀ p y hy, P p y hy := by
   apply invRec' hx zero
   convert mk using 8 with _ _ _ ha
   simp_rw [invOption_eq ha]
