@@ -166,7 +166,7 @@ protected theorem add_zero (a : Nimber) : a + 0 = a := by
       rw [Nimber.add_zero]
       exact ha.ne
     · intro _ h
-      exact (Nimber.not_lt_zero _ h).elim
+      exact (Nimber.not_neg _ h).elim
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := Nimber.add_zero (a + 0)
