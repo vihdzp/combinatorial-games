@@ -243,7 +243,7 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
   .rfl
 
 instance : WellFoundedLT (Lex (ℕᵒᵈ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_lt_zero lt_wf (wellFounded_lt (α := ℕ))
+  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf (wellFounded_lt (α := ℕ))
 
 instance : WellFoundedLT (Nimber[X]) where
   wf := InvImage.wf
