@@ -447,7 +447,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
         obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hx
       obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast _ _ hy
       use k * (n : ℚ)⁻¹ + m * q - k * q
-      have := Numeric.of_mem_moves hy
+      numeric
       simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/
