@@ -133,10 +133,10 @@ theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
   · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
-    have := Impartial.of_mem_moves hz
+    impartial
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
     exact fuzzy_of_mem_moves hz
-  · have := Impartial.of_mem_moves hy
+  · impartial
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
 termination_by x
