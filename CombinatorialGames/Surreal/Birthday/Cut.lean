@@ -251,7 +251,7 @@ private theorem birthday_game_le (x : IGame) :
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
     constructor <;>
-      simpa using add_le_add_right ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
+      simpa using add_le_add_left ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
   · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h]
     refine ⟨H₁.trans ?_, H₂.trans ?_⟩ <;>
       exact (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le

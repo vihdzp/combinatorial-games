@@ -31,7 +31,7 @@ open Order Polynomial
 /-! ### For Mathlib -/
 
 -- TODO: should some of these be global?
-attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
+attribute [local aesop simp] Function.update
 
 -- TODO: upstream attr.
 attribute [simp] mem_lowerBounds
@@ -91,8 +91,6 @@ theorem eq_add_C_mul_X_pow_of_degree_le {p : R[X]} {n : ℕ} (h : p.degree ≤ n
   · refine ⟨p.leadingCoeff, p.eraseLead, ?_, hp ▸ degree_eraseLead_lt ?_⟩
     · rw [← natDegree_eq_of_degree_eq_some hp, eraseLead_add_C_mul_X_pow]
     · aesop
-
-alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
 
 end Polynomial
 
@@ -243,7 +241,7 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
   .rfl
 
 instance : WellFoundedLT (Lex (ℕᵒᵈ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_lt_zero lt_wf (wellFounded_lt (α := ℕ))
+  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf (wellFounded_lt (α := ℕ))
 
 instance : WellFoundedLT (Nimber[X]) where
   wf := InvImage.wf
@@ -632,9 +630,9 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     have hpe (k : Nat) : (p.erase n).coeff k < x := by
       rw [p.coeff_erase]
       split <;> simp [hpk, hx]
-    apply (add_lt_add_left (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
+    apply (add_lt_add_right (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
     rw [← mul_add_one]
-    apply mul_le_mul_left'
+    apply mul_le_mul_right
     rwa [add_one_le_iff, val.lt_iff_lt]
   | ind k ih =>
     have hp0 : p ≠ 0 := by rintro rfl; simp at hk
@@ -846,16 +844,16 @@ theorem IsField.has_root_subfield {x : Nimber} (h : IsField x)
 
 theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
     {p : (h.toSubfield hx₁)[X]} (hpn : map (Subfield.subtype _) p < leastNoRoots x) :
-    p.Splits (.id _) := by
+    p.Splits := by
   obtain hp₀ | hp₀ := le_or_gt p.degree 0
-  · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
+  · exact .of_degree_le_one (hp₀.trans zero_le_one)
   induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
   subst hp
   have ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
   rw [← hr.mul_div_eq]
-  apply splits_mul _ (splits_X_sub_C _)
+  apply Splits.mul (.X_sub_C _)
   obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
-  · exact splits_of_degree_le_one _ hp₀'
+  · exact .of_degree_le_one hp₀'
   · have hp : (p / (X - C r)).degree < p.degree := by apply degree_div_lt <;> aesop
     apply IH _ hp _ (zero_lt_one.trans hp₀') rfl
     apply (WithTop.coe_strictMono (Lex.lt_of_degree_lt _)).trans hpn

@@ -2,26 +2,6 @@ import Mathlib.Data.Finset.Max
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Order.Antisymmetrization
 
-/-! ### Basic order theorems -/
-
-theorem not_lt_of_antisymmRel {α} [Preorder α] {x y : α} (h : AntisymmRel (· ≤ ·) x y) : ¬ x < y :=
-  h.ge.not_gt
-
-theorem not_gt_of_antisymmRel {α} [Preorder α] {x y : α} (h : AntisymmRel (· ≤ ·) x y) : ¬ y < x :=
-  h.le.not_gt
-
-alias AntisymmRel.not_lt := not_lt_of_antisymmRel
-alias AntisymmRel.not_gt := not_gt_of_antisymmRel
-
-theorem not_antisymmRel_of_lt {α} [Preorder α] {x y : α} : x < y → ¬ AntisymmRel (· ≤ ·) x y :=
-  imp_not_comm.1 not_lt_of_antisymmRel
-
-theorem not_antisymmRel_of_gt {α} [Preorder α] {x y : α} : y < x → ¬ AntisymmRel (· ≤ ·) x y :=
-  imp_not_comm.1 not_gt_of_antisymmRel
-
-alias LT.lt.not_antisymmRel := not_antisymmRel_of_lt
-alias LT.lt.not_antisymmRel_symm := not_antisymmRel_of_gt
-
 /-! ### `exists_between` for Finsets -/
 
 -- Written by Kenny Lau: https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/.60exists_between.60.20for.20finite.20sets/near/526965677

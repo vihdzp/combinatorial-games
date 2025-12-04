@@ -166,7 +166,7 @@ protected theorem add_zero (a : Nimber) : a + 0 = a := by
       rw [Nimber.add_zero]
       exact ha.ne
     · intro _ h
-      exact (Nimber.not_lt_zero _ h).elim
+      exact (Nimber.not_neg _ h).elim
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := Nimber.add_zero (a + 0)
@@ -249,8 +249,8 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
     rw [hc', OrderIso.lt_iff_lt, Nat.cast_lt] at hc
     obtain h | h := Nat.lt_xor_cases hc
     · apply h.ne
-      simpa [Nat.xor_comm, Nat.xor_cancel_left, ← hc'] using add_nat (c ^^^ b) b
+      simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat (c ^^^ b) b
     · apply h.ne
-      simpa [Nat.xor_comm, Nat.xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
+      simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
 
 end Nimber

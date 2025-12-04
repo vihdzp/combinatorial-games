@@ -134,7 +134,7 @@ instance : IsOrderedCancelAddMonoid NatOrdinal where
   add_le_add_left _ _ := add_le_add_left
   le_of_add_le_add_left a b c h := by
     by_contra! h'
-    exact h.not_gt (add_lt_add_left h' a)
+    exact h.not_gt (add_lt_add_right h' a)
 
 theorem le_add_left : a ≤ b + a := by simp
 theorem le_add_right : a ≤ a + b := by simp
@@ -210,11 +210,11 @@ theorem val_add_natCast (a : NatOrdinal) (n : ℕ) : val (a + n) = val a + n :=
 theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [← add_assoc] using add_le_add_right IH 1
+  | succ c IH => simpa [← add_assoc] using add_le_add_left IH 1
   | limit c hc IH =>
     rw [(Ordinal.isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
-    exact (IH i hi).trans (add_le_add_left hi.le (of a))
+    exact (IH i hi).trans (add_le_add_right hi.le (of a))
 
 theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
   oadd_le_add' ..
@@ -305,10 +305,10 @@ instance : MulZeroOneClass NatOrdinal where
   one_mul a := by rw [mul_comm', mul_one']
 
 instance : PosMulStrictMono NatOrdinal where
-  elim a b c h := lt_mul_iff.2 ⟨0, a.2, b, h, by simp⟩
+  mul_lt_mul_of_pos_left a ha b c h := lt_mul_iff.2 ⟨0, ha, b, h, by simp⟩
 
 instance : MulPosStrictMono NatOrdinal where
-  elim a b c h := lt_mul_iff.2 ⟨b, h, 0, a.2, by simp⟩
+  mul_lt_mul_of_pos_right a ha b c h := lt_mul_iff.2 ⟨b, h, 0, ha, by simp⟩
 
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
@@ -318,7 +318,7 @@ instance : MulLeftMono NatOrdinal where
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
 instance : MulRightMono NatOrdinal where
-  elim a b c h := by convert mul_le_mul_left' h a using 1 <;> exact mul_comm ..
+  elim a b c h := by convert mul_le_mul_right h a using 1 <;> exact mul_comm ..
 
 private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
   refine le_antisymm (mul_le_iff.2 fun a' ha d hd => ?_)
@@ -327,33 +327,18 @@ private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
     rcases lt_add_iff.1 hd with (⟨b', hb, hd⟩ | ⟨c', hc, hd⟩)
     · have := add_lt_add_of_lt_of_le (mul_add_lt ha hb) (mul_add_le ha.le hd)
       rw [mul_add, mul_add] at this
-      simp only [add_assoc] at this
-      rwa [add_left_comm, add_left_comm _ (a * b'), add_left_comm (a * b),
-        add_lt_add_iff_left, add_left_comm (a' * b), add_left_comm (a * b),
-        add_lt_add_iff_left, ← add_assoc, ← add_assoc] at this
+      grind
     · have := add_lt_add_of_le_of_lt (mul_add_le ha.le hd) (mul_add_lt ha hc)
       rw [mul_add, mul_add] at this
-      simp only [add_assoc] at this
-      rwa [add_left_comm, add_comm (a * c), add_left_comm (a' * d), add_left_comm (a * c'),
-        add_left_comm (a * b), add_lt_add_iff_left, add_comm (a' * c), add_left_comm (a * d),
-        add_left_comm (a' * b), add_left_comm (a * b), add_lt_add_iff_left, add_comm (a * d),
-        add_comm (a' * d), ← add_assoc, ← add_assoc] at this
+      grind
   · rcases lt_mul_iff.1 hd with ⟨a', ha, b', hb, hd⟩
-    have := add_lt_add_of_le_of_lt hd (mul_add_lt ha (add_lt_add_right hb c))
+    have := add_lt_add_of_le_of_lt hd (mul_add_lt ha (add_lt_add_left hb c))
     rw [mul_add, mul_add, mul_add a'] at this
-    simp only [add_assoc] at this
-    rwa [add_left_comm (a' * b'), add_left_comm, add_lt_add_iff_left, add_left_comm,
-      add_left_comm _ (a' * b'), add_left_comm (a * b'), add_lt_add_iff_left,
-      add_left_comm (a' * c), add_left_comm, add_lt_add_iff_left, add_left_comm,
-      add_comm _ (a' * c), add_lt_add_iff_left] at this
+    grind
   · rcases lt_mul_iff.1 hd with ⟨a', ha, c', hc, hd⟩
-    have := add_lt_add_of_lt_of_le (mul_add_lt ha (add_lt_add_left hc b)) hd
+    have := add_lt_add_of_lt_of_le (mul_add_lt ha (add_lt_add_right hc b)) hd
     rw [mul_add, mul_add, mul_add a'] at this
-    simp only [add_assoc] at this
-    rwa [add_left_comm _ (a' * b), add_lt_add_iff_left, add_left_comm (a' * c'),
-      add_left_comm _ (a' * c), add_lt_add_iff_left, add_left_comm, add_comm (a' * c'),
-      add_left_comm _ (a * c'), add_lt_add_iff_left, add_comm _ (a' * c'),
-      add_comm _ (a' * c'), add_left_comm, add_lt_add_iff_left] at this
+    grind
 termination_by (a, b, c)
 
 instance : Distrib NatOrdinal where
@@ -422,8 +407,6 @@ instance : CommSemiring NatOrdinal where
   mul_assoc := mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
-  mul_lt_mul_of_pos_left _ _ _ := mul_lt_mul_of_pos_left
-  mul_lt_mul_of_pos_right _ _ _ := mul_lt_mul_of_pos_right
 
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
@@ -435,7 +418,7 @@ theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
     · simp
     · rw [(Ordinal.isNormal_mul_right ha).apply_of_isSuccLimit hc, iSup_le_iff]
       rintro ⟨i, hi⟩
-      exact (IH i hi).trans (mul_le_mul_left' hi.le (of a))
+      exact (IH i hi).trans (mul_le_mul_right hi.le (of a))
 
 theorem omul_le_mul (a b : NatOrdinal) : a *ₒ b ≤ a * b :=
   omul_le_mul' ..
