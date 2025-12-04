@@ -313,7 +313,7 @@ instance : MulPosStrictMono NatOrdinal where
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
     obtain rfl | h₁ := h.eq_or_lt; simp
-    obtain rfl | h₂ := eq_zero_or_pos a; simp
+    obtain rfl | h₂ := NatOrdinal.eq_zero_or_pos a; simp
     dsimp
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 

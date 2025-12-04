@@ -247,7 +247,7 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
       intro a ha b hb
       have hx : val (∗b + ∗y) < x := h.add_lt hb hy
       rw [ne_eq, h.mul_add_eq_of_lt' hb, add_assoc, ← of_val (∗b + _), ← h.mul_add_eq_of_lt' hx]
-      exact ((mul_add_lt hx ha).trans_le (Ordinal.le_add_right ..)).ne
+      exact ((mul_add_lt hx ha).trans_le (le_self_add ..)).ne
     · intro b hb
       rw [ne_eq, ← h.mul_add_eq_of_lt' (hb.trans hy)]
       simpa using hb.ne
