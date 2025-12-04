@@ -183,18 +183,15 @@ theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGa
   simp [NatOrdinal.lt_mul_iff, mulOption]
   constructor
   · rintro _ e c hc d hd he rfl
-    rw [← toIGame.le_iff_le] at he
-    grw [toIGame_add, toIGame_add] at he
+    grw [← toIGame.le_iff_le, toIGame_add, toIGame_add] at he
     rw [← add_le_add_iff_right (toIGame (c * d))]
     apply mt he.trans'
-    grw [toIGame_mul, toIGame_mul, toIGame_mul]
-    rw [← IGame.le_sub_iff_add_le]
+    grw [toIGame_mul, toIGame_mul, toIGame_mul, ← IGame.le_sub_iff_add_le]
     exact left_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
-  · rintro _ _ _ c hc rfl d hd rfl rfl
-    rw [IGame.le_sub_iff_add_le]
-    grw [← toIGame_mul, ← toIGame_mul, ← toIGame_mul, ← toIGame_add, ← toIGame_add]
-    rw [toIGame.le_iff_le, not_le]
+  · rintro _ c d hc hd rfl
+    grw [IGame.le_sub_iff_add_le, ← toIGame_mul, ← toIGame_mul, ← toIGame_mul, ← toIGame_add,
+      ← toIGame_add, toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
 termination_by (a, b)
 

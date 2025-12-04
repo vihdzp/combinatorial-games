@@ -3,8 +3,8 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+import Mathlib.Order.Concept
 import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Mathlib.Concept
 import CombinatorialGames.Surreal.Birthday.Basic
 
 /-!
@@ -51,8 +51,17 @@ alias disjoint_left_right := Concept.disjoint_extent_intent
 alias codisjoint_left_right := Concept.codisjoint_extent_intent
 alias isCompl_left_right := Concept.isCompl_extent_intent
 
-theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := c.isLowerSet_extent'
-theorem isUpperSet_right (c : Cut) : IsUpperSet c.right := c.isUpperSet_intent'
+theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := by
+  intro a b hb ha
+  obtain rfl | hb := hb.eq_or_lt
+  · assumption
+  · exact c.mem_extent_of_rel_extent hb ha
+
+theorem isUpperSet_right (c : Cut) : IsUpperSet c.right := by
+  intro a b hb ha
+  obtain rfl | hb := hb.eq_or_lt
+  · assumption
+  · exact c.mem_intent_of_intent_rel hb ha
 
 @[ext] theorem ext {c d : Cut} (h : c.left = d.left) : c = d := Concept.ext h
 theorem ext' {c d : Cut} (h : c.right = d.right) : c = d := Concept.ext' h
@@ -210,14 +219,14 @@ def rightGame : Game →o Cut where
 /-- The cut just to the left of a surreal number. -/
 def leftSurreal : Surreal ↪o Cut where
   toFun x := (leftGame x.toGame).copy
-    (Iio x) (by rw [leftGame]; aesop) (Ici x) (by rw [leftGame]; aesop)
+    (Iio x) (Ici x) (by rw [leftGame]; aesop) (by rw [leftGame]; aesop)
   inj' _ := by simp [Concept.copy, Ici_inj]
   map_rel_iff' := Iio_subset_Iio_iff
 
 /-- The cut just to the right of a surreal number. -/
 def rightSurreal : Surreal ↪o Cut where
   toFun x := (rightGame x.toGame).copy
-    (Iic x) (by rw [rightGame]; aesop) (Ioi x) (by rw [rightGame]; aesop)
+    (Iic x) (Ioi x) (by rw [rightGame]; aesop) (by rw [rightGame]; aesop)
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 

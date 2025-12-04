@@ -37,10 +37,6 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
-@[simp]
-theorem Set.empty_ne_singleton {α : Type*} (a : α) : ∅ ≠ ({a} : Set α) :=
-  (Set.singleton_ne_empty a).symm
-
 theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
   Ordinal.lt_omega0
 
@@ -283,7 +279,7 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
 
 theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
   refine strictMono_nat_of_lt_succ fun n ↦ ⟨fun y hy ↦ ?_, fun h ↦ ?_⟩
-  · rw [mem_birthdayFinset] at *
+  · rw [SetLike.mem_coe, mem_birthdayFinset] at *
     apply hy.trans
     simp
   · have := Finset.card_le_card h
