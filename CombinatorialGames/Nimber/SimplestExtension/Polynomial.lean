@@ -581,7 +581,7 @@ theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
 theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
     ∗(x.val ^ p.natDegree) ≤ oeval x p := by
   apply (Ordinal.le_mul_left ..).trans (mul_coeff_le_oeval x p p.natDegree)
-  simpa [Ordinal.pos_iff_ne_zero]
+  simpa [pos_iff_ne_zero]
 
 theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
@@ -707,7 +707,7 @@ theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
 theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
   induction n generalizing y with
-  | zero => use 0; simp_all [Ordinal.pos_iff_ne_zero]
+  | zero => use 0; simp_all [pos_iff_ne_zero]
   | succ n IH =>
     obtain ⟨p, hpn, hpk, hp⟩ := IH (Ordinal.mod_lt y (pow_ne_zero n hx₀))
     refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
@@ -862,8 +862,8 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
 theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p.roots = (h.embed hx₁ p hpk).roots.map (Subfield.subtype _) := by
-  simpa using roots_map (Subfield.subtype _)
-    (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa))
+  simpa using (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)).map_roots
+    (Subfield.subtype _)
 
 theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
@@ -876,7 +876,7 @@ theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
   obtain rfl | hp₀ := eq_or_ne p 0; simp
   have hx₁ := lt_of_not_ge fun h ↦ hp₀ (polynomial_eq_zero_of_le_one h hpk)
   have hs := h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)
-  conv_lhs => rw [← h.map_embed hx₁ hpk, eq_prod_roots_of_splits_id hs]
+  conv_lhs => rw [← h.map_embed hx₁ hpk, hs.eq_prod_roots]
   simp [h.roots_eq_map hx₁ hpn hpk]
 
 theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :

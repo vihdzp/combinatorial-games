@@ -124,8 +124,8 @@ theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, 
 @[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := bot_le
 @[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := le_bot_iff
 @[simp] theorem $(mkIdent `not_neg) (a : $Alias) : ¬ a < 0 := not_lt_bot
-theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
-theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
+protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
+protected theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
 
 end $Alias
 )

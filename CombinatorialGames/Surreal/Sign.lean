@@ -166,7 +166,7 @@ instance : Append SignSeq where
       (s.length + t.length) fun a ↦ ?_
     dsimp
     split <;> rename_i h
-    · simp [h.not_ge, (h.trans_le (Ordinal.le_add_right ..)).not_ge]
+    · simp [h.not_ge, (h.trans_le (le_self_add ..)).not_ge]
     · rw [get_eq_zero_iff, ← add_le_add_iff_left s.length,
         Ordinal.add_sub_cancel_of_le (le_of_not_gt h)]
 
@@ -179,7 +179,7 @@ theorem get_append_of_le (s t : SignSeq) {o : Ordinal} (h : s.length ≤ o) :
 
 @[simp]
 theorem get_append_add (s t : SignSeq) (o : Ordinal) : (s ++ t)[s.length + o] = t[o] := by
-  rw [get_append_of_le _ _ (Ordinal.le_add_right ..), Ordinal.add_sub_cancel]
+  rw [get_append_of_le _ _ (le_self_add ..), Ordinal.add_sub_cancel]
 
 @[simp]
 theorem length_append (s t : SignSeq) : (s ++ t).length = s.length + t.length :=
