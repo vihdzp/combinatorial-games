@@ -245,9 +245,6 @@ instance : CompleteSemilatticeInf SignExpansion where
     simp_all
 
 -- TODO: better def-eqs
-instance completeLattice : CompleteLattice SignExpansion :=
-  completeLatticeOfCompleteSemilatticeInf _
-
 instance : CompleteLinearOrder SignExpansion where
   __ := linearOrder
   __ := LinearOrder.toBiheytingAlgebra _
