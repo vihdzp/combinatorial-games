@@ -291,13 +291,12 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
     simpa [← Int.cast_add] using intCast_add_equiv ..
   apply Fits.equiv_of_forall_not_fits
   · rw [Fits, forall_moves_add, forall_moves_add]
-    refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
-    any_goals
-      obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-      grw [← toIGame_add_equiv]
-      simp
+    refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
-      obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+      intro z hz
+      first |
+        obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz |
+        obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
       grw [← toIGame_add_equiv]
       simp
   · intro z hz
