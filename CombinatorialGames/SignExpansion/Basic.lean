@@ -33,7 +33,7 @@ structure SignExpansion : Type (u + 1) where
   isUpperSet_preimage_singleton_zero' : IsUpperSet (sign ⁻¹' {0})
 
 namespace SignExpansion
-open Order
+open Set
 
 instance : FunLike SignExpansion NatOrdinal SignType where
   coe := sign
@@ -112,7 +112,7 @@ instance : Neg SignExpansion where
   neg e :=
   { sign := -e
     isUpperSet_preimage_singleton_zero' a b hab ha := by
-      simp only [Set.mem_preimage, Pi.neg_apply, Set.mem_singleton_iff,
+      simp only [mem_preimage, Pi.neg_apply, mem_singleton_iff,
         SignType.neg_eq_zero_iff, apply_eq_zero] at ha ⊢
       exact ha.trans (WithTop.coe_le_coe.2 hab) }
 
@@ -124,7 +124,7 @@ def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x.sign i else 0
   isUpperSet_preimage_singleton_zero' a b hab ha := by
     rw [← WithTop.coe_le_coe] at hab
-    simp only [sign_eq_coe, Set.mem_preimage, Set.mem_singleton_iff,
+    simp only [sign_eq_coe, mem_preimage, mem_singleton_iff,
       ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
 
@@ -163,7 +163,10 @@ theorem restrict_top_right {e : SignExpansion} : e.restrict ⊤ = e := by
 
 /-! ### Order structure -/
 
-instance : LinearOrder SignExpansion :=
+-- #32444
+instance : CompleteLinearOrder SignType := Fintype.toCompleteLinearOrder SignType
+
+instance linearOrder : LinearOrder SignExpansion :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
 theorem le_iff_toLex {a b : SignExpansion} : a ≤ b ↔ toLex ⇑a ≤ toLex ⇑b := Iff.rfl
@@ -172,5 +175,82 @@ theorem lt_iff_toLex {a b : SignExpansion} : a < b ↔ toLex ⇑a < toLex ⇑b :
 instance : BoundedOrder SignExpansion where
   le_top _ := le_iff_toLex.2 le_top
   bot_le _ := le_iff_toLex.2 bot_le
+
+private def inf (s : Set SignExpansion) (o : NatOrdinal) : SignType :=
+  ⨅ e : {e ∈ s | ∀ i < o, e i = inf s i}, e.1 o
+termination_by o
+
+private theorem exists_of_inf_ne_one {s : Set SignExpansion} {o : NatOrdinal} (h : inf s o ≠ 1) :
+    ∃ e ∈ s, e o = inf s o ∧ ∀ i < o, e i = inf s i := by
+  rw [inf] at h ⊢
+  obtain hs | hs := isEmpty_or_nonempty {e ∈ s | ∀ i < o, e i = inf s i}
+  · rw [iInf_of_empty] at h
+    contradiction
+  · obtain ⟨e, he⟩ := @ciInf_mem _ _ _ _ hs fun e ↦ e.1 o
+    exact ⟨_, e.2.1, he, e.2.2⟩
+
+instance : InfSet SignExpansion where
+  sInf s :=
+  { sign := inf s
+    isUpperSet_preimage_singleton_zero' a b hab ha := by
+      induction b using WellFoundedLT.induction with | ind b IH
+      obtain rfl | hab := hab.eq_or_lt; assumption
+      rw [mem_preimage, mem_singleton_iff] at ha ⊢
+      rw [inf]
+      convert iInf_const with e
+      · exact e.1.isUpperSet_preimage_singleton_zero hab.le (ha ▸ e.2.2 _ hab)
+      · rw [nonempty_coe_sort]
+        obtain ⟨e, he, _, h⟩ := exists_of_inf_ne_one (ha.trans_ne <| by decide)
+        refine ⟨e, he, fun i hi ↦ ?_⟩
+        obtain hia | hai := lt_or_ge i a
+        · exact h i hia
+        · rw [IH i hi hai]
+          apply e.isUpperSet_preimage_singleton_zero hai
+          simp_all }
+
+theorem sInf_apply (s : Set SignExpansion) (o : NatOrdinal) :
+    sInf s o = ⨅ e : {e ∈ s | ∀ i < o, e i = sInf s i}, e.1 o := by
+  dsimp [sInf]
+  rw [inf]
+  rfl
+
+theorem sInf_apply_le {s : Set SignExpansion} {o : NatOrdinal} {e : SignExpansion}
+    (he : e ∈ s) (h : ∀ i < o, e i = sInf s i) : sInf s o ≤ e o := by
+  rw [sInf_apply]
+  exact sInf_le ⟨⟨e, he, h⟩, rfl⟩
+
+theorem le_sInf_apply {s : Set SignExpansion} {o : NatOrdinal} {e : SignExpansion}
+    (h : ∀ f ∈ s, (∀ i < o, f i = sInf s i) → e o ≤ f o) : e o ≤ sInf s o := by
+  rw [sInf_apply]
+  apply le_sInf
+  grind
+
+theorem exists_of_sInf_ne_one {s : Set SignExpansion} {o : NatOrdinal} (h : sInf s o ≠ 1) :
+    ∃ e ∈ s, e o = sInf s o ∧ ∀ i < o, e i = sInf s i :=
+  exists_of_inf_ne_one h
+
+instance : CompleteSemilatticeInf SignExpansion where
+  sInf_le s e he := by
+    by_contra! hs
+    obtain ⟨a, ha⟩ := hs
+    exact ha.2.not_ge (sInf_apply_le he ha.1)
+  le_sInf s e h := by
+    by_contra! hs
+    obtain ⟨a, ha⟩ := hs
+    apply ha.2.not_ge <| le_sInf_apply fun f hf hf' ↦ ?_
+    -- TODO: make a lemma for this contrapose step
+    have := h f hf
+    contrapose! this
+    use a
+    simp_all
+
+-- TODO: better def-eqs
+instance completeLattice : CompleteLattice SignExpansion :=
+  completeLatticeOfCompleteSemilatticeInf _
+
+instance : CompleteLinearOrder SignExpansion where
+  __ := linearOrder
+  __ := LinearOrder.toBiheytingAlgebra _
+  __ := completeLatticeOfCompleteSemilatticeInf _
 
 end SignExpansion
