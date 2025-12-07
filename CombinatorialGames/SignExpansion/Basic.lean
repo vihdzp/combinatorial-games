@@ -11,9 +11,9 @@ import Mathlib.Order.PiLex
 /-!
 # Sign expansions
 
-In this repository we define the type of `Surreal` numbers following Conway's theorem of games. A
-popular alternative is to instead define the surreals as infinite "expansions of signs", setting
-for instance `+ = 1`, `- = -1`, `+- = ½`, etc.
+In this repository we define the type of `Surreal` numbers following Conway's theory of games. A
+popular alternative is to instead define the surreals as potentially infinite "expansions of signs",
+setting for instance `+ = 1`, `- = -1`, `+- = ½`, etc.
 
 This file defines the type `SignExpansion` and constructs its basic instances. We do not yet link it
 to the development of surreal numbers.
