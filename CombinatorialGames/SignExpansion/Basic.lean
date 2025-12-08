@@ -117,28 +117,33 @@ instance : Neg SignExpansion where
       exact ha.trans (WithTop.coe_le_coe.2 hab) }
 
 @[simp] theorem coe_neg (e : SignExpansion) : ⇑(-e : SignExpansion) = -⇑e := rfl
-theorem neg_apply (e : SignExpansion) (o : Ordinal) : (-e) o = -e o := rfl
+theorem neg_apply (e : SignExpansion) (o : NatOrdinal) : (-e) o = -e o := rfl
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
-def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
-  sign i := if i < o then x.sign i else 0
+def restrict (e : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
+  sign i := if i < o then e.sign i else 0
   isUpperSet_preimage_singleton_zero' a b hab ha := by
     rw [← WithTop.coe_le_coe] at hab
     simp only [sign_eq_coe, Set.mem_preimage, Set.mem_singleton_iff,
       ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
 
-@[simp]
-theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
-    (x.restrict o).length = min x.length o := by
-  refine eq_of_forall_ge_iff fun c ↦ ?_
-  cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
+@[aesop simp]
+theorem coe_restrict (e : SignExpansion) (o : WithTop NatOrdinal) :
+    ⇑(e.restrict o) = fun i : NatOrdinal ↦ if i < o then e i else 0 :=
+  rfl
 
 theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₂ < o₁) : x.restrict o₁ o₂ = x o₂ := if_pos h
 
 theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : x.restrict o₁ o₂ = 0 := if_neg h.not_gt
+
+@[simp]
+theorem length_restrict (e : SignExpansion) (o : WithTop NatOrdinal) :
+    (e.restrict o).length = min e.length o := by
+  refine eq_of_forall_ge_iff fun c ↦ ?_
+  cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
 theorem restrict_of_length_le {e : SignExpansion} {o : WithTop NatOrdinal}
     (ho : e.length ≤ o) : e.restrict o = e := by
@@ -161,6 +166,30 @@ theorem restrict_zero_right (e : SignExpansion) : e.restrict 0 = 0 := by
 theorem restrict_top_right {e : SignExpansion} : e.restrict ⊤ = e := by
   apply restrict_of_length_le; simp
 
+/-! ### Subset relation -/
+
+/-- We write `x ⊆ y` when `x = restrict y o` for some `o`. In the literature, this is written as
+`x ≤ₛ y` or `x ⊑ y`. -/
+instance : HasSubset SignExpansion where
+  Subset x y := restrict y x.length = x
+
+/-- We write `x ⊂ y` when `x ⊆ y` and `x ≠ y`. In the literature, this is written as `x <ₛ y` or
+`x ⊏ y`. -/
+instance : HasSSubset SignExpansion where
+  SSubset x y := x ⊆ y ∧ ¬ y ⊆ x
+
+theorem restrict_subset ()
+
+  #exit
+
+instance : IsNonstrictStrictOrder SignExpansion (· ⊆ ·) (· ⊂ ·) where
+  right_iff_left_not_left
+
+example : True := by
+  apply ssubset_iff_subset_not_subset
+
+#exit
+
 /-! ### Order structure -/
 
 instance : LinearOrder SignExpansion :=
@@ -174,3 +203,33 @@ instance : BoundedOrder SignExpansion where
   bot_le _ := le_iff_toLex.2 bot_le
 
 end SignExpansion
+
+/-! ### Cast from ordinals -/
+
+namespace NatOrdinal
+open SignExpansion
+
+/-- Returns the sign expansion with the corresponding number of `1`s. -/
+def toSignExpansion : NatOrdinal ↪o SignExpansion :=
+  .ofStrictMono (restrict ⊤ ·) fun x y h ↦ by
+    use x
+    aesop (add apply unsafe [lt_trans])
+
+instance : Coe NatOrdinal SignExpansion where
+  coe x := x.toSignExpansion
+
+theorem toSignExpansion_def (o : NatOrdinal) : o = restrict ⊤ o := rfl
+
+@[simp]
+theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
+  simp [toSignExpansion]
+
+theorem toSignExpansion_apply_of_lt {o₁ o₂ : NatOrdinal} (h : o₂ < o₁) :
+    toSignExpansion o₁ o₂ = 1 := by
+  aesop (add simp [toSignExpansion])
+
+theorem toSignExpansion_apply_of_le {o₁ o₂ : NatOrdinal} (h : o₁ ≤ o₂) :
+    toSignExpansion o₁ o₂ = 0 := by
+  aesop (add simp [toSignExpansion])
+
+end NatOrdinal
