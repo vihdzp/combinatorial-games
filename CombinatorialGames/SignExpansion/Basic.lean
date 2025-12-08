@@ -40,36 +40,36 @@ instance : FunLike SignExpansion NatOrdinal SignType where
   coe_injective' a b hab := by cases a; cases b; cases hab; rfl
 
 /-- Every sign after the first `0` is also `0`. -/
-theorem isUpperSet_preimage_singleton_zero (e : SignExpansion) : IsUpperSet (e ⁻¹' {0}) := e.2
+theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
 
 @[simp] theorem coe_mk (f h) : SignExpansion.mk f h = f := rfl
-@[simp] theorem sign_eq_coe (e : SignExpansion) : e.sign = ⇑e := rfl
+@[simp] theorem sign_eq_coe (x : SignExpansion) : x.sign = ⇑x := rfl
 
 @[ext]
 protected theorem ext {x y : SignExpansion} (hxy : ∀ o, x o = y o) : x = y :=
   DFunLike.coe_injective (funext hxy)
 
-theorem apply_eq_zero_of_le {e : SignExpansion} {o o' : Ordinal}
-    (hoo' : o ≤ o') (ho : e o = 0) : e o' = 0 :=
-  isUpperSet_preimage_singleton_zero e hoo' ho
+theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : Ordinal}
+    (hoo' : o ≤ o') (ho : x o = 0) : x o' = 0 :=
+  isUpperSet_preimage_singleton_zero x hoo' ho
 
 /-- The length of a sign expansion is the smallest ordinal at which it equals zero,
 or `⊤` is no such ordinal exists. -/
-def length (e : SignExpansion) : WithTop NatOrdinal :=
-  sInf ((↑) '' (e ⁻¹' {0}))
+def length (x : SignExpansion) : WithTop NatOrdinal :=
+  sInf ((↑) '' (x ⁻¹' {0}))
 
-theorem apply_of_length_le {e : SignExpansion} {o : NatOrdinal} (h : e.length ≤ o) : e o = 0 := by
-  obtain he | he := (WithTop.some '' (e ⁻¹' {0})).eq_empty_or_nonempty
+theorem apply_of_length_le {x : SignExpansion} {o : NatOrdinal} (h : x.length ≤ o) : x o = 0 := by
+  obtain he | he := (WithTop.some '' (x ⁻¹' {0})).eq_empty_or_nonempty
   · simp_all [length]
   · obtain ⟨a, ha, ha'⟩ := csInf_mem he
     apply apply_eq_zero_of_le _ ha
     rwa [← WithTop.coe_le_coe, ha']
 
-theorem apply_eq_zero {e : SignExpansion} {o : NatOrdinal} : e o = 0 ↔ e.length ≤ o := by
+theorem apply_eq_zero {x : SignExpansion} {o : NatOrdinal} : x o = 0 ↔ x.length ≤ o := by
   refine ⟨fun h ↦ csInf_le' ?_, apply_of_length_le⟩
   simpa
 
-theorem length_eq_top {e : SignExpansion} : e.length = ⊤ ↔ ∀ o, e o ≠ 0 := by
+theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
   simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
 
 /-! ### Basic sign expansions -/
@@ -116,21 +116,20 @@ instance : Neg SignExpansion where
         SignType.neg_eq_zero_iff, apply_eq_zero] at ha ⊢
       exact ha.trans (WithTop.coe_le_coe.2 hab) }
 
-@[simp] theorem coe_neg (e : SignExpansion) : ⇑(-e : SignExpansion) = -⇑e := rfl
-theorem neg_apply (e : SignExpansion) (o : NatOrdinal) : (-e) o = -e o := rfl
+@[simp] theorem coe_neg (x : SignExpansion) : ⇑(-x : SignExpansion) = -⇑x := rfl
+theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
-def restrict (e : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
-  sign i := if i < o then e.sign i else 0
+def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
+  sign i := if i < o then x i else 0
   isUpperSet_preimage_singleton_zero' a b hab ha := by
     rw [← WithTop.coe_le_coe] at hab
-    simp only [sign_eq_coe, Set.mem_preimage, Set.mem_singleton_iff,
-      ite_eq_right_iff, apply_eq_zero] at ha ⊢
+    simp only [Set.mem_preimage, Set.mem_singleton_iff, ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
 
 @[aesop simp]
-theorem coe_restrict (e : SignExpansion) (o : WithTop NatOrdinal) :
-    ⇑(e.restrict o) = fun i : NatOrdinal ↦ if i < o then e i else 0 :=
+theorem coe_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
+    ⇑(x.restrict o) = fun i : NatOrdinal ↦ if i < o then x i else 0 :=
   rfl
 
 theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
@@ -140,31 +139,37 @@ theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : x.restrict o₁ o₂ = 0 := if_neg h.not_gt
 
 @[simp]
-theorem length_restrict (e : SignExpansion) (o : WithTop NatOrdinal) :
-    (e.restrict o).length = min e.length o := by
+theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
+    (x.restrict o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
-theorem restrict_of_length_le {e : SignExpansion} {o : WithTop NatOrdinal}
-    (ho : e.length ≤ o) : e.restrict o = e := by
+@[simp]
+theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
+    (ho : x.length ≤ o) : x.restrict o = x := by
   ext o'
-  obtain ho' | ho' := lt_or_ge (↑o') e.length
+  obtain ho' | ho' := lt_or_ge (↑o') x.length
   · rw [restrict_apply_of_coe_lt (ho'.trans_le ho)]
   · rw [apply_of_length_le ho']
     apply apply_of_length_le
     simp [ho']
 
+@[simp, grind =]
+theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
+    (x.restrict o₁).restrict o₂ = x.restrict (min o₁ o₂) := by
+  aesop
+
 @[simp]
-theorem restrict_zero_left (o : NatOrdinal) : restrict 0 o = 0 := by
+theorem restrict_zero_left (o : WithTop NatOrdinal) : restrict 0 o = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_zero_right (e : SignExpansion) : e.restrict 0 = 0 := by
+theorem restrict_zero_right (x : SignExpansion) : x.restrict 0 = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_top_right {e : SignExpansion} : e.restrict ⊤ = e := by
-  apply restrict_of_length_le; simp
+theorem restrict_top_right {x : SignExpansion} : x.restrict ⊤ = x :=
+  rfl
 
 /-! ### Subset relation -/
 
@@ -178,25 +183,59 @@ instance : HasSubset SignExpansion where
 instance : HasSSubset SignExpansion where
   SSubset x y := x ⊆ y ∧ ¬ y ⊆ x
 
-theorem restrict_subset ()
+theorem subset_def {x y : SignExpansion} : x ⊆ y ↔ restrict y x.length = x := .rfl
+theorem ssubset_def {x y : SignExpansion} : x ⊂ y ↔ x ⊆ y ∧ ¬ y ⊆ x := .rfl
 
-  #exit
+alias ⟨eq_of_subset, _⟩ := subset_def
+
+@[simp]
+theorem restrict_subset (x : SignExpansion) (o : WithTop NatOrdinal) : restrict x o ⊆ x := by
+  rw [subset_def, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
+
+@[simp]
+theorem zero_subset (x : SignExpansion) : 0 ⊆ x := by
+  rw [← restrict_zero_right x]
+  exact restrict_subset ..
+
+theorem eq_or_length_lt_of_subset {x y : SignExpansion} (h : x ⊆ y) :
+    x = y ∨ x.length < y.length := by
+  rw [subset_def] at h
+  have := lt_or_ge x.length y.length
+  aesop
+
+instance : IsRefl SignExpansion (· ⊆ ·) where
+  refl x := restrict_subset x ⊤
+
+instance : IsTrans SignExpansion (· ⊆ ·) where
+  trans := by grind [subset_def]
+
+instance : IsAntisymm SignExpansion (· ⊆ ·) where
+  antisymm x y h₁ h₂ := by
+    have := eq_or_length_lt_of_subset h₁
+    have := eq_or_length_lt_of_subset h₂
+    grind
 
 instance : IsNonstrictStrictOrder SignExpansion (· ⊆ ·) (· ⊂ ·) where
-  right_iff_left_not_left
+  right_iff_left_not_left _ _ := .rfl
 
-example : True := by
-  apply ssubset_iff_subset_not_subset
+@[gcongr]
+theorem length_le_of_subset {x y : SignExpansion} (h : x ⊆ y) : x.length ≤ y.length := by
+  rw [← eq_of_subset h]
+  simp
 
-#exit
+@[gcongr]
+theorem length_lt_of_ssubset {x y : SignExpansion} (h : x ⊂ y) : x.length < y.length := by
+  have := eq_or_length_lt_of_subset (subset_of_ssubset h)
+  have := ssubset_irrefl x
+  aesop
 
 /-! ### Order structure -/
 
 instance : LinearOrder SignExpansion :=
   LinearOrder.lift' (toLex ⇑·) (by simp [Function.Injective])
 
-theorem le_iff_toLex {a b : SignExpansion} : a ≤ b ↔ toLex ⇑a ≤ toLex ⇑b := Iff.rfl
-theorem lt_iff_toLex {a b : SignExpansion} : a < b ↔ toLex ⇑a < toLex ⇑b := Iff.rfl
+theorem le_iff_toLex {x y : SignExpansion} : x ≤ y ↔ toLex ⇑x ≤ toLex ⇑y := .rfl
+theorem lt_iff_toLex {x y : SignExpansion} : x < y ↔ toLex ⇑x < toLex ⇑y := .rfl
 
 instance : BoundedOrder SignExpansion where
   le_top _ := le_iff_toLex.2 le_top
@@ -220,16 +259,47 @@ instance : Coe NatOrdinal SignExpansion where
 
 theorem toSignExpansion_def (o : NatOrdinal) : o = restrict ⊤ o := rfl
 
+@[aesop simp]
+theorem coe_toSignExpansion (o : NatOrdinal) :
+    ⇑(o : SignExpansion) = fun i : NatOrdinal ↦ if i < o then 1 else 0 := by
+  unfold toSignExpansion
+  aesop
+
 @[simp]
 theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
   simp [toSignExpansion]
 
 theorem toSignExpansion_apply_of_lt {o₁ o₂ : NatOrdinal} (h : o₂ < o₁) :
     toSignExpansion o₁ o₂ = 1 := by
-  aesop (add simp [toSignExpansion])
+  aesop
 
 theorem toSignExpansion_apply_of_le {o₁ o₂ : NatOrdinal} (h : o₁ ≤ o₂) :
     toSignExpansion o₁ o₂ = 0 := by
-  aesop (add simp [toSignExpansion])
+  aesop
+
+theorem toSignExpansion_subset_toSignExpansion_of_le {o₁ o₂ : NatOrdinal} (h : o₁ ≤ o₂) :
+    (o₁ : SignExpansion) ⊆ o₂ := by
+  rw [subset_def]
+  aesop (add unsafe apply lt_of_lt_of_le)
+
+theorem toSignExpansion_ssubset_toSignExpansion_of_lt {o₁ o₂ : NatOrdinal} (h : o₁ < o₂) :
+    (o₁ : SignExpansion) ⊂ o₂ := by
+  rw [ssubset_iff_subset_ne]
+  use toSignExpansion_subset_toSignExpansion_of_le h.le
+  aesop
+
+@[simp]
+theorem toSignExpansion_subset_toSignExpansion_iff {o₁ o₂ : NatOrdinal} :
+    (o₁ : SignExpansion) ⊆ o₂ ↔ o₁ ≤ o₂ := by
+  refine ⟨?_, toSignExpansion_subset_toSignExpansion_of_le⟩
+  contrapose!
+  exact fun h ↦ (toSignExpansion_ssubset_toSignExpansion_of_lt h).2
+
+@[simp]
+theorem toSignExpansion_ssubset_toSignExpansion_iff {o₁ o₂ : NatOrdinal} :
+    (o₁ : SignExpansion) ⊂ o₂ ↔ o₁ < o₂ := by
+  refine ⟨?_, toSignExpansion_ssubset_toSignExpansion_of_lt⟩
+  contrapose!
+  exact fun h ↦ not_ssubset_of_subset (toSignExpansion_subset_toSignExpansion_of_le h)
 
 end NatOrdinal
