@@ -248,6 +248,8 @@ end SignExpansion
 namespace NatOrdinal
 open SignExpansion
 
+variable {o₁ o₂ : NatOrdinal}
+
 /-- Returns the sign expansion with the corresponding number of `1`s. -/
 def toSignExpansion : NatOrdinal ↪o SignExpansion :=
   .ofStrictMono (restrict ⊤ ·) fun x y h ↦ by
@@ -269,35 +271,31 @@ theorem coe_toSignExpansion (o : NatOrdinal) :
 theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
   simp [toSignExpansion]
 
-theorem toSignExpansion_apply_of_lt {o₁ o₂ : NatOrdinal} (h : o₂ < o₁) :
-    toSignExpansion o₁ o₂ = 1 := by
+theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o₂ = 1 := by
   aesop
 
-theorem toSignExpansion_apply_of_le {o₁ o₂ : NatOrdinal} (h : o₁ ≤ o₂) :
-    toSignExpansion o₁ o₂ = 0 := by
+theorem toSignExpansion_apply_of_le (h : o₁ ≤ o₂) : toSignExpansion o₁ o₂ = 0 := by
   aesop
 
-theorem toSignExpansion_subset_toSignExpansion_of_le {o₁ o₂ : NatOrdinal} (h : o₁ ≤ o₂) :
+theorem toSignExpansion_subset_toSignExpansion_of_le (h : o₁ ≤ o₂) :
     (o₁ : SignExpansion) ⊆ o₂ := by
   rw [subset_def]
   aesop (add unsafe apply lt_of_lt_of_le)
 
-theorem toSignExpansion_ssubset_toSignExpansion_of_lt {o₁ o₂ : NatOrdinal} (h : o₁ < o₂) :
+theorem toSignExpansion_ssubset_toSignExpansion_of_lt (h : o₁ < o₂) :
     (o₁ : SignExpansion) ⊂ o₂ := by
   rw [ssubset_iff_subset_ne]
   use toSignExpansion_subset_toSignExpansion_of_le h.le
   aesop
 
 @[simp]
-theorem toSignExpansion_subset_toSignExpansion_iff {o₁ o₂ : NatOrdinal} :
-    (o₁ : SignExpansion) ⊆ o₂ ↔ o₁ ≤ o₂ := by
+theorem toSignExpansion_subset_toSignExpansion_iff : (o₁ : SignExpansion) ⊆ o₂ ↔ o₁ ≤ o₂ := by
   refine ⟨?_, toSignExpansion_subset_toSignExpansion_of_le⟩
   contrapose!
   exact fun h ↦ (toSignExpansion_ssubset_toSignExpansion_of_lt h).2
 
 @[simp]
-theorem toSignExpansion_ssubset_toSignExpansion_iff {o₁ o₂ : NatOrdinal} :
-    (o₁ : SignExpansion) ⊂ o₂ ↔ o₁ < o₂ := by
+theorem toSignExpansion_ssubset_toSignExpansion_iff : (o₁ : SignExpansion) ⊂ o₂ ↔ o₁ < o₂ := by
   refine ⟨?_, toSignExpansion_ssubset_toSignExpansion_of_lt⟩
   contrapose!
   exact fun h ↦ not_ssubset_of_subset (toSignExpansion_subset_toSignExpansion_of_le h)
