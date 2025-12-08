@@ -23,7 +23,7 @@ universe u
 
 noncomputable section
 
--- TODO: upstream
+-- #32571
 @[simp] theorem SignType.neg_le_neg_iff {x y : SignType} : -x ≤ -y ↔ y ≤ x := by decide +revert
 @[simp] theorem SignType.neg_lt_neg_iff {x y : SignType} : -x < -y ↔ y < x := by decide +revert
 
@@ -138,16 +138,19 @@ def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
     simp only [Set.mem_preimage, Set.mem_singleton_iff, ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
 
+@[inherit_doc] scoped notation x:70 " ↾ " o:70 => restrict x o
+recommended_spelling "restrict" for "↾" in [«term_↾_»]
+
 @[aesop simp]
 theorem coe_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
-    ⇑(x.restrict o) = fun i : NatOrdinal ↦ if i < o then x i else 0 :=
+    ⇑(x ↾ o) = fun i : NatOrdinal ↦ if i < o then x i else 0 :=
   rfl
 
 theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
-    {o₂ : NatOrdinal} (h : o₂ < o₁) : x.restrict o₁ o₂ = x o₂ := if_pos h
+    {o₂ : NatOrdinal} (h : o₂ < o₁) : (x ↾ o₁) o₂ = x o₂ := if_pos h
 
 theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
-    {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : x.restrict o₁ o₂ = 0 := if_neg h.not_gt
+    {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := if_neg h.not_gt
 
 @[simp]
 theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
@@ -156,7 +159,7 @@ theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
 theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
-    (ho : x.length ≤ o) : x.restrict o = x := by
+    (ho : x.length ≤ o) : x ↾ o = x := by
   ext o'
   obtain ho' | ho' := lt_or_ge (↑o') x.length
   · rw [restrict_apply_of_coe_lt (ho'.trans_le ho)]
@@ -165,15 +168,15 @@ theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     simp [ho']
 
 @[simp]
-theorem restrict_zero_left (o : NatOrdinal) : restrict 0 o = 0 := by
+theorem restrict_zero_left (o : NatOrdinal) : 0 ↾ o = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_zero_right (x : SignExpansion) : x.restrict 0 = 0 := by
+theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_top_right {x : SignExpansion} : x.restrict ⊤ = x := by
+theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
   apply restrict_of_length_le; simp
 
 /-! ### Order structure -/
