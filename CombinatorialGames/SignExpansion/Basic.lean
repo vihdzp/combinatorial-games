@@ -23,6 +23,10 @@ universe u
 
 noncomputable section
 
+-- TODO: upstream
+@[simp] theorem SignType.neg_le_neg_iff {x y : SignType} : -x ≤ -y ↔ y ≤ x := by decide +revert
+@[simp] theorem SignType.neg_lt_neg_iff {x y : SignType} : -x < -y ↔ y < x := by decide +revert
+
 /-- A sign expansion is a an ordinal indexed sequence of `1`s and `-1`s, followed by `0`s. -/
 structure SignExpansion : Type (u + 1) where
   /-- The sequence defining the sign expansion. -/
@@ -119,6 +123,13 @@ instance : Neg SignExpansion where
 @[simp] theorem coe_neg (x : SignExpansion) : ⇑(-x : SignExpansion) = -⇑x := rfl
 theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 
+@[simp] theorem neg_zero : -(0 : SignExpansion) = 0 := rfl
+@[simp] theorem neg_bot : -(⊥ : SignExpansion) = ⊤ := rfl
+@[simp] theorem neg_top : -(⊤ : SignExpansion) = ⊥ := rfl
+
+instance : InvolutiveNeg SignExpansion where
+  neg_neg x := by ext; simp
+
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x i else 0
@@ -176,5 +187,21 @@ theorem lt_iff_toLex {x y : SignExpansion} : x < y ↔ toLex ⇑x < toLex ⇑y :
 instance : BoundedOrder SignExpansion where
   le_top _ := le_iff_toLex.2 le_top
   bot_le _ := le_iff_toLex.2 bot_le
+
+protected theorem neg_lt_neg {x y : SignExpansion} (h : x < y) : -y < -x := by
+  obtain ⟨i, hi⟩ := h
+  use i
+  simp_all
+
+@[simp]
+protected theorem neg_lt_neg_iff {x y : SignExpansion} : -x < -y ↔ y < x where
+  mp := by simpa using SignExpansion.neg_lt_neg (x := -x) (y := -y)
+  mpr := SignExpansion.neg_lt_neg
+
+@[simp]
+protected theorem neg_le_neg_iff {x y : SignExpansion} : -x ≤ -y ↔ y ≤ x :=
+  le_iff_le_iff_lt_iff_lt.2 SignExpansion.neg_lt_neg_iff
+
+protected alias ⟨_, neg_le_neg⟩ := SignType.neg_le_neg_iff
 
 end SignExpansion
