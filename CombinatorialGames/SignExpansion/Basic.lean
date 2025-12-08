@@ -178,8 +178,8 @@ theorem restrict_top_right {x : SignExpansion} : x.restrict ⊤ = x :=
 instance : HasSubset SignExpansion where
   Subset x y := restrict y x.length = x
 
-/-- We write `x ⊂ y` when `x ⊆ y` and `x ≠ y`. In the literature, this is written as `x <ₛ y` or
-`x ⊏ y`. -/
+/-- We write `x ⊂ y` when `x ⊆ y` and `x ≠ y`. In the literature, this is written as
+`x <ₛ y` or `x ⊏ y`. -/
 instance : HasSSubset SignExpansion where
   SSubset x y := x ⊆ y ∧ ¬ y ⊆ x
 
