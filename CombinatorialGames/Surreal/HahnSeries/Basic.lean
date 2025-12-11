@@ -80,11 +80,10 @@ theorem Ordinal.type_lt_Iio (o : Ordinal.{u}) : typeLT (Set.Iio o) = lift.{u + 1
   · rw [type_toType]
 
 -- This is like `RelIso.cast` with better def-eqs.
-def RelIso.subrel {α : Type*} (r : α → α → Prop) (p q : α → Prop) (H : ∀ {x}, p x ↔ q x) :
+def RelIso.subrel {α : Type*} (r : α → α → Prop) {p q : α → Prop} (H : ∀ x, p x ↔ q x) :
     Subrel r p ≃r Subrel r q where
-  toFun x := ⟨x, H.1 x.2⟩
-  invFun x := ⟨x, H.2 x.2⟩
   map_rel_iff' := .rfl
+  __ := Equiv.subtypeEquiv (Equiv.refl _) H
 
 instance {α β : Type*} {r : α → α → Prop} {s} [IsWellOrder β s] : Subsingleton (r ≃r s) where
   allEq f g := by
@@ -93,9 +92,28 @@ instance {α β : Type*} {r : α → α → Prop} {s} [IsWellOrder β s] : Subsi
     congr 1
     subsingleton
 
+namespace InitialSeg
+
+theorem apply_relEmbedding_le_apply_initialSeg {α β : Type*} {r : α → α → Prop} {s : β → β → Prop}
+    [IsWellOrder β s] (f : r ↪r s) (g : r ≼i s) (x : α) : ¬ s (f x) (g x) := by
+  induction x using f.isWellOrder.wf.induction with | h x IH
+  intro hs
+  obtain ⟨y, hy, hr⟩ := g.exists_eq_iff_rel.1 hs
+  exact (f.map_rel_iff.not.1 <| hy ▸ IH y hr) hr
+
+theorem not_surjective_of_exists_gt {α β : Type*} {r : α → α → Prop} {s : β → β → Prop}
+    [IsWellOrder β s] (f : r ↪r s) (g : r ≼i s) (H : ∃ a, ∀ b, s (f b) a) :
+    ¬ Function.Surjective g := by
+  intro h
+  obtain ⟨a, ha⟩ := H
+  obtain ⟨a, rfl⟩ := h a
+  exact apply_relEmbedding_le_apply_initialSeg f g a (ha a)
+
+end InitialSeg
+
 open Cardinal Set
 
-/-! ### Basic functions and instances -/
+/-! ### Basic defs and instances -/
 
 /-- The type of `u`-small Hahn series over `Surrealᵒᵈ`, endowed with the lexicographic ordering. We
 will show that this type is isomorphic as an ordered field to the surreals themselves. -/
@@ -145,11 +163,19 @@ theorem support_coeff (x : SurrealHahnSeries) : Function.support x.coeff = x.sup
 theorem support_mk (f small wf) : support (mk f small wf) = Function.support f :=
   rfl
 
+@[simp]
+theorem support_zero : support 0 = ∅ := by
+  aesop
+
 theorem wellFoundedOn_support (x : SurrealHahnSeries) : x.support.WellFoundedOn (· > ·) :=
   x.1.isWF_support
 
 instance (x : SurrealHahnSeries) : WellFoundedGT x.support :=
   x.1.isWF_support.to_subtype
+
+instance (x : SurrealHahnSeries) :
+    IsWellOrder { y // y ∈ x.support } (Subrel (· > ·) (· ∈ x.support)) :=
+  inferInstanceAs (IsWellOrder x.support (· > ·))
 
 instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
   rw [Cardinal.small_iff_lift_mk_lt_univ, Cardinal.lift_id]
@@ -185,14 +211,22 @@ theorem type_support (x : SurrealHahnSeries.{u}) :
 @[simp]
 theorem length_zero : length 0 = 0 := by
   rw [← Ordinal.lift_inj, ← type_support, Ordinal.lift_zero, type_eq_zero_iff_isEmpty]
-  aesop
+  simp
 
 @[gcongr]
-theorem length_mono {x y : SurrealHahnSeries.{u}} (h : x.support ⊆ y.support) :
+theorem length_mono {x y : SurrealHahnSeries} (h : x.support ⊆ y.support) :
     x.length ≤ y.length := by
-  rw [← Ordinal.lift_le.{u + 1}, ← type_support, ← type_support]
-  apply RelEmbedding.ordinal_type_le
-  exact Subrel.inclusionEmbedding (· > ·) h
+  rw [← Ordinal.lift_le, ← type_support, ← type_support]
+  exact (Subrel.inclusionEmbedding (· > ·) h).ordinal_type_le
+
+theorem length_lt_length_of_subset_of_exists {x y : SurrealHahnSeries} (h : x.support ⊆ y.support)
+    (H : ∃ a ∈ y.support, ∀ b ∈ x.support, a < b) : x.length < y.length := by
+  choose a ha using H
+  rw [← Ordinal.lift_lt, ← type_support, ← type_support]
+  let f := Subrel.inclusionEmbedding (· > ·) h
+  apply (f.collapse.toPrincipalSeg ?_).ordinal_type_lt
+  apply InitialSeg.not_surjective_of_exists_gt f
+  aesop
 
 /-- Returns the `i`-th largest exponent with a non-zero coefficient. -/
 def exp (x : SurrealHahnSeries) : (· < · : Iio x.length → _ → _) ≃r (· > · : x.support → _ → _) :=
@@ -206,13 +240,22 @@ coefficient exists. -/
 def coeffIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : ℝ :=
   if h : i < x.length then x.coeff (x.exp ⟨i, h⟩) else 0
 
-theorem coeffIdx_of_lt (x : SurrealHahnSeries) {i : Ordinal} (h : i < x.length) :
+theorem coeffIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
     x.coeffIdx i = x.coeff (x.exp ⟨i, h⟩) := by
   rw [coeffIdx, dif_pos]
 
-theorem coeffIdx_of_le (x : SurrealHahnSeries) {i : Ordinal} (h : x.length ≤ i) :
+theorem coeffIdx_of_le {x : SurrealHahnSeries} {i : Ordinal} (h : x.length ≤ i) :
     x.coeffIdx i = 0 := by
   rw [coeffIdx, dif_neg h.not_gt]
+
+@[simp]
+theorem coeffIdx_eq_zero_iff {x : SurrealHahnSeries} {i : Ordinal} :
+    x.coeffIdx i = 0 ↔ x.length ≤ i where
+  mp h := by
+    contrapose! h
+    rw [coeffIdx_of_lt h]
+    exact (x.exp _).2
+  mpr := coeffIdx_of_le
 
 section ofSeq
 variable (o : Ordinal.{u}) (f : Iio o → Surreal.{u} × ℝ) (hf : StrictAnti (Prod.fst ∘ f))
@@ -267,7 +310,7 @@ def length_ofSeq_le : (ofSeq o f hf).length ≤ o := by
 
 private def ofSeq_relIso' (hf' : ∀ i, (f i).2 ≠ 0) :
     (· < · : Iio o → _ → _) ≃r (· > · : (ofSeq o f hf).support → _ → _) := by
-  apply (ofSeq_relIso o f hf).trans (RelIso.subrel (· > ·) ..)
+  refine (ofSeq_relIso o f hf).trans (RelIso.subrel (· > ·) fun _ ↦ ?_)
   rw [support_ofSeq o f hf hf']
 
 def length_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) : (ofSeq o f hf).length = o := by
@@ -276,7 +319,7 @@ def length_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) : (ofSeq o f hf).length = o := by
 
 theorem exp_coeffIdx (i : Iio (ofSeq o f hf).length) (hf' : ∀ i, (f i).2 ≠ 0) :
     exp _ i = (f ⟨i, by convert ← i.2; exact length_ofSeq o f hf hf'⟩).1 := by
-  change _ = (((RelIso.subrel (· < ·) _ _ <| by rw [length_ofSeq o f hf hf']).trans <|
+  change _ = (((RelIso.subrel (· < ·) fun _ ↦ by rw [length_ofSeq o f hf hf']).trans <|
     ofSeq_relIso' o f hf hf') i).1
   congr
   subsingleton
