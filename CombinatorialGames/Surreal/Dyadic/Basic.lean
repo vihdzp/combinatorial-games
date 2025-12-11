@@ -294,9 +294,9 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
       intro z hz
-      first |
-        obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz |
-        obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+      first
+        | obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+        | obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
       grw [← toIGame_add_equiv]
       simp
   · intro z hz
