@@ -704,6 +704,19 @@ theorem wlog_inv (x : Surreal) : x⁻¹.wlog = -x.wlog := by
   obtain rfl | hx := eq_or_ne x 0; simp
   rw [← add_eq_zero_iff_eq_neg, ← wlog_mul (inv_ne_zero hx) hx, inv_mul_cancel₀ hx, wlog_one]
 
+@[simp]
+theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · cases n <;> simp
+  · induction n with
+    | zero => simp
+    | succ n IH =>
+      rw [pow_succ, wlog_mul (pow_ne_zero n hx) hx, IH, Nat.cast_add_one, add_one_mul]
+
+@[simp]
+theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
+
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
