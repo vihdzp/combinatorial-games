@@ -710,8 +710,7 @@ theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
   · cases n <;> simp
   · induction n with
     | zero => simp
-    | succ n IH =>
-      rw [pow_succ, wlog_mul (pow_ne_zero n hx) hx, IH, Nat.cast_add_one, add_one_mul]
+    | succ n IH => rw [pow_succ, wlog_mul (pow_ne_zero n hx) hx, IH, Nat.cast_add_one, add_one_mul]
 
 @[simp]
 theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
