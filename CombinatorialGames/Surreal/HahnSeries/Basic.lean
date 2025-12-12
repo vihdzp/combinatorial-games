@@ -778,18 +778,6 @@ alias ⟨_, sub_self_eq_zero_of_ne_top⟩ := sub_self_eq_zero_iff_ne_top
 
 end LinearOrderedAddCommGroupWithTop
 
-@[simp]
-theorem ArchimedeanClass.top_ne_zero {M : Type*} [CommRing M] [LinearOrder M]
-    [IsOrderedRing M] [NeZero (1 : M)] : (⊤ : ArchimedeanClass M) ≠ 0 := by
-  rw [← mk_one, ne_eq, top_eq_mk_iff]
-  exact one_ne_zero
-
-@[simp]
-theorem ArchimedeanClass.zero_ne_top {M : Type*} [CommRing M] [LinearOrder M]
-    [IsOrderedRing M] [NeZero (1 : M)] : 0 ≠ (⊤ : ArchimedeanClass M) := by
-  rw [ne_comm]
-  exact top_ne_zero
-
 namespace Surreal
 
 @[simp]
@@ -799,6 +787,8 @@ theorem mk_div_wlog (x : Surreal) :
   · simp
   · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
       mk_wpow_wlog (inv_ne_zero hx), ArchimedeanClass.mk_inv, ← sub_eq_add_neg]
+
+-- This leading coeff stuff should go in Pow
 
 /-- The leading coefficient of a surreal's Hahn series. -/
 def leadingCoeff (x : Surreal) : ℝ :=
@@ -849,6 +839,14 @@ theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)�
   obtain rfl | hx := eq_or_ne x 0; simp
   apply eq_inv_of_mul_eq_one_left
   rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
+
+@[simp]
+theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
+  mp h := by
+    contrapose h
+    apply ArchimedeanClass.standardPart_ne_zero
+    simpa
+  mpr := by simp +contextual
 
 /-- The ordinal-indexed sequence of "Hahn series residues" associated to a given surreal. -/
 private def toHahnSeriesAux (x : Surreal) (i : Ordinal) : Surreal :=
