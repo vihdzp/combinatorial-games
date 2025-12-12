@@ -483,6 +483,7 @@ theorem support_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) : (ofSeq o f hf).support = ra
   grind
 
 variable (hf) in
+/-- Embeds `Iio o` into the range of the first entries of `f`. -/
 private def ofSeq_relIso : (· < · : Iio o → _ → _) ≃r (· > · : range (Prod.fst ∘ f) → _ → _) := by
   refine .ofSurjective ⟨⟨fun x ↦ ⟨(f x).1, ⟨x, rfl⟩⟩, fun a b h ↦ hf.injective ?_⟩, hf.lt_iff_gt⟩
     fun _ ↦ ?_ <;> aesop
@@ -494,6 +495,7 @@ theorem length_ofSeq_le : (ofSeq o f hf).length ≤ o := by
   exact Subrel.inclusionEmbedding (· > ·) (support_ofSeq_subset ..)
 
 variable (hf) in
+/-- Embeds `Iio o` into the support of `ofSeq o f hf`. -/
 private def ofSeq_relIso' (hf' : ∀ i, (f i).2 ≠ 0) :
     (· < · : Iio o → _ → _) ≃r (· > · : (ofSeq o f hf).support → _ → _) := by
   refine (ofSeq_relIso hf).trans (RelIso.subrel (· > ·) fun _ ↦ ?_)
@@ -510,10 +512,6 @@ theorem exp_ofSeq (i : Iio (ofSeq o f hf).length) (hf' : ∀ i, (f i).2 ≠ 0) :
   congr
   subsingleton
 
-theorem exp_ofSeq' (i : Iio o) (hf' : ∀ i, (f i).2 ≠ 0) :
-    exp _ ⟨i, by convert i.2; exact length_ofSeq (hf := hf) hf'⟩ = (f i).1 :=
-  exp_ofSeq _ hf'
-
 theorem coeffIdx_ofSeq {i : Ordinal} (hf' : ∀ i, (f i).2 ≠ 0) (hi : i < o) :
     coeffIdx (ofSeq o f hf) i = (f ⟨i, hi⟩).2 := by
   rw [coeffIdx_of_lt, exp_ofSeq _ hf', coeff_ofSeq']
@@ -527,25 +525,6 @@ theorem ofSeq_coeffIdx (x : SurrealHahnSeries) :
   · rw [coeff_ofSeq' (x.exp.symm ⟨y, hy⟩)] <;>
       simp [coeffIdx_symm_exp]
   · grind [coeff_ofSeq_of_ne]
-
-theorem trunc_ofSeq (i : Iio o) :
-    (ofSeq o f hf).trunc (f i).1 = ofSeq i (fun j ↦ f ⟨j.1, lt_trans (c := o) j.2 i.2⟩)
-      fun _ _ h ↦ hf h := by
-  ext j
-  by_cases hj : j ∈ range (Prod.fst ∘ f)
-  · obtain ⟨j, rfl⟩ := hj
-    dsimp [coeff_trunc]
-    obtain hij | hij := le_or_gt i j
-    · rw [if_neg, coeff_ofSeq_of_ne]
-      · rintro ⟨k, hk⟩
-        obtain rfl := hf.injective hk
-        grind
-      · exact (hf.antitone hij).not_gt
-    · rw [if_pos, coeff_ofSeq, coeff_ofSeq' j hij]
-      · rfl
-      · exact hf hij
-  · rw [coeff_trunc_eq_zero (coeff_ofSeq_of_ne hj), coeff_ofSeq_of_ne]
-    grind
 
 theorem ofSeq_add_single {i : Surreal} (r : ℝ) (h : ∀ j, i < (f j).1) :
     ofSeq o f hf + single i r = ofSeq (o + 1)
@@ -611,6 +590,16 @@ theorem length_single_add {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (h : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) : (single i r + x).length = x.length + 1 := by
   rw [add_comm, length_add_single h hr]
 
+theorem length_trunc_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
+    (x.trunc (x.exp i) + single (x.exp i) r).length = i + 1 := by
+  rw [length_add_single, length_trunc_exp] <;> aesop
+
+theorem length_trunc_add_single_le {x : SurrealHahnSeries} (i : Iio x.length) (r : ℝ) :
+    (x.trunc (x.exp i) + single (x.exp i) r).length ≤ i + 1 := by
+  obtain rfl | hr := eq_or_ne r 0
+  · simp
+  · rw [length_trunc_add_single _ hr]
+
 private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : x.length = o + 1) :
     IsLeast x.support (x.exp ⟨o, by simp_all⟩) := by
   refine ⟨Subtype.coe_prop _, fun j hj ↦ ?_⟩
@@ -672,12 +661,13 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0
     lengthRecOn (x + single i r) zero succ limit =
       succ _ _ _ hi hr (lengthRecOn x zero succ limit) := by
   rw [lengthRecOn, lengthRecOnAux_succ (o := x.length), cast_eq_iff_heq, lengthRecOn]
-  · have H : ∀ hx, ↑((x + single i r).exp ⟨x.length, hx⟩) = i := by
+  · have H : ∀ {hx}, ↑((x + single i r).exp ⟨x.length, hx⟩) = i := by
       induction x using ofSeqRecOn with | ofSeq x f hf hf'
       rw [ofSeq_add_single]
       · simp_rw [length_ofSeq hf']
         intro hx
         rw [exp_ofSeq, dif_pos rfl]
+        -- Why does `grind` fail here?
         intro j
         split_ifs
         · exact hr
@@ -686,7 +676,7 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0
         grind
     congr!
     · rw [H, trunc_add, trunc_single_of_le le_rfl, add_zero, trunc_eq hi]
-    · exact H _
+    · exact H
     · rw [H]
       simpa using mt (hi i) (lt_irrefl i)
   · exact length_add_single hi hr
@@ -705,9 +695,11 @@ This is an arbitrary representative for `SurrealHahnSeries.toSurreal`, which we 
 while we prove that this game is numeric. -/
 def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
   lengthRecOn x 0 (fun _ i r _ _ IH ↦ IH + r * ω^ i.out) fun y hy IH ↦
-    !{range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
-        IH (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) sorry |
-      range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
-        IH (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) sorry}
+    !{range fun i : (j : Iio y.length) × {r // r < y.coeffIdx j} ↦
+        IH (y.trunc (y.exp i.1) + single (y.exp i.1) i.2) <|
+          (length_trunc_add_single_le ..).trans_lt (hy.add_one_lt i.1.2) |
+      range fun i : (j : Iio y.length) × {r // y.coeffIdx j < r} ↦
+        IH (y.trunc (y.exp i.1) + single (y.exp i.1) i.2) <|
+          (length_trunc_add_single_le ..).trans_lt (hy.add_one_lt i.1.2)}
 
 end SurrealHahnSeries
