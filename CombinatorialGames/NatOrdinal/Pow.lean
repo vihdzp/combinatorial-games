@@ -97,7 +97,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
         simp_rw [Nat.cast_one, mul_one] at *
         apply (H z hz).trans_le
         rw [wpow_def, of.le_iff_le]
-        exact Ordinal.le_add_right ..
+        exact le_self_add ..
       | n + 1 + 1 =>
         rw [Nat.cast_add_one, mul_add_one] at hz
         obtain ⟨a, ha, hz⟩ : ∃ a < ω^ x, z ≤ ω^ x * ↑(n + 1) + a := by
@@ -113,7 +113,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
         have ha' := H a ha
         apply (add_le_add_left hz _).trans_lt
         rw [add_assoc, (wpow_mul_natCast_add_of_lt_aux ha' _).2, of.lt_iff_lt]
-        apply (Ordinal.le_add_right ..).trans_lt'
+        apply (le_self_add ..).trans_lt'
         rw [Nat.cast_add_one (n + 1), mul_add]
         simpa
     · rw [(wpow_mul_natCast_add_of_lt_aux (hz.trans hy) n).2]
