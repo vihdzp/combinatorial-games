@@ -220,6 +220,9 @@ instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
 theorem mk_coeff (x : SurrealHahnSeries) : mk x.coeff x.small_support x.wellFoundedOn_support = x :=
   rfl
 
+theorem lt_def {x y : SurrealHahnSeries} : x < y ↔ toColex x.coeff < toColex y.coeff := .rfl
+theorem le_def {x y : SurrealHahnSeries} : x ≤ y ↔ toColex x.coeff ≤ toColex y.coeff := .rfl
+
 /-! #### `single` -/
 
 /-- The Hahn series with a single entry. -/
@@ -754,6 +757,27 @@ theorem exists_rightMoves_toIGame_limit {P : IGame → Prop}
   rw [rightMoves_toIGame_limit hx]
   aesop
 
+private theorem toIGame_lt_toIGame_aux {x y : SurrealHahnSeries}
+    [Numeric x] [Numeric y] (h : x < y) : toIGame x < toIGame y := by
+  induction x using lengthRecOn generalizing y with
+  | succ x i r hi hr IH =>
+    rw [toIGame_succ hi hr]
+    induction y using lengthRecOn with
+    | succ y j s hj hs IH' =>
+      rw [toIGame_succ hj hs]
+    | limit y hy IH' => sorry
+  | limit x hx IH => sorry
+
+
+#exit
+theorem strictMono_toIGame : StrictMono toIGame := by
+  intro x y h
+  rw [lt_def] at h
+  obtain ⟨a, ha⟩ := h
+  simp at ha
+
+
+#exit
 end SurrealHahnSeries
 
 -- Split file here for import purposes?
@@ -851,7 +875,7 @@ theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 wh
 /-- The ordinal-indexed sequence of "Hahn series residues" associated to a given surreal. -/
 private def toHahnSeriesAux (x : Surreal) (i : Ordinal) : Surreal :=
   SuccOrder.prelimitRecOn i
-    (fun j _ IH ↦ IH - ω^ IH.wlog * leadingCoeff IH)
+    (fun j _ IH ↦ IH - leadingCoeff IH * ω^ IH.wlog)
     (fun j hj IH ↦ sorry) -- IH minus the Hahn series determined from all prev values
 
 end Surreal
