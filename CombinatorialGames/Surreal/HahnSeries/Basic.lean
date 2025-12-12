@@ -89,7 +89,7 @@ theorem equivShrink_lt_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} 
 open Ordinal in
 @[simp]
 theorem Ordinal.type_lt_Iio (o : Ordinal.{u}) : typeLT (Set.Iio o) = lift.{u + 1} o := by
-  convert (enumIsoToType o).toRelIsoLT.ordinal_lift_type_eq
+  convert ToType.mk.toRelIsoLT.ordinal_lift_type_eq
   · rw [lift_id'.{u, u+1}]
   · rw [type_toType]
 
