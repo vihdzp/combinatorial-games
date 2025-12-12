@@ -205,6 +205,4 @@ protected theorem neg_lt_neg_iff {x y : SignExpansion} : -x < -y ↔ y < x where
 protected theorem neg_le_neg_iff {x y : SignExpansion} : -x ≤ -y ↔ y ≤ x :=
   le_iff_le_iff_lt_iff_lt.2 SignExpansion.neg_lt_neg_iff
 
-protected alias ⟨_, neg_le_neg⟩ := SignType.neg_le_neg_iff
-
 end SignExpansion
