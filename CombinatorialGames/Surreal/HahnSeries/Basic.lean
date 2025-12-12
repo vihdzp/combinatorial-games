@@ -20,6 +20,7 @@ noncomputable section
 attribute [aesop simp] Pi.single_apply mem_lowerBounds
 attribute [-simp] Ordinal.add_one_eq_succ
 attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
+attribute [aesop unsafe forward] le_of_lt lt_of_le_of_ne not_lt_of_ge
 
 -- #32670
 namespace HahnSeries
@@ -282,12 +283,12 @@ theorem trunc_sub (x y : SurrealHahnSeries) (i : Surreal) :
 @[simp]
 theorem trunc_single_of_le {i j : Surreal} {r : ℝ} (h : i ≤ j) :
     (single i r).trunc j = 0 := by
-  aesop (add simp [le_iff_lt_or_eq, lt_asymm])
+  aesop
 
 @[simp]
 theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
     (single i r).trunc j = single i r := by
-  aesop (add simp [le_iff_lt_or_eq, lt_asymm])
+  aesop
 
 theorem trunc_eq {x : SurrealHahnSeries} {i : Surreal} (h : ∀ j ∈ x.support, i < j) :
     x.trunc i = x := by
@@ -678,7 +679,7 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0
         intro hx
         rw [exp_ofSeq, dif_pos rfl]
         intro j
-        split_ifs 
+        split_ifs
         · exact hr
         · exact hf' _
       · rw [support_ofSeq hf'] at hi
