@@ -227,6 +227,10 @@ theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x 
   rfl
 
 @[simp]
+theorem coeff_single_self (x : Surreal) (r : ℝ) : (single x r).coeff x = r := by
+  aesop
+
+@[simp]
 theorem single_zero (x : Surreal) : single x 0 = 0 := by
   aesop
 
@@ -393,7 +397,7 @@ theorem coeffIdx_exp (x : SurrealHahnSeries) (i) : x.coeff (x.exp i) = x.coeffId
   (coeffIdx_of_lt _).symm
 
 @[simp]
-theorem coeffIdx_exp_symm (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
+theorem coeffIdx_symm_exp (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
   rw [coeffIdx_of_lt] <;> simp
 
 @[simp]
@@ -483,7 +487,8 @@ theorem ofSeq_coeffIdx (x : SurrealHahnSeries) :
     ofSeq x.length (fun i ↦ ⟨x.exp i, x.coeffIdx i⟩) (fun _ _ h ↦ exp_strictAnti h) = x := by
   ext y
   by_cases hy : y ∈ x.support
-  · rw [coeff_ofSeq_of_eq (i := x.exp.symm ⟨y, hy⟩)] <;> simp
+  · rw [coeff_ofSeq_of_eq (i := x.exp.symm ⟨y, hy⟩)] <;>
+      simp [coeffIdx_symm_exp]
   · grind [coeff_ofSeq_of_ne]
 
 end ofSeq
@@ -518,6 +523,14 @@ theorem ofSeqRecOn_ofSeq {motive : SurrealHahnSeries → Sort*} {o f hf}
     · congr!
     · grind
 
+private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : x.length = o + 1) :
+    IsLeast x.support (x.exp ⟨o, by simp_all⟩) := by
+  refine ⟨Subtype.coe_prop _, fun j hj ↦ ?_⟩
+  change _ ≤ ↑(⟨j, hj⟩ : x.support)
+  rw [← symm_exp_le_symm_exp_iff, x.exp.symm_apply_apply, ← Subtype.coe_le_coe,
+    ← Order.lt_add_one_iff, ← h]
+  exact symm_exp_lt _
+
 /-- Auxiliary construction for `lengthRecOn`. -/
 private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*}
     (o : Ordinal) (zero : motive 0)
@@ -527,13 +540,8 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*}
   limitRecOn o
     (fun x hx ↦ cast (by simp_all) zero)
     (by
-      intro a IH x hx
-      refine cast (congrArg _ <| trunc_add_single ⟨Subtype.coe_prop _, fun j hj ↦ ?_⟩)
+      refine fun a IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
         (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ <| length_trunc_exp ..))
-      · change _ ≤ ↑(⟨j, hj⟩ : x.support)
-        rw [← symm_exp_le_symm_exp_iff, x.exp.symm_apply_apply, ← Subtype.coe_le_coe,
-          ← Order.lt_succ_iff, ← hx]
-        exact symm_exp_lt _
       all_goals aesop
     )
     (fun a ha IH x hx ↦ limit _ (hx ▸ ha) fun y hy ↦ IH _ (hx ▸ hy) _ rfl)
@@ -546,15 +554,15 @@ private theorem lengthRecOnAux_zero {motive : SurrealHahnSeries → Sort*}
 private theorem lengthRecOnAux_succ {motive : SurrealHahnSeries → Sort*}
     {o a : Ordinal} (ha : a = o + 1) {zero : motive 0} {succ limit} :
     lengthRecOnAux a zero succ limit = fun x _ ↦
-      let i := x.exp ⟨o, by simp_all⟩
-      cast (sorry) (succ (x.trunc i) i (x.coeff i) sorry sorry
-        (lengthRecOnAux o zero succ limit (x.trunc i) sorry)) := by
+      cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all))
+        (succ (x.trunc <| x.exp ⟨o, by simp_all⟩) _ _ (by simp) (by simp_all)
+          (lengthRecOnAux o zero succ limit _ (by simp))) := by
   subst ha; exact limitRecOn_succ ..
 
 private theorem lengthRecOnAux_limit {motive : SurrealHahnSeries → Sort*}
     {o : Ordinal} (ho : Order.IsSuccLimit o) (zero : motive 0) {succ limit} :
     lengthRecOnAux o zero succ limit = fun y hy ↦
-      limit y (by simp_all) (fun z _ ↦ lengthRecOnAux _ zero succ limit z rfl) :=
+      limit y (by simp_all) fun z _ ↦ lengthRecOnAux _ zero succ limit z rfl :=
   limitRecOn_limit _ _ _ _ ho
 
 /-- Limit recursion on the length of a Hahn series. -/
@@ -575,34 +583,34 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0
     {x : SurrealHahnSeries} {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) :
     lengthRecOn (x + single i r) zero succ limit =
       succ _ _ _ hi hr (lengthRecOn x zero succ limit) := by
-  rw [lengthRecOn, lengthRecOnAux_succ (o := x.length)]
-  · dsimp
-    rw [cast_eq_iff_heq]
+  rw [lengthRecOn, lengthRecOnAux_succ (o := x.length), cast_eq_iff_heq, lengthRecOn]
+  · have H hx : ↑((x + single i r).exp ⟨x.length, hx⟩) = i := by
+      sorry
     congr!
-    · sorry
-    · sorry
-    · sorry
-    · sorry
-  ·
-
+    · rw [H]
+      sorry
+    · exact H _
+    · have := mt (hi i) (lt_irrefl i)
+      sorry
+  · exact length_add_single hi hr
 
 theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
     {x : SurrealHahnSeries} (hx : Order.IsSuccLimit x.length) {zero : motive 0} {succ limit} :
-    lengthRecOn x zero succ limit = limit x hx (fun y _ ↦ lengthRecOn y zero succ limit) := by
+    lengthRecOn x zero succ limit = limit x hx fun y _ ↦ lengthRecOn y zero succ limit := by
   rw [lengthRecOn, lengthRecOnAux_limit hx]
   rfl
 
-#exit
 /-! ### Hahn series as games -/
 
-/-- The game that corresponds to a given surreal Hahn series. -/
-def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
-  !{range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
-      toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) |
-    range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
-      toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2)}
-termination_by x.length
-decreasing_by all_goals sorry
+/-- The game that corresponds to a given surreal Hahn series.
 
+This is an arbitrary representative for `SurrealHahnSeries.toSurreal`, which we use in its place
+while we prove that this game is numeric. -/
+def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
+  lengthRecOn x 0 (fun _ i r _ _ IH ↦ IH + r * ω^ i.out) fun y hy IH ↦
+    !{range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
+        IH (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) sorry |
+      range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
+        IH (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) sorry}
 
 end SurrealHahnSeries
