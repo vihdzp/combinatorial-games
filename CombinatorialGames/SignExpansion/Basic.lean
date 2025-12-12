@@ -23,10 +23,6 @@ universe u
 
 noncomputable section
 
--- #32571
-@[simp] theorem SignType.neg_le_neg_iff {x y : SignType} : -x ≤ -y ↔ y ≤ x := by decide +revert
-@[simp] theorem SignType.neg_lt_neg_iff {x y : SignType} : -x < -y ↔ y < x := by decide +revert
-
 /-- A sign expansion is a an ordinal indexed sequence of `1`s and `-1`s, followed by `0`s. -/
 structure SignExpansion : Type (u + 1) where
   /-- The sequence defining the sign expansion. -/
