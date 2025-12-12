@@ -149,8 +149,8 @@ instance : LinearOrder SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
 -- TODO: prove this!
-instance : IsStrictOrderedRing SurrealHahnSeries := by
-  sorry
+-- instance : IsStrictOrderedRing SurrealHahnSeries := by
+--  sorry
 
 open Cardinal in
 /-- A constructor for `SurrealHahnSeries` which hides various implementation details. -/
@@ -158,6 +158,8 @@ def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
     (wf : (Function.support f).WellFoundedOn (· > ·)) : SurrealHahnSeries where
   val := toLex ⟨f ∘ OrderDual.ofDual, IsWF.isPWO wf⟩
   property := by rwa [small_iff_lift_mk_lt_univ, lift_id, univ_umax.{u, u}] at small
+
+/-! #### `coeff` -/
 
 /-- Returns the coefficient for `X ^ i`. -/
 def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
@@ -167,20 +169,19 @@ def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
 @[simp, grind =] theorem coeff_zero : coeff 0 = 0 := rfl
 
 @[simp, grind =]
-theorem coeff_neg (x : SurrealHahnSeries) : (-x).coeff = -x.coeff :=
-  rfl
+theorem coeff_neg (x : SurrealHahnSeries) : (-x).coeff = -x.coeff := rfl
 
 @[simp, grind =]
-theorem coeff_add (x y : SurrealHahnSeries) : (x + y).coeff = x.coeff + y.coeff :=
-  rfl
+theorem coeff_add (x y : SurrealHahnSeries) : (x + y).coeff = x.coeff + y.coeff := rfl
 
 @[simp, grind =]
-theorem coeff_sub (x y : SurrealHahnSeries) : (x - y).coeff = x.coeff - y.coeff :=
-  rfl
+theorem coeff_sub (x y : SurrealHahnSeries) : (x - y).coeff = x.coeff - y.coeff := rfl
 
 @[ext]
 theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
   Subtype.ext <| HahnSeries.ext h
+
+/-! #### `support` -/
 
 /-- The support of the Hahn series. -/
 def support (x : SurrealHahnSeries) : Set Surreal :=
@@ -219,14 +220,15 @@ instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
 theorem mk_coeff (x : SurrealHahnSeries) : mk x.coeff x.small_support x.wellFoundedOn_support = x :=
   rfl
 
+/-! #### `single` -/
+
 /-- The Hahn series with a single entry. -/
 def single (x : Surreal) (r : ℝ) : SurrealHahnSeries :=
   mk (Pi.single x r) (small_subset Pi.support_single_subset)
     (WellFoundedOn.subset wellFoundedOn_singleton Pi.support_single_subset)
 
 @[aesop simp]
-theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r :=
-  rfl
+theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r := rfl
 
 @[simp, grind =]
 theorem coeff_single_self (x : Surreal) (r : ℝ) : (single x r).coeff x = r := by
@@ -239,6 +241,8 @@ theorem coeff_single_of_ne {x y : Surreal} (h : x ≠ y) (r : ℝ) : (single x r
 @[simp]
 theorem single_zero (x : Surreal) : single x 0 = 0 := by
   aesop
+
+/-! #### `trunc` -/
 
 /-- Zeroes out any terms of the Hahn series less than or equal to `i`. -/
 def trunc (x : SurrealHahnSeries) (i : Surreal) : SurrealHahnSeries :=
@@ -301,16 +305,14 @@ theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : IsLeast x.s
   have := @hi.2 j
   aesop (add simp [le_iff_lt_or_eq'])
 
-theorem single_add_trunc {x : SurrealHahnSeries} {i : Surreal} (hi : IsLeast x.support i) :
-    single i (x.coeff i) + x.trunc i = x := by
-  rw [add_comm, trunc_add_single hi]
-
 /-! ### Indexing the support by ordinals -/
 
 open Ordinal
 
 local instance (x : SurrealHahnSeries) : IsWellOrder (Shrink.{u} x.support) (· > ·) :=
   (orderIsoShrink x.support).dual.symm.toRelIsoLT.toRelEmbedding.isWellOrder
+
+/-! #### `length` -/
 
 /-- The length of a surreal Hahn series is the order type of its support.
 
@@ -340,14 +342,7 @@ theorem length_mono {x y : SurrealHahnSeries} (h : x.support ⊆ y.support) :
   rw [← lift_le, ← type_support, ← type_support]
   exact (Subrel.inclusionEmbedding (· > ·) h).ordinal_type_le
 
-theorem length_lt_length_of_subset_of_exists {x y : SurrealHahnSeries} (h : x.support ⊆ y.support)
-    (H : ∃ a ∈ y.support, ∀ b ∈ x.support, a < b) : x.length < y.length := by
-  choose a ha using H
-  rw [← lift_lt, ← type_support, ← type_support]
-  let f := Subrel.inclusionEmbedding (· > ·) h
-  apply (f.collapse.toPrincipalSeg ?_).ordinal_type_lt
-  apply InitialSeg.not_surjective_of_exists_gt f
-  aesop
+/-! #### `exp` -/
 
 /-- Returns the `i`-th largest exponent with a non-zero coefficient.
 
@@ -406,6 +401,8 @@ theorem length_trunc_exp (x : SurrealHahnSeries) (i : Iio x.length) :
     aesop
   · simp
 
+/-! #### `coeffIdx` -/
+
 /-- Returns the coefficient which corresponds to the `i`-th largest exponent, or `0` if no such
 coefficient exists. -/
 def coeffIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : ℝ :=
@@ -435,6 +432,8 @@ theorem coeffIdx_eq_zero_iff {x : SurrealHahnSeries} {i : Ordinal} :
     rw [coeffIdx_of_lt h]
     exact (x.exp _).2
   mpr := coeffIdx_of_le
+
+/-! #### `ofSeq` -/
 
 section ofSeq
 variable (o : Ordinal.{u}) (f : Iio o → Surreal.{u} × ℝ) (hf : StrictAnti (Prod.fst ∘ f))
