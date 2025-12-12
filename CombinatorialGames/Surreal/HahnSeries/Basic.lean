@@ -607,57 +607,44 @@ private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : 
   exact h ▸ symm_exp_lt _
 
 /-- Auxiliary construction for `lengthRecOn`. -/
-private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*}
-    (o : Ordinal) (zero : motive 0)
+private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
     (succ : ∀ y i r, (∀ j ∈ y.support, i < j) → r ≠ 0 → motive y → motive (y + single i r))
-    (limit : ∀ y, IsSuccLimit y.length → (∀ z, length z < length y → motive z) → motive y) :
+    (limit : ∀ y, IsSuccPrelimit y.length → (∀ z, length z < length y → motive z) → motive y) :
     ∀ x, x.length = o → motive x :=
-  limitRecOn o
-    (fun x hx ↦ cast (by simp_all) zero)
+  SuccOrder.prelimitRecOn o
     (by
-      refine fun a IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
+      refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
         (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ <| length_trunc_exp ..))
       all_goals aesop
     )
     (fun a ha IH x hx ↦ limit _ (hx ▸ ha) fun y hy ↦ IH _ (hx ▸ hy) _ rfl)
 
-private theorem lengthRecOnAux_zero {motive : SurrealHahnSeries → Sort*}
-    {o : Ordinal} (ho : o = 0) {zero : motive 0} {succ limit} :
-    lengthRecOnAux o zero succ limit = fun x _ ↦ cast (by simp_all) zero := by
-  subst ho; exact limitRecOn_zero ..
-
 private theorem lengthRecOnAux_succ {motive : SurrealHahnSeries → Sort*}
-    {o a : Ordinal} (ha : a = o + 1) {zero : motive 0} {succ limit} :
-    lengthRecOnAux a zero succ limit = fun x _ ↦
+    {o a : Ordinal} (ha : a = o + 1) {succ limit} :
+    lengthRecOnAux (motive := motive) a succ limit = fun x _ ↦
       cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all))
         (succ (x.trunc <| x.exp ⟨o, by simp_all⟩) _ _ (by simp) (by simp_all)
-          (lengthRecOnAux o zero succ limit _ (by simp))) := by
-  subst ha; exact limitRecOn_succ ..
+          (lengthRecOnAux o succ limit _ (by simp))) := by
+  subst ha; exact SuccOrder.prelimitRecOn_succ ..
 
 private theorem lengthRecOnAux_limit {motive : SurrealHahnSeries → Sort*}
-    {o : Ordinal} (ho : IsSuccLimit o) (zero : motive 0) {succ limit} :
-    lengthRecOnAux o zero succ limit = fun y hy ↦
-      limit y (by simp_all) fun z _ ↦ lengthRecOnAux _ zero succ limit z rfl :=
-  limitRecOn_limit _ _ _ _ ho
+    {o : Ordinal} (ho : IsSuccPrelimit o) {succ limit} :
+    lengthRecOnAux (motive := motive) o succ limit = fun y hy ↦
+      limit y (by simp_all) fun z _ ↦ lengthRecOnAux _ succ limit z rfl :=
+  SuccOrder.prelimitRecOn_of_isSuccPrelimit _ _ ho
 
-/-- Limit recursion on the length of a Hahn series. -/
+/-- Recursion on the length of a Hahn series, separating out the case where it's a
+succesor ordinal. -/
 def lengthRecOn {motive : SurrealHahnSeries → Sort*} (x : SurrealHahnSeries)
-    (zero : motive 0)
     (succ : ∀ y i r, (∀ j ∈ y.support, i < j) → r ≠ 0 → motive y → motive (y + single i r))
-    (limit : ∀ y, IsSuccLimit y.length → (∀ z, length z < length y → motive z) → motive y) :
+    (limit : ∀ y, IsSuccPrelimit y.length → (∀ z, length z < length y → motive z) → motive y) :
     motive x :=
-  lengthRecOnAux _ zero succ limit _ rfl
+  lengthRecOnAux _ succ limit _ rfl
 
-@[simp]
-theorem lengthRecOn_zero {motive : SurrealHahnSeries → Sort*} {zero : motive 0} {succ limit} :
-    lengthRecOn 0 zero succ limit = zero := by
-  rw [lengthRecOn, lengthRecOnAux_zero length_zero]
-  rfl
-
-theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0} {succ limit}
+theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {succ limit}
     {x : SurrealHahnSeries} {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) :
-    lengthRecOn (x + single i r) zero succ limit =
-      succ _ _ _ hi hr (lengthRecOn x zero succ limit) := by
+    lengthRecOn (motive := motive) (x + single i r) succ limit =
+      succ _ _ _ hi hr (lengthRecOn x succ limit) := by
   rw [lengthRecOn, lengthRecOnAux_succ (o := x.length), cast_eq_iff_heq, lengthRecOn]
   · have H : ∀ {hx}, ↑((x + single i r).exp ⟨x.length, hx⟩) = i := by
       induction x using ofSeqRecOn with | ofSeq x f hf hf'
@@ -680,8 +667,9 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {zero : motive 0
   · exact length_add_single hi hr
 
 theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
-    {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) {zero : motive 0} {succ limit} :
-    lengthRecOn x zero succ limit = limit x hx fun y _ ↦ lengthRecOn y zero succ limit := by
+    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) {succ limit} :
+    lengthRecOn (motive := motive) x succ limit =
+      limit x hx fun y _ ↦ lengthRecOn y succ limit := by
   rw [lengthRecOn, lengthRecOnAux_limit hx]
   rfl
 
@@ -695,7 +683,7 @@ This is an arbitrary representative for `SurrealHahnSeries.toSurreal`, which we 
 while we prove that this game is numeric. -/
 @[coe]
 def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
-  lengthRecOn x 0 (fun _ i r _ _ IH ↦ IH + r * ω^ i.out) fun y hy IH ↦
+  lengthRecOn x (fun _ i r _ _ IH ↦ IH + r * ω^ i.out) fun y hy IH ↦
     !{range fun i : (j : Iio y.length) × {r // r < y.coeffIdx j} ↦
         IH (y.trunc (y.exp i.1) + single (y.exp i.1) i.2) <|
           (length_trunc_add_single_le ..).trans_lt (hy.add_one_lt i.1.2) |
@@ -705,10 +693,6 @@ def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
 
 instance : Coe SurrealHahnSeries IGame where
   coe := toIGame
-
-@[simp]
-theorem toIGame_zero : toIGame 0 = 0 :=
-  lengthRecOn_zero
 
 theorem toIGame_succ {x : SurrealHahnSeries}
     {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) :
@@ -720,7 +704,7 @@ theorem toIGame_succ' {x : SurrealHahnSeries}
     toIGame (single i r + x) = r * ω^ i.out + toIGame x := by
   rw [add_comm, toIGame_succ hi hr, add_comm]
 
-theorem toIGame_limit {x : SurrealHahnSeries.{u}} (hx : IsSuccLimit x.length) :
+theorem toIGame_limit {x : SurrealHahnSeries.{u}} (hx : IsSuccPrelimit x.length) :
     toIGame x =
       !{range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
           toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) |
@@ -728,42 +712,50 @@ theorem toIGame_limit {x : SurrealHahnSeries.{u}} (hx : IsSuccLimit x.length) :
           toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2)} :=
   lengthRecOn_limit hx
 
-theorem leftMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+@[simp]
+theorem toIGame_zero : toIGame 0 = 0 := by
+  rw [toIGame_limit] <;> aesop
+
+theorem leftMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (toIGame x)ᴸ = range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
       toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) := by
   rw [toIGame_limit hx, leftMoves_ofSets]
 
-theorem rightMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+theorem rightMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (toIGame x)ᴿ = range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
       toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) := by
   rw [toIGame_limit hx, rightMoves_ofSets]
 
 theorem forall_leftMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (∀ y ∈ (toIGame x)ᴸ, P y) ↔ ∀ i (hi : i < x.length), ∀ r < x.coeffIdx i,
       P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
   rw [leftMoves_toIGame_limit hx]
   aesop
 
 theorem forall_rightMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (∀ y ∈ (toIGame x)ᴿ, P y) ↔ ∀ i (hi : i < x.length), ∀ ⦃r⦄, x.coeffIdx i < r →
       P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
   rw [rightMoves_toIGame_limit hx]
   aesop
 
 theorem exists_leftMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (∃ y ∈ (toIGame x)ᴸ, P y) ↔ ∃ i, ∃ (hi : i < x.length), ∃ r < x.coeffIdx i,
       P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
   rw [leftMoves_toIGame_limit hx]
   aesop
 
 theorem exists_rightMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccLimit x.length) :
+    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (∃ y ∈ (toIGame x)ᴿ, P y) ↔ ∃ i, ∃ (hi : i < x.length), ∃ r, x.coeffIdx i < r ∧
       P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
   rw [rightMoves_toIGame_limit hx]
   aesop
 
 end SurrealHahnSeries
+
+namespace Surreal
+
+end Surreal
