@@ -25,6 +25,7 @@ import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
+import CombinatorialGames.Mathlib.StandardPart
 import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal.Basic
 import CombinatorialGames.NatOrdinal.Pow
@@ -41,6 +42,7 @@ import CombinatorialGames.Surreal.Cut
 import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Dyadic.Basic
 import CombinatorialGames.Surreal.Dyadic.Birthday
+import CombinatorialGames.Surreal.HahnSeries.Basic
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Pow
