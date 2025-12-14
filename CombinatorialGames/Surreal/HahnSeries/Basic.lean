@@ -274,12 +274,12 @@ theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
   aesop
 
 @[simp]
-theorem coeff_trunc_of_lt (x : SurrealHahnSeries) {i j : Surreal} (h : i < j) :
+theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
     (x.trunc i).coeff j = x.coeff j :=
   if_pos h
 
 @[simp]
-theorem coeff_trunc_of_le (x : SurrealHahnSeries) {i j : Surreal} (h : j ≤ i) :
+theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
     (x.trunc i).coeff j = 0 :=
   if_neg h.not_gt
 
@@ -311,6 +311,17 @@ theorem trunc_eq {x : SurrealHahnSeries} {i : Surreal} (h : ∀ j ∈ x.support,
     x.trunc i = x := by
   ext j
   by_cases j ∈ x.support <;> aesop
+
+theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
+    (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
+  ext k
+  obtain hi | hi := le_or_gt k i
+  · rw [coeff_trunc_of_le hi, coeff_trunc_of_le (hi.trans h)]
+  · rw [coeff_trunc_of_lt hi]
+    obtain hj | hj := lt_or_ge j k
+    · rw [coeff_trunc_of_lt hj]
+    · rw [coeff_trunc_of_le hj]
+      exact H _ hi hj
 
 theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : IsLeast x.support i) :
     x.trunc i + single i (x.coeff i) = x := by
@@ -855,7 +866,7 @@ theorem rightMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.
   rw [toIGame_limit hx, rightMoves_ofSets]
 
 private theorem toIGame_lt_toIGame_of_truncLT' {x y : SurrealHahnSeries} (h : x ≺ y)
-    [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
+    [hy' : Numeric y] (IH : ∀ z, length z < y.length → Numeric z) :
     toIGame x < toIGame y := by
   induction y using lengthRecOn generalizing hy' x with
   | succ y i r hi hr IH' =>
@@ -897,7 +908,7 @@ private theorem toIGame_lt_toIGame_of_truncLT' {x y : SurrealHahnSeries} (h : x 
 
 -- TODO: can we more immediately prove this from the previous theorem?
 private theorem toIGame_lt_toIGame_of_truncGT' {x y : SurrealHahnSeries} (h : x ≻ y)
-    [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
+    [hy' : Numeric y] (IH : ∀ z, length z < y.length → Numeric z) :
     toIGame y < toIGame x := by
   induction y using lengthRecOn generalizing hy' x with
   | succ y i r hi hr IH' =>
@@ -938,7 +949,7 @@ private theorem toIGame_lt_toIGame_of_truncGT' {x y : SurrealHahnSeries} (h : x 
     exact mem_image_of_mem _ h
 
 private theorem numeric_toIGame' (x : SurrealHahnSeries)
-    (IH : ∀ {y z : SurrealHahnSeries}, y.length < x.length → z.length < x.length →
+    (IH : ∀ {y z}, length y < x.length → length z < x.length →
       Numeric y ∧ Numeric z ∧ (y < z → toIGame y < toIGame z)) : Numeric x := by
   have IH' {y : SurrealHahnSeries} (hy : y.length < _) := (IH hy hy).1
   cases x using lengthRecOn with
@@ -954,29 +965,96 @@ private theorem numeric_toIGame' (x : SurrealHahnSeries)
       lt_of_truncLT, gt_of_truncGT, lt_trans])
 
 private theorem toIGame_aux {o : Ordinal} {x y : SurrealHahnSeries}
-    (hx : x.length < o) (hy : y.length < o) : Numeric x ∧ Numeric y ∧
+    (_ : x.length < o) (_ : y.length < o) : Numeric x ∧ Numeric y ∧
       (x < y → toIGame x < toIGame y) := by
   have hx' := numeric_toIGame' x toIGame_aux
   have hy' := numeric_toIGame' y toIGame_aux
+  have IHx (z) (hz : length z < x.length) : Numeric z := (toIGame_aux hz hz).1
+  have IHy (z) (hz : length z < y.length) : Numeric z := (toIGame_aux hz hz).1
   refine ⟨hx', hy', fun h ↦ ?_⟩
   obtain ⟨i, hi, hi'⟩ := lt_def.1 h
   dsimp at *
   obtain hx | hx := eq_or_ne (x.coeff i) 0 <;> obtain hy | hy := eq_or_ne (y.coeff i) 0
   · simp_all
-  · sorry
-  · sorry
+  · by_cases! H : ∀ j : x.support, i < j
+    · apply toIGame_lt_toIGame_of_truncLT' _ IHy
+      rw [truncLT_def]
+      use i, hy, x.coeff i, hi'
+      ext j
+      have (hj : j < i) : x.coeff j = 0 := by
+        by_contra hj'
+        exact (H ⟨_, hj'⟩).not_gt hj
+      have := lt_trichotomy i j
+      aesop
+    · obtain ⟨⟨j, hj⟩, (hj' : j ≤ i), hij⟩ := wellFounded_gt.has_min {j : x.support | j ≤ i} H
+      obtain rfl | hj' := hj'.eq_or_lt
+      · cases hj hx
+      · obtain ⟨r, hr⟩ := exists_gt (x.coeff j)
+        trans ↑(x.trunc j + single j r)
+        · apply toIGame_lt_toIGame_of_truncGT' _ IHx
+          rw [truncGT_def]
+          use j, hj, r
+        · rw [hx] at hi'
+          obtain ⟨s, hs, hs'⟩ := exists_between hi'
+          trans ↑(y.trunc i + single i s)
+          · grw [toIGame_succ_equiv (by simp), toIGame_succ (by simp) hs.ne']
+            apply add_lt_add_of_le_of_lt (le_of_eq _)
+            · apply Numeric.mul_wpow_lt_mul_wpow_of_pos _ hs
+              simpa [← Surreal.mk_lt_mk]
+            · congr 1
+              trans x.trunc i
+              · refine trunc_eq_trunc hj'.le fun k hj hi ↦ ?_
+                by_contra h
+                exact hij ⟨_, h⟩ hi hj
+              · aesop
+          · apply toIGame_lt_toIGame_of_truncLT' _ IHy
+            rw [truncLT_def]
+            use i, hy, s
+  -- TODO: can we more immediately prove this case from the previous?
+  · by_cases! H : ∀ j : y.support, i < j
+    · apply toIGame_lt_toIGame_of_truncGT' _ IHx
+      rw [truncGT_def]
+      use i, hx, y.coeff i, hi'
+      ext j
+      have (hj : j < i) : y.coeff j = 0 := by
+        by_contra hj'
+        exact (H ⟨_, hj'⟩).not_gt hj
+      have := lt_trichotomy i j
+      aesop
+    · obtain ⟨⟨j, hj⟩, (hj' : j ≤ i), hij⟩ := wellFounded_gt.has_min {j : y.support | j ≤ i} H
+      obtain rfl | hj' := hj'.eq_or_lt
+      · cases hj hy
+      · obtain ⟨r, hr⟩ := exists_lt (y.coeff j)
+        trans ↑(y.trunc j + single j r)
+        · rw [hy] at hi'
+          obtain ⟨s, hs', hs⟩ := exists_between hi'
+          trans ↑(x.trunc i + single i s)
+          · apply toIGame_lt_toIGame_of_truncGT' _ IHx
+            rw [truncGT_def]
+            use i, hx, s
+          · grw [toIGame_succ (by simp) hs.ne, toIGame_succ_equiv (by simp)]
+            apply add_lt_add_of_le_of_lt (le_of_eq _)
+            · apply Numeric.mul_wpow_lt_mul_wpow_of_neg _ hs
+              simpa [← Surreal.mk_lt_mk]
+            · congr 1
+              trans y.trunc i
+              · aesop
+              · symm
+                refine trunc_eq_trunc hj'.le fun k hj hi ↦ ?_
+                by_contra h
+                exact hij ⟨_, h⟩ hi hj
+        · apply toIGame_lt_toIGame_of_truncLT' _ IHy
+          rw [truncLT_def]
+          use j, hj, r
   · obtain ⟨r, hr, hr'⟩ := exists_between hi'
     trans ↑(x.trunc i + single i r)
-    · apply toIGame_lt_toIGame_of_truncGT'
-      · rw [truncGT_def]
-        use i, hx, r
-      · exact fun z (hz : z.length < x.length) ↦ (toIGame_aux hz hz).1
-    · apply toIGame_lt_toIGame_of_truncLT'
-      · rw [truncLT_def]
-        use i, hy, r, hr'
-        congr 1
-        aesop
-      · exact fun z hz ↦ (toIGame_aux hz hz).1
+    · apply toIGame_lt_toIGame_of_truncGT' _ IHx
+      rw [truncGT_def]
+      use i, hx, r
+    · apply toIGame_lt_toIGame_of_truncLT' _ IHy
+      rw [truncLT_def]
+      use i, hy, r, hr'
+      aesop
 termination_by o
 
 instance numeric (x : SurrealHahnSeries) : Numeric (toIGame x) :=
@@ -984,9 +1062,6 @@ instance numeric (x : SurrealHahnSeries) : Numeric (toIGame x) :=
 
 theorem toIGame_strictMono : StrictMono toIGame := by
   refine fun x y h ↦ (toIGame_aux (o := max (x.length + 1) (y.length + 1)) ?_ ?_).2.2 h <;> simp
-
-
-#exit
 
 end SurrealHahnSeries
 
