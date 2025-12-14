@@ -38,11 +38,9 @@ meta def unexpander : Lean.PrettyPrinter.Unexpander
 
 end HahnSeries
 
-open HahnSeries
-
 -- #32648
 section Subfield
-open Cardinal
+open Cardinal HahnSeries
 
 variable {Γ R : Type*} [LinearOrder Γ] [AddCommGroup Γ] [IsOrderedAddMonoid Γ] [Field R]
   (κ : Cardinal) [Fact (ℵ₀ < κ)]
@@ -177,6 +175,12 @@ theorem coeff_add (x y : SurrealHahnSeries) : (x + y).coeff = x.coeff + y.coeff 
 @[simp, grind =]
 theorem coeff_sub (x y : SurrealHahnSeries) : (x - y).coeff = x.coeff - y.coeff := rfl
 
+theorem coeff_add_apply (x y : SurrealHahnSeries) (i : Surreal) :
+    (x + y).coeff i = x.coeff i + y.coeff i := rfl
+
+theorem coeff_sub_apply (x y : SurrealHahnSeries) (i : Surreal) :
+    (x - y).coeff i = x.coeff i - y.coeff i := rfl
+
 @[ext]
 theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
   Subtype.ext <| HahnSeries.ext h
@@ -201,6 +205,9 @@ theorem support_eq_empty {x : SurrealHahnSeries} : support x = ∅ ↔ x = 0 := 
 @[simp]
 theorem support_zero : support 0 = ∅ :=
   support_eq_empty.2 rfl
+
+theorem support_add_subset {x y : SurrealHahnSeries} : (x + y).support ⊆ x.support ∪ y.support :=
+  Function.support_add ..
 
 theorem wellFoundedOn_support (x : SurrealHahnSeries) : x.support.WellFoundedOn (· > ·) :=
   x.1.isWF_support
@@ -243,6 +250,9 @@ theorem coeff_single_of_ne {x y : Surreal} (h : x ≠ y) (r : ℝ) : (single x r
 
 @[simp]
 theorem single_zero (x : Surreal) : single x 0 = 0 := by
+  aesop
+
+theorem support_single_subset {x : Surreal} {r : ℝ} : support (single x r) ⊆ {x} := by
   aesop
 
 /-! #### `trunc` -/
@@ -384,6 +394,11 @@ theorem symm_exp_le_symm_exp_iff {x : SurrealHahnSeries} {i j : x.support} :
     x.exp.symm i ≤ x.exp.symm j ↔ j ≤ i := by
   simp [← exp_le_exp_iff]
 
+theorem eq_exp_of_mem_support {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
+    ∃ j, x.exp j = i := by
+  use x.exp.symm ⟨i, h⟩
+  simp
+
 @[simp]
 theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
     typein (· > ·) i = lift.{u + 1} (x.exp.symm i) := by
@@ -403,6 +418,12 @@ theorem length_trunc_exp (x : SurrealHahnSeries) (i : Iio x.length) :
     use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
     aesop
   · simp
+
+theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
+    (x.trunc i).length < x.length := by
+  obtain ⟨i, rfl⟩ := eq_exp_of_mem_support h
+  rw [length_trunc_exp]
+  exact i.2
 
 /-! #### `coeffIdx` -/
 
@@ -537,7 +558,7 @@ theorem ofSeq_add_single {i : Surreal} (r : ℝ) (h : ∀ j, i < (f j).1) :
   · obtain ⟨j, rfl⟩ := hj
     dsimp [coeff_trunc]
     rw [coeff_ofSeq, coeff_ofSeq' j (lt_add_one_iff.2 j.2.le)] <;> grind
-  · rw [coeff_add, Pi.add_apply, coeff_ofSeq_of_ne hj, zero_add]
+  · rw [coeff_add_apply, coeff_ofSeq_of_ne hj, zero_add]
     obtain rfl | hi := eq_or_ne i j
     · rw [coeff_ofSeq' o] <;> grind
     · rw [coeff_single_of_ne hi, coeff_ofSeq_of_ne]
@@ -588,9 +609,11 @@ theorem length_add_single {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     · exact hf' _
   · grind
 
-theorem length_single_add {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
-    (h : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) : (single i r + x).length = x.length + 1 := by
-  rw [add_comm, length_add_single h hr]
+theorem length_add_single_le {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+    (h : ∀ j ∈ x.support, i < j) : (x + single i r).length ≤ x.length + 1 := by
+  obtain rfl | hr := eq_or_ne r 0
+  · simp
+  · rw [length_add_single h hr]
 
 theorem length_trunc_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
     (x.trunc (x.exp i) + single (x.exp i) r).length = i + 1 := by
@@ -680,6 +703,114 @@ theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
 
 open IGame
 
+/-- A common base for both `truncLT` and `truncGT`. -/
+private def truncAux (x : SurrealHahnSeries) (R : ℝ → ℝ → Prop) : Set SurrealHahnSeries :=
+  range fun i : (j : x.support) × {r // R r (x.coeff j)} ↦ x.trunc i.1 + single i.1 i.2
+
+/-- We write `x ≺ y` whenever `x = y.trunc i + single i r` for some `i ∈ y.support` and
+`r < y.coeff i`.
+
+When `y.length` is a limit ordinal, the series with `x ≺ y` describe the left options of
+`toIGame y`. -/
+def truncLT (x : SurrealHahnSeries) : Set SurrealHahnSeries :=
+  truncAux x (· < ·)
+
+notation:50 x:50 " ≺ " y:50 => x ∈ truncLT y
+recommended_spelling "truncLT" for "≺" in [«term_≺_»]
+
+/-- We write `x ≻ y` whenever `x = y.trunc i + single i r` for some `i ∈ y.support` and
+`r > y.coeff i`.
+
+When `y.length` is a limit ordinal, the series with `x ≻ y` describe the right options of
+`toIGame y`. -/
+def truncGT (x : SurrealHahnSeries) : Set SurrealHahnSeries :=
+  truncAux x (· > ·)
+
+local notation:50 x:50 " ≻ " y:50 => x ∈ truncGT y
+recommended_spelling "truncGT" for "≻" in [«term_≺_»]
+
+private theorem truncAux_def {x y : SurrealHahnSeries} {R : ℝ → ℝ → Prop} :
+    x ∈ truncAux y R ↔ ∃ i ∈ y.support, ∃ r : ℝ, R r (y.coeff i) ∧ y.trunc i + single i r = x := by
+  simp [truncAux]
+
+theorem truncLT_def {x y : SurrealHahnSeries} :
+    x ≺ y ↔ ∃ i ∈ y.support, ∃ r : ℝ, r < y.coeff i ∧ y.trunc i + single i r = x :=
+  truncAux_def
+
+theorem truncGT_def {x y : SurrealHahnSeries} :
+    x ≻ y ↔ ∃ i ∈ y.support, ∃ r : ℝ, y.coeff i < r ∧ y.trunc i + single i r = x :=
+  truncAux_def
+
+private theorem truncAux_zero (R : ℝ → ℝ → Prop) : truncAux 0 R = ∅ := by
+  unfold truncAux; simp
+
+@[simp] theorem truncLT_zero : truncLT 0 = ∅ := truncAux_zero _
+@[simp] theorem truncGT_zero : truncGT 0 = ∅ := truncAux_zero _
+
+private theorem trunc_add_single_truncAux {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+    {R : ℝ → ℝ → Prop} (hi : i ∈ x.support) (hr : R r (x.coeff i)) :
+    x.trunc i + single i r ∈ truncAux x R := by
+  unfold truncAux
+  aesop
+
+theorem trunc_add_single_truncLT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+    (hi : i ∈ x.support) (hr : r < x.coeff i) : x.trunc i + single i r ≺ x :=
+  trunc_add_single_truncAux hi hr
+
+theorem trunc_add_single_truncGT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+    (hi : i ∈ x.support) (hr : x.coeff i < r) : x.trunc i + single i r ≻ x :=
+  trunc_add_single_truncAux hi hr
+
+instance small_truncAux (x : SurrealHahnSeries.{u}) (R : ℝ → ℝ → Prop) : Small.{u} (truncAux x R) :=
+  by unfold truncAux; infer_instance
+
+instance small_truncLT (x : SurrealHahnSeries.{u}) : Small.{u} (truncLT x) :=
+  small_truncAux ..
+
+instance small_truncGT (x : SurrealHahnSeries.{u}) : Small.{u} (truncGT x) :=
+  small_truncAux ..
+
+private theorem length_le_of_truncAux {x y : SurrealHahnSeries} {R : ℝ → ℝ → Prop}
+    (h : x ∈ truncAux y R) : x.length ≤ y.length := by
+  obtain ⟨⟨i, hi⟩, rfl⟩ := h
+  apply (length_add_single_le ..).trans
+  · rw [add_one_le_iff]
+    exact length_trunc_lt i.2
+  · simp
+
+private theorem length_lt_of_truncAux {x y : SurrealHahnSeries} (hy : IsSuccPrelimit y.length)
+    {R : ℝ → ℝ → Prop} (h : x ∈ truncAux y R) : x.length < y.length := by
+  obtain ⟨⟨i, hi⟩, rfl⟩ := h
+  apply (length_add_single_le ..).trans_lt
+  · exact hy.add_one_lt <| length_trunc_lt i.2
+  · simp
+
+theorem length_le_of_truncLT {x y : SurrealHahnSeries} (h : x ≺ y) : x.length ≤ y.length :=
+  length_le_of_truncAux h
+
+theorem length_le_of_truncGT {x y : SurrealHahnSeries} (h : x ≻ y) : x.length ≤ y.length :=
+  length_le_of_truncAux h
+
+theorem length_lt_of_truncLT {x y : SurrealHahnSeries} (hy : IsSuccPrelimit y.length) (h : x ≺ y) :
+    x.length < y.length :=
+  length_lt_of_truncAux hy h
+
+theorem length_lt_of_truncGT {x y : SurrealHahnSeries} (hy : IsSuccPrelimit y.length) (h : x ≻ y) :
+    x.length < y.length :=
+  length_lt_of_truncAux hy h
+
+theorem lt_of_truncLT {x y : SurrealHahnSeries} (h : x ≺ y) : x < y := by
+  obtain ⟨⟨⟨i, hi⟩, s, hs⟩, rfl⟩ := h
+  rw [lt_def]
+  use i
+  aesop
+
+theorem gt_of_truncGT {x y : SurrealHahnSeries} (h : x ≻ y) : y < x := by
+  obtain ⟨⟨⟨i, hi⟩, s, hs⟩, rfl⟩ := h
+  rw [lt_def]
+  use i
+  aesop
+
 /-- The game that corresponds to a given surreal Hahn series.
 
 This is an arbitrary representative for `SurrealHahnSeries.toSurreal`, which we use in its place
@@ -687,12 +818,8 @@ while we prove that this game is numeric. -/
 @[coe]
 def toIGame (x : SurrealHahnSeries.{u}) : IGame.{u} :=
   lengthRecOn x (fun _ i r _ _ IH ↦ IH + r * ω^ i.out) fun y hy IH ↦
-    !{range fun i : (j : Iio y.length) × {r // r < y.coeffIdx j} ↦
-        IH (y.trunc (y.exp i.1) + single (y.exp i.1) i.2) <|
-          (length_trunc_add_single_le ..).trans_lt (hy.add_one_lt i.1.2) |
-      range fun i : (j : Iio y.length) × {r // y.coeffIdx j < r} ↦
-        IH (y.trunc (y.exp i.1) + single (y.exp i.1) i.2) <|
-          (length_trunc_add_single_le ..).trans_lt (hy.add_one_lt i.1.2)}
+    !{range fun i : truncLT y ↦ IH i <| length_lt_of_truncLT hy i.2 |
+      range fun i : truncGT y ↦ IH i <| length_lt_of_truncGT hy i.2}
 
 instance : Coe SurrealHahnSeries IGame where
   coe := toIGame
@@ -702,63 +829,91 @@ theorem toIGame_succ {x : SurrealHahnSeries}
     toIGame (x + single i r) = toIGame x + r * ω^ i.out :=
   lengthRecOn_succ hi hr
 
-theorem toIGame_succ' {x : SurrealHahnSeries}
-    {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) :
-    toIGame (single i r + x) = r * ω^ i.out + toIGame x := by
-  rw [add_comm, toIGame_succ hi hr, add_comm]
+theorem toIGame_succ_equiv {x : SurrealHahnSeries}
+    {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) :
+    toIGame (x + single i r) ≈ toIGame x + r * ω^ i.out := by
+  obtain rfl | hr := eq_or_ne r 0
+  · rw [single_zero, add_zero, antisymmRel_comm, add_equiv_left_iff, ← Surreal.mk_eq_mk]
+    simp
+  · rw [toIGame_succ hi hr]
 
 theorem toIGame_limit {x : SurrealHahnSeries.{u}} (hx : IsSuccPrelimit x.length) :
-    toIGame x =
-      !{range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
-          toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) |
-        range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
-          toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2)} :=
-  lengthRecOn_limit hx
+    toIGame x = !{toIGame '' truncLT x | toIGame '' truncGT x} := by
+  simp_rw [image_eq_range]
+  exact lengthRecOn_limit hx
 
 @[simp]
 theorem toIGame_zero : toIGame 0 = 0 := by
   rw [toIGame_limit] <;> aesop
 
 theorem leftMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (toIGame x)ᴸ = range fun i : (j : Iio x.length) × {r // r < x.coeffIdx j} ↦
-      toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) := by
+    (toIGame x)ᴸ = toIGame '' truncLT x := by
   rw [toIGame_limit hx, leftMoves_ofSets]
 
 theorem rightMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (toIGame x)ᴿ = range fun i : (j : Iio x.length) × {r // x.coeffIdx j < r} ↦
-      toIGame (x.trunc (x.exp i.1) + single (x.exp i.1) i.2) := by
+    (toIGame x)ᴿ = toIGame '' truncGT x := by
   rw [toIGame_limit hx, rightMoves_ofSets]
 
-theorem forall_leftMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (∀ y ∈ (toIGame x)ᴸ, P y) ↔ ∀ i (hi : i < x.length), ∀ r < x.coeffIdx i,
-      P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
-  rw [leftMoves_toIGame_limit hx]
-  aesop
+private theorem toIGame_lt_toIGame_of_truncLT' {x y : SurrealHahnSeries} (h : x ≺ y)
+    [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
+    toIGame x < toIGame y := by
+  induction y using lengthRecOn generalizing hy' x with
+  | succ y i r hi hr IH' =>
+    obtain ⟨⟨⟨j, hj⟩, s, hs⟩, rfl⟩ := h
+    rw [coeff_add_apply] at hs
+    replace hj := union_subset_union_right y.support support_single_subset (support_add_subset hj)
+    have hij : i ≤ j := by rw [le_iff_lt_or_eq]; aesop
+    dsimp
+    rw [trunc_add, trunc_single_of_le hij, add_zero, toIGame_succ hi hr]
+    grw [toIGame_succ_equiv (by simp)]
+    obtain hj | rfl := hj
+    · replace hij := hi _ hj
+      rw [coeff_single_of_ne hij.ne, add_zero] at hs
+      obtain ⟨t, ht, ht'⟩ := exists_between hs
+      have hst : s * ω^ j.out ≈ t * ω^ j.out + ↑(s - t) * ω^ j.out := by
+        rw [← Surreal.mk_eq_mk]
+        simp [← add_mul]
+      grw [hst, ← add_assoc]
+      apply add_lt_add _ (Numeric.mul_wpow_lt_mul_wpow_of_neg ..)
+      · grw [← toIGame_succ_equiv (by simp)]
+        simp_rw [length_add_single hi hr, lt_add_one_iff] at IH
+        have := IH _ le_rfl
+        apply IH'
+        · rw [truncLT_def]
+          exact ⟨j, hj, t, ht', rfl⟩
+        · exact fun z hz ↦ IH z hz.le
+      · rwa [sub_neg]
+      · rw [← Surreal.mk_lt_mk]
+        simpa
+    · rw [trunc_eq hi]
+      have : y.coeff j = 0 := by
+        by_contra h
+        exact (hi _ h).false
+      simpa [this] using hs
+  | limit y hy IH' =>
+    apply Numeric.left_lt
+    rw [leftMoves_toIGame_limit hy]
+    exact mem_image_of_mem _ h
 
-theorem forall_rightMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (∀ y ∈ (toIGame x)ᴿ, P y) ↔ ∀ i (hi : i < x.length), ∀ ⦃r⦄, x.coeffIdx i < r →
-      P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
-  rw [rightMoves_toIGame_limit hx]
-  aesop
 
-theorem exists_leftMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (∃ y ∈ (toIGame x)ᴸ, P y) ↔ ∃ i, ∃ (hi : i < x.length), ∃ r < x.coeffIdx i,
-      P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
-  rw [leftMoves_toIGame_limit hx]
-  aesop
+private theorem toIGame_lt_toIGame_of_truncGT' {x y : SurrealHahnSeries} (h : x ≻ y)
+    [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
+    toIGame y < toIGame x :=
+  sorry
 
-theorem exists_rightMoves_toIGame_limit {P : IGame → Prop}
-    {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
-    (∃ y ∈ (toIGame x)ᴿ, P y) ↔ ∃ i, ∃ (hi : i < x.length), ∃ r, x.coeffIdx i < r ∧
-      P (toIGame (x.trunc (x.exp ⟨i, hi⟩) + single (x.exp ⟨i, hi⟩) r)) := by
-  rw [rightMoves_toIGame_limit hx]
-  aesop
+private theorem toIGame_aux {o : Ordinal} {x y : SurrealHahnSeries}
+    (hx : x.length < o) (hy : y.length < o) : Numeric x ∧ Numeric y ∧
+      x < y → toIGame x < toIGame y := by
+  sorry
 
-private theorem toIGame_lt_toIGame_aux {x y : SurrealHahnSeries}
-    [Numeric x] [Numeric y] (h : x < y) : toIGame x < toIGame y := by
+  #exit
+proof_wanted strictMono_toIGame : StrictMono SurrealHahnSeries.toIGame
+proof_wanted numeric_toIGame : ∀ x, Numeric (SurrealHahnSeries.toIGame x)
+
+#exit
+
+private theorem toIGame_lt_toIGame_aux {x y : SurrealHahnSeries} :
+    Numeric x ∧ Numeric y ∧ x < y → toIGame x < toIGame y := by
   induction x using lengthRecOn generalizing y with
   | succ x i r hi hr IH =>
     rw [toIGame_succ hi hr]
@@ -769,6 +924,7 @@ private theorem toIGame_lt_toIGame_aux {x y : SurrealHahnSeries}
   | limit x hx IH => sorry
 
 
+#exit
 #exit
 theorem strictMono_toIGame : StrictMono toIGame := by
   intro x y h

@@ -799,6 +799,22 @@ theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
   add_congr .rfl h
 
 @[simp]
+theorem add_equiv_add_iff_left {a b c : IGame} : a + b ≈ a + c ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_add_iff_right {a b c : IGame} : b + a ≈ c + a ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_left_iff {a b : IGame} : a + b ≈ a ↔ b ≈ 0 := by
+  simpa using @add_equiv_add_iff_left a b 0
+
+@[simp]
+theorem add_equiv_right_iff {a b : IGame} : a + b ≈ b ↔ a ≈ 0 := by
+  simpa using @add_equiv_add_iff_right b a 0
+
+@[simp]
 theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := by
   simp [IncompRel]
 
