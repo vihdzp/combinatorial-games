@@ -44,7 +44,7 @@ rationals. -/
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
-instance Numeric.toIGame (x : ℝ) : Numeric x := by
+instance numeric (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
   · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]

@@ -895,45 +895,62 @@ private theorem toIGame_lt_toIGame_of_truncLT' {x y : SurrealHahnSeries} (h : x 
     rw [leftMoves_toIGame_limit hy]
     exact mem_image_of_mem _ h
 
-
 private theorem toIGame_lt_toIGame_of_truncGT' {x y : SurrealHahnSeries} (h : x ≻ y)
     [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
     toIGame y < toIGame x :=
   sorry
 
+private theorem numeric_toIGame' (x : SurrealHahnSeries)
+    (IH : ∀ {y z : SurrealHahnSeries}, y.length < x.length → z.length < x.length →
+      Numeric y ∧ Numeric z ∧ (y < z → toIGame y < toIGame z)) : Numeric x := by
+  have IH' {y : SurrealHahnSeries} (hy : y.length < _) := (IH hy hy).1
+  cases x using lengthRecOn with
+  | succ x i r hi hr =>
+    rw [toIGame_succ hi hr]
+    have hx : x.length < (x + single i r).length := by
+      rw [length_add_single hi hr, lt_add_one_iff]
+    have := IH' hx
+    infer_instance
+  | limit _ hx =>
+    rw [toIGame_limit hx, numeric_def]
+    aesop (add apply forward safe [length_lt_of_truncLT, length_lt_of_truncGT,
+      lt_of_truncLT, gt_of_truncGT, lt_trans])
+
 private theorem toIGame_aux {o : Ordinal} {x y : SurrealHahnSeries}
     (hx : x.length < o) (hy : y.length < o) : Numeric x ∧ Numeric y ∧
-      x < y → toIGame x < toIGame y := by
-  sorry
+      (x < y → toIGame x < toIGame y) := by
+  have hx' := numeric_toIGame' x toIGame_aux
+  have hy' := numeric_toIGame' y toIGame_aux
+  refine ⟨hx', hy', fun h ↦ ?_⟩
+  obtain ⟨i, hi, hi'⟩ := lt_def.1 h
+  dsimp at *
+  obtain hx | hx := eq_or_ne (x.coeff i) 0 <;> obtain hy | hy := eq_or_ne (y.coeff i) 0
+  · simp_all
+  · sorry
+  · sorry
+  · obtain ⟨r, hr, hr'⟩ := exists_between hi'
+    trans ↑(x.trunc i + single i r)
+    · apply toIGame_lt_toIGame_of_truncGT'
+      · rw [truncGT_def]
+        use i, hx, r
+      · exact fun z (hz : z.length < x.length) ↦ (toIGame_aux hz hz).1
+    · apply toIGame_lt_toIGame_of_truncLT'
+      · rw [truncLT_def]
+        use i, hy, r, hr'
+        congr 1
+        aesop
+      · exact fun z hz ↦ (toIGame_aux hz hz).1
+termination_by o
 
-  #exit
-proof_wanted strictMono_toIGame : StrictMono SurrealHahnSeries.toIGame
-proof_wanted numeric_toIGame : ∀ x, Numeric (SurrealHahnSeries.toIGame x)
+instance numeric (x : SurrealHahnSeries) : Numeric (toIGame x) :=
+  (toIGame_aux (lt_add_one _) (lt_add_one _)).1
+
+theorem toIGame_strictMono : StrictMono toIGame := by
+  refine fun x y h ↦ (toIGame_aux (o := max (x.length + 1) (y.length + 1)) ?_ ?_).2.2 h <;> simp
+
 
 #exit
 
-private theorem toIGame_lt_toIGame_aux {x y : SurrealHahnSeries} :
-    Numeric x ∧ Numeric y ∧ x < y → toIGame x < toIGame y := by
-  induction x using lengthRecOn generalizing y with
-  | succ x i r hi hr IH =>
-    rw [toIGame_succ hi hr]
-    induction y using lengthRecOn with
-    | succ y j s hj hs IH' =>
-      rw [toIGame_succ hj hs]
-    | limit y hy IH' => sorry
-  | limit x hx IH => sorry
-
-
-#exit
-#exit
-theorem strictMono_toIGame : StrictMono toIGame := by
-  intro x y h
-  rw [lt_def] at h
-  obtain ⟨a, ha⟩ := h
-  simp at ha
-
-
-#exit
 end SurrealHahnSeries
 
 -- Split file here for import purposes?
