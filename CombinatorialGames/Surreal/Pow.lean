@@ -830,6 +830,11 @@ theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)�
   rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
 
 @[simp]
+theorem leadingCoeff_div (x y : Surreal) :
+    leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
+  simp [div_eq_mul_inv]
+
+@[simp]
 theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
   mp h := by
     contrapose h
