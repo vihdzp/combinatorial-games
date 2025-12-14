@@ -699,6 +699,24 @@ theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
 @[simp] theorem wlog_ratCast (q : ℚ) : wlog q = 0 := by simpa using wlog_realCast q
 @[simp] theorem wlog_intCast (n : ℤ) : wlog n = 0 := by simpa using wlog_realCast n
 @[simp] theorem wlog_natCast (n : ℕ) : wlog n = 0 := by simpa using wlog_realCast n
+@[simp] theorem wlog_one : wlog 1 = 0 := mod_cast wlog_natCast 1
+
+@[simp]
+theorem wlog_inv (x : Surreal) : x⁻¹.wlog = -x.wlog := by
+  obtain rfl | hx := eq_or_ne x 0; simp
+  rw [← add_eq_zero_iff_eq_neg, ← wlog_mul (inv_ne_zero hx) hx, inv_mul_cancel₀ hx, wlog_one]
+
+@[simp]
+theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · cases n <;> simp
+  · induction n with
+    | zero => simp
+    | succ n IH => rw [pow_succ, wlog_mul (pow_ne_zero n hx) hx, IH, Nat.cast_add_one, add_one_mul]
+
+@[simp]
+theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 @[simp]
 theorem mk_div_wlog (x : Surreal) :
