@@ -895,10 +895,47 @@ private theorem toIGame_lt_toIGame_of_truncLT' {x y : SurrealHahnSeries} (h : x 
     rw [leftMoves_toIGame_limit hy]
     exact mem_image_of_mem _ h
 
+-- TODO: can we more immediately prove this from the previous theorem?
 private theorem toIGame_lt_toIGame_of_truncGT' {x y : SurrealHahnSeries} (h : x ≻ y)
     [hy' : Numeric y] (IH : ∀ z : SurrealHahnSeries, z.length < y.length → Numeric z) :
-    toIGame y < toIGame x :=
-  sorry
+    toIGame y < toIGame x := by
+  induction y using lengthRecOn generalizing hy' x with
+  | succ y i r hi hr IH' =>
+    obtain ⟨⟨⟨j, hj⟩, s, hs⟩, rfl⟩ := h
+    rw [coeff_add_apply] at hs
+    replace hj := union_subset_union_right y.support support_single_subset (support_add_subset hj)
+    have hij : i ≤ j := by rw [le_iff_lt_or_eq]; aesop
+    dsimp
+    rw [trunc_add, trunc_single_of_le hij, add_zero, toIGame_succ hi hr]
+    grw [toIGame_succ_equiv (by simp)]
+    obtain hj | rfl := hj
+    · replace hij := hi _ hj
+      rw [coeff_single_of_ne hij.ne, add_zero] at hs
+      obtain ⟨t, ht', ht⟩ := exists_between hs
+      have hst : s * ω^ j.out ≈ t * ω^ j.out + ↑(s - t) * ω^ j.out := by
+        rw [← Surreal.mk_eq_mk]
+        simp [← add_mul]
+      grw [hst, ← add_assoc]
+      apply add_lt_add _ (Numeric.mul_wpow_lt_mul_wpow_of_pos ..)
+      · grw [← toIGame_succ_equiv (by simp)]
+        simp_rw [length_add_single hi hr, lt_add_one_iff] at IH
+        have := IH _ le_rfl
+        apply IH'
+        · rw [truncGT_def]
+          exact ⟨j, hj, t, ht', rfl⟩
+        · exact fun z hz ↦ IH z hz.le
+      · rwa [sub_pos]
+      · rw [← Surreal.mk_lt_mk]
+        simpa
+    · rw [trunc_eq hi]
+      have : y.coeff j = 0 := by
+        by_contra h
+        exact (hi _ h).false
+      simpa [this] using hs
+  | limit y hy IH' =>
+    apply Numeric.lt_right
+    rw [rightMoves_toIGame_limit hy]
+    exact mem_image_of_mem _ h
 
 private theorem numeric_toIGame' (x : SurrealHahnSeries)
     (IH : ∀ {y z : SurrealHahnSeries}, y.length < x.length → z.length < x.length →
