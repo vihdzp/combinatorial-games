@@ -568,7 +568,7 @@ theorem IsRing.inv_lt_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsFi
 
 theorem IsRing.inv_le_of_not_isField {x y : Nimber} (h' : IsRing x) (h : ¬ IsField x)
     (hy : y ≤ x⁻¹) : y⁻¹ ≤ x := by
-  obtain rfl | hy := hy.eq_or_lt; simp
+  obtain rfl | hy := hy.eq_or_lt; · simp
   exact (h'.inv_lt_of_not_isField h hy).le
 
 /-- The third **simplest extension theorem**: if `x` is a ring but not a field, then `x` can be

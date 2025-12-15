@@ -375,7 +375,7 @@ open NatOrdinal in
 theorem toIGame_wpow_equiv (x : NatOrdinal) : (ω^ x).toIGame ≈ ω^ x.toIGame := by
   have H {y} (h : y < x) (n : ℕ) : toIGame (ω^ y * n) ≈ ω^ y.toIGame * n :=
     (toIGame_mul ..).trans <| Numeric.mul_congr (toIGame_wpow_equiv y) (toIGame_natCast_equiv n)
-  obtain rfl | hx := eq_or_ne x 0; simp
+  obtain rfl | hx := eq_or_ne x 0; · simp
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
   · simp_rw [forall_leftMoves_toIGame, lt_wpow_iff hx]
     intro z ⟨y, hy, n, hz⟩
