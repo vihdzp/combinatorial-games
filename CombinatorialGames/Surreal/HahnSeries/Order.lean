@@ -1,9 +1,16 @@
 import CombinatorialGames.Surreal.HahnSeries.Basic
 
+universe u
+
+open IGame Order Set
+
+attribute [-simp] Ordinal.add_one_eq_succ
+
+noncomputable section
 
 /-! ### Hahn series as games -/
 
-open IGame
+namespace SurrealHahnSeries
 
 /-- A common base for both `truncLT` and `truncGT`. -/
 private def truncAux (x : SurrealHahnSeries) (R : ℝ → ℝ → Prop) : Set SurrealHahnSeries :=
@@ -373,5 +380,8 @@ def toSurreal (x : SurrealHahnSeries) : Surreal :=
 
 instance : Coe SurrealHahnSeries Surreal where
   coe := toSurreal
+
+end SurrealHahnSeries
+end
 
 #exit
