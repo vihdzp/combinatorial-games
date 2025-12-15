@@ -19,7 +19,8 @@ these surreal Hahn series with ordinal-indexed sequences of surreal exponents an
 coefficients.
 
 This file provides the translation layer between Hahn series as they're implemented in Mathlib, and
-the Hahn series relevant to surreal numbers.
+the Hahn series relevant to surreal numbers, by defining the type `SurrealHahnSeries` for the
+latter.
 -/
 
 universe u
@@ -722,103 +723,3 @@ theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
   rfl
 
 end SurrealHahnSeries
-
--- The following should go on another file.
-
-namespace LinearOrderedAddCommGroupWithTop
-variable {α : Type*} [LinearOrderedAddCommGroupWithTop α]
-
-@[simp]
-theorem sub_top (a : α) : a - ⊤ = ⊤ := by
-  rw [sub_eq_add_neg, LinearOrderedAddCommGroupWithTop.neg_top, add_top]
-
-@[simp]
-theorem sub_self_eq_zero_iff_ne_top {a : α} : a - a = 0 ↔ a ≠ ⊤ where
-  mp := by
-    contrapose!
-    simp +contextual
-  mpr := by
-    rw [sub_eq_add_neg]
-    exact add_neg_cancel_of_ne_top
-
-alias ⟨_, sub_self_eq_zero_of_ne_top⟩ := sub_self_eq_zero_iff_ne_top
-
-end LinearOrderedAddCommGroupWithTop
-
-namespace Surreal
-
-@[simp]
-theorem mk_div_wlog (x : Surreal) :
-    ArchimedeanClass.mk (x / ω^ x.wlog) = ArchimedeanClass.mk x - ArchimedeanClass.mk x := by
-  obtain rfl | hx := eq_or_ne x 0
-  · simp
-  · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
-      mk_wpow_wlog (inv_ne_zero hx), ArchimedeanClass.mk_inv, ← sub_eq_add_neg]
-
--- This leading coeff stuff should go in Pow
-
-/-- The leading coefficient of a surreal's Hahn series. -/
-def leadingCoeff (x : Surreal) : ℝ :=
-  ArchimedeanClass.standardPart (x / ω^ x.wlog)
-
-@[simp]
-theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
-  rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.standardPart_real Real.toSurrealRingHom r
-
-@[simp]
-theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
-  mod_cast leadingCoeff_realCast q
-
-@[simp]
-theorem leadingCoeff_intCast (n : ℤ) : leadingCoeff n = n :=
-  mod_cast leadingCoeff_realCast n
-
-@[simp]
-theorem leadingCoeff_natCast (n : ℕ) : leadingCoeff n = n :=
-  mod_cast leadingCoeff_realCast n
-
-@[simp]
-theorem leadingCoeff_zero : leadingCoeff 0 = 0 :=
-  mod_cast leadingCoeff_natCast 0
-
-@[simp]
-theorem leadingCoeff_one : leadingCoeff 1 = 1 :=
-  mod_cast leadingCoeff_natCast 1
-
-@[simp]
-theorem leadingCoeff_neg (x : Surreal) : leadingCoeff (-x) = -leadingCoeff x := by
-  simp [leadingCoeff, neg_div]
-
-@[simp]
-theorem leadingCoeff_mul (x y : Surreal) :
-    leadingCoeff (x * y) = leadingCoeff x * leadingCoeff y := by
-  unfold leadingCoeff
-  by_cases hx : x = 0; simp [hx]
-  by_cases hy : y = 0; simp [hy]
-  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.standardPart_mul, mul_div_mul_comm]
-  all_goals
-    rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
-    simpa
-
-@[simp]
-theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)⁻¹ := by
-  obtain rfl | hx := eq_or_ne x 0; simp
-  apply eq_inv_of_mul_eq_one_left
-  rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
-
-@[simp]
-theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
-  mp h := by
-    contrapose h
-    apply ArchimedeanClass.standardPart_ne_zero
-    simpa
-  mpr := by simp +contextual
-
-/-- The ordinal-indexed sequence of "Hahn series residues" associated to a given surreal. -/
-private def toHahnSeriesAux (x : Surreal) (i : Ordinal) : Surreal :=
-  SuccOrder.prelimitRecOn i
-    (fun j _ IH ↦ IH - leadingCoeff IH * ω^ IH.wlog)
-    (fun j hj IH ↦ sorry) -- IH minus the Hahn series determined from all prev values
-
-end Surreal
