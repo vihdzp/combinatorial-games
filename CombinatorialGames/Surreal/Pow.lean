@@ -3,6 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.AddGroupWithTop
+import CombinatorialGames.Mathlib.StandardPart
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.NatOrdinal.Pow
@@ -717,6 +719,26 @@ theorem wlog_inv (x : Surreal) : x⁻¹.wlog = -x.wlog := by
   obtain rfl | hx := eq_or_ne x 0; simp
   rw [← add_eq_zero_iff_eq_neg, ← wlog_mul (inv_ne_zero hx) hx, inv_mul_cancel₀ hx, wlog_one]
 
+@[simp]
+theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · cases n <;> simp
+  · induction n with
+    | zero => simp
+    | succ n IH => rw [pow_succ, wlog_mul (pow_ne_zero n hx) hx, IH, Nat.cast_add_one, add_one_mul]
+
+@[simp]
+theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
+
+@[simp]
+theorem mk_div_wlog (x : Surreal) :
+    ArchimedeanClass.mk (x / ω^ x.wlog) = ArchimedeanClass.mk x - ArchimedeanClass.mk x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simp
+  · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
+      mk_wpow_wlog (inv_ne_zero hx), ArchimedeanClass.mk_inv, ← sub_eq_add_neg]
+
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
@@ -767,6 +789,71 @@ theorem mem_range_wpow_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
 @[simp]
 theorem toSurreal_wpow (x : NatOrdinal) : (ω^ x).toSurreal = ω^ x.toSurreal :=
   Surreal.mk_eq (toIGame_wpow_equiv x)
+
+/-! ### Leading coefficient -/
+
+/-- The leading coefficient of a surreal's Hahn series. -/
+def leadingCoeff (x : Surreal) : ℝ :=
+  ArchimedeanClass.standardPart (x / ω^ x.wlog)
+
+@[simp]
+theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
+  rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
+  exact ArchimedeanClass.standardPart_real Real.toSurrealRingHom r
+
+@[simp]
+theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
+  mod_cast leadingCoeff_realCast q
+
+@[simp]
+theorem leadingCoeff_intCast (n : ℤ) : leadingCoeff n = n :=
+  mod_cast leadingCoeff_realCast n
+
+@[simp]
+theorem leadingCoeff_natCast (n : ℕ) : leadingCoeff n = n :=
+  mod_cast leadingCoeff_realCast n
+
+@[simp]
+theorem leadingCoeff_zero : leadingCoeff 0 = 0 :=
+  mod_cast leadingCoeff_natCast 0
+
+@[simp]
+theorem leadingCoeff_one : leadingCoeff 1 = 1 :=
+  mod_cast leadingCoeff_natCast 1
+
+@[simp]
+theorem leadingCoeff_neg (x : Surreal) : leadingCoeff (-x) = -leadingCoeff x := by
+  simp [leadingCoeff, neg_div]
+
+@[simp]
+theorem leadingCoeff_mul (x y : Surreal) :
+    leadingCoeff (x * y) = leadingCoeff x * leadingCoeff y := by
+  unfold leadingCoeff
+  by_cases hx : x = 0; simp [hx]
+  by_cases hy : y = 0; simp [hy]
+  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.standardPart_mul, mul_div_mul_comm]
+  all_goals
+    rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
+    simpa
+
+@[simp]
+theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)⁻¹ := by
+  obtain rfl | hx := eq_or_ne x 0; simp
+  apply eq_inv_of_mul_eq_one_left
+  rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
+
+@[simp]
+theorem leadingCoeff_div (x y : Surreal) :
+    leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
+  simp [div_eq_mul_inv]
+
+@[simp]
+theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
+  mp h := by
+    contrapose h
+    apply ArchimedeanClass.standardPart_ne_zero
+    simpa
+  mpr := by simp +contextual
 
 end Surreal
 end
