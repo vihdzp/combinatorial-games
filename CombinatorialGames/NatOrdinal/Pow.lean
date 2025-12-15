@@ -44,6 +44,7 @@ class Wpow (α : Type*) where
 recommended_spelling "wpow" for "ω^" in [«termω^_»]
 
 namespace NatOrdinal
+variable {x y z : NatOrdinal}
 
 noncomputable instance : Wpow NatOrdinal where
   wpow x := of (ω ^ x.val)
@@ -59,17 +60,9 @@ theorem wpow_def (x : NatOrdinal) : ω^ x = of (ω ^ x.val) := rfl
 theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
   Ordinal.isNormal_opow one_lt_omega0
 
-@[simp]
-theorem wpow_lt_wpow {x y : NatOrdinal} : ω^ x < ω^ y ↔ x < y :=
-  isNormal_wpow.strictMono.lt_iff_lt
-
-@[simp]
-theorem wpow_le_wpow {x y : NatOrdinal} : ω^ x ≤ ω^ y ↔ x ≤ y :=
-  isNormal_wpow.strictMono.le_iff_le
-
-@[simp]
-theorem wpow_inj {x y : NatOrdinal} : ω^ x = ω^ y ↔ x = y :=
-  isNormal_wpow.strictMono.injective.eq_iff
+@[simp] theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := isNormal_wpow.strictMono.lt_iff_lt
+@[simp] theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := isNormal_wpow.strictMono.le_iff_le
+@[simp] theorem wpow_inj : ω^ x = ω^ y ↔ x = y := isNormal_wpow.strictMono.injective.eq_iff
 
 private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ x) (n : ℕ) :
     (∀ z < ω^ x, z + y < ω^ x) ∧ ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
@@ -121,45 +114,45 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
   · exact (oadd_le_add ..).trans (add_le_add_left (omul_le_mul ..) _)
 termination_by (x, n, y)
 
-theorem add_lt_wpow {x y z : NatOrdinal} (hx : x < ω^ z) (hy : y < ω^ z) : x + y < ω^ z :=
+theorem add_lt_wpow (hx : x < ω^ z) (hy : y < ω^ z) : x + y < ω^ z :=
   (wpow_mul_natCast_add_of_lt_aux hy 0).1 x hx
 
 /-- See `wpow_mul_natCast_add_of_lt` for a stronger version. -/
-theorem wpow_mul_natCast_add_of_lt' {x y : NatOrdinal} (hy : y < ω^ x) (n : ℕ) :
+theorem wpow_mul_natCast_add_of_lt' (hy : y < ω^ x) (n : ℕ) :
     ω^ x * n + y = of (ω ^ x.val * n + y.val) :=
   (wpow_mul_natCast_add_of_lt_aux hy n).2
 
 /-- See `wpow_add_of_lt` for a stronger version. -/
-theorem wpow_add_of_lt' {x y : NatOrdinal} (hy : y < ω^ x) : ω^ x + y = of (ω ^ x.val + y.val) := by
+theorem wpow_add_of_lt' (hy : y < ω^ x) : ω^ x + y = of (ω ^ x.val + y.val) := by
   simpa using wpow_mul_natCast_add_of_lt' hy 1
 
 theorem wpow_mul_natCast (x : NatOrdinal) (n : ℕ) : ω^ x * n = of (ω ^ x.val * n) := by
   simpa using wpow_mul_natCast_add_of_lt' (wpow_pos _) n
 
-theorem wpow_mul_natCast_lt {a b : NatOrdinal} (h : a < b) (n : ℕ) : ω^ a * n < ω^ b := by
+theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   rw [wpow_mul_natCast]
   exact omega0_opow_mul_nat_lt h n
 
-theorem lt_wpow_iff {x y : NatOrdinal} (hx : x ≠ 0) : y < ω^ x ↔ ∃ z < x, ∃ n : ℕ, y < ω^ z * n := by
+theorem lt_wpow_iff (hx : x ≠ 0) : y < ω^ x ↔ ∃ z < x, ∃ n : ℕ, y < ω^ z * n := by
   rw [wpow_def, ← val_lt_iff, lt_omega0_opow]
   · simp_rw [wpow_mul_natCast]
     rfl
   · assumption
 
-theorem wpow_le_iff {x y : NatOrdinal} (hx : x ≠ 0) : ω^ x ≤ y ↔ ∀ z < x, ∀ n : ℕ, ω^ z * n ≤ y := by
+theorem wpow_le_iff (hx : x ≠ 0) : ω^ x ≤ y ↔ ∀ z < x, ∀ n : ℕ, ω^ z * n ≤ y := by
   rw [← not_lt, lt_wpow_iff hx]
   simp
 
-theorem lt_wpow_add_one_iff {x y : NatOrdinal} : y < ω^ (x + 1) ↔ ∃ n : ℕ, y < ω^ x * n := by
+theorem lt_wpow_add_one_iff : y < ω^ (x + 1) ↔ ∃ n : ℕ, y < ω^ x * n := by
   rw [wpow_def, ← val_lt_iff, val_add_one, add_one_eq_succ, lt_omega0_opow_succ]
   simp_rw [wpow_mul_natCast]
   rfl
 
-theorem wpow_add_one_le_iff {x y : NatOrdinal} : ω^ (x + 1) ≤ y ↔ ∀ n : ℕ, ω^ x * n ≤ y := by
+theorem wpow_add_one_le_iff : ω^ (x + 1) ≤ y ↔ ∀ n : ℕ, ω^ x * n ≤ y := by
   rw [← not_lt, lt_wpow_add_one_iff]
   simp
 
-theorem wpow_mul_natCast_add_of_lt {x y : NatOrdinal} (hy : y < ω^ (x + 1)) (n : ℕ) :
+theorem wpow_mul_natCast_add_of_lt (hy : y < ω^ (x + 1)) (n : ℕ) :
     ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
   obtain ⟨z, hz, m, rfl⟩ : ∃ z < ω^ x, ∃ m : ℕ, y = ω^ x * m + z := by
     rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, ← Ordinal.div_lt] at hy
@@ -172,17 +165,16 @@ theorem wpow_mul_natCast_add_of_lt {x y : NatOrdinal} (hy : y < ω^ (x + 1)) (n 
   simp_rw [← add_assoc, wpow_mul_natCast_add_of_lt' hz, val_of, ← add_assoc, ← mul_add,
     ← Nat.cast_add, wpow_mul_natCast_add_of_lt' hz]
 
-theorem wpow_add_of_lt {x y : NatOrdinal} (hy : y < ω^ (x + 1)) :
-    ω^ x + y = of (ω ^ x.val + y.val) := by
+theorem wpow_add_of_lt (hy : y < ω^ (x + 1)) : ω^ x + y = of (ω ^ x.val + y.val) := by
   simpa using wpow_mul_natCast_add_of_lt hy 1
 
-theorem wpow_add_wpow {x y : NatOrdinal} (h : x ≤ y) : ω^ y + ω^ x = of (ω ^ y.val + ω ^ x.val) := by
+theorem wpow_add_wpow (h : x ≤ y) : ω^ y + ω^ x = of (ω ^ y.val + ω ^ x.val) := by
   rw [wpow_add_of_lt, val_wpow]
   simpa using Order.lt_succ_of_le h
 
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
-  obtain rfl | hx := eq_or_ne x 0; simp
-  obtain rfl | hy := eq_or_ne y 0; simp
+  obtain rfl | hx := eq_or_ne x 0; · simp
+  obtain rfl | hy := eq_or_ne y 0; · simp
   have h : x + y ≠ 0 := by simp_all
   apply le_antisymm
   · simp_rw [wpow_le_iff h, lt_add_iff]
