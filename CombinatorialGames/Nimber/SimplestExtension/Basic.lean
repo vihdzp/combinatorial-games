@@ -111,7 +111,7 @@ protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
   rw [← one_add_one_eq_two, mul_add, mul_one]
 
 theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
-  obtain rfl | hb₀ := eq_or_ne b 0; simp
+  obtain rfl | hb₀ := eq_or_ne b 0; · simp
   refine ⟨fun h ↦ ⟨_, (Ordinal.div_lt hb₀).2 h, _, mod_lt a hb₀, (div_add_mod ..).symm⟩, ?_⟩
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_right_strictMono hr).trans_le
@@ -151,7 +151,7 @@ end Ordinal
 
 theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
     a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  obtain rfl | ha := eq_or_ne a 0; simp
+  obtain rfl | ha := eq_or_ne a 0; · simp
   rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
   tauto
 
@@ -270,8 +270,8 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   refine ⟨fun y z hy hz ↦ ?_⟩
   induction y with | mk y
   induction z with | mk z
-  obtain rfl | hy₀ := eq_or_ne y 0; simpa
-  obtain rfl | hz₀ := eq_or_ne z 0; simpa
+  obtain rfl | hy₀ := eq_or_ne y 0; · simpa
+  obtain rfl | hz₀ := eq_or_ne z 0; · simpa
   have hy' : log 2 y < x := by rwa [← lt_opow_iff_log_lt one_lt_two hy₀]
   have hz' : log 2 z < x := by rwa [← lt_opow_iff_log_lt one_lt_two hz₀]
   have hm {x y : Ordinal} : x % 2 ^ y < 2 ^ y := mod_lt _ (opow_ne_zero _ two_ne_zero)
@@ -576,7 +576,7 @@ written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField {x : Nimber} (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
 
--- TODO: this follows directly from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
+-- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 end Nimber
