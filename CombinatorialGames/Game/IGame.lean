@@ -392,6 +392,18 @@ theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
 theorem lf_right {x y : IGame} (h : y ∈ xᴿ) : x ⧏ y :=
   lf_of_right_le le_rfl h
 
+theorem le_of_forall_moves_right_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴿ, x ⧏ z) (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) : x ≤ y := by
+  refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx⟩
+  obtain ⟨w, hw, hw'⟩ := hl z hz
+  exact mt hw'.trans' (left_lf hw)
+
+theorem le_of_forall_moves_left_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴸ, z ⧏ x) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : y ≤ x := by
+  refine le_iff_forall_lf.2 ⟨hx, fun z hz ↦ ?_⟩
+  obtain ⟨w, hw, hw'⟩ := hr z hz
+  exact mt hw'.trans (lf_right hw)
+
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)

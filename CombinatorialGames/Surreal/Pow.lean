@@ -262,8 +262,8 @@ theorem mul_wpow_lt_mul_wpow_of_neg' (r : Dyadic') {s : Dyadic'} (hr : r < 0) (h
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
   have h : 0 < t / 2 := by simpa
-  apply (add_lt_add (mul_wpow_lt_mul_wpow_of_pos r h hx)
-    (mul_wpow_lt_mul_wpow_of_pos s h hy)).trans_le
+  apply (add_lt_add
+    (mul_wpow_lt_mul_wpow_of_pos r h hx) (mul_wpow_lt_mul_wpow_of_pos s h hy)).trans_le
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
@@ -274,8 +274,8 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic') {t : Dyadic'} (ht : 0
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  apply (add_lt_add (mul_wpow_lt_mul_wpow_of_pos (r/2) hs hx)
-    (mul_wpow_lt_mul_wpow_of_pos (r/2) ht hy)).trans_le'
+  apply (add_lt_add
+    (mul_wpow_lt_mul_wpow_of_pos (r/2) hs hx) (mul_wpow_lt_mul_wpow_of_pos (r/2) ht hy)).trans_le'
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
@@ -302,20 +302,68 @@ theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
 
 theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame) [Numeric x] :
     r * ω^ x ≈ !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
-  apply Fits.equiv_of_forall_not_fits
+  apply Fits.equiv_of_forall_moves
   · simp [Fits]
-  · simp_rw [forall_moves_mul, Player.mul_left, not_fits_iff]
-    intro p a ha b hb
-    apply not_fits
+  all_goals
+    simp only [forall_moves_mul, Player.mul_left, Player.mul_right,
+      moves_ofSets, Player.cases, exists_mem_image]
+    rintro (_ | _) a ha b hb
+  · rw [Real.leftMoves_toIGame] at ha
+    rw [leftMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
+    numeric
+    obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+    use t, ht'
+    rw [← Surreal.mk_le_mk]
+    dsimp [mulOption]
+    rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
+      ← sub_le_iff_le_add, le_neg, neg_sub, ← sub_mul, ← mul_assoc]
+    convert Surreal.mk_le_mk.2
+      (mul_wpow_lt_mul_wpow_of_pos ((r - s) * a) (s := t - s) _ (left_lt hy)).le <;> simp_all
+  · rw [Real.rightMoves_toIGame] at ha
+    rw [rightMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain ⟨a, ha, y, hy, rfl⟩ := hb
+    numeric
+    obtain ⟨t, ht⟩ := exists_lt r
+    use t, ht
+    rw [← Surreal.mk_le_mk]
+    dsimp [mulOption]
+    rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
+      ← sub_le_iff_le_add, ← neg_mul, ← sub_mul, neg_sub, ← mul_assoc]
+    convert Surreal.mk_le_mk.2
+      (mul_wpow_lt_mul_wpow_of_pos (s - t) (s := (s - r) * a) _ (lt_right hy)).le <;> simp_all
+  · rw [Real.leftMoves_toIGame] at ha
+    rw [Player.neg_left, rightMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain ⟨a, ha, y, hy, rfl⟩ := hb
+    numeric
+    obtain ⟨t, ht⟩ := exists_gt r
+    use t, ht
+    rw [← Surreal.mk_le_mk]
+    dsimp [mulOption]
+    rw [add_sub_assoc, ← sub_mul, ← sub_le_iff_le_add', ← sub_mul, ← mul_assoc]
+    convert Surreal.mk_le_mk.2
+      (mul_wpow_lt_mul_wpow_of_pos (t - s) (s := (r - s) * a) _ (lt_right hy)).le <;> simp_all
+  · rw [Real.rightMoves_toIGame] at ha
+    rw [Player.neg_right, leftMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
+    numeric
+    obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+    use t, ht
+    rw [← Surreal.mk_le_mk]
+    dsimp [mulOption]
+    rw [add_sub_assoc, ← sub_mul, ← sub_le_iff_le_add', ← sub_mul, ← neg_le_neg_iff, ← neg_mul,
+      neg_sub, ← neg_mul, neg_sub, ← mul_assoc]
+    convert Surreal.mk_le_mk.2
+      (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (s := (s - t)) _ (left_lt hy)).le <;> simp_all
 
-#exit
 theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame) [Numeric x] :
     ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
-  simp_rw [mul_comm]; exact realCast_mul_wpow_equiv ..
+  simpa [mul_comm] using realCast_mul_wpow_equiv r x
 
-#exit
-
-#exit
 private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
@@ -572,7 +620,7 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   have Hl' := mk_lt_mk_of_ne h Hl
   have Hr' := mk_lt_mk_of_ne' h Hr
   have := numeric_of_forall_mk_ne_mk' h hf hg Hl Hr
-  apply (Fits.equiv_of_forall_not_fits ..).symm
+  apply (Fits.equiv_of_forall_moves ..).symm
   · constructor
     · simp_rw [forall_leftMoves_wpow, leftMoves_ofSets, forall_mem_range,
         Function.comp_apply, ← Surreal.mk_le_mk]
@@ -586,8 +634,8 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   all_goals
     intro y hy
     numeric
-    simp only [not_fits_iff, exists_rightMoves_wpow, exists_leftMoves_wpow]
-  · refine .inl <| or_iff_not_imp_left.2 fun hy' ↦ ?_
+    simp only [exists_rightMoves_wpow, exists_leftMoves_wpow]
+  · refine or_iff_not_imp_left.2 fun hy' ↦ ?_
     rw [Numeric.not_le] at hy'
     obtain ⟨(_ | n), hn⟩ := (hf ⟨y, hy, hy'⟩).le
     · apply (hy'.not_antisymmRel_symm _).elim
@@ -599,7 +647,7 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
       · exact abs_of_pos hy'
       · simp
   · obtain ⟨r, hr, hr'⟩ := mk_le_mk_iff_dyadic.1 (hg ⟨y, hy⟩).ge
-    refine .inr ⟨r, hr, ?_⟩
+    refine ⟨r, hr, ?_⟩
     simp_rw [rightMoves_ofSets, exists_range_iff, Function.comp_apply, ← Surreal.mk_le_mk]
     use ⟨y, hy⟩
     convert ←hr' using 1
