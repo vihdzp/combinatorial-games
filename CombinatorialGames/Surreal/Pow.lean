@@ -300,7 +300,7 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simpa [AntisymmRel] using h
 
-theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame) [Numeric x] :
+theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     r * ω^ x ≈ !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
   apply Fits.equiv_of_forall_moves
   · simp [Fits]
@@ -360,7 +360,7 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame) [Numeric x] :
     convert Surreal.mk_le_mk.2
       (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (s := (s - t)) _ (left_lt hy)).le <;> simp_all
 
-theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame) [Numeric x] :
+theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
   simpa [mul_comm] using realCast_mul_wpow_equiv r x
 
