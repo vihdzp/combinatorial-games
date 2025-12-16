@@ -413,7 +413,8 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
     toIGame x ≈ !{toIGame '' truncLT x | toIGame '' truncGT x} := by
   induction x using lengthRecOn with
   | succ x i r hi hr IH =>
-    apply Fits.equiv_of_forall_not_fits
+    grw [toIGame_succ hi hr, Numeric.realCast_mul_wpow_equiv r i.out]
+    apply Fits.equiv_of_forall_moves
     · constructor
       all_goals
         simp only [leftMoves_ofSets, rightMoves_ofSets, forall_mem_image,
