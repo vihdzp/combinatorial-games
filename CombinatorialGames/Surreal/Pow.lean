@@ -547,7 +547,7 @@ theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y 
   cases x; cases y; exact IGame.Numeric.wpow_lt_mul_wpow hr h
 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
-  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_mul_wpow r hs h
+  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_mul_wpow_of_pos r hs h
 
 /-! ### Archimedean classes -/
 
