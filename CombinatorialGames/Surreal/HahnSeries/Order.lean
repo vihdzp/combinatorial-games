@@ -50,6 +50,42 @@ theorem truncGT_def {x y : SurrealHahnSeries} :
     x ≻ y ↔ ∃ i ∈ y.support, ∃ r : ℝ, y.coeff i < r ∧ y.trunc i + single i r = x :=
   truncAux_def
 
+theorem forall_mem_truncAux {y : SurrealHahnSeries}
+    {P : SurrealHahnSeries → Prop} {R : ℝ → ℝ → Prop} :
+    (∀ x ∈ truncAux y R, P x) ↔
+      ∀ i ∈ y.support, ∀ r : ℝ, R r (y.coeff i) → P (y.trunc i + single i r) := by
+  aesop (add simp [truncAux])
+
+@[simp]
+theorem forall_mem_truncLT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
+    (∀ x ∈ truncLT y, P x) ↔
+      ∀ i ∈ y.support, ∀ r : ℝ, r < y.coeff i → P (y.trunc i + single i r) :=
+  forall_mem_truncAux
+
+@[simp]
+theorem forall_mem_truncGT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
+    (∀ x ∈ truncGT y, P x) ↔
+      ∀ i ∈ y.support, ∀ r : ℝ, y.coeff i < r → P (y.trunc i + single i r) :=
+  forall_mem_truncAux
+
+theorem exists_mem_truncAux {y : SurrealHahnSeries}
+    {P : SurrealHahnSeries → Prop} {R : ℝ → ℝ → Prop} :
+    (∃ x ∈ truncAux y R, P x) ↔
+      ∃ i ∈ y.support, ∃ r : ℝ, R r (y.coeff i) ∧ P (y.trunc i + single i r) := by
+  aesop (add simp [truncAux])
+
+@[simp]
+theorem exists_mem_truncLT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
+    (∃ x ∈ truncLT y, P x) ↔
+      ∃ i ∈ y.support, ∃ r : ℝ, r < y.coeff i ∧ P (y.trunc i + single i r) :=
+  exists_mem_truncAux
+
+@[simp]
+theorem exists_mem_truncGT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
+    (∃ x ∈ truncGT y, P x) ↔
+      ∃ i ∈ y.support, ∃ r : ℝ, y.coeff i < r ∧ P (y.trunc i + single i r) :=
+  exists_mem_truncAux
+
 private theorem truncAux_zero (R : ℝ → ℝ → Prop) : truncAux 0 R = ∅ := by
   unfold truncAux; simp
 
@@ -372,6 +408,29 @@ theorem toIGame_le_toIGame_iff {x y : SurrealHahnSeries} : toIGame x ≤ toIGame
 @[simp, norm_cast]
 theorem toIGame_inj {x y : SurrealHahnSeries} : toIGame x = toIGame y ↔ x = y :=
   toIGame_strictMono.injective.eq_iff
+
+theorem toIGame_equiv (x : SurrealHahnSeries) :
+    toIGame x ≈ !{toIGame '' truncLT x | toIGame '' truncGT x} := by
+  induction x using lengthRecOn with
+  | succ x i r hi hr IH =>
+    apply Fits.equiv_of_forall_not_fits
+    · constructor
+      all_goals
+        simp only [leftMoves_ofSets, rightMoves_ofSets, forall_mem_image,
+          forall_mem_truncLT, forall_mem_truncGT]
+        intro j hj s hs
+        rw [toIGame_le_toIGame_iff, not_le, lt_def]
+        use j
+        sorry--aesop
+    · rw [toIGame_succ hi hr, forall_moves_add]
+      simp
+      sorry
+    · sorry
+
+
+  | limit x hx IH => rw [toIGame_limit hx]
+
+#exit
 
 /-- The surreal that corresponds to a given surreal Hahn series. -/
 @[coe]
