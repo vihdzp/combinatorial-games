@@ -895,7 +895,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
       rw [Nimber.add_eq_zero] at H
       obtain rfl := eq_of_inv_mul_eq_one H
       exact hr.false
-  · apply le_of_forall_ne
+  · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
     · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]
