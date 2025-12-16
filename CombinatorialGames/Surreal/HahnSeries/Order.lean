@@ -56,13 +56,11 @@ theorem forall_mem_truncAux {y : SurrealHahnSeries}
       ∀ i ∈ y.support, ∀ r : ℝ, R r (y.coeff i) → P (y.trunc i + single i r) := by
   aesop (add simp [truncAux])
 
-@[simp]
 theorem forall_mem_truncLT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
     (∀ x ∈ truncLT y, P x) ↔
       ∀ i ∈ y.support, ∀ r : ℝ, r < y.coeff i → P (y.trunc i + single i r) :=
   forall_mem_truncAux
 
-@[simp]
 theorem forall_mem_truncGT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
     (∀ x ∈ truncGT y, P x) ↔
       ∀ i ∈ y.support, ∀ r : ℝ, y.coeff i < r → P (y.trunc i + single i r) :=
@@ -74,13 +72,11 @@ theorem exists_mem_truncAux {y : SurrealHahnSeries}
       ∃ i ∈ y.support, ∃ r : ℝ, R r (y.coeff i) ∧ P (y.trunc i + single i r) := by
   aesop (add simp [truncAux])
 
-@[simp]
 theorem exists_mem_truncLT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
     (∃ x ∈ truncLT y, P x) ↔
       ∃ i ∈ y.support, ∃ r : ℝ, r < y.coeff i ∧ P (y.trunc i + single i r) :=
   exists_mem_truncAux
 
-@[simp]
 theorem exists_mem_truncGT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Prop} :
     (∃ x ∈ truncGT y, P x) ↔
       ∃ i ∈ y.support, ∃ r : ℝ, y.coeff i < r ∧ P (y.trunc i + single i r) :=
@@ -413,19 +409,34 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
     toIGame x ≈ !{toIGame '' truncLT x | toIGame '' truncGT x} := by
   induction x using lengthRecOn with
   | succ x i r hi hr IH =>
-    grw [toIGame_succ hi hr, Numeric.realCast_mul_wpow_equiv r i.out]
-    apply Fits.equiv_of_forall_moves
+    have hi' : i ∉ x.support := fun hi' ↦ (hi i hi').false
+    apply Fits.equiv_of_forall_moves_of_equiv (
+      !{toIGame '' truncLT x | toIGame '' truncGT x} +
+      !{(fun s : ℝ ↦ s * ω^ i.out) '' Iio r | (fun s : ℝ ↦ s * ω^ i.out) '' Ioi r})
+    · grw [toIGame_succ hi hr, Numeric.realCast_mul_wpow_equiv, IH]
     · constructor
       all_goals
-        simp only [leftMoves_ofSets, rightMoves_ofSets, forall_mem_image,
-          forall_mem_truncLT, forall_mem_truncGT]
-        intro j hj s hs
-        rw [toIGame_le_toIGame_iff, not_le, lt_def]
-        use j
-        sorry--aesop
-    · rw [toIGame_succ hi hr, forall_moves_add]
-      simp
-      sorry
+        rw [moves_ofSets, forall_mem_image]
+        intro y hy
+      · simpa using lt_of_truncLT hy
+      · simpa using gt_of_truncGT hy
+    · simp_rw [forall_moves_add, moves_ofSets, Player.cases,
+        forall_mem_image, exists_mem_image, forall_mem_truncLT, exists_mem_truncLT, trunc_add]
+      constructor
+      · intro j hj s hs
+        obtain ⟨t, ht⟩ := exists_lt ((x + single i r).coeff i)
+        refine ⟨i, ?_, t, ht, ?_⟩
+        · simp_all
+        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl, add_zero,
+            ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
+          refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
+          · dsimp
+            rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
+            aesop
+          · aesop
+      · sorry
+
+
     · sorry
 
 

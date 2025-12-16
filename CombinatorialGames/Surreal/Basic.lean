@@ -209,7 +209,7 @@ end Numeric
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
 the games are equivalent. In particular, a numeric game is equivalent to the game of the least
-birthday that fits in it -/
+birthday that fits in it. -/
 def Fits (x y : IGame) : Prop :=
   (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
@@ -238,10 +238,20 @@ theorem not_fits_iff {x y : IGame} :
     ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
   rw [Fits, not_and_or]; simp
 
+theorem Fits.congr {x y z : IGame} (h : x ≈ y) (hx : x.Fits z) : y.Fits z := by
+  constructor <;> intro w hw <;> grw [← h]
+  exacts [hx.1 w hw, hx.2 w hw]
+
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
 theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
   ⟨le_of_forall_moves_right_lf hx.2 hl, le_of_forall_moves_left_lf hx.1 hr⟩
+
+/-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
+are easier to enumerate. -/
+theorem Fits.equiv_of_forall_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a) (hx : x.Fits y)
+    (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_moves (hx.congr h) hl hr
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
