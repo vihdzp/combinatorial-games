@@ -285,6 +285,52 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simpa [AntisymmRel] using h
 
+theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame) [Numeric x] :
+    r * ω^ x ≈ !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
+  apply Fits.equiv_of_forall_moves
+  · simp [Fits]
+  · simp_rw [forall_moves_mul, Player.mul_left, moves_ofSets, Player.cases, exists_mem_image]
+    rintro (_ | _) a ha b hb
+    · rw [Real.leftMoves_toIGame] at ha
+      rw [leftMoves_wpow] at hb
+      obtain ⟨s, hs, rfl⟩ := ha
+      obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb
+      · aesop
+      · numeric
+        have hy' := Numeric.left_lt hy
+        obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+        have hts : 0 < (t - s : ℝ) := by simpa
+        use t, ht'
+        rw [← Surreal.mk_le_mk]
+        dsimp [mulOption]
+        rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
+          ← sub_le_iff_le_add, le_neg, neg_sub, ← sub_mul, ← mul_assoc]
+        convert Surreal.mk_le_mk.2 <| (mul_wpow_lt_mul_wpow ((r - s) * a) hts hy').le <;> simp
+    · rw [Real.rightMoves_toIGame] at ha
+      rw [rightMoves_wpow] at hb
+      obtain ⟨s, hs, rfl⟩ := ha
+      obtain ⟨a, -, y, hy, rfl⟩ := hb
+      numeric
+      have hy' := Numeric.lt_right hy
+      obtain ⟨t, ht⟩ := exists_lt r
+      use t, ht
+      rw [← Surreal.mk_le_mk]
+      dsimp [mulOption]
+      rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
+        ← sub_le_iff_le_add, ← neg_mul, ← sub_mul, neg_sub, ← mul_assoc]
+      dsimp at hs
+      convert Surreal.mk_le_mk.2 <| (mul_wpow_lt_mul_wpow (s - t) sorry hy').le
+      · simp
+      · simp
+  · sorry
+
+
+#exit
+theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame) [Numeric x] :
+    ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
+  simpa [mul_comm] using realCast_mul_wpow_equiv r x
+
+#exit
 private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
