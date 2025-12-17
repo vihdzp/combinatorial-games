@@ -4,11 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Mathlib.AddGroupWithTop
-import CombinatorialGames.Mathlib.StandardPart
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.NatOrdinal.Pow
-import Mathlib.Algebra.Order.Ring.Archimedean
+import Mathlib.Algebra.Order.Ring.StandardPart
 
 /-!
 # Surreal exponentiation
@@ -781,12 +780,12 @@ theorem toSurreal_wpow (x : NatOrdinal) : (ω^ x).toSurreal = ω^ x.toSurreal :=
 
 /-- The leading coefficient of a surreal's Hahn series. -/
 def leadingCoeff (x : Surreal) : ℝ :=
-  ArchimedeanClass.standardPart (x / ω^ x.wlog)
+  ArchimedeanClass.stdPart (x / ω^ x.wlog)
 
 @[simp]
 theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
   rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.standardPart_real Real.toSurrealRingHom r
+  exact ArchimedeanClass.stdPart_real Real.toSurrealRingHom r
 
 @[simp]
 theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
@@ -818,7 +817,7 @@ theorem leadingCoeff_mul (x y : Surreal) :
   unfold leadingCoeff
   by_cases hx : x = 0; simp [hx]
   by_cases hy : y = 0; simp [hy]
-  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.standardPart_mul, mul_div_mul_comm]
+  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.stdPart_mul, mul_div_mul_comm]
   all_goals
     rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
     simpa
@@ -834,11 +833,16 @@ theorem leadingCoeff_div (x y : Surreal) :
     leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
   simp [div_eq_mul_inv]
 
+-- TODO: upstream
+theorem _root_.ArchimedeanClass.stdPart_ne_zero {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] {x : K} (h : ArchimedeanClass.mk x = 0) : stdPart x ≠ 0 := by
+  rwa [stdPart_of_mk_nonneg default h.ge, map_ne_zero, FiniteResidueField.mk_ne_zero]
+
 @[simp]
 theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
   mp h := by
     contrapose h
-    apply ArchimedeanClass.standardPart_ne_zero
+    apply ArchimedeanClass.stdPart_ne_zero
     simpa
   mpr := by simp +contextual
 

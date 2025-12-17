@@ -21,6 +21,7 @@ import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
+import CombinatorialGames.Mathlib.AddGroupWithTop
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Order
