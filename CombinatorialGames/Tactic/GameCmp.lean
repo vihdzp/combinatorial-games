@@ -68,7 +68,7 @@ theorem Set.exists_insert {x : α} {y : Set α} :
 @[game_cmp] theorem exists_lt_one {P : ℕ → Prop} : (∃ n < 1, P n) ↔ P 0 := by simp
 
 attribute [game_cmp] le_rfl
-  zero_add add_zero zero_mul mul_zero one_mul mul_one neg_zero
+  zero_add add_zero zero_mul mul_zero one_mul mul_one neg_zero sub_eq_add_neg
   Nat.cast_zero Nat.cast_one Nat.forall_lt_succ Nat.exists_lt_succ
   not_not not_true not_false_eq_true not_forall true_and and_true false_and and_false
   false_implies implies_true forall_const and_imp forall_exists_index
