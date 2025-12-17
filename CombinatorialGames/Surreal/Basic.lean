@@ -246,7 +246,7 @@ theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
 
-Note that in most circumstances, `Fits.equiv_of_forall_moves` is easier to use. -/
+Note that under most circumstances, `Fits.equiv_of_forall_moves` is easier to use. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (h : ∀ p, ∀ z ∈ x.moves p, ¬ z.Fits y) : x ≈ y := by
   simp_rw [not_fits_iff] at h
