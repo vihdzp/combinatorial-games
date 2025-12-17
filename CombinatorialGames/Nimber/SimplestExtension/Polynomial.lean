@@ -263,7 +263,7 @@ theorem forall_lt_quadratic {P : Nimber[X] → Prop} {x y z : Nimber} :
       (∀ b < y, ∀ c, P (C x * X ^ 2 + C b * X + C c)) ∧
       (∀ a < x, ∀ b c, P (C a * X ^ 2 + C b * X + C c)) := by
   refine ⟨fun H ↦
-    ⟨fun c hc ↦ H _ ⟨0, by aesop⟩, fun b hb c ↦ H _ ⟨1, by aesop⟩, fun a ha b c ↦ H _ ⟨2, by aesop⟩⟩,
+    ⟨fun c _ ↦ H _ ⟨0, by aesop⟩, fun b _ c ↦ H _ ⟨1, by aesop⟩, fun a _ b c ↦ H _ ⟨2, by aesop⟩⟩,
     fun ⟨H₁, H₂, H₃⟩ p ⟨n, hn, hp⟩ ↦ ?_⟩
   match n with
   | 0 =>
@@ -528,7 +528,7 @@ theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a
 
 theorem oeval_eq (x : Nimber) (p : Nimber[X]) :
     oeval x p = ∗(x.val ^ p.natDegree * p.leadingCoeff.val + val (oeval x p.eraseLead)) := by
-  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain rfl | hp₀ := eq_or_ne p 0; · simp
   conv_lhs => rw [← eraseLead_add_C_mul_X_pow p, add_comm]
   exact oeval_C_mul_X_pow_add ((degree_eraseLead_lt hp₀).trans_eq (degree_eq_natDegree hp₀)) ..
 
@@ -875,7 +875,7 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
 theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
     {p : Nimber[X]} (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
-  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain rfl | hp₀ := eq_or_ne p 0; · simp
   have hx₁ := lt_of_not_ge fun h ↦ hp₀ (polynomial_eq_zero_of_le_one h hpk)
   have hs := h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)
   conv_lhs => rw [← h.map_embed hx₁ hpk, hs.eq_prod_roots]
