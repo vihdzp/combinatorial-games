@@ -487,26 +487,22 @@ open ArchimedeanClass
 
 Other mathematical papers variously denote this as `x ≪ y` or `x ≺ y`. -/
 notation:50 x:50 " <ₐ " y:50 => ArchimedeanClass.mk y < ArchimedeanClass.mk x
-recommended_spelling "lt" for "<ₐ" in [«term_<ₐ_»]
 
 /-- The relation `x ≤ₐ y` means that `x` is either infinitesimal or commensurate to `y`, i.e. that
 `ArchimedeanClass.mk y ≤ ArchimedeanClass.mk x`.
 
 Other mathematical papers denote this as `x ≼ y`, or use no notation at all. -/
 notation:50 x:50 " ≤ₐ " y:50 => ArchimedeanClass.mk y ≤ ArchimedeanClass.mk x
-recommended_spelling "le" for "<ₐ" in [«term_≤ₐ_»]
 
 /-- The relation `x =ₐ y` means that `x` is commensurate to `y`, i.e. that
 `ArchimedeanClass.mk x = ArchimedeanClass.mk y`.
 
 Other mathematical papers denote this as `x ≍ y`, or use no notation at all. -/
 notation:50 x:50 " =ₐ " y:50 => ArchimedeanClass.mk x = ArchimedeanClass.mk y
-recommended_spelling "eq" for "=ₐ" in [«term_=ₐ_»]
 
 /-- The relation `x ≠ₐ y` means that `x` is not commensurate to `y`, i.e. that
 `ArchimedeanClass.mk x ≠ ArchimedeanClass.mk y`. -/
 notation:50 x:50 " ≠ₐ " y:50 => ¬ ArchimedeanClass.mk x = ArchimedeanClass.mk y
-recommended_spelling "ne" for "=ₐ" in [«term_≠ₐ_»]
 
 theorem mk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
