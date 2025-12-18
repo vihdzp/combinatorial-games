@@ -21,6 +21,12 @@ Among other things, we prove that every non-zero surreal number is commensurate 
 - The order in `ArchimedeanClass` is defined so that the equivalence class of `0` is the **largest**
   equivalence class, rather than the smallest.
 
+## Notation
+
+We introduce ad-hoc notation `x <ₐ y`, `x ≤ₐ y`, and `x =ₐ y` for the respective relations on
+Archimedean classes. Note that our notation does have the expected ordering, so that for instance
+`x <ₐ y` is notation for `ArchimedeanClass.mk y < ArchimedeanClass.mk x`.
+
 ## Todo
 
 - Define the normal form of a surreal number.
@@ -476,6 +482,32 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 
 open ArchimedeanClass
 
+/-- The relation `x <ₐ y` means that `x` is infinitesimal to `y`, i.e. that
+`ArchimedeanClass.mk y < ArchimedeanClass.mk x`.
+
+Other mathematical papers variously denote this as `x ≪ y` or `x ≺ y`. -/
+notation:50 x:50 " <ₐ " y:50 => ArchimedeanClass.mk y < ArchimedeanClass.mk x
+recommended_spelling "lt" for "<ₐ" in [«term_<ₐ_»]
+
+/-- The relation `x ≤ₐ y` means that `x` is either infinitesimal or commensurate to `y`, i.e. that
+`ArchimedeanClass.mk y ≤ ArchimedeanClass.mk x`.
+
+Other mathematical papers denote this as `x ≼ y`, or use no notation at all. -/
+notation:50 x:50 " ≤ₐ " y:50 => ArchimedeanClass.mk y ≤ ArchimedeanClass.mk x
+recommended_spelling "le" for "<ₐ" in [«term_≤ₐ_»]
+
+/-- The relation `x =ₐ y` means that `x` is commensurate to `y`, i.e. that
+`ArchimedeanClass.mk x = ArchimedeanClass.mk y`.
+
+Other mathematical papers denote this as `x ≍ y`, or use no notation at all. -/
+notation:50 x:50 " =ₐ " y:50 => ArchimedeanClass.mk x = ArchimedeanClass.mk y
+recommended_spelling "eq" for "=ₐ" in [«term_=ₐ_»]
+
+/-- The relation `x ≠ₐ y` means that `x` is not commensurate to `y`, i.e. that
+`ArchimedeanClass.mk x ≠ ArchimedeanClass.mk y`. -/
+notation:50 x:50 " ≠ₐ " y:50 => ¬ ArchimedeanClass.mk x = ArchimedeanClass.mk y
+recommended_spelling "ne" for "=ₐ" in [«term_≠ₐ_»]
+
 theorem mk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_pos _).le (wpow_pos _).le
@@ -483,30 +515,26 @@ theorem mk_wpow_strictAnti :
   simpa using mul_wpow_lt_wpow n h
 
 @[simp]
-theorem mk_wpow_lt_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) < ArchimedeanClass.mk (ω^ y) ↔ y < x :=
+theorem mk_wpow_lt_mk_wpow_iff : ω^ x <ₐ ω^ y ↔ x < y :=
   mk_wpow_strictAnti.lt_iff_gt
 
 @[simp]
-theorem mk_wpow_le_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) ≤ ArchimedeanClass.mk (ω^ y) ↔ y ≤ x :=
+theorem mk_wpow_le_mk_wpow_iff : ω^ x ≤ₐ ω^ y ↔ x ≤ y :=
   mk_wpow_strictAnti.le_iff_ge
 
 /-- `ω^ x` and `ω^ y` are commensurate iff `x = y`. -/
 @[simp]
-theorem mk_wpow_inj : ArchimedeanClass.mk (ω^ x) = ArchimedeanClass.mk (ω^ y) ↔ x = y :=
+theorem mk_wpow_inj : ω^ x =ₐ ω^ y ↔ x = y :=
   mk_wpow_strictAnti.injective.eq_iff
 
 private theorem mk_lt_mk_of_ne {x : IGame} [Numeric x] (h : 0 < x)
-    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x)) :
-    ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk x) < .mk (mk y) :=
+    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h; mk y ≠ₐ mk x) :
+    ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h; mk y <ₐ mk x :=
   fun y hy hy' ↦ lt_of_le_of_ne' (mk_antitoneOn hy'.le h.le (Numeric.left_lt hy).le) (Hl y hy hy')
 
 private theorem mk_lt_mk_of_ne' {x : IGame} [Numeric x] (h : 0 < x)
-    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x)) :
-    ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) < .mk (mk x) :=
+    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h; mk y ≠ₐ mk x) :
+    ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h; mk x <ₐ mk y :=
   fun y hy ↦ have hy' := (Numeric.lt_right hy);
     lt_of_le_of_ne (mk_antitoneOn h.le (h.trans hy').le hy'.le) (Hr y hy)
 
@@ -515,12 +543,9 @@ local instance (x : IGame) [Numeric x] (y : (xᴸ ∩ Ioi 0 :)) : Numeric y :=
 
 private theorem numeric_of_forall_mk_ne_mk' {x : IGame} [Numeric x] (h : 0 < x)
     {f : (xᴸ ∩ Ioi 0 :) → Subtype Numeric.{u}} {g : xᴿ → Subtype Numeric.{u}}
-    (hf : ∀ y, ArchimedeanClass.mk (ω^ (mk (f y).1)) = .mk (mk y.1))
-    (hg : ∀ y, ArchimedeanClass.mk (ω^ (mk (g y).1)) = .mk (mk y.1))
-    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x))
-    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x)) :
+    (hf : ∀ y, ω^ (mk (f y).1) =ₐ mk y.1) (hg : ∀ y, ω^ (mk (g y).1) =ₐ mk y.1)
+    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h; mk y ≠ₐ mk x)
+    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h; mk y ≠ₐ mk x) :
     Numeric !{range (Subtype.val ∘ f) | range (Subtype.val ∘ g)} := by
   apply Numeric.mk
   · simp_rw [leftMoves_ofSets, rightMoves_ofSets]
@@ -531,12 +556,9 @@ private theorem numeric_of_forall_mk_ne_mk' {x : IGame} [Numeric x] (h : 0 < x)
 
 private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 0 < x)
     {f : (xᴸ ∩ Ioi 0 :) → Subtype Numeric.{u}} {g : xᴿ → Subtype Numeric.{u}}
-    (hf : ∀ y, ArchimedeanClass.mk (ω^ (mk (f y).1)) = .mk (mk y.1))
-    (hg : ∀ y, ArchimedeanClass.mk (ω^ (mk (g y).1)) = .mk (mk y.1))
-    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x))
-    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h;
-      ArchimedeanClass.mk (mk y) ≠ .mk (mk x)) :
+    (hf : ∀ y, ω^ (mk (f y).1) =ₐ mk y.1) (hg : ∀ y, ω^ (mk (g y).1) =ₐ mk y.1)
+    (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h; mk y ≠ₐ mk x)
+    (Hr : ∀ y (h : y ∈ xᴿ), have := Numeric.of_mem_moves h; mk y ≠ₐ mk x) :
     ω^ !{range (Subtype.val ∘ f) | range (Subtype.val ∘ g)} ≈ x := by
   have Hl' := mk_lt_mk_of_ne h Hl
   have Hr' := mk_lt_mk_of_ne' h Hr
@@ -576,23 +598,21 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
     · exact abs_of_pos <| h.trans (Numeric.lt_right hy)
 
 private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
-    ∃ y : Subtype Numeric, ArchimedeanClass.mk (ω^ mk y) = .mk (mk x) := by
-  have IHl (y : (xᴸ ∩ Ioi 0 :)) :
-      ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
+    ∃ y : Subtype Numeric, ω^ mk y =ₐ mk x := by
+  have IHl (y : (xᴸ ∩ Ioi 0 :)) : ∃ z : Subtype Numeric, ω^ mk z =ₐ mk y :=
     have := y.2.1; exists_mk_wpow_eq' y.2.2
-  have IHr (y : xᴿ) :
-      ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
+  have IHr (y : xᴿ) : ∃ z : Subtype Numeric, ω^ mk z =ₐ mk y :=
     exists_mk_wpow_eq' (h.trans (Numeric.lt_right y.2))
   choose f hf using IHl
   choose g hg using IHr
   by_contra! H
   have Hf (y : IGame) (h : y ∈ xᴸ) (hy : 0 < y) :
-      have := Numeric.of_mem_moves h; ArchimedeanClass.mk (mk y) ≠ ArchimedeanClass.mk (mk x) := by
+      have := Numeric.of_mem_moves h; mk y ≠ₐ mk x := by
     dsimp
     rw [← hf ⟨y, h, hy⟩]
     exact H _
   have Hg (y : IGame) (h : y ∈ xᴿ) :
-      have := Numeric.of_mem_moves h; ArchimedeanClass.mk (mk y) ≠ ArchimedeanClass.mk (mk x) := by
+      have := Numeric.of_mem_moves h; mk y ≠ₐ mk x := by
     dsimp
     rw [← hg ⟨y, h⟩]
     exact H _
@@ -605,8 +625,7 @@ termination_by x
 decreasing_by igame_wf
 
 /-- Every non-zero surreal is commensurate to some `ω^ x`. -/
-theorem exists_mk_wpow_eq (h : x ≠ 0) :
-    ∃ y, ArchimedeanClass.mk (ω^ y) = .mk x := by
+theorem exists_mk_wpow_eq (h : x ≠ 0) : ∃ y, ω^ y =ₐ x := by
   obtain h | h := h.lt_or_gt <;> cases x
   · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' (IGame.zero_lt_neg.2 h)
     use .mk y
@@ -640,19 +659,17 @@ theorem wlog_zero : wlog 0 = 0 :=
   dif_pos rfl
 
 @[simp]
-theorem mk_wpow_wlog (h : x ≠ 0) : ArchimedeanClass.mk (ω^ wlog x) = ArchimedeanClass.mk x := by
+theorem mk_wpow_wlog (h : x ≠ 0) : ω^ wlog x =ₐ x := by
   rw [wlog, dif_neg h]
   exact Classical.choose_spec (exists_mk_wpow_eq h)
 
-theorem wlog_eq_of_mk_eq_mk (h : ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x) :
-    wlog x = y := by
+theorem wlog_eq_of_mk_eq_mk (h : ω^ y =ₐ x) : wlog x = y := by
   obtain rfl | hx := eq_or_ne x 0
   · simp at h
   · rwa [← mk_wpow_wlog hx, eq_comm, mk_wpow_inj] at h
 
 @[simp]
-theorem wlog_eq_iff (h : x ≠ 0) :
-    wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
+theorem wlog_eq_iff (h : x ≠ 0) : wlog x = y ↔ ω^ y =ₐ x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
 
 @[simp]
@@ -705,42 +722,36 @@ private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
   congr! <;> exact image_eq_range ..
 
 private theorem mk_wpow_wlog_left {x : IGame} [Numeric x] :
-    ∀ y : (xᴸ ∩ Ioi 0 :), ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
+    ∀ y : (xᴸ ∩ Ioi 0 :), ω^ mk y.1.wlog =ₐ mk y := by
   intro ⟨y, hy, hy'⟩
   numeric
   rw [mk_wlog, mk_wpow_wlog hy'.ne']
 
 private theorem mk_wpow_wlog_right {x : IGame} [Numeric x] (h : 0 < x) :
-    ∀ y : xᴿ, ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
+    ∀ y : xᴿ, ω^ mk y.1.wlog =ₐ mk y := by
   intro ⟨y, hy⟩
   numeric
   rw [mk_wlog, mk_wpow_wlog]
   simpa [← mk_eq_mk] using (h.trans (Numeric.lt_right hy)).not_antisymmRel_symm
 
 theorem numeric_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
-    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y →
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x))
-    (Hr : ∀ y (hy : y ∈ xᴿ),
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x)) :
+    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y → @mk y (Numeric.of_mem_moves hy) ≠ₐ mk x)
+    (Hr : ∀ y (hy : y ∈ xᴿ), @mk y (Numeric.of_mem_moves hy) ≠ₐ mk x) :
     Numeric !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} := by
   rw [ofSets_wlog_eq]
   exact numeric_of_forall_mk_ne_mk' h mk_wpow_wlog_left (mk_wpow_wlog_right h) Hl Hr
 
 theorem wpow_equiv_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
-    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y →
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x))
-    (Hr : ∀ y (hy : y ∈ xᴿ),
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x)) :
+    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y → @mk y (Numeric.of_mem_moves hy) ≠ₐ mk x)
+    (Hr : ∀ y (hy : y ∈ xᴿ), @mk y (Numeric.of_mem_moves hy) ≠ₐ .mk x) :
     ω^ !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} ≈ x := by
   rw [ofSets_wlog_eq]
   exact wpow_equiv_of_forall_mk_ne_mk' h mk_wpow_wlog_left (mk_wpow_wlog_right h) Hl Hr
 
 /-- A game not commensurate with its positive options is a power of `ω`. -/
 theorem mem_range_wpow_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
-    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y →
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x))
-    (Hr : ∀ y (hy : y ∈ xᴿ),
-      ArchimedeanClass.mk (@mk y (Numeric.of_mem_moves hy)) ≠ .mk (mk x)) :
+    (Hl : ∀ y (hy : y ∈ xᴸ), 0 < y → @mk y (Numeric.of_mem_moves hy) ≠ₐ mk x)
+    (Hr : ∀ y (hy : y ∈ xᴿ), @mk y (Numeric.of_mem_moves hy) ≠ₐ mk x) :
     mk x ∈ range (ω^ ·) := by
   have hn := numeric_of_forall_mk_ne_mk h Hl Hr
   exact ⟨@mk _ hn, mk_eq (wpow_equiv_of_forall_mk_ne_mk h Hl Hr)⟩
