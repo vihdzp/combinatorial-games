@@ -23,8 +23,8 @@ Among other things, we prove that every non-zero surreal number is commensurate 
 
 ## Notation
 
-We introduce ad-hoc notation `x <ₐ y`, `x ≤ₐ y`, and `x =ₐ y` for the respective relations on
-Archimedean classes. Note that our notation does have the expected ordering, so that for instance
+We introduce ad-hoc notation `x <ₐ y`, `x ≤ₐ y`, `x =ₐ y`, and `x ≠ₐ y` for the respective relations
+on Archimedean classes. Note that our notation does have the expected ordering, so that for instance
 `x <ₐ y` is notation for `ArchimedeanClass.mk y < ArchimedeanClass.mk x`.
 
 ## Todo
