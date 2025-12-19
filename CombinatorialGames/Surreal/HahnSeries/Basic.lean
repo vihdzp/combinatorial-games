@@ -313,7 +313,7 @@ theorem trunc_eq_self_iff {x : SurrealHahnSeries} {i : Surreal} :
   · ext j
     by_cases j ∈ x.support <;> aesop
 
-alias ⟨trunc_eq_self, _⟩ := trunc_eq_self_iff
+alias ⟨_, trunc_eq_self⟩ := trunc_eq_self_iff
 
 theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
     (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
@@ -421,6 +421,23 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
   apply RelIso.ordinal_lift_type_eq
   use Equiv.subtypeEquiv (equivShrink _) (fun a ↦ (orderIsoShrink _).toRelIsoLT.map_rel_iff.symm)
   simp
+
+@[simp]
+theorem length_trunc_exp (x : SurrealHahnSeries) (i : Iio x.length) :
+    (x.trunc (x.exp i)).length = i := by
+  rw [← lift_inj, ← type_support]
+  trans type (Subrel (· > · : x.support → _ → _) (· > x.exp i))
+  · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp i))
+      (· > ·) (by aesop)).trans _).ordinal_type_eq
+    use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
+    aesop
+  · simp
+
+theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
+    (x.trunc i).length < x.length := by
+  obtain ⟨i, rfl⟩ := eq_exp_of_mem_support h
+  rw [length_trunc_exp]
+  exact i.2
 
 /-! #### `coeffIdx` -/
 
@@ -689,7 +706,7 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {succ limit}
       · rw [support_ofSeq hf'] at hi
         grind
     congr!
-    · rw [H, trunc_add, trunc_single_of_le le_rfl, add_zero, trunc_eq hi]
+    · rw [H, trunc_add, trunc_single_of_le le_rfl, add_zero, trunc_eq_self hi]
     · exact H
     · rw [H]
       simpa using mt (hi i) (lt_irrefl i)

@@ -510,9 +510,15 @@ end SurrealHahnSeries
 
 namespace Surreal
 
+structure InitialSeg (x : Surreal) : Type _ where
+  carrier : SurrealHahnSeries
+  coeffIdx_eq_leadingCoeff_sub : ∀ i, carrier.coeffIdx i = (x - )
+
+#exit
+
 open Classical in
-private def toSurrealHahnSeriesTrunc (x : Surreal) (i : Ordinal) : SurrealHahnSeries :=
-  SuccOrder.prelimitRecOn (motive := fun _ ↦ SurrealHahnSeries) i
+private def toSurrealHahnSeriesTrunc (x : Surreal) (i : Ordinal) : Iio i → Surreal × ℝ :=
+  SuccOrder.prelimitRecOn (motive := fun i ↦ Iio i → Surreal × ℝ) i
     (fun i hi IH ↦ let y := x - IH.toSurreal; IH + .single y.wlog y.leadingCoeff)
     (fun i hi IH ↦ sorry)
 
