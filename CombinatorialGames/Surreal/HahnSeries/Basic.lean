@@ -264,7 +264,7 @@ theorem coeff_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).coeff = fun j ↦ if i < j then x.coeff j else 0 :=
   rfl
 
-@[simp]
+@[simp, grind =]
 theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).support = x.support ∩ Ioi i := by
   aesop
@@ -422,23 +422,6 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
   use Equiv.subtypeEquiv (equivShrink _) (fun a ↦ (orderIsoShrink _).toRelIsoLT.map_rel_iff.symm)
   simp
 
-@[simp]
-theorem length_trunc_exp (x : SurrealHahnSeries) (i : Iio x.length) :
-    (x.trunc (x.exp i)).length = i := by
-  rw [← lift_inj, ← type_support]
-  trans type (Subrel (· > · : x.support → _ → _) (· > x.exp i))
-  · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp i))
-      (· > ·) (by aesop)).trans _).ordinal_type_eq
-    use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
-    aesop
-  · simp
-
-theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
-    (x.trunc i).length < x.length := by
-  obtain ⟨i, rfl⟩ := eq_exp_of_mem_support h
-  rw [length_trunc_exp]
-  exact i.2
-
 /-! #### `coeffIdx` -/
 
 /-- Returns the coefficient which corresponds to the `i`-th largest exponent, or `0` if no such
@@ -470,6 +453,56 @@ theorem coeffIdx_eq_zero_iff {x : SurrealHahnSeries} {i : Ordinal} :
     rw [coeffIdx_of_lt h]
     exact (x.exp _).2
   mpr := coeffIdx_of_le
+
+/-! #### `truncIdx` -/
+
+/-- Truncates the series at the `i`-th largest exponent, or returns it unchanged if no such
+coefficient exists. -/
+def truncIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : SurrealHahnSeries :=
+  if h : i < x.length then x.trunc (x.exp ⟨i, h⟩) else x
+
+@[aesop simp]
+theorem support_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
+    (truncIdx x i).support =
+      if hi : i < x.length then x.support ∩ Ioi (x.exp ⟨i, hi⟩) else x.support := by
+  unfold truncIdx
+  aesop
+
+theorem truncIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
+    x.truncIdx i = x.trunc (x.exp ⟨i, h⟩) := by
+  rw [truncIdx, dif_pos]
+
+theorem truncIdx_of_le {x : SurrealHahnSeries} {i : Ordinal} (h : x.length ≤ i) :
+    x.truncIdx i = x := by
+  rw [truncIdx, dif_neg h.not_gt]
+
+@[simp, grind =]
+theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i :=
+  (truncIdx_of_lt _).symm
+
+@[simp]
+theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by
+  rw [truncIdx_of_lt] <;> simp
+
+@[simp, grind =]
+theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
+    (x.truncIdx i).length = min i x.length := by
+  obtain hi | hi := lt_or_ge i x.length
+  · rw [← lift_inj, ← type_support]
+    trans type (Subrel (· > · : x.support → _ → _) (· > x.exp ⟨i, hi⟩))
+    · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp ⟨i, hi⟩))
+        (· > ·) _).trans _).ordinal_type_eq
+      · rw [truncIdx_of_lt hi, support_trunc]
+        aesop
+      · use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
+        aesop
+    · simpa using hi.le
+  · rw [truncIdx_of_le hi, min_eq_right hi]
+
+theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
+    (x.trunc i).length < x.length := by
+  obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support h
+  rwa [trunc_exp, length_truncIdx, min_eq_left hi.le]
 
 /-! #### `ofSeq` -/
 
@@ -636,11 +669,14 @@ theorem length_add_single_le {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
   · rw [length_add_single h hr]
 
 theorem length_trunc_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
-    (x.trunc (x.exp i) + single (x.exp i) r).length = i + 1 := by
-  rw [length_add_single, length_trunc_exp] <;> aesop
+    (x.truncIdx i + single (x.exp i) r).length = i + 1 := by
+  rw [length_add_single _ hr, length_truncIdx]
+  · aesop
+  · rw [truncIdx_of_lt i.2, support_trunc]
+    aesop
 
 theorem length_trunc_add_single_le {x : SurrealHahnSeries} (i : Iio x.length) (r : ℝ) :
-    (x.trunc (x.exp i) + single (x.exp i) r).length ≤ i + 1 := by
+    (x.truncIdx i + single (x.exp i) r).length ≤ i + 1 := by
   obtain rfl | hr := eq_or_ne r 0
   · simp
   · rw [length_trunc_add_single _ hr]
@@ -660,7 +696,7 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
   SuccOrder.prelimitRecOn o
     (by
       refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
-        (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ <| length_trunc_exp ..))
+        (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ ?_))
       all_goals aesop
     )
     (fun a ha IH x hx ↦ limit _ (hx ▸ ha) fun y hy ↦ IH _ (hx ▸ hy) _ rfl)
@@ -669,8 +705,8 @@ private theorem lengthRecOnAux_succ {motive : SurrealHahnSeries → Sort*}
     {o a : Ordinal} (ha : a = o + 1) {succ limit} :
     lengthRecOnAux (motive := motive) a succ limit = fun x _ ↦
       cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all))
-        (succ (x.trunc <| x.exp ⟨o, by simp_all⟩) _ _ (by simp) (by simp_all)
-          (lengthRecOnAux o succ limit _ (by simp))) := by
+        (succ (x.trunc <| x.exp ⟨o, _⟩) _ _ (by grind) (by simp_all)
+          (lengthRecOnAux o succ limit _ (by grind))) := by
   subst ha; exact SuccOrder.prelimitRecOn_succ ..
 
 private theorem lengthRecOnAux_limit {motive : SurrealHahnSeries → Sort*}
@@ -697,7 +733,7 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {succ limit}
       rw [ofSeq_add_single]
       · simp_rw [length_ofSeq hf']
         intro hx
-        rw [exp_ofSeq, dif_pos rfl]
+        rw [exp_ofSeq, dif_pos rfl] 
         -- Why does `grind` fail here?
         intro j
         split_ifs
