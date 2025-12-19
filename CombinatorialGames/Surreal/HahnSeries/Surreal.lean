@@ -1,4 +1,5 @@
 import CombinatorialGames.Surreal.HahnSeries.Basic
+import CombinatorialGames.Surreal.Birthday.Basic
 
 universe u
 
@@ -476,6 +477,10 @@ instance numeric_ofSets_truncLT_truncGT (x : SurrealHahnSeries) :
 def toSurreal (x : SurrealHahnSeries) : Surreal :=
   .mk x
 
+@[simp]
+theorem mk_toIGame (x : SurrealHahnSeries) : Surreal.mk x.toIGame = toSurreal x :=
+  rfl
+
 instance : Coe SurrealHahnSeries Surreal where
   coe := toSurreal
 
@@ -505,6 +510,18 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
   convert Surreal.mk_eq <| toIGame_equiv x
   rw [Surreal.mk_ofSets]
   congr <;> aesop
+
+theorem birthday_truncIdx_monotone (x : SurrealHahnSeries) :
+    Monotone fun i ↦ Surreal.birthday (.mk <| truncIdx x i) := by
+  intro i j h
+  apply Fits.birthday_le
+  rw [fits_congr]
+
+theorem birthday_truncIdx_strictMonoOn (x : SurrealHahnSeries) :
+    StrictMonoOn (fun i ↦ Surreal.birthday (.mk <| truncIdx x i)) (Iio x.length) := by
+  sorry
+
+#exit
 
 end SurrealHahnSeries
 
