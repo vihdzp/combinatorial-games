@@ -105,11 +105,8 @@ theorem trunc_add_single_truncGT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
 instance small_truncAux (x : SurrealHahnSeries.{u}) (R : ℝ → ℝ → Prop) : Small.{u} (truncAux x R) :=
   by unfold truncAux; infer_instance
 
-instance small_truncLT (x : SurrealHahnSeries.{u}) : Small.{u} (truncLT x) :=
-  small_truncAux ..
-
-instance small_truncGT (x : SurrealHahnSeries.{u}) : Small.{u} (truncGT x) :=
-  small_truncAux ..
+instance small_truncLT (x : SurrealHahnSeries.{u}) : Small.{u} (truncLT x) := small_truncAux ..
+instance small_truncGT (x : SurrealHahnSeries.{u}) : Small.{u} (truncGT x) := small_truncAux ..
 
 private theorem length_le_of_truncAux {x y : SurrealHahnSeries} {R : ℝ → ℝ → Prop}
     (h : x ∈ truncAux y R) : x.length ≤ y.length := by
@@ -427,22 +424,43 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         obtain ⟨t, ht⟩ := exists_lt ((x + single i r).coeff i)
         refine ⟨i, ?_, t, ht, ?_⟩
         · simp_all
-        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl, add_zero,
+        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl,
             ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
           · dsimp
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
             aesop
           · aesop
-      · sorry
-
-
-    · sorry
-
-
+      · intro s hs
+        obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+        refine ⟨i, ?_, t, ?_, ?_⟩
+        · simp_all
+        · simp_all
+        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq hi]
+          simpa using ht.le
+    -- TODO: can we more immediately prove this case from the previous?
+    · simp_rw [forall_moves_add, moves_ofSets, Player.cases,
+        forall_mem_image, exists_mem_image, forall_mem_truncGT, exists_mem_truncGT, trunc_add]
+      constructor
+      · intro j hj s hs
+        obtain ⟨t, ht⟩ := exists_gt ((x + single i r).coeff i)
+        refine ⟨i, ?_, t, ht, ?_⟩
+        · simp_all
+        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl,
+            ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
+          refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
+          · dsimp
+            rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
+            aesop
+          · aesop
+      · intro s hs
+        obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+        refine ⟨i, ?_, t, ?_, ?_⟩
+        · simp_all
+        · simp_all
+        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq hi]
+          simpa using ht'.le
   | limit x hx IH => rw [toIGame_limit hx]
-
-#exit
 
 /-- The surreal that corresponds to a given surreal Hahn series. -/
 @[coe]
@@ -455,4 +473,3 @@ instance : Coe SurrealHahnSeries Surreal where
 end SurrealHahnSeries
 end
 
-#exit

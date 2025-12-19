@@ -1,5 +1,5 @@
 import CombinatorialGames.Surreal.Pow
-import CombinatorialGames.Mathlib.StandardPart
+import Mathlib.Algebra.Order.Ring.StandardPart
 import Mathlib.RingTheory.HahnSeries.Summable
 import Mathlib.RingTheory.HahnSeries.Lex
 
@@ -33,22 +33,6 @@ attribute [aesop simp] Pi.single_apply mem_lowerBounds
 attribute [-simp] Ordinal.add_one_eq_succ
 attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
 attribute [aesop unsafe forward] le_of_lt lt_of_le_of_ne not_lt_of_ge
-
--- #32670
-namespace HahnSeries
-
-@[inherit_doc HahnSeries]
-scoped syntax:max (priority := high) term noWs "⟦" term "⟧" : term
-
-macro_rules | `($R⟦$M⟧) => `(HahnSeries $M $R)
-
-/-- Unexpander for `HahnSeries`. -/
-@[scoped app_unexpander HahnSeries]
-meta def unexpander : Lean.PrettyPrinter.Unexpander
-  | `($_ $M $R) => `($R⟦$M⟧)
-  | _ => throw ()
-
-end HahnSeries
 
 -- #32648
 section Subfield
