@@ -13,7 +13,10 @@ namespace Surreal
 open IGame NatOrdinal Order Set
 
 /-- The birthday of a surreal number is defined as the least birthday
-among all *numeric* pre-games that define it. -/
+among all *numeric* pre-games that define it.
+
+The theorem `Surreal.birthday_toGame` shows that the numeric condition can be removed without
+changing the result. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
 
@@ -70,6 +73,25 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 @[simp]
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
+
+theorem birthday_eq_iInf_fits (x : IGame) [hx : Numeric x] :
+    birthday (.mk x) = ⨅ y : {y : Subtype Numeric // Fits y x}, birthday (.mk y.1.1) := by
+  let f (y : {y : Subtype Numeric // Fits y x}) := birthday (.mk y.1)
+  let : Inhabited {y : Subtype Numeric // Fits y x} := ⟨⟨x, hx⟩, Fits.refl _⟩
+  apply (ciInf_le' f default).antisymm'
+  obtain ⟨⟨⟨y, _⟩, hy⟩, hy'⟩ := ciInf_mem f
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk y)
+  rw [← hz'.trans hy']
+  apply (birthday_mk_le z).trans'
+  congr! 1
+  rw [eq_comm, mk_eq_mk]
+  refine Fits.equiv_of_forall_birthday_le (Fits.congr fun w hw hw' ↦ ?_
+  dsimp [f] at hy'
+
+  sorry
+
+
+#exit
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
