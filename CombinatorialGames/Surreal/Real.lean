@@ -366,15 +366,26 @@ theorem toSurreal_inj {x y : ℝ} : (x : Surreal) = y ↔ x = y :=
 theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
   simpa using Surreal.mk_eq (toIGame_ratCast_equiv q)
 
-@[simp, norm_cast] theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by
+@[simp, norm_cast]
+theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
-@[simp] theorem toSurreal_ofNat (n : ℕ) [n.AtLeastTwo] : toSurreal ofNat(n) = n :=
+
+@[simp]
+theorem toSurreal_ofNat (n : ℕ) [n.AtLeastTwo] : toSurreal ofNat(n) = n :=
   toSurreal_natCast n
-@[simp, norm_cast] theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by
+
+@[simp, norm_cast]
+theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
 
 @[simp, norm_cast] theorem toSurreal_zero : toSurreal 0 = 0 := by simpa using toSurreal_natCast 0
 @[simp, norm_cast] theorem toSurreal_one : toSurreal 1 = 1 := by simpa using toSurreal_natCast 1
+
+@[simp] theorem toSurreal_eq_zero_iff {x : ℝ} : (x : Surreal) = 0 ↔ x = 0 := by norm_cast
+@[simp] theorem zero_eq_toSurreal_iff {x : ℝ} : 0 = (x : Surreal) ↔ 0 = x := by norm_cast
+
+@[simp] theorem toSurreal_eq_one_iff {x : ℝ} : (x : Surreal) = 1 ↔ x = 1 := by norm_cast
+@[simp] theorem one_eq_toSurreal_iff {x : ℝ} : 1 = (x : Surreal) ↔ 1 = x := by norm_cast
 
 @[simp]
 theorem toSurreal_neg (x : ℝ) : toSurreal (-x) = -toSurreal x :=

@@ -384,7 +384,7 @@ private theorem toIGame_aux {o : Ordinal} {x y : SurrealHahnSeries}
       aesop
 termination_by o
 
-instance numeric (x : SurrealHahnSeries) : Numeric (toIGame x) :=
+instance numeric_toIGame (x : SurrealHahnSeries) : Numeric (toIGame x) :=
   (toIGame_aux (lt_add_one _) (lt_add_one _)).1
 
 theorem toIGame_strictMono : StrictMono toIGame := by
@@ -462,6 +462,15 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
           simpa using ht'.le
   | limit x hx IH => rw [toIGame_limit hx]
 
+instance numeric_ofSets_truncLT_truncGT (x : SurrealHahnSeries) :
+    Numeric !{toIGame '' truncLT x | toIGame '' truncGT x} := by
+  rw [numeric_def]
+  constructor
+  · simp_rw [moves_ofSets, Player.cases, forall_mem_image]
+    intro i hi j hj
+    exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)
+  · simp [numeric_toIGame]
+
 /-- The surreal that corresponds to a given surreal Hahn series. -/
 @[coe]
 def toSurreal (x : SurrealHahnSeries) : Surreal :=
@@ -470,6 +479,45 @@ def toSurreal (x : SurrealHahnSeries) : Surreal :=
 instance : Coe SurrealHahnSeries Surreal where
   coe := toSurreal
 
-end SurrealHahnSeries
-end
+theorem toSurreal_strictMono : StrictMono toSurreal :=
+  toIGame_strictMono
 
+@[simp, norm_cast]
+theorem toSurreal_lt_toSurreal_iff {x y : SurrealHahnSeries} : toSurreal x < toSurreal y ↔ x < y :=
+  toIGame_lt_toIGame_iff
+
+@[simp, norm_cast]
+theorem toSurreal_le_toSurreal_iff {x y : SurrealHahnSeries} : toSurreal x ≤ toSurreal y ↔ x ≤ y :=
+  toIGame_le_toIGame_iff
+
+@[simp, norm_cast]
+theorem toSurreal_inj {x y : SurrealHahnSeries} : toSurreal x = toSurreal y ↔ x = y :=
+  toSurreal_strictMono.injective.eq_iff
+
+@[simp]
+theorem toSurreal_zero : toSurreal 0 = 0 := by simp [toSurreal]
+
+theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
+    toSurreal x = !{toSurreal '' truncLT x | toSurreal '' truncGT x}'(by
+      rintro _ ⟨i, hi, rfl⟩ _ ⟨j, hj, rfl⟩
+      exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)
+    ) := by
+  convert Surreal.mk_eq <| toIGame_equiv x
+  rw [Surreal.mk_ofSets]
+  congr <;> aesop
+
+end SurrealHahnSeries
+
+namespace Surreal
+
+open Classical in
+private def toSurrealHahnSeriesTrunc (x : Surreal) (i : Ordinal) : SurrealHahnSeries :=
+  SuccOrder.prelimitRecOn (motive := fun _ ↦ SurrealHahnSeries) i
+    (fun i hi IH ↦ let y := x - IH.toSurreal; IH + .single y.wlog y.leadingCoeff)
+    (fun i hi IH ↦ sorry)
+
+/-- The **Conway normal form** of a surreal number. -/
+def toSurrealHahnSeries (x : Surreal) : SurrealHahnSeries :=
+  sorry
+
+end Surreal

@@ -910,6 +910,10 @@ theorem leadingCoeff_div (x y : Surreal) :
     leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
   simp [div_eq_mul_inv]
 
+@[simp]
+theorem leadingCoeff_wpow (x : Surreal) : leadingCoeff (ω^ x) = 1 := by
+  simp [leadingCoeff]
+
 -- TODO: upstream
 theorem _root_.ArchimedeanClass.stdPart_ne_zero {K : Type*} [Field K] [LinearOrder K]
     [IsOrderedRing K] {x : K} (h : ArchimedeanClass.mk x = 0) : stdPart x ≠ 0 := by
@@ -922,6 +926,64 @@ theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 wh
     apply ArchimedeanClass.stdPart_ne_zero
     simpa
   mpr := by simp +contextual
+
+/-- The leading term of a surreal's Hahn series. -/
+def leadingTerm (x : Surreal) : Surreal :=
+  x.leadingCoeff * ω^ x.wlog
+
+@[simp]
+theorem leadingTerm_realCast (r : ℝ) : leadingTerm r = r := by
+  simp [leadingTerm]
+
+@[simp]
+theorem leadingTerm_ratCast (q : ℚ) : leadingTerm q = q :=
+  mod_cast leadingTerm_realCast q
+
+@[simp]
+theorem leadingTerm_intCast (n : ℤ) : leadingTerm n = n :=
+  mod_cast leadingTerm_realCast n
+
+@[simp]
+theorem leadingTerm_natCast (n : ℕ) : leadingTerm n = n :=
+  mod_cast leadingTerm_realCast n
+
+@[simp]
+theorem leadingTerm_zero : leadingTerm 0 = 0 :=
+  mod_cast leadingTerm_natCast 0
+
+@[simp]
+theorem leadingTerm_one : leadingTerm 1 = 1 :=
+  mod_cast leadingTerm_natCast 1
+
+@[simp]
+theorem leadingTerm_neg (x : Surreal) : leadingTerm (-x) = -leadingTerm x := by
+  simp [leadingTerm]
+
+@[simp]
+theorem leadingTerm_mul (x y : Surreal) :
+    leadingTerm (x * y) = leadingTerm x * leadingTerm y := by
+  obtain rfl | hx := eq_or_ne x 0; · simp
+  obtain rfl | hy := eq_or_ne y 0; · simp
+  simp [leadingTerm, wlog_mul hx hy, mul_mul_mul_comm]
+
+@[simp]
+theorem leadingTerm_inv (x : Surreal) : leadingTerm x⁻¹ = (leadingTerm x)⁻¹ := by
+  obtain rfl | hx := eq_or_ne x 0; · simp
+  apply eq_inv_of_mul_eq_one_left
+  rw [← leadingTerm_mul, inv_mul_cancel₀ hx, leadingTerm_one]
+
+@[simp]
+theorem leadingTerm_div (x y : Surreal) :
+    leadingTerm (x / y) = leadingTerm x / leadingTerm y := by
+  simp [div_eq_mul_inv]
+
+@[simp]
+theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
+  simp [leadingTerm]
+
+@[simp]
+theorem leadingTerm_eq_zero_iff {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
+  simp [leadingTerm]
 
 end Surreal
 end

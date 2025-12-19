@@ -303,10 +303,17 @@ theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
     (single i r).trunc j = single i r := by
   aesop
 
-theorem trunc_eq {x : SurrealHahnSeries} {i : Surreal} (h : ∀ j ∈ x.support, i < j) :
-    x.trunc i = x := by
-  ext j
-  by_cases j ∈ x.support <;> aesop
+theorem trunc_eq_self_iff {x : SurrealHahnSeries} {i : Surreal} :
+    x.trunc i = x ↔ ∀ j ∈ x.support, i < j := by
+  refine ⟨fun hx j hj ↦ ?_, fun _ ↦ ?_⟩
+  · by_contra! hi
+    apply_fun (coeff · j) at hx
+    rw [coeff_trunc_of_le hi] at hx
+    exact hj hx.symm
+  · ext j
+    by_cases j ∈ x.support <;> aesop
+
+alias ⟨trunc_eq_self, _⟩ := trunc_eq_self_iff
 
 theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
     (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
@@ -415,23 +422,6 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
   use Equiv.subtypeEquiv (equivShrink _) (fun a ↦ (orderIsoShrink _).toRelIsoLT.map_rel_iff.symm)
   simp
 
-@[simp]
-theorem length_trunc_exp (x : SurrealHahnSeries) (i : Iio x.length) :
-    (x.trunc (x.exp i)).length = i := by
-  rw [← lift_inj, ← type_support]
-  trans type (Subrel (· > · : x.support → _ → _) (· > x.exp i))
-  · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp i))
-      (· > ·) (by aesop)).trans _).ordinal_type_eq
-    use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
-    aesop
-  · simp
-
-theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
-    (x.trunc i).length < x.length := by
-  obtain ⟨i, rfl⟩ := eq_exp_of_mem_support h
-  rw [length_trunc_exp]
-  exact i.2
-
 /-! #### `coeffIdx` -/
 
 /-- Returns the coefficient which corresponds to the `i`-th largest exponent, or `0` if no such
@@ -503,6 +493,12 @@ theorem coeff_ofSeq' {x : Surreal} (i : Ordinal) (hi : i < o) (h : (f ⟨i, hi�
 theorem coeff_ofSeq_of_ne {x : Surreal} (h : x ∉ range (Prod.fst ∘ f)) :
     coeff (ofSeq o f hf) x = 0 := by
   grind [ofSeq]
+
+theorem coeff_ofSeq_zero (ho : o = 0) : ofSeq o f hf = 0 := by
+  subst ho
+  ext
+  rw [coeff_ofSeq_of_ne, coeff_zero, Pi.zero_apply]
+  simp
 
 theorem support_ofSeq_subset : (ofSeq o f hf).support ⊆ range (Prod.fst ∘ f) :=
   ofSeq_aux o f
