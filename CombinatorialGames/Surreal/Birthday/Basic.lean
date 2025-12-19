@@ -84,14 +84,27 @@ theorem birthday_eq_iInf_fits (x : IGame) [hx : Numeric x] :
   rw [← hz'.trans hy']
   apply (birthday_mk_le z).trans'
   congr! 1
-  rw [eq_comm, mk_eq_mk]
-  refine Fits.equiv_of_forall_birthday_le (Fits.congr fun w hw hw' ↦ ?_
-  dsimp [f] at hy'
+  rw [eq_comm, mk_eq_mk] at hz ⊢
+  refine (hy.congr hz).equiv_of_forall_birthday_le fun w hw hw' ↦ hz' ▸ ?_
+  exact hy'.trans_le <| (ciInf_le' f ⟨⟨w, hw⟩, hw'⟩).trans (birthday_mk_le _)
 
-  sorry
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [hx : Numeric x] [Numeric y] (h : Fits x y) :
+    birthday (.mk y) ≤ birthday (.mk x) := by
+  let f (x : {x : Subtype Numeric // Fits x y}) := birthday (.mk x.1)
+  rw [birthday_eq_iInf_fits y]
+  exact ciInf_le' f ⟨⟨x, hx⟩, h⟩
 
-
-#exit
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] [Numeric y]
+    (h : Fits x y) (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+  apply h.birthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :

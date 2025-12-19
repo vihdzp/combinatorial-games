@@ -238,6 +238,10 @@ theorem not_fits_iff {x y : IGame} :
     ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
   rw [Fits, not_and_or]; simp
 
+theorem Fits.congr {x y z : IGame} (h : x ≈ y) (hx : x.Fits z) : y.Fits z := by
+  constructor <;> intro w hw <;> grw [← h]
+  exacts [hx.1 w hw, hx.2 w hw]
+
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
 theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
