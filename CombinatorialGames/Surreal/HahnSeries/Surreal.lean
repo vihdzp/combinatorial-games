@@ -223,7 +223,7 @@ private theorem toIGame_lt_toIGame_of_truncLT {x y : SurrealHahnSeries} (h : x �
       · rwa [sub_neg]
       · rw [← Surreal.mk_lt_mk]
         simpa
-    · rw [trunc_eq hi]
+    · rw [trunc_eq_self hi]
       have : y.coeff j = 0 := by
         by_contra h
         exact (hi _ h).false
@@ -265,7 +265,7 @@ private theorem toIGame_lt_toIGame_of_truncGT {x y : SurrealHahnSeries} (h : x �
       · rwa [sub_pos]
       · rw [← Surreal.mk_lt_mk]
         simpa
-    · rw [trunc_eq hi]
+    · rw [trunc_eq_self hi]
       have : y.coeff j = 0 := by
         by_contra h
         exact (hi _ h).false
@@ -436,7 +436,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         refine ⟨i, ?_, t, ?_, ?_⟩
         · simp_all
         · simp_all
-        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq hi]
+        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
           simpa using ht.le
     -- TODO: can we more immediately prove this case from the previous?
     · simp_rw [forall_moves_add, moves_ofSets, Player.cases,
@@ -458,7 +458,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         refine ⟨i, ?_, t, ?_, ?_⟩
         · simp_all
         · simp_all
-        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq hi]
+        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
           simpa using ht'.le
   | limit x hx IH => rw [toIGame_limit hx]
 
@@ -508,22 +508,77 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
 
 end SurrealHahnSeries
 
+/-! ### Surreals as Hahn series -/
+
 namespace Surreal
 
+/-- An auxiliary type containing the truncations of `x.toSurrealHahnSeries`.
+
+We'll show that this type, ordered by length, forms a complete linear order, whose supremum
+satisfies `toSurreal ⊤ = x`. -/
+@[ext]
 structure InitialSeg (x : Surreal) : Type _ where
+  /-- The underlying `SurrealHahnSeries`. -/
   carrier : SurrealHahnSeries
-  coeffIdx_eq_leadingCoeff_sub : ∀ i, carrier.coeffIdx i = (x - )
+  /-- The condition which guarantees that the Hahn series is some truncation of that of `x`. -/
+  coeffIdx_eq_leadingCoeff_sub' {i} (hi : i < carrier.length) :
+    carrier.coeffIdx i = (x - carrier.truncIdx i).leadingCoeff
 
-#exit
+namespace InitialSeg
+variable {x : Surreal}
 
-open Classical in
-private def toSurrealHahnSeriesTrunc (x : Surreal) (i : Ordinal) : Iio i → Surreal × ℝ :=
-  SuccOrder.prelimitRecOn (motive := fun i ↦ Iio i → Surreal × ℝ) i
-    (fun i hi IH ↦ let y := x - IH.toSurreal; IH + .single y.wlog y.leadingCoeff)
-    (fun i hi IH ↦ sorry)
+open SurrealHahnSeries
+
+instance : Zero (InitialSeg x) where
+  zero := ⟨0, by simp⟩
+
+@[simp]
+theorem carrier_zero : carrier (0 : InitialSeg x) = 0 :=
+  rfl
+
+/-- The length of the carrier. -/
+def length (y : InitialSeg x) : Ordinal :=
+  y.carrier.length
+
+@[simp]
+theorem length_zero : length (0 : InitialSeg x) = 0 := by
+  simp [length]
+
+/-- The `coeffIdx` function on the carrier. -/
+def coeffIdx (y : InitialSeg x) : Ordinal → ℝ :=
+  y.carrier.coeffIdx
+
+theorem coeffIdx_eq_leadingCoeff_sub {y : InitialSeg x} {i} (hi : i < y.length) :
+    y.coeffIdx i = (x - y.carrier.truncIdx i).leadingCoeff :=
+  y.coeffIdx_eq_leadingCoeff_sub' hi
+
+/-- Truncating the series preserves that it is an initial segment. -/
+def truncIdx (y : InitialSeg x) (i : Ordinal) : InitialSeg x where
+  carrier := y.carrier.truncIdx i
+  coeffIdx_eq_leadingCoeff_sub' {j} hj := by
+    have hj' : j < i := hj.trans_le (by simp)
+    rw [coeffIdx_truncIdx_of_lt hj', truncIdx_truncIdx, min_eq_right hj'.le]
+    apply y.coeffIdx_eq_leadingCoeff_sub' (hj.trans_le _)
+    simp
+
+@[simp]
+theorem carrier_truncIdx (y : InitialSeg x) (i : Ordinal) :
+    (y.truncIdx i).carrier = y.carrier.truncIdx i :=
+  rfl
+
+instance : Preorder (InitialSeg x) :=
+  .lift length
+
+theorem truncIdx_length_of_le {y z : InitialSeg x} (h : y ≤ z) : z.truncIdx y.length = y := by
+  sorry
+
+instance : CompleteLinearOrder (InitialSeg x) :=
+  sorry
+
+end InitialSeg
 
 /-- The **Conway normal form** of a surreal number. -/
 def toSurrealHahnSeries (x : Surreal) : SurrealHahnSeries :=
-  sorry
+  (⊤ : InitialSeg x).carrier
 
 end Surreal
