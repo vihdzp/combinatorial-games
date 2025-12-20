@@ -638,7 +638,7 @@ namespace Surreal
 We'll show that this type, ordered by length, forms a complete linear order, whose supremum
 satisfies `toSurreal ⊤ = x`. -/
 @[ext]
-structure InitialSeg (x : Surreal) : Type _ where
+structure PartialSum (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
   carrier : SurrealHahnSeries
   /-- Every non-zero coefficient matches that of `x.toSurrealHahnSeries`. -/
@@ -648,12 +648,12 @@ structure InitialSeg (x : Surreal) : Type _ where
   exp_eq_wlog_sub {i} (hi : i < carrier.length) :
     carrier.exp ⟨i, hi⟩ = (x - carrier.truncIdx i).wlog
 
-namespace InitialSeg
+namespace PartialSum
 variable {x : Surreal.{u}}
 
 open SurrealHahnSeries
 
-instance : Bot (InitialSeg x) where
+instance : Bot (PartialSum x) where
   bot := ⟨0, by simp, by simp⟩
 
 theorem carrier_injective : Function.Injective (carrier (x := x)) := by
@@ -662,38 +662,38 @@ theorem carrier_injective : Function.Injective (carrier (x := x)) := by
   rw [h]
 
 @[simp]
-theorem carrier_inj {y z : InitialSeg x} : y.carrier = z.carrier ↔ y = z :=
+theorem carrier_inj {y z : PartialSum x} : y.carrier = z.carrier ↔ y = z :=
   carrier_injective.eq_iff
 
 @[simp]
-theorem carrier_bot : carrier (⊥ : InitialSeg x) = 0 :=
+theorem carrier_bot : carrier (⊥ : PartialSum x) = 0 :=
   rfl
 
 /-- The length of the carrier. -/
-def length (y : InitialSeg x) : Ordinal :=
+def length (y : PartialSum x) : Ordinal :=
   y.carrier.length
 
 @[simp]
-theorem length_bot : length (⊥ : InitialSeg x) = 0 := by
+theorem length_bot : length (⊥ : PartialSum x) = 0 := by
   simp [length]
 
-instance : Preorder (InitialSeg x) :=
+instance : Preorder (PartialSum x) :=
   .lift length
 
-instance : WellFoundedLT (InitialSeg x) where
+instance : WellFoundedLT (PartialSum x) where
   wf := InvImage.wf length wellFounded_lt
 
-instance : WellFoundedRelation (InitialSeg x) :=
+instance : WellFoundedRelation (PartialSum x) :=
   ⟨_, wellFounded_lt⟩
 
 theorem length_strictMono : StrictMono (length (x := x)) :=
   fun _ _ ↦ id
 
-@[simp] theorem length_lt_length {y z : InitialSeg x} : length y < length z ↔ y < z := .rfl
-@[simp] theorem length_le_length {y z : InitialSeg x} : length y ≤ length z ↔ y ≤ z := .rfl
+@[simp] theorem length_lt_length {y z : PartialSum x} : length y < length z ↔ y < z := .rfl
+@[simp] theorem length_le_length {y z : PartialSum x} : length y ≤ length z ↔ y ≤ z := .rfl
 
 /-- Truncating the series preserves that it is an initial segment. -/
-def truncIdx (y : InitialSeg x) (i : Ordinal) : InitialSeg x where
+def truncIdx (y : PartialSum x) (i : Ordinal) : PartialSum x where
   carrier := y.carrier.truncIdx i
   coeffIdx_eq_leadingCoeff_sub {j} hj := by
     have hj' : j < i := hj.trans_le (by simp)
@@ -705,29 +705,29 @@ def truncIdx (y : InitialSeg x) (i : Ordinal) : InitialSeg x where
     rw [exp_truncIdx, truncIdx_truncIdx, min_eq_right hj'.le, y.exp_eq_wlog_sub]
 
 @[simp]
-theorem carrier_truncIdx (y : InitialSeg x) (i : Ordinal) :
+theorem carrier_truncIdx (y : PartialSum x) (i : Ordinal) :
     (y.truncIdx i).carrier = y.carrier.truncIdx i :=
   rfl
 
 @[simp]
-theorem length_truncIdx (y : InitialSeg x) (i : Ordinal) : (y.truncIdx i).length = min i y.length :=
+theorem length_truncIdx (y : PartialSum x) (i : Ordinal) : (y.truncIdx i).length = min i y.length :=
   y.carrier.length_truncIdx i
 
-theorem truncIdx_le (y : InitialSeg x) (i : Ordinal) : y.truncIdx i ≤ y :=
+theorem truncIdx_le (y : PartialSum x) (i : Ordinal) : y.truncIdx i ≤ y :=
   (length_truncIdx ..).trans_le (min_le_right ..)
 
 @[simp]
-theorem truncIdx_truncIdx (y : InitialSeg x) (i j : Ordinal) :
+theorem truncIdx_truncIdx (y : PartialSum x) (i j : Ordinal) :
     (y.truncIdx i).truncIdx j = y.truncIdx (min i j) :=
   carrier_injective <| SurrealHahnSeries.truncIdx_truncIdx ..
 
 @[simp]
-theorem truncIdx_length (y : InitialSeg x) : y.truncIdx y.length = y := by
+theorem truncIdx_length (y : PartialSum x) : y.truncIdx y.length = y := by
   apply carrier_injective
   rw [carrier_truncIdx, truncIdx_of_le]
   rfl
 
-theorem truncIdx_length_of_le {y z : InitialSeg x} (h : y ≤ z) : z.truncIdx y.length = y := by
+theorem truncIdx_length_of_le {y z : PartialSum x} (h : y ≤ z) : z.truncIdx y.length = y := by
   have IH {i} (hi : i < y.length) : (z.truncIdx y.length).truncIdx i = y.truncIdx i := by
     have : y.truncIdx i < y := by
       rw [← length_lt_length, length_truncIdx]
@@ -752,23 +752,31 @@ theorem length_injective : Function.Injective (length (x := x)) := by
   rw [← truncIdx_length_of_le h.le, h, truncIdx_length]
 
 @[simp]
-theorem length_inj {y z : InitialSeg x} : length y = length z ↔ y = z :=
+theorem length_inj {y z : PartialSum x} : length y = length z ↔ y = z :=
   length_injective.eq_iff
 
-instance : LinearOrder (InitialSeg x) where
+instance : LinearOrder (PartialSum x) where
   le_antisymm y z h₁ h₂ := by
     rw [← length_inj]
     exact h₁.antisymm h₂
   le_total y z := le_total y.length z.length
   toDecidableLE := Classical.decRel _
 
-theorem birthday_strictMono : StrictMono fun y : InitialSeg x ↦ birthday y.carrier := by
+theorem exp_lt_exp {y z : PartialSum x} {i : Iio y.carrier.length} {j : Iio z.carrier.length}
+    (h : i.1 < j.1) : (z.carrier.exp j).1 < (y.carrier.exp i).1 := by
+  obtain hyz | hyz := le_total y z
+  all_goals
+    rw [exp_congr (carrier_inj.2 (truncIdx_length_of_le hyz).symm),
+      exp_congr (carrier_truncIdx ..), exp_truncIdx]
+    simpa
+
+theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
   dsimp
   rw [← truncIdx_length_of_le h.le]
   exact birthday_truncIdx_lt h
 
-theorem birthday_le (y : InitialSeg x) : birthday y.carrier ≤ birthday x := by
+theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
   cases x with | mk z
   rw [toSurreal_eq']
   apply Fits.birthday_le
@@ -782,6 +790,7 @@ theorem birthday_le (y : InitialSeg x) : birthday y.carrier ≤ birthday x := by
     obtain ⟨⟨i, hi'⟩, rfl⟩ := eq_exp_of_mem_support hi
     rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
     simpa using hr
+  -- TODO: golf
   · rw [rightMoves_ofSets, forall_mem_image, forall_mem_truncGT]
     intro i hi r hr
     grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm, ← IGame.sub_lt_iff_lt_add]
@@ -792,18 +801,69 @@ theorem birthday_le (y : InitialSeg x) : birthday y.carrier ≤ birthday x := by
     rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
     simpa using hr
 
-instance : Small.{u} (InitialSeg x) := by
+instance : Small.{u} (PartialSum x) := by
   refine small_of_injective (β := Iic x.birthday) (f := fun y ↦ ⟨_, birthday_le y⟩) fun y z h ↦
     birthday_strictMono.injective ?_
   simpa using h
 
-instance : CompleteLinearOrder (InitialSeg x) :=
+-- Directed union
+instance : SupSet (PartialSum x) where
+  sSup s := {
+    carrier := .ofSeq (⨆ x : s, x.1.length) (fun i ↦
+      have H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
+      ⟨exp _ ⟨_, Classical.choose_spec H⟩, coeffIdx (Classical.choose H).1.1 i⟩
+    ) fun i j h ↦ exp_lt_exp h
+    coeffIdx_eq_leadingCoeff_sub := sorry
+    exp_eq_wlog_sub := sorry
+  }
+
+@[simp]
+theorem length_sSup (s : Set (PartialSum x)) : (sSup s).length = ⨆ x : s, x.1.length := by
+  dsimp [sSup, length]
+  refine length_ofSeq fun i ↦ ?_
+  generalize_proofs H
+  simpa using Classical.choose_spec H
+
+instance : CompleteSemilatticeSup (PartialSum x) where
+  le_sSup s y hy := by
+    rw [← length_le_length, length_sSup]
+    exact le_ciSup (Ordinal.bddAbove_of_small _) (⟨y, hy⟩ : s)
+  sSup_le s y := by
+    rw [← length_le_length, length_sSup, ciSup_le_iff' (Ordinal.bddAbove_of_small _)]
+    simp
+
+instance : CompleteLattice (PartialSum x) :=
+  completeLatticeOfCompleteSemilatticeSup _
+
+instance : CompleteLinearOrder (PartialSum x) where
+  __ := LinearOrder.toBiheytingAlgebra _
+  __ := instCompleteLattice
+  __ := instLinearOrder
+
+def succ (y : PartialSum x) : PartialSum x where
+  carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
+  coeffIdx_eq_leadingCoeff_sub {i} hi := by
+    sorry
+  exp_eq_wlog_sub := sorry
+
+theorem length_succ_of_ne {y : PartialSum x} (h : x ≠ y.carrier) :
+    (succ y).length = y.length + 1 := by
   sorry
 
-end InitialSeg
+theorem toSurreal_top : (⊤ : PartialSum x).carrier = x := by
+  by_contra! h
+  apply (le_top (a := succ ⊤)).not_gt
+  rw [← length_lt_length, length_succ_of_ne h.symm, Order.lt_add_one_iff]
+
+end PartialSum
 
 /-- The **Conway normal form** of a surreal number. -/
+@[coe]
 def toSurrealHahnSeries (x : Surreal) : SurrealHahnSeries :=
-  (⊤ : InitialSeg x).carrier
+  (⊤ : PartialSum x).carrier
+
+@[simp]
+theorem toSurreal_toSurrealHahnSeries (x : Surreal) : x.toSurrealHahnSeries = x :=
+  PartialSum.toSurreal_top
 
 end Surreal
