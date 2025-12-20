@@ -547,6 +547,11 @@ theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.suppo
   obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support h
   rwa [trunc_exp, length_truncIdx, min_eq_left hi.le]
 
+theorem truncIdx_ne {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
+    x.truncIdx i ≠ x := by
+  apply_fun length
+  simpa
+
 theorem coeff_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {j k : Surreal}
     (hjk : j ≤ k) (h : j ∈ (x.truncIdx i).support) : (x.truncIdx i).coeff k = x.coeff k := by
   obtain hi | hi := lt_or_ge i x.length
