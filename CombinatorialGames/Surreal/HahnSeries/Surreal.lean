@@ -560,12 +560,6 @@ theorem fits_ofSets_truncLT_truncGT (x : SurrealHahnSeries) (i : Ordinal) :
     rw [toIGame_le_toIGame_iff, not_le]
   exacts [lt_of_truncLT (truncLT_truncIdx_subset hk), gt_of_truncGT (truncGT_truncIdx_subset hk)]
 
-theorem fits_ofSets_truncLT_truncGT' (x : SurrealHahnSeries) {i j : Ordinal} (h : j ≤ i) :
-    (toIGame (x.truncIdx i)).Fits
-      !{toIGame '' (x.truncIdx j).truncLT | toIGame '' (x.truncIdx j).truncGT} := by
-  convert fits_ofSets_truncLT_truncGT (x.truncIdx i) j using 5 <;>
-    rw [truncIdx_truncIdx, min_eq_right h]
-
 /-- The surreal that corresponds to a given surreal Hahn series. -/
 @[coe]
 def toSurreal (x : SurrealHahnSeries) : Surreal :=
@@ -620,20 +614,18 @@ theorem birthday_truncIdx_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.le
   grw [← toIGame_equiv, toIGame_equiv_toIGame_iff]
   exact (truncIdx_ne h).symm
 
-#exit
-
 theorem birthday_truncIdx_monotone (x : SurrealHahnSeries) :
     Monotone fun i ↦ Surreal.birthday (truncIdx x i) := by
   intro i j h
-  dsimp
-  conv_lhs => rw [toSurreal_eq']
-  exact (fits_ofSets_truncLT_truncGT' _ h).birthday_le
+  convert birthday_truncIdx_le (x.truncIdx j) i using 3
+  rw [truncIdx_truncIdx, min_eq_right h]
 
 theorem birthday_truncIdx_strictMonoOn (x : SurrealHahnSeries) :
-    StrictMonoOn (fun i ↦ Surreal.birthday (.mk <| truncIdx x i)) (Iio x.length) := by
-  sorry
-
-#exit
+    StrictMonoOn (fun i ↦ Surreal.birthday (truncIdx x i)) (Iio x.length) := by
+  intro i hi j hj h
+  convert birthday_truncIdx_lt (x := x.truncIdx j) (i := i) _ using 3
+  · rw [truncIdx_truncIdx, min_eq_right h.le]
+  · simp_all
 
 end SurrealHahnSeries
 
