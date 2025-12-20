@@ -269,6 +269,13 @@ theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).support = x.support ∩ Ioi i := by
   aesop
 
+theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
+    (x.trunc i).support ⊆ x.support := by
+  simp
+
+theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
+  fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
+
 @[simp]
 theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
     (x.trunc i).coeff j = x.coeff j :=
@@ -281,6 +288,10 @@ theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) 
 
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by
+  aesop
+
+theorem coeff_trunc_of_mem {x : SurrealHahnSeries} {i j : Surreal} (h : j ∈ (x.trunc i).support) :
+    (x.trunc i).coeff j = x.coeff j := by
   aesop
 
 @[simp]
@@ -502,6 +513,20 @@ theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i
 theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by
   rw [truncIdx_of_lt] <;> simp
 
+theorem support_truncIdx_ssubset {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
+    support (truncIdx x i) ⊂ support x := by
+  rw [truncIdx_of_lt h]
+  refine ⟨support_trunc_subset .., ?_⟩
+  rw [not_subset]
+  use x.exp ⟨i, h⟩
+  aesop
+
+theorem support_truncIdx_subset (x : SurrealHahnSeries) (i : Ordinal) :
+    support (truncIdx x i) ⊆ support x := by
+  obtain h | h := lt_or_ge i x.length
+  · exact (support_truncIdx_ssubset h).le
+  · rw [truncIdx_of_le h]
+
 @[simp, grind =]
 theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).length = min i x.length := by
@@ -521,6 +546,26 @@ theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.suppo
     (x.trunc i).length < x.length := by
   obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support h
   rwa [trunc_exp, length_truncIdx, min_eq_left hi.le]
+
+theorem coeff_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {j k : Surreal}
+    (hjk : j ≤ k) (h : j ∈ (x.truncIdx i).support) : (x.truncIdx i).coeff k = x.coeff k := by
+  obtain hi | hi := lt_or_ge i x.length
+  · by_cases hk : k ∈ (x.truncIdx i).support
+    · rw [truncIdx_of_lt hi, coeff_trunc_of_mem]
+      rwa [trunc_exp]
+    · rw [mem_support_iff, not_ne_iff] at hk
+      rw [hk, eq_comm]
+      rwa [truncIdx_of_lt hi, coeff_trunc_of_lt] at hk
+      apply hjk.trans_lt'
+      aesop
+  · rw [truncIdx_of_le hi]
+
+theorem trunc_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {a b : Surreal}
+    (hab : a ≤ b) (ha : a ∈ (x.truncIdx i).support) : (x.truncIdx i).trunc b = x.trunc b := by
+  ext k
+  obtain h | h := lt_or_ge b k
+  · rw [coeff_trunc_of_lt h, coeff_trunc_of_lt h, coeff_truncIdx_of_mem (hab.trans h.le) ha]
+  · rw [coeff_trunc_of_le h, coeff_trunc_of_le h]
 
 /-! #### `ofSeq` -/
 
@@ -791,18 +836,18 @@ theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
 
 /-! ### Extra lemmas -/
 
-theorem length_trunc_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
+theorem length_truncIdx_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
     (x.truncIdx i + single (x.exp i) r).length = i + 1 := by
   rw [length_add_single _ hr, length_truncIdx]
   · aesop
   · rw [truncIdx_of_lt i.2, support_trunc]
     aesop
 
-theorem length_trunc_add_single_le {x : SurrealHahnSeries} (i : Iio x.length) (r : ℝ) :
+theorem length_truncIdx_add_single_le {x : SurrealHahnSeries} (i : Iio x.length) (r : ℝ) :
     (x.truncIdx i + single (x.exp i) r).length ≤ i + 1 := by
   obtain rfl | hr := eq_or_ne r 0
   · simp
-  · rw [length_trunc_add_single _ hr]
+  · rw [length_truncIdx_add_single _ hr]
 
 @[simp]
 theorem truncIdx_truncIdx (x : SurrealHahnSeries) (i j : Ordinal) :
@@ -843,6 +888,21 @@ theorem coeffIdx_truncIdx_of_le {x : SurrealHahnSeries} {i j : Ordinal} (h : i �
     (x.truncIdx i).coeffIdx j = 0 := by
   rw [coeffIdx_truncIdx]
   exact if_neg h.not_gt
+
+theorem support_truncIdx_strictMonoOn {x : SurrealHahnSeries} :
+    StrictMonoOn (fun i ↦ (truncIdx x i).support) (Iio x.length) := by
+  intro i hi j hj h
+  dsimp
+  rw [← min_eq_right h.le, ← truncIdx_truncIdx]
+  apply support_truncIdx_ssubset
+  simp_all
+
+theorem support_truncIdx_mono {x : SurrealHahnSeries} :
+    Monotone fun i ↦ (truncIdx x i).support := by
+  intro i j h
+  dsimp
+  rw [← min_eq_right h, ← truncIdx_truncIdx]
+  exact support_truncIdx_subset ..
 
 end SurrealHahnSeries
 end

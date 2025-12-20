@@ -150,6 +150,79 @@ theorem gt_of_truncGT {x y : SurrealHahnSeries} (h : x ≻ y) : y < x := by
   use i
   aesop
 
+private theorem truncAux_truncIdx_ssubset {x : SurrealHahnSeries} {R : ℝ → ℝ → Prop} {i : Ordinal}
+    (h : i < x.length) (hR : ∀ r, ∃ s ≠ 0, R s r) : truncAux (truncIdx x i) R ⊂ truncAux x R := by
+  constructor
+  · intro y hy
+    rw [truncAux_def] at hy ⊢
+    obtain ⟨a, ha, r, hr, rfl⟩ := hy
+    refine ⟨a, support_truncIdx_subset _ _ ha, r, ?_, ?_⟩
+    · rwa [coeff_truncIdx_of_mem le_rfl ha] at hr
+    · rw [trunc_truncIdx_of_mem le_rfl ha]
+  · rw [not_subset, exists_mem_truncAux]
+    obtain ⟨s, hs, hs'⟩ := hR (x.coeff ↑(x.exp ⟨i, h⟩))
+    refine ⟨x.exp ⟨i, h⟩, Subtype.coe_prop _, s, hs', fun H ↦ (length_le_of_truncAux H).not_gt ?_⟩
+    rw [trunc_exp, length_truncIdx_add_single _ hs, length_truncIdx, Order.lt_add_one_iff]
+    exact min_le_left ..
+
+private theorem truncAux_truncIdx_subset {x : SurrealHahnSeries} {R : ℝ → ℝ → Prop} {i : Ordinal}
+    (hR : ∀ r, ∃ s ≠ 0, R s r) : truncAux (truncIdx x i) R ⊆ truncAux x R := by
+  obtain hi | hi := lt_or_ge i x.length
+  · exact (truncAux_truncIdx_ssubset hi hR).le
+  · rw [truncIdx_of_le hi]
+
+private theorem truncAux_truncIdx_strictMonoOn {x : SurrealHahnSeries} {R : ℝ → ℝ → Prop}
+    (hR : ∀ r, ∃ s ≠ 0, R s r) :
+    StrictMonoOn (fun i ↦ truncAux (truncIdx x i) R) (Iio x.length) := by
+  intro i hi j hj h
+  dsimp
+  rw [← min_eq_right h.le, ← truncIdx_truncIdx]
+  apply truncAux_truncIdx_ssubset _ hR
+  simp_all
+
+private theorem truncAux_truncIdx_mono {x : SurrealHahnSeries} {R : ℝ → ℝ → Prop}
+    (hR : ∀ r, ∃ s ≠ 0, R s r) :
+    Monotone fun i ↦ truncAux (truncIdx x i) R := by
+  intro i j h
+  dsimp
+  rw [← min_eq_right h, ← truncIdx_truncIdx]
+  exact truncAux_truncIdx_subset hR
+
+private theorem truncLT_aux (r : ℝ) : ∃ s ≠ 0, s < r := ⟨min (r - 1) (-1), by grind⟩
+private theorem truncGT_aux (r : ℝ) : ∃ s ≠ 0, r < s := ⟨max (r + 1) 1, by grind⟩
+
+theorem truncLT_truncIdx_ssubset {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
+    truncLT (truncIdx x i) ⊂ truncLT x :=
+  truncAux_truncIdx_ssubset h truncLT_aux
+
+theorem truncGT_truncIdx_ssubset {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
+    truncGT (truncIdx x i) ⊂ truncGT x :=
+  truncAux_truncIdx_ssubset h truncGT_aux
+
+theorem truncLT_truncIdx_subset {x : SurrealHahnSeries} {i : Ordinal} :
+    truncLT (truncIdx x i) ⊆ truncLT x :=
+  truncAux_truncIdx_subset truncLT_aux
+
+theorem truncGT_truncIdx_subset {x : SurrealHahnSeries} {i : Ordinal} :
+    truncGT (truncIdx x i) ⊆ truncGT x :=
+  truncAux_truncIdx_subset truncGT_aux
+
+theorem truncLT_truncIdx_strictMonoOn {x : SurrealHahnSeries} :
+    StrictMonoOn (fun i ↦ truncLT (truncIdx x i)) (Iio x.length) :=
+  truncAux_truncIdx_strictMonoOn truncLT_aux
+
+theorem truncGT_truncIdx_strictMonoOn {x : SurrealHahnSeries} :
+    StrictMonoOn (fun i ↦ truncGT (truncIdx x i)) (Iio x.length) :=
+  truncAux_truncIdx_strictMonoOn truncGT_aux
+
+theorem truncLT_truncIdx_mono {x : SurrealHahnSeries} :
+    Monotone fun i ↦ truncLT (truncIdx x i) :=
+  truncAux_truncIdx_mono truncLT_aux
+
+theorem truncGT_truncIdx_mono {x : SurrealHahnSeries} :
+    Monotone fun i ↦ truncGT (truncIdx x i) :=
+  truncAux_truncIdx_mono truncGT_aux
+
 /-- The game that corresponds to a given surreal Hahn series.
 
 This is an arbitrary representative for `SurrealHahnSeries.toSurreal`, which we use in its place
@@ -472,6 +545,17 @@ instance numeric_ofSets_truncLT_truncGT (x : SurrealHahnSeries) :
     exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)
   · simp [numeric_toIGame]
 
+theorem fits_ofSets_truncLT_truncGT {x : SurrealHahnSeries} {i j : Ordinal} (h : i ≤ j) :
+    (toIGame <| x.truncIdx j).Fits
+      !{toIGame '' (x.truncIdx i).truncLT | toIGame '' (x.truncIdx i).truncGT} := by
+  constructor
+  all_goals
+    intro k hk
+    rw [moves_ofSets] at hk
+    obtain ⟨k, hk, rfl⟩ := hk
+    rw [toIGame_le_toIGame_iff, not_le]
+  exacts [lt_of_truncLT (truncLT_truncIdx_mono h hk), gt_of_truncGT (truncGT_truncIdx_mono h hk)]
+
 /-- The surreal that corresponds to a given surreal Hahn series. -/
 @[coe]
 def toSurreal (x : SurrealHahnSeries) : Surreal :=
@@ -502,20 +586,26 @@ theorem toSurreal_inj {x y : SurrealHahnSeries} : toSurreal x = toSurreal y ↔ 
 @[simp]
 theorem toSurreal_zero : toSurreal 0 = 0 := by simp [toSurreal]
 
+theorem toSurreal_eq' {x : SurrealHahnSeries.{u}} :
+    toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
+  Surreal.mk_eq <| toIGame_equiv x
+
 theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
     toSurreal x = !{toSurreal '' truncLT x | toSurreal '' truncGT x}'(by
       rintro _ ⟨i, hi, rfl⟩ _ ⟨j, hj, rfl⟩
       exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)
     ) := by
-  convert Surreal.mk_eq <| toIGame_equiv x
-  rw [Surreal.mk_ofSets]
+  rw [toSurreal_eq', Surreal.mk_ofSets]
   congr <;> aesop
 
 theorem birthday_truncIdx_monotone (x : SurrealHahnSeries) :
     Monotone fun i ↦ Surreal.birthday (.mk <| truncIdx x i) := by
   intro i j h
+  dsimp
+  rw [toSurreal_eq', toSurreal_eq']
   apply Fits.birthday_le
-  rw [fits_congr]
+  constructor
+  ·
 
 theorem birthday_truncIdx_strictMonoOn (x : SurrealHahnSeries) :
     StrictMonoOn (fun i ↦ Surreal.birthday (.mk <| truncIdx x i)) (Iio x.length) := by
