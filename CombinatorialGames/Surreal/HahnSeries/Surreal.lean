@@ -641,20 +641,32 @@ satisfies `toSurreal ⊤ = x`. -/
 structure InitialSeg (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
   carrier : SurrealHahnSeries
-  /-- The condition which guarantees that the Hahn series is some truncation of that of `x`. -/
-  coeffIdx_eq_leadingCoeff_sub' {i} (hi : i < carrier.length) :
+  /-- Every non-zero coefficient matches that of `x.toSurrealHahnSeries`. -/
+  coeffIdx_eq_leadingCoeff_sub {i} (hi : i < carrier.length) :
     carrier.coeffIdx i = (x - carrier.truncIdx i).leadingCoeff
+  /-- Every non-zero exponent matches that of `x.toSurrealHahnSeries`. -/
+  exp_eq_wlog_sub {i} (hi : i < carrier.length) :
+    carrier.exp ⟨i, hi⟩ = (x - carrier.truncIdx i).wlog
 
 namespace InitialSeg
-variable {x : Surreal}
+variable {x : Surreal.{u}}
 
 open SurrealHahnSeries
 
-instance : Zero (InitialSeg x) where
-  zero := ⟨0, by simp⟩
+instance : Bot (InitialSeg x) where
+  bot := ⟨0, by simp, by simp⟩
+
+theorem carrier_injective : Function.Injective (carrier (x := x)) := by
+  intro i j h
+  ext
+  rw [h]
 
 @[simp]
-theorem carrier_zero : carrier (0 : InitialSeg x) = 0 :=
+theorem carrier_inj {y z : InitialSeg x} : y.carrier = z.carrier ↔ y = z :=
+  carrier_injective.eq_iff
+
+@[simp]
+theorem carrier_bot : carrier (⊥ : InitialSeg x) = 0 :=
   rfl
 
 /-- The length of the carrier. -/
@@ -662,36 +674,128 @@ def length (y : InitialSeg x) : Ordinal :=
   y.carrier.length
 
 @[simp]
-theorem length_zero : length (0 : InitialSeg x) = 0 := by
+theorem length_bot : length (⊥ : InitialSeg x) = 0 := by
   simp [length]
 
-/-- The `coeffIdx` function on the carrier. -/
-def coeffIdx (y : InitialSeg x) : Ordinal → ℝ :=
-  y.carrier.coeffIdx
+instance : Preorder (InitialSeg x) :=
+  .lift length
 
-theorem coeffIdx_eq_leadingCoeff_sub {y : InitialSeg x} {i} (hi : i < y.length) :
-    y.coeffIdx i = (x - y.carrier.truncIdx i).leadingCoeff :=
-  y.coeffIdx_eq_leadingCoeff_sub' hi
+instance : WellFoundedLT (InitialSeg x) where
+  wf := InvImage.wf length wellFounded_lt
+
+instance : WellFoundedRelation (InitialSeg x) :=
+  ⟨_, wellFounded_lt⟩
+
+theorem length_strictMono : StrictMono (length (x := x)) :=
+  fun _ _ ↦ id
+
+@[simp] theorem length_lt_length {y z : InitialSeg x} : length y < length z ↔ y < z := .rfl
+@[simp] theorem length_le_length {y z : InitialSeg x} : length y ≤ length z ↔ y ≤ z := .rfl
 
 /-- Truncating the series preserves that it is an initial segment. -/
 def truncIdx (y : InitialSeg x) (i : Ordinal) : InitialSeg x where
   carrier := y.carrier.truncIdx i
-  coeffIdx_eq_leadingCoeff_sub' {j} hj := by
+  coeffIdx_eq_leadingCoeff_sub {j} hj := by
     have hj' : j < i := hj.trans_le (by simp)
     rw [coeffIdx_truncIdx_of_lt hj', truncIdx_truncIdx, min_eq_right hj'.le]
-    apply y.coeffIdx_eq_leadingCoeff_sub' (hj.trans_le _)
+    apply y.coeffIdx_eq_leadingCoeff_sub (hj.trans_le _)
     simp
+  exp_eq_wlog_sub {j} hj := by
+    have hj' : j < i := hj.trans_le (by simp)
+    rw [exp_truncIdx, truncIdx_truncIdx, min_eq_right hj'.le, y.exp_eq_wlog_sub]
 
 @[simp]
 theorem carrier_truncIdx (y : InitialSeg x) (i : Ordinal) :
     (y.truncIdx i).carrier = y.carrier.truncIdx i :=
   rfl
 
-instance : Preorder (InitialSeg x) :=
-  .lift length
+@[simp]
+theorem length_truncIdx (y : InitialSeg x) (i : Ordinal) : (y.truncIdx i).length = min i y.length :=
+  y.carrier.length_truncIdx i
+
+theorem truncIdx_le (y : InitialSeg x) (i : Ordinal) : y.truncIdx i ≤ y :=
+  (length_truncIdx ..).trans_le (min_le_right ..)
+
+@[simp]
+theorem truncIdx_truncIdx (y : InitialSeg x) (i j : Ordinal) :
+    (y.truncIdx i).truncIdx j = y.truncIdx (min i j) :=
+  carrier_injective <| SurrealHahnSeries.truncIdx_truncIdx ..
+
+@[simp]
+theorem truncIdx_length (y : InitialSeg x) : y.truncIdx y.length = y := by
+  apply carrier_injective
+  rw [carrier_truncIdx, truncIdx_of_le]
+  rfl
 
 theorem truncIdx_length_of_le {y z : InitialSeg x} (h : y ≤ z) : z.truncIdx y.length = y := by
-  sorry
+  have IH {i} (hi : i < y.length) : (z.truncIdx y.length).truncIdx i = y.truncIdx i := by
+    have : y.truncIdx i < y := by
+      rw [← length_lt_length, length_truncIdx]
+      simpa
+    convert truncIdx_length_of_le (y := y.truncIdx i) (z := z) _ using 1
+    · simp [min_comm]
+    · exact (truncIdx_le y i).trans h
+  apply carrier_injective (exp_ext _ _ _)
+  · exact (length_truncIdx ..).trans (min_eq_left h)
+  · intro i hx hy
+    rw [exp_eq_wlog_sub, exp_eq_wlog_sub]
+    congr 3
+    rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hy]
+  · intro i hx hy
+    rw [coeffIdx_eq_leadingCoeff_sub _ hx, coeffIdx_eq_leadingCoeff_sub _ hy]
+    congr 3
+    rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hy]
+termination_by y
+
+theorem length_injective : Function.Injective (length (x := x)) := by
+  intro y z h
+  rw [← truncIdx_length_of_le h.le, h, truncIdx_length]
+
+@[simp]
+theorem length_inj {y z : InitialSeg x} : length y = length z ↔ y = z :=
+  length_injective.eq_iff
+
+instance : LinearOrder (InitialSeg x) where
+  le_antisymm y z h₁ h₂ := by
+    rw [← length_inj]
+    exact h₁.antisymm h₂
+  le_total y z := le_total y.length z.length
+  toDecidableLE := Classical.decRel _
+
+theorem birthday_strictMono : StrictMono fun y : InitialSeg x ↦ birthday y.carrier := by
+  intro y z h
+  dsimp
+  rw [← truncIdx_length_of_le h.le]
+  exact birthday_truncIdx_lt h
+
+theorem birthday_le (y : InitialSeg x) : birthday y.carrier ≤ birthday x := by
+  cases x with | mk z
+  rw [toSurreal_eq']
+  apply Fits.birthday_le
+  constructor
+  · rw [leftMoves_ofSets, forall_mem_image, forall_mem_truncLT]
+    intro i hi r hr
+    grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm, ← IGame.lt_sub_iff_add_lt]
+    rw [← Surreal.mk_lt_mk]
+    apply leadingTerm_mono.reflect_lt
+    simp
+    obtain ⟨⟨i, hi'⟩, rfl⟩ := eq_exp_of_mem_support hi
+    rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
+    simpa using hr
+  · rw [rightMoves_ofSets, forall_mem_image, forall_mem_truncGT]
+    intro i hi r hr
+    grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm, ← IGame.sub_lt_iff_lt_add]
+    rw [← Surreal.mk_lt_mk]
+    apply leadingTerm_mono.reflect_lt
+    simp
+    obtain ⟨⟨i, hi'⟩, rfl⟩ := eq_exp_of_mem_support hi
+    rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
+    simpa using hr
+
+instance : Small.{u} (InitialSeg x) := by
+  refine small_of_injective (β := Iic x.birthday) (f := fun y ↦ ⟨_, birthday_le y⟩) fun y z h ↦
+    birthday_strictMono.injective ?_
+  simpa using h
 
 instance : CompleteLinearOrder (InitialSeg x) :=
   sorry

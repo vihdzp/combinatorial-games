@@ -434,6 +434,11 @@ theorem eq_exp_of_mem_support {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x
   use x.exp.symm ⟨i, h⟩
   simp
 
+/-- This lemma is useful for rewriting. -/
+theorem exp_congr {x y : SurrealHahnSeries} (h : x = y) (i : Iio x.length) :
+    (x.exp i).1 = (y.exp ⟨i.1, h ▸ i.2⟩).1 := by
+  congr!
+
 @[simp]
 theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
     typein (· > ·) i = lift.{u + 1} (x.exp.symm i) := by
@@ -869,7 +874,7 @@ theorem coeffIdx_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).coeffIdx = fun j ↦ if j < i then x.coeffIdx j else 0 := by
   ext j
   induction x using ofSeqRecOn with | ofSeq o f hf hf'
-  have H : ∀ (j : ↑(Iio (min i o))), (f ⟨j, ((lt_inf_iff (a := j.1)).1 j.2).2⟩).2 ≠ 0 := by grind
+  have H : ∀ (j : Iio (min i o)), (f ⟨j, ((lt_inf_iff (a := j.1)).1 j.2).2⟩).2 ≠ 0 := by grind
   rw [truncIdx_ofSeq hf']
   obtain hj | hj := lt_or_ge j i
   · rw [if_pos hj]
@@ -908,6 +913,26 @@ theorem support_truncIdx_mono {x : SurrealHahnSeries} :
   dsimp
   rw [← min_eq_right h, ← truncIdx_truncIdx]
   exact support_truncIdx_subset ..
+
+@[simp]
+theorem exp_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (j : Iio (x.truncIdx i).length) :
+    (x.truncIdx i).exp j = ⟨x.exp ⟨j, by aesop⟩, by aesop⟩ := by
+  induction x using ofSeqRecOn with | ofSeq o f hf hf'
+  apply Subtype.val_injective
+  rw [exp_congr (truncIdx_ofSeq hf' i), exp_ofSeq _ hf', exp_ofSeq]
+  grind
+
+theorem exp_ext {x y : SurrealHahnSeries} (h : x.length = y.length)
+    (he : ∀ i (hx : i < x.length) (hy : i < y.length), (x.exp ⟨i, hx⟩).1 = (y.exp ⟨i, hy⟩).1)
+    (hc : ∀ i, i < x.length → i < y.length → x.coeffIdx i = y.coeffIdx i) : x = y := by
+  ext a
+  by_cases hx : a ∈ x.support
+  · obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support hx
+    rw [coeff_exp, hc _ hi (h ▸ hi), he _ hi (h ▸ hi), coeff_exp]
+  by_cases hy : a ∈ y.support
+  · obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support hy
+    simp [← he _ (h ▸ hi)] at hx
+  · simp_all
 
 end SurrealHahnSeries
 end

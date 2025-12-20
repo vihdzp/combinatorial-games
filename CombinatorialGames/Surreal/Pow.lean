@@ -554,6 +554,10 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 
 open ArchimedeanClass
 
+@[simp]
+theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
+  mk_map_of_archimedean' Real.toSurrealRingHom hr
+
 theorem mk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_pos _).le (wpow_pos _).le
@@ -927,6 +931,65 @@ theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 wh
     simpa
   mpr := by simp +contextual
 
+-- TODO: upstream
+theorem _root_.ArchimedeanClass.stdPart_monotoneOn {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] : MonotoneOn stdPart (.mk ⁻¹' {(0 : ArchimedeanClass K)}) := by
+  intro x hx y hy h
+  unfold stdPart
+  rw [dif_pos (le_of_eq hx.symm), dif_pos (le_of_eq hy.symm)]
+  apply OrderRingHom.monotone'
+  assumption
+
+-- TODO: upstream
+theorem _root_.ArchimedeanClass.stdPart_nonneg {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] {x : K} (h : 0 ≤ x) : 0 ≤ stdPart x := by
+  obtain hx | hx := eq_or_ne (ArchimedeanClass.mk x) 0
+  · rw [stdPart, dif_pos hx.ge]
+    apply map_nonneg
+    assumption
+  · rw [stdPart_of_mk_ne_zero hx]
+
+-- TODO: upstream
+theorem _root_.ArchimedeanClass.stdPart_nonpos {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] {x : K} (h : x ≤ 0) : stdPart x ≤ 0 := by
+  simpa using stdPart_nonneg (neg_nonneg.2 h)
+
+theorem leadingCoeff_nonneg {x : Surreal} (h : 0 ≤ x) : 0 ≤ leadingCoeff x :=
+  stdPart_nonneg <| div_nonneg h (wpow_pos _).le
+
+theorem leadingCoeff_nonpos {x : Surreal} (h : x ≤ 0) : leadingCoeff x ≤ 0 :=
+  stdPart_nonpos <| div_nonpos_of_nonpos_of_nonneg h (wpow_pos _).le
+
+@[simp]
+theorem leadingCoeff_nonneg_iff {x : Surreal} : 0 ≤ leadingCoeff x ↔ 0 ≤ x := by
+  refine ⟨?_, leadingCoeff_nonneg⟩
+  contrapose!
+  refine fun h ↦ (leadingCoeff_nonpos h.le).lt_of_ne ?_
+  rw [ne_eq, leadingCoeff_eq_zero_iff]
+  exact h.ne
+
+@[simp]
+theorem leadingCoeff_nonpos_iff {x : Surreal} : leadingCoeff x ≤ 0 ↔ x ≤ 0 := by
+  simpa using leadingCoeff_nonneg_iff (x := -x)
+
+@[simp]
+theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
+  simp [← not_le]
+
+@[simp]
+theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
+  simp [← not_le]
+
+theorem leadingCoeff_monotoneOn {x : Surreal.{u}} : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
+  rintro y rfl z (hw : wlog _ = _) h
+  obtain rfl | hy := eq_or_ne y 0; · simpa
+  obtain rfl | hz := eq_or_ne z 0; · simpa
+  · rw [leadingCoeff, leadingCoeff, hw]
+    apply stdPart_monotoneOn
+    · simpa
+    · rw [← hw]; simpa
+    · simpa [div_eq_mul_inv]
+
 /-- The leading term of a surreal's Hahn series. -/
 def leadingTerm (x : Surreal) : Surreal :=
   x.leadingCoeff * ω^ x.wlog
@@ -984,6 +1047,9 @@ theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
 @[simp]
 theorem leadingTerm_eq_zero_iff {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
   simp [leadingTerm]
+
+theorem leadingTerm_mono : Monotone leadingTerm := by
+  sorry
 
 end Surreal
 end
