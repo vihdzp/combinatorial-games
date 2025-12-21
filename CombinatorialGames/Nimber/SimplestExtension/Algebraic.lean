@@ -73,14 +73,14 @@ protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
   choose f hf using hp
   obtain ⟨c, hc⟩ := ((Finset.range (p.natDegree + 1)).image f).exists_maximal (by simp)
   have hc' := hc.1
-  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ] at hc'
+  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ_iff] at hc'
   obtain ⟨n, hn, rfl⟩ := hc'
   have := (H _ (hf n).1).exists_root' hp₀ hpn fun m ↦ ?_
   · obtain ⟨r, hr, hr'⟩ := this
     exact ⟨r, ⟨_, (hf n).1, hr⟩, hr'⟩
   · obtain hm | hm := le_or_gt m p.natDegree
     · apply (hf m).2.trans_le (hc.isGreatest.2 _)
-      aesop (add simp [Nat.lt_succ])
+      aesop
     · rw [coeff_eq_zero_of_natDegree_lt hm]
       exact bot_le.trans_lt (hf n).2
 

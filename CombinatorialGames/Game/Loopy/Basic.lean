@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
+import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
 import Mathlib.Data.Set.Finite.Basic
@@ -33,7 +33,7 @@ on a type `α`, as long as the amount of branches per node is `u`-small, there's
 isomorphic to it".
 
 Although extensionality still holds, it's not always sufficient to prove two games equal. For
-instance, if `x = {x | x}ᴸ` and `y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to
+instance, if `x = !{x | x}` and `y = !{y | y}`, then `x = y`, but trying to use extensionality to
 prove this just leads to a cyclic argument. Instead, we can use `LGame.eq_of_bisim`, which can
 roughly be interpreted as saying "if two games have the same shape, they're equal". In this case,
 the relation `r a b ↔ a = x ∧ b = y` is a bisimulation between both games, which proves their
@@ -87,35 +87,34 @@ instance : DecidableEq LGame := Classical.decEq _
 def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
 
 /-- The set of left moves of the game. -/
-abbrev leftMoves (x : LGame.{u}) : Set LGame.{u} := x.moves left
+scoped notation:max x:max "ᴸ" => moves left x
 
 /-- The set of right moves of the game. -/
-abbrev rightMoves (x : LGame.{u}) : Set LGame.{u} := x.moves right
+scoped notation:max x:max "ᴿ" => moves right x
 
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
 /-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-@[aesop simp]
 def IsOption (x y : LGame) : Prop :=
-  x ∈ y.leftMoves ∪ y.rightMoves
+  x ∈ ⋃ p, y.moves p
 
-theorem IsOption.of_mem_leftMoves {x y : LGame} : x ∈ y.leftMoves → IsOption x y := .inl
-theorem IsOption.of_mem_rightMoves {x y : LGame} : x ∈ y.rightMoves → IsOption x y := .inr
+@[aesop simp]
+lemma isOption_iff_mem_union {x y : LGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
+  simp [IsOption, Player.exists]
+
+theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
+  ⟨_, ⟨p, rfl⟩, h⟩
 
 instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (x.leftMoves ∪ x.rightMoves :))
+  inferInstanceAs (Small (⋃ p, x.moves p))
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : LGame → LGame → Prop :=
   Relation.TransGen IsOption
 
 @[aesop unsafe apply 50%]
-theorem Subposition.of_mem_leftMoves {x y : LGame} (h : x ∈ y.leftMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_leftMoves h)
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_rightMoves {x y : LGame} (h : x ∈ y.rightMoves) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_rightMoves h)
+theorem Subposition.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : Subposition x y :=
+  Relation.TransGen.single (.of_mem_moves h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -148,8 +147,8 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
 
 /-- Two `LGame`s are equal when their move sets are.
 
-This is not always sufficient to prove that two games are equal. For instance, if `x = {x | x}ᴸ` and
-`y = {y | y}ᴸ`, then `x = y`, but trying to use extensionality to prove this just leads to a cyclic
+This is not always sufficient to prove that two games are equal. For instance, if `x = !{x | x}` and
+`y = !{y | y}`, then `x = y`, but trying to use extensionality to prove this just leads to a cyclic
 argument. For these situations, you can use `eq_of_bisim` instead. -/
 @[ext]
 protected theorem ext {x y : LGame.{u}}
@@ -165,54 +164,54 @@ variable {α : Type v}
 
 /-- A node `α` is reachable from `init` when it can be formed by applying
 `moves` finitely many times. -/
-private def Reachable (moves : Player → α → Set α) (init : α) (a : α) : Prop :=
-  Relation.ReflTransGen (fun x y ↦ x ∈ moves left y ∪ moves right y) a init
+private def Reachable (mov : Player → α → Set α) (init : α) (a : α) : Prop :=
+  Relation.ReflTransGen (fun x y ↦ x ∈ mov left y ∪ mov right y) a init
 
-variable (p : Player) (moves : Player → α → Set α)
-  [∀ a, Small.{u} (moves left a)] [∀ a, Small.{u} (moves right a)] (init : α)
+variable (p : Player) (mov : Player → α → Set α)
+  [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (init : α)
 
 attribute [local instance] small_succ' in
-private instance : Small.{u + 1} (Subtype (Reachable moves init)) :=
+private instance : Small.{u + 1} (Subtype (Reachable mov init)) :=
   small_reflTransGen' ..
 
 /-- Destructor for the subtype of reachable positions. -/
 @[simp]
-private def dest (x : Shrink (Subtype (Reachable moves init))) :
-    GameFunctor (Shrink (Subtype (Reachable moves init))) :=
+private def dest (x : Shrink (Subtype (Reachable mov init))) :
+    GameFunctor (Shrink (Subtype (Reachable mov init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨fun
     | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
     | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
     fun | left | right => inferInstance⟩
 
-private theorem unique (f g : Subtype (Reachable moves init) → LGame.{u})
+private theorem unique (f g : Subtype (Reachable mov init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
-      Functor.map (f ∘ (equivShrink _).symm) ∘ dest moves init)
+      Functor.map (f ∘ (equivShrink _).symm) ∘ dest mov init)
     (hg : QPF.Cofix.dest ∘ g ∘ (equivShrink _).symm =
-      Functor.map (g ∘ (equivShrink _).symm) ∘ dest moves init) (x) : f x = g x :=
+      Functor.map (g ∘ (equivShrink _).symm) ∘ dest mov init) (x) : f x = g x :=
   congrFun ((equivShrink _).symm.surjective.right_cancellable.1 <|
-    QPF.Cofix.unique (dest moves init) _ _ hf hg) x
+    QPF.Cofix.unique (dest mov init) _ _ hf hg) x
 
 /-- The corecursor on the subtype of reachable nodes. -/
-private def corec' (x : Subtype (Reachable moves init)) :=
+private def corec' (x : Subtype (Reachable mov init)) :=
   QPF.Cofix.corec (dest _ _) (equivShrink _ x)
 
 /-- The corecursor on `LGame`.
 
 You can use this in order to define an arbitrary `LGame` by "drawing" its move graph on some other
-type. As an example, `on = {on | }ᴸ` is defined as `corec (Player.cases ⊤ ⊥) ()`. -/
+type. As an example, `on = !{on | }` is defined as `corec (Player.cases ⊤ ⊥) ()`. -/
 def corec : LGame.{u} :=
-  corec' moves init ⟨_, .refl⟩
+  corec' mov init ⟨_, .refl⟩
 
-private theorem corec'_trans {x} (hx : Reachable moves init x)
-  (y : Subtype (Reachable moves x)) :
+private theorem corec'_trans {x} (hx : Reachable mov init x)
+  (y : Subtype (Reachable mov x)) :
     corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
-private theorem corec'_aux {a} (ha : a ∈ moves left init ∪ moves right init) {x : LGame} :
-    (∃ ha : Reachable moves init a, corec' _ init ⟨a, ha⟩ = x) ↔
-    corec moves a = x := by
+private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x : LGame} :
+    (∃ ha : Reachable mov init a, corec' _ init ⟨a, ha⟩ = x) ↔
+    corec mov a = x := by
   unfold corec
   constructor
   · rintro ⟨hx, rfl⟩
@@ -222,39 +221,39 @@ private theorem corec'_aux {a} (ha : a ∈ moves left init ∪ moves right init)
     simp [corec'_trans _ _ (.single ha)]
 
 @[simp]
-theorem moves_corec : (corec moves init).moves p = corec moves '' moves p init := by
-  rw [LGame.moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
+theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
+  rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   cases p <;>
     simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right]
-      using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux moves init (by aesop)
+      using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
 
 theorem moves_comp_corec :
-    LGame.moves p ∘ corec moves = image (corec moves) ∘ moves p :=
-  funext (moves_corec p moves)
+    moves p ∘ corec mov = image (corec mov) ∘ mov p :=
+  funext (moves_corec p mov)
 
-theorem hom_unique_apply {moves : Player → α → Set α}
-    [∀ a, Small.{u} (moves left a)] [∀ a, Small.{u} (moves right a)] (f g : α → LGame.{u})
-    (hf : ∀ p, LGame.moves p ∘ f = image f ∘ moves p)
-    (hg : ∀ p, LGame.moves p ∘ g = image g ∘ moves p) (x) : f x = g x := by
-  change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable moves x)) =
-    (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable moves x))
+theorem hom_unique_apply {mov : Player → α → Set α}
+    [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
+    (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
+    (hg : ∀ p, moves p ∘ g = image g ∘ mov p) (x) : f x = g x := by
+  change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x)) =
+    (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x))
   apply unique <;> ext z p
-  · change _ ∈ (LGame.moves p ∘ f) _ ↔ _
+  · change _ ∈ (moves p ∘ f) _ ↔ _
     rw [hf]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
         fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).2
-  · change _ ∈ (LGame.moves p ∘ g) _ ↔ _
+  · change _ ∈ (moves p ∘ g) _ ↔ _
     rw [hg]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
         fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).2
 
-theorem hom_unique {moves : Player → α → Set α}
-    [∀ a, Small.{u} (moves left a)] [∀ a, Small.{u} (moves right a)] (f g : α → LGame.{u})
-    (hf : ∀ p, LGame.moves p ∘ f = image f ∘ moves p)
-    (hg : ∀ p, LGame.moves p ∘ g = image g ∘ moves p) : f = g :=
+theorem hom_unique {mov : Player → α → Set α}
+    [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
+    (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
+    (hg : ∀ p, moves p ∘ g = image g ∘ mov p) : f = g :=
   funext (hom_unique_apply _ _ hf hg)
 
 -- We make no use of `LGame`'s definition from a `QPF` after this point.
@@ -263,22 +262,22 @@ attribute [irreducible] LGame
 end corec
 
 theorem corec_comp_hom
-    {movesα : Player → α → Set α} {movesβ : Player → β → Set β}
-    [∀ a, Small.{u} (movesα left a)] [∀ a, Small.{u} (movesα right a)]
-    [∀ b, Small.{u} (movesβ left b)] [∀ b, Small.{u} (movesβ right b)] (f : α → β)
-    (hf : ∀ p, movesβ p ∘ f = Set.image f ∘ movesα p) :
-    corec movesβ ∘ f = corec movesα := by
+    {movα : Player → α → Set α} {movβ : Player → β → Set β}
+    [∀ a, Small.{u} (movα left a)] [∀ a, Small.{u} (movα right a)]
+    [∀ b, Small.{u} (movβ left b)] [∀ b, Small.{u} (movβ right b)] (f : α → β)
+    (hf : ∀ p, movβ p ∘ f = Set.image f ∘ movα p) :
+    corec movβ ∘ f = corec movα := by
   refine hom_unique _ _ ?_ (fun _ ↦ moves_comp_corec ..)
   intro p
   rw [Set.image_comp_eq, Function.comp_assoc, ← hf,
     ← Function.comp_assoc, moves_comp_corec, Function.comp_assoc]
 
 theorem corec_comp_hom_apply
-    {movesα : Player → α → Set α} {movesβ : Player → β → Set β}
-    [∀ a, Small.{u} (movesα left a)] [∀ a, Small.{u} (movesα right a)]
-    [∀ b, Small.{u} (movesβ left b)] [∀ b, Small.{u} (movesβ right b)] (f : α → β)
-    (hf : ∀ p, movesβ p ∘ f = Set.image f ∘ movesα p) (x : α) :
-    corec movesβ (f x) = corec movesα x :=
+    {movα : Player → α → Set α} {movβ : Player → β → Set β}
+    [∀ a, Small.{u} (movα left a)] [∀ a, Small.{u} (movα right a)]
+    [∀ b, Small.{u} (movβ left b)] [∀ b, Small.{u} (movβ right b)] (f : α → β)
+    (hf : ∀ p, movβ p ∘ f = Set.image f ∘ movα p) (x : α) :
+    corec movβ (f x) = corec movα x :=
   congrFun (corec_comp_hom f hf) x
 
 @[simp]
@@ -289,133 +288,125 @@ theorem corec_moves_apply (x : LGame) : corec moves x = x := by simp
 
 /-- Construct an `LGame` from its left and right sets.
 
-This is given notation `{s | t}ᴸ`, where the superscript `L` is to disambiguate from set builder
-notation, and from the analogous constructors on other game types.
-
 It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
-noncomputable def ofSets (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] : LGame.{u} := by
-  have this (p) : ∀ (a : Option LGame),
-      Small.{u} ((a.elim (some '' lr p) (some '' moves p ·)) : Set _) := by
-    cases p <;> simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
-  exact corec (fun p ↦ (·.elim (some '' lr p) (some '' moves p ·))) none
-
-@[inherit_doc] notation "{" s " | " t "}ᴸ" => ofSets (Player.cases s t)
-
-theorem ofSets_eq_ofSets_cases (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] :
-    ofSets lr = {lr left | lr right}ᴸ := by
-  congr; ext1 p; cases p <;> rfl
+instance : OfSets LGame.{u} fun _ ↦ True where
+  ofSets lr _ :=
+    have this (p) : ∀ (a : Option LGame),
+        Small.{u} ((a.elim (some '' lr p) (some '' moves p ·)) : Set _) := by
+      cases p <;> simpa [Option.forall] using ⟨inferInstance, inferInstance⟩
+    corec (fun p ↦ (·.elim (some '' lr p) (some '' moves p ·))) none
 
 @[simp]
 theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
-    [Small.{u} (lr left)] [Small.{u} (lr right)] : (ofSets lr).moves p = lr p := by
-  rw [ofSets, moves_corec, Option.elim_none, Set.image_image]
+    [Small.{u} (lr left)] [Small.{u} (lr right)] : !{lr}.moves p = lr p := by
+  dsimp [ofSets]
+  rw [moves_corec, Option.elim_none, Set.image_image]
   conv_rhs => rw [← Set.image_id (lr p), ← corec_moves]
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
-@[simp]
-theorem leftMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.leftMoves = l := by
-  rw [leftMoves, moves_ofSets]
+theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+    !{l | r}ᴸ = l :=
+  moves_ofSets ..
 
-@[simp]
-theorem rightMoves_ofSets (l r : Set _) [Small.{u} l] [Small.{u} r] : {l | r}ᴸ.rightMoves = r := by
-  rw [rightMoves, moves_ofSets]
+theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+    !{l | r}ᴿ = r :=
+  moves_ofSets ..
 
 /-! ### Basic games -/
 
-/-- The game `0 = {∅ | ∅}ᴸ`. -/
-instance : Zero LGame := ⟨{∅ | ∅}ᴸ⟩
+/-- The game `0 = !{∅ | ∅}`. -/
+instance : Zero LGame := ⟨!{fun _ ↦ ∅}⟩
 
-theorem zero_def : 0 = {∅ | ∅}ᴸ := rfl
+theorem zero_def : (0 : LGame) = !{fun _ ↦ ∅} := rfl
 
-@[simp] theorem leftMoves_zero : leftMoves 0 = ∅ := leftMoves_ofSets ..
-@[simp] theorem rightMoves_zero : rightMoves 0 = ∅ := rightMoves_ofSets ..
+@[simp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
 instance : Inhabited LGame := ⟨0⟩
 
-/-- The game `1 = {{0} | ∅}ᴵ`. -/
-instance : One LGame := ⟨{{0} | ∅}ᴸ⟩
+/-- The game `1 = !{{0} | ∅}`. -/
+instance : One LGame := ⟨!{{0} | ∅}⟩
 
-theorem one_def : 1 = {{0} | ∅}ᴸ := rfl
+theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 
-@[simp] theorem leftMoves_one : leftMoves 1 = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_one : rightMoves 1 = ∅ := rightMoves_ofSets ..
+@[simp] theorem leftMoves_one : 1ᴸ = {0} := leftMoves_ofSets ..
+@[simp] theorem rightMoves_one : 1ᴿ = ∅ := rightMoves_ofSets ..
 
-/-- The game `on = {{on} | ∅}ᴸ`. -/
+/-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
-@[simp] theorem leftMoves_on : leftMoves on = {on} := by simp [on]
-@[simp] theorem rightMoves_on : rightMoves on = ∅ := by simp [on]
-theorem on_eq : on = {{on} | ∅}ᴸ := by ext p; cases p <;> simp
+@[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
+@[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
+@[simp] theorem isOption_on_iff {x : LGame} : IsOption x on ↔ x = on := by simp [IsOption]
+theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
-theorem eq_on {x : LGame} : x = on ↔ leftMoves x = {x} ∧ rightMoves x = ∅ := by
+theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = on) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine Player.rec ⟨{(a, on)}, ?_⟩ ⟨∅, ?_⟩ <;> simp_all
 
-/-- The game `off = {∅ | {off}}ᴸ`. -/
+/-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
-@[simp] theorem leftMoves_off : leftMoves off = ∅ := by simp [off]
-@[simp] theorem rightMoves_off : rightMoves off = {off} := by simp [off]
-theorem off_eq : off = {∅ | {off}}ᴸ := by ext p; cases p <;> simp
+@[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
+@[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
+@[simp] theorem isOption_off_iff {x : LGame} : IsOption x off ↔ x = off := by simp [IsOption]
+theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
-theorem eq_off {x : LGame} : x = off ↔ leftMoves x = ∅ ∧ rightMoves x = {x} := by
+theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = off) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine Player.rec ⟨∅, ?_⟩ ⟨{(a, off)}, ?_⟩ <;> simp_all
 
-/-- The game `dud = {{dud} | {dud}}ᴸ`. -/
+/-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
-@[simp] theorem leftMoves_dud : leftMoves dud = {dud} := by simp [dud]
-@[simp] theorem rightMoves_dud : rightMoves dud = {dud} := by simp [dud]
-theorem dud_eq : dud = {{dud} | {dud}}ᴸ := by ext p; cases p <;> simp
+@[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
+@[simp] theorem isOption_dud_iff {x : LGame} : IsOption x dud ↔ x = dud := by simp [IsOption]
+theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
-theorem eq_dud {x : LGame} : x = dud ↔ leftMoves x = {x} ∧ rightMoves x = {x} := by
+theorem eq_dud {x : LGame} : x = dud ↔ xᴸ = {x} ∧ xᴿ = {x} := by
   refine ⟨?_, fun hx ↦ ?_⟩
   · simp_all
   · refine eq_of_bisim (fun a b ↦ a = x ∧ b = dud) ?_ ⟨rfl, rfl⟩
     rintro a b ⟨rfl, rfl⟩
     refine fun p ↦ ⟨{(a, dud)}, ?_⟩; cases p <;> simp_all
 
-/-- The game `tis = {{tisn} | ∅}ᴸ`, where `tisn = {∅ | {tis}}ᴸ`. -/
+/-- The game `tis = !{{tisn} | ∅}`, where `tisn = !{∅ | {tis}}`. -/
 def tis : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) true
-/-- The game `tisn = {∅ | {tis}}ᴸ`, where `tis = {{tisn} | ∅}ᴸ`. -/
+/-- The game `tisn = !{∅ | {tis}}`, where `tis = !{{tisn} | ∅}`. -/
 def tisn : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) false
 
-@[simp] theorem leftMoves_tis : leftMoves tis = {tisn} := by simp [tis, tisn]
-@[simp] theorem rightMoves_tis : rightMoves tis = ∅ := by simp [tis]
-theorem tis_eq : tis = {{tisn} | ∅}ᴸ := by ext p; cases p <;> simp
+@[simp] theorem leftMoves_tis : tisᴸ = {tisn} := by simp [tis, tisn]
+@[simp] theorem rightMoves_tis : tisᴿ = ∅ := by simp [tis]
+theorem tis_eq : tis = !{{tisn} | ∅} := by ext p; cases p <;> simp
 
-@[simp] theorem leftMoves_tisn : leftMoves tisn = ∅ := by simp [tisn]
-@[simp] theorem rightMoves_tisn : rightMoves tisn = {tis} := by simp [tis, tisn]
-theorem tisn_eq : tisn = {∅ | {tis}}ᴸ := by ext p; cases p <;> simp
+@[simp] theorem leftMoves_tisn : tisnᴸ = ∅ := by simp [tisn]
+@[simp] theorem rightMoves_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
+theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 
 /-! ### Negation -/
 
-/-- The negative of a game is defined by `-{s | t}ᴸ = {-t | -s}ᴸ`. -/
+/-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
 instance : Neg LGame where
   neg := corec fun p ↦ moves (-p)
 
 @[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := rfl
 theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := rfl
 
-theorem neg_corec (moves : Player → α → Set α)
-    [∀ x, Small.{u} (moves left x)] [∀ x, Small.{u} (moves right x)] :
-    -corec moves = corec fun p ↦ moves (-p) :=
+theorem neg_corec (mov : Player → α → Set α)
+    [∀ x, Small.{u} (mov left x)] [∀ x, Small.{u} (mov right x)] :
+    -corec mov = corec fun p ↦ mov (-p) :=
   corec_comp_hom _ (fun _ ↦ moves_comp_corec ..)
 
-theorem neg_corec_apply (moves : Player → α → Set α)
-    [∀ x, Small.{u} (moves left x)] [∀ x, Small.{u} (moves right x)] (init : α) :
-    -corec moves init = corec (fun p ↦ moves (-p)) init :=
+theorem neg_corec_apply (mov : Player → α → Set α)
+    [∀ x, Small.{u} (mov left x)] [∀ x, Small.{u} (mov right x)] (init : α) :
+    -corec mov init = corec (fun p ↦ mov (-p)) init :=
   congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
@@ -427,8 +418,18 @@ theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
   exact moves_corec ..
 
 @[simp]
-theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -{s | t}ᴸ = {-t | -s}ᴸ := by
+theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -!{s | t} = !{-t | -s} := by
   ext p; cases p <;> simp
+
+theorem neg_ofSets' (st : Player → Set LGame) [Small (st left)] [Small (st right)] :
+    -!{st} = !{fun p ↦ -st (-p)} := by
+  rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
+  rfl
+
+@[simp]
+theorem neg_ofSets_const (s : Set LGame) [Small s] :
+    -!{fun _ ↦ s} = !{fun _ ↦ -s} := by
+  simp [neg_ofSets']
 
 instance : NegZeroClass LGame where
   neg_zero := by simp [zero_def]
@@ -453,21 +454,21 @@ theorem neg_tisn : -tisn = tis := by
 
 /-! ### Addition -/
 
-/-- The sum of `x = {s₁ | t₁}ᴸ` and `y = {s₂ | t₂}ᴸ` is `{s₁ + y, x + s₂ | t₁ + y, x + t₂}ᴸ`. -/
+/-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
 instance : Add LGame where
   add x y := corec
     (fun p x ↦ (fun y ↦ (y, x.2)) '' moves p x.1 ∪ (fun y ↦ (x.1, y)) '' moves p x.2)
     (x, y)
 
 theorem corec_add_corec
-    {movesα : Player → α → Set α} {movesβ : Player → β → Set β}
-    [∀ x, Small.{u} (movesα left x)] [∀ x, Small.{u} (movesα right x)]
-    [∀ x, Small.{u} (movesβ left x)] [∀ x, Small.{u} (movesβ right x)] (initα : α) (initβ : β) :
-    corec movesα initα + corec movesβ initβ =
+    {movα : Player → α → Set α} {movβ : Player → β → Set β}
+    [∀ x, Small.{u} (movα left x)] [∀ x, Small.{u} (movα right x)]
+    [∀ x, Small.{u} (movβ left x)] [∀ x, Small.{u} (movβ right x)] (initα : α) (initβ : β) :
+    corec movα initα + corec movβ initβ =
     corec
-      (fun p x ↦ (fun y ↦ (y, x.2)) '' movesα p x.1 ∪ (fun y ↦ (x.1, y)) '' movesβ p x.2)
+      (fun p x ↦ (fun y ↦ (y, x.2)) '' movα p x.1 ∪ (fun y ↦ (x.1, y)) '' movβ p x.2)
       (initα, initβ) := by
-  refine corec_comp_hom_apply (Prod.map (corec movesα) (corec movesβ)) ?_ (initα, initβ)
+  refine corec_comp_hom_apply (Prod.map (corec movα) (corec movβ)) ?_ (initα, initβ)
   refine fun p ↦ funext fun ⟨a, b⟩ ↦ ?_
   simp [Set.image_image, Set.image_union, moves_corec]
 
@@ -547,12 +548,12 @@ instance : SubNegMonoid LGame where
   zsmul := zsmulRec
 
 theorem corec_sub_corec
-    {movesα : Player → α → Set α} {movesβ : Player → β → Set β}
-    [∀ x, Small.{u} (movesα left x)] [∀ x, Small.{u} (movesα right x)]
-    [∀ x, Small.{u} (movesβ left x)] [∀ x, Small.{u} (movesβ right x)] (initα : α) (initβ : β) :
-    corec movesα initα - corec movesβ initβ =
+    {movα : Player → α → Set α} {movβ : Player → β → Set β}
+    [∀ x, Small.{u} (movα left x)] [∀ x, Small.{u} (movα right x)]
+    [∀ x, Small.{u} (movβ left x)] [∀ x, Small.{u} (movβ right x)] (initα : α) (initβ : β) :
+    corec movα initα - corec movβ initβ =
     corec
-      (fun p x ↦ (fun y ↦ (y, x.2)) '' movesα p x.1 ∪ (fun y ↦ (x.1, y)) '' movesβ (-p) x.2)
+      (fun p x ↦ (fun y ↦ (y, x.2)) '' movα p x.1 ∪ (fun y ↦ (x.1, y)) '' movβ (-p) x.2)
       (initα, initβ) := by
   rw [sub_eq_add_neg, neg_corec_apply, corec_add_corec]
 
@@ -685,55 +686,55 @@ theorem mulOption_eq_add (p : Player) (x : α × β) (y : α × β) :
     mulOption p x y = {(p, y.1, x.2)} + {(p, x.1, y.2)} + {(-p, y.1, y.2)} :=
   rfl
 
-variable (p : Player) (movesα : Player → α → Set α) (movesβ : Player → β → Set β)
+variable (p : Player) (movα : Player → α → Set α) (movβ : Player → β → Set β)
 
 /-- The set of pairs `α × β` used in `movesSingle`. -/
 def movesSet (x : Player × α × β) : Set (α × β) :=
   (p * x.1).rec
-    (movesα left x.2.1 ×ˢ movesβ right x.2.2 ∪ movesα right x.2.1 ×ˢ movesβ left x.2.2)
-    (movesα left x.2.1 ×ˢ movesβ left x.2.2 ∪ movesα right x.2.1 ×ˢ movesβ right x.2.2)
+    (movα left x.2.1 ×ˢ movβ right x.2.2 ∪ movα right x.2.1 ×ˢ movβ left x.2.2)
+    (movα left x.2.1 ×ˢ movβ left x.2.2 ∪ movα right x.2.1 ×ˢ movβ right x.2.2)
 
 theorem movesSet_neg (x : Player × α × β) :
-    movesSet p movesα movesβ (-x.1, x.2) = movesSet (-p) movesα movesβ x := by
+    movesSet p movα movβ (-x.1, x.2) = movesSet (-p) movα movβ x := by
   cases p
   · rfl
   · obtain ⟨_ | _, _, _⟩ := x <;> rfl
 
 theorem movesSet_neg' (x : Player × LGame × LGame) :
-    movesSet p LGame.moves LGame.moves (x.1, -x.2.1, x.2.2) =
-    (fun y ↦ (-y.1, y.2)) '' movesSet (-p) LGame.moves LGame.moves x := by
+    movesSet p moves moves (x.1, -x.2.1, x.2.2) =
+    (fun y ↦ (-y.1, y.2)) '' movesSet (-p) moves moves x := by
   obtain ⟨_ | _, _, _⟩ := x <;> aesop (add simp [movesSet])
 
 theorem movesSet_swap (x : Player × α × β) :
-    movesSet p movesβ movesα (x.1, x.2.swap) = Prod.swap '' movesSet p movesα movesβ x := by
+    movesSet p movβ movα (x.1, x.2.swap) = Prod.swap '' movesSet p movα movβ x := by
   obtain ⟨_ | _, _, _⟩ := x <;> cases p <;> simp [movesSet, image_union, union_comm]
 
 /-- The left or right moves of `±x * y` are left or right moves of `x * y` if the sign is positive,
 or the negatives of right or left moves of `x * y` if the sign is negative. -/
 def movesSingle (x : Player × α × β) : Set (MulTy α β) :=
-  mulOption x.1 x.2 '' movesSet p movesα movesβ x
+  mulOption x.1 x.2 '' movesSet p movα movβ x
 
 theorem movesSingle_neg (x : Player × α × β) :
-    movesSingle p movesα movesβ (-x.1, x.2) = -movesSingle (-p) movesα movesβ x := by
+    movesSingle p movα movβ (-x.1, x.2) = -movesSingle (-p) movα movβ x := by
   rw [movesSingle, movesSingle, movesSet_neg]
   simp [image_image, ← image_neg_eq_neg]
 
 theorem movesSingle_neg' (x : Player × LGame × LGame) :
-    movesSingle p LGame.moves LGame.moves (x.1, -x.2.1, x.2.2) =
-    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' movesSingle (-p) LGame.moves LGame.moves x := by
+    movesSingle p moves moves (x.1, -x.2.1, x.2.2) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' movesSingle (-p) moves moves x := by
   rw [movesSingle, movesSingle, movesSet_neg']
   simp [image_image, mulOption]
 
 theorem movesSingle_swap (x : Player × α × β) :
-    movesSingle p movesβ movesα (x.1, x.2.swap) = swap '' movesSingle p movesα movesβ x := by
+    movesSingle p movβ movα (x.1, x.2.swap) = swap '' movesSingle p movα movβ x := by
   simp [movesSingle, movesSet_swap, image_image]
 
 variable [Hα : DecidableEq α] [Hβ : DecidableEq β]
 
 /-- The set of left or right moves of `Σ ±xᵢ * yᵢ` are `zᵢ + Σ ±xⱼ * yⱼ` for all `i`, where `cᵢ` is
 a left or right move of `±xᵢ * yᵢ`, and the summation is taken over indices `j ≠ i`. -/
-def moves (x : MulTy α β) : Set (MulTy α β) :=
-  ⋃ y ∈ x, (x.erase y + ·) '' movesSingle p movesα movesβ y
+protected def moves (x : MulTy α β) : Set (MulTy α β) :=
+  ⋃ y ∈ x, (x.erase y + ·) '' movesSingle p movα movβ y
 
 -- TODO: upstream?
 theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) (g : β → Set γ) :
@@ -741,27 +742,27 @@ theorem _root_.Multiset.iUnion_map {α β γ} (m : Multiset α) (f : α → β) 
   simp
 
 theorem moves_neg (x : MulTy α β) :
-    moves p movesα movesβ (-x) = -moves (-p) movesα movesβ x := by
-  rw [moves, moves, neg_def, Multiset.iUnion_map]
+    (-x).moves p movα movβ = -x.moves (-p) movα movβ := by
+  rw [MulTy.moves, MulTy.moves, neg_def, Multiset.iUnion_map]
   simp [← image_neg_eq_neg, image_iUnion, image_image, movesSingle_neg, ← neg_def]
 
 theorem moves_neg' (x : MulTy LGame LGame) :
-    moves p LGame.moves LGame.moves (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
-    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' moves (-p) LGame.moves LGame.moves x := by
-  rw [moves, moves, Multiset.iUnion_map]
+    MulTy.moves p moves moves (Multiset.map (fun y ↦ (y.1, -y.2.1, y.2.2)) x) =
+    (Multiset.map fun y ↦ (y.1, -y.2.1, y.2.2)) '' x.moves (-p) moves moves := by
+  rw [MulTy.moves, MulTy.moves, Multiset.iUnion_map]
   simp only [movesSingle_neg', image_image, image_iUnion, Multiset.map_add]
   congr! with y hy
   exact (x.map_erase_of_mem _ hy).symm
 
 theorem moves_swap (x : MulTy α β) :
-    moves p movesβ movesα x.swap = swap '' moves p movesα movesβ x := by
-  rw [moves, swap_def, Multiset.iUnion_map]
-  simp [moves, image_iUnion, image_image, movesSingle_swap]
+    x.swap.moves p movβ movα = swap '' x.moves p movα movβ := by
+  rw [MulTy.moves, swap_def, Multiset.iUnion_map]
+  simp [MulTy.moves, image_iUnion, image_image, movesSingle_swap]
   rfl
 
 variable {α₁ β₁ α₂ β₂ : Type*}
-  {movesα₁ : Player → α₁ → Set α₁} {movesβ₁ : Player → β₁ → Set β₁}
-  {movesα₂ : Player → α₂ → Set α₂} {movesβ₂ : Player → β₂ → Set β₂}
+  {movα₁ : Player → α₁ → Set α₁} {movβ₁ : Player → β₁ → Set β₁}
+  {movα₂ : Player → α₂ → Set α₂} {movβ₂ : Player → β₂ → Set β₂}
   (f : α₁ → α₂) (g : β₁ → β₂)
 
 /-- Map `MulTy α₁ β₁` to `MulTy α₂ β₂` using `f : α₁ → α₂` and `g : β₁ → β₂` in the natural way. -/
@@ -784,62 +785,65 @@ theorem map_mulOption (b x y) :
 
 variable {p f g}
 
-set_option maxHeartbeats 1000000 in
+set_option maxHeartbeats 400000 in
 theorem movesSingle_comp_prodMap
-    (hf : ∀ p, movesα₂ p ∘ f = Set.image f ∘ movesα₁ p)
-    (hg : ∀ p, movesβ₂ p ∘ g = Set.image g ∘ movesβ₁ p) :
-    movesSingle p movesα₂ movesβ₂ ∘ Prod.map id (Prod.map f g) =
-    image (map f g) ∘ movesSingle p movesα₁ movesβ₁ := by
+    (hf : ∀ p, movα₂ p ∘ f = Set.image f ∘ movα₁ p)
+    (hg : ∀ p, movβ₂ p ∘ g = Set.image g ∘ movβ₁ p) :
+    movesSingle p movα₂ movβ₂ ∘ Prod.map id (Prod.map f g) =
+    image (map f g) ∘ movesSingle p movα₁ movβ₁ := by
   simp_rw [funext_iff, Function.comp_apply, movesSingle, movesSet] at *
-  rintro ⟨(_ | _), x⟩ <;> aesop
+  rintro ⟨p', x⟩
+  ext
+  simp_rw [Prod.map_apply, id_eq, Prod.map_fst, Prod.map_snd, mem_image, Prod.exists, hf, hg]
+  clear hf hg
+  cases p <;> cases p' <;> aesop
 
 variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
 theorem moves_comp_map
-    (hf : ∀ p, movesα₂ p ∘ f = Set.image f ∘ movesα₁ p)
-    (hg : ∀ p, movesβ₂ p ∘ g = Set.image g ∘ movesβ₁ p) :
-    moves p movesα₂ movesβ₂ ∘ map f g = image (map f g) ∘ moves p movesα₁ movesβ₁ := by
+    (hf : ∀ p, movα₂ p ∘ f = Set.image f ∘ movα₁ p)
+    (hg : ∀ p, movβ₂ p ∘ g = Set.image g ∘ movβ₁ p) :
+    MulTy.moves p movα₂ movβ₂ ∘ map f g = image (map f g) ∘ MulTy.moves p movα₁ movβ₁ := by
   ext1 x
-  simp_rw [Function.comp_apply, moves, map, Multiset.iUnion_map, image_iUnion]
+  simp_rw [Function.comp_apply, MulTy.moves, map, Multiset.iUnion_map, image_iUnion]
   congr! with y hy
   simp_rw [← Multiset.map_erase_of_mem _ _ hy, ← Function.comp_apply (g := Prod.map id _),
     movesSingle_comp_prodMap hf hg]
   aesop
 
 variable (p)
-    [∀ x, Small.{u} (movesα left x)] [∀ x, Small.{u} (movesα right x)]
-    [∀ x, Small.{u} (movesβ left x)] [∀ x, Small.{u} (movesβ right x)]
+    [∀ x, Small.{u} (movα left x)] [∀ x, Small.{u} (movα right x)]
+    [∀ x, Small.{u} (movβ left x)] [∀ x, Small.{u} (movβ right x)]
 
 private instance (x : Player × α × β) :
-    Small.{u} (movesSet p movesα movesβ x) := by
+    Small.{u} (movesSet p movα movβ x) := by
   obtain ⟨(_ | _), _⟩ := x <;> cases p <;> exact small_union ..
 
 instance (x : Player × α × β) :
-    Small.{u} (movesSingle p movesα movesβ x) :=
+    Small.{u} (movesSingle p movα movβ x) :=
   small_image ..
 
 instance (x : MulTy α β) :
-    Small.{u} (moves p movesα movesβ x) := by
-  simp_rw [moves, ← Multiset.mem_toFinset]
-  exact small_biUnion.{u} (Multiset.toFinset x).toSet _
+    Small.{u} (x.moves p movα movβ) := by
+  simp_rw [MulTy.moves, ← Multiset.mem_toFinset]
+  exact small_biUnion.{u} (ι := Player × α × β) (Multiset.toFinset x) _
 
 /-- The game `±xᵢ * yᵢ`. -/
 abbrev toLGame (x : Player × α × β) : LGame :=
-  corec (moves · movesα movesβ) {x}
+  corec (MulTy.moves · movα movβ) {x}
 
 theorem moves_toLGame (x : Player × α × β) :
-    (toLGame movesα movesβ x).moves p =
-    corec (moves · movesα movesβ) '' movesSingle p movesα movesβ x := by
+    (toLGame movα movβ x).moves p =
+    corec (MulTy.moves · movα movβ) '' movesSingle p movα movβ x := by
   apply (moves_corec ..).trans
-  simp [moves]
+  simp [MulTy.moves]
 
 @[simp]
-theorem corec_zero :
-    corec (moves · movesα movesβ) 0 = 0 := by
-  ext p; cases p <;> simp [moves]
+theorem corec_zero : corec (MulTy.moves · movα movβ) 0 = 0 := by
+  ext p; cases p <;> simp [MulTy.moves]
 
 theorem corec_neg (init : MulTy α β) :
-    corec (moves · movesα movesβ) (-init) = -corec (moves · movesα movesβ) init := by
+    corec (MulTy.moves · movα movβ) (-init) = -corec (MulTy.moves · movα movβ) init := by
   rw [neg_corec_apply]
   apply corec_comp_hom_apply
   intro p
@@ -847,74 +851,74 @@ theorem corec_neg (init : MulTy α β) :
   simp [moves_neg]
 
 theorem corec_add (init₁ init₂ : MulTy α β) :
-    corec (moves · movesα movesβ) (init₁ + init₂) =
-    corec (moves · movesα movesβ) init₁ + corec (moves · movesα movesβ) init₂ := by
+    corec (MulTy.moves · movα movβ) (init₁ + init₂) =
+    corec (MulTy.moves · movα movβ) init₁ + corec (MulTy.moves · movα movβ) init₂ := by
   refine eq_of_bisim (fun a b ↦ ∃ x y,
-    a = corec (moves · movesα movesβ) (x + y) ∧
-    b = corec (moves · movesα movesβ) x + corec (moves · movesα movesβ) y) ?_
+    a = corec (MulTy.moves · movα movβ) (x + y) ∧
+    b = corec (MulTy.moves · movα movβ) x + corec (MulTy.moves · movα movβ) y) ?_
     ⟨_, _, rfl, rfl⟩
   rintro _ _ ⟨x, y, rfl, rfl⟩
   let f (s : _ → _) := (⋃ z ∈ x, (fun w ↦
-      (corec (moves · movesα movesβ) (mulOption z.1 z.2 w + x.erase z + y),
-      corec (moves · movesα movesβ) (mulOption z.1 z.2 w + x.erase z) +
-      corec (moves · movesα movesβ) y)) '' s z) ∪
+      (corec (MulTy.moves · movα movβ) (mulOption z.1 z.2 w + x.erase z + y),
+      corec (MulTy.moves · movα movβ) (mulOption z.1 z.2 w + x.erase z) +
+      corec (MulTy.moves · movα movβ) y)) '' s z) ∪
     (⋃ z ∈ y, (fun w ↦
-      (corec (moves · movesα movesβ) (mulOption z.1 z.2 w + x + y.erase z),
-      corec (moves · movesα movesβ) x +
-      corec (moves · movesα movesβ) (mulOption z.1 z.2 w + y.erase z))) '' s z)
+      (corec (MulTy.moves · movα movβ) (mulOption z.1 z.2 w + x + y.erase z),
+      corec (MulTy.moves · movα movβ) x +
+      corec (MulTy.moves · movα movβ) (mulOption z.1 z.2 w + y.erase z))) '' s z)
   intro p
-  use f (movesSet p movesα movesβ)
+  use f (movesSet p movα movβ)
   simp only [f, image_union, image_iUnion, image_image,
     Multiset.mem_add, iUnion_or, iUnion_union_distrib,
-    moves_corec, moves, movesSingle]
+    moves_corec, MulTy.moves, movesSingle]
   refine ⟨?_, ?_, ?_⟩
   · congr! 6 with a ha b hb a ha b hb
     · rw [Multiset.erase_add_left_pos _ ha]
       simp [add_comm, add_assoc]
     · rw [Multiset.erase_add_right_pos _ ha]
       simp [add_comm, ← add_assoc]
-  · simp [image_iUnion, image_image, moves, movesSingle, add_comm]
+  · simp [image_iUnion, image_image, MulTy.moves, movesSingle, add_comm]
   · rintro z (⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩ | ⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩)
     · use mulOption a.1 a.2 b + x.erase a, y
     · use mulOption a.1 a.2 b + y.erase a, x
       simp [add_comm, ← add_assoc]
 
 theorem corec_mulOption (p : Player) (x y : α × β) :
-    corec (moves · movesα movesβ) (mulOption p x y) =
-    toLGame movesα movesβ (p, y.1, x.2) +
-    toLGame movesα movesβ (p, x.1, y.2) -
-    toLGame movesα movesβ (p, y.1, y.2) := by
+    corec (MulTy.moves · movα movβ) (mulOption p x y) =
+    toLGame movα movβ (p, y.1, x.2) +
+    toLGame movα movβ (p, x.1, y.2) -
+    toLGame movα movβ (p, y.1, y.2) := by
   simp_rw [mulOption_eq_add, corec_add]
   congr
   rw [← corec_neg, neg_singleton]
 
 theorem _root_.LGame.corec_mulTy (x : MulTy α β) :
-    corec (moves · movesα movesβ) x =
-    (Multiset.map (toLGame movesα movesβ) x).sum := by
+    corec (MulTy.moves · movα movβ) x =
+    (Multiset.map (toLGame movα movβ) x).sum := by
   induction x using Multiset.induction with
   | empty => simp
   | cons a x IH => simp [← Multiset.singleton_add, corec_add, IH]
 
 theorem corec_swap (x : MulTy α β) :
-    corec (moves · movesβ movesα) x.swap = corec (moves · movesα movesβ) x := by
+    corec (MulTy.moves · movβ movα) x.swap = corec (MulTy.moves · movα movβ) x := by
   apply corec_comp_hom_apply
   intro p
   ext
   simp [moves_swap]
 
-/-- The product of `x = {s₁ | t₁}ᴵ` and `y = {s₂ | t₂}ᴵ` is
-`{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}ᴵ`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
+/-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
+`!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
-`x * y = {mulOption x y a₁ b₁ | mulOption x y a₂ b₂}ᴵ`. -/
+`x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 instance _root_.LGame.instMul : Mul LGame where
-  mul x y := toLGame LGame.moves LGame.moves (right, x, y)
+  mul x y := toLGame moves moves (right, x, y)
 
 theorem _root_.LGame.corec_mul_corec (initα : α) (initβ : β) :
-    corec movesα initα * corec movesβ initβ =
-    toLGame movesα movesβ (right, initα, initβ) := by
-  refine corec_comp_hom_apply (MulTy.map (corec movesα) (corec movesβ)) ?_ {(right, initα, initβ)}
+    corec movα initα * corec movβ initβ =
+    toLGame movα movβ (right, initα, initβ) := by
+  refine corec_comp_hom_apply (MulTy.map (corec movα) (corec movβ)) ?_ {(right, initα, initβ)}
   intro p
   apply MulTy.moves_comp_map
   all_goals exact fun _ ↦ moves_comp_corec ..
@@ -930,7 +934,7 @@ def mulOption (x y a b : LGame) : LGame :=
 @[simp]
 theorem moves_mul (p : Player) (x y : LGame) :
     (x * y).moves p = (fun a ↦ mulOption x y a.1 a.2) ''
-      (x.leftMoves ×ˢ y.moves p ∪ x.rightMoves ×ˢ y.moves (-p)) := by
+      (xᴸ ×ˢ y.moves p ∪ xᴿ ×ˢ y.moves (-p)) := by
   apply (moves_corec ..).trans
   simp [MulTy.moves, MulTy.movesSingle, MulTy.corec_mulOption, image_image]
   cases p <;> rfl
@@ -970,5 +974,90 @@ private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
 instance : HasDistribNeg LGame where
   neg_mul := neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
+
+/-! ### Stoppers -/
+
+/-- A game is a stopper for player `p` when an alternating sequence of moves starting with said
+player always terminates. -/
+@[mk_iff]
+inductive StopperFor : Player → LGame → Prop
+  | mk {p : Player} {x : LGame} : (∀ y ∈ x.moves p, StopperFor (-p) y) → StopperFor p x
+
+theorem StopperFor.of_mem_moves {p : Player} {x y : LGame} (h : StopperFor p x)
+    (hy : y ∈ x.moves p) : StopperFor (-p) y := by
+  induction h with | mk IH
+  exact IH y hy
+
+theorem StopperFor.neg {p : Player} {x : LGame} (h : StopperFor p x) : StopperFor (-p) (-x) := by
+  induction h with | @mk p' x h IH
+  refine .mk ?_
+  simp_all
+
+@[simp]
+theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ StopperFor (-p) x := by
+  constructor <;> intro h <;> simpa using h.neg
+
+/-- A game is a stopper when it's `StopperFor` for both players. -/
+def Stopper (x : LGame) : Prop :=
+  ∀ p, StopperFor p x
+
+@[simp]
+theorem Stopper.stopperFor (p : Player) {x : LGame} (h : Stopper x) : StopperFor p x :=
+  h p
+
+/-- A game is a stopper when all its options are stoppers.
+
+Note that this is not an iff, as e.g. `{ | { | dud}}` is a stopper, but `{ | dud}` isn't. -/
+theorem Stopper.mk {x : LGame} (H : ∀ p, ∀ y ∈ x.moves p, Stopper y) : Stopper x :=
+  fun p ↦ .mk fun y hy ↦ H p y hy _
+
+theorem Stopper.neg {x : LGame} (h : Stopper x) : Stopper (-x) := by
+  simp_all [Stopper]
+
+@[simp]
+theorem stopper_neg_iff {x : LGame} : Stopper (-x) ↔ Stopper x := by
+  constructor <;> intro h <;> simpa using h.neg
+
+@[simp]
+theorem stopper_zero : Stopper 0 :=
+  fun p ↦ .mk <| by simp
+
+@[simp]
+theorem stopper_one : Stopper 1 := by
+  refine fun p ↦ .mk ?_
+  cases p <;> simp
+
+@[simp]
+theorem stopper_on : Stopper.{u} on := by
+  have : StopperFor.{u} right on := by refine .mk ?_; simp
+  refine fun p ↦ .mk fun y h ↦ ?_
+  cases p <;> simp_all
+
+@[simp]
+theorem stopper_off : Stopper off := by
+  simpa using stopper_on.neg
+
+@[simp]
+theorem not_stopperFor_dud (p : Player) : ¬ StopperFor p dud := by
+  refine fun h ↦ h.rec (motive := fun _ x _ ↦ x ≠ dud) ?_ rfl
+  aesop
+
+@[simp] theorem not_stopper_dud : ¬ Stopper dud := by simp [Stopper]
+
+@[simp] theorem stopperFor_right_tis : StopperFor right tis := .mk <| by simp
+@[simp] theorem stopperFor_left_tisn : StopperFor left tisn := .mk <| by simp
+
+@[simp]
+theorem not_stopperFor_left_tis : ¬ StopperFor left tis := by
+  refine fun h ↦ h.rec (motive := fun p x _ ↦ p.cases (x ≠ tis) (x ≠ tisn)) ?_ rfl
+  aesop
+
+@[simp]
+theorem not_stopperFor_right_tisn : ¬ StopperFor right tisn := by
+  refine fun h ↦ not_stopperFor_left_tis <| h.of_mem_moves ?_
+  simp
+
+@[simp] theorem not_stopper_tis : ¬ Stopper tis := by simp [Stopper]
+@[simp] theorem not_stopper_tisn : ¬ Stopper tisn := by simp [Stopper]
 
 end LGame

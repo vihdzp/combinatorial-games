@@ -25,8 +25,8 @@ namespace IGame
 
 /-- Undominating a game. This returns garbage values on non-short games -/
 noncomputable def undominate (x : IGame) : IGame :=
-  {{y ∈ Set.range fun z : x.leftMoves ↦ undominate z | ∀ z ∈ x.leftMoves, ¬y < z} |
-    {y ∈ Set.range fun z : x.rightMoves ↦ undominate z | ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ
+  !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
+    {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
 termination_by x
 decreasing_by igame_wf
 
@@ -38,20 +38,20 @@ termination_by x
 decreasing_by igame_wf
 
 theorem undominate_def {x : IGame} : x.undominate =
-    {{y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} |
-      {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y}}ᴵ := by
+    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} |
+      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
   rw [undominate]
   simp
 
 @[simp]
 theorem leftMoves_undominate {x : IGame} :
-    x.undominate.leftMoves = {y ∈ undominate '' x.leftMoves | ∀ z ∈ x.leftMoves, ¬y < z} := by
+    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
   rw [undominate_def]
   exact leftMoves_ofSets ..
 
 @[simp]
 theorem rightMoves_undominate {x : IGame} :
-    x.undominate.rightMoves = {y ∈ undominate '' x.rightMoves | ∀ z ∈ x.rightMoves, ¬z < y} := by
+    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
   rw [undominate_def]
   exact rightMoves_ofSets ..
 
@@ -71,13 +71,13 @@ private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
   rw [le_def, leftMoves_undominate, rightMoves_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
-    have := Short.of_mem_moves hz
+    short
     have IH := le_undominate z
     refine .inl ⟨_, ⟨⟨Set.mem_image_of_mem _ hz, fun a ha h ↦ ?_⟩, hyz.trans IH⟩⟩
     replace h := IH.trans_lt h
     exact (hz' ha h.le).not_gt h
   · rintro y ⟨⟨z, ⟨hz, rfl⟩⟩, _⟩
-    have := Short.of_mem_moves hz
+    short
     exact .inr ⟨z, hz, le_undominate z⟩
 termination_by x
 decreasing_by igame_wf
