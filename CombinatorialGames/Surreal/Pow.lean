@@ -833,17 +833,19 @@ theorem leadingCoeff_div (x y : Surreal) :
   simp [div_eq_mul_inv]
 
 -- TODO: upstream
-theorem _root_.ArchimedeanClass.stdPart_ne_zero {K : Type*} [Field K] [LinearOrder K]
-    [IsOrderedRing K] {x : K} (h : ArchimedeanClass.mk x = 0) : stdPart x ≠ 0 := by
-  rwa [stdPart_of_mk_nonneg default h.ge, map_ne_zero, FiniteResidueField.mk_ne_zero]
+@[simp]
+theorem _root_.ArchimedeanClass.stdPart_eq_zero {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] {x : K} : stdPart x = 0 ↔ ArchimedeanClass.mk x ≠ 0 where
+  mp := by
+    contrapose!
+    intro h
+    rwa [ne_eq, stdPart_of_mk_nonneg default h.ge, map_eq_zero,
+      ← ne_eq, FiniteResidueField.mk_ne_zero]
+  mpr := stdPart_of_mk_ne_zero
 
 @[simp]
-theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
-  mp h := by
-    contrapose h
-    apply ArchimedeanClass.stdPart_ne_zero
-    simpa
-  mpr := by simp +contextual
+theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 := by
+  simp [leadingCoeff]
 
 end Surreal
 end
