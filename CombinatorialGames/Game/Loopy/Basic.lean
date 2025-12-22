@@ -793,7 +793,7 @@ theorem movesSingle_comp_prodMap
   simp_rw [funext_iff, Function.comp_apply, movesSingle, movesSet] at *
   rintro ⟨p', x⟩
   ext
-  simp only [Player.cases, mem_image, Prod.exists, Prod.map_apply, id_eq]
+  simp_rw [Player.cases, mem_image, Prod.exists, Prod.map_apply, id_eq]
   cases p <;> cases p'
   all_goals
     simp only [mem_union, mem_prod]
