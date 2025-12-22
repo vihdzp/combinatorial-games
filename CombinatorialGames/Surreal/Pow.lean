@@ -736,6 +736,11 @@ theorem wlog_eq_iff (h : x ≠ 0) :
     wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
 
+theorem wlog_congr (h : ArchimedeanClass.mk x = ArchimedeanClass.mk y) : wlog x = wlog y := by
+  obtain rfl | hy := eq_or_ne y 0; · simp_all
+  apply wlog_eq_of_mk_eq_mk
+  rwa [mk_wpow_wlog hy, eq_comm]
+
 @[simp]
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
   simp
@@ -763,6 +768,24 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
+    ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ wlog y ≤ wlog x := by
+  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+
+theorem wlog_le_wlog_of_mk_le_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y) :
+    wlog y ≤ wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp_all
+  rwa [← wlog_le_wlog_iff hx hy]
+
+theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
+    ArchimedeanClass.mk x < ArchimedeanClass.mk y ↔ wlog y < wlog x := by
+  rw [← mk_wpow_lt_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+
+theorem wlog_lt_wlog_of_mk_lt_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x < ArchimedeanClass.mk y) :
+    wlog y < wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp at h
+  rwa [← wlog_lt_wlog_iff hx hy]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by

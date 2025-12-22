@@ -633,7 +633,7 @@ end SurrealHahnSeries
 
 namespace Surreal
 
-/-- An auxiliary type containing the truncations of `x.toSurrealHahnSeries`.
+/-- An auxiliary type containing the truncations of `x.toHahnSeries`.
 
 We'll show that this type, ordered by length, forms a complete linear order, whose supremum
 satisfies `toSurreal ⊤ = x`. -/
@@ -641,10 +641,10 @@ satisfies `toSurreal ⊤ = x`. -/
 structure PartialSum (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
   carrier : SurrealHahnSeries
-  /-- Every non-zero coefficient matches that of `x.toSurrealHahnSeries`. -/
+  /-- Every non-zero coefficient matches that of `x.toHahnSeries`. -/
   coeffIdx_eq_leadingCoeff_sub {i} (hi : i < carrier.length) :
     carrier.coeffIdx i = (x - carrier.truncIdx i).leadingCoeff
-  /-- Every non-zero exponent matches that of `x.toSurrealHahnSeries`. -/
+  /-- Every non-zero exponent matches that of `x.toHahnSeries`. -/
   exp_eq_wlog_sub {i} (hi : i < carrier.length) :
     carrier.exp ⟨i, hi⟩ = (x - carrier.truncIdx i).wlog
 
@@ -912,30 +912,65 @@ def succ (y : PartialSum x) : PartialSum x where
 
 theorem length_succ_of_ne {y : PartialSum x} (h : x ≠ y.carrier) :
     (succ y).length = y.length + 1 := by
+  have h' : ¬ x - y.carrier = 0 := by rwa [sub_eq_zero]
   apply length_add_single
-  · sorry
-  · rwa [ne_eq, leadingCoeff_eq_zero, sub_eq_zero]
+  · intro i hi
+    obtain ⟨⟨i, hi⟩, rfl⟩ := eq_exp_of_mem_support hi
+    rw [exp_eq_wlog_sub]
+    apply wlog_lt_wlog_of_mk_lt_mk h'
+    rw [← carrier_truncIdx]
+    apply mk_sub_strictMono
+    rwa [← length_lt_length, length_truncIdx, inf_lt_right, not_le]
+  · rwa [ne_eq, leadingCoeff_eq_zero]
 
 theorem toSurreal_top : (⊤ : PartialSum x).carrier = x := by
   by_contra! h
   apply (le_top (a := succ ⊤)).not_gt
   rw [← length_lt_length, length_succ_of_ne h.symm, Order.lt_add_one_iff]
 
+-- TODO: add a `SuccOrder` instance?
+
 end PartialSum
+
+variable {x y : Surreal}
 
 /-- The **Conway normal form** of a surreal number. -/
 @[coe]
-def toSurrealHahnSeries (x : Surreal) : SurrealHahnSeries :=
+def toHahnSeries (x : Surreal) : SurrealHahnSeries :=
   (⊤ : PartialSum x).carrier
 
 @[simp]
-theorem toSurreal_toSurrealHahnSeries (x : Surreal) : x.toSurrealHahnSeries = x :=
+theorem toSurreal_toHahnSeries (x : Surreal) : x.toHahnSeries = x :=
   PartialSum.toSurreal_top
 
-end Surreal
+@[simp]
+theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.toHahnSeries = x := by
+  apply SurrealHahnSeries.toSurreal_strictMono.injective
+  rw [toSurreal_toHahnSeries]
 
 /-- `SurrealHahnSeries.toSurreal` as an `OrderIso`. -/
 @[simps]
 def _root_.SurrealHahnSeries.toSurrealOrderIso : SurrealHahnSeries ≃o Surreal where
-  toFun := toSurreal
-  invFun := toSurrealHahnSeries
+  toFun := SurrealHahnSeries.toSurreal
+  invFun := toHahnSeries
+  left_inv := SurrealHahnSeries.toHahnSeries_toSurreal
+  right_inv := toSurreal_toHahnSeries
+  map_rel_iff' := by simp
+
+theorem toHahnSeries_strictMono : StrictMono toHahnSeries :=
+  SurrealHahnSeries.toSurrealOrderIso.symm.strictMono
+
+@[simp, norm_cast]
+theorem toHahnSeries_lt_toHahnSeries_iff : toHahnSeries x < toHahnSeries y ↔ x < y :=
+  toHahnSeries_strictMono.lt_iff_lt
+
+@[simp, norm_cast]
+theorem toHahnSeries_le_toHahnSeries_iff : toHahnSeries x ≤ toHahnSeries y ↔ x ≤ y :=
+  toHahnSeries_strictMono.le_iff_le
+
+@[simp, norm_cast]
+theorem toHahnSeries_inj : toHahnSeries x = toHahnSeries y ↔ x = y :=
+  toHahnSeries_strictMono.injective.eq_iff
+
+end Surreal
