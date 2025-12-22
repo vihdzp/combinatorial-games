@@ -4,9 +4,10 @@ keywords = ["math"]
 defaultTargets = ["CombinatorialGames"]
 
 [leanOptions]
-pp.unicode.fun = true       # pretty-prints `fun a ↦ b`
-autoImplicit = false        # switch off auto-implicit
-relaxedAutoImplicit = false # switch off relaxed auto-implicit
+pp.unicode.fun = true
+autoImplicit = false
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
 
 [[require]]
 name = "mathlib"

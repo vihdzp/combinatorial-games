@@ -236,7 +236,8 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
 
 private theorem birthday_game_le (x : IGame) :
     (supLeft x).birthday ≤ x.birthday ∧ (infRight x).birthday ≤ x.birthday ∧
-    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧ (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
+    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧
+    (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
   have H₁ : (supLeft x).birthday ≤ x.birthday := by
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
