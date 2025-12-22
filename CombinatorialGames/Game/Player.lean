@@ -103,6 +103,18 @@ instance : CommGroup Player where
 @[simp] lemma one_eq_left : 1 = left := rfl
 @[simp] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
+-- copied from lemmas about `Bool` in `Init.Data.Bool`
+theorem eq_neg_of_ne : ∀ {p q : Player}, p ≠ q → p = -q := by decide
+theorem eq_neg : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
+theorem neg_eq : ∀ {p q : Player}, -p = q ↔ p ≠ q := by decide
+
+-- copied from lemmas about `Bool` in `Mathlib.Data.Bool.Basic`
+theorem neg_ne_id : Neg.neg ≠ @id Player := by decide
+theorem neg_ne_self : ∀ (p : Player), -p ≠ p := by decide
+theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
+theorem eq_neg_iff : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
+theorem ne_neg : ∀ {p q : Player}, p ≠ -q ↔ p = q := by decide
+
 end Player
 
 open Player
