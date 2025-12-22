@@ -20,7 +20,7 @@ universe u
 /-! ### Players -/
 
 /-- Either the Left or Right player. -/
-@[aesop safe cases]
+@[aesop safe cases, grind cases]
 inductive Player where
   /-- The Left player. -/
   | left  : Player
@@ -67,8 +67,8 @@ protected lemma «exists» {p : Player → Prop} :
 instance : Neg Player where
   neg := cases right left
 
-@[simp] lemma neg_left : -left = right := rfl
-@[simp] lemma neg_right : -right = left := rfl
+@[simp, grind =] lemma neg_left : -left = right := rfl
+@[simp, grind =] lemma neg_right : -right = left := rfl
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
@@ -81,11 +81,11 @@ instance : Mul Player where mul
   | left, p => p
   | right, p => -p
 
-@[simp] lemma left_mul (p : Player) : left * p = p := rfl
-@[simp] lemma right_mul (p : Player) : right * p = -p := rfl
-@[simp] lemma mul_left : ∀ p, p * left = p := by decide
-@[simp] lemma mul_right : ∀ p, p * right = -p := by decide
-@[simp] lemma mul_self : ∀ p, p * p = left := by decide
+@[simp, grind =] lemma left_mul (p : Player) : left * p = p := rfl
+@[simp, grind =] lemma right_mul (p : Player) : right * p = -p := rfl
+@[simp, grind =] lemma mul_left : ∀ p, p * left = p := by decide
+@[simp, grind =] lemma mul_right : ∀ p, p * right = -p := by decide
+@[simp, grind =] lemma mul_self : ∀ p, p * p = left := by decide
 
 instance : HasDistribNeg Player where
   neg_mul := by decide
@@ -100,8 +100,8 @@ instance : CommGroup Player where
   mul_one := by decide
   inv_mul_cancel := by decide
 
-@[simp] lemma one_eq_left : 1 = left := rfl
-@[simp] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
+@[simp, grind =] lemma one_eq_left : 1 = left := rfl
+@[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
 end Player
 
