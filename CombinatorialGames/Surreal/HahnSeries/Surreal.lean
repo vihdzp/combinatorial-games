@@ -617,7 +617,7 @@ theorem mk_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length
       ArchimedeanClass.mk (ω^ (x.exp ⟨i, hi⟩).1) := by
   sorry
 
-theorem leadingCoeff_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
+theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingCoeff (x - x.truncIdx i) = x.term i := by
   sorry
 
@@ -807,6 +807,10 @@ theorem coeffIdx_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (h
   obtain hyz | hyz := le_total y z <;>
     rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, coeffIdx_truncIdx_of_lt]
 
+theorem ne_of_lt {y z : PartialSum x} (h : y < z) : y.carrier ≠ x := by
+  sorry
+
+-- Do I need this?
 theorem eq_of_length_eq_add_one {y z : PartialSum x} (h : z.length = y.length + 1) :
     z.carrier = y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff := by
   apply exp_ext
@@ -925,8 +929,8 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := instCompleteLattice
   __ := instLinearOrder
 
-theorem leadingCoeff_sub_truncIdx {y : PartialSum x} {i : Ordinal} (hi : i < y.length) :
-    leadingCoeff (x - y.carrier.truncIdx i) = y.carrier.term i := by
+theorem leadingTerm_sub_truncIdx {y : PartialSum x} {i : Ordinal} (hi : i < y.length) :
+    leadingTerm (x - y.carrier.truncIdx i) = y.carrier.term i := by
   sorry
 
 private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
@@ -937,7 +941,12 @@ private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
   obtain ⟨o, ho⟩ | hz := mem_range_succ_or_isSuccPrelimit z.length
   · apply (le_of_le_of_lt_of_lt (f := fun a : PartialSum x ↦ ArchimedeanClass.mk (x - a.carrier))
       (mk_sub_strictMono' _ (z.truncIdx o)) _).trans_lt
-    · rw [toSurreal_eq_of_succ ho.symm, ← leadingCoeff_sub_truncIdx]
+    · rw [toSurreal_eq_of_succ ho.symm, ← leadingTerm_sub_truncIdx, carrier_truncIdx, ← sub_sub]
+      · apply mk_sub_leadingTerm
+        rw [sub_ne_zero, ne_comm, ← carrier_truncIdx]
+        apply ne_of_lt (z := z)
+        rw [truncIdx_lt_iff, ← ho, Order.lt_succ_iff]
+      · rw [← ho, Order.lt_succ_iff]
     · rw [← length_le_length, length_truncIdx, length_truncIdx]
       apply min_le_min_right
       rwa [← Order.lt_succ_iff, ho]
@@ -950,7 +959,6 @@ theorem mk_sub_strictMono :
     StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) :=
   mk_sub_strictMono'
 
-#exit
 def succ (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
   coeffIdx_eq_leadingCoeff_sub {i} hi := by
