@@ -896,12 +896,13 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := instCompleteLattice
   __ := instLinearOrder
 
-theorem mk_sub_wlog_strictMono :
+theorem mk_sub_strictMono :
     StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) := by
   intro y z h
+  rw [← truncIdx_length_of_le h.le]
   dsimp
-
-  #exit
+  rw [← carrier_truncIdx, ]
+  sorry
 
 def succ (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
@@ -911,7 +912,9 @@ def succ (y : PartialSum x) : PartialSum x where
 
 theorem length_succ_of_ne {y : PartialSum x} (h : x ≠ y.carrier) :
     (succ y).length = y.length + 1 := by
-  sorry
+  apply length_add_single
+  · sorry
+  · rwa [ne_eq, leadingCoeff_eq_zero, sub_eq_zero]
 
 theorem toSurreal_top : (⊤ : PartialSum x).carrier = x := by
   by_contra! h
@@ -930,3 +933,9 @@ theorem toSurreal_toSurrealHahnSeries (x : Surreal) : x.toSurrealHahnSeries = x 
   PartialSum.toSurreal_top
 
 end Surreal
+
+/-- `SurrealHahnSeries.toSurreal` as an `OrderIso`. -/
+@[simps]
+def _root_.SurrealHahnSeries.toSurrealOrderIso : SurrealHahnSeries ≃o Surreal where
+  toFun := toSurreal
+  invFun := toSurrealHahnSeries

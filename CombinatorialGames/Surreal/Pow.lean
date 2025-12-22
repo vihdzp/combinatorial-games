@@ -924,7 +924,7 @@ theorem _root_.ArchimedeanClass.stdPart_ne_zero {K : Type*} [Field K] [LinearOrd
   rwa [stdPart_of_mk_nonneg default h.ge, map_ne_zero, FiniteResidueField.mk_ne_zero]
 
 @[simp]
-theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
+theorem leadingCoeff_eq_zero {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 where
   mp h := by
     contrapose h
     apply ArchimedeanClass.stdPart_ne_zero
@@ -965,7 +965,7 @@ theorem leadingCoeff_nonneg_iff {x : Surreal} : 0 ≤ leadingCoeff x ↔ 0 ≤ x
   refine ⟨?_, leadingCoeff_nonneg⟩
   contrapose!
   refine fun h ↦ (leadingCoeff_nonpos h.le).lt_of_ne ?_
-  rw [ne_eq, leadingCoeff_eq_zero_iff]
+  rw [ne_eq, leadingCoeff_eq_zero]
   exact h.ne
 
 @[simp]
