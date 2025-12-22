@@ -51,7 +51,7 @@ theorem truncGT_def {x y : SurrealHahnSeries} :
     x ≻ y ↔ ∃ i ∈ y.support, ∃ r : ℝ, y.coeff i < r ∧ y.trunc i + single i r = x :=
   truncAux_def
 
-theorem forall_mem_truncAux {y : SurrealHahnSeries}
+private theorem forall_mem_truncAux {y : SurrealHahnSeries}
     {P : SurrealHahnSeries → Prop} {R : ℝ → ℝ → Prop} :
     (∀ x ∈ truncAux y R, P x) ↔
       ∀ i ∈ y.support, ∀ r : ℝ, R r (y.coeff i) → P (y.trunc i + single i r) := by
@@ -709,7 +709,7 @@ theorem carrier_truncIdx (y : PartialSum x) (i : Ordinal) :
     (y.truncIdx i).carrier = y.carrier.truncIdx i :=
   rfl
 
-@[simp]
+@[simp, grind =]
 theorem length_truncIdx (y : PartialSum x) (i : Ordinal) : (y.truncIdx i).length = min i y.length :=
   y.carrier.length_truncIdx i
 
@@ -762,13 +762,29 @@ instance : LinearOrder (PartialSum x) where
   le_total y z := le_total y.length z.length
   toDecidableLE := Classical.decRel _
 
+theorem exp_congr {y z : PartialSum x} (i : Iio y.carrier.length) (j : Iio z.carrier.length)
+    (h : i.1 = j.1) : (y.carrier.exp i).1 = (z.carrier.exp j).1 := by
+  obtain ⟨i, hi⟩ := i
+  obtain ⟨j, hj⟩ := j
+  subst h
+  obtain hyz | hyz := le_total y z
+  all_goals
+    rw [SurrealHahnSeries.exp_congr (carrier_inj.2 (truncIdx_length_of_le hyz)).symm,
+      SurrealHahnSeries.exp_congr (carrier_truncIdx ..)]
+    simp
+
 theorem exp_lt_exp {y z : PartialSum x} {i : Iio y.carrier.length} {j : Iio z.carrier.length}
     (h : i.1 < j.1) : (z.carrier.exp j).1 < (y.carrier.exp i).1 := by
   obtain hyz | hyz := le_total y z
   all_goals
-    rw [exp_congr (carrier_inj.2 (truncIdx_length_of_le hyz).symm),
-      exp_congr (carrier_truncIdx ..), exp_truncIdx]
+    rw [SurrealHahnSeries.exp_congr (carrier_inj.2 (truncIdx_length_of_le hyz).symm),
+      SurrealHahnSeries.exp_congr (carrier_truncIdx ..), exp_truncIdx]
     simpa
+
+theorem coeffIdx_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : i < z.length) :
+    coeffIdx y.carrier i = coeffIdx z.carrier i := by
+  obtain hyz | hyz := le_total y z <;>
+    rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, coeffIdx_truncIdx_of_lt]
 
 theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
@@ -780,20 +796,13 @@ theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
   cases x with | mk z
   rw [toSurreal_eq']
   apply Fits.birthday_le
+  unfold truncLT truncGT
   constructor
-  · rw [leftMoves_ofSets, forall_mem_image, forall_mem_truncLT]
+  all_goals
+    rw [moves_ofSets, forall_mem_image, forall_mem_truncAux]
     intro i hi r hr
-    grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm, ← IGame.lt_sub_iff_add_lt]
-    rw [← Surreal.mk_lt_mk]
-    apply leadingTerm_mono.reflect_lt
-    simp
-    obtain ⟨⟨i, hi'⟩, rfl⟩ := eq_exp_of_mem_support hi
-    rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
-    simpa using hr
-  -- TODO: golf
-  · rw [rightMoves_ofSets, forall_mem_image, forall_mem_truncGT]
-    intro i hi r hr
-    grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm, ← IGame.sub_lt_iff_lt_add]
+    grw [Numeric.not_le, toIGame_succ_equiv (by simp), add_comm]
+    first | rw [← IGame.lt_sub_iff_add_lt] | rw [← IGame.sub_lt_iff_lt_add]
     rw [← Surreal.mk_lt_mk]
     apply leadingTerm_mono.reflect_lt
     simp
@@ -806,23 +815,70 @@ instance : Small.{u} (PartialSum x) := by
     birthday_strictMono.injective ?_
   simpa using h
 
+/-- The function used in `sSup`. -/
+private def sSupFun (s : Set (PartialSum x)) (i : Iio (⨆ x : s, x.1.length)) : Surreal × ℝ :=
+  have H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
+  ⟨exp _ ⟨_, Classical.choose_spec H⟩, coeffIdx (Classical.choose H).1.1 i⟩
+
+private theorem sSupFun_ne_zero {s : Set (PartialSum x)} (i : Iio (⨆ x : s, x.1.length)) :
+    (sSupFun s i).2 ≠ 0 := by
+  dsimp [sSupFun]
+  generalize_proofs H
+  rw [coeffIdx_eq_zero_iff, not_le]
+  exact Classical.choose_spec H
+
+/-- The Hahn series corresponding to `sSup`. -/
+private def sSupAux (s : Set (PartialSum x)) : SurrealHahnSeries :=
+  .ofSeq (⨆ x : s, x.1.length) (sSupFun s) fun _ _ h ↦ exp_lt_exp h
+
+private theorem length_sSupAux (s : Set (PartialSum x)) :
+    (sSupAux s).length = ⨆ x : s, x.1.length :=
+  length_ofSeq sSupFun_ne_zero
+
+private theorem coeffIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
+    {i : Ordinal} (hs : i < (sSupAux s).length) (hi : i < y.length) :
+    coeffIdx (sSupAux s) i = coeffIdx y.carrier i := by
+  unfold sSupAux sSupFun
+  generalize_proofs _ H _
+  rw [coeffIdx_ofSeq _ (length_sSupAux s ▸ hs), coeffIdx_congr]
+  exacts [hi, H _ _, sSupFun_ne_zero]
+
+private theorem exp_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
+    {i : Ordinal} (hs : i < (sSupAux s).length) (hy : i < y.length) :
+    ((sSupAux s).exp ⟨i, hs⟩).1 = y.carrier.exp ⟨i, hy⟩ := by
+  dsimp [sSupAux]
+  generalize_proofs _ H _
+  rw [exp_ofSeq _ sSupFun_ne_zero]
+  apply exp_congr
+  rfl
+
+private theorem truncIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
+    {i : Ordinal} (hs : i < (sSupAux s).length) (hy : i < y.length) :
+    (sSupAux s).truncIdx i = y.carrier.truncIdx i := by
+  refine exp_ext ?_ (fun j hj hj' ↦ ?_) (fun j hj hj' ↦ ?_)
+  · aesop
+  · rw [exp_truncIdx, exp_sSupAux (y := y.truncIdx i)]
+    · simp
+    · grind
+  · rw [coeffIdx_truncIdx_of_lt, ← carrier_truncIdx]
+    · apply coeffIdx_sSupAux <;> grind
+    · grind
+
 -- Directed union
 instance : SupSet (PartialSum x) where
-  sSup s := {
-    carrier := .ofSeq (⨆ x : s, x.1.length) (fun i ↦
-      have H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
-      ⟨exp _ ⟨_, Classical.choose_spec H⟩, coeffIdx (Classical.choose H).1.1 i⟩
-    ) fun i j h ↦ exp_lt_exp h
-    coeffIdx_eq_leadingCoeff_sub := sorry
-    exp_eq_wlog_sub := sorry
-  }
+  sSup s := by
+    refine ⟨sSupAux s, ?_, ?_⟩
+    all_goals
+      intro i hi
+      have hi' := length_sSupAux _ ▸ hi
+      rw [lt_ciSup_iff' (Ordinal.bddAbove_of_small _)] at hi'
+      obtain ⟨⟨y, hy⟩, hy'⟩ := hi'
+    · rw [coeffIdx_sSupAux hi hy', coeffIdx_eq_leadingCoeff_sub _ hy', truncIdx_sSupAux hi hy']
+    · rw [exp_sSupAux hi hy', exp_eq_wlog_sub _ hy', truncIdx_sSupAux hi hy']
 
 @[simp]
-theorem length_sSup (s : Set (PartialSum x)) : (sSup s).length = ⨆ x : s, x.1.length := by
-  dsimp [sSup, length]
-  refine length_ofSeq fun i ↦ ?_
-  generalize_proofs H
-  simpa using Classical.choose_spec H
+theorem length_sSup (s : Set (PartialSum x)) : (sSup s).length = ⨆ x : s, x.1.length :=
+  length_sSupAux s
 
 instance : CompleteSemilatticeSup (PartialSum x) where
   le_sSup s y hy := by
@@ -839,6 +895,13 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := LinearOrder.toBiheytingAlgebra _
   __ := instCompleteLattice
   __ := instLinearOrder
+
+theorem mk_sub_wlog_strictMono :
+    StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) := by
+  intro y z h
+  dsimp
+
+  #exit
 
 def succ (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
