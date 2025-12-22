@@ -6,6 +6,7 @@ Authors: Aaron Liu
 import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.NatOrdinal.Basic
+import CombinatorialGames.Mathlib.WithTop
 
 /-!
 # Stopping time
@@ -88,15 +89,6 @@ theorem Monotone.iSup' {α β : Type*} {ι : Sort*} [Preorder α] [CompleteLatti
 
 theorem OrderHom.lfp_le_gfp {α : Type*} [CompleteLattice α] (f : α →o α) : f.lfp ≤ f.gfp :=
   f.lfp_le_fixed f.isFixedPt_gfp
-
-instance WithTop.succAddOrder {α : Type*}
-    [One α] [Add α] [PartialOrder α] [SuccAddOrder α] [NoMaxOrder α]
-    [(a : α) → Decidable (Order.succ a = a)]  :
-    SuccAddOrder (WithTop α) where
-  succ_eq_add_one x := by
-    cases x with
-    | top => simp [SuccOrder.succ]
-    | coe => simp [SuccOrder.succ, ← WithTop.coe_one, ← WithTop.coe_add, ← Order.succ_eq_add_one]
 
 theorem Order.lt_add_one_iff_not_isMax {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOrder α]
     (x : α) : x < x + 1 ↔ ¬IsMax x := by
