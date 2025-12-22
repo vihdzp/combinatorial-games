@@ -879,7 +879,7 @@ theorem corec_add (init₁ init₂ : MulTy α β) :
     · rw [Multiset.erase_add_right_pos _ ha]
       simp [add_comm, ← add_assoc]
   · simp [image_iUnion, image_image, MulTy.moves, movesSingle, add_comm]
-  · rintro z (⟨_, ⟨a, rfl⟩, ⟨c, ⟨_, rfl⟩, ⟨b, _, rfl⟩⟩⟩ | ⟨_, ⟨a, rfl⟩, ⟨c, ⟨_, rfl⟩, ⟨b, _, rfl⟩⟩⟩)
+  · rintro z (⟨-, ⟨a, rfl⟩, ⟨c, ⟨-, rfl⟩, ⟨b, -, rfl⟩⟩⟩ | ⟨-, ⟨a, rfl⟩, ⟨c, ⟨-, rfl⟩, ⟨b, -, rfl⟩⟩⟩)
     · use mulOption a.1 a.2 b + x.erase a, y
     · use mulOption a.1 a.2 b + y.erase a, x
       simp [add_comm, ← add_assoc]
