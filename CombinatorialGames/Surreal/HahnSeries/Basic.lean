@@ -143,8 +143,8 @@ instance : LinearOrder SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
 -- TODO: prove this!
--- instance : IsStrictOrderedRing SurrealHahnSeries := by
---  sorry
+instance : IsStrictOrderedRing SurrealHahnSeries := by
+  sorry
 
 open Cardinal in
 /-- A constructor for `SurrealHahnSeries` which hides various implementation details. -/
@@ -577,6 +577,22 @@ theorem trunc_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {a b : Surre
   · rw [coeff_trunc_of_lt h, coeff_trunc_of_lt h, coeff_truncIdx_of_mem (hab.trans h.le) ha]
   · rw [coeff_trunc_of_le h, coeff_trunc_of_le h]
 
+/-! #### `term` -/
+
+/-- Returns the `i`-th largest term of the sum, or `0` if it doesn't exist. -/
+def term (x : SurrealHahnSeries) (i : Ordinal) : Surreal :=
+  if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, hi⟩).1 else 0
+
+theorem term_of_lt {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
+    x.term i = x.coeffIdx i * ω^ (x.exp ⟨i, hi⟩).1 :=
+  dif_pos hi
+
+@[simp]
+theorem term_eq_zero {x : SurrealHahnSeries} {i : Ordinal} : x.term i = 0 ↔ x.length ≤ i := by
+  simp [term, ← not_le];
+
+alias ⟨_, term_of_le⟩ := term_eq_zero
+
 /-! #### `ofSeq` -/
 
 section ofSeq
@@ -667,6 +683,11 @@ theorem coeffIdx_ofSeq {i : Ordinal} (hf' : ∀ i, (f i).2 ≠ 0) (hi : i < o) :
   rw [coeffIdx_of_lt, exp_ofSeq _ hf', coeff_ofSeq']
   · rfl
   · rwa [length_ofSeq hf']
+
+theorem term_ofSeq {i : Ordinal} (hf' : ∀ i, (f i).2 ≠ 0) (hi : i < o) :
+    term (ofSeq o f hf) i = (f ⟨i, hi⟩).2 * ω^ (f ⟨i, hi⟩).1 := by
+  rw [term_of_lt, coeffIdx_ofSeq hf' hi, exp_ofSeq _ hf']
+  rwa [length_ofSeq hf']
 
 theorem ofSeq_coeffIdx (x : SurrealHahnSeries) :
     ofSeq x.length (fun i ↦ ⟨x.exp i, x.coeffIdx i⟩) (fun _ _ h ↦ exp_strictAnti h) = x := by

@@ -590,6 +590,12 @@ theorem toSurreal_inj {x y : SurrealHahnSeries} : toSurreal x = toSurreal y ↔ 
 @[simp]
 theorem toSurreal_zero : toSurreal 0 = 0 := by simp [toSurreal]
 
+/-- This is just a special case of `toSurreal_add`. -/
+theorem toSurreal_succ {x : SurrealHahnSeries}
+    {i : Surreal} {r : ℝ} (hi : ∀ j ∈ x.support, i < j) :
+    toSurreal (x + single i r) = toSurreal x + r * ω^ i := by
+  simpa using Surreal.mk_eq (toIGame_succ_equiv hi)
+
 theorem toSurreal_eq' {x : SurrealHahnSeries.{u}} :
     toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
   Surreal.mk_eq <| toIGame_equiv x
@@ -601,6 +607,19 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
     ) := by
   rw [toSurreal_eq', Surreal.mk_ofSets]
   congr <;> aesop
+
+theorem toSurreal_eq_of_succ {x : SurrealHahnSeries} {o : Ordinal} (hx : x.length = o + 1) :
+    toSurreal x = toSurreal (x.truncIdx o) + x.term o := by
+  sorry
+
+theorem mk_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
+    ArchimedeanClass.mk (toSurreal x - x.truncIdx i) =
+      ArchimedeanClass.mk (ω^ (x.exp ⟨i, hi⟩).1) := by
+  sorry
+
+theorem leadingCoeff_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
+    Surreal.leadingCoeff (x - x.truncIdx i) = x.term i := by
+  sorry
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
@@ -727,11 +746,13 @@ theorem truncIdx_length (y : PartialSum x) : y.truncIdx y.length = y := by
   rw [carrier_truncIdx, truncIdx_of_le]
   rfl
 
+@[simp]
+theorem truncIdx_lt_iff {y : PartialSum x} {i : Ordinal} : y.truncIdx i < y ↔ i < y.length := by
+  simp [← length_lt_length]
+
 theorem truncIdx_length_of_le {y z : PartialSum x} (h : y ≤ z) : z.truncIdx y.length = y := by
   have IH {i} (hi : i < y.length) : (z.truncIdx y.length).truncIdx i = y.truncIdx i := by
-    have : y.truncIdx i < y := by
-      rw [← length_lt_length, length_truncIdx]
-      simpa
+    have : y.truncIdx i < y := by simpa
     convert truncIdx_length_of_le (y := y.truncIdx i) (z := z) _ using 1
     · simp [min_comm]
     · exact (truncIdx_le y i).trans h
@@ -785,6 +806,14 @@ theorem coeffIdx_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (h
     coeffIdx y.carrier i = coeffIdx z.carrier i := by
   obtain hyz | hyz := le_total y z <;>
     rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, coeffIdx_truncIdx_of_lt]
+
+theorem eq_of_length_eq_add_one {y z : PartialSum x} (h : z.length = y.length + 1) :
+    z.carrier = y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff := by
+  apply exp_ext
+  · rwa [length_add_single]
+    · sorry
+    · sorry
+  all_goals sorry
 
 theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
@@ -896,14 +925,32 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := instCompleteLattice
   __ := instLinearOrder
 
-theorem mk_sub_strictMono :
-    StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) := by
-  intro y z h
+theorem leadingCoeff_sub_truncIdx {y : PartialSum x} {i : Ordinal} (hi : i < y.length) :
+    leadingCoeff (x - y.carrier.truncIdx i) = y.carrier.term i := by
+  sorry
+
+private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
+    ArchimedeanClass.mk (x - y.carrier) < ArchimedeanClass.mk (x - z.carrier) := by
   rw [← truncIdx_length_of_le h.le]
   dsimp
   rw [← carrier_truncIdx, ]
-  sorry
+  obtain ⟨o, ho⟩ | hz := mem_range_succ_or_isSuccPrelimit z.length
+  · apply (le_of_le_of_lt_of_lt (f := fun a : PartialSum x ↦ ArchimedeanClass.mk (x - a.carrier))
+      (mk_sub_strictMono' _ (z.truncIdx o)) _).trans_lt
+    · rw [toSurreal_eq_of_succ ho.symm, ← leadingCoeff_sub_truncIdx]
+    · rw [← length_le_length, length_truncIdx, length_truncIdx]
+      apply min_le_min_right
+      rwa [← Order.lt_succ_iff, ho]
+  · sorry
+termination_by z
+decreasing_by
+· rw [truncIdx_lt_iff, ← ho, Order.lt_succ_iff]
 
+theorem mk_sub_strictMono :
+    StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) :=
+  mk_sub_strictMono'
+
+#exit
 def succ (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
   coeffIdx_eq_leadingCoeff_sub {i} hi := by
