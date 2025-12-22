@@ -188,7 +188,7 @@ theorem stoppingTime_induction (p : Player)
   · cases Player.neg_eq_of_ne hq
     exact fun x => (iSup₂_mono fun y _ => add_left_mono (up y)).trans (hnp x)
 
-theorem stoppingTimeLeft_coinduction (p : Player)
+theorem stoppingTime_coinduction (p : Player)
     (val : Player → LGame.{u} → WithTop NatOrdinal.{u})
     (hp : ∀ x, val p x ≤ ⨅ y ∈ x.moves p, val (-p) y)
     (hnp : ∀ x, val (-p) x ≤ ⨆ y ∈ x.moves (-p), val p y + 1) :
