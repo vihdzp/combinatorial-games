@@ -67,8 +67,15 @@ protected lemma «exists» {p : Player → Prop} :
 instance : Neg Player where
   neg := cases right left
 
+-- lemmas about neg
 @[simp] lemma neg_left : -left = right := rfl
 @[simp] lemma neg_right : -right = left := rfl
+@[simp] theorem eq_neg : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
+@[simp] theorem neg_eq : ∀ {p q : Player}, -p = q ↔ p ≠ q := by decide
+theorem ne_neg : ∀ {p q : Player}, p ≠ -q ↔ p = q := by decide
+theorem neg_ne : ∀ {p q : Player}, -p ≠ q ↔ p = q := by decide
+theorem neg_ne_self : ∀ (p : Player), -p ≠ p := by decide
+theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
@@ -102,14 +109,6 @@ instance : CommGroup Player where
 
 @[simp] lemma one_eq_left : 1 = left := rfl
 @[simp] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
-
--- lemmas about neg
-@[simp] theorem eq_neg : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
-@[simp] theorem neg_eq : ∀ {p q : Player}, -p = q ↔ p ≠ q := by decide
-theorem ne_neg : ∀ {p q : Player}, p ≠ -q ↔ p = q := by decide
-theorem neg_ne : ∀ {p q : Player}, -p ≠ q ↔ p = q := by decide
-theorem neg_ne_self : ∀ (p : Player), -p ≠ p := by decide
-theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 end Player
 
