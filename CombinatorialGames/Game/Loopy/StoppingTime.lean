@@ -11,67 +11,31 @@ import CombinatorialGames.Mathlib.WithTop
 /-!
 # Stopping time
 
-The stopping time of a game is an ordinal which denotes how long the opponent can prolong the game.
-Each game has four stopping times, the left and right stopping time for left and right going first.
+For `p q : Player` and `x : LGame.{u}`, `stoppingTime p q x : WithTop NatOrdinal.{u}` is called
+the stopping time of `x`, and represents how long it will take with optimal play
+for `p` for force a win if it is `q`'s turn to move on `x`.
+No move by `p` can strictly decrease the stopping time, and
+no move by `-p` can strictly increase the stopping time.
+If `p` cannot force a win then it takes the value `⊤`, and `-p` can survive forever by
+only moving to other positions whose stopping time is also `⊤`.
+Otherwise it is an ordinal that strictly decreases whenever `-p` moves.
+Then `p` can force a win by moving to positions with an equal stopping time.
+The stopping times of the positions for `-p` will then spell out a
+strictly decreasing sequence of ordinals, which must eventually reach `0`,
+at which point `-p` will have no moves left.
+The lemma `stoppingTime_of_eq` characterizes the behavior of `stoppingTime`
+when it is `p`'s turn to move, and
+the lemma `stoppingTime_of_ne` characterizes the behavior of `stoppingTime`
+when it is `-p`'s turn to move.
 
-- `stoppingTimeLeftLeft x`: the time it takes for left to force a win going first on `x`.
-  If left cannot force a win, then the stopping time is `⊤`. It is equal to
-  `⨅ y ∈ x.leftMoves, stoppingTimeLeftRight y`, which is the stopping time of
-  left's best option (the one that stops the fastest).
-- `stoppingTimeLeftRight x`: the time it takes for right to lose going first on `x`.
-  If right can survive forever, then the stopping time is `⊤`. It is equal to
-  `⨆ y ∈ x.rightMoves, stoppingTimeLeftLeft y + 1`, which is the supremum of the stopping times of
-  all of right's options, plus one (since right makes a move).
-- `stoppingTimeRightLeft x`: the time it takes for left to lose going first on `x`.
-  If left can survive forever, then the stopping time is `⊤`. It is equal to
-  `⨆ y ∈ x.leftMoves, stoppingTimeRightRight y + 1`, which is the supremum of the stopping times of
-  all of left's options, plus one (since left makes a move).
-- `stoppingTimeRightRight x`: the time it takes for right to force a win going first on `x`.
-  If right cannot force a win, then the stopping time is `⊤`. It is equal to
-  `⨅ y ∈ x.rightMoves, stoppingTimeRightLeft y`, which is the stopping time of
-  right's best option (the one that stops the fastest).
-
-These stopping times satisfy both an induction principle and a coinduction principle.
-
-For left stopping times,
-- `stoppingTimeLeft_induction left right`: if `left` and `right` are approximations to
-  `stoppingTimeLeftLeft` and `stoppingTimeLeftRight` assigning to each `LGame` a
-  `WithTop NatOrdinal`, and the inequalities `⨅ y ∈ x.leftMoves, right y ≤ left x` and
-  `⨆ y ∈ x.rightMoves, left y + 1 ≤ right x` hold for all `x` (the pair `(left, right)` is
-  *larger* then its refinement), then `left` and `right` are *overapproximations*
-  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
-- `stoppingTimeLeft_coinduction left right`: if `left` and `right` are approximations to
-  `stoppingTimeLeftLeft` and `stoppingTimeLeftRight` assigning to each `LGame` a
-  `WithTop NatOrdinal`, and the inequalities `left x ≤ ⨅ y ∈ x.leftMoves, right y` and
-  `right x ≤ ⨆ y ∈ x.rightMoves, left y + 1` hold for all `x` (the pair `(left, right)` is
-  *smaller* then its refinement), then `left` and `right` are *underapproximations*
-  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
-The function `(left, right) ↦ (x ↦ ⨅ y ∈ x.leftMoves, right y, x ↦ ⨆ y ∈ x.rightMoves, left y + 1)`,
-is interpreted as *refining* the approximation `(left, right)` to more closely match
-`(stoppingTimeLeftLeft, stoppingTimeLeftRight)` (which is its only fixpoint).
-The induction principle says that if this refinement decreases the pair, it must be an
-overestimation, and the coinduction principle says that if this refinement increases the pair,
-it must be an underestimation.
-
-For right stopping times,
-- `stoppingTimeRight_induction left right`: if `left` and `right` are approximations to
-  `stoppingTimeRightLeft` and `stoppingTimeRightRight` assigning to each `LGame` a
-  `WithTop NatOrdinal`, and the inequalities `⨆ y ∈ x.leftMoves, right y + 1 ≤ left x` and
-  `⨅ y ∈ x.rightMoves, left y ≤ right x` hold for all `x` (the pair `(left, right)` is
-  *larger* then its refinement), then `left` and `right` are *overapproximations*
-  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
-- `stoppingTimeRight_coinduction left right`: if `left` and `right` are approximations to
-  `stoppingTimeRightLeft` and `stoppingTimeRightRight` assigning to each `LGame` a
-  `WithTop NatOrdinal`, and the inequalities `left x ≤ ⨆ y ∈ x.leftMoves, right y + 1` and
-  `right x ≤ ⨅ y ∈ x.rightMoves, left y` hold for all `x` (the pair `(left, right)` is
-  *smaller* then its refinement), then `left` and `right` are *underapproximations*
-  to `stoppingTimeLeftLeft` and `stoppingTimeLeftRight`.
-The function `(left, right) ↦ (x ↦ ⨆ y ∈ x.leftMoves, right y + 1, x ↦ ⨅ y ∈ x.rightMoves, left y`,
-is interpreted as *refining* the approximation `(left, right)` to more closely match
-`(stoppingTimeRightLeft, stoppingTimeRightRight)` (which is its only fixpoint).
-The induction principle says that if this refinement decreases the pair, it must be an
-overestimation, and the coinduction principle says that if this refinement increases the pair,
-it must be an underestimation.
+`stoppingTime p : Player → LGame.{u} → WithTop NatOrdinal.{u}` is the unique fixed point of the map
+`val ↦ (p, x ↦ ⨅ y ∈ x.moves p, val (-p) y; -p, x ↦ ⨆ y ∈ x.moves (-p), stoppingTime p y + 1)`.
+It therefore satisfies both an induction and a coinduction principle,
+given by `stoppingTime_induction` and `stoppingTime_coinduction`.
+`stoppingTime_induction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
+increased by this map must be smaller than `stoppingTime`, and
+`stoppingTime_coinduction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
+decreased by this map must be bigger than `stoppingTime`.
 
 -/
 
