@@ -608,6 +608,7 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
   rw [toSurreal_eq', Surreal.mk_ofSets]
   congr <;> aesop
 
+-- Do I need this?
 theorem toSurreal_eq_of_succ {x : SurrealHahnSeries} {o : Ordinal} (hx : x.length = o + 1) :
     toSurreal x = toSurreal (x.truncIdx o) + x.term o := by
   sorry
@@ -710,6 +711,10 @@ theorem length_strictMono : StrictMono (length (x := x)) :=
 
 @[simp] theorem length_lt_length {y z : PartialSum x} : length y < length z ↔ y < z := .rfl
 @[simp] theorem length_le_length {y z : PartialSum x} : length y ≤ length z ↔ y ≤ z := .rfl
+
+theorem term_eq (y : PartialSum x) {i : Ordinal} (hi : i < y.length) :
+    y.carrier.term i = (x - y.carrier.truncIdx i).leadingTerm := by
+  rw [term_of_lt hi, coeffIdx_eq_leadingCoeff_sub _ hi, exp_eq_wlog_sub, leadingTerm]
 
 /-- Truncating the series preserves that it is an initial segment. -/
 def truncIdx (y : PartialSum x) (i : Ordinal) : PartialSum x where
@@ -929,10 +934,6 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := instCompleteLattice
   __ := instLinearOrder
 
-theorem leadingTerm_sub_truncIdx {y : PartialSum x} {i : Ordinal} (hi : i < y.length) :
-    leadingTerm (x - y.carrier.truncIdx i) = y.carrier.term i := by
-  sorry
-
 private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
     ArchimedeanClass.mk (x - y.carrier) < ArchimedeanClass.mk (x - z.carrier) := by
   rw [← truncIdx_length_of_le h.le]
@@ -941,7 +942,7 @@ private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
   obtain ⟨o, ho⟩ | hz := mem_range_succ_or_isSuccPrelimit z.length
   · apply (le_of_le_of_lt_of_lt (f := fun a : PartialSum x ↦ ArchimedeanClass.mk (x - a.carrier))
       (mk_sub_strictMono' _ (z.truncIdx o)) _).trans_lt
-    · rw [toSurreal_eq_of_succ ho.symm, ← leadingTerm_sub_truncIdx, carrier_truncIdx, ← sub_sub]
+    · rw [toSurreal_eq_of_succ ho.symm, term_eq, carrier_truncIdx, ← sub_sub]
       · apply mk_sub_leadingTerm
         rw [sub_ne_zero, ne_comm, ← carrier_truncIdx]
         apply ne_of_lt (z := z)
