@@ -33,9 +33,9 @@ when it is `-p`'s turn to move.
 It therefore satisfies both an induction and a coinduction principle,
 given by `stoppingTime_induction` and `stoppingTime_coinduction`.
 `stoppingTime_induction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
-increased by this map must be smaller than `stoppingTime`, and
+decreased by this map must be bigger than `stoppingTime`, and
 `stoppingTime_coinduction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
-decreased by this map must be bigger than `stoppingTime`.
+increased by this map must be smaller than `stoppingTime`.
 
 -/
 
