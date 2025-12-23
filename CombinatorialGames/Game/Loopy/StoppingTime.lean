@@ -149,6 +149,7 @@ private theorem lfp_eq_gfp (p : Player) :
 
 /-- `stoppingTime p q x` is the time it takes for `p` to force a win if `q` goes first on `x`,
 counted in moves made by `-p`. -/
+@[irreducible]
 def stoppingTime (p q : Player) (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   if p = q then (stoppingTimeApprox p).lfp x
   else ⨆ i ∈ x.moves q, (stoppingTimeApprox p).lfp i + 1
