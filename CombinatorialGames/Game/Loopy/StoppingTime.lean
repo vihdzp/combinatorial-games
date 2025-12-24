@@ -135,7 +135,7 @@ theorem stoppingTime_of_ne {p q : Player} (h : p ≠ q) (x : LGame.{u}) :
     congr
     · rw [if_neg h]
     · enter [1, y, 1, _]
-      rw [if_pos (Player.eq_neg_of_ne h)]
+      rw [if_pos (Player.eq_neg.2 h)]
 
 theorem stoppingTime_induction (p : Player)
     (val : Player → LGame.{u} → WithTop NatOrdinal.{u})
@@ -150,7 +150,7 @@ theorem stoppingTime_induction (p : Player)
   split_ifs with hq
   · cases hq
     exact up
-  · cases Player.neg_eq_of_ne hq
+  · cases Player.neg_eq.2 hq
     exact fun x => (iSup₂_mono fun y _ => add_left_mono (up y)).trans (hnp x)
 
 theorem stoppingTime_coinduction (p : Player)
@@ -167,5 +167,5 @@ theorem stoppingTime_coinduction (p : Player)
   split_ifs with hq
   · cases hq
     exact up
-  · cases Player.neg_eq_of_ne hq
+  · cases Player.neg_eq.2 hq
     exact fun x ↦ (hnp x).trans (iSup₂_mono fun y j ↦ add_left_mono (up y))
