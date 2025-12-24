@@ -67,7 +67,6 @@ protected lemma «exists» {p : Player → Prop} :
 instance : Neg Player where
   neg := cases right left
 
--- lemmas about neg
 @[simp, grind =] lemma neg_left : -left = right := rfl
 @[simp, grind =] lemma neg_right : -right = left := rfl
 @[simp] theorem eq_neg : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
