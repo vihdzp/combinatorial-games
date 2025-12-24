@@ -109,17 +109,6 @@ instance : CommGroup Player where
 @[simp, grind =] lemma one_eq_left : 1 = left := rfl
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
--- lemmas about neg
-theorem eq_neg_of_ne : ∀ {p q : Player}, p ≠ q → p = -q := by decide
-theorem neg_eq_of_ne : ∀ {p q : Player}, p ≠ q → -p = q := by decide
-@[simp] theorem eq_neg : ∀ {p q : Player}, p = -q ↔ p ≠ q := by decide
-@[simp] theorem neg_eq : ∀ {p q : Player}, -p = q ↔ p ≠ q := by decide
-theorem neg_ne_self : ∀ (p : Player), -p ≠ p := by decide
-theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
-theorem ne_neg : ∀ {p q : Player}, p ≠ -q ↔ p = q := by decide
-theorem neg_ne : ∀ {p q : Player}, -p ≠ q ↔ p = q := by decide
-theorem neg_ne_id : Neg.neg ≠ @id Player := by decide
-
 end Player
 
 open Player
