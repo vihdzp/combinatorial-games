@@ -11,7 +11,7 @@ import CombinatorialGames.Mathlib.WithTop
 /-!
 # Stopping time
 
-For `p q : Player` and `x : LGame.{u}`, `stoppingTime p q x : WithTop NatOrdinal.{u}` is called
+For `p q : Player` and `x : LGame`, `stoppingTime p q x : WithTop NatOrdinal` is called
 the stopping time of `x`, and represents how long it will take with optimal play
 for `p` for force a win if it is `q`'s turn to move on `x`.
 No move by `p` can strictly decrease the stopping time, and
@@ -32,9 +32,9 @@ when it is `-p`'s turn to move.
 `val ↦ (p, x ↦ ⨅ y ∈ x.moves p, val (-p) y; -p, x ↦ ⨆ y ∈ x.moves (-p), stoppingTime p y + 1)`.
 It therefore satisfies both an induction and a coinduction principle,
 given by `stoppingTime_induction` and `stoppingTime_coinduction`.
-`stoppingTime_induction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
+`stoppingTime_induction` says that any other `val : Player → LGame → WithTop NatOrdinal`
 decreased by this map must be bigger than `stoppingTime`, and
-`stoppingTime_coinduction` says that any other `val : Player → LGame.{u} → WithTop NatOrdinal.{u}`
+`stoppingTime_coinduction` says that any other `val : Player → LGame → WithTop NatOrdinal`
 increased by this map must be smaller than `stoppingTime`.
 
 -/
