@@ -386,6 +386,18 @@ theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
 theorem lf_right {x y : IGame} (h : y ∈ xᴿ) : x ⧏ y :=
   lf_of_right_le le_rfl h
 
+theorem le_of_forall_moves_right_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴿ, x ⧏ z) (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) : x ≤ y := by
+  refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx⟩
+  obtain ⟨w, hw, hw'⟩ := hl z hz
+  exact mt hw'.trans' (left_lf hw)
+
+theorem le_of_forall_moves_left_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴸ, z ⧏ x) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : y ≤ x := by
+  refine le_iff_forall_lf.2 ⟨hx, fun z hz ↦ ?_⟩
+  obtain ⟨w, hw, hw'⟩ := hr z hz
+  exact mt hw'.trans (lf_right hw)
+
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/
 infix:50 " ≈ " => AntisymmRel (· ≤ ·)
@@ -783,6 +795,7 @@ instance : AddRightReflectLT IGame :=
 
 -- TODO: add the general versions of this to Mathlib
 
+@[gcongr]
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
@@ -793,6 +806,22 @@ theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
   add_congr .rfl h
 
 @[simp]
+theorem add_equiv_add_iff_left {a b c : IGame} : a + b ≈ a + c ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_add_iff_right {a b c : IGame} : b + a ≈ c + a ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_left_iff {a b : IGame} : a + b ≈ a ↔ b ≈ 0 := by
+  simpa using @add_equiv_add_iff_left a b 0
+
+@[simp]
+theorem add_equiv_right_iff {a b : IGame} : a + b ≈ b ↔ a ≈ 0 := by
+  simpa using @add_equiv_add_iff_right b a 0
+
+@[simp]
 theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := by
   simp [IncompRel]
 
@@ -800,6 +829,7 @@ theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := 
 theorem add_fuzzy_add_iff_right {a b c : IGame} : b + a ‖ c + a ↔ b ‖ c := by
   simp [IncompRel]
 
+@[gcongr]
 theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 
