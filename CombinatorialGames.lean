@@ -34,6 +34,7 @@ import CombinatorialGames.Nimber.Nat
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+import CombinatorialGames.SignExpansion.Basic
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Birthday.Cut
@@ -45,7 +46,6 @@ import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Pow
 import CombinatorialGames.Surreal.Real
-import CombinatorialGames.Surreal.Sign
 import CombinatorialGames.Tactic.AddInstances
 import CombinatorialGames.Tactic.GameCmp
 import CombinatorialGames.Tactic.OrdinalAlias
