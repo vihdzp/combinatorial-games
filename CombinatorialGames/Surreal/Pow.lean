@@ -832,6 +832,10 @@ theorem leadingCoeff_div (x y : Surreal) :
     leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
   simp [div_eq_mul_inv]
 
+@[simp]
+theorem leadingCoeff_wpow (x : Surreal) : leadingCoeff (ω^ x) = 1 := by
+  simp [leadingCoeff]
+
 -- TODO: upstream
 @[simp]
 theorem _root_.ArchimedeanClass.stdPart_eq_zero {K : Type*} [Field K] [LinearOrder K]
@@ -845,10 +849,6 @@ theorem _root_.ArchimedeanClass.stdPart_eq_zero {K : Type*} [Field K] [LinearOrd
 
 @[simp]
 theorem leadingCoeff_eq_zero {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 := by
-  simp [leadingCoeff]
-
-@[simp]
-theorem leadingCoeff_wpow (x : Surreal) : leadingCoeff (ω^ x) = 1 := by
   simp [leadingCoeff]
 
 -- TODO: upstream
@@ -910,6 +910,8 @@ theorem leadingCoeff_monotoneOn {x : Surreal.{u}} : MonotoneOn leadingCoeff (wlo
     · rw [← hw]; simpa
     · simpa [div_eq_mul_inv]
 
+/-! ### Leading term -/
+
 /-- The leading term of a surreal's Hahn series. -/
 def leadingTerm (x : Surreal) : Surreal :=
   x.leadingCoeff * ω^ x.wlog
@@ -965,7 +967,7 @@ theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
   simp [leadingTerm]
 
 @[simp]
-theorem leadingTerm_eq_zero_iff {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
+theorem leadingTerm_eq_zero {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
   simp [leadingTerm]
 
 theorem mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
