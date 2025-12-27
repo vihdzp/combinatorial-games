@@ -971,9 +971,19 @@ theorem leadingTerm_eq_zero {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
   simp [leadingTerm]
 
 theorem mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
-    ArchimedeanClass.mk x < .mk (x - x.leadingTerm) :=
+    ArchimedeanClass.mk x < .mk (x - x.leadingTerm) := by
+  -- TODO: missing mathlib theorems?
+  apply (LinearOrderedAddCommGroupWithTop.strictMono_add_left_of_ne_top
+    (-ArchimedeanClass.mk (ω^ x.wlog)) (by simp)).lt_iff_lt.1
+  rw [← sub_eq_add_neg, ← sub_eq_add_neg, ← ArchimedeanClass.mk_mul]
+
+  rw [← sub_lt_sub_iff_ne_top]
+  rw [← mul_div]
+  rw [leadingTerm, leadingCoeff]
+
   sorry
 
+#exit
 theorem leadingTerm_mono : Monotone leadingTerm := by
   sorry
 
