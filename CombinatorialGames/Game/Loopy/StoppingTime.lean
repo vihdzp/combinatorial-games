@@ -168,7 +168,6 @@ theorem stoppingTime_coinduction (p : Player)
   · cases hq
     exact up
   · cases Player.neg_eq.2 hq
-    exact fun x ↦ (hnp x).trans (iSup₂_mono fun y j ↦ add_left_mono (up y))
+    exact fun x ↦ (hnp x).trans (iSup₂_mono fun y _ ↦ add_left_mono (up y))
 
 end LGame
-end
