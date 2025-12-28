@@ -212,12 +212,12 @@ protected instance wpow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
 termination_by x
 decreasing_by igame_wf
 
-@[simp]
-theorem wpow_pos (x : IGame) [Numeric x] : 0 < ω^ x := wpow_pos' x
+@[simp] theorem wpow_pos (x : IGame) [Numeric x] : 0 < ω^ x := wpow_pos' x
+@[simp] theorem wpow_nonneg (x : IGame) [Numeric x] : 0 ≤ ω^ x := (wpow_pos x).le
 
 theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
   obtain hr | hr := le_or_gt r 0
-  · apply (Numeric.mul_nonpos_of_nonpos_of_nonneg _ (wpow_pos x).le).trans_lt (wpow_pos y)
+  · apply (Numeric.mul_nonpos_of_nonpos_of_nonneg _ (wpow_nonneg x)).trans_lt (wpow_pos y)
     exact Real.toIGame_le_zero.mpr hr
   · exact wpow_strictMono_aux.1 h hr
 
@@ -425,6 +425,10 @@ theorem wpow_pos : ∀ x : Surreal, 0 < ω^ x := by
   exact Numeric.wpow_pos x
 
 @[simp]
+theorem wpow_nonneg (x : Surreal) : 0 ≤ ω^ x :=
+  (wpow_pos x).le
+
+@[simp]
 theorem wpow_ne_zero (x : Surreal) : ω^ x ≠ 0 :=
   (wpow_pos x).ne'
 
@@ -478,7 +482,7 @@ open ArchimedeanClass
 
 theorem mk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
-  refine fun x y h ↦ (mk_antitoneOn (wpow_pos _).le (wpow_pos _).le
+  refine fun x y h ↦ (mk_antitoneOn (wpow_nonneg _) (wpow_nonneg _)
     (wpow_le_wpow.2 h.le)).lt_of_not_ge fun ⟨n, hn⟩ ↦ hn.not_gt ?_
   simpa using mul_wpow_lt_wpow n h
 
@@ -724,6 +728,11 @@ theorem mk_div_wlog (x : Surreal) :
   · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
       mk_wpow_wlog (inv_ne_zero hx), ArchimedeanClass.mk_inv, ← sub_eq_add_neg]
 
+theorem mk_div_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
+    ArchimedeanClass.mk (x / ω^ x.wlog) = 0 := by
+  rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
+  simpa
+
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
@@ -874,11 +883,11 @@ theorem _root_.ArchimedeanClass.stdPart_nonpos {K : Type*} [Field K] [LinearOrde
     [IsOrderedRing K] {x : K} (h : x ≤ 0) : stdPart x ≤ 0 := by
   simpa using stdPart_nonneg (neg_nonneg.2 h)
 
-theorem leadingCoeff_nonneg {x : Surreal} (h : 0 ≤ x) : 0 ≤ leadingCoeff x :=
-  stdPart_nonneg <| div_nonneg h (wpow_pos _).le
+private theorem leadingCoeff_nonneg {x : Surreal} (h : 0 ≤ x) : 0 ≤ leadingCoeff x :=
+  stdPart_nonneg <| div_nonneg h (wpow_nonneg _)
 
-theorem leadingCoeff_nonpos {x : Surreal} (h : x ≤ 0) : leadingCoeff x ≤ 0 :=
-  stdPart_nonpos <| div_nonpos_of_nonpos_of_nonneg h (wpow_pos _).le
+private theorem leadingCoeff_nonpos {x : Surreal} (h : x ≤ 0) : leadingCoeff x ≤ 0 :=
+  stdPart_nonpos <| div_nonpos_of_nonpos_of_nonneg h (wpow_nonneg _)
 
 @[simp]
 theorem leadingCoeff_nonneg_iff {x : Surreal} : 0 ≤ leadingCoeff x ↔ 0 ≤ x := by
@@ -970,23 +979,58 @@ theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
 theorem leadingTerm_eq_zero {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
   simp [leadingTerm]
 
-theorem mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
+@[simp]
+theorem leadingTerm_nonneg_iff {x : Surreal} : 0 ≤ leadingTerm x ↔ 0 ≤ x := by
+  simp [leadingTerm]
+
+@[simp]
+theorem leadingTerm_nonpos_iff {x : Surreal} : leadingTerm x ≤ 0 ↔ x ≤ 0 := by
+  simp [leadingTerm, mul_nonpos_iff]
+
+@[simp]
+theorem leadingTerm_pos_iff {x : Surreal} : 0 < leadingTerm x ↔ 0 < x := by
+  simp [← not_le]
+
+@[simp]
+theorem leadingTerm_neg_iff {x : Surreal} : leadingTerm x < 0 ↔ x < 0 := by
+  simp [← not_le]
+
+@[simp]
+theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
+  sorry
+
+-- TODO: upstream
+@[simp]
+theorem _root_.ArchimedeanClass.mk_div {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
+    (x y : R) : ArchimedeanClass.mk (x / y) = .mk x - .mk y := by
+  rw [div_eq_mul_inv, ArchimedeanClass.mk_mul, ArchimedeanClass.mk_inv, sub_eq_add_neg]
+
+theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk x < .mk (x - x.leadingTerm) := by
-  -- TODO: missing mathlib theorems?
+  -- TODO: simplify after #33349 lands
   apply (LinearOrderedAddCommGroupWithTop.strictMono_add_left_of_ne_top
     (-ArchimedeanClass.mk (ω^ x.wlog)) (by simp)).lt_iff_lt.1
-  rw [← sub_eq_add_neg, ← sub_eq_add_neg, ← ArchimedeanClass.mk_mul]
+  simp_rw [← sub_eq_add_neg, ← ArchimedeanClass.mk_div, sub_div, mk_div_wlog_of_ne_zero hx]
+  convert mk_sub_stdPart_pos Real.toSurrealRingHom _
+  · simp [leadingTerm, leadingCoeff]
+  · rw [mk_div_wlog_of_ne_zero hx]
 
-  rw [← sub_lt_sub_iff_ne_top]
-  rw [← mul_div]
-  rw [leadingTerm, leadingCoeff]
-
+private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
+    x.leadingTerm ≤ y.leadingTerm := by
+  by_cases hxy : ArchimedeanClass.mk x = .mk y
+  · 
   sorry
 
 #exit
 theorem leadingTerm_mono : Monotone leadingTerm := by
-  sorry
+  intro x y h
+  obtain hx | hx := le_total 0 x
+  · exact leadingTerm_mono' hx h
+  · obtain hy | hy := le_total 0 y
+    · exact (leadingTerm_nonpos_iff.2 hx).trans (leadingTerm_nonneg_iff.2 hy)
+    · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
+      apply leadingTerm_mono' <;> simpa
 
-
+#exit
 end Surreal
 end
