@@ -878,8 +878,7 @@ theorem _root_.ArchimedeanClass.stdPart_nonneg {K : Type*} [Field K] [LinearOrde
     [IsOrderedRing K] {x : K} (h : 0 ≤ x) : 0 ≤ stdPart x := by
   obtain hx | hx := eq_or_ne (ArchimedeanClass.mk x) 0
   · rw [stdPart, dif_pos hx.ge]
-    apply map_nonneg
-    assumption
+    exact map_nonneg _ h
   · rw [stdPart_of_mk_ne_zero hx]
 
 -- TODO: upstream
