@@ -913,7 +913,7 @@ theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
 theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
   simp [← not_le]
 
-theorem leadingCoeff_monotoneOn {x : Surreal.{u}} : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
+theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
   obtain rfl | hz := eq_or_ne z 0; · simpa
@@ -958,8 +958,7 @@ theorem leadingTerm_neg (x : Surreal) : leadingTerm (-x) = -leadingTerm x := by
   simp [leadingTerm]
 
 @[simp]
-theorem leadingTerm_mul (x y : Surreal) :
-    leadingTerm (x * y) = leadingTerm x * leadingTerm y := by
+theorem leadingTerm_mul (x y : Surreal) : leadingTerm (x * y) = leadingTerm x * leadingTerm y := by
   obtain rfl | hx := eq_or_ne x 0; · simp
   obtain rfl | hy := eq_or_ne y 0; · simp
   simp [leadingTerm, wlog_mul hx hy, mul_mul_mul_comm]
@@ -971,8 +970,7 @@ theorem leadingTerm_inv (x : Surreal) : leadingTerm x⁻¹ = (leadingTerm x)⁻�
   rw [← leadingTerm_mul, inv_mul_cancel₀ hx, leadingTerm_one]
 
 @[simp]
-theorem leadingTerm_div (x y : Surreal) :
-    leadingTerm (x / y) = leadingTerm x / leadingTerm y := by
+theorem leadingTerm_div (x y : Surreal) : leadingTerm (x / y) = leadingTerm x / leadingTerm y := by
   simp [div_eq_mul_inv]
 
 @[simp]
@@ -1027,7 +1025,7 @@ private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
   · have hxy' := wlog_congr hxy
     unfold leadingTerm
     rw [hxy', mul_le_mul_iff_left₀ (wpow_pos _), Real.toSurreal_le_iff]
-    exact leadingCoeff_monotoneOn rfl hxy' h
+    exact leadingCoeff_monotoneOn _ rfl hxy' h
   · apply (lt_of_mk_lt_mk_of_nonneg ..).le <;> simpa
 
 theorem leadingTerm_mono : Monotone leadingTerm := by
