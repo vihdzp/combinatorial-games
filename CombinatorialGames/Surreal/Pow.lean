@@ -1017,21 +1017,19 @@ theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
 
 @[simp]
 theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
-  apply ArchimedeanClass.mk_sub_eq_mk_left
-
-  exit
+  obtain rfl | hx := eq_or_ne x 0; · simp
+  simpa using ArchimedeanClass.mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
 
 private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
     x.leadingTerm ≤ y.leadingTerm := by
-  obtain rfl | hx := hx.eq_or_lt; · simpa
-  obtain hxy | hxy := (wlog_monotoneOn hx (hx.trans_le h) h).eq_or_lt
-  · unfold leadingTerm
-    have := wlog_congr hxy
-    rw [leadingTerm]
+  have hy := hx.trans h
+  obtain hxy | hxy := (mk_antitoneOn hx hy h).eq_or_lt
+  · have hxy' := wlog_congr hxy
+    unfold leadingTerm
+    rw [hxy', mul_le_mul_iff_left₀ (wpow_pos _), Real.toSurreal_le_iff]
+    exact leadingCoeff_monotoneOn rfl hxy' h
+  · apply (lt_of_mk_lt_mk_of_nonneg ..).le <;> simpa
 
-  sorry
-
-#exit
 theorem leadingTerm_mono : Monotone leadingTerm := by
   intro x y h
   obtain hx | hx := le_total 0 x
@@ -1041,6 +1039,5 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
 
-#exit
 end Surreal
 end
