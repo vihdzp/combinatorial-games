@@ -655,9 +655,13 @@ theorem wlog_eq_of_mk_eq_mk (h : ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.
   · rwa [← mk_wpow_wlog hx, eq_comm, mk_wpow_inj] at h
 
 @[simp]
-theorem wlog_eq_iff (h : x ≠ 0) :
-    wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x :=
+theorem wlog_eq_iff (h : x ≠ 0) : wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = .mk x :=
   ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
+
+theorem wlog_congr (h : ArchimedeanClass.mk x = .mk y) : wlog x = wlog y := by
+  obtain rfl | hy := eq_or_ne y 0; · simp_all
+  apply wlog_eq_of_mk_eq_mk
+  rwa [mk_wpow_wlog hy, eq_comm]
 
 @[simp]
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
@@ -995,10 +999,6 @@ theorem leadingTerm_pos_iff {x : Surreal} : 0 < leadingTerm x ↔ 0 < x := by
 theorem leadingTerm_neg_iff {x : Surreal} : leadingTerm x < 0 ↔ x < 0 := by
   simp [← not_le]
 
-@[simp]
-theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
-  sorry
-
 -- TODO: upstream
 @[simp]
 theorem _root_.ArchimedeanClass.mk_div {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
@@ -1015,10 +1015,20 @@ theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
   · simp [leadingTerm, leadingCoeff]
   · rw [mk_div_wlog_of_ne_zero hx]
 
+@[simp]
+theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
+  apply ArchimedeanClass.mk_sub_eq_mk_left
+
+  exit
+
 private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
     x.leadingTerm ≤ y.leadingTerm := by
-  by_cases hxy : ArchimedeanClass.mk x = .mk y
-  · 
+  obtain rfl | hx := hx.eq_or_lt; · simpa
+  obtain hxy | hxy := (wlog_monotoneOn hx (hx.trans_le h) h).eq_or_lt
+  · unfold leadingTerm
+    have := wlog_congr hxy
+    rw [leadingTerm]
+
   sorry
 
 #exit
