@@ -824,8 +824,7 @@ theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 @[simp]
-theorem mk_div_wlog (x : Surreal) :
-    ArchimedeanClass.mk (x / ω^ x.wlog) = ArchimedeanClass.mk x - ArchimedeanClass.mk x := by
+theorem mk_div_wlog (x : Surreal) : ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
   obtain rfl | hx := eq_or_ne x 0
   · simp
   · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
@@ -1021,6 +1020,12 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · rw [← hw]; simpa
     · simpa [div_eq_mul_inv]
 
+theorem leadingCoeff_eq {x y : Surreal} {r : ℝ}
+    (hL : ∀ s < r, s * ω^ y < x) (hR : ∀ s > r, x < s * ω^ y) : x.leadingCoeff = r := by
+  rw [leadingCoeff, stdPart_eq]
+  sorry
+  #exit
+
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/
@@ -1134,6 +1139,11 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · exact (leadingTerm_nonpos_iff.2 hx).trans (leadingTerm_nonneg_iff.2 hy)
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
+
+theorem leadingTerm_eq {x y : Surreal} {r : ℝ}
+    (hL : ∀ s < r, s * ω^ y < x) (hR : ∀ s > r, x < s * ω^ y) : x.leadingTerm = r * ω^ y := by
+  rw [leadingTerm]
+  sorry
 
 end Surreal
 end

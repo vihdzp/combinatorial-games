@@ -589,7 +589,7 @@ theorem term_of_lt {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
 
 @[simp]
 theorem term_eq_zero {x : SurrealHahnSeries} {i : Ordinal} : x.term i = 0 ↔ x.length ≤ i := by
-  simp [term, ← not_le];
+  simp [term, ← not_le]
 
 alias ⟨_, term_of_le⟩ := term_eq_zero
 

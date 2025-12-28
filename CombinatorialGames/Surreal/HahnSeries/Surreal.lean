@@ -619,9 +619,10 @@ theorem mk_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length
   sorry
 
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
-    Surreal.leadingCoeff (x - x.truncIdx i) = x.term i := by
+    Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
   sorry
 
+#exit
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
   conv_lhs => rw [toSurreal_eq']
