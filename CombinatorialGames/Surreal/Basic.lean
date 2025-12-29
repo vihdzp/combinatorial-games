@@ -162,12 +162,12 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @left_lt_right x <;> simp_all
-  · intro p y hy
-    rw [moves_neg] at hy
+  · simp_rw [forall_moves_neg]
+    intro p y hy
     numeric
-    simpa using Numeric.neg (-y)
+    simpa using Numeric.neg y
 termination_by x
-decreasing_by all_goals simp_all; igame_wf
+decreasing_by igame_wf
 
 @[simp]
 theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
