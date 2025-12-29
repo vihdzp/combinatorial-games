@@ -1020,11 +1020,30 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · rw [← hw]; simpa
     · simpa [div_eq_mul_inv]
 
-theorem leadingCoeff_eq {x y : Surreal} {r : ℝ}
-    (hL : ∀ s < r, s * ω^ y < x) (hR : ∀ s > r, x < s * ω^ y) : x.leadingCoeff = r := by
-  rw [leadingCoeff, stdPart_eq]
+-- #33007
+theorem _root_.ArchimedeanClass.stdPart_eq {K : Type*} [Field K] [LinearOrder K]
+    [IsOrderedRing K] (f : ℝ →+*o K) {x : K} {r : ℝ}
+    (hl : ∀ s < r, f s ≤ x) (hr : ∀ s > r, x ≤ f s) : stdPart x = r :=
   sorry
-  #exit
+
+private theorem wlog_eq_of_between {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.wlog = y := by
+  rw [wlog_eq_iff]
+  obtain hr | hr := lt_or_gt_of_ne hr <;> apply le_antisymm <;> rw [← wlog_wpow y]
+  · sorry
+  · sorry
+  · apply wlog_monotoneOn
+  · sorry
+
+#exit
+theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingCoeff = r := by
+  have hr' := wlog_eq_of_between hr hL hR
+  apply stdPart_eq Real.toSurrealRingHom <;> intro s hs
+  · rw [le_div_iff₀ (wpow_pos _), hr']
+    exact hL s hs
+  · rw [div_le_iff₀ (wpow_pos _), hr']
+    exact hR s hs
 
 /-! ### Leading term -/
 
@@ -1140,10 +1159,9 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
 
-theorem leadingTerm_eq {x y : Surreal} {r : ℝ}
-    (hL : ∀ s < r, s * ω^ y < x) (hR : ∀ s > r, x < s * ω^ y) : x.leadingTerm = r * ω^ y := by
-  rw [leadingTerm]
-  sorry
+theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingTerm = r * ω^ y := by
+  rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq_of_between hr hL hR]
 
 end Surreal
 end
