@@ -65,6 +65,7 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
 
 noncomputable section
 namespace LGame
+open Order
 
 /-- Refines the approximations for the stopping times. -/
 private def stoppingTimeApprox (p : Player) : (LGame.{u} → WithTop NatOrdinal.{u}) →o
@@ -76,28 +77,17 @@ private def stoppingTimeApprox (p : Player) : (LGame.{u} → WithTop NatOrdinal.
 
 private theorem le_of_finite (p : Player) {x y}
     (hx : stoppingTimeApprox p x = x) (hy : stoppingTimeApprox p y = y)
-    {i : LGame.{u}} (hi : y i ≠ ⊤) :
-    x i ≤ y i := by
+    {i : LGame.{u}} (hi : y i ≠ ⊤) : x i ≤ y i := by
   have ihy : ∀ j, y j < y i → x j ≤ y j := fun j hj =>
     le_of_finite p hx hy (hj.trans (lt_top_iff_ne_top.2 hi)).ne
-  have hli : ¬IsMax (y i) := mt isMax_iff_eq_top.1 hi
-  have hg : IsGLB _ (stoppingTimeApprox p y i) := isGLB_biInf
-  rw [hy] at hg
-  have hk := hg.mem_of_not_isPredPrelimit
-    ((Order.not_isPredPrelimit_iff_exists_covBy _).2
-      ⟨Order.succ _, Order.covBy_succ_of_not_isMax hli⟩)
-  rw [Set.mem_image] at hk
-  obtain ⟨u, hui, hu⟩ := hk
+  obtain ⟨u, hui, (hu : iSup _ = y i)⟩ : y i ∈ _ '' _ := hy ▸ isGLB_biInf.mem_of_not_isPredPrelimit
+    (hy.symm ▸ (not_isPredPrelimit_iff_exists_covBy (y i)).2
+      ⟨succ (y i), covBy_succ_of_not_isMax fun h => hi h.eq_top⟩)
   rw [← hu, ← hx, stoppingTimeApprox, OrderHom.coe_mk]
   refine iInf₂_le_of_le u hui (iSup₂_mono fun k hk => add_left_mono (ihy k ?_))
-  rw [← hu]
-  refine lt_of_lt_of_le ?_ (le_iSup₂ k hk)
-  rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
-  suffices hki : y k ≤ y i from fun h => hli (h.mono hki)
-  rw [← hu]
-  apply le_iSup₂_of_le k hk
-  rw [← Order.succ_eq_add_one]
-  exact Order.le_succ _
+  refine lt_of_lt_of_le ?_ ((le_iSup₂ k hk).trans_eq hu)
+  suffices hki : y k ≤ y i from (lt_add_one_iff_not_isMax (y k)).2 fun h => hi (h.mono hki).eq_top
+  exact (le_iSup₂_of_le k hk (le_add_one (y k))).trans_eq hu
 termination_by wellFounded_lt.wrap (y i)
 
 private theorem lfp_eq_gfp (p : Player) :
