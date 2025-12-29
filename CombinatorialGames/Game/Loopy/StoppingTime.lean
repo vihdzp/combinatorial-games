@@ -29,7 +29,7 @@ the lemma `stoppingTime_of_ne` characterizes the behavior of `stoppingTime`
 when it is `-p`'s turn to move.
 
 `stoppingTime p : Player → LGame.{u} → WithTop NatOrdinal.{u}` is the unique fixed point of the map
-`val ↦ (p, x ↦ ⨅ y ∈ x.moves p, val (-p) y; -p, x ↦ ⨆ y ∈ x.moves (-p), stoppingTime p y + 1)`.
+`val ↦ fun q x ↦ if p = q then ⨅ y ∈ x.moves q, val (-q) y else ⨆ y ∈ x.moves q, val (-q) y + 1`.
 It therefore satisfies both an induction and a coinduction principle,
 given by `stoppingTime_induction` and `stoppingTime_coinduction`.
 `stoppingTime_induction` says that any other `val : Player → LGame → WithTop NatOrdinal`
