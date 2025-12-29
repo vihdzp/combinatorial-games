@@ -300,7 +300,7 @@ private theorem mulOption_lt_wpow' {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) < ω^ (x + y) := by
   apply IGame.sub_lt_iff_lt_add.2
-  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic') * ω^ (x + y) + ↑(r * s) * ω^ (z + w) := by
+  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic') * ω^ (x + y) + (r * s) * ω^ (z + w) := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
@@ -309,7 +309,8 @@ private theorem wpow_lt_mulOption {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : w < y) (IH₁ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₂ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     ω^(x + y) < mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) := by
   apply IGame.lt_sub_iff_add_lt.2
-  have H : (1 : Dyadic') * ω^ (x + y) + ↑(r * s) * ω^ (z + w) < r * ω^ (z + y) + s * ω^ x * ω^ w := by
+  have H : (1 : Dyadic') * ω^ (x + y) + ↑(r * s) * ω^ (z + w)
+      < r * ω^ (z + y) + s * ω^ x * ω^ w := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
@@ -701,7 +702,7 @@ theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
 
 @[simp]
 theorem wlog_inv (x : Surreal) : x⁻¹.wlog = -x.wlog := by
-  obtain rfl | hx := eq_or_ne x 0; simp
+  obtain rfl | hx := eq_or_ne x 0; · simp
   rw [← add_eq_zero_iff_eq_neg, ← wlog_mul (inv_ne_zero hx) hx, inv_mul_cancel₀ hx, wlog_one]
 
 @[simp]
@@ -716,13 +717,8 @@ theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
 theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
-@[simp]
-theorem mk_div_wlog (x : Surreal) :
-    ArchimedeanClass.mk (x / ω^ x.wlog) = ArchimedeanClass.mk x - ArchimedeanClass.mk x := by
-  obtain rfl | hx := eq_or_ne x 0
-  · simp
-  · rw [div_eq_mul_inv, ← wpow_neg, ArchimedeanClass.mk_mul, ← wlog_inv,
-      mk_wpow_wlog (inv_ne_zero hx), ArchimedeanClass.mk_inv, ← sub_eq_add_neg]
+theorem mk_div_wlog (x : Surreal) : ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
+  obtain rfl | hx := eq_or_ne x 0 <;> simp_all
 
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
@@ -814,8 +810,8 @@ theorem leadingCoeff_neg (x : Surreal) : leadingCoeff (-x) = -leadingCoeff x := 
 theorem leadingCoeff_mul (x y : Surreal) :
     leadingCoeff (x * y) = leadingCoeff x * leadingCoeff y := by
   unfold leadingCoeff
-  by_cases hx : x = 0; simp [hx]
-  by_cases hy : y = 0; simp [hy]
+  by_cases hx : x = 0; · simp [hx]
+  by_cases hy : y = 0; · simp [hy]
   rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.stdPart_mul, mul_div_mul_comm]
   all_goals
     rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
@@ -823,7 +819,7 @@ theorem leadingCoeff_mul (x y : Surreal) :
 
 @[simp]
 theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)⁻¹ := by
-  obtain rfl | hx := eq_or_ne x 0; simp
+  obtain rfl | hx := eq_or_ne x 0; · simp
   apply eq_inv_of_mul_eq_one_left
   rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
 
@@ -832,20 +828,10 @@ theorem leadingCoeff_div (x y : Surreal) :
     leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
   simp [div_eq_mul_inv]
 
--- TODO: upstream
-@[simp]
-theorem _root_.ArchimedeanClass.stdPart_eq_zero {K : Type*} [Field K] [LinearOrder K]
-    [IsOrderedRing K] {x : K} : stdPart x = 0 ↔ ArchimedeanClass.mk x ≠ 0 where
-  mp := by
-    contrapose!
-    intro h
-    rwa [ne_eq, stdPart_of_mk_nonneg default h.ge, map_eq_zero,
-      ← ne_eq, FiniteResidueField.mk_ne_zero]
-  mpr := stdPart_of_mk_ne_zero
-
 @[simp]
 theorem leadingCoeff_eq_zero_iff {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 := by
-  simp [leadingCoeff]
+  rw [leadingCoeff, stdPart_eq_zero, mk_div_wlog]
+  simp
 
 end Surreal
 end
