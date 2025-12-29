@@ -88,15 +88,12 @@ private theorem le_of_finite (p : Player) {x y}
       ⟨Order.succ _, Order.covBy_succ_of_not_isMax hli⟩)
   rw [Set.mem_image] at hk
   obtain ⟨u, hui, hu⟩ := hk
-  rw [← hu, ← hx]
-  apply iInf₂_le_of_le u hui
-  refine iSup₂_mono fun k hk => ?_
-  apply add_left_mono
-  apply ihy
+  rw [← hu, ← hx, stoppingTimeApprox, OrderHom.coe_mk]
+  refine iInf₂_le_of_le u hui (iSup₂_mono fun k hk => add_left_mono (ihy k ?_))
   rw [← hu]
   refine lt_of_lt_of_le ?_ (le_iSup₂ k hk)
   rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
-  refine mt (IsMax.mono · ?_) hli
+  suffices hki : y k ≤ y i from fun h => hli (h.mono hki)
   rw [← hu]
   apply le_iSup₂_of_le k hk
   rw [← Order.succ_eq_add_one]
