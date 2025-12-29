@@ -236,6 +236,12 @@ theorem coe_sInf (s : Set SignExpansion) :
     sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) :=
   rfl
 
+theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
+  rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
+  apply congrArg sInf
+  aesop
+
 theorem coe_iInf {ι} (f : ι → SignExpansion) :
     ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
   rw [iInf, coe_sInf]
@@ -269,6 +275,12 @@ instance : SupSet SignExpansion where
 theorem coe_sSup (s : Set SignExpansion) :
     sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) :=
   rfl
+
+theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
+  rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
+  apply congrArg sSup
+  aesop
 
 theorem coe_iSup {ι} (f : ι → SignExpansion) :
     ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
