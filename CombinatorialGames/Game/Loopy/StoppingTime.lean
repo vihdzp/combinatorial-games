@@ -74,16 +74,15 @@ private def stoppingTimeApprox (p : Player) : (LGame.{u} → WithTop NatOrdinal.
     Monotone.iInf' fun _ => Monotone.iInf' fun _ => Monotone.iSup' fun i => Monotone.iSup' fun _ =>
       add_left_mono.comp (Function.monotone_eval i)
 
-private theorem eq_of_finite (p : Player) {x} (hx : stoppingTimeApprox p x = x)
-    {i : LGame.{u}} (hi : (stoppingTimeApprox p).lfp i ≠ ⊤) :
-    (stoppingTimeApprox p).lfp i = x i := by
-  have ihx : ∀ j, (stoppingTimeApprox p).lfp j < (stoppingTimeApprox p).lfp i →
-      (stoppingTimeApprox p).lfp j = x j := fun j hj =>
-    eq_of_finite p hx (hj.trans (lt_top_iff_ne_top.2 hi)).ne
-  have hli : ¬IsMax ((stoppingTimeApprox p).lfp i) := mt isMax_iff_eq_top.1 hi
-  apply le_antisymm ((stoppingTimeApprox p).isLeast_lfp.right hx i)
-  have hg : IsGLB _ (stoppingTimeApprox p (stoppingTimeApprox p).lfp i) := isGLB_biInf
-  rw [(stoppingTimeApprox p).isFixedPt_lfp] at hg
+private theorem le_of_finite (p : Player) {x y}
+    (hx : stoppingTimeApprox p x = x) (hy : stoppingTimeApprox p y = y)
+    {i : LGame.{u}} (hi : y i ≠ ⊤) :
+    x i ≤ y i := by
+  have ihy : ∀ j, y j < y i → x j ≤ y j := fun j hj =>
+    le_of_finite p hx hy (hj.trans (lt_top_iff_ne_top.2 hi)).ne
+  have hli : ¬IsMax (y i) := mt isMax_iff_eq_top.1 hi
+  have hg : IsGLB _ (stoppingTimeApprox p y i) := isGLB_biInf
+  rw [hy] at hg
   have hk := hg.mem_of_not_isPredPrelimit
     ((Order.not_isPredPrelimit_iff_exists_covBy _).2
       ⟨Order.succ _, Order.covBy_succ_of_not_isMax hli⟩)
@@ -91,9 +90,9 @@ private theorem eq_of_finite (p : Player) {x} (hx : stoppingTimeApprox p x = x)
   obtain ⟨u, hui, hu⟩ := hk
   rw [← hu, ← hx]
   apply iInf₂_le_of_le u hui
-  apply ge_of_eq
-  congr! 4 with k hk
-  apply ihx
+  refine iSup₂_mono fun k hk => ?_
+  apply add_left_mono
+  apply ihy
   rw [← hu]
   refine lt_of_lt_of_le ?_ (le_iSup₂ k hk)
   rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
@@ -102,14 +101,17 @@ private theorem eq_of_finite (p : Player) {x} (hx : stoppingTimeApprox p x = x)
   apply le_iSup₂_of_le k hk
   rw [← Order.succ_eq_add_one]
   exact Order.le_succ _
-termination_by wellFounded_lt.wrap ((stoppingTimeApprox p).lfp i)
+termination_by wellFounded_lt.wrap (y i)
 
 private theorem lfp_eq_gfp (p : Player) :
     (stoppingTimeApprox p).lfp = (stoppingTimeApprox p).gfp := by
   ext i
+  apply le_antisymm ((stoppingTimeApprox p).lfp_le_gfp i)
   by_cases hi : (stoppingTimeApprox p).lfp i = ⊤
-  · exact le_antisymm ((stoppingTimeApprox p).lfp_le_gfp i) (le_top.trans_eq hi.symm)
-  · exact eq_of_finite p (stoppingTimeApprox p).isFixedPt_gfp hi
+  · exact le_top.trans_eq hi.symm
+  · exact le_of_finite p
+      (stoppingTimeApprox p).isFixedPt_gfp
+      (stoppingTimeApprox p).isFixedPt_lfp hi
 
 /-- `stoppingTime p q x` is the time it takes for `p` to force a win if `q` goes first on `x`,
 counted in moves made by `-p`. -/
