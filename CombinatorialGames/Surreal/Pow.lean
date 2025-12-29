@@ -541,7 +541,7 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   have Hl' := mk_lt_mk_of_ne h Hl
   have Hr' := mk_lt_mk_of_ne' h Hr
   have := numeric_of_forall_mk_ne_mk' h hf hg Hl Hr
-  apply (Fits.equiv_of_forall_not_fits ..).symm
+  apply (Fits.equiv_of_forall_moves ..).symm
   · constructor
     · simp_rw [forall_leftMoves_wpow, leftMoves_ofSets, forall_mem_range,
         Function.comp_apply, ← Surreal.mk_le_mk]
@@ -555,8 +555,8 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   all_goals
     intro y hy
     numeric
-    simp only [not_fits_iff, exists_rightMoves_wpow, exists_leftMoves_wpow]
-  · refine .inl <| or_iff_not_imp_left.2 fun hy' ↦ ?_
+    simp only [exists_rightMoves_wpow, exists_leftMoves_wpow]
+  · refine or_iff_not_imp_left.2 fun hy' ↦ ?_
     rw [Numeric.not_le] at hy'
     obtain ⟨(_ | n), hn⟩ := (hf ⟨y, hy, hy'⟩).le
     · apply (hy'.not_antisymmRel_symm _).elim
@@ -568,7 +568,7 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
       · exact abs_of_pos hy'
       · simp
   · obtain ⟨r, hr, hr'⟩ := mk_le_mk_iff_dyadic.1 (hg ⟨y, hy⟩).ge
-    refine .inr ⟨r, hr, ?_⟩
+    refine ⟨r, hr, ?_⟩
     simp_rw [rightMoves_ofSets, exists_range_iff, Function.comp_apply, ← Surreal.mk_le_mk]
     use ⟨y, hy⟩
     convert ←hr' using 1

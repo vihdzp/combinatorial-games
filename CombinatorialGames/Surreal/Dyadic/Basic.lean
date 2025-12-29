@@ -184,14 +184,14 @@ theorem toIGame_equiv_lower_upper (x : Dyadic') :
   split_ifs with h
   · unfold lower upper
     simp only [Dyadic'.mkRat, Rat.mkRat_one, mk_intCast, toIGame_intCast, h]
-    apply Fits.equiv_of_forall_not_fits
+    apply Fits.equiv_of_forall_moves
     · simp [Fits]
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
-      simp_all [Fits, Int.sub_one_lt_iff]
+      obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_leftMoves_intCast hm
+      simp
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
-      simp_all [Fits, Int.lt_add_one_iff]
+      obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_rightMoves_intCast hm
+      simp
   · rfl
 
 instance _root_.IGame.Short.dyadic (x : Dyadic') : Short x := by
@@ -289,7 +289,7 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
   by_cases H : x.den = 1 ∧ y.den = 1
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
-  apply Fits.equiv_of_forall_not_fits
+  apply Fits.equiv_of_forall_moves ?_ (fun z hz ↦ ?_) (fun z hz ↦ ?_)
   · rw [Fits, forall_moves_add, forall_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
@@ -299,10 +299,7 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
         | obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
       grw [← toIGame_add_equiv]
       simp
-  · intro z hz
-    obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-    rw [not_fits_iff]
-    left
+  · obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; · simp_all
       use x + lower y
@@ -315,10 +312,7 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
       have : (lower x : IGame) ∈ xᴸ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
-  · intro z hz
-    obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
-    rw [not_fits_iff]
-    right
+  · obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; · simp_all
       use x + upper y
@@ -539,7 +533,8 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic'
       exact this.not_ge
   obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic'.toIGame) this
   use z
-  apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
+  refine (Fits.equiv_of_forall_not_fits H.1 fun p _ hz' hz ↦ ?_).symm
+  cases p
   · obtain rfl := Dyadic'.eq_lower_of_mem_leftMoves_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
