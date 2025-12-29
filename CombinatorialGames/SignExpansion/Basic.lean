@@ -6,7 +6,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 import CombinatorialGames.NatOrdinal.Basic
 import Mathlib.Data.Fintype.Order
 import Mathlib.Data.Sign.Defs
-import Mathlib.Order.PiLex
+import Mathlib.Order.CompleteLattice.PiLex
 
 /-!
 # Sign expansions
@@ -200,5 +200,101 @@ protected theorem neg_lt_neg_iff {x y : SignExpansion} : -x < -y ↔ y < x where
 @[simp]
 protected theorem neg_le_neg_iff {x y : SignExpansion} : -x ≤ -y ↔ y ≤ x :=
   le_iff_le_iff_lt_iff_lt.2 SignExpansion.neg_lt_neg_iff
+
+-- This has deliberately not been upstreamed to Mathlib.
+instance : CompleteLinearOrder SignType := Fintype.toCompleteLinearOrder _
+
+-- TODO: upstream
+theorem _root_.ciSup_mem {ι α} [ConditionallyCompleteLinearOrder α] [WellFoundedGT α] [Nonempty ι]
+    (f : ι → α) : iSup f ∈ Set.range f :=
+  ciInf_mem (α := αᵒᵈ) f
+
+instance : InfSet SignExpansion where
+  sInf s := ⟨ofLex <| sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s), by
+    intro a b hab
+    simp_rw [Set.mem_preimage, Set.mem_singleton_iff, Pi.ofLex_apply]
+    induction b using WellFoundedLT.induction with | ind b IH
+    obtain rfl | hab := hab.eq_or_lt; · exact id
+    intro h
+    rw [Pi.Lex.sInf_apply]
+    convert ciInf_const with f
+    · obtain ⟨_, ⟨x, hx, rfl⟩, hx'⟩ := f
+      exact x.isUpperSet_preimage_singleton_zero hab.le (h ▸ hx' _ hab)
+    · have h' := h
+      rw [Pi.Lex.sInf_apply] at h
+      have H := mt (fun h ↦ @iInf_of_empty SignType _ _ h _) (h.trans_ne (show 0 ≠ ⊤ by decide))
+      rw [not_isEmpty_iff] at H
+      obtain ⟨⟨_, ⟨x, hx, rfl⟩, hx'⟩, hxa⟩ := h ▸ @ciInf_mem _ _ _ _ H fun e ↦ e.1 a
+      refine ⟨_, Set.mem_image_of_mem _ hx, fun c hc ↦ ?_⟩
+      obtain hc | hc' := lt_or_ge c a
+      · exact hx' _ hc
+      · rw [IH c hc hc' h']
+        exact x.isUpperSet_preimage_singleton_zero hc' hxa
+  ⟩
+
+theorem coe_sInf (s : Set SignExpansion) :
+    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) :=
+  rfl
+
+theorem coe_iInf {ι} (f : ι → SignExpansion) :
+    ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
+  rw [iInf, coe_sInf]
+  congr
+  aesop
+
+-- TODO: can we get to_dual to work here?
+instance : SupSet SignExpansion where
+  sSup s := ⟨ofLex <| sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s), by
+    intro a b hab
+    simp_rw [Set.mem_preimage, Set.mem_singleton_iff, Pi.ofLex_apply]
+    induction b using WellFoundedLT.induction with | ind b IH
+    obtain rfl | hab := hab.eq_or_lt; · exact id
+    intro h
+    rw [Pi.Lex.sSup_apply]
+    convert ciSup_const with f
+    · obtain ⟨_, ⟨x, hx, rfl⟩, hx'⟩ := f
+      exact x.isUpperSet_preimage_singleton_zero hab.le (h ▸ hx' _ hab)
+    · have h' := h
+      rw [Pi.Lex.sSup_apply] at h
+      have H := mt (fun h ↦ @iSup_of_empty SignType _ _ h _) (h.trans_ne (show 0 ≠ ⊥ by decide))
+      rw [not_isEmpty_iff] at H
+      obtain ⟨⟨_, ⟨x, hx, rfl⟩, hx'⟩, hxa⟩ := h ▸ @ciSup_mem _ _ _ _ H fun e ↦ e.1 a
+      refine ⟨_, Set.mem_image_of_mem _ hx, fun c hc ↦ ?_⟩
+      obtain hc | hc' := lt_or_ge c a
+      · exact hx' _ hc
+      · rw [IH c hc hc' h']
+        exact x.isUpperSet_preimage_singleton_zero hc' hxa
+  ⟩
+
+theorem coe_sSup (s : Set SignExpansion) :
+    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) :=
+  rfl
+
+theorem coe_iSup {ι} (f : ι → SignExpansion) :
+    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
+  rw [iSup, coe_sSup]
+  congr
+  aesop
+
+instance : CompleteLattice SignExpansion where
+  le_sSup s x hx := by
+    rw [le_iff_toLex]
+    exact le_sSup (Set.mem_image_of_mem _ hx)
+  sSup_le s x hx := by
+    rw [le_iff_toLex]
+    apply sSup_le
+    simpa
+  sInf_le s x hx := by
+    rw [le_iff_toLex]
+    exact sInf_le (Set.mem_image_of_mem _ hx)
+  le_sInf s x hx := by
+    rw [le_iff_toLex]
+    apply le_sInf
+    simpa
+
+instance : CompleteLinearOrder SignExpansion where
+  __ := LinearOrder.toBiheytingAlgebra _
+  __ := instCompleteLattice
+  __ := instLinearOrder
 
 end SignExpansion
