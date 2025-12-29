@@ -51,9 +51,6 @@ theorem Monotone.iSup' {α β : Type*} {ι : Sort*} [Preorder α] [CompleteLatti
     (hf : ∀ (i : ι), Monotone (f i)) : Monotone (fun x => ⨆ i, f i x) :=
   (congrArg Monotone (funext (@iSup_apply _ _ _ _ _))).mp (Monotone.iSup hf)
 
-theorem OrderHom.lfp_le_gfp {α : Type*} [CompleteLattice α] (f : α →o α) : f.lfp ≤ f.gfp :=
-  f.lfp_le_fixed f.isFixedPt_gfp
-
 theorem Order.lt_add_one_iff_not_isMax {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOrder α]
     (x : α) : x < x + 1 ↔ ¬IsMax x := by
   rw [← Order.succ_eq_add_one, Order.lt_succ_iff_not_isMax]
