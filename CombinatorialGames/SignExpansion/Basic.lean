@@ -8,7 +8,6 @@ import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Data.Fintype.Order
 import Mathlib.Data.Sign.Defs
 import Mathlib.Order.CompleteLattice.PiLex
-import Mathlib.Tactic.Order
 
 /-!
 # Sign expansions
