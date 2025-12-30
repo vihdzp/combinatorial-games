@@ -276,10 +276,8 @@ theorem zero_subset (x : SignExpansion) : 0 ⊆ x := by
 theorem eq_or_length_lt_of_subset {x y : SignExpansion} (h : x ⊆ y) :
     x = y ∨ x.length < y.length := by
   rw [subset_def] at h
-  obtain hxy | hyx := lt_or_ge x.length y.length
-  · exact .inr hxy
-  · left
-    rw [← h, restrict_of_length_le hyx]
+  have := lt_or_ge x.length y.length
+  aesop
 
 instance : IsRefl SignExpansion (· ⊆ ·) where
   refl x := restrict_subset x ⊤
