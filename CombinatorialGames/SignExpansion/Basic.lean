@@ -417,8 +417,7 @@ theorem gc_coe_floor : GaloisConnection (toLex ∘ (⇑·) : SignExpansion → _
 def gciFloor : GaloisCoinsertion (toLex ∘ (⇑·) : SignExpansion → _) (floor ∘ ofLex) where
   gc := gc_coe_floor
   u_l_le := by simp
-  choice x h :=
-    (floor (ofLex x)).copy (ofLex x) (toLex_inj.1 (le_antisymm h (gc_coe_floor.l_u_le x)))
+  choice x h := (floor (ofLex x)).copy (ofLex x) (toLex_inj.1 (h.antisymm (gc_coe_floor.l_u_le x)))
   choice_eq x h := copy_eq ..
 
 /-! #### Ceiling function -/
@@ -464,12 +463,11 @@ theorem ceil_le {f : NatOrdinal → SignType} {x : SignExpansion} :
 theorem gc_ceil_coe : GaloisConnection (ceil ∘ ofLex) (toLex ∘ (⇑·) : SignExpansion → _) :=
   fun _ _ ↦ ceil_le
 
-/-- `ceil` as a Galois coinsertion. -/
+/-- `ceil` as a Galois insertion. -/
 def giCeil : GaloisInsertion (ceil ∘ ofLex) (toLex ∘ (⇑·) : SignExpansion → _) where
   gc := gc_ceil_coe
   le_l_u := by simp
-  choice x h :=
-    (ceil (ofLex x)).copy (ofLex x) (toLex_inj.1 (le_antisymm (gc_ceil_coe.le_u_l x) h))
+  choice x h := (ceil (ofLex x)).copy (ofLex x) (toLex_inj.1 ((gc_ceil_coe.le_u_l x).antisymm h))
   choice_eq x h := copy_eq ..
 
 @[simp]
@@ -501,7 +499,7 @@ instance : CompleteLinearOrder SignExpansion where
   __ := instLinearOrder
 
 theorem coe_sInf (s : Set SignExpansion) :
-    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := rfl
+    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
 
 theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
@@ -516,7 +514,7 @@ theorem coe_iInf {ι} (f : ι → SignExpansion) :
   aesop
 
 theorem coe_sSup (s : Set SignExpansion) :
-    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := rfl
+    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
 
 theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
