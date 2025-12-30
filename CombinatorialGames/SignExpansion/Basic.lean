@@ -215,7 +215,7 @@ theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
 
 @[simp]
 theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
-    (x.restrict o).length = min x.length o := by
+    (x ↾ o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
@@ -231,40 +231,40 @@ theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
 
 @[simp, grind =]
 theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
-    (x.restrict o₁).restrict o₂ = x.restrict (min o₁ o₂) := by
+    (x ↾ o₁) ↾ o₂ = x ↾ min o₁ o₂ := by
   aesop
 
 @[simp]
-theorem restrict_zero_left (o : WithTop NatOrdinal) : restrict 0 o = 0 := by
+theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_zero_right (x : SignExpansion) : x.restrict 0 = 0 := by
+theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
 @[simp]
-theorem restrict_top_right {x : SignExpansion} : x.restrict ⊤ = x :=
+theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x :=
   rfl
 
 /-! ### Subset relation -/
 
-/-- We write `x ⊆ y` when `x = restrict y o` for some `o`. In the literature, this is written as
+/-- We write `x ⊆ y` when `x = y ↾ o` for some `o`. In the literature, this is written as
 `x ≤ₛ y` or `x ⊑ y`. -/
 instance : HasSubset SignExpansion where
-  Subset x y := restrict y x.length = x
+  Subset x y := y ↾ x.length = x
 
 /-- We write `x ⊂ y` when `x ⊆ y` and `x ≠ y`. In the literature, this is written as
 `x <ₛ y` or `x ⊏ y`. -/
 instance : HasSSubset SignExpansion where
   SSubset x y := x ⊆ y ∧ ¬ y ⊆ x
 
-theorem subset_def {x y : SignExpansion} : x ⊆ y ↔ restrict y x.length = x := .rfl
+theorem subset_def {x y : SignExpansion} : x ⊆ y ↔ y ↾ x.length = x := .rfl
 theorem ssubset_def {x y : SignExpansion} : x ⊂ y ↔ x ⊆ y ∧ ¬ y ⊆ x := .rfl
 
 alias ⟨eq_of_subset, _⟩ := subset_def
 
 @[simp]
-theorem restrict_subset (x : SignExpansion) (o : WithTop NatOrdinal) : restrict x o ⊆ x := by
+theorem restrict_subset (x : SignExpansion) (o : WithTop NatOrdinal) : x ↾ o ⊆ x := by
   rw [subset_def, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
 
 @[simp]
@@ -604,14 +604,14 @@ variable {o₁ o₂ : NatOrdinal}
 
 /-- Returns the sign expansion with the corresponding number of `1`s. -/
 def toSignExpansion : NatOrdinal ↪o SignExpansion :=
-  .ofStrictMono (restrict ⊤ ·) fun x y h ↦ by
+  .ofStrictMono (⊤ ↾ ·) fun x y h ↦ by
     use x
     aesop (add apply unsafe [lt_trans])
 
 instance : Coe NatOrdinal SignExpansion where
   coe x := x.toSignExpansion
 
-theorem toSignExpansion_def (o : NatOrdinal) : o = restrict ⊤ o := rfl
+theorem toSignExpansion_def (o : NatOrdinal) : o = ⊤ ↾ o := rfl
 
 @[aesop simp]
 theorem coe_toSignExpansion (o : NatOrdinal) :
