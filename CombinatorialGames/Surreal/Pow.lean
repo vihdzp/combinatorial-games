@@ -729,7 +729,7 @@ theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
 theorem mk_div_wpow_wlog (x : Surreal) : ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
   obtain rfl | hx := eq_or_ne x 0 <;> simp_all
 
-theorem mk_div_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
+theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk (x / ω^ x.wlog) = 0 := by
   rw [mk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
@@ -972,10 +972,10 @@ theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk x < .mk (x - x.leadingTerm) := by
   rw [← LinearOrderedAddCommGroupWithTop.sub_lt_sub_iff_left_of_ne_top
     (a := .mk <| ω^ x.wlog) (by simp)]
-  simp_rw [← ArchimedeanClass.mk_div, sub_div, mk_div_wlog_of_ne_zero hx]
+  simp_rw [← ArchimedeanClass.mk_div, sub_div, mk_div_wpow_wlog_of_ne_zero hx]
   convert mk_sub_stdPart_pos Real.toSurrealRingHom _
   · simp [leadingTerm, leadingCoeff]
-  · rw [mk_div_wlog_of_ne_zero hx]
+  · rw [mk_div_wpow_wlog_of_ne_zero hx]
 
 @[simp]
 theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
