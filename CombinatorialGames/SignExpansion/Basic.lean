@@ -96,6 +96,16 @@ instance : FunLike SignExpansion NatOrdinal SignType where
 /-- Every sign after the first `0` is also `0`. -/
 theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
 
+def copy (x : SignExpansion) (sign : NatOrdinal → SignType)
+    (h : sign = x) : SignExpansion where
+  sign
+  isUpperSet_preimage_singleton_zero' := h ▸ isUpperSet_preimage_singleton_zero x
+
+@[simp]
+theorem copy_eq (x : SignExpansion) (sign : NatOrdinal → SignType)
+    (h : sign = x) : x.copy sign h = x :=
+  DFunLike.coe_injective h
+
 @[simp] theorem coe_mk (f h) : mk f h = f := rfl
 @[simp] theorem sign_eq_coe (x : SignExpansion) : x.sign = ⇑x := rfl
 
@@ -404,8 +414,12 @@ theorem gc_coe_floor : GaloisConnection (toLex ∘ (⇑·) : SignExpansion → _
   fun _ _ ↦ le_floor.symm
 
 /-- `floor` as a Galois coinsertion. -/
-def gciFloor : GaloisCoinsertion (toLex ∘ (⇑·) : SignExpansion → _) (floor ∘ ofLex) :=
-  gc_coe_floor.toGaloisCoinsertion (by simp)
+def gciFloor : GaloisCoinsertion (toLex ∘ (⇑·) : SignExpansion → _) (floor ∘ ofLex) where
+  gc := gc_coe_floor
+  u_l_le := by simp
+  choice x h :=
+    (floor (ofLex x)).copy (ofLex x) (toLex_inj.1 (le_antisymm h (gc_coe_floor.l_u_le x)))
+  choice_eq x h := copy_eq ..
 
 /-! #### Ceiling function -/
 
@@ -451,8 +465,12 @@ theorem gc_ceil_coe : GaloisConnection (ceil ∘ ofLex) (toLex ∘ (⇑·) : Sig
   fun _ _ ↦ ceil_le
 
 /-- `ceil` as a Galois coinsertion. -/
-def giCeil : GaloisInsertion (ceil ∘ ofLex) (toLex ∘ (⇑·) : SignExpansion → _) :=
-  gc_ceil_coe.toGaloisInsertion (by simp)
+def giCeil : GaloisInsertion (ceil ∘ ofLex) (toLex ∘ (⇑·) : SignExpansion → _) where
+  gc := gc_ceil_coe
+  le_l_u := by simp
+  choice x h :=
+    (ceil (ofLex x)).copy (ofLex x) (toLex_inj.1 (le_antisymm (gc_ceil_coe.le_u_l x) h))
+  choice_eq x h := copy_eq ..
 
 @[simp]
 theorem floor_neg (f : NatOrdinal → SignType) : floor (-f) = -ceil f := by
@@ -471,9 +489,11 @@ theorem floor_lt_ceil_of_not_isUpperSet {f : NatOrdinal → SignType} (h : ¬ Is
 
 /-! #### Complete linear order instance -/
 
-instance : CompleteLattice SignExpansion where
-  __ := instLinearOrder
-  __ := giCeil.liftCompleteLattice
+instance : CompleteLattice SignExpansion :=
+  fast_instance%
+  { __ := instLinearOrder.toBiheytingAlgebra _
+    __ := giCeil.liftCompleteLattice.toCompleteSemilatticeInf
+    __ := gciFloor.liftCompleteLattice.toCompleteSemilatticeSup }
 
 instance : CompleteLinearOrder SignExpansion where
   __ := LinearOrder.toBiheytingAlgebra _
@@ -481,12 +501,7 @@ instance : CompleteLinearOrder SignExpansion where
   __ := instLinearOrder
 
 theorem coe_sInf (s : Set SignExpansion) :
-    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := by
-  have H := gciFloor.u_sInf_l_image s
-  rw [← H, Function.comp_apply, floor_of_isUpperSet]
-  · rfl
-  · by_contra
-    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H.trans (giCeil.l_sInf_u_image s))
+    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := rfl
 
 theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
@@ -501,12 +516,7 @@ theorem coe_iInf {ι} (f : ι → SignExpansion) :
   aesop
 
 theorem coe_sSup (s : Set SignExpansion) :
-    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := by
-  have H := gciFloor.u_sSup_l_image s
-  rw [← H, Function.comp_apply, floor_of_isUpperSet]
-  · rfl
-  · by_contra
-    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H.trans (giCeil.l_sSup_u_image s))
+    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := rfl
 
 theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
