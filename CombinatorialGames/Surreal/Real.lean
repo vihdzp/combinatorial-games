@@ -387,6 +387,18 @@ theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
 @[simp, norm_cast] theorem toSurreal_zero : toSurreal 0 = 0 := by simpa using toSurreal_natCast 0
 @[simp, norm_cast] theorem toSurreal_one : toSurreal 1 = 1 := by simpa using toSurreal_natCast 1
 
+@[simp] theorem toSurreal_eq_zero_iff {x : ℝ} : (x : Surreal) = 0 ↔ x = 0 := by norm_cast
+@[simp] theorem zero_eq_toSurreal_iff {x : ℝ} : 0 = (x : Surreal) ↔ 0 = x := by norm_cast
+
+@[simp] theorem toSurreal_eq_one_iff {x : ℝ} : (x : Surreal) = 1 ↔ x = 1 := by norm_cast
+@[simp] theorem one_eq_toSurreal_iff {x : ℝ} : 1 = (x : Surreal) ↔ 1 = x := by norm_cast
+
+@[simp] theorem toSurreal_nonneg_iff {x : ℝ} : 0 ≤ (x : Surreal) ↔ 0 ≤ x := by norm_cast
+@[simp] theorem toSurreal_nonpos_iff {x : ℝ} : (x : Surreal) ≤ 0 ↔ x ≤ 0 := by norm_cast
+
+@[simp] theorem toSurreal_pos_iff {x : ℝ} : 0 < (x : Surreal) ↔ 0 < x := by norm_cast
+@[simp] theorem toSurreal_neg_iff {x : ℝ} : (x : Surreal) < 0 ↔ x < 0 := by norm_cast
+
 @[simp]
 theorem toSurreal_neg (x : ℝ) : toSurreal (-x) = -toSurreal x :=
   Surreal.mk_eq (toIGame_neg _).antisymmRel
