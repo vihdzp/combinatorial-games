@@ -24,6 +24,8 @@ universe u
 
 /-! ### For Mathlib -/
 
+attribute [grind =] Pi.toLex_apply
+
 instance : ZeroLEOneClass SignType where
   zero_le_one := by decide
 
@@ -351,8 +353,6 @@ theorem floor_le (f : NatOrdinal → SignType) : toLex ⇑(floor f) ≤ toLex f 
   by_cases hf : IsUpperSet (f ⁻¹' {0})
   · rw [floor_of_isUpperSet hf]; rfl
   · exact (floor_lt_of_not_isUpperSet hf).le
-
-attribute [grind =] Pi.toLex_apply
 
 theorem floor_lt {f : NatOrdinal → SignType} {x : SignExpansion} :
     floor f < x ↔ toLex f < toLex ⇑x := by
