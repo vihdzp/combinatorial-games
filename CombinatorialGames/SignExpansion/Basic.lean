@@ -483,12 +483,11 @@ instance : CompleteLinearOrder SignExpansion where
 
 theorem coe_sInf (s : Set SignExpansion) :
     sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := by
-  have H₁ := gciFloor.u_sInf_l_image s
-  have H₂ := giCeil.l_sInf_u_image s
-  rw [← H₁, Function.comp_apply, floor_of_isUpperSet]
+  have H := gciFloor.u_sInf_l_image s
+  rw [← H, Function.comp_apply, floor_of_isUpperSet]
   · rfl
   · by_contra
-    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H₁.trans H₂)
+    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H.trans (giCeil.l_sInf_u_image s))
 
 theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
@@ -504,12 +503,11 @@ theorem coe_iInf {ι} (f : ι → SignExpansion) :
 
 theorem coe_sSup (s : Set SignExpansion) :
     sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex (⇑x)) '' s)) := by
-  have H₁ := gciFloor.u_sSup_l_image s
-  have H₂ := giCeil.l_sSup_u_image s
-  rw [← H₁, Function.comp_apply, floor_of_isUpperSet]
+  have H := gciFloor.u_sSup_l_image s
+  rw [← H, Function.comp_apply, floor_of_isUpperSet]
   · rfl
   · by_contra
-    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H₁.trans H₂)
+    exact (floor_lt_ceil_of_not_isUpperSet this).ne (H.trans (giCeil.l_sSup_u_image s))
 
 theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
     sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
@@ -518,7 +516,7 @@ theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
   aesop
 
 theorem coe_iSup {ι} (f : ι → SignExpansion) :
-    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
+    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by 
   rw [iSup, coe_sSup]
   congr
   aesop
