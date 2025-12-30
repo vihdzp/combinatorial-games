@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbo
 -/
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Small
@@ -238,14 +237,8 @@ theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
       (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
     ofSetsRecOn !{s | t} mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
-  congr
-  any_goals simp
-  all_goals
-    refine Function.hfunext rfl fun x _ h ↦ ?_
-    cases h
-    refine Function.hfunext ?_ fun _ _ _ ↦ ?_
-    · simp
-    · rw [ofSetsRecOn, cast_heq_iff_heq, heq_cast_iff_heq]
+  simp_rw [ofSetsRecOn]
+  congr! <;> simp
 
 /-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
 def Subposition : IGame → IGame → Prop :=
@@ -392,6 +385,18 @@ theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
 
 theorem lf_right {x y : IGame} (h : y ∈ xᴿ) : x ⧏ y :=
   lf_of_right_le le_rfl h
+
+theorem le_of_forall_moves_right_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴿ, x ⧏ z) (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) : x ≤ y := by
+  refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx⟩
+  obtain ⟨w, hw, hw'⟩ := hl z hz
+  exact mt hw'.trans' (left_lf hw)
+
+theorem le_of_forall_moves_left_lf {x y : IGame}
+    (hx : ∀ z ∈ yᴸ, z ⧏ x) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : y ≤ x := by
+  refine le_iff_forall_lf.2 ⟨hx, fun z hz ↦ ?_⟩
+  obtain ⟨w, hw, hw'⟩ := hr z hz
+  exact mt hw'.trans (lf_right hw)
 
 /-- The equivalence relation `x ≈ y` means that `x ≤ y` and `y ≤ x`. This is notation for
 `AntisymmRel (⬝ ≤ ⬝) x y`. -/

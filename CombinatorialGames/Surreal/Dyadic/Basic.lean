@@ -184,14 +184,14 @@ theorem toIGame_equiv_lower_upper (x : Dyadic') :
   split_ifs with h
   · unfold lower upper
     simp only [Dyadic'.mkRat, Rat.mkRat_one, mk_intCast, toIGame_intCast, h]
-    apply Fits.equiv_of_forall_not_fits
+    apply Fits.equiv_of_forall_moves
     · simp [Fits]
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hm
-      simp_all [Fits, Int.sub_one_lt_iff]
+      obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_leftMoves_intCast hm
+      simp
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hm
-      simp_all [Fits, Int.lt_add_one_iff]
+      obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_rightMoves_intCast hm
+      simp
   · rfl
 
 instance _root_.IGame.Short.dyadic (x : Dyadic') : Short x := by
@@ -289,23 +289,19 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
   by_cases H : x.den = 1 ∧ y.den = 1
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
-  apply Fits.equiv_of_forall_not_fits
+  apply Fits.equiv_of_forall_moves ?_ (fun z hz ↦ ?_) (fun z hz ↦ ?_)
   · rw [Fits, forall_moves_add, forall_moves_add]
-    refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩ <;> intro z hz
-    any_goals
-      obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-      grw [← toIGame_add_equiv]
-      simp
+    refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
-      obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+      intro z hz
+      first
+        | obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+        | obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
       grw [← toIGame_add_equiv]
       simp
-  · intro z hz
-    obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-    rw [not_fits_iff]
-    left
+  · obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
     obtain h | h := le_or_gt x.den y.den
-    · by_cases hy : y.den = 1; simp_all
+    · by_cases hy : y.den = 1; · simp_all
       use x + lower y
       have hy := toIGame_of_den_ne_one hy
       have : (lower y : IGame) ∈ yᴸ := by rw [hy]; simp
@@ -316,12 +312,9 @@ theorem toIGame_add_equiv (x y : Dyadic') : ((x + y : Dyadic') : IGame.{u}) ≈ 
       have : (lower x : IGame) ∈ xᴸ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
-  · intro z hz
-    obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
-    rw [not_fits_iff]
-    right
+  · obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
     obtain h | h := le_or_gt x.den y.den
-    · by_cases hy : y.den = 1; simp_all
+    · by_cases hy : y.den = 1; · simp_all
       use x + upper y
       have hy := toIGame_of_den_ne_one hy
       have : (upper y : IGame) ∈ yᴿ := by rw [hy]; simp
@@ -362,107 +355,145 @@ theorem toIGame_mul_equiv (x y : Dyadic') : ((x * y : Dyadic') : IGame) ≈ x * 
 
 /-! #### ℚ -/
 
-@[simp, norm_cast] theorem toIGame_lt_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) < y ↔ x.1 < y := by
+@[simp, norm_cast]
+theorem toIGame_lt_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) < y ↔ x.1 < y := by
   simp [(toIGame_equiv x).lt_congr_left]
-@[simp, norm_cast] theorem toIGame_le_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) ≤ y ↔ x.1 ≤ y := by
+@[simp, norm_cast]
+theorem toIGame_le_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) ≤ y ↔ x.1 ≤ y := by
   simp [(toIGame_equiv x).le_congr_left]
 
-@[simp, norm_cast] theorem ratCast_lt_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) < y ↔ x < y.1 := by
+@[simp, norm_cast]
+theorem ratCast_lt_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) < y ↔ x < y.1 := by
   simp [(toIGame_equiv y).lt_congr_right]
-@[simp, norm_cast] theorem ratCast_le_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y.1 := by
+@[simp, norm_cast]
+theorem ratCast_le_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y.1 := by
   simp [(toIGame_equiv y).le_congr_right]
 
-@[simp, norm_cast] theorem toIGame_equiv_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) ≈ y ↔ x.1 = y := by
+@[simp, norm_cast]
+theorem toIGame_equiv_ratCast {x : Dyadic'} {y : ℚ} : (x : IGame) ≈ y ↔ x.1 = y := by
   simp [AntisymmRel, le_antisymm_iff]
-@[simp, norm_cast] theorem ratCast_equiv_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y.1 := by
+@[simp, norm_cast]
+theorem ratCast_equiv_toIGame {x : ℚ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y.1 := by
   simp [AntisymmRel, le_antisymm_iff]
 
 /-! #### ℤ -/
 
-@[simp, norm_cast] theorem toIGame_lt_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) < y ↔ x < y := by
+@[simp, norm_cast]
+theorem toIGame_lt_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) < y ↔ x < y := by
   simp [← (ratCast_intCast_equiv y).lt_congr_right]
-@[simp, norm_cast] theorem toIGame_le_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) ≤ y ↔ x ≤ y := by
+@[simp, norm_cast]
+theorem toIGame_le_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) ≤ y ↔ x ≤ y := by
   simp [← (ratCast_intCast_equiv y).le_congr_right]
 
-@[simp, norm_cast] theorem intCast_lt_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) < y ↔ x < y := by
+@[simp, norm_cast]
+theorem intCast_lt_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) < y ↔ x < y := by
   simp [← (ratCast_intCast_equiv x).lt_congr_left]
-@[simp, norm_cast] theorem intCast_le_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y := by
+@[simp, norm_cast]
+theorem intCast_le_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y := by
   simp [← (ratCast_intCast_equiv x).le_congr_left]
 
-@[simp, norm_cast] theorem toIGame_equiv_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) ≈ y ↔ x = y := by
+@[simp, norm_cast]
+theorem toIGame_equiv_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
-@[simp, norm_cast] theorem intCast_equiv_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y := by
+@[simp, norm_cast]
+theorem intCast_equiv_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 
-@[simp, norm_cast] theorem toIGame_eq_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) = y ↔ x = y :=
+@[simp, norm_cast]
+theorem toIGame_eq_intCast {x : Dyadic'} {y : ℤ} : (x : IGame) = y ↔ x = y :=
   ⟨fun h ↦ toIGame_equiv_intCast.1 h.antisymmRel, by simp_all⟩
-@[simp, norm_cast] theorem intCast_eq_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) = y ↔ x = y := by
+@[simp, norm_cast]
+theorem intCast_eq_toIGame {x : ℤ} {y : Dyadic'} : (x : IGame) = y ↔ x = y := by
   simp [eq_comm]
 
 /-! #### ℕ -/
 
-@[simp, norm_cast] theorem toIGame_lt_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) < y ↔ x < y :=
+@[simp, norm_cast]
+theorem toIGame_lt_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) < y ↔ x < y :=
   toIGame_lt_intCast (y := y)
-@[simp, norm_cast] theorem toIGame_le_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) ≤ y ↔ x ≤ y :=
+@[simp, norm_cast]
+theorem toIGame_le_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) ≤ y ↔ x ≤ y :=
   toIGame_le_intCast (y := y)
 
-@[simp, norm_cast] theorem natCast_lt_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) < y ↔ x < y :=
+@[simp, norm_cast]
+theorem natCast_lt_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) < y ↔ x < y :=
   intCast_lt_toIGame (x := x)
-@[simp, norm_cast] theorem natCast_le_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y :=
+@[simp, norm_cast]
+theorem natCast_le_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y :=
   intCast_le_toIGame (x := x)
 
-@[simp, norm_cast] theorem toIGame_equiv_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) ≈ y ↔ x = y :=
+@[simp, norm_cast]
+theorem toIGame_equiv_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) ≈ y ↔ x = y :=
   toIGame_equiv_intCast (y := y)
-@[simp, norm_cast] theorem natCast_equiv_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y :=
+@[simp, norm_cast]
+theorem natCast_equiv_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) ≈ y ↔ x = y :=
   intCast_equiv_toIGame (x := x)
 
-@[simp, norm_cast] theorem toIGame_eq_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) = y ↔ x = y :=
+@[simp, norm_cast]
+theorem toIGame_eq_natCast {x : Dyadic'} {y : ℕ} : (x : IGame) = y ↔ x = y :=
   toIGame_eq_intCast (y := y)
-@[simp, norm_cast] theorem natCast_eq_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) = y ↔ x = y :=
+@[simp, norm_cast]
+theorem natCast_eq_toIGame {x : ℕ} {y : Dyadic'} : (x : IGame) = y ↔ x = y :=
   intCast_eq_toIGame (x := x)
 
 /-! #### 0 -/
 
-@[simp, norm_cast] theorem toIGame_lt_zero {x : Dyadic'} : (x : IGame) < 0 ↔ x < 0 :=
+@[simp, norm_cast]
+theorem toIGame_lt_zero {x : Dyadic'} : (x : IGame) < 0 ↔ x < 0 :=
   toIGame_lt_natCast (y := 0)
-@[simp, norm_cast] theorem toIGame_le_zero {x : Dyadic'} : (x : IGame) ≤ 0 ↔ x ≤ 0 :=
+@[simp, norm_cast]
+theorem toIGame_le_zero {x : Dyadic'} : (x : IGame) ≤ 0 ↔ x ≤ 0 :=
   toIGame_le_natCast (y := 0)
 
-@[simp, norm_cast] theorem zero_lt_toIGame {x : Dyadic'} : 0 < (x : IGame) ↔ 0 < x :=
+@[simp, norm_cast]
+theorem zero_lt_toIGame {x : Dyadic'} : 0 < (x : IGame) ↔ 0 < x :=
   natCast_lt_toIGame (x := 0)
-@[simp, norm_cast] theorem zero_le_toIGame {x : Dyadic'} : 0 ≤ (x : IGame) ↔ 0 ≤ x :=
+@[simp, norm_cast]
+theorem zero_le_toIGame {x : Dyadic'} : 0 ≤ (x : IGame) ↔ 0 ≤ x :=
   natCast_le_toIGame (x := 0)
 
-@[simp, norm_cast] theorem toIGame_equiv_zero {x : Dyadic'} : (x : IGame) ≈ 0 ↔ x = 0 :=
+@[simp, norm_cast]
+theorem toIGame_equiv_zero {x : Dyadic'} : (x : IGame) ≈ 0 ↔ x = 0 :=
   toIGame_equiv_natCast (y := 0)
-@[simp, norm_cast] theorem zero_equiv_toIGame {x : Dyadic'} : 0 ≈ (x : IGame) ↔ 0 = x :=
+@[simp, norm_cast]
+theorem zero_equiv_toIGame {x : Dyadic'} : 0 ≈ (x : IGame) ↔ 0 = x :=
   natCast_equiv_toIGame (x := 0)
 
-@[simp, norm_cast] theorem toIGame_eq_zero {x : Dyadic'} : (x : IGame) = 0 ↔ x = 0 :=
+@[simp, norm_cast]
+theorem toIGame_eq_zero {x : Dyadic'} : (x : IGame) = 0 ↔ x = 0 :=
   toIGame_eq_natCast (y := 0)
-@[simp, norm_cast] theorem zero_eq_toIGame {x : Dyadic'} : 0 = (x : IGame) ↔ 0 = x :=
+@[simp, norm_cast]
+theorem zero_eq_toIGame {x : Dyadic'} : 0 = (x : IGame) ↔ 0 = x :=
   natCast_eq_toIGame (x := 0)
 
 /-! #### 1 -/
 
-@[simp, norm_cast] theorem toIGame_lt_one {x : Dyadic'} : (x : IGame) < 1 ↔ x < 1 := by
+@[simp, norm_cast]
+theorem toIGame_lt_one {x : Dyadic'} : (x : IGame) < 1 ↔ x < 1 := by
   simpa using toIGame_lt_natCast (y := 1)
-@[simp, norm_cast] theorem toIGame_le_one {x : Dyadic'} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by
+@[simp, norm_cast]
+theorem toIGame_le_one {x : Dyadic'} : (x : IGame) ≤ 1 ↔ x ≤ 1 := by
   simpa using toIGame_le_natCast (y := 1)
 
-@[simp, norm_cast] theorem one_lt_toIGame {x : Dyadic'} : 1 < (x : IGame) ↔ 1 < x := by
+@[simp, norm_cast]
+theorem one_lt_toIGame {x : Dyadic'} : 1 < (x : IGame) ↔ 1 < x := by
   simpa using natCast_lt_toIGame (x := 1)
-@[simp, norm_cast] theorem one_le_toIGame {x : Dyadic'} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by
+@[simp, norm_cast]
+theorem one_le_toIGame {x : Dyadic'} : 1 ≤ (x : IGame) ↔ 1 ≤ x := by
   simpa using natCast_le_toIGame (x := 1)
 
-@[simp, norm_cast] theorem toIGame_equiv_one {x : Dyadic'} : (x : IGame) ≈ 1 ↔ x = 1 := by
+@[simp, norm_cast]
+theorem toIGame_equiv_one {x : Dyadic'} : (x : IGame) ≈ 1 ↔ x = 1 := by
   simpa using toIGame_equiv_natCast (y := 1)
-@[simp, norm_cast] theorem one_equiv_toIGame {x : Dyadic'} : 1 ≈ (x : IGame) ↔ 1 = x := by
+@[simp, norm_cast]
+theorem one_equiv_toIGame {x : Dyadic'} : 1 ≈ (x : IGame) ↔ 1 = x := by
   simpa using natCast_equiv_toIGame (x := 1)
 
-@[simp, norm_cast] theorem toIGame_eq_one {x : Dyadic'} : (x : IGame) = 1 ↔ x = 1 := by
+@[simp, norm_cast]
+theorem toIGame_eq_one {x : Dyadic'} : (x : IGame) = 1 ↔ x = 1 := by
   simpa using toIGame_eq_natCast (y := 1)
-@[simp, norm_cast] theorem one_eq_toIGame {x : Dyadic'} : 1 = (x : IGame) ↔ 1 = x := by
+@[simp, norm_cast]
+theorem one_eq_toIGame {x : Dyadic'} : 1 = (x : IGame) ↔ 1 = x := by
   simpa using natCast_eq_toIGame (x := 1)
 
 end Dyadic'
@@ -502,7 +533,8 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic'
       exact this.not_ge
   obtain ⟨z, H⟩ := exists_minimalFor_of_wellFoundedLT _ (birthday ∘ Dyadic'.toIGame) this
   use z
-  apply (Fits.equiv_of_forall_not_fits H.1 ..).symm <;> intro _ hz' hz
+  refine (Fits.equiv_of_forall_not_fits H.1 fun p _ hz' hz ↦ ?_).symm
+  cases p
   · obtain rfl := Dyadic'.eq_lower_of_mem_leftMoves_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'

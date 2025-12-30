@@ -257,8 +257,8 @@ theorem mul_add_lt (ha : a' < a) (hb : b' < b) : a' * b + a * b' < a * b + a' * 
   exact csInf_mem (mul_nonempty a b) a' ha b' hb
 
 theorem mul_add_le (ha : a' ≤ a) (hb : b' ≤ b) : a' * b + a * b' ≤ a * b + a' * b' := by
-  obtain rfl | ha := ha.eq_or_lt; rfl
-  obtain rfl | hb := hb.eq_or_lt; rw [add_comm]
+  obtain rfl | ha := ha.eq_or_lt; · rfl
+  obtain rfl | hb := hb.eq_or_lt; · rw [add_comm]
   exact (mul_add_lt ha hb).le
 
 theorem lt_mul_iff : c < a * b ↔ ∃ a' < a, ∃ b' < b, c + a' * b' ≤ a' * b + a * b' := by
@@ -312,9 +312,8 @@ instance : MulPosStrictMono NatOrdinal where
 
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
-    obtain rfl | h₁ := h.eq_or_lt; simp
-    obtain rfl | h₂ := eq_zero_or_pos a; simp
-    dsimp
+    obtain rfl | h₁ := h.eq_or_lt; · simp
+    obtain rfl | h₂ := NatOrdinal.eq_zero_or_pos a; · simp
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
 instance : MulRightMono NatOrdinal where

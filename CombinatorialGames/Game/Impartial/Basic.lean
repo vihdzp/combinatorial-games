@@ -111,7 +111,6 @@ protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
   .add x (-y)
 
 /-- The product instance is proven in `Game.Impartial.Grundy`. -/
-
 theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
 

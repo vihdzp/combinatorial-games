@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
 import Mathlib.Algebra.Group.Pointwise.Set.Small
@@ -691,7 +690,7 @@ variable (p : Player) (movα : Player → α → Set α) (movβ : Player → β 
 
 /-- The set of pairs `α × β` used in `movesSingle`. -/
 def movesSet (x : Player × α × β) : Set (α × β) :=
-  (p * x.1).rec
+  (p * x.1).cases
     (movα left x.2.1 ×ˢ movβ right x.2.2 ∪ movα right x.2.1 ×ˢ movβ left x.2.2)
     (movα left x.2.1 ×ˢ movβ left x.2.2 ∪ movα right x.2.1 ×ˢ movβ right x.2.2)
 
@@ -779,14 +778,13 @@ theorem map_erase [DecidableEq α₁] [DecidableEq β₁] [DecidableEq α₂] [D
     map f g (x.erase y) = (map f g x).erase (y.1, f y.2.1, g y.2.2) :=
   Multiset.map_erase_of_mem _ _ hy
 
-@[simp]
+@[simp, grind =]
 theorem map_mulOption (b x y) :
     map f g (mulOption b x y) = mulOption b (Prod.map f g x) (Prod.map f g y) := by
   simp [mulOption, map, Prod.map]
 
 variable {p f g}
 
-set_option maxHeartbeats 400000 in
 theorem movesSingle_comp_prodMap
     (hf : ∀ p, movα₂ p ∘ f = Set.image f ∘ movα₁ p)
     (hg : ∀ p, movβ₂ p ∘ g = Set.image g ∘ movβ₁ p) :
@@ -795,9 +793,11 @@ theorem movesSingle_comp_prodMap
   simp_rw [funext_iff, Function.comp_apply, movesSingle, movesSet] at *
   rintro ⟨p', x⟩
   ext
-  simp_rw [Prod.map_apply, id_eq, Prod.map_fst, Prod.map_snd, mem_image, Prod.exists, hf, hg]
-  clear hf hg
-  cases p <;> cases p' <;> aesop
+  simp_rw [Player.cases, mem_image, Prod.exists, Prod.map_apply, id_eq]
+  cases p <;> cases p'
+  all_goals
+    simp only [mem_union, mem_prod]
+    grind
 
 variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 
@@ -879,7 +879,7 @@ theorem corec_add (init₁ init₂ : MulTy α β) :
     · rw [Multiset.erase_add_right_pos _ ha]
       simp [add_comm, ← add_assoc]
   · simp [image_iUnion, image_image, MulTy.moves, movesSingle, add_comm]
-  · rintro z (⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩ | ⟨_, ⟨a, rfl⟩, ⟨c, ⟨ha, rfl⟩, ⟨b, hb, rfl⟩⟩⟩)
+  · rintro z (⟨-, ⟨a, rfl⟩, ⟨c, ⟨-, rfl⟩, ⟨b, -, rfl⟩⟩⟩ | ⟨-, ⟨a, rfl⟩, ⟨c, ⟨-, rfl⟩, ⟨b, -, rfl⟩⟩⟩)
     · use mulOption a.1 a.2 b + x.erase a, y
     · use mulOption a.1 a.2 b + y.erase a, x
       simp [add_comm, ← add_assoc]

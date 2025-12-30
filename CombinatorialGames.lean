@@ -12,6 +12,7 @@ import CombinatorialGames.Game.Impartial.Multiplication
 import CombinatorialGames.Game.Loopy.Basic
 import CombinatorialGames.Game.Loopy.IGame
 import CombinatorialGames.Game.Loopy.Outcome
+import CombinatorialGames.Game.Loopy.StoppingTime
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Player
@@ -23,7 +24,6 @@ import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Mathlib.Neg
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
