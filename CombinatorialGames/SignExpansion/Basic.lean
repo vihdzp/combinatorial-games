@@ -471,8 +471,9 @@ theorem floor_lt_ceil_of_not_isUpperSet {f : NatOrdinal → SignType} (h : ¬ Is
 
 /-! #### Complete linear order instance -/
 
-instance : CompleteLattice SignExpansion :=
-  giCeil.liftCompleteLattice
+instance : CompleteLattice SignExpansion where
+  __ := instLinearOrder
+  __ := giCeil.liftCompleteLattice
 
 instance : CompleteLinearOrder SignExpansion where
   __ := LinearOrder.toBiheytingAlgebra _
