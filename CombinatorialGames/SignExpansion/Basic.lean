@@ -27,14 +27,13 @@ universe u
 instance : ZeroLEOneClass SignType where
   zero_le_one := by decide
 
--- TODO: upstream
 @[local simp← ]
 theorem Set.preimage_neg {α ι : Type*} [InvolutiveNeg α] (f : ι → α) {s : Set α} :
     f ⁻¹' (-s) = (-f) ⁻¹' s :=
   rfl
 
 @[simp]
-theorem Pi.Lex.neg_apply {α β : Type*} [Neg β] (x : Lex (α → β)) (i : α) : (-x) i = -(x i) :=
+theorem Pi.Lex.neg_apply {α β : Type*} [Neg β] (x : Lex (α → β)) (i : α) : (-x) i = -x i :=
   rfl
 
 -- TODO: we're missing an `AntitoneNeg` typeclass to express the following theorems generally.
@@ -288,12 +287,12 @@ def floor (f : NatOrdinal → SignType) : SignExpansion :=
 
 private theorem floor_of_eq_neg_one {f : NatOrdinal → SignType} (hf : ¬ IsUpperSet (f ⁻¹' {0}))
     (hf' : f (sInf {b | sInf (f ⁻¹' {0}) < b ∧ f b ≠ 0}) = -1) (c : NatOrdinal) :
-    (floor f) c = if c < sInf (f ⁻¹' {0}) then f c else if c = sInf (f ⁻¹' {0}) then -1 else 1 := by
+    floor f c = if c < sInf (f ⁻¹' {0}) then f c else if c = sInf (f ⁻¹' {0}) then -1 else 1 := by
   simp_all [floor]
 
 private theorem floor_of_eq_one {f : NatOrdinal → SignType} (hf : ¬ IsUpperSet (f ⁻¹' {0}))
     (hf' : f (sInf {b | sInf (f ⁻¹' {0}) < b ∧ f b ≠ 0}) = 1) (c : NatOrdinal) :
-    (floor f) c = if c < sInf (f ⁻¹' {0}) then f c else 0 := by
+    floor f c = if c < sInf (f ⁻¹' {0}) then f c else 0 := by
   simp_all [floor]
 
 private theorem nonempty_of_not_isUpperSet {f : NatOrdinal → SignType}
@@ -378,11 +377,10 @@ theorem floor_lt {f : NatOrdinal → SignType} {x : SignExpansion} :
         · refine ⟨sInf {b | sInf (f ⁻¹' {0}) < b ∧ f b ≠ 0}, fun b hb ↦ ?_, ?_⟩
           · obtain hb' | hb' := lt_or_ge b (sInf (f ⁻¹' {0}))
             · exact ha.1 b hb'
-            · trans 0
-              · by_contra
-                refine notMem_of_lt_csInf' hb ⟨hb'.lt_of_ne ?_, this⟩
-                grind
-              · exact (x.isUpperSet_preimage_singleton_zero hb' hx).symm
+            · apply Eq.trans _ (x.isUpperSet_preimage_singleton_zero hb' hx).symm
+              by_contra
+              refine notMem_of_lt_csInf' hb ⟨hb'.lt_of_ne ?_, this⟩
+              grind
           · dsimp
             rw [h, SignType.neg_one_lt_iff]
             exact (x.isUpperSet_preimage_singleton_zero hf₂'.1.le hx).ge
@@ -516,7 +514,7 @@ theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
   aesop
 
 theorem coe_iSup {ι} (f : ι → SignExpansion) :
-    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by 
+    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
   rw [iSup, coe_sSup]
   congr
   aesop
