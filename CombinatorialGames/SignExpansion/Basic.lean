@@ -96,6 +96,7 @@ instance : FunLike SignExpansion NatOrdinal SignType where
 /-- Every sign after the first `0` is also `0`. -/
 theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
 
+/-- Adjust definitional equalities of a sign expansion. -/
 def copy (x : SignExpansion) (sign : NatOrdinal → SignType)
     (h : sign = x) : SignExpansion where
   sign
