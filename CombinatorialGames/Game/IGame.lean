@@ -262,7 +262,7 @@ instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposi
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
 macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+  `(tactic| all_goals solve_by_elim (maxDepth := 9)
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
 
