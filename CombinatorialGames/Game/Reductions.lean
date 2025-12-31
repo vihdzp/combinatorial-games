@@ -41,34 +41,27 @@ theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
     (hcr : ∀ i, cr i ∈ (c i).moves right)
     (hu : u ∈ Icc l (range c ∪ l)) (hv : v = (⋃ i ∈ c ⁻¹' u, (cr i).moves left) ∪ l) :
     !{u | r} ≈ !{v | r} := by
-  cases hv
-  apply equiv_of_forall_lf <;> simp only [moves_ofSets, Player.cases]
-  · intro z hzu
-    obtain ⟨i, rfl⟩ | hz := hu.2 hzu
-    · refine lf_of_right_le (le_iff_forall_lf.2 ⟨?_, ?_⟩) (hcr i)
-      · intro z hz
-        apply left_lf
+  subst hv
+  apply equiv_of_forall_lf <;> simp only [moves_ofSets, Player.cases] <;> intro z hz
+  · obtain ⟨i, rfl⟩ | hzu := hu.2 hz
+    · refine lf_of_right_le (le_iff_forall_lf.2 ⟨?_, ?_⟩) (hcr i) <;> intro z hz'
+      · apply left_lf
         rw [leftMoves_ofSets]
-        exact .inl (mem_biUnion hzu hz)
-      · intro z hz
-        refine fun h => lf_right ?_ (h.trans (hbb i))
-        simpa using hz
+        exact .inl (mem_biUnion hz hz')
+      · refine fun h => lf_right ?_ (h.trans (hbb i))
+        simpa using hz'
     · apply left_lf
       rw [leftMoves_ofSets]
-      exact .inr hz
-  · intro z hz
-    apply lf_right
+      exact .inr hzu
+  · apply lf_right
     simpa using hz
-  · intro z hz
-    obtain hz | hz := hz
-    · simp only [mem_preimage, mem_iUnion, exists_prop] at hz
-      obtain ⟨i, hi, hz⟩ := hz
-      exact fun h => left_lf hz ((hbb i).trans h)
+  · rw [mem_union, mem_iUnion₂] at hz
+    obtain ⟨i, hi, hz⟩ | hz := hz
+    · exact fun h => left_lf hz ((hbb i).trans h)
     · apply left_lf
       rw [leftMoves_ofSets]
       exact hu.1 hz
-  · intro z hz
-    apply lf_right
+  · apply lf_right
     simpa using hz
 
 theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
