@@ -17,9 +17,6 @@ universe u v
 namespace IGame
 open Set
 
-variable {l r u v w : Set IGame.{u}}
-  [Small.{u} l] [Small.{u} u] [Small.{u} r] [Small.{u} v] [Small.{u} w]
-
 theorem equiv_of_dominated_left {u v w r : Set IGame.{u}}
     [Small.{u} v] [Small.{u} w] [Small.{u} r]
     (hu : ∀ g ∈ u, ∃ g' ∈ v, g ≤ g') (hw : w ∈ Icc v (u ∪ v)) : !{w | r} ≈ !{v | r} := by
