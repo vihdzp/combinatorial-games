@@ -138,9 +138,9 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
   simp_rw [← Numeric.not_le]; tauto
 
 /-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
-to the right options.-/
-theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z)
-    (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) : Numeric x :=
+to the right options. -/
+theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z) (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) :
+    Numeric x :=
   mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₂ _ z hz) (h₂ _ y hy)).1 (h₁ y hy z hz)) h₂
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
@@ -162,12 +162,12 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @left_lt_right x <;> simp_all
-  · intro p y hy
-    rw [moves_neg] at hy
+  · simp_rw [forall_moves_neg]
+    intro p y hy
     numeric
-    simpa using Numeric.neg (-y)
+    simpa using Numeric.neg y
 termination_by x
-decreasing_by all_goals simp_all; igame_wf
+decreasing_by igame_wf
 
 @[simp]
 theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=

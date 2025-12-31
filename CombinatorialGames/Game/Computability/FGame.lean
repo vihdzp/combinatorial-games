@@ -385,3 +385,5 @@ private unsafe def instRepr_aux : FGame → Std.Format :=
 and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
 {a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
 unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
+
+end FGame

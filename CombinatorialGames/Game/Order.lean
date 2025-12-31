@@ -69,3 +69,6 @@ instance : DenselyOrdered Game where
     rw [Game.mk_lt_mk] at hab
     obtain ⟨c, hac, hcb⟩ := exists_between hab
     exact ⟨.mk c, hac, hcb⟩
+
+end IGame
+end
