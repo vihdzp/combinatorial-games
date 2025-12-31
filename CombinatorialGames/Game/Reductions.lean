@@ -20,7 +20,7 @@ open Set
 theorem equiv_of_dominated_left {u v w r : Set IGame.{u}}
     [Small.{u} v] [Small.{u} w] [Small.{u} r]
     (hu : ∀ g ∈ u, ∃ g' ∈ v, g ≤ g') (hw : w ∈ Icc v (u ∪ v)) : !{w | r} ≈ !{v | r} := by
-  apply equiv_of_exists_le <;> simp only [moves_ofSets, Player.cases]
+  apply equiv_of_exists_le <;> simp only [moves_ofSets] <;> intro z hz
   · exact fun z hz => (hw.2 hz).elim (fun hz => hu z hz) (fun hz => ⟨z, hz, le_rfl⟩)
   · exact fun z hz => ⟨z, hz, le_rfl⟩
   · exact fun z hz => ⟨z, hw.1 hz, le_rfl⟩
@@ -86,7 +86,7 @@ theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
 
 theorem equiv_of_gift_left {gs l r u : Set IGame.{u}} [Small.{u} l] [Small.{u} r] [Small.{u} u]
     (hg : ∀ g ∈ gs, ¬!{l | r} ≤ g) (hu : u ∈ Icc l (gs ∪ l)) : !{l | r} ≈ !{u | r} := by
-  apply equiv_of_forall_lf <;> simp only [moves_ofSets, Player.cases]
+  apply equiv_of_forall_lf <;> simp only [moves_ofSets] <;> intro z hz
   · intro z hz
     apply left_lf
     rw [leftMoves_ofSets]
