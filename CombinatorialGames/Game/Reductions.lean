@@ -17,6 +17,8 @@ universe u v
 namespace IGame
 open Set
 
+/-- If `w = u ∪ v` where every move in `u` is dominated by (or equivalent to) a move in `v`,
+then `{w | r} ≈ {v | r}`. -/
 theorem equiv_of_dominated_left {u v w r : Set IGame.{u}}
     [Small.{u} v] [Small.{u} w] [Small.{u} r]
     (hu : ∀ g ∈ u, ∃ g' ∈ v, g ≤ g') (hw : w ∈ Icc v (u ∪ v)) : !{w | r} ≈ !{v | r} := by
@@ -35,6 +37,8 @@ theorem equiv_of_dominated_right {l u v w : Set IGame.{u}}
   · exact fun z hz => ⟨z, hz, le_rfl⟩
   · exact fun z hz => ⟨z, hw.1 hz, le_rfl⟩
 
+/-- If each of the moves `c i ∈ u` in `{u | r}` is bypassed by `cr i ∈ (c i)ᴿ`, the game `{v | r}`
+which replaces each `c i` by the set of moves `(cr i)ᴸ` is equivalent. -/
 theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
     [Small.{u} l] [Small.{u} r] [Small.{u} u] [Small.{u} v]
     {c cr : ι → IGame.{u}} (hbb : ∀ i, cr i ≤ !{u | r})
@@ -77,6 +81,8 @@ theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
   · simpa [neg_subset, neg_range] using hu
   · simpa [neg_eq_iff_eq_neg] using hv
 
+/-- If each of the moves `gs ⊆ u` is a gift horse for `{l | r}`, then the game `{u | r}` which
+removes them is equivalent. -/
 theorem equiv_of_gift_left {gs l r u : Set IGame.{u}} [Small.{u} l] [Small.{u} r] [Small.{u} u]
     (hg : ∀ g ∈ gs, ¬!{l | r} ≤ g) (hu : u ∈ Icc l (gs ∪ l)) : !{l | r} ≈ !{u | r} := by
   apply equiv_of_forall_lf <;> simp only [moves_ofSets] <;> intro z hz
