@@ -100,28 +100,24 @@ private theorem add_ne_of_lt (a b : Nimber) :
   rw [← add_def] at H
   simpa using H
 
-instance : IsLeftCancelAdd Nimber := by
-  constructor
-  intro a b c h
-  apply le_antisymm <;>
-  apply le_of_not_gt
-  · exact fun hc ↦ (add_ne_of_lt a b).2 c hc h.symm
-  · exact fun hb ↦ (add_ne_of_lt a c).2 b hb h
-
-instance : IsRightCancelAdd Nimber := by
-  constructor
-  intro a b c h
-  apply le_antisymm <;>
-  apply le_of_not_gt
-  · exact fun hc ↦ (add_ne_of_lt a b).1 c hc h.symm
-  · exact fun ha ↦ (add_ne_of_lt c b).1 a ha h
-
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
   congr! 7 <;>
     (rw [and_congr_right_iff]; intro; rw [Nimber.add_comm])
 termination_by (a, b)
+
+instance : IsLeftCancelAdd Nimber where
+  add_left_cancel a b c h := by
+    apply le_antisymm <;>
+    apply le_of_not_gt
+    · exact fun hc ↦ (add_ne_of_lt a b).2 c hc h.symm
+    · exact fun hb ↦ (add_ne_of_lt a c).2 b hb h
+
+instance : IsRightCancelAdd Nimber where
+  add_right_cancel a b c h := by
+    simp_rw [Nimber.add_comm] at h
+    exact add_left_cancel h
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
   constructor <;>
@@ -170,7 +166,7 @@ protected theorem add_zero (a : Nimber) : a + 0 = a := by
       rw [Nimber.add_zero]
       exact ha.ne
     · intro _ h
-      exact (Nimber.not_lt_zero _ h).elim
+      exact (Nimber.not_neg _ h).elim
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := Nimber.add_zero (a + 0)
@@ -253,8 +249,8 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
     rw [hc', OrderIso.lt_iff_lt, Nat.cast_lt] at hc
     obtain h | h := Nat.lt_xor_cases hc
     · apply h.ne
-      simpa [Nat.xor_comm, Nat.xor_cancel_left, ← hc'] using add_nat (c ^^^ b) b
+      simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat (c ^^^ b) b
     · apply h.ne
-      simpa [Nat.xor_comm, Nat.xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
+      simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
 
 end Nimber

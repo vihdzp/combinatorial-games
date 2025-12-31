@@ -43,9 +43,6 @@ universe u
 
 /-- The type of "short pre-games", before we have quotiented by equivalence (`identicalSetoid`).
 
-This serves the exact purpose that `PGame` does for `IGame`. However, unlike `PGame`'s relatively
-short construction, we must prove some extra definitions for computing on top of `SGame`.
-
 This could perfectly well have been in `Type 0`, but we make it universe polymorphic for
 convenience when building quotient types. However, conversions from computable games to their
 noncomputable counterparts are squeezed to `Type 0`. -/
@@ -103,7 +100,7 @@ instance : DecidableEq SGame
       rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
   else .isFalse (by simp_all)
 
-/-- The identical relation on short games. See `PGame.Identical`. -/
+/-- The identical relation on short games. -/
 def Identical : SGame.{u} → SGame.{u} → Prop
   | mk _ _ xL xR, mk _ _ yL yR =>
       Relator.BiTotal (fun i j ↦ Identical (xL i) (yL j)) ∧
@@ -162,9 +159,6 @@ end SGame
 /-! ### Game moves -/
 
 /-- Short games up to identity.
-
-`FGame` uses the set-theoretic notion of equality on short games,
-similarly to how `IGame` is defined on top of `PGame`.
 
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.
@@ -391,3 +385,5 @@ private unsafe def instRepr_aux : FGame → Std.Format :=
 and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
 {a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
 unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
+
+end FGame

@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison
 -/
 import CombinatorialGames.Game.IGame
+import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Data.Finite.Prod
 
 /-!
@@ -31,22 +32,13 @@ finite, and all of the games in them are short as well. -/
 class Short (x : IGame) : Prop where of_shortAux ::
   out : ShortAux x
 
-theorem short_def {x : IGame} : Short x ↔
-    ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, Short y := by
+theorem short_def {x : IGame} : Short x ↔ ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, Short y := by
   simp_rw [short_iff_aux]; rw [ShortAux]
 
-theorem short_def' {x : IGame} : Short x ↔
-    x.leftMoves.Finite ∧ x.rightMoves.Finite ∧
-      (∀ y ∈ x.leftMoves, Short y) ∧ (∀ y ∈ x.rightMoves, Short y) := by
-  rw [short_def, Player.forall]
-  tauto
+alias ⟨_, Short.mk⟩ := short_def
 
 namespace Short
 variable {x y : IGame}
-
-theorem mk (h₁ : x.leftMoves.Finite) (h₂ : x.rightMoves.Finite)
-    (h₃ : ∀ y ∈ x.leftMoves, Short y) (h₄ : ∀ y ∈ x.rightMoves, Short y) : Short x :=
-  short_def'.2 ⟨h₁, h₂, h₃, h₄⟩
 
 theorem finite_moves (p : Player) (x : IGame) [h : Short x] : (x.moves p).Finite :=
   (short_def.1 h p).1
@@ -63,6 +55,10 @@ instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
 
 protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short y :=
   (short_def.1 h p).2 y hy
+
+/-- `short` eagerly adds all possible `Short` hypotheses. -/
+elab "short" : tactic =>
+  addInstances <| .mk [`IGame.Short.of_mem_moves]
 
 protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
   simp_rw [isOption_iff_mem_union] at h
@@ -99,9 +95,9 @@ instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
 
 theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
     Short x ↔ {y | Subposition y x}.Finite := by
-  refine ⟨@finite_setOf_subposition x, fun h ↦ mk ?_ ?_ ?_ ?_⟩
-  any_goals refine h.subset fun y hy ↦ ?_
-  any_goals refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
+  refine ⟨@finite_setOf_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
+  on_goal 1 => refine h.subset fun y hy ↦ ?_
+  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
   all_goals igame_wf
 termination_by x
 decreasing_by igame_wf
@@ -115,12 +111,8 @@ protected instance one : Short 1 := by
   rw [short_def]; simp
 
 protected instance neg (x : IGame) [Short x] : Short (-x) := by
-  apply mk
+  refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · rw [forall_moves_neg]
-    intro y hy
-    simpa using (Short.of_mem_moves hy).neg
   · rw [forall_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
@@ -132,21 +124,16 @@ theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
   ⟨fun _ ↦ by simpa using Short.neg (-x), fun _ ↦ Short.neg x⟩
 
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
-  rw [short_def]
-  intro p
-  constructor
+  refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
-  rw [forall_moves_add]
-  constructor
-  all_goals
-    intro z hz
-    have := Short.of_mem_moves hz
-    exact Short.add ..
+  · rw [forall_moves_add]
+    constructor
+    all_goals intro z hz; short; exact Short.add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance sub (x y : IGame) [Short x] [Short y] : Short (x - y) :=
-  inferInstanceAs (Short (x + -y))
+  .add ..
 
 protected instance natCast : ∀ n : ℕ, Short n
   | 0 => inferInstanceAs (Short 0)
@@ -160,26 +147,23 @@ protected instance intCast : ∀ n : ℤ, Short n
   | .negSucc n => inferInstanceAs (Short (-(n + 1)))
 
 protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
-  rw [short_def]
-  intro p
-  constructor
+  refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa [Set.image_union] using
       ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
         (finite_moves _ x).image2 _ (finite_moves _ y)⟩
-  rw [forall_moves_mul]
-  intro p'
-  intro a ha b hb
-  replace ha := Short.of_mem_moves ha
-  replace hb := Short.of_mem_moves hb
-  have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
-  rw [mulOption]
-  infer_instance
+  · rw [forall_moves_mul]
+    intro p' a ha b hb
+    replace ha := Short.of_mem_moves ha
+    replace hb := Short.of_mem_moves hb
+    have := Short.mul a y; have := Short.mul x b; have := Short.mul a b
+    rw [mulOption]
+    infer_instance
 termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance mulOption (x y a b : IGame) [Short x] [Short y] [Short a] [Short b] :
     Short (mulOption x y a b) :=
-  inferInstanceAs (Short (_ - _))
+  .sub ..
 
 end Short
 end IGame

@@ -226,7 +226,7 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
     have H₁ := le_sSup (mem_image_of_mem rightSurreal hx)
     have H₂ := sInf_le (mem_image_of_mem leftSurreal hy)
     simpa using (H₁.trans_lt h).trans_le H₂
-  trans ((ofSets (Player.cases s t) H).birthday : WithTop NatOrdinal)
+  trans (!{s | t}.birthday : WithTop NatOrdinal)
   · rw [WithTop.coe_le_coe]
     apply birthday_simplestBtwn_le_of_fits
     unfold Fits
@@ -236,22 +236,23 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
 
 private theorem birthday_game_le (x : IGame) :
     (supLeft x).birthday ≤ x.birthday ∧ (infRight x).birthday ≤ x.birthday ∧
-    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧ (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
+    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧
+    (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
   have H₁ : (supLeft x).birthday ≤ x.birthday := by
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_leftMoves i.2
+    exact IGame.birthday_lt_of_mem_moves i.2
   have H₂ : (infRight x).birthday ≤ x.birthday := by
     rw [infRight, iInf_subtype']
     apply (birthday_iInf_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.1.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_rightMoves i.2
+    exact IGame.birthday_lt_of_mem_moves i.2
   use H₁, H₂
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
     constructor <;>
-      simpa using add_le_add_right ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
+      simpa using add_le_add_left ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
   · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h]
     refine ⟨H₁.trans ?_, H₂.trans ?_⟩ <;>
       exact (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le
