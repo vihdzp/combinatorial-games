@@ -9,7 +9,8 @@ import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 /-!
 # Game reductions
 
-We prove that dominated moves can be deleted and reversible moves can be bypassed.
+We prove that dominated moves can be deleted, reversible moves can be bypassed,
+and gift horses can be given.
 -/
 
 universe u v
