@@ -833,11 +833,6 @@ theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
   rw [mk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
 
-theorem mk_div_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
-    ArchimedeanClass.mk (x / ω^ x.wlog) = 0 := by
-  rw [mk_div_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
-  simpa
-
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
@@ -997,6 +992,7 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · simp
     · rw [← hw]; simp
     · simpa [div_eq_mul_inv]
+      
 theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingCoeff = r := by
   have hr' := wlog_eq_of_between hr hL hR
