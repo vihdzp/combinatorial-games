@@ -32,7 +32,7 @@ theorem equiv_of_dominated_left {u v w r : Set IGame.{u}}
 /-- If every move in `u` is dominated by a move in `v`, then the game `!{l | w}` is equivalent
 to the game `!{l | v}` obtained by removing the dominated right-options in `u` from `!{l | w}`. -/
 theorem equiv_of_dominated_right {l u v w : Set IGame.{u}}
-    [Small.{u} l] [Small.{u} u] [Small.{u} v] [Small.{u} w]
+    [Small.{u} l] [Small.{u} v] [Small.{u} w]
     (hu : ∀ g ∈ u, ∃ g' ∈ v, g' ≤ g) (hw : w ∈ Icc v (u ∪ v)) : !{l | w} ≈ !{l | v} := by
   apply equiv_of_exists_le <;> simp only [moves_ofSets, Player.cases]
   · exact fun z hz => ⟨z, hz, le_rfl⟩
@@ -43,7 +43,7 @@ theorem equiv_of_dominated_right {l u v w : Set IGame.{u}}
 /-- If each of the moves `c i ∈ u` in `{u | r}` is reversed by `cr i ∈ (c i)ᴿ`, the game `{v | r}`
 which bypasses each `c i` by replacing it with `(cr i)ᴸ` is equivalent. -/
 theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
-    [Small.{u} l] [Small.{u} r] [Small.{u} u] [Small.{u} v]
+    [Small.{u} r] [Small.{u} u] [Small.{u} v]
     {c cr : ι → IGame.{u}} (hbb : ∀ i, cr i ≤ !{u | r})
     (hcr : ∀ i, cr i ∈ (c i).moves right)
     (hu : u ∈ Icc l (range c ∪ l)) (hv : v = (⋃ i ∈ c ⁻¹' u, (cr i).moves left) ∪ l) :
@@ -74,13 +74,13 @@ theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
 /-- If each of the moves `d i ∈ u` in `{l | u}` is reversed by `dl i ∈ (d i)ᴸ`, the game `{l | v}`
 which bypasses each `d i` by replacing it with `(dl i)ᴿ` is equivalent. -/
 theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
-    [Small.{u} l] [Small.{u} r] [Small.{u} u] [Small.{u} v]
+    [Small.{u} l] [Small.{u} u] [Small.{u} v]
     {d dl : ι → IGame.{u}} (hbb : ∀ i, !{l | u} ≤ dl i)
     (hdl : ∀ i, dl i ∈ (d i).moves left)
     (hu : u ∈ Icc r (range d ∪ r)) (hv : v = (⋃ i ∈ d ⁻¹' u, (dl i).moves right) ∪ r) :
     !{l | u} ≈ !{l | v} := by
   rw [← neg_equiv_neg_iff, neg_ofSets, neg_ofSets]
-  refine @equiv_of_bypass_left ι (-r) (-l) (-u) (-v) _ _ _ _ (-d) (-dl) ?_ ?_ ?_ ?_
+  refine @equiv_of_bypass_left ι (-r) (-l) (-u) (-v) _ _ _ (-d) (-dl) ?_ ?_ ?_ ?_
   · simpa [← neg_ofSets] using hbb
   · simpa using hdl
   · simpa [neg_subset, neg_range] using hu
