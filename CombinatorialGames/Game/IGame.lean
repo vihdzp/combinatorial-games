@@ -207,13 +207,13 @@ things for you.
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
 def moveRecOn {motive : IGame → Sort*} (x)
-    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
+    (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     motive x :=
-  isOption_wf.recursion x fun x IH ↦ mk x (fun _ _ h ↦ IH _ (.of_mem_moves h))
+  isOption_wf.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
 
 theorem moveRecOn_eq {motive : IGame → Sort*} (x)
-    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
-    moveRecOn x mk = mk x (fun _ y _ ↦ moveRecOn y mk) :=
+    (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
+    moveRecOn x ind = ind x (fun _ y _ ↦ moveRecOn y ind) :=
   isOption_wf.fix_eq ..
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
@@ -223,19 +223,20 @@ things for you.
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
 def ofSetsRecOn {motive : IGame.{u} → Sort*} (x)
-    (mk : Π (s t : Set IGame) [Small s] [Small t],
+    (ofSets : Π (s t : Set IGame) [Small s] [Small t],
       (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
     motive x :=
   cast (by simp) <| moveRecOn (motive := fun x ↦ motive !{xᴸ | xᴿ}) x
-    fun x IH ↦ mk _ _
+    fun x IH ↦ ofSets _ _
       (fun y hy ↦ cast (by simp) (IH left y hy)) (fun y hy ↦ cast (by simp) (IH right y hy))
 
 @[simp]
 theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
     (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (mk : Π (s t : Set IGame) [Small s] [Small t],
+    (ofSets : Π (s t : Set IGame) [Small s] [Small t],
       (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
-    ofSetsRecOn !{s | t} mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
+    ofSetsRecOn !{s | t} ofSets =
+      ofSets _ _ (fun y _ ↦ ofSetsRecOn y ofSets) (fun y _ ↦ ofSetsRecOn y ofSets) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   simp_rw [ofSetsRecOn]
   congr! <;> simp
