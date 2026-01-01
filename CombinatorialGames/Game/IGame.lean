@@ -261,11 +261,8 @@ instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposi
 
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
-macro "igame_wf" config:(colGt Lean.Parser.Tactic.configItem)* : tactic => do
-  -- hack to add an option in the front
-  let init ← `(Lean.Parser.Tactic.configItem| (maxDepth := 8))
-  let fullConfig ← `(Lean.Parser.Tactic.optConfig| $[$(#[init] ++ config)]*)
-  `(tactic| all_goals solve_by_elim $fullConfig
+macro "igame_wf" config:Lean.Parser.Tactic.optConfig : tactic =>
+  `(tactic| all_goals solve_by_elim $config
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
 
