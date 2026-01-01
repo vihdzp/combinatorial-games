@@ -261,8 +261,8 @@ instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposi
 
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
-macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+macro "igame_wf" config:Lean.Parser.Tactic.optConfig : tactic =>
+  `(tactic| all_goals solve_by_elim $config
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
 
@@ -757,7 +757,7 @@ private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x
     · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
     · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
 termination_by (x, y, z)
-decreasing_by igame_wf
+decreasing_by igame_wf (maxDepth := 8)
 
 private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
   simpa [add_comm] using add_le_add_left' h z
