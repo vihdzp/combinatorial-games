@@ -256,7 +256,7 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
 instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
+/-- A variant of `small_setOf_subposition` in simp-normal form -/
 instance small_subtype_subposition (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
   small_transGen' _ x
 
