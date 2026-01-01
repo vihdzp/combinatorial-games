@@ -757,7 +757,7 @@ private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x
     · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
     · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
 termination_by (x, y, z)
-decreasing_by igame_wf
+decreasing_by igame_wf (maxDepth := 8)
 
 private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
   simpa [add_comm] using add_le_add_left' h z
