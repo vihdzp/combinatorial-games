@@ -164,7 +164,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   · simp only [moves_nim, mem_image, mem_Iio] at hw
     obtain ⟨o', ho', rfl⟩ := hw
     obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
-    apply ihx (of x.birthday.val) ho' y ⟨hyx, hxy⟩
+    apply ihx (.of x.birthday.val) ho' y ⟨hyx, hxy⟩
     clear *-hy
     simp only [Nimber.val_of, NatOrdinal.of_val]
     apply birthday_lt_of_subposition
