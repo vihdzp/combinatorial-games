@@ -138,7 +138,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   clear hxb
   intro hxb
   induction o using Nimber.induction generalizing x with | _ o ihx
-  have hu (u : IGame) (hu : u ∈ (nim (of (NatOrdinal.val x.birthday)))ᴸ) : ¬x ≤ u := by
+  have hu (u : IGame) (hu : u ∈ (nim (.of x.birthday.val))ᴸ) : ¬x ≤ u := by
     simp only [moves_nim, mem_image, mem_Iio] at hu
     obtain ⟨o', ho', rfl⟩ := hu
     simp_rw [← OrderIso.symm_apply_lt, Nimber.of_symm, NatOrdinal.val_symm] at ho'
