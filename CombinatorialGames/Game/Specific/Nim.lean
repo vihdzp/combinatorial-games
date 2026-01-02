@@ -149,11 +149,10 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
       (mem_moves_nim_of_lt right (by simpa [← OrderIso.lt_symm_apply] using hxb)))
   · exact hu y hy hxy
   have hyo := (le_iff_forall_lf.1 hxo.ge).2 y hy
-  change Nat.rec (· ∈ xᴿ) (fun _ ih y => ∃ z, ih z ∧
-    ∃ w ∈ zᴸ, x ≤ w ∧ y ∈ wᴿ) 0 y at hy
+  change Nat.rec (· ∈ xᴿ) (fun _ ih y => ∃ z, ih z ∧ ∃ w ∈ zᴸ, x ≤ w ∧ y ∈ wᴿ) 0 y at hy
   generalize 0 = n at hy
   induction y using IsWellFounded.induction Subposition generalizing n with | ind y ihn
-  obtain ⟨w, hw, how⟩ | ⟨u, hu, hxy⟩ := lf_iff_exists_le.1 hyo
+  obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
   · refine lf_of_le_left ?_ hw hyx
     rw [le_iff_forall_lf]
     constructor
@@ -162,12 +161,12 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
     · intro k hk hkx
       exact ihn k (.trans (.of_mem_moves hk) (.of_mem_moves hw)) hkx
         (lf_right_of_le how hk) (n + 1) ⟨y, hy, w, hw, hxo.le.trans how, hk⟩
-  · simp only [moves_nim, mem_image, mem_Iio] at hu
-    obtain ⟨o', ho', rfl⟩ := hu
+  · simp only [moves_nim, mem_image, mem_Iio] at hw
+    obtain ⟨o', ho', rfl⟩ := hw
     obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
-    apply ihx _ ho' y ⟨hyx, hxy⟩
+    apply ihx (of x.birthday.val) ho' y ⟨hyx, hxy⟩
     clear *-hy
-    simp only [val_of, NatOrdinal.of_val]
+    simp only [Nimber.val_of, NatOrdinal.of_val]
     apply birthday_lt_of_subposition
     induction n generalizing y with
     | zero => exact .of_mem_moves hy
