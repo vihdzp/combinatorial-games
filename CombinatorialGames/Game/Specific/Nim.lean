@@ -103,9 +103,6 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   exact congrArg _ (birthday_nim _)
 termination_by o
 
-/-- This would show that the birthday of an impartial game equals its Grundy value! -/
-proof_wanted _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val
-
 @[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
   GameGraph.neg_toIGame rfl ..
@@ -131,5 +128,51 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
   rw [← Impartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+
+theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val := by
+  apply le_antisymm ((Game.birthday_mk_le (nim o)).trans_eq (IGame.birthday_nim o))
+  obtain ⟨x, hxo, hxb⟩ := Game.birthday_eq_iGameBirthday (.mk (nim o))
+  rw [Game.mk_eq_mk] at hxo
+  apply le_of_not_gt
+  rw [← hxb]
+  clear hxb
+  intro hxb
+  induction o using Nimber.induction generalizing x with | _ o ihx
+  have hu (u : IGame) (hu : u ∈ (nim (of (NatOrdinal.val x.birthday)))ᴸ) : ¬x ≤ u := by
+    simp only [moves_nim, mem_image, mem_Iio] at hu
+    obtain ⟨o', ho', rfl⟩ := hu
+    simp_rw [← OrderIso.symm_apply_lt, Nimber.of_symm, NatOrdinal.val_symm] at ho'
+    apply left_lf_of_le hxo.ge
+    simpa using ho'.trans hxb
+  obtain ⟨y, hy, hxy⟩ | ⟨y, hy, hyx⟩ := lf_iff_exists_le.1
+    ((le_iff_forall_lf.1 hxo.le).2 (nim (.of x.birthday.val))
+      (mem_moves_nim_of_lt right (by simpa [← OrderIso.lt_symm_apply] using hxb)))
+  · exact hu y hy hxy
+  have hyo := (le_iff_forall_lf.1 hxo.ge).2 y hy
+  change Nat.rec (· ∈ xᴿ) (fun _ ih y => ∃ z, ih z ∧
+    ∃ w ∈ zᴸ, x ≤ w ∧ y ∈ wᴿ) 0 y at hy
+  generalize 0 = n at hy
+  induction y using IsWellFounded.induction Subposition generalizing n with | ind y ihn
+  obtain ⟨w, hw, how⟩ | ⟨u, hu, hxy⟩ := lf_iff_exists_le.1 hyo
+  · refine lf_of_le_left ?_ hw hyx
+    rw [le_iff_forall_lf]
+    constructor
+    · intro k hk uk
+      exact hu k hk ((hxo.le.trans how).trans uk)
+    · intro k hk hkx
+      exact ihn k (.trans (.of_mem_moves hk) (.of_mem_moves hw)) hkx
+        (lf_right_of_le how hk) (n + 1) ⟨y, hy, w, hw, hxo.le.trans how, hk⟩
+  · simp only [moves_nim, mem_image, mem_Iio] at hu
+    obtain ⟨o', ho', rfl⟩ := hu
+    obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
+    apply ihx _ ho' y ⟨hyx, hxy⟩
+    clear *-hy
+    simp only [val_of, NatOrdinal.of_val]
+    apply birthday_lt_of_subposition
+    induction n generalizing y with
+    | zero => exact .of_mem_moves hy
+    | succ n ih =>
+      obtain ⟨z, hz, w, hwz, -, hyw⟩ := hy
+      exact .trans (.trans (.of_mem_moves hyw) (.of_mem_moves hwz)) (ih z hz)
 
 end IGame
