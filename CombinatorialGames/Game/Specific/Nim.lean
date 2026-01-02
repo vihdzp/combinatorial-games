@@ -137,7 +137,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   rw [← hxb]
   clear hxb
   intro hxb
-  induction o using Nimber.induction generalizing x with | _ o ihx
+  induction o using Nimber.induction generalizing x with | _ o iho
   have hu (u : IGame) (hu : u ∈ (nim (.of x.birthday.val))ᴸ) : ¬x ≤ u := by
     simp only [moves_nim, mem_image, mem_Iio] at hu
     obtain ⟨o', ho', rfl⟩ := hu
@@ -164,7 +164,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   · simp only [moves_nim, mem_image, mem_Iio] at hw
     obtain ⟨o', ho', rfl⟩ := hw
     obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
-    apply ihx (.of x.birthday.val) ho' y ⟨hyx, hxy⟩
+    apply iho (.of x.birthday.val) ho' y ⟨hyx, hxy⟩
     clear *-hy
     simp only [Nimber.val_of, NatOrdinal.of_val]
     apply birthday_lt_of_subposition
