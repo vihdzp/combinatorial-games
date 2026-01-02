@@ -144,11 +144,10 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
     simp_rw [← OrderIso.symm_apply_lt, Nimber.of_symm, NatOrdinal.val_symm] at ho'
     apply left_lf_of_le hxo.ge
     simpa using ho'.trans hxb
-  obtain ⟨y, hy, hxy⟩ | ⟨y, hy, hyx⟩ := lf_iff_exists_le.1
-    ((le_iff_forall_lf.1 hxo.le).2 (nim (.of x.birthday.val))
-      (mem_moves_nim_of_lt right (by simpa [← OrderIso.lt_symm_apply] using hxb)))
+  obtain ⟨y, hy, hxy⟩ | ⟨y, hy, hyx⟩ := (IGame.le_def.1 hxo.le).2 (nim (.of x.birthday.val))
+    (mem_moves_nim_of_lt right (by simpa [← OrderIso.lt_symm_apply] using hxb))
   · exact hu y hy hxy
-  have hyo := (le_iff_forall_lf.1 hxo.ge).2 y hy
+  have hyo := lf_right_of_le hxo.ge hy
   change Nat.rec (· ∈ xᴿ) (fun _ ih y => ∃ z, ih z ∧ ∃ w ∈ zᴸ, x ≤ w ∧ y ∈ wᴿ) 0 y at hy
   generalize 0 = n at hy
   induction y using IsWellFounded.induction Subposition generalizing n with | ind y ihy
