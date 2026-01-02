@@ -151,7 +151,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   have hyo := (le_iff_forall_lf.1 hxo.ge).2 y hy
   change Nat.rec (· ∈ xᴿ) (fun _ ih y => ∃ z, ih z ∧ ∃ w ∈ zᴸ, x ≤ w ∧ y ∈ wᴿ) 0 y at hy
   generalize 0 = n at hy
-  induction y using IsWellFounded.induction Subposition generalizing n with | ind y ihn
+  induction y using IsWellFounded.induction Subposition generalizing n with | ind y ihy
   obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
   · refine lf_of_le_left ?_ hw hyx
     rw [le_iff_forall_lf]
@@ -159,7 +159,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
     · intro k hk uk
       exact hu k hk ((hxo.le.trans how).trans uk)
     · intro k hk hkx
-      exact ihn k (.trans (.of_mem_moves hk) (.of_mem_moves hw)) hkx
+      exact ihy k (.trans (.of_mem_moves hk) (.of_mem_moves hw)) hkx
         (lf_right_of_le how hk) (n + 1) ⟨y, hy, w, hw, hxo.le.trans how, hk⟩
   · simp only [moves_nim, mem_image, mem_Iio] at hw
     obtain ⟨o', ho', rfl⟩ := hw
