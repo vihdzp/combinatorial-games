@@ -371,13 +371,8 @@ theorem lf_of_le_left {x y z : IGame} (h : x ≤ z) (h' : z ∈ yᴸ) : x ⧏ y 
 theorem lf_of_right_le {x y z : IGame} (h : z ≤ y) (h' : z ∈ xᴿ) : x ⧏ y :=
   lf_iff_exists_le.2 <| Or.inr ⟨z, h', h⟩
 
-theorem lf_of_mem_moves_of_le {x y z : IGame} {p : Player}
-    (h : p.le x z) (h' : y ∈ x.moves p) : ¬ p.le x y := by
-  cases p with
-  | left => exact left_lf_of_le h h'
-  | right => exact lf_right_of_le h h'
+-- What to call the next theorem?
 
-#exit
 private theorem le_rfl' {x : IGame} : x ≤ x := by
   rw [le_iff_forall_lf]
   constructor <;> intro y hy
