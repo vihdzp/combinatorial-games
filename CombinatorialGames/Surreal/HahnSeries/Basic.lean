@@ -1,6 +1,7 @@
 import CombinatorialGames.Surreal.Pow
 import Mathlib.Algebra.Order.Ring.StandardPart
-import Mathlib.RingTheory.HahnSeries.Summable
+import Mathlib.Order.Shrink
+import Mathlib.RingTheory.HahnSeries.Cardinal
 import Mathlib.RingTheory.HahnSeries.Lex
 
 /-!
@@ -34,46 +35,7 @@ attribute [-simp] Ordinal.add_one_eq_succ
 attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
 attribute [aesop unsafe forward] le_of_lt lt_of_le_of_ne not_lt_of_ge
 
--- #32648
-section Subfield
-open Cardinal HahnSeries
-
-variable {Γ R : Type*} [LinearOrder Γ] [AddCommGroup Γ] [IsOrderedAddMonoid Γ] [Field R]
-  (κ : Cardinal) [Fact (ℵ₀ < κ)]
-
-variable (Γ R) in
-/-- The `κ`-bounded subfield of Hahn series with cardinal less than `c`. -/
-@[simps!]
-def cardLTSubfield [Fact (ℵ₀ < κ)] : Subfield R⟦Γ⟧ where
-  carrier := {x | #x.support < κ}
-  zero_mem' := sorry
-  one_mem' := sorry
-  neg_mem' := sorry
-  add_mem' := sorry
-  inv_mem' := sorry
-  mul_mem' := sorry
-
-@[simp]
-theorem mem_cardLTSubfield {x : HahnSeries Γ R} : x ∈ cardLTSubfield Γ R κ ↔ #x.support < κ :=
-  .rfl
-
-end Subfield
-
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
-
-noncomputable instance {α : Type*} [LinearOrder α] [Small.{u} α] : LinearOrder (Shrink.{u} α) :=
-  .lift' _ (equivShrink _).symm.injective
-
-/-- `equivShrink` as an `OrderIso`. -/
-def orderIsoShrink (α : Type*) [LinearOrder α] [Small.{u} α] : α ≃o Shrink.{u} α where
-  map_rel_iff' {x y} := by
-    change (equivShrink _).symm _ ≤ (equivShrink _).symm _ ↔ _
-    simp
-  __ := equivShrink α
-
-@[simp]
-theorem orderIsoShrink_apply {α : Type*} [LinearOrder α] [Small.{u} α] (x : α) :
-    orderIsoShrink α x = equivShrink α x := rfl
 
 @[simp]
 theorem equivShrink_le_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} α] {x y : α} :
@@ -140,12 +102,14 @@ instance : Field SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
 instance : LinearOrder SurrealHahnSeries := by
+
   unfold SurrealHahnSeries; infer_instance
 
 -- TODO: prove this!
 instance : IsStrictOrderedRing SurrealHahnSeries := by
-  sorry
+  unfold SurrealHahnSeries; infer_instance
 
+#exit
 open Cardinal in
 /-- A constructor for `SurrealHahnSeries` which hides various implementation details. -/
 def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))

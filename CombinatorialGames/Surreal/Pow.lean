@@ -992,7 +992,8 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · simp
     · rw [← hw]; simp
     · simpa [div_eq_mul_inv]
-      
+
+/-
 theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingCoeff = r := by
   have hr' := wlog_eq_of_between hr hL hR
@@ -1001,6 +1002,8 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     exact hL s hs
   · rw [div_le_iff₀ (wpow_pos _), hr']
     exact hR s hs
+-/
+
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/
@@ -1108,9 +1111,11 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
 
+/-
 theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingTerm = r * ω^ y := by
   rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq_of_between hr hL hR]
+-/
 
 end Surreal
 end
