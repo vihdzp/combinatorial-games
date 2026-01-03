@@ -539,7 +539,6 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
   induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
   dsimp at *
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
