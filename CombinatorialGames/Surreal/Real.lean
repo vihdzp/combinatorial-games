@@ -113,7 +113,7 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
   refine ⟨⟨?_, fun x hx ↦ ?_⟩, ⟨fun x hx ↦ ?_, ?_⟩⟩
   · aesop
-  · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hx
+  · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_moves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt] at hs'
     grw [← hr'] at hs'
@@ -122,7 +122,7 @@ theorem toIGame_ratCast_equiv (q : ℚ) : toIGame q ≈ q := by
       grw [← s.toIGame_equiv] at hs'
       exact hs'.le
     · simpa
-  · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hx
+  · obtain ⟨r, hr, hr'⟩ := equiv_ratCast_of_mem_moves_ratCast hx
     obtain ⟨s, hs, hs'⟩ := exists_dyadic_btwn hr
     rw [← IGame.ratCast_lt] at hs
     grw [← hr'] at hs
@@ -169,9 +169,10 @@ theorem ratCast_equiv_toIGame {q : ℚ} {x : ℝ} : (q : IGame) ≈ (x : IGame) 
 theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q := by
   simp [AntisymmRel, le_antisymm_iff]
 
+-- TODO: can we golf this using `equiv_of_forall_lf`?
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_add, forall_moves_add]
-  simp_rw [forall_leftMoves_toIGame, forall_rightMoves_toIGame, Numeric.not_le]
+  simp_rw [forall_moves_toIGame, Numeric.not_le]
   refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩, ⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
   · grw [r.toIGame_equiv]
     rw [← IGame.sub_lt_iff_lt_add]
@@ -180,7 +181,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
   · grw [r.toIGame_equiv, ← IGame.ratCast_add_equiv]
     simpa
   · intro y hy
-    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_rightMoves_ratCast hy
+    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_moves_ratCast hy
     grw [hy]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr
@@ -192,7 +193,7 @@ theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + 
   · grw [r.toIGame_equiv, ← IGame.ratCast_add_equiv]
     simpa
   · intro y hy
-    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_leftMoves_ratCast hy
+    obtain ⟨r, hr, hy⟩ := equiv_ratCast_of_mem_moves_ratCast hy
     grw [hy]
     rw [← ratCast_lt, ← add_lt_add_iff_left x] at hr
     obtain ⟨s, hs, hs'⟩ := exists_rat_btwn hr

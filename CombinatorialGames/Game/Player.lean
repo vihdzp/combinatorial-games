@@ -127,10 +127,10 @@ protected abbrev le [LE α] (p : Player) : α → α → Prop :=
 protected abbrev lt [LT α] (p : Player) : α → α → Prop :=
   p.cases (· < ·) (· > ·)
 
-theorem le_left [LE α] {x y : α} : left.le x y ↔ x ≤ y := .rfl
-theorem le_right [LE α] {x y : α} : right.le x y ↔ y ≤ x := .rfl
-theorem lt_left [LT α] {x y : α} : left.lt x y ↔ x < y := .rfl
-theorem lt_right [LT α] {x y : α} : right.lt x y ↔ y < x := .rfl
+@[simp] theorem le_left [LE α] {x y : α} : left.le x y ↔ x ≤ y := .rfl
+@[simp] theorem le_right [LE α] {x y : α} : right.le x y ↔ y ≤ x := .rfl
+@[simp] theorem lt_left [LT α] {x y : α} : left.lt x y ↔ x < y := .rfl
+@[simp] theorem lt_right [LT α] {x y : α} : right.lt x y ↔ y < x := .rfl
 
 @[simp] theorem le_neg [LE α] {x y : α} : (-p).le x y ↔ p.le y x := by cases p <;> rfl
 @[simp] theorem lt_neg [LE α] {x y : α} : (-p).le x y ↔ p.le y x := by cases p <;> rfl
@@ -149,7 +149,6 @@ theorem lt.trans [Preorder α] {x y z : α} (h₁ : p.lt x y) (h₂ : p.lt y z) 
   | left => lt_trans h₁ h₂
   | right => lt_trans h₂ h₁
 
-@[gcongr]
 theorem le_congr {x₁ x₂ y₁ y₂ : α} [Preorder α]
     (h₁ : AntisymmRel (· ≤ ·) x₁ x₂) (h₂ : AntisymmRel (· ≤ ·) y₁ y₂) :
     p.le x₁ y₁ ↔ p.le x₂ y₂ := by
@@ -157,7 +156,6 @@ theorem le_congr {x₁ x₂ y₁ y₂ : α} [Preorder α]
   | left => exact h₁.le_congr h₂
   | right => exact h₂.le_congr h₁
 
-@[gcongr]
 theorem lt_congr {x₁ x₂ y₁ y₂ : α} [Preorder α]
     (h₁ : AntisymmRel (· ≤ ·) x₁ x₂) (h₂ : AntisymmRel (· ≤ ·) y₁ y₂) :
     p.lt x₁ y₁ ↔ p.lt x₂ y₂ := by

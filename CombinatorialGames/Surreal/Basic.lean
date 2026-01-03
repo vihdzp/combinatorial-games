@@ -158,6 +158,11 @@ theorem left_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
 theorem lt_right [Numeric x] (h : y ∈ xᴿ) : x < y := by
   numeric; simpa using lf_right h
 
+theorem lt_of_mem_moves [Numeric x] {p : Player} (h : y ∈ x.moves p) : p.lt y x := by
+  cases p with
+  | left => exact left_lt h
+  | right => exact lt_right h
+
 protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]

@@ -432,41 +432,31 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
       numeric
       simp_all [invOption, ← Surreal.mk_eq_mk]
 
-private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
-    (∀ x ∈ (q : IGame.{u})ᴸ, ∃ r : ℚ, x ≈ r) ∧ (∀ x ∈ (q : IGame.{u})ᴿ, ∃ r : ℚ, x ≈ r) := by
-  constructor
+private theorem equiv_ratCast_of_mem_moves_ratCast' {q : ℚ} {p : Player} :
+    ∀ x ∈ (q : IGame.{u}).moves p, ∃ r : ℚ, x ≈ r := by
+  rw [ratCast_def]
+  simp only [IGame.div_eq_mul_inv, forall_moves_mul, forall_moves_mul]
+  obtain ⟨m, n, hn, _⟩ := q
+  rintro (_ | _)
   all_goals
-    rw [ratCast_def]
-    simp only [IGame.div_eq_mul_inv, forall_moves_mul, forall_moves_mul]
-    obtain ⟨m, n, hn, _⟩ := q
-    rintro (_ | _)
-    all_goals
-    · intro x hx y hy
-      first |
-        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hx |
-        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hx
-      obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast _ _ hy
-      use k * (n : ℚ)⁻¹ + m * q - k * q
-      numeric
-      simp_all [mulOption, ← Surreal.mk_eq_mk]
+  · intro x hx y hy
+    obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_moves_intCast hx
+    obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast _ _ hy
+    use k * (n : ℚ)⁻¹ + m * q - k * q
+    numeric
+    simp_all [mulOption, ← Surreal.mk_eq_mk]
 
-/-- Every left option of a rational number is equivalent to a smaller rational number. -/
-theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴸ) :
-    ∃ r : ℚ, r < q ∧ x ≈ r := by
-  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
+/-- Every left/right option of a rational number is equivalent to a smaller/larger
+rational number. -/
+theorem equiv_ratCast_of_mem_moves_ratCast {q : ℚ} {p : Player} {x : IGame} (hx : x ∈ moves p q) :
+    ∃ r : ℚ, p.lt r q ∧ x ≈ r := by
+  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_moves_ratCast' x hx
   refine ⟨r, ?_, hr⟩
-  rw [← ratCast_lt]
-  grw [← hr]
-  simpa using Numeric.left_lt hx
-
-/-- Every right option of a rational number is equivalent to a larger rational number. -/
-theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴿ) :
-    ∃ r : ℚ, q < r ∧ x ≈ r := by
-  obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
-  refine ⟨r, ?_, hr⟩
-  rw [← ratCast_lt]
-  grw [← hr]
-  simpa using Numeric.lt_right hx
+  cases p
+  all_goals
+    simp only [gt_iff_lt]
+    grw [← ratCast_lt, ← hr]
+    simpa using Numeric.lt_of_mem_moves hx
 
 end IGame
 

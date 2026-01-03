@@ -359,12 +359,25 @@ theorem left_lf_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ xᴸ) : z ⧏ y 
 theorem lf_right_of_le {x y z : IGame} (h : x ≤ y) (h' : z ∈ yᴿ) : x ⧏ z :=
   (le_iff_forall_lf.1 h).2 z h'
 
+theorem lf_of_mem_moves_of_le {x y z : IGame} {p : Player}
+    (h : p.le x y) (h' : z ∈ x.moves p) : ¬ p.le y z := by
+  cases p with
+  | left => exact left_lf_of_le h h'
+  | right => exact lf_right_of_le h h'
+
 theorem lf_of_le_left {x y z : IGame} (h : x ≤ z) (h' : z ∈ yᴸ) : x ⧏ y :=
   lf_iff_exists_le.2 <| Or.inl ⟨z, h', h⟩
 
 theorem lf_of_right_le {x y z : IGame} (h : z ≤ y) (h' : z ∈ xᴿ) : x ⧏ y :=
   lf_iff_exists_le.2 <| Or.inr ⟨z, h', h⟩
 
+theorem lf_of_mem_moves_of_le {x y z : IGame} {p : Player}
+    (h : p.le x z) (h' : y ∈ x.moves p) : ¬ p.le x y := by
+  cases p with
+  | left => exact left_lf_of_le h h'
+  | right => exact lf_right_of_le h h'
+
+#exit
 private theorem le_rfl' {x : IGame} : x ≤ x := by
   rw [le_iff_forall_lf]
   constructor <;> intro y hy
@@ -910,17 +923,16 @@ theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
   rw [← neg_inj]
   simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
 
-/-- Every left option of an integer is equal to a smaller integer. -/
-theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴸ) :
-    ∃ m : ℤ, m < n ∧ m = x := by
-  use n - 1
-  simp [eq_sub_one_of_mem_leftMoves_intCast hx]
-
-/-- Every right option of an integer is equal to a larger integer. -/
-theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴿ) :
-    ∃ m : ℤ, n < m ∧ m = x := by
-  use n + 1
-  simp [eq_add_one_of_mem_rightMoves_intCast hx]
+/-- Every left/right option of an integer is equal to a smaller/larger integer. -/
+theorem eq_intCast_of_mem_moves_intCast {n : ℤ} {x : IGame} {p : Player} (hx : x ∈ moves p n) :
+    ∃ m : ℤ, p.lt m n ∧ m = x := by
+  cases p with
+  | left =>
+    use n - 1
+    simp [eq_sub_one_of_mem_leftMoves_intCast hx]
+  | right =>
+    use n + 1
+    simp [eq_add_one_of_mem_rightMoves_intCast hx]
 
 /-! ### Multiplication -/
 
