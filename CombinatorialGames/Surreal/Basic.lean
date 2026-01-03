@@ -73,13 +73,6 @@ protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves 
 elab "numeric" : tactic =>
   addInstances <| .mk [`IGame.Numeric.of_mem_moves]
 
-protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
-  rw [isOption_iff_mem_union] at h
-  cases h with
-  | _ h => exact .of_mem_moves h
-
-alias _root_.IGame.IsOption.numeric := Numeric.isOption
-
 @[simp]
 protected instance zero : Numeric 0 := by
   rw [numeric_def]; simp
