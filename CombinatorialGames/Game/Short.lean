@@ -54,12 +54,10 @@ elab "short" : tactic =>
   addInstances <| .mk [`IGame.Short.of_mem_moves]
 
 protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
-  replace h := h.to_reflTransGen
-  induction h using Relation.ReflTransGen.head_induction_on with
-  | refl => assumption
-  | head h _ _ =>
-    obtain ⟨p, h⟩ := Set.mem_iUnion.1 h
-    exact .of_mem_moves h
+  induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
+  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
 
 theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
