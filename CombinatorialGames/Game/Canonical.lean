@@ -32,7 +32,8 @@ decreasing_by igame_wf
 
 theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthday := by
   rw [undominate, birthday_le_iff']
-  have (w) (hw : IsOption w x) := (birthday_undominate_le w).trans_lt (birthday_lt_of_isOption hw)
+  have (p) (w) (hw : w ∈ x.moves p) :=
+    (birthday_undominate_le w).trans_lt (birthday_lt_of_mem_moves hw)
   aesop
 termination_by x
 decreasing_by igame_wf
