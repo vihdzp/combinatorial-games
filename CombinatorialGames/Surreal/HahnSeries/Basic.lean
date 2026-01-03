@@ -30,10 +30,7 @@ noncomputable section
 
 /-! ### For Mathlib -/
 
-attribute [aesop simp] Pi.single_apply mem_lowerBounds
-attribute [-simp] Ordinal.add_one_eq_succ
-attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
-attribute [aesop unsafe forward] le_of_lt lt_of_le_of_ne not_lt_of_ge
+attribute [aesop simp] Pi.single_apply
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
@@ -249,12 +246,12 @@ theorem trunc_sub (x y : SurrealHahnSeries) (i : Surreal) :
 @[simp]
 theorem trunc_single_of_le {i j : Surreal} {r : ℝ} (h : i ≤ j) :
     (single i r).trunc j = 0 := by
-  aesop
+  aesop (add unsafe forward [lt_of_le_of_ne, not_lt_of_ge])
 
 @[simp]
 theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
     (single i r).trunc j = single i r := by
-  aesop
+  aesop (add unsafe forward [lt_of_le_of_ne, not_lt_of_ge])
 
 @[simp]
 theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
