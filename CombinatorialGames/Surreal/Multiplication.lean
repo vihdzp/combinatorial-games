@@ -181,16 +181,15 @@ def P124 : Args → Prop
 
 /-! ### P1 follows from the inductive hypothesis -/
 
-lemma numeric_isOption_mul_of_IH {p : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
+lemma numeric_move_mul_of_IH {p : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
     (h : x' ∈ x.moves p) : (x' * y).Numeric :=
   IH (Args.P1 x' y) (TransGen.single <| cutExpand_pair_left ⟨p, h⟩)
 
-lemma numeric_mul_isOption_of_IH {p : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
+lemma numeric_mul_move_of_IH {p : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
     (h : y' ∈ y.moves p) : (x * y').Numeric :=
   IH (Args.P1 x y') (TransGen.single <| cutExpand_pair_right ⟨p, h⟩)
 
-lemma numeric_isOption_mul_isOption_of_IH {p q : Player}
-    (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
+lemma numeric_move_mul_move_of_IH {p q : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
     (hx : x' ∈ x.moves p) (hy : y' ∈ y.moves q) : (x' * y').Numeric :=
   IH (Args.P1 x' y')
     ((TransGen.single (cutExpand_pair_right ⟨q, hy⟩)).tail (cutExpand_pair_left ⟨p, hx⟩))
@@ -281,9 +280,9 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
       forall_exists_index, and_imp]
     rintro _ a b (⟨ha, hb⟩ | ⟨ha, hb⟩) rfl
     all_goals
-      have := numeric_isOption_mul_of_IH IH ha
-      have := numeric_mul_isOption_of_IH IH hb
-      have := numeric_isOption_mul_isOption_of_IH IH ha hb
+      have := numeric_move_mul_of_IH IH ha
+      have := numeric_mul_move_of_IH IH hb
+      have := numeric_move_mul_move_of_IH IH ha hb
       infer_instance
 
 /-! ### P2 follows from the inductive hypothesis -/

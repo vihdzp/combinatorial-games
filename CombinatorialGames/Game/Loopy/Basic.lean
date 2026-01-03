@@ -71,9 +71,9 @@ noncomputable section
 
 /-- The type of loopy games.
 
-Most games studied within game theory are terminating, which means that the `IsOption` relation is
-well-founded. A loopy game relaxes this constraint. Thus, `LGame` contains all normal `IGame`s, but
-it also contains games such as `on = {on | }`, `off = { | off}`, and `dud = {dud | dud}`.
+Most games studied within game theory are terminating, which means that the `Subposition` relation
+is well-founded. A loopy game relaxes this constraint. Thus, `LGame` contains all normal `IGame`s,
+but it also contains games such as `on = {on | }`, `off = { | off}`, and `dud = {dud | dud}`.
 
 See the module docstring for guidance on how to make use of this type. -/
 def LGame := QPF.Cofix GameFunctor
