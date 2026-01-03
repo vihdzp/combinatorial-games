@@ -455,18 +455,18 @@ def delabFuzzy : Delab := do
   catch _ => failure -- fail over to the default delaborator
 
 theorem equiv_of_forall_lf {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ, a ⧏ y) (hr₁ : ∀ a ∈ xᴿ, y ⧏ a)
-    (hl₂ : ∀ b ∈ yᴸ, b ⧏ x) (hr₂ : ∀ b ∈ yᴿ, x ⧏ b) : x ≈ y := by
-  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> assumption
+    (hx : ∀ p, ∀ a ∈ x.moves p, ¬ p.le y a)
+    (hy : ∀ p, ∀ b ∈ y.moves p, ¬ p.le x b) : x ≈ y := by
+  constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩ <;> simp_all
 
 theorem equiv_of_exists_le {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ, ∃ b ∈ yᴸ, a ≤ b) (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, b ≤ a)
-    (hl₂ : ∀ b ∈ yᴸ, ∃ a ∈ xᴸ, b ≤ a) (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≤ b) : x ≈ y := by
-  apply equiv_of_forall_lf <;> simp +contextual [hl₁, hl₂, hr₁, hr₂, lf_iff_exists_le]
+    (hx : ∀ p, ∀ a ∈ x.moves p, ∃ b ∈ y.moves p, p.le a b)
+    (hy : ∀ p, ∀ b ∈ y.moves p, ∃ a ∈ x.moves p, p.le b a) : x ≈ y := by
+  apply equiv_of_forall_lf <;> simp_all [lf_iff_exists_le]
 
 theorem equiv_of_exists {x y : IGame}
-    (hl₁ : ∀ a ∈ xᴸ, ∃ b ∈ yᴸ, a ≈ b) (hr₁ : ∀ a ∈ xᴿ, ∃ b ∈ yᴿ, a ≈ b)
-    (hl₂ : ∀ b ∈ yᴸ, ∃ a ∈ xᴸ, a ≈ b) (hr₂ : ∀ b ∈ yᴿ, ∃ a ∈ xᴿ, a ≈ b) : x ≈ y := by
+    (hx : ∀ p, ∀ a ∈ x.moves p, ∃ b ∈ y.moves p, a ≈ b)
+    (hy : ∀ p, ∀ b ∈ y.moves p, ∃ a ∈ x.moves p, a ≈ b) : x ≈ y := by
   apply equiv_of_exists_le <;> grind [AntisymmRel]
 
 @[simp]

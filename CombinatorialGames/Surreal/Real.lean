@@ -40,48 +40,40 @@ namespace Real
 /-- The canonical map from `ℝ` to `IGame`, sending a real number to its Dedekind cut of dyadic
 rationals. -/
 @[coe, match_pattern] def toIGame (x : ℝ) : IGame.{u} :=
-  !{(↑) '' {q : Dyadic' | q < x} | (↑) '' {q : Dyadic' | x < q}}
+  !{fun p ↦ (↑) '' {q : Dyadic' | p.lt (q : ℝ) x}}
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
+
+@[simp]
+theorem moves_toIGame (x : ℝ) (p : Player) :
+    x.toIGame.moves p = (↑) '' {q : Dyadic' | p.lt (q : ℝ) x} :=
+  moves_ofSets ..
+
+theorem moves_left_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic' | q < x} :=
+  moves_toIGame ..
+
+@[simp]
+theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic' | x < q} :=
+  moves_toIGame ..
 
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
-  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]
+  · simp only [moves_ofSets, Set.forall_mem_image, Set.mem_setOf]
     intro x hx y hy
     simpa using hx.trans hy
   · aesop (add simp [Numeric.dyadic])
 
-@[simp]
-theorem leftMoves_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic' | q < x} :=
-  leftMoves_ofSets ..
-
-@[simp]
-theorem rightMoves_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic' | x < q} :=
-  rightMoves_ofSets ..
-
-theorem forall_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic', q < x → P q := by
+theorem forall_moves_toIGame {P : IGame → Prop} {x : ℝ} {p : Player} :
+    (∀ y ∈ x.toIGame.moves p, P y) ↔ ∀ q : Dyadic', p.lt (q : ℝ) x → P q := by
   aesop
 
-theorem exists_leftMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ xᴸ, P y) ↔ ∃ q : Dyadic', q < x ∧ P q := by
+theorem exists_moves_toIGame {P : IGame → Prop} {x : ℝ} {p : Player} :
+    (∃ y ∈ x.toIGame.moves p, P y) ↔ ∃ q : Dyadic', p.lt (q : ℝ) x ∧ P q := by
   aesop
 
-theorem forall_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∀ y ∈ xᴿ, P y) ↔ ∀ q : Dyadic', x < q → P q := by
-  aesop
-
-theorem exists_rightMoves_toIGame {P : IGame → Prop} {x : ℝ} :
-    (∃ y ∈ xᴿ, P y) ↔ ∃ q : Dyadic', x < q ∧ P q := by
-  aesop
-
-theorem mem_leftMoves_toIGame_of_lt {q : Dyadic'} {x : ℝ} (h : q < x) :
-    (q : IGame) ∈ xᴸ := by
-  simpa
-
-theorem mem_rightMoves_toIGame_of_lt {q : Dyadic'} {x : ℝ} (h : x < q) :
-    (q : IGame) ∈ xᴿ := by
+theorem mem_moves_toIGame_of_lt {q : Dyadic'} {x : ℝ} {p : Player} (h : p.lt (q : ℝ) x) :
+    (q : IGame) ∈ x.toIGame.moves p := by
   simpa
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
@@ -113,7 +105,7 @@ theorem toIGame_inj {x y : ℝ} : (x : IGame) = y ↔ x = y :=
 
 @[simp, norm_cast]
 theorem toIGame_neg (x : ℝ) : toIGame (-x) = -toIGame x := by
-  simp_rw [toIGame, neg_ofSets, ofSets_inj,
+  simp_rw [toIGame, neg_ofSets', ofSets_inj',
     ← Set.image_neg_of_apply_neg_eq_neg (fun _ _ ↦ Dyadic'.toIGame_neg _)]
   aesop (add simp [lt_neg, neg_lt])
 

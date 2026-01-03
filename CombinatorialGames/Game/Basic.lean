@@ -66,7 +66,7 @@ instance : OfSets Game.{u} fun _ ↦ True where
 
 theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
     mk !{st} = !{fun p ↦ mk '' st p} := by
-  refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
+  refine mk_eq <| IGame.equiv_of_exists (fun _ ↦ ?_) (fun _ ↦ ?_) <;>
     simpa using fun a ha ↦ ⟨a, ha, equiv_mk_out a⟩
 
 @[simp]

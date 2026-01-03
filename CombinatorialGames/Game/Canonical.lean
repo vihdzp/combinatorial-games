@@ -25,10 +25,32 @@ namespace IGame
 
 /-- Undominating a game. This returns garbage values on non-short games -/
 noncomputable def undominate (x : IGame) : IGame :=
-  !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
-    {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
+  !{fun p ↦ {y ∈ Set.range fun z : x.moves p ↦ undominate z | ∀ z ∈ x.moves p, ¬p.lt y z}}
 termination_by x
 decreasing_by igame_wf
+
+theorem undominate_def {x : IGame} : x.undominate =
+    !{fun p ↦ {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬ p.lt y z}} := by
+  rw [undominate]
+  simp
+
+theorem undominate_def' {x : IGame} : x.undominate =
+    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬ y < z} |
+    {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬ z < y}} := by
+  rw [undominate_def, ofSets_eq_ofSets_cases]; rfl
+
+@[simp]
+theorem moves_undominate {x : IGame} {p : Player} :
+    x.undominate.moves p = {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬p.lt y z} := by
+  rw [undominate_def, moves_ofSets]
+
+theorem moves_left_undominate {x : IGame} :
+    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} :=
+  moves_undominate
+
+theorem moves_right_undominate {x : IGame} :
+    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} :=
+  moves_undominate
 
 theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthday := by
   rw [undominate, birthday_le_iff']
@@ -37,24 +59,6 @@ theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthda
 termination_by x
 decreasing_by igame_wf
 
-theorem undominate_def {x : IGame} : x.undominate =
-    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} |
-      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
-  rw [undominate]
-  simp
-
-@[simp]
-theorem leftMoves_undominate {x : IGame} :
-    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
-  rw [undominate_def]
-  exact leftMoves_ofSets ..
-
-@[simp]
-theorem rightMoves_undominate {x : IGame} :
-    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
-  rw [undominate_def]
-  exact rightMoves_ofSets ..
-
 instance {x : IGame} [hx : Short x] : Short (undominate x) := by
   rw [short_iff_birthday_finite] at hx ⊢
   exact (birthday_undominate_le x).trans_lt hx
@@ -62,13 +66,13 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
   have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  rw [undominate_def, undominate_def]
+  rw [undominate_def', undominate_def', neg_ofSets]
   simp_all [IGame.lt_neg, IGame.neg_lt]
 termination_by x
 decreasing_by igame_wf
 
 private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
-  rw [le_def, leftMoves_undominate, rightMoves_undominate]
+  rw [le_def, moves_undominate, moves_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
     short
