@@ -219,12 +219,12 @@ theorem trunc_sub (x y : SurrealHahnSeries) (i : Surreal) :
 @[simp]
 theorem trunc_single_of_le {i j : Surreal} {r : ℝ} (h : i ≤ j) :
     (single i r).trunc j = 0 := by
-  aesop (add unsafe forward [lt_of_le_of_ne, not_lt_of_ge])
+  aesop (add safe tactic (by order))
 
 @[simp]
 theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
     (single i r).trunc j = single i r := by
-  aesop (add unsafe forward [lt_of_le_of_ne, not_lt_of_ge])
+  aesop (add safe tactic (by order))
 
 @[simp]
 theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
