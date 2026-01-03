@@ -123,10 +123,6 @@ theorem wellFoundedOn_support (x : SurrealHahnSeries) : x.support.WellFoundedOn 
 instance (x : SurrealHahnSeries) : WellFoundedGT x.support :=
   x.1.isWF_support.to_subtype
 
-instance (x : SurrealHahnSeries) :
-    IsWellOrder { y // y ∈ x.support } (Subrel (· > ·) (· ∈ x.support)) :=
-  inferInstanceAs (IsWellOrder x.support (· > ·))
-
 instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
   rw [Cardinal.small_iff_lift_mk_lt_univ, Cardinal.lift_id]
   exact lt_of_lt_of_eq x.2 Cardinal.univ_umax.symm
