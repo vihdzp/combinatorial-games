@@ -325,6 +325,11 @@ theorem birthday_eq_iGameBirthday (x : Game) :
 theorem birthday_mk_le (x : IGame) : birthday (mk x) ≤ x.birthday :=
   csInf_le' ⟨x, rfl, rfl⟩
 
+theorem le_birthday_iff {x : Game} {o : NatOrdinal} :
+    o ≤ x.birthday ↔ ∀ y, mk y = x → o ≤ y.birthday :=
+  ⟨fun hx y hy => hx.trans (hy ▸ (birthday_mk_le y)),
+    fun h => (birthday_eq_iGameBirthday x).elim fun y hy => (h y hy.1).trans_eq hy.2⟩
+
 @[simp]
 theorem birthday_zero : birthday 0 = 0 := by
   simpa using birthday_mk_le 0
