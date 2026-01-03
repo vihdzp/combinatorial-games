@@ -178,6 +178,8 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
     Subposition x z :=
   Relation.TransGen.trans h₁ h₂
 
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
+
 /-- The set of games reachable from a given game is small. -/
 instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
@@ -200,7 +202,6 @@ theorem subposition_wf : WellFounded Subposition := by
 -- We make no use of `IGame`'s definition from a `QPF` after this point.
 attribute [irreducible] IGame
 
-instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
 instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
 
