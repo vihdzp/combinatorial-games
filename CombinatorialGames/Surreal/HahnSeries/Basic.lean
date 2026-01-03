@@ -258,7 +258,7 @@ theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
 theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lowerBounds x.support) :
     x.trunc i + single i (x.coeff i) = x := by
   ext j
-  have := hi j
+  have := @hi j
   aesop (add simp [le_iff_lt_or_eq'])
 
 end SurrealHahnSeries
