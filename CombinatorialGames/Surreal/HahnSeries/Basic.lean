@@ -255,10 +255,10 @@ theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
     · rw [coeff_trunc_of_le hj]
       exact H _ hi hj
 
-theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : IsLeast x.support i) :
+theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lowerBounds x.support) :
     x.trunc i + single i (x.coeff i) = x := by
   ext j
-  have := @hi.2 j
+  have := hi j
   aesop (add simp [le_iff_lt_or_eq'])
 
 end SurrealHahnSeries
