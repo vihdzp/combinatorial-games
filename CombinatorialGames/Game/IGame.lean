@@ -189,7 +189,7 @@ instance small_subtype_subposition (x : IGame.{u}) : Small.{u} {y // Subposition
 theorem subposition_wf : WellFounded Subposition := by
   refine ⟨fun x => Acc.transGen ?_⟩
   apply QPF.Fix.ind
-  unfold IGame.moves
+  unfold moves
   rintro _ ⟨⟨st, hst⟩, rfl⟩
   constructor
   rintro y hy
