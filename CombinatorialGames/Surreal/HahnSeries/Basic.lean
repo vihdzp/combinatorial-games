@@ -67,25 +67,6 @@ instance {α β : Type*} {r : α → α → Prop} {s} [IsWellOrder β s] : Subsi
     congr 1
     subsingleton
 
-namespace InitialSeg
-
-theorem apply_relEmbedding_le_apply_initialSeg {α β : Type*} {r : α → α → Prop} {s : β → β → Prop}
-    [IsWellOrder β s] (f : r ↪r s) (g : r ≼i s) (x : α) : ¬ s (f x) (g x) := by
-  induction x using f.isWellOrder.wf.induction with | h x IH
-  intro hs
-  obtain ⟨y, hy, hr⟩ := g.exists_eq_iff_rel.1 hs
-  exact (f.map_rel_iff.not.1 <| hy ▸ IH y hr) hr
-
-theorem not_surjective_of_exists_gt {α β : Type*} {r : α → α → Prop} {s : β → β → Prop}
-    [IsWellOrder β s] (f : r ↪r s) (g : r ≼i s) (H : ∃ a, ∀ b, s (f b) a) :
-    ¬ Function.Surjective g := by
-  intro h
-  obtain ⟨a, ha⟩ := H
-  obtain ⟨a, rfl⟩ := h a
-  exact apply_relEmbedding_le_apply_initialSeg f g a (ha a)
-
-end InitialSeg
-
 open Order Set
 
 /-! ### Basic defs and instances -/
@@ -94,7 +75,7 @@ open Order Set
 will show that this type is isomorphic as an ordered field to the surreals themselves. -/
 def SurrealHahnSeries : Type (u + 1) :=
   have : Fact (_ < _) := ⟨Cardinal.aleph0_lt_univ.{u, u}⟩
-  show Subfield (Lex _) from cardLTSubfield Surrealᵒᵈ ℝ .univ
+  show Subfield (Lex _) from HahnSeries.cardSuppLTSubfield Surrealᵒᵈ ℝ .univ
 
 namespace SurrealHahnSeries
 
@@ -102,14 +83,11 @@ instance : Field SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
 instance : LinearOrder SurrealHahnSeries := by
-
   unfold SurrealHahnSeries; infer_instance
 
--- TODO: prove this!
 instance : IsStrictOrderedRing SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
-#exit
 open Cardinal in
 /-- A constructor for `SurrealHahnSeries` which hides various implementation details. -/
 def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
@@ -700,8 +678,8 @@ theorem truncIdx_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) (i : Ordinal) :
         · exact coeff_ofSeq_of_ne hj
         · grind
   · rw [truncIdx_of_le]
-    congr!
-    · rw [min_eq_right hi]
+    · congr!
+      rw [min_eq_right hi]
     · rwa [length_ofSeq hf']
 
 end ofSeq
