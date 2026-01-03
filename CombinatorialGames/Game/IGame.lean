@@ -298,8 +298,8 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 instance : LE IGame where
   le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
-    (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (Subposition.of_mem_moves h))) ∧
-    (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (Subposition.of_mem_moves h)))
+    (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
+    (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
 /-- The less or fuzzy relation on games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
