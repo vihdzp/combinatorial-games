@@ -35,12 +35,12 @@ attribute [aesop simp] Pi.single_apply
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
 @[simp]
-theorem equivShrink_le_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} α] {x y : α} :
+theorem equivShrink_le_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
     equivShrink α x ≤ equivShrink α y ↔ x ≤ y :=
   (orderIsoShrink α).map_rel_iff
 
 @[simp]
-theorem equivShrink_lt_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} α] {x y : α} :
+theorem equivShrink_lt_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
     equivShrink α x < equivShrink α y ↔ x < y :=
   (orderIsoShrink α).toRelIsoLT.map_rel_iff
 
