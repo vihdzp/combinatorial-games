@@ -165,7 +165,8 @@ theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set IGame} [Small s₁] [Small s₂] [
     !{s₁ | t₁} = !{s₂ | t₂} ↔ s₁ = s₂ ∧ t₁ = t₂ := by
   simp
 
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+/-- A (proper) subposition is any game reachable a nonempty sequence of
+(not necessarily alternating) left and right moves. -/
 def Subposition : IGame → IGame → Prop :=
   Relation.TransGen fun x y => x ∈ ⋃ p, y.moves p
 
@@ -196,12 +197,32 @@ theorem subposition_wf : WellFounded Subposition := by
   obtain ⟨_, ⟨_, h⟩, _, rfl⟩ := hy
   exact h
 
+-- We make no use of `IGame`'s definition from a `QPF` after this point.
+attribute [irreducible] IGame
+
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
 instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
 
--- We make no use of `IGame`'s definition from a `QPF` after this point.
-attribute [irreducible] IGame
+theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
+
+theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
+  fun hx ↦ Subposition.irrefl x (.of_mem_moves hx)
+
+theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
+    ∃ p, ∃ z ∈ y.moves p, x = z ∨ Subposition x z := by
+  constructor
+  · intro h
+    cases h with
+    | single h =>
+      obtain ⟨p, hp⟩ := Set.mem_iUnion.1 h
+      exact ⟨p, x, hp, .inl rfl⟩
+    | tail ih h =>
+      obtain ⟨p, hp⟩ := Set.mem_iUnion.1 h
+      exact ⟨p, _, hp, .inr ih⟩
+  · rintro ⟨p, z, hz, rfl | h⟩
+    · exact .of_mem_moves hz
+    · exact h.trans (.of_mem_moves hz)
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
