@@ -73,12 +73,11 @@ protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves 
 elab "numeric" : tactic =>
   addInstances <| .mk [`IGame.Numeric.of_mem_moves]
 
-protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
-  rw [isOption_iff_mem_union] at h
-  cases h with
-  | _ h => exact .of_mem_moves h
-
-alias _root_.IGame.IsOption.numeric := Numeric.isOption
+protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
+  induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
+  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
 
 @[simp]
 protected instance zero : Numeric 0 := by
