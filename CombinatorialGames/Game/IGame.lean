@@ -72,6 +72,11 @@ The order structures interact in the expected way with arithmetic. In particular
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
 -/
 
+theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
+    Relation.TransGen r x y ↔ ∃ z, r z y ∧ (x = z ∨ TransGen r x z) := by
+  rw [transGen_iff]
+  simp [and_or_left, exists_or, and_comm]
+
 universe u
 
 open Set Pointwise
@@ -212,18 +217,10 @@ theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
 
 theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
     ∃ p, ∃ z ∈ y.moves p, x = z ∨ Subposition x z := by
-  constructor
-  · intro h
-    cases h with
-    | single h =>
-      obtain ⟨p, hp⟩ := Set.mem_iUnion.1 h
-      exact ⟨p, x, hp, .inl rfl⟩
-    | tail ih h =>
-      obtain ⟨p, hp⟩ := Set.mem_iUnion.1 h
-      exact ⟨p, _, hp, .inr ih⟩
-  · rintro ⟨p, z, hz, rfl | h⟩
-    · exact .of_mem_moves hz
-    · exact h.trans (.of_mem_moves hz)
+  unfold Subposition
+  rw [Relation.transGen_iff_exists]
+  simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
+  exact exists_comm
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
