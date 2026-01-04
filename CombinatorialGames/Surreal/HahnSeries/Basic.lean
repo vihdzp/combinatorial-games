@@ -305,10 +305,7 @@ local instance (x : SurrealHahnSeries.{u}) : IsWellOrder (Shrink.{u} x.support) 
 
 /-! #### `length` -/
 
-/-- The length of a surreal Hahn series is the order type of its support.
-
-Reasoning about `Ordinal.type` directly is often quite tedious. To prove things about `length`, it's
-often easier to use `HahnSeries.ofSeqRecOn` and the `HahnSeries.ofSeq` API. -/
+/-- The length of a surreal Hahn series is the order type of its support. -/
 def length (x : SurrealHahnSeries.{u}) : Ordinal.{u} :=
   type (α := Shrink.{u} x.support) (· > ·)
 
@@ -395,7 +392,7 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
 
 /-- Returns the coefficient which corresponds to the `i`-th largest exponent, or `0` if no such
 coefficient exists. -/
-def coeffIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : ℝ :=
+def coeffIdx (x : SurrealHahnSeries) (i : Ordinal) : ℝ :=
   if h : i < x.length then x.coeff (x.exp ⟨i, h⟩) else 0
 
 theorem coeffIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
@@ -480,12 +477,12 @@ theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).length = min i x.length := by
   obtain hi | hi := lt_or_ge i x.length
   · rw [← lift_inj, ← type_support]
-    trans type (Subrel (· > · : x.support → _ → _) (· > x.exp ⟨i, hi⟩))
+    trans type (Subrel (· > · : x.support → _) (· > x.exp ⟨i, hi⟩))
     · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp ⟨i, hi⟩))
         (· > ·) _).trans _).ordinal_type_eq
       · rw [truncIdx_of_lt hi, support_trunc]
         aesop
-      · use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
+      · use (Equiv.subtypeSubtypeEquivSubtypeExists ..).symm
         aesop
     · simpa using hi.le
   · rw [truncIdx_of_le hi, min_eq_right hi]
