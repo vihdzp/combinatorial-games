@@ -300,7 +300,7 @@ theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lower
 
 open Ordinal
 
-local instance (x : SurrealHahnSeries) : IsWellOrder (Shrink.{u} x.support) (· > ·) :=
+local instance (x : SurrealHahnSeries.{u}) : IsWellOrder (Shrink.{u} x.support) (· > ·) :=
   (orderIsoShrink x.support).dual.symm.toRelIsoLT.toRelEmbedding.isWellOrder
 
 /-! #### `length` -/
