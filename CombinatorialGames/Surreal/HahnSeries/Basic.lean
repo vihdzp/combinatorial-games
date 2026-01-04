@@ -61,13 +61,6 @@ def RelIso.subrel {α : Type*} (r : α → α → Prop) {p q : α → Prop} (H :
   map_rel_iff' := .rfl
   __ := Equiv.subtypeEquiv (Equiv.refl _) H
 
-instance {α β : Type*} {r : α → α → Prop} {s} [IsWellOrder β s] : Subsingleton (r ≃r s) where
-  allEq f g := by
-    ext x
-    change f.toInitialSeg x = g.toInitialSeg x
-    congr 1
-    subsingleton
-
 open Order Set
 
 /-! ### Basic defs and instances -/
