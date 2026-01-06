@@ -948,16 +948,16 @@ theorem mul_eq' (x y : IGame) : x * y =
   rw [mul_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]; rfl
 
 theorem mul_eq'' (x y : IGame) : x * y =
-    !{fun p ↦ ⋃ (x : {x : Player × Player // x.1 * x.2 = p}),
-      (fun a ↦ mulOption x y a.1 a.2) '' x.moves u ×ˢ y.moves v} := by
+    !{fun p ↦ ⋃ (q : {q : Player × Player // q.1 * q.2 = p}),
+      (fun a ↦ mulOption x y a.1 a.2) '' x.moves q.1.1 ×ˢ y.moves q.1.2} := by
   rw [mul_eq']
   ext p a
   simp_rw [moves_ofSets, mem_iUnion, mem_image]
   constructor
   · rintro ⟨a, ha | ha, rfl⟩
-    · exact ⟨left, p, .up (by simp), a, ha, rfl⟩
-    · exact ⟨right, -p, .up (by simp), a, ha, rfl⟩
-  · rintro ⟨u, v, ⟨rfl⟩, a, ha, rfl⟩
+    · exact ⟨⟨(left, p), by simp⟩, a, ha, rfl⟩
+    · exact ⟨⟨(right, -p), by simp⟩, a, ha, rfl⟩
+  · rintro ⟨⟨⟨u, v⟩, rfl⟩, a, ha, rfl⟩
     cases u with
     | left => exact ⟨a, .inl (by simpa using ha), rfl⟩
     | right => exact ⟨a, .inr (by simpa using ha), rfl⟩
@@ -978,10 +978,7 @@ theorem moves_mul (p : Player) (x y : IGame) :
 theorem moves_mul' (p : Player) (x y : IGame) :
     (x * y).moves p = ⋃ (u) (v) (_ : u * v = p),
       (fun a ↦ mulOption x y a.1 a.2) '' x.moves u ×ˢ y.moves v := by
-  rw [mul_eq'', moves_ofSets]
-  refine Set.iUnion_congr fun u => Set.iUnion_congr fun v => ?_
-  rw [← Set.iSup_eq_iUnion, ← Set.iSup_eq_iUnion]
-  exact Equiv.plift.iSup_congr fun _ => rfl
+  rw [mul_eq'', moves_ofSets, Set.iUnion_subtype, Set.iUnion_prod']
 
 @[simp]
 theorem moves_mulOption (p : Player) (x y a b : IGame) :
