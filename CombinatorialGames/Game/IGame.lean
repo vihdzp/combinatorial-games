@@ -7,12 +7,12 @@ import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
+import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
-import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 
 /-!
 # Combinatorial (pre-)games
