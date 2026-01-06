@@ -948,7 +948,7 @@ theorem mul_eq' (x y : IGame) : x * y =
   rw [mul_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]; rfl
 
 theorem mul_eq'' (x y : IGame) : x * y =
-    !{fun p ↦ ⋃ (x : {x : Player × Player // x.1 * x.2 = p}),
+    !{fun p ↦ ⋃ (u) (v) (_ : PLift (u * v = p)),
       (fun a ↦ mulOption x y a.1 a.2) '' x.moves u ×ˢ y.moves v} := by
   rw [mul_eq']
   ext p a
