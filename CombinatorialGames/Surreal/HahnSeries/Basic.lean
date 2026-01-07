@@ -561,160 +561,221 @@ theorem wlog_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
   rw [term]
   aesop
 
-/-! #### `ofSeq` -/
+/-! ### Assemble Hahn series from sequences -/
 
-section ofSeq
-variable (o : Ordinal.{u}) (f : Iio o → Surreal.{u} × ℝ) (hf : StrictAnti (Prod.fst ∘ f))
+/-- An auxiliary structure for a decreasing sequence of exponents and their bundled coefficients.
+Use the coercion `TermSeq.toSurrealHahnSeries` to cast this into a `SurrealHahnSeries`. -/
+structure TermSeq : Type (u + 1) where
+  /-- The length of the sequence. -/
+  protected length : Ordinal.{u}
+  /-- The exponents in the sequence. -/
+  protected exp : Iio length → Surreal.{u}
+  /-- The coefficients in the sequence. -/
+  protected coeff : Iio length → ℝ
+  /-- The sequence of exponents must be strictly antitone. -/
+  exp_strictAnti : StrictAnti exp
+  /-- All of the coefficients must be non-zero. -/
+  coeff_ne_zero (i) : coeff i ≠ 0
+
+#exit
+namespace TermSeq
+
+attribute [simp, grind .] coeff_ne_zero
 
 open Classical in
-private theorem ofSeq_aux :
+private theorem toSurrealHahnSeries_aux (o : Ordinal.{u}) (f : Iio o → Surreal.{u} × ℝ) :
     Function.support (fun i ↦ if h : ∃ o, (f o).1 = i then (f <| Classical.choose h).2 else 0) ⊆
       range (Prod.fst ∘ f) := by
   aesop
 
-open Classical in
-/-- Constructs a surreal Hahn series from a decreasing sequence of exponents and their
-associated coefficients. -/
-def ofSeq : SurrealHahnSeries :=
-  mk _ (small_subset (ofSeq_aux o f)) (.subset (by
+/-- Cast a sequence of terms into a `SurrealHahnSeries`. -/
+@[coe]
+def toSurrealHahnSeries (s : TermSeq) : SurrealHahnSeries :=
+  have H := toSurrealHahnSeries_aux s.length fun i ↦ (s.exp i, s.coeff i)
+  .mk _ (small_subset H) (.subset (by
     rw [wellFoundedOn_range]
-    convert wellFounded_lt (α := Iio o)
+    convert wellFounded_lt (α := Iio s.length)
     ext
-    exact hf.lt_iff_gt
-  ) (ofSeq_aux o f))
+    exact s.exp_strictAnti.lt_iff_gt
+  ) H)
 
-variable {o f hf}
+instance : Coe TermSeq SurrealHahnSeries where
+  coe := toSurrealHahnSeries
 
-theorem coeff_ofSeq (i : Iio o) : coeff (ofSeq o f hf) (f i).1 = (f i).2 := by
-  rw [ofSeq, coeff_mk, dif_pos ⟨i, rfl⟩]
-  congr
+def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
+  length := x.length
+  exp i := x.exp i
+
+  #exit
+
+@[ext]
+theorem ext {s t : TermSeq} (hl : s.length = t.length)
+    (he : ∀ i (hs : i < s.length) (ht : i < t.length), s.exp ⟨i, hs⟩ = t.exp ⟨i, ht⟩)
+    (hc : ∀ i (hs : i < s.length) (ht : i < t.length), s.coeff ⟨i, hs⟩ = t.coeff ⟨i, ht⟩) :
+    s = t := by
+  cases s
+  cases t
+  cases hl
+  simp_rw [mk.injEq, heq_eq_eq, true_and]
+  constructor <;> ext
+  · apply he
+  · apply hc
+
+@[simp, grind =]
+theorem exp_lt_exp_iff {s : TermSeq} {i j} : s.exp i < s.exp j ↔ j < i :=
+  s.exp_strictAnti.lt_iff_gt
+
+@[simp, grind =]
+theorem exp_le_exp_iff {s : TermSeq} {i j} : s.exp i ≤ s.exp j ↔ j ≤ i :=
+  s.exp_strictAnti.le_iff_ge
+
+@[simp, grind =]
+theorem exp_inj {s : TermSeq} {i j} : s.exp i = s.exp j ↔ i = j :=
+  s.exp_strictAnti.injective.eq_iff
+
+@[simp, grind =]
+theorem coeff_exp {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff i := by
+  rw [toSurrealHahnSeries, coeff_mk, dif_pos ⟨i, rfl⟩]
   generalize_proofs H
-  apply hf.injective
-  have := Classical.choose_spec H
-  simp_all
+  rw [s.exp_strictAnti.injective <| Classical.choose_spec H]
 
--- A variant of `coeff_ofSeq` that's useful for rewriting.
-theorem coeff_ofSeq' {x : Surreal} (i : Ordinal) (hi : i < o) (h : (f ⟨i, hi⟩).1 = x) :
-    (ofSeq o f hf).coeff x = (f ⟨i, hi⟩).2 := by
-  rw [← h, coeff_ofSeq]
+theorem coeff_coe_of_notMem {s : TermSeq} {x : Surreal} (h : x ∉ range s.exp) : coeff s x = 0 := by
+  grind [toSurrealHahnSeries]
 
-theorem coeff_ofSeq_of_ne {x : Surreal} (h : x ∉ range (Prod.fst ∘ f)) :
-    coeff (ofSeq o f hf) x = 0 := by
-  grind [ofSeq]
+@[simp, grind =]
+theorem length_eq_zero {s : TermSeq} : s.length = 0 ↔ s.toSurrealHahnSeries = 0 where
+  mp h := by
+    ext
+    apply coeff_coe_of_notMem
+    simp [h]
+  mpr h := by
+    by_contra! hi
+    rw [← pos_iff_ne_zero] at hi
+    apply_fun (coeff · (s.exp ⟨0, hi⟩)) at h
+    simp at h
 
-theorem coeff_ofSeq_zero (ho : o = 0) : ofSeq o f hf = 0 := by
-  subst ho
-  ext
-  rw [coeff_ofSeq_of_ne, coeff_zero, Pi.zero_apply]
-  simp
+@[simp, grind =]
+theorem support_coe (s : TermSeq) : support s = range s.exp := by
+  ext i
+  by_cases hi : i ∈ range s.exp
+  · obtain ⟨i, rfl⟩ := hi
+    simp
+  · grind [coeff_coe_of_notMem hi]
 
-theorem ofSeq_congr {o'} {g : Iio o' → Surreal × ℝ} {hg} (ho : o = o')
-    (H : ∀ i : Iio o, f i = g ⟨i.1, ho ▸ i.2⟩) : ofSeq o f hf = ofSeq o' g hg := by
-  subst ho
-  congr
-  exact funext H
+/-- Order isomorphism between `Iio x.length` and the range of `x.exp`. -/
+private def relIso' (s : TermSeq) : (· < · : Iio s.length → _) ≃r (· > · : range s.exp → _) := by
+  refine .ofSurjective ⟨⟨fun i ↦ ⟨s.exp i, ⟨i, rfl⟩⟩, fun a b h ↦ s.exp_strictAnti.injective ?_⟩,
+    s.exp_lt_exp_iff⟩ fun _ ↦ ?_ <;> aesop
 
-theorem support_ofSeq_subset : (ofSeq o f hf).support ⊆ range (Prod.fst ∘ f) :=
-  ofSeq_aux o f
+/-- Order isomorphism between `Iio s.length` and the support of `x`. -/
+private def relIso (s : TermSeq) : (· < · : Iio s.length → _) ≃r (· > · : support s → _) :=
+  (relIso' s).trans (RelIso.subrel (· > ·) (by simp))
 
-theorem support_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) : (ofSeq o f hf).support = range (Prod.fst ∘ f) := by
-  refine (ofSeq_aux o f).antisymm fun _ ↦ ?_
-  simp only [Function.mem_support, ne_eq, dite_eq_right_iff, forall_exists_index]
-  grind
-
-variable (hf) in
-/-- Embeds `Iio o` into the range of the first entries of `f`. -/
-private def ofSeq_relIso : (· < · : Iio o → _ → _) ≃r (· > · : range (Prod.fst ∘ f) → _ → _) := by
-  refine .ofSurjective ⟨⟨fun x ↦ ⟨(f x).1, ⟨x, rfl⟩⟩, fun a b h ↦ hf.injective ?_⟩, hf.lt_iff_gt⟩
-    fun _ ↦ ?_ <;> aesop
-
-theorem length_ofSeq_le : (ofSeq o f hf).length ≤ o := by
-  have := (ofSeq_relIso hf).symm.toRelEmbedding.isWellOrder
-  rw [← lift_le, ← type_support, ← type_lt_Iio, (ofSeq_relIso hf).ordinal_type_eq]
-  apply RelEmbedding.ordinal_type_le
-  exact Subrel.inclusionEmbedding (· > ·) (support_ofSeq_subset ..)
-
-variable (hf) in
-/-- Embeds `Iio o` into the support of `ofSeq o f hf`. -/
-private def ofSeq_relIso' (hf' : ∀ i, (f i).2 ≠ 0) :
-    (· < · : Iio o → _ → _) ≃r (· > · : (ofSeq o f hf).support → _ → _) := by
-  refine (ofSeq_relIso hf).trans (RelIso.subrel (· > ·) fun _ ↦ ?_)
-  rw [support_ofSeq hf']
-
-theorem length_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) : (ofSeq o f hf).length = o := by
+@[simp, grind =]
+theorem length_coe (s : TermSeq) : length s = s.length := by
   rw [← lift_inj, ← type_support, ← type_lt_Iio]
-  exact (ofSeq_relIso' hf hf').ordinal_type_eq.symm
+  exact (relIso s).ordinal_type_eq.symm
 
-theorem exp_ofSeq (i : Iio (ofSeq o f hf).length) (hf' : ∀ i, (f i).2 ≠ 0) :
-    exp _ i = (f ⟨i, by convert ← i.2; exact length_ofSeq hf'⟩).1 := by
-  change _ = (((RelIso.subrel (· < ·) fun _ ↦ by rw [length_ofSeq hf']).trans <|
-    ofSeq_relIso' hf hf') i).1
+@[simp, grind =]
+theorem exp_coe (s : TermSeq) (i) : exp s i = s.exp ⟨i, by simpa using i.2⟩ := by
+  change _ = (((RelIso.subrel (· < ·) (by simp)).trans <| relIso s) i).1
   congr
   subsingleton
 
-theorem coeffIdx_ofSeq {i : Ordinal} (hf' : ∀ i, (f i).2 ≠ 0) (hi : i < o) :
-    coeffIdx (ofSeq o f hf) i = (f ⟨i, hi⟩).2 := by
-  rw [coeffIdx_of_lt, exp_ofSeq _ hf', coeff_ofSeq']
-  · rfl
-  · rwa [length_ofSeq hf']
+/-- A `TermSeq` with a single term. -/
+@[simps (attr := grind =)]
+def single (r : ℝ) (e : Surreal) (hr : r ≠ 0) : TermSeq where
+  length := 1
+  exp _ := e
+  coeff _ := r
+  exp_strictAnti _ := by simp
+  coeff_ne_zero _ := hr
 
-theorem term_ofSeq {i : Ordinal} (hf' : ∀ i, (f i).2 ≠ 0) (hi : i < o) :
-    term (ofSeq o f hf) i = (f ⟨i, hi⟩).2 * ω^ (f ⟨i, hi⟩).1 := by
-  rw [term_of_lt, coeffIdx_ofSeq hf' hi, exp_ofSeq _ hf']
-  rwa [length_ofSeq hf']
+/-- Appends a single term at the end of a `TermSeq`.
 
-theorem ofSeq_coeffIdx (x : SurrealHahnSeries) :
-    ofSeq x.length (fun i ↦ ⟨x.exp i, x.coeffIdx i⟩) (fun _ _ h ↦ exp_strictAnti h) = x := by
-  ext y
-  by_cases hy : y ∈ x.support
-  · rw [coeff_ofSeq' (x.exp.symm ⟨y, hy⟩)] <;>
-      simp [coeffIdx_symm_exp]
-  · grind [coeff_ofSeq_of_ne]
+TODO: generalize to an `append` function? -/
+@[simps (attr := grind =) -isSimp]
+def appendSingle (s : TermSeq) (r : ℝ) (e : Surreal) (hr : r ≠ 0) (he : ∀ i, e < s.exp i) :
+    TermSeq where
+  length := s.length + 1
+  exp i := if h : i = s.length then e else s.exp ⟨i, by grind⟩
+  coeff i := if h : i = s.length then r else s.coeff ⟨i, by grind⟩
+  exp_strictAnti := by grind [StrictAnti]
+  coeff_ne_zero := by grind
 
-theorem ofSeq_add_single {i : Surreal} (r : ℝ) (h : ∀ j, i < (f j).1) :
-    ofSeq o f hf + single i r = ofSeq (o + 1)
-      (fun j ↦ if _ : j = o then ⟨i, r⟩ else f ⟨j, by grind⟩)
-      fun j k h ↦ by grind [StrictAnti] := by
+attribute [simp] appendSingle_length
+
+theorem exp_eq_exp_appendSingle (s : TermSeq) (i r e hr he) :
+    s.exp i = (s.appendSingle r e hr he).exp ⟨i.1, by grind⟩ := by
+  grind
+
+theorem coeff_eq_coeff_appendSingle (s : TermSeq) (i r e hr he) :
+    s.coeff i = (s.appendSingle r e hr he).coeff ⟨i.1, by grind⟩ := by
+  grind
+
+@[simp, grind =]
+theorem exp_appendSingle_same (s : TermSeq) (r e hr he) :
+    (s.appendSingle r e hr he).exp ⟨s.length, by grind⟩ = e := by
+  grind
+
+@[simp, grind =]
+theorem coeff_appendSingle_same (s : TermSeq) (r e hr he) :
+    (s.appendSingle r e hr he).coeff ⟨s.length, by grind⟩ = r := by
+  grind
+
+theorem coe_add_single (s : TermSeq) {r : ℝ} {e : Surreal} (hr : r ≠ 0) (he : ∀ i, e < s.exp i) :
+    s + SurrealHahnSeries.single e r = appendSingle s r e hr he := by
   ext j
-  by_cases hj : j ∈ range (Prod.fst ∘ f)
+  by_cases hj : j ∈ range s.exp
   · obtain ⟨j, rfl⟩ := hj
     dsimp [coeff_trunc]
-    rw [coeff_ofSeq, coeff_ofSeq' j (lt_add_one_iff.2 j.2.le)] <;> grind
-  · rw [coeff_add_apply, coeff_ofSeq_of_ne hj, zero_add]
-    obtain rfl | hi := eq_or_ne i j
-    · rw [coeff_ofSeq' o] <;> grind
-    · rw [coeff_single_of_ne hi, coeff_ofSeq_of_ne]
+    rw [coeff_exp, exp_eq_exp_appendSingle s j r e hr he]
+    grind
+  · rw [coeff_add_apply, coeff_coe_of_notMem hj, zero_add]
+    obtain rfl | he := eq_or_ne e j
+    · conv_rhs => right; rw [← exp_appendSingle_same s r e hr he]
+      rw [coeff_exp]
+      simp
+    · rw [coeff_single_of_ne he, coeff_coe_of_notMem]
       grind
 
-theorem truncIdx_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) (i : Ordinal) :
-    (ofSeq o f hf).truncIdx i = ofSeq (min i o)
-      (fun j ↦ f ⟨j.1, ((lt_inf_iff (a := j.1)).1 j.2).2⟩) (by grind [StrictAnti]) := by
-  obtain hi | hi := lt_or_ge i o
-  · rw [truncIdx_of_lt, exp_ofSeq _ hf']
-    · ext j
-      by_cases hj : j ∈ range (Prod.fst ∘ f)
-      · obtain ⟨⟨j, hj⟩, _, rfl⟩ := hj
-        dsimp
-        obtain hj' | hj' := lt_or_ge j i
-        · rw [coeff_trunc_of_lt, coeff_ofSeq, coeff_ofSeq' j]
-          · order
-          · rfl
-          · apply hf hj'
-            rwa [length_ofSeq hf']
-        · rw [coeff_trunc_of_le, coeff_ofSeq_of_ne]
-          · rintro ⟨k, hk⟩
-            have := hf.injective hk
-            aesop (add safe tactic (by order))
-          · exact hf.antitone hj'
-      · rw [coeff_ofSeq_of_ne, coeff_trunc_eq_zero]
-        · exact coeff_ofSeq_of_ne hj
-        · grind
-  · rw [truncIdx_of_le]
-    · congr!
-      rw [min_eq_right hi]
-    · rwa [length_ofSeq hf']
+/-- Truncate a `TermSeq` at the i-th term. -/
+@[simps (attr := grind =)]
+def trunc (s : TermSeq) (i : Ordinal) : TermSeq where
+  length := min i s.length
+  exp i := s.exp ⟨i, by grind⟩
+  coeff i := s.coeff ⟨i, by grind⟩
+  exp_strictAnti _ := by grind
+  coeff_ne_zero := by grind
 
-end ofSeq
+@[simp]
+theorem trunc_of_le {s : TermSeq} {i : Ordinal} (h : s.length ≤ i) : s.trunc i = s := by
+  ext
+  · simpa
+  · rfl
+  · rfl
+
+@[simp]
+theorem truncIdx_coe (s : TermSeq) (i : Ordinal) : truncIdx s i = s.trunc i := by
+  obtain hi | hi := lt_or_ge i s.length
+  · rw [truncIdx_of_lt (by simpa), exp_coe]
+    ext j
+    by_cases hj : j ∈ range s.exp
+    · obtain ⟨⟨j, hj⟩, _, rfl⟩ := hj
+      obtain hj' | hj' := lt_or_ge j i
+      · rw [coeff_trunc_of_lt, coeff_exp]
+        · apply ((s.trunc i).coeff_exp ⟨j, _⟩).symm
+          simpa [hj']
+        · simpa
+      · rw [coeff_trunc_of_le, coeff_coe_of_notMem]
+        · grind
+        · simpa
+    · rw [coeff_trunc_eq_zero, coeff_coe_of_notMem]
+      · grind
+      · rwa [← support_coe, mem_support_iff, not_ne_iff] at hj
+  · rw [trunc_of_le hi, truncIdx_of_le (by simpa)]
+
+end TermSeq
 
 /-! ### Recursion principles -/
 
@@ -729,11 +790,12 @@ theorem recOn_mk {motive : SurrealHahnSeries → Sort*} {f small wf}
     (mk' : ∀ f small wf, motive (mk f small wf)) : recOn (mk f small wf) mk' = mk' f small wf :=
   rfl
 
-/-- Build data for a Hahn series by building it for `ofSeq`. -/
-def ofSeqRecOn {motive : SurrealHahnSeries → Sort*} (x : SurrealHahnSeries)
-    (ofSeq : ∀ o f hf, (∀ i, (f i).2 ≠ 0) → motive (ofSeq o f hf)) : motive x :=
+/-- Build data for a Hahn series by building it for `TermSeq.toSurrealHahnSeries`. -/
+def termSeqRecOn {motive : SurrealHahnSeries → Sort*} (x : SurrealHahnSeries)
+    (mk : ∀ y : TermSeq, motive y) : motive x :=
   cast (congrArg _ (ofSeq_coeffIdx x)) (ofSeq _ _ _ (by simp))
 
+#exit
 theorem ofSeqRecOn_ofSeq {motive : SurrealHahnSeries → Sort*} {o f hf}
     (ofSeq' : ∀ o f hf, (∀ i, (f i).2 ≠ 0) → motive (ofSeq o f hf)) (hf' : ∀ i, (f i).2 ≠ 0) :
     ofSeqRecOn (ofSeq o f hf) ofSeq' = ofSeq' o f hf hf' := by
