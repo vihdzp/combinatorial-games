@@ -622,7 +622,6 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
   sorry
 
-#exit
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
   conv_lhs => rw [toSurreal_eq']
@@ -662,12 +661,9 @@ satisfies `toSurreal ⊤ = x`. -/
 structure PartialSum (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
   carrier : SurrealHahnSeries
-  /-- Every non-zero coefficient matches that of `x.toHahnSeries`. -/
-  coeffIdx_eq_leadingCoeff_sub {i} (hi : i < carrier.length) :
-    carrier.coeffIdx i = (x - carrier.truncIdx i).leadingCoeff
-  /-- Every non-zero exponent matches that of `x.toHahnSeries`. -/
-  exp_eq_wlog_sub {i} (hi : i < carrier.length) :
-    carrier.exp ⟨i, hi⟩ = (x - carrier.truncIdx i).wlog
+  /-- Every term matches that of `x.toHahnSeries`. -/
+  term_eq_leadingTerm_sub {i} (hi : i < carrier.length) :
+    carrier.term i = (x - carrier.truncIdx i).leadingTerm
 
 namespace PartialSum
 variable {x : Surreal.{u}}
@@ -675,7 +671,7 @@ variable {x : Surreal.{u}}
 open SurrealHahnSeries
 
 instance : Bot (PartialSum x) where
-  bot := ⟨0, by simp, by simp⟩
+  bot := ⟨0, by simp⟩
 
 theorem carrier_injective : Function.Injective (carrier (x := x)) := by
   intro i j h
@@ -713,21 +709,14 @@ theorem length_strictMono : StrictMono (length (x := x)) :=
 @[simp] theorem length_lt_length {y z : PartialSum x} : length y < length z ↔ y < z := .rfl
 @[simp] theorem length_le_length {y z : PartialSum x} : length y ≤ length z ↔ y ≤ z := .rfl
 
-theorem term_eq (y : PartialSum x) {i : Ordinal} (hi : i < y.length) :
-    y.carrier.term i = (x - y.carrier.truncIdx i).leadingTerm := by
-  rw [term_of_lt hi, coeffIdx_eq_leadingCoeff_sub _ hi, exp_eq_wlog_sub, leadingTerm]
-
-/-- Truncating the series preserves that it is an initial segment. -/
+/-- Truncating the series preserves that it is a partial sum. -/
 def truncIdx (y : PartialSum x) (i : Ordinal) : PartialSum x where
   carrier := y.carrier.truncIdx i
-  coeffIdx_eq_leadingCoeff_sub {j} hj := by
+  term_eq_leadingTerm_sub {j} hj := by
     have hj' : j < i := hj.trans_le (by simp)
-    rw [coeffIdx_truncIdx_of_lt hj', truncIdx_truncIdx, min_eq_right hj'.le]
-    apply y.coeffIdx_eq_leadingCoeff_sub (hj.trans_le _)
+    rw [term_truncIdx_of_lt hj', truncIdx_truncIdx, min_eq_right hj'.le]
+    apply y.term_eq_leadingTerm_sub (hj.trans_le _)
     simp
-  exp_eq_wlog_sub {j} hj := by
-    have hj' : j < i := hj.trans_le (by simp)
-    rw [exp_truncIdx, truncIdx_truncIdx, min_eq_right hj'.le, y.exp_eq_wlog_sub]
 
 @[simp]
 theorem carrier_truncIdx (y : PartialSum x) (i : Ordinal) :
@@ -762,16 +751,13 @@ theorem truncIdx_length_of_le {y z : PartialSum x} (h : y ≤ z) : z.truncIdx y.
     convert truncIdx_length_of_le (y := y.truncIdx i) (z := z) _ using 1
     · simp [min_comm]
     · exact (truncIdx_le y i).trans h
-  apply carrier_injective (exp_ext _ _ _)
-  · exact (length_truncIdx ..).trans (min_eq_left h)
-  · intro i hx hy
-    rw [exp_eq_wlog_sub, exp_eq_wlog_sub]
-    congr 3
-    rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hy]
-  · intro i hx hy
-    rw [coeffIdx_eq_leadingCoeff_sub _ hx, coeffIdx_eq_leadingCoeff_sub _ hy]
-    congr 3
-    rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hy]
+  refine carrier_injective (term_injective <| funext fun i ↦ ?_)
+  obtain hi | hi := lt_or_ge i y.length
+  · rw [term_eq_leadingTerm_sub, term_eq_leadingTerm_sub _ hi]
+    · congr 3
+      rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hi]
+    · simpa [hi] using hi.trans_le h
+  · rw [term_of_le (by simp [hi]), term_of_le hi]
 termination_by y
 
 theorem length_injective : Function.Injective (length (x := x)) := by
@@ -789,6 +775,7 @@ instance : LinearOrder (PartialSum x) where
   le_total y z := le_total y.length z.length
   toDecidableLE := Classical.decRel _
 
+/-
 theorem exp_congr {y z : PartialSum x} (i : Iio y.carrier.length) (j : Iio z.carrier.length)
     (h : i.1 = j.1) : (y.carrier.exp i).1 = (z.carrier.exp j).1 := by
   obtain ⟨i, hi⟩ := i
@@ -799,6 +786,7 @@ theorem exp_congr {y z : PartialSum x} (i : Iio y.carrier.length) (j : Iio z.car
     rw [SurrealHahnSeries.exp_congr (carrier_inj.2 (truncIdx_length_of_le hyz)).symm,
       SurrealHahnSeries.exp_congr (carrier_truncIdx ..)]
     simp
+-/
 
 theorem exp_lt_exp {y z : PartialSum x} {i : Iio y.carrier.length} {j : Iio z.carrier.length}
     (h : i.1 < j.1) : (z.carrier.exp j).1 < (y.carrier.exp i).1 := by
@@ -808,22 +796,27 @@ theorem exp_lt_exp {y z : PartialSum x} {i : Iio y.carrier.length} {j : Iio z.ca
       SurrealHahnSeries.exp_congr (carrier_truncIdx ..), exp_truncIdx]
     simpa
 
+/-
 theorem coeffIdx_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : i < z.length) :
     coeffIdx y.carrier i = coeffIdx z.carrier i := by
   obtain hyz | hyz := le_total y z <;>
     rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, coeffIdx_truncIdx_of_lt]
+-/
 
+theorem term_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : i < z.length) :
+    term y.carrier i = term z.carrier i := by
+  obtain hyz | hyz := le_total y z <;>
+    rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, term_truncIdx_of_lt]
+
+/-
 theorem ne_of_lt {y z : PartialSum x} (h : y < z) : y.carrier ≠ x := by
   sorry
 
 -- Do I need this?
 theorem eq_of_length_eq_add_one {y z : PartialSum x} (h : z.length = y.length + 1) :
     z.carrier = y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff := by
-  apply exp_ext
-  · rwa [length_add_single]
-    · sorry
-    · sorry
-  all_goals sorry
+  sorry
+-/
 
 theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
@@ -844,9 +837,8 @@ theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
     first | rw [← IGame.lt_sub_iff_add_lt] | rw [← IGame.sub_lt_iff_lt_add]
     rw [← Surreal.mk_lt_mk]
     apply leadingTerm_mono.reflect_lt
-    simp
     obtain ⟨⟨i, hi'⟩, rfl⟩ := eq_exp_of_mem_support hi
-    rw [leadingTerm, trunc_exp, ← coeffIdx_eq_leadingCoeff_sub _ hi', ← exp_eq_wlog_sub _ hi']
+    rw [mk_sub, mk_toIGame, trunc_exp, ← term_eq_leadingTerm_sub _ hi', term_of_lt hi']
     simpa using hr
 
 instance : Small.{u} (PartialSum x) := by
@@ -859,11 +851,10 @@ private def sSupFun (s : Set (PartialSum x)) (i : Iio (⨆ x : s, x.1.length)) :
   have H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
   ⟨exp _ ⟨_, Classical.choose_spec H⟩, coeffIdx (Classical.choose H).1.1 i⟩
 
-private theorem sSupFun_ne_zero {s : Set (PartialSum x)} (i : Iio (⨆ x : s, x.1.length)) :
-    (sSupFun s i).2 ≠ 0 := by
+private theorem sSupFun_ne_zero {s : Set (PartialSum x)} (i) : (sSupFun s i).2 ≠ 0 := by
   dsimp [sSupFun]
   generalize_proofs H
-  rw [coeffIdx_eq_zero_iff, not_le]
+  rw [coeffIdx_eq_zero, not_le]
   exact Classical.choose_spec H
 
 /-- The Hahn series corresponding to `sSup`. -/
@@ -874,14 +865,16 @@ private theorem length_sSupAux (s : Set (PartialSum x)) :
     (sSupAux s).length = ⨆ x : s, x.1.length :=
   length_ofSeq sSupFun_ne_zero
 
-private theorem coeffIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
+private theorem term_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
     {i : Ordinal} (hs : i < (sSupAux s).length) (hi : i < y.length) :
-    coeffIdx (sSupAux s) i = coeffIdx y.carrier i := by
+    term (sSupAux s) i = term y.carrier i := by
   unfold sSupAux sSupFun
   generalize_proofs _ H _
-  rw [coeffIdx_ofSeq _ (length_sSupAux s ▸ hs), coeffIdx_congr]
-  exacts [hi, H _ _, sSupFun_ne_zero]
+  rw [term_ofSeq _ (length_sSupAux s ▸ hs), ← term_of_lt, term_congr hi]
+  · exact H _ _
+  · exact sSupFun_ne_zero
 
+/-
 private theorem exp_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
     {i : Ordinal} (hs : i < (sSupAux s).length) (hy : i < y.length) :
     ((sSupAux s).exp ⟨i, hs⟩).1 = y.carrier.exp ⟨i, hy⟩ := by
@@ -890,30 +883,24 @@ private theorem exp_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
   rw [exp_ofSeq _ sSupFun_ne_zero]
   apply exp_congr
   rfl
+-/
 
 private theorem truncIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
     {i : Ordinal} (hs : i < (sSupAux s).length) (hy : i < y.length) :
     (sSupAux s).truncIdx i = y.carrier.truncIdx i := by
-  refine exp_ext ?_ (fun j hj hj' ↦ ?_) (fun j hj hj' ↦ ?_)
-  · aesop
-  · rw [exp_truncIdx, exp_sSupAux (y := y.truncIdx i)]
-    · simp
-    · grind
-  · rw [coeffIdx_truncIdx_of_lt, ← carrier_truncIdx]
-    · apply coeffIdx_sSupAux <;> grind
-    · grind
+  refine term_injective <| funext fun j ↦ ?_
+  obtain hj | hj := lt_or_ge j i
+  · rw [term_truncIdx_of_lt hj, term_truncIdx_of_lt hj, term_sSupAux (hj.trans hs) (hj.trans hy)]
+  · rw [term_truncIdx_of_le hj, term_truncIdx_of_le hj]
 
 -- Directed union
 instance : SupSet (PartialSum x) where
-  sSup s := by
-    refine ⟨sSupAux s, ?_, ?_⟩
-    all_goals
-      intro i hi
-      have hi' := length_sSupAux _ ▸ hi
-      rw [lt_ciSup_iff' (Ordinal.bddAbove_of_small _)] at hi'
-      obtain ⟨⟨y, hy⟩, hy'⟩ := hi'
-    · rw [coeffIdx_sSupAux hi hy', coeffIdx_eq_leadingCoeff_sub _ hy', truncIdx_sSupAux hi hy']
-    · rw [exp_sSupAux hi hy', exp_eq_wlog_sub _ hy', truncIdx_sSupAux hi hy']
+  sSup s := ⟨sSupAux s, fun hi ↦ by
+    have hi' := length_sSupAux _ ▸ hi
+    rw [lt_ciSup_iff' (Ordinal.bddAbove_of_small _)] at hi'
+    obtain ⟨⟨y, hy⟩, hy'⟩ := hi'
+    rw [truncIdx_sSupAux hi hy', ← term_eq_leadingTerm_sub _ hy', term_sSupAux hi hy']
+  ⟩
 
 @[simp]
 theorem length_sSup (s : Set (PartialSum x)) : (sSup s).length = ⨆ x : s, x.1.length :=
@@ -963,10 +950,28 @@ theorem mk_sub_strictMono :
 
 def succ (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
-  coeffIdx_eq_leadingCoeff_sub {i} hi := by
-    sorry
-  exp_eq_wlog_sub := sorry
+  term_eq_leadingTerm_sub {j} hj := by
+    obtain hx | hx := eq_or_ne x y.carrier
+    · simp_all [y.term_eq_leadingTerm_sub]
+    obtain ⟨y, hy⟩ := y
+    induction y using ofSeqRecOn with | ofSeq o f hf hf'
+    dsimp at *
+    have hf'' (i : ↑(Iio (o + 1))) (h) :
+        (if x_1 : ↑i = o then ((x - ↑(ofSeq o f hf)).wlog,
+        (x - ↑(ofSeq o f hf)).leadingCoeff) else f ⟨↑i, (by simp [i.2])⟩).2 ≠ 0 := by
+      split_ifs
+      · simpa [sub_eq_zero]
+      · exact hf' _
+    rw [ofSeq_add_single _ sorry] at *
+    rw [length_ofSeq] at hj
+    · rw [term_ofSeq]
+    · intro ⟨i, hi⟩
+      split_ifs
+      · simpa [sub_eq_zero]
+      · exact hf' _
 
+
+#exit
 theorem length_succ_of_ne {y : PartialSum x} (h : x ≠ y.carrier) :
     (succ y).length = y.length + 1 := by
   have h' : ¬ x - y.carrier = 0 := by rwa [sub_eq_zero]
