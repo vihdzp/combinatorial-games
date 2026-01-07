@@ -577,7 +577,6 @@ structure TermSeq : Type (u + 1) where
   /-- All of the coefficients must be non-zero. -/
   coeff_ne_zero (i) : coeff i ≠ 0
 
-#exit
 namespace TermSeq
 
 attribute [simp, grind .] coeff_ne_zero
@@ -602,11 +601,14 @@ def toSurrealHahnSeries (s : TermSeq) : SurrealHahnSeries :=
 instance : Coe TermSeq SurrealHahnSeries where
   coe := toSurrealHahnSeries
 
+/-- Build a `TermSeq` from a `SurrealHahnSeries`. -/
+@[simps!]
 def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
   length := x.length
-  exp i := x.exp i
-
-  #exit
+  exp := (↑) ∘ x.exp
+  coeff i := x.coeffIdx i
+  exp_strictAnti _ := by simp
+  coeff_ne_zero := by simp
 
 @[ext]
 theorem ext {s t : TermSeq} (hl : s.length = t.length)
@@ -682,6 +684,57 @@ theorem exp_coe (s : TermSeq) (i) : exp s i = s.exp ⟨i, by simpa using i.2⟩ 
   congr
   subsingleton
 
+theorem coeffIdx_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
+    coeffIdx s i = s.coeff ⟨i, h⟩ := by
+  rw [coeffIdx_of_lt (by simpa), exp_coe, coeff_exp]
+
+theorem coeffIdx_coe_of_le {s : TermSeq} {i} (h : s.length ≤ i) : coeffIdx s i = 0 :=
+  coeffIdx_of_le (by simpa)
+
+@[aesop simp]
+theorem coeffIdx_coe (s : TermSeq) (i) :
+    coeffIdx s i = if h : i < s.length then s.coeff ⟨i, h⟩ else 0 := by
+  split_ifs with h
+  · exact coeffIdx_coe_of_lt h
+  · exact coeffIdx_coe_of_le (le_of_not_gt h)
+
+/-- `TermSeq` and `SurrealHahnSeries` are alternate representations for the same structure. -/
+@[simps!]
+def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
+  toFun := toSurrealHahnSeries
+  invFun := ofSurrealHahnSeries
+  left_inv s := by
+    ext
+    · simp
+    · simp
+    · simp_all [coeffIdx_coe_of_lt]
+  right_inv x := by
+    ext i
+    by_cases h : i ∈ x.support
+    · obtain ⟨i, hi, rfl⟩ := eq_exp_of_mem_support h
+      apply (coeff_exp (s := ofSurrealHahnSeries x) i).trans
+      simp
+    · have hx : x.coeff i = 0 := by rwa [← not_ne_iff, ← mem_support_iff]
+      rw [coeff_coe_of_notMem, hx]
+      simpa [ofSurrealHahnSeries]
+
+@[simp]
+theorem coe_ofSurrealHahnSeries (x : SurrealHahnSeries) : ofSurrealHahnSeries x = x :=
+  surrealHahnSeriesEquiv.apply_symm_apply x
+
+@[simp]
+theorem ofSurrealHahnSeries_coe (x : TermSeq) : ofSurrealHahnSeries x = x :=
+  surrealHahnSeriesEquiv.symm_apply_apply x
+
+@[simp]
+theorem coe_inj {x y : TermSeq} : (x : SurrealHahnSeries) = y ↔ x = y :=
+  surrealHahnSeriesEquiv.apply_eq_iff_eq
+
+@[simp]
+theorem ofSurrealHahnSeries_inj {x y : SurrealHahnSeries} :
+    ofSurrealHahnSeries x = ofSurrealHahnSeries y ↔ x = y :=
+  surrealHahnSeriesEquiv.symm.apply_eq_iff_eq
+
 /-- A `TermSeq` with a single term. -/
 @[simps (attr := grind =)]
 def single (r : ℝ) (e : Surreal) (hr : r ≠ 0) : TermSeq where
@@ -723,17 +776,18 @@ theorem coeff_appendSingle_same (s : TermSeq) (r e hr he) :
     (s.appendSingle r e hr he).coeff ⟨s.length, by grind⟩ = r := by
   grind
 
-theorem coe_add_single (s : TermSeq) {r : ℝ} {e : Surreal} (hr : r ≠ 0) (he : ∀ i, e < s.exp i) :
-    s + SurrealHahnSeries.single e r = appendSingle s r e hr he := by
+@[simp]
+theorem coe_appendSingle {s : TermSeq} {r : ℝ} {e : Surreal} (hr : r ≠ 0) (he : ∀ i, e < s.exp i) :
+    appendSingle s r e hr he = s + SurrealHahnSeries.single e r := by
   ext j
   by_cases hj : j ∈ range s.exp
   · obtain ⟨j, rfl⟩ := hj
     dsimp [coeff_trunc]
-    rw [coeff_exp, exp_eq_exp_appendSingle s j r e hr he]
+    rw [coeff_exp, exp_eq_exp_appendSingle s j r e hr he, eq_comm]
     grind
   · rw [coeff_add_apply, coeff_coe_of_notMem hj, zero_add]
     obtain rfl | he := eq_or_ne e j
-    · conv_rhs => right; rw [← exp_appendSingle_same s r e hr he]
+    · conv_lhs => right; rw [← exp_appendSingle_same s r e hr he]
       rw [coeff_exp]
       simp
     · rw [coeff_single_of_ne he, coeff_coe_of_notMem]
@@ -756,7 +810,15 @@ theorem trunc_of_le {s : TermSeq} {i : Ordinal} (h : s.length ≤ i) : s.trunc i
   · rfl
 
 @[simp]
-theorem truncIdx_coe (s : TermSeq) (i : Ordinal) : truncIdx s i = s.trunc i := by
+theorem trunc_trunc (s : TermSeq) (i j : Ordinal) : (s.trunc i).trunc j = s.trunc (min i j) := by
+  ext
+  · dsimp
+    ac_rfl
+  · simp
+  · simp
+
+@[simp]
+theorem coe_trunc (s : TermSeq) (i : Ordinal) : s.trunc i = truncIdx s i := by
   obtain hi | hi := lt_or_ge i s.length
   · rw [truncIdx_of_lt (by simpa), exp_coe]
     ext j
@@ -764,7 +826,7 @@ theorem truncIdx_coe (s : TermSeq) (i : Ordinal) : truncIdx s i = s.trunc i := b
     · obtain ⟨⟨j, hj⟩, _, rfl⟩ := hj
       obtain hj' | hj' := lt_or_ge j i
       · rw [coeff_trunc_of_lt, coeff_exp]
-        · apply ((s.trunc i).coeff_exp ⟨j, _⟩).symm
+        · apply (s.trunc i).coeff_exp ⟨j, _⟩
           simpa [hj']
         · simpa
       · rw [coeff_trunc_of_le, coeff_coe_of_notMem]
@@ -790,29 +852,24 @@ theorem recOn_mk {motive : SurrealHahnSeries → Sort*} {f small wf}
     (mk' : ∀ f small wf, motive (mk f small wf)) : recOn (mk f small wf) mk' = mk' f small wf :=
   rfl
 
-/-- Build data for a Hahn series by building it for `TermSeq.toSurrealHahnSeries`. -/
+/-- Build data for a `SurrealHahnSeries` by building it for a `TermSeq`. -/
 def termSeqRecOn {motive : SurrealHahnSeries → Sort*} (x : SurrealHahnSeries)
-    (mk : ∀ y : TermSeq, motive y) : motive x :=
-  cast (congrArg _ (ofSeq_coeffIdx x)) (ofSeq _ _ _ (by simp))
+    (mk : ∀ s : TermSeq, motive s) : motive x :=
+  cast (congrArg _ (by simp)) (mk (.ofSurrealHahnSeries x))
 
-#exit
-theorem ofSeqRecOn_ofSeq {motive : SurrealHahnSeries → Sort*} {o f hf}
-    (ofSeq' : ∀ o f hf, (∀ i, (f i).2 ≠ 0) → motive (ofSeq o f hf)) (hf' : ∀ i, (f i).2 ≠ 0) :
-    ofSeqRecOn (ofSeq o f hf) ofSeq' = ofSeq' o f hf hf' := by
-  rw [ofSeqRecOn, cast_eq_iff_heq]
-  congr!
-  · exact length_ofSeq hf'
-  · rw [exp_ofSeq _ hf']
-    congr!
-  · rw [coeffIdx_ofSeq hf']
-    · congr!
-    · grind
+@[simp]
+theorem termSeqRecOn_coe {motive : SurrealHahnSeries → Sort*} {mk} (s : TermSeq) :
+    termSeqRecOn (motive := motive) s mk = mk s := by
+  rw [termSeqRecOn, cast_eq_iff_heq]
+  congr
+  simp
 
 theorem length_add_single {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (h : ∀ j ∈ x.support, i < j) (hr : r ≠ 0) : (x + single i r).length = x.length + 1 := by
-  induction x using ofSeqRecOn with | ofSeq o f hf hf'
-  rw [support_ofSeq hf'] at h
-  rw [ofSeq_add_single, length_ofSeq, length_ofSeq] <;> grind
+  induction x using termSeqRecOn with | mk s
+  rw [← TermSeq.coe_appendSingle hr fun _ ↦ h _ (by simp)]
+  rw [TermSeq.length_coe]
+  simp
 
 theorem length_add_single_le {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (h : ∀ j ∈ x.support, i < j) : (x + single i r).length ≤ x.length + 1 := by
@@ -821,8 +878,8 @@ theorem length_add_single_le {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
   · rw [length_add_single h hr]
 
 private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : x.length = o + 1) :
-    IsLeast x.support (x.exp ⟨o, by simp_all⟩) := by
-  refine ⟨Subtype.coe_prop _, fun j hj ↦ ?_⟩
+    (x.exp ⟨o, by simp_all⟩).1 ∈ lowerBounds x.support := by
+  refine fun j hj ↦ ?_
   change _ ≤ ↑(⟨j, hj⟩ : x.support)
   rw [← symm_exp_le_symm_exp_iff, x.exp.symm_apply_apply, ← Subtype.coe_le_coe, ← lt_add_one_iff]
   exact h ▸ symm_exp_lt _
@@ -834,7 +891,7 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
     ∀ x, x.length = o → motive x :=
   SuccOrder.prelimitRecOn o
     (by
-      refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx).2)
+      refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
         (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ ?_))
       all_goals aesop
     )
@@ -843,7 +900,7 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
 private theorem lengthRecOnAux_succ {motive : SurrealHahnSeries → Sort*}
     {o a : Ordinal} (ha : a = o + 1) {succ limit} :
     lengthRecOnAux (motive := motive) a succ limit = fun x _ ↦
-      cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all).2)
+      cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all))
         (succ (x.trunc <| x.exp ⟨o, _⟩) _ _ (by grind) (by simp_all)
           (lengthRecOnAux o succ limit _ (by grind))) := by
   subst ha; exact SuccOrder.prelimitRecOn_succ ..
@@ -868,18 +925,9 @@ theorem lengthRecOn_succ {motive : SurrealHahnSeries → Sort*} {succ limit}
       succ _ _ _ hi hr (lengthRecOn x succ limit) := by
   rw [lengthRecOn, lengthRecOnAux_succ (o := x.length), cast_eq_iff_heq, lengthRecOn]
   · have H : ∀ {hx}, ↑((x + single i r).exp ⟨x.length, hx⟩) = i := by
-      induction x using ofSeqRecOn with | ofSeq x f hf hf'
-      rw [ofSeq_add_single]
-      · simp_rw [length_ofSeq hf']
-        intro hx
-        rw [exp_ofSeq, dif_pos rfl]
-        -- Why does `grind` fail here?
-        intro j
-        split_ifs
-        · exact hr
-        · exact hf' _
-      · rw [support_ofSeq hf'] at hi
-        grind
+      induction x using termSeqRecOn with | mk s
+      rw [← TermSeq.coe_appendSingle hr fun _ ↦ hi _ (by simp)]
+      simp
     congr!
     · rw [H, trunc_add, trunc_single_of_le le_rfl, add_zero, trunc_eq_self hi]
     · exact H
@@ -912,32 +960,16 @@ theorem length_truncIdx_add_single_le {x : SurrealHahnSeries} (i : Iio x.length)
 @[simp]
 theorem truncIdx_truncIdx (x : SurrealHahnSeries) (i j : Ordinal) :
     (x.truncIdx i).truncIdx j = x.truncIdx (min i j) := by
-  induction x using ofSeqRecOn with | ofSeq o f hf hf'
-  have : min j (min i o) = min (min i j) o := by ac_rfl
-  rw [truncIdx_ofSeq hf', truncIdx_ofSeq hf', truncIdx_ofSeq]
-  · congr! 4
-    grind
-  · grind
+  induction x using termSeqRecOn with | mk s
+  simp [← TermSeq.coe_trunc]
 
 @[aesop simp]
 theorem coeffIdx_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).coeffIdx = fun j ↦ if j < i then x.coeffIdx j else 0 := by
   ext j
-  induction x using ofSeqRecOn with | ofSeq o f hf hf'
-  have H : ∀ (j : Iio (min i o)), (f ⟨j, ((lt_inf_iff (a := j.1)).1 j.2).2⟩).2 ≠ 0 := by grind
-  rw [truncIdx_ofSeq hf']
-  obtain hj | hj := lt_or_ge j i
-  · rw [if_pos hj]
-    obtain ho | ho := lt_or_ge j o
-    · rw [coeffIdx_ofSeq hf' ho, coeffIdx_ofSeq H]
-      exact lt_min hj ho
-    · rw [coeffIdx_of_le, coeffIdx_of_le]
-      · rwa [length_ofSeq hf']
-      · rw [length_ofSeq H]
-        exact inf_le_of_right_le ho
-  · rw [if_neg hj.not_gt, coeffIdx_of_le]
-    rw [length_ofSeq H]
-    exact inf_le_of_left_le hj
+  induction x using termSeqRecOn with | mk s
+  rw [← TermSeq.coe_trunc, TermSeq.coeffIdx_coe]
+  aesop
 
 theorem coeffIdx_truncIdx_of_lt {x : SurrealHahnSeries} {i j : Ordinal} (h : j < i) :
     (x.truncIdx i).coeffIdx j = x.coeffIdx j := by
@@ -967,10 +999,10 @@ theorem support_truncIdx_mono {x : SurrealHahnSeries} :
 @[simp]
 theorem exp_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (j : Iio (x.truncIdx i).length) :
     (x.truncIdx i).exp j = ⟨x.exp ⟨j, by aesop⟩, by aesop⟩ := by
-  induction x using ofSeqRecOn with | ofSeq o f hf hf'
+  induction x using termSeqRecOn with | mk s
   apply Subtype.val_injective
-  rw [exp_congr (truncIdx_ofSeq hf' i), exp_ofSeq _ hf', exp_ofSeq]
-  grind
+  rw [exp_congr (TermSeq.coe_trunc s i).symm]
+  simp
 
 theorem term_truncIdx_of_lt {x : SurrealHahnSeries} {i j : Ordinal} (h : j < i) :
     (x.truncIdx i).term j = x.term j := by
@@ -987,22 +1019,19 @@ theorem term_truncIdx_of_le {x : SurrealHahnSeries} {i j : Ordinal} (h : i ≤ j
 
 theorem term_injective : term.Injective := by
   intro x y h
-  induction x using ofSeqRecOn with | ofSeq o f hf hf'
-  induction y using ofSeqRecOn with | ofSeq o' g hg hg'
-  obtain rfl : o = o' := eq_of_forall_ge_iff fun i ↦ by
-    rw [← length_ofSeq (hf := hf) hf', ← length_ofSeq (hf := hg) hg',
-      ← term_eq_zero, ← term_eq_zero, h]
-  refine ofSeq_congr rfl fun ⟨i, hi⟩ ↦ ?_
-  have := congrFun h i
-  ext
-  · convert congrArg Surreal.wlog this
-    · rw [wlog_term, exp_ofSeq _ hf']
-      rwa [length_ofSeq hf']
-    · rw [wlog_term, exp_ofSeq _ hg']
-      rwa [length_ofSeq hg']
-  · convert congrArg Surreal.leadingCoeff this
-    · rw [leadingCoeff_term, coeffIdx_ofSeq hf']
-    · rw [leadingCoeff_term, coeffIdx_ofSeq hg']
+  induction x using termSeqRecOn with | mk s
+  induction y using termSeqRecOn with | mk t
+  congr
+  ext i
+  · refine eq_of_forall_ge_iff fun _ ↦ ?_
+    simp_rw [← TermSeq.length_coe, ← term_eq_zero, h]
+  · have := congrFun h i
+    convert congrArg Surreal.wlog this <;>
+    · rw [wlog_term, TermSeq.exp_coe]
+      simpa
+  · have := congrFun h i
+    convert congrArg Surreal.leadingCoeff this <;>
+    · rw [leadingCoeff_term, TermSeq.coeffIdx_coe_of_lt]
 
 @[simp]
 theorem term_inj {x y : SurrealHahnSeries} : x.term = y.term ↔ x = y :=
