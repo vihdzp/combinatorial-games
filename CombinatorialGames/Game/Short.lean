@@ -43,15 +43,8 @@ variable {x y : IGame}
 theorem finite_moves (p : Player) (x : IGame) [h : Short x] : (x.moves p).Finite :=
   (short_def.1 h p).1
 
-theorem finite_setOf_isOption (x : IGame) [Short x] : {y | IsOption y x}.Finite := by
-  simp_rw [isOption_iff_mem_union]
-  exact (finite_moves _ x).union (finite_moves _ x)
-
 instance (p : Player) (x : IGame) [Short x] : Finite (x.moves p) :=
   (Short.finite_moves _ x).to_subtype
-
-instance (x : IGame) [Short x] : Finite {y // IsOption y x} :=
-  (Short.finite_setOf_isOption x).to_subtype
 
 protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short y :=
   (short_def.1 h p).2 y hy
@@ -60,35 +53,19 @@ protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short 
 elab "short" : tactic =>
   addInstances <| .mk [`IGame.Short.of_mem_moves]
 
-protected theorem isOption [Short x] (h : IsOption y x) : Short y := by
-  simp_rw [isOption_iff_mem_union] at h
-  cases h with
-  | inl h => exact .of_mem_moves h
-  | inr h => exact .of_mem_moves h
-
-alias _root_.IGame.IsOption.short := Short.isOption
-
 protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
-  cases h with
-  | single h => exact h.short
-  | tail IH h => have := h.short; exact Short.subposition IH
-termination_by x
-decreasing_by igame_wf
-
-alias _root_.IGame.IsOption.subposition := Short.subposition
+  induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
+  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
 
 theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
-  have : {y | Subposition y x} = {y | IsOption y x} ∪
-      ⋃ y ∈ {y | IsOption y x}, {z | Subposition z y} := by
-    ext
-    rw [Set.mem_setOf_eq, Subposition, Relation.transGen_iff]
-    simp [and_comm]
-  rw [this]
-  refine (finite_setOf_isOption x).union <| (finite_setOf_isOption x).biUnion fun y hy ↦ ?_
-  have := hy.short
-  exact finite_setOf_subposition y
-termination_by x
-decreasing_by igame_wf
+  induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
+  convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
+    (@ih p y hy (.of_mem_moves hy)).insert y
+  ext
+  rw [Set.mem_setOf, subposition_iff_exists]
+  simp
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
   (Short.finite_setOf_subposition x).to_subtype

@@ -72,6 +72,11 @@ The order structures interact in the expected way with arithmetic. In particular
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
 -/
 
+theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
+    Relation.TransGen r x y ↔ ∃ z, r z y ∧ (x = z ∨ TransGen r x z) := by
+  rw [transGen_iff]
+  simp [and_or_left, exists_or, and_comm]
+
 universe u
 
 open Set Pointwise
@@ -165,24 +170,33 @@ theorem ofSets_inj {s₁ s₂ t₁ t₂ : Set IGame} [Small s₁] [Small s₂] [
     !{s₁ | t₁} = !{s₂ | t₂} ↔ s₁ = s₂ ∧ t₁ = t₂ := by
   simp
 
-/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-def IsOption (x y : IGame) : Prop :=
-  x ∈ ⋃ p, y.moves p
+/-- A (proper) subposition is any game reachable a nonempty sequence of
+(not necessarily alternating) left and right moves. -/
+def Subposition : IGame → IGame → Prop :=
+  Relation.TransGen fun x y => x ∈ ⋃ p, y.moves p
 
-@[aesop simp]
-lemma isOption_iff_mem_union {x y : IGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
-  simp [IsOption, Player.exists]
+@[aesop unsafe apply 50%]
+theorem Subposition.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : Subposition x y :=
+  Relation.TransGen.single (Set.mem_iUnion_of_mem p h)
 
-theorem IsOption.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : IsOption x y :=
-  ⟨_, ⟨p, rfl⟩, h⟩
+theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
+    Subposition x z :=
+  Relation.TransGen.trans h₁ h₂
 
-instance (x : IGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (⋃ p, x.moves p))
+instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 
-theorem isOption_wf : WellFounded IsOption := by
-  refine ⟨fun x ↦ ?_⟩
+/-- The set of games reachable from a given game is small. -/
+instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
+  small_transGen' _ x
+
+/-- A variant of `small_setOf_subposition` in simp-normal form -/
+instance small_subtype_subposition (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
+  small_transGen' _ x
+
+theorem subposition_wf : WellFounded Subposition := by
+  refine ⟨fun x => Acc.transGen ?_⟩
   apply QPF.Fix.ind
-  unfold IsOption moves
+  unfold moves
   rintro _ ⟨⟨st, hst⟩, rfl⟩
   constructor
   rintro y hy
@@ -193,12 +207,20 @@ theorem isOption_wf : WellFounded IsOption := by
 -- We make no use of `IGame`'s definition from a `QPF` after this point.
 attribute [irreducible] IGame
 
-instance : IsWellFounded _ IsOption := ⟨isOption_wf⟩
+instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
+instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
 
-theorem IsOption.irrefl (x : IGame) : ¬ IsOption x x := _root_.irrefl x
+theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
 
 theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
-  fun hx ↦ IsOption.irrefl x (.of_mem_moves hx)
+  fun hx ↦ Subposition.irrefl x (.of_mem_moves hx)
+
+theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
+    ∃ p, ∃ z ∈ y.moves p, x = z ∨ Subposition x z := by
+  unfold Subposition
+  rw [Relation.transGen_iff_exists]
+  simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
+  exact exists_comm
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -207,14 +229,14 @@ things for you.
 See `ofSetsRecOn` for an alternate form. -/
 @[elab_as_elim]
 def moveRecOn {motive : IGame → Sort*} (x)
-    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
+    (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     motive x :=
-  isOption_wf.recursion x fun x IH ↦ mk x (fun _ _ h ↦ IH _ (.of_mem_moves h))
+  subposition_wf.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
 
 theorem moveRecOn_eq {motive : IGame → Sort*} (x)
-    (mk : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
-    moveRecOn x mk = mk x (fun _ y _ ↦ moveRecOn y mk) :=
-  isOption_wf.fix_eq ..
+    (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
+    moveRecOn x ind = ind x (fun _ y _ ↦ moveRecOn y ind) :=
+  subposition_wf.fix_eq ..
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -223,46 +245,28 @@ things for you.
 See `moveRecOn` for an alternate form. -/
 @[elab_as_elim]
 def ofSetsRecOn {motive : IGame.{u} → Sort*} (x)
-    (mk : Π (s t : Set IGame) [Small s] [Small t],
+    (ofSets : Π (s t : Set IGame) [Small s] [Small t],
       (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
     motive x :=
   cast (by simp) <| moveRecOn (motive := fun x ↦ motive !{xᴸ | xᴿ}) x
-    fun x IH ↦ mk _ _
+    fun x IH ↦ ofSets _ _
       (fun y hy ↦ cast (by simp) (IH left y hy)) (fun y hy ↦ cast (by simp) (IH right y hy))
 
 @[simp]
 theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
     (s t : Set IGame) [Small.{u} s] [Small.{u} t]
-    (mk : Π (s t : Set IGame) [Small s] [Small t],
+    (ofSets : Π (s t : Set IGame) [Small s] [Small t],
       (Π x ∈ s, motive x) → (Π x ∈ t, motive x) → motive !{s | t}) :
-    ofSetsRecOn !{s | t} mk = mk _ _ (fun y _ ↦ ofSetsRecOn y mk) (fun y _ ↦ ofSetsRecOn y mk) := by
+    ofSetsRecOn !{s | t} ofSets =
+      ofSets _ _ (fun y _ ↦ ofSetsRecOn y ofSets) (fun y _ ↦ ofSetsRecOn y ofSets) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   simp_rw [ofSetsRecOn]
   congr! <;> simp
 
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
-def Subposition : IGame → IGame → Prop :=
-  Relation.TransGen IsOption
-
-@[aesop unsafe apply 50%]
-theorem Subposition.of_mem_moves {p} {x y : IGame} (h : x ∈ y.moves p) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves h)
-
-theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
-    Subposition x z :=
-  Relation.TransGen.trans h₁ h₂
-
-instance (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_transGen' _ x
-
-instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
-instance : IsWellFounded _ Subposition := inferInstanceAs (IsWellFounded _ (Relation.TransGen _))
-instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
-
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
-macro "igame_wf" : tactic =>
-  `(tactic| all_goals solve_by_elim (maxDepth := 8)
+macro "igame_wf" config:Lean.Parser.Tactic.optConfig : tactic =>
+  `(tactic| all_goals solve_by_elim $config
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     Subposition.of_mem_moves, Subposition.trans, Subtype.prop] )
 
@@ -291,9 +295,9 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 instance : LE IGame where
-  le := Sym2.GameAdd.fix isOption_wf fun x y le ↦
-    (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (IsOption.of_mem_moves h))) ∧
-    (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (IsOption.of_mem_moves h)))
+  le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
+    (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
+    (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
 /-- The less or fuzzy relation on games. `x ⧏ y` is notation for `¬ y ≤ x`.
 
@@ -370,10 +374,10 @@ private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x 
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
   exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
-termination_by isOption_wf.cutExpand.wrap {x, y, z}
+termination_by subposition_wf.cutExpand.wrap {x, y, z}
 decreasing_by
-  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (IsOption.of_mem_moves ha)
-  on_goal 2 => convert Relation.cutExpand_single_add (IsOption.of_mem_moves ha) {x, y}
+  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
+  on_goal 2 => convert Relation.cutExpand_single_add (Subposition.of_mem_moves ha) {x, y}
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
 instance : Preorder IGame where
@@ -521,13 +525,6 @@ theorem moves_neg (p : Player) (x : IGame) :
     (-x).moves p = -x.moves (-p) := by
   rw [neg_eq', moves_ofSets]
 
-theorem isOption_neg {x y : IGame} : IsOption x (-y) ↔ IsOption (-x) y := by
-  simp [isOption_iff_mem_union, union_comm]
-
-@[simp]
-theorem isOption_neg_neg {x y : IGame} : IsOption (-x) (-y) ↔ IsOption x y := by
-  rw [isOption_neg, neg_neg]
-
 @[game_cmp]
 theorem forall_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
     (∀ y ∈ (-x).moves p, P y) ↔ (∀ y ∈ x.moves (-p), P (-y)) := by
@@ -540,8 +537,7 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  -- TODO: may have to add an `elab_as_elim` attr. in Mathlib
-  refine Sym2.GameAdd.induction (C := fun x y ↦ -x ≤ -y ↔ y ≤ x) isOption_wf (fun x y IH ↦ ?_) x y
+  induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
   dsimp at *
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
   congr! 3 with z hz z hz
@@ -636,12 +632,6 @@ theorem add_left_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ y.moves p) 
 theorem add_right_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ y.moves p) (z : IGame) :
     x + z ∈ (y + z).moves p := by
   rw [moves_add]; left; use x
-
-theorem IsOption.add_left {x y z : IGame} (h : IsOption x y) : IsOption (z + x) (z + y) := by
-  aesop
-
-theorem IsOption.add_right {x y z : IGame} (h : IsOption x y) : IsOption (x + z) (y + z) := by
-  aesop
 
 @[game_cmp]
 theorem forall_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
@@ -757,7 +747,7 @@ private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x
     · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
     · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
 termination_by (x, y, z)
-decreasing_by igame_wf
+decreasing_by igame_wf (maxDepth := 8)
 
 private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
   simpa [add_comm] using add_le_add_left' h z
@@ -995,10 +985,6 @@ theorem moves_mulOption (p : Player) (x y a b : IGame) :
 theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
     (h₁ : a ∈ x.moves px) (h₂ : b ∈ y.moves py) : mulOption x y a b ∈ (x * y).moves (px * py) := by
   rw [moves_mul]; use (a, b); cases px <;> cases py <;> simp_all
-
-theorem IsOption.mul {x y a b : IGame} (h₁ : IsOption a x) (h₂ : IsOption b y) :
-    IsOption (mulOption x y a b) (x * y) := by
-  aesop
 
 @[game_cmp]
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :

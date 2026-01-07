@@ -983,6 +983,13 @@ lemma _root_.LinearOrderedAddCommGroupWithTop.sub_self_nonneg {α}
   · simp
   · rw [LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha]
 
+-- TODO: upstream
+@[simp]
+lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
+    [LinearOrderedAddCommGroupWithTop α] {a b : α} (ha : a ≠ ⊤) : b - a = 0 ↔ b = a := by
+  rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
+    LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
+
 theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
@@ -993,16 +1000,24 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · rw [← hw]; simp
     · simpa [div_eq_mul_inv]
 
-/-
-theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingCoeff = r := by
-  have hr' := wlog_eq_of_between hr hL hR
+private theorem stdPart_eq' {x y : Surreal} {r : ℝ}
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : stdPart (x / ω^ y) = r := by
   apply stdPart_eq Real.toSurrealRingHom <;> intro s hs
-  · rw [le_div_iff₀ (wpow_pos _), hr']
+  · rw [le_div_iff₀ (wpow_pos _)]
     exact hL s hs
-  · rw [div_le_iff₀ (wpow_pos _), hr']
+  · rw [div_le_iff₀ (wpow_pos _)]
     exact hR s hs
--/
+
+theorem wlog_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.wlog = y := by
+  apply wlog_eq_of_mk_eq_mk
+  rw [eq_comm, ← LinearOrderedAddCommGroupWithTop.sub_eq_zero (by simp), ← ArchimedeanClass.mk_div,
+    ← stdPart_eq_zero.ne_left]
+  exact (stdPart_eq' hL hR).trans_ne hr
+
+theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
+  rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
 /-! ### Leading term -/
 
@@ -1092,6 +1107,15 @@ theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x
   obtain rfl | hx := eq_or_ne x 0; · simp
   simpa using ArchimedeanClass.mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
 
+@[simp]
+theorem wlog_leadingTerm (x : Surreal) : x.leadingTerm.wlog = x.wlog :=
+  wlog_congr x.mk_leadingTerm
+
+@[simp]
+theorem leadingTerm_leadingTerm (x : Surreal) : x.leadingTerm.leadingTerm = x.leadingTerm := by
+  apply (leadingTerm_mul ..).trans
+  simp [leadingTerm]
+
 private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
     x.leadingTerm ≤ y.leadingTerm := by
   have hy := hx.trans h
@@ -1111,11 +1135,9 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
 
-/-
 theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.leadingTerm = r * ω^ y := by
-  rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq_of_between hr hL hR]
--/
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingTerm x = r * ω^ y := by
+  rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq hr hL hR]
 
 end Surreal
 end

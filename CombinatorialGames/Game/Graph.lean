@@ -105,14 +105,14 @@ variable (c) in
 left and right sets. -/
 @[elab_as_elim]
 def moveRecOn {motive : α → Sort*} (x)
-    (mk : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
+    (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     motive x :=
-  H.fix _ (fun x IH ↦ mk x fun _ _ h ↦ IH _ (.of_mem_moves h)) x
+  H.fix _ (fun x IH ↦ ind x fun _ _ h ↦ IH _ (.of_mem_moves h)) x
 
 omit Hl Hr in
 theorem moveRecOn_eq {motive : α → Sort*} (x)
-    (mk : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
-    c.moveRecOn x mk = mk x fun _ y _ ↦ c.moveRecOn y mk := by
+    (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
+    c.moveRecOn x ind = ind x fun _ y _ ↦ c.moveRecOn y ind := by
   rw [moveRecOn, H.fix_eq]
   rfl
 

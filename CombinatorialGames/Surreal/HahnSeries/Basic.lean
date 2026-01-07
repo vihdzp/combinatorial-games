@@ -1,11 +1,14 @@
+/-
+Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
 import CombinatorialGames.Surreal.Pow
-import Mathlib.Algebra.Order.Ring.StandardPart
-import Mathlib.Order.Shrink
 import Mathlib.RingTheory.HahnSeries.Cardinal
 import Mathlib.RingTheory.HahnSeries.Lex
 
 /-!
-# Surreals Hahn series
+# Surreal Hahn series
 
 Hahn series are a generalization of power series and Puiseux series. A Hahn series `R⟦Γ⟧` is defined
 as a function `Γ → R` whose support is well-founded. This condition is sufficient to define addition
@@ -249,12 +252,12 @@ theorem trunc_sub (x y : SurrealHahnSeries) (i : Surreal) :
 @[simp]
 theorem trunc_single_of_le {i j : Surreal} {r : ℝ} (h : i ≤ j) :
     (single i r).trunc j = 0 := by
-  aesop
+  aesop (add safe tactic (by order))
 
 @[simp]
 theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
     (single i r).trunc j = single i r := by
-  aesop
+  aesop (add safe tactic (by order))
 
 @[simp]
 theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
@@ -289,10 +292,10 @@ theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
     · rw [coeff_trunc_of_le hj]
       exact H _ hi hj
 
-theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : IsLeast x.support i) :
+theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lowerBounds x.support) :
     x.trunc i + single i (x.coeff i) = x := by
   ext j
-  have := @hi.2 j
+  have := @hi j
   aesop (add simp [le_iff_lt_or_eq'])
 
 /-! ### Indexing the support by ordinals -/

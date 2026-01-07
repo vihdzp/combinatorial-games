@@ -46,10 +46,12 @@ def left (x : Cut) := x.extent
 /-- The right set in a cut. This is an alias for `Concept.intent`. -/
 def right (x : Cut) := x.intent
 
-alias left_lt_right := Concept.rel_extent_intent
-alias disjoint_left_right := Concept.disjoint_extent_intent
-alias codisjoint_left_right := Concept.codisjoint_extent_intent
-alias isCompl_left_right := Concept.isCompl_extent_intent
+theorem left_lt_right {x : Cut} {y z : Surreal} (hy : y ∈ x.left) (hz : z ∈ x.right) : y < z :=
+  x.rel_extent_intent hy hz
+
+theorem disjoint_left_right (x : Cut) : Disjoint x.left x.right := x.disjoint_extent_intent
+theorem codisjoint_left_right (x : Cut) : Codisjoint x.left x.right := x.codisjoint_extent_intent
+theorem isCompl_left_right (x : Cut) : IsCompl x.left x.right := x.isCompl_extent_intent
 
 theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := by
   intro a b hb ha
