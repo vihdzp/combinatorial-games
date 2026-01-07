@@ -1112,6 +1112,10 @@ theorem wlog_leadingTerm (x : Surreal) : x.leadingTerm.wlog = x.wlog :=
   wlog_congr x.mk_leadingTerm
 
 @[simp]
+theorem leadingCoeff_leadingTerm (x : Surreal) : x.leadingTerm.leadingCoeff = x.leadingCoeff := by
+  simp [leadingTerm]
+
+@[simp]
 theorem leadingTerm_leadingTerm (x : Surreal) : x.leadingTerm.leadingTerm = x.leadingTerm := by
   apply (leadingTerm_mul ..).trans
   simp [leadingTerm]
