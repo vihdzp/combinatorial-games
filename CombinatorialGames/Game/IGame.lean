@@ -951,7 +951,7 @@ theorem mul_eq'' (x y : IGame) : x * y =
     !{fun p ↦ ⋃ (q : {q : Player × Player // q.1 * q.2 = p}),
       (fun a ↦ mulOption x y a.1 a.2) '' x.moves q.1.1 ×ˢ y.moves q.1.2} := by
   rw [mul_eq']
-  -- `aesop` proves this but is 30 times slower
+  -- `aesop` proves this but is many times slower, so we prove it manually
   ext p a
   simp_rw [moves_ofSets, mem_iUnion, mem_image]
   constructor
