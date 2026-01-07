@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Surreal.Pow
+import Mathlib.Order.Shrink
 import Mathlib.RingTheory.HahnSeries.Cardinal
 import Mathlib.RingTheory.HahnSeries.Lex
 
@@ -33,10 +34,9 @@ noncomputable section
 
 /-! ### For Mathlib -/
 
-attribute [aesop simp] Pi.single_apply mem_lowerBounds
+attribute [aesop simp] Pi.single_apply
 attribute [-simp] Ordinal.add_one_eq_succ
 attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
-attribute [aesop unsafe forward] le_of_lt lt_of_le_of_ne not_lt_of_ge
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
@@ -307,7 +307,8 @@ local instance (x : SurrealHahnSeries) : IsWellOrder (Shrink.{u} x.support) (· 
 
 /-! #### `length` -/
 
-/-- The length of a surreal Hahn series is the order type of its support.
+/-- The length of a surreal Hahn series is the order type of its support. Note that this is an
+`Ordinal`, rather than a `NatOrdinal`.
 
 Reasoning about `Ordinal.type` directly is often quite tedious. To prove things about `length`, it's
 often easier to use `HahnSeries.ofSeqRecOn` and the `HahnSeries.ofSeq` API. -/
@@ -675,7 +676,7 @@ theorem truncIdx_ofSeq (hf' : ∀ i, (f i).2 ≠ 0) (i : Ordinal) :
         · rw [coeff_trunc_of_le, coeff_ofSeq_of_ne]
           · rintro ⟨k, hk⟩
             have := hf.injective hk
-            aesop
+            aesop (add safe tactic (by order))
           · exact hf.antitone hj'
       · rw [coeff_ofSeq_of_ne, coeff_trunc_eq_zero]
         · exact coeff_ofSeq_of_ne hj
@@ -750,7 +751,7 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
     ∀ x, x.length = o → motive x :=
   SuccOrder.prelimitRecOn o
     (by
-      refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx))
+      refine fun a _ IH x hx ↦ cast (congrArg _ <| trunc_add_single (isLeast_support_succ hx).2)
         (succ (x.trunc <| x.exp ⟨a, ?_⟩) _ _ ?_ ?_ (IH _ ?_))
       all_goals aesop
     )
@@ -759,7 +760,7 @@ private def lengthRecOnAux {motive : SurrealHahnSeries → Sort*} (o : Ordinal)
 private theorem lengthRecOnAux_succ {motive : SurrealHahnSeries → Sort*}
     {o a : Ordinal} (ha : a = o + 1) {succ limit} :
     lengthRecOnAux (motive := motive) a succ limit = fun x _ ↦
-      cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all))
+      cast (congrArg _ <| trunc_add_single (isLeast_support_succ <| by simp_all).2)
         (succ (x.trunc <| x.exp ⟨o, _⟩) _ _ (by grind) (by simp_all)
           (lengthRecOnAux o succ limit _ (by grind))) := by
   subst ha; exact SuccOrder.prelimitRecOn_succ ..
@@ -815,7 +816,7 @@ theorem lengthRecOn_limit {motive : SurrealHahnSeries → Sort*}
 theorem length_truncIdx_add_single {x : SurrealHahnSeries} (i : Iio x.length) {r : ℝ} (hr : r ≠ 0) :
     (x.truncIdx i + single (x.exp i) r).length = i + 1 := by
   rw [length_add_single _ hr, length_truncIdx]
-  · aesop
+  · grind
   · rw [truncIdx_of_lt i.2, support_trunc]
     aesop
 

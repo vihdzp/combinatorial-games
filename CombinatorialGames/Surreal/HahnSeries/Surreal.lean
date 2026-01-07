@@ -421,7 +421,7 @@ private theorem toIGame_aux {o : Ordinal} {x y : SurrealHahnSeries}
         by_contra hj'
         exact (H ⟨_, hj'⟩).not_gt hj
       have := lt_trichotomy i j
-      aesop
+      aesop (add safe tactic (by order))
     · obtain ⟨⟨j, hj⟩, (hj' : j ≤ i), hij⟩ := wellFounded_gt.has_min {j : y.support | j ≤ i} H
       obtain rfl | hj' := hj'.eq_or_lt
       · cases hj hy
@@ -507,7 +507,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
           · dsimp
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
-            aesop
+            grind
           · aesop
       · intro s hs
         obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
@@ -529,7 +529,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
           · dsimp
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
-            aesop
+            grind
           · aesop
       · intro s hs
         obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
