@@ -260,7 +260,8 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic') {t : Dyadic'} (ht : 0
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  apply (add_lt_add (mul_wpow_lt_mul_wpow (r/2) hs hx) (mul_wpow_lt_mul_wpow (r/2) ht hy)).trans_le'
+  apply (add_lt_add
+    (mul_wpow_lt_mul_wpow_of_pos (r/2) hs hx) (mul_wpow_lt_mul_wpow_of_pos (r/2) ht hy)).trans_le'
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
@@ -481,6 +482,10 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 
 open ArchimedeanClass
 
+@[simp]
+theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
+  mk_map_of_archimedean' Real.toSurrealRingHom hr
+
 theorem mk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_nonneg _) (wpow_nonneg _)
@@ -691,6 +696,24 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
+    ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ wlog y ≤ wlog x := by
+  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+
+theorem wlog_le_wlog_of_mk_le_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y) :
+    wlog y ≤ wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp_all
+  rwa [← wlog_le_wlog_iff hx hy]
+
+theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
+    ArchimedeanClass.mk x < ArchimedeanClass.mk y ↔ wlog y < wlog x := by
+  rw [← mk_wpow_lt_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+
+theorem wlog_lt_wlog_of_mk_lt_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x < ArchimedeanClass.mk y) :
+    wlog y < wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp at h
+  rwa [← wlog_lt_wlog_iff hx hy]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
