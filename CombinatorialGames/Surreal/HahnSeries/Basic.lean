@@ -865,6 +865,15 @@ theorem trunc_appendSingle_self (s : TermSeq) {r e} (hr he) :
     trunc (s.appendSingle r e hr he) s.length = s := by
   rw [trunc_appendSingle le_rfl , trunc_of_le le_rfl]
 
+theorem trunc_add_one {s : TermSeq} {i} (hi : i < s.length) :
+    s.trunc (i + 1) =
+      (s.trunc i).appendSingle (s.coeff ⟨i, hi⟩) (s.exp ⟨i, hi⟩) (by simp) (by grind) := by
+  ext
+  · rw [← Order.add_one_le_iff] at hi
+    grind
+  · grind [appendSingle]
+  · grind [appendSingle]
+
 end TermSeq
 
 /-! ### Recursion principles -/
@@ -1007,6 +1016,21 @@ theorem coeffIdx_truncIdx_of_le {x : SurrealHahnSeries} {i j : Ordinal} (h : i �
     (x.truncIdx i).coeffIdx j = 0 := by
   rw [coeffIdx_truncIdx]
   exact if_neg h.not_gt
+
+theorem truncIdx_add_one {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
+    x.truncIdx (i + 1) = x.truncIdx i + single (x.exp ⟨i, hi⟩) (x.coeffIdx i) := by
+  induction x using termSeqRecOn with | mk s
+  rw [← TermSeq.coe_trunc, ← TermSeq.coe_trunc, TermSeq.exp_coe,
+    ← TermSeq.coe_appendSingle, TermSeq.trunc_add_one]
+  · congr
+    rw [TermSeq.coeffIdx_coe_of_lt (by simpa using hi)]
+  · simpa using hi
+  · simp_rw [TermSeq.trunc_exp]
+    grind
+
+theorem eq_of_length_eq_add_one {x : SurrealHahnSeries} {i : Ordinal} (hi : x.length = i + 1) :
+    x = x.truncIdx i + single (x.exp ⟨i, by simp [hi]⟩) (x.coeffIdx i) := by
+  rw [← truncIdx_add_one, truncIdx_of_le hi.le]
 
 theorem support_truncIdx_strictMonoOn {x : SurrealHahnSeries} :
     StrictMonoOn (fun i ↦ (truncIdx x i).support) (Iio x.length) := by

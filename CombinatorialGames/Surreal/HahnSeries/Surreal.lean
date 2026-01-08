@@ -596,6 +596,16 @@ theorem toSurreal_succ {x : SurrealHahnSeries}
     toSurreal (x + single i r) = toSurreal x + r * ω^ i := by
   simpa using Surreal.mk_eq (toIGame_succ_equiv hi)
 
+theorem toSurreal_of_length_le_add_one {x : SurrealHahnSeries} {i : Ordinal}
+    (hi : x.length ≤ i + 1) : toSurreal x = toSurreal (x.truncIdx i) + x.term i := by
+  obtain hi | hi := hi.eq_or_lt
+  · conv_lhs => rw [eq_of_length_eq_add_one hi]
+    rw [toSurreal_succ]
+    · simp [term]
+    · aesop
+  · rw [Order.lt_add_one_iff] at hi
+    rw [truncIdx_of_le hi, term_of_le hi, add_zero]
+
 theorem toSurreal_eq' {x : SurrealHahnSeries.{u}} :
     toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
   Surreal.mk_eq <| toIGame_equiv x
@@ -607,16 +617,6 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
     ) := by
   rw [toSurreal_eq', Surreal.mk_ofSets]
   congr <;> aesop
-
--- Do I need this?
-theorem toSurreal_eq_of_succ {x : SurrealHahnSeries} {o : Ordinal} (hx : x.length = o + 1) :
-    toSurreal x = toSurreal (x.truncIdx o) + x.term o := by
-  sorry
-
-theorem mk_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
-    ArchimedeanClass.mk (toSurreal x - x.truncIdx i) =
-      ArchimedeanClass.mk (ω^ (x.exp ⟨i, hi⟩).1) := by
-  sorry
 
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
@@ -906,37 +906,59 @@ instance : CompleteLinearOrder (PartialSum x) where
   __ := instCompleteLattice
   __ := instLinearOrder
 
-private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
-    ArchimedeanClass.mk (x - y.carrier) < ArchimedeanClass.mk (x - z.carrier) := by
-  sorry
-
 theorem leadingTerm_sub {y z : PartialSum x} (h : y < z) :
     (x - y.carrier).leadingTerm = leadingTerm (z.carrier - y.carrier) := by
-  rw [← truncIdx_length_of_le h.le, carrier_truncIdx, ← z.term_eq_leadingTerm_sub h]
-  sorry
+  rw [← truncIdx_length_of_le h.le, carrier_truncIdx, ← z.term_eq_leadingTerm_sub h,
+    leadingTerm_sub_truncIdx]
 
 theorem mk_sub {y z : PartialSum x} (h : y < z) :
     ArchimedeanClass.mk (x - y.carrier) = .mk (z.carrier - y.carrier) := by
   rw [← mk_leadingTerm, leadingTerm_sub h, mk_leadingTerm]
 
+theorem mk_le_mk_of_sub {x y : Surreal} (h : ArchimedeanClass.mk x ≤ ArchimedeanClass.mk (x - y)) :
+    ArchimedeanClass.mk x ≤ .mk y := by
+  simpa using ArchimedeanClass.mk_left_le_mk_sub h
+
 theorem mk_sub_strictMono :
     StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) := by
   intro y z h
-  dsimp
-  rw [← mk_leadingTerm, leadingTerm_sub h]
+  obtain ⟨z, hz⟩ := z
+  dsimp at *
+  induction hz' : z.length using SuccOrder.prelimitRecOn generalizing y z with
+  | succ i _ IH =>
+    have hi : i < z.length := by simp [hz']
+    have H : ArchimedeanClass.mk (x - z.truncIdx i) < .mk (x - z) := by
+      conv_rhs => rw [toSurreal_of_length_le_add_one hz'.le, ← sub_sub]
+      rw [hz hi]
+      apply mk_lt_mk_sub_leadingTerm
+      rwa [ne_eq, ← leadingTerm_eq_zero, ← hz hi, term_eq_zero, not_le]
+    rw [← length_lt_length] at h
+    have hy := h.trans_eq hz'
+    rw [Order.lt_succ_iff] at hy
+    obtain hy | hy := hy.eq_or_lt
+    · obtain rfl := hy ▸ truncIdx_length_of_le h.le
+      exact H
+    · apply (IH _ (truncIdx ⟨z, hz⟩ i).2 (hy.trans_eq _) _).trans H <;> simp [length, hz']
+  | isSuccPrelimit i hi IH =>
+    subst hz'
+    have hi' := hi.add_one_lt h
+    apply (IH _ hi' _ (truncIdx ⟨z, hz⟩ (y.length + 1)).2 _ _).trans_le
+    · apply mk_le_mk_of_sub
+      dsimp
+      simp_rw [sub_sub_sub_cancel_left, ← mk_leadingTerm (_ - _)]
+      rwa [← hz, ← leadingTerm_sub_truncIdx]
+    · rw [← length_lt_length]
+      simpa [length]
+    · simpa
 
-
-
-#exit
 theorem wlog_sub_lt {y : PartialSum x} (h : x ≠ y.carrier) (i) :
     (x - y.carrier).wlog < y.carrier.exp i := by
   obtain ⟨i, hi⟩ := i
   have hi' : (y.truncIdx i).length = i := by simpa using hi.le
   have hy := hi' ▸ hi
-  rw [← wlog_term, ← hi', ← leadingTerm_sub hy, wlog_leadingTerm]
+  rw [← wlog_term, term_eq_leadingTerm_sub _ hi, ← carrier_truncIdx, wlog_leadingTerm]
   exact wlog_lt_wlog_of_mk_lt_mk (by simpa [sub_eq_zero]) (mk_sub_strictMono hy)
 
-#exit
 private def succ' (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
   term_eq_leadingTerm_sub {j} hj := by
@@ -989,7 +1011,6 @@ theorem length_succ_of_ne_top (y : PartialSum x) (h : y ≠ ⊤) :
   conv_lhs => rw [← toSurreal_top x]
   rwa [ne_eq, toSurreal_inj, carrier_inj, eq_comm]
 
-#exit
 -- TODO: add a `SuccOrder` instance?
 
 end PartialSum
@@ -1003,7 +1024,7 @@ def toHahnSeries (x : Surreal) : SurrealHahnSeries :=
 
 @[simp]
 theorem toSurreal_toHahnSeries (x : Surreal) : x.toHahnSeries = x :=
-  PartialSum.toSurreal_top
+  PartialSum.toSurreal_top x
 
 @[simp]
 theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) :
