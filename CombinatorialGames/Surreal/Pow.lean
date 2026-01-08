@@ -260,8 +260,7 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic') {t : Dyadic'} (ht : 0
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  apply (add_lt_add
-    (mul_wpow_lt_mul_wpow_of_pos (r/2) hs hx) (mul_wpow_lt_mul_wpow_of_pos (r/2) ht hy)).trans_le'
+  apply (add_lt_add (mul_wpow_lt_mul_wpow (r/2) hs hx) (mul_wpow_lt_mul_wpow (r/2) ht hy)).trans_le'
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
