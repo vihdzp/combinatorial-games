@@ -698,6 +698,20 @@ theorem coeffIdx_coe (s : TermSeq) (i) :
   · exact coeffIdx_coe_of_lt h
   · exact coeffIdx_coe_of_le (le_of_not_gt h)
 
+theorem term_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
+    term s i = s.coeff ⟨i, h⟩ * ω^ s.exp ⟨i, h⟩ := by
+  rw [term_of_lt (by simpa), coeffIdx_coe_of_lt, exp_coe]
+
+theorem term_coe_of_le {s : TermSeq} {i} (h : s.length ≤ i) : term s i = 0 :=
+  term_of_le (by simpa)
+
+@[aesop simp]
+theorem term_coe (s : TermSeq) (i) :
+    term s i = if h : i < s.length then s.coeff ⟨i, h⟩ * ω^ s.exp ⟨i, h⟩ else 0 := by
+  split_ifs with h
+  · exact term_coe_of_lt h
+  · exact term_coe_of_le (le_of_not_gt h)
+
 /-- `TermSeq` and `SurrealHahnSeries` are alternate representations for the same structure. -/
 @[simps!]
 def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
@@ -817,7 +831,7 @@ theorem trunc_trunc (s : TermSeq) (i j : Ordinal) : (s.trunc i).trunc j = s.trun
   · simp
   · simp
 
-@[simp]
+@[simp← ]
 theorem coe_trunc (s : TermSeq) (i : Ordinal) : s.trunc i = truncIdx s i := by
   obtain hi | hi := lt_or_ge i s.length
   · rw [truncIdx_of_lt (by simpa), exp_coe]
@@ -836,6 +850,20 @@ theorem coe_trunc (s : TermSeq) (i : Ordinal) : s.trunc i = truncIdx s i := by
       · grind
       · rwa [← support_coe, mem_support_iff, not_ne_iff] at hj
   · rw [trunc_of_le hi, truncIdx_of_le (by simpa)]
+
+theorem trunc_appendSingle {s : TermSeq} {r e hr he} {i} (hi : i ≤ s.length) :
+    trunc (s.appendSingle r e hr he) i = trunc s i := by
+  ext
+  · rw [← Order.lt_add_one_iff] at hi
+    rw [trunc_length, trunc_length, appendSingle_length]
+    grind
+  · grind
+  · grind
+
+@[simp]
+theorem trunc_appendSingle_self (s : TermSeq) {r e} (hr he) :
+    trunc (s.appendSingle r e hr he) s.length = s := by
+  rw [trunc_appendSingle le_rfl , trunc_of_le le_rfl]
 
 end TermSeq
 
@@ -961,14 +989,13 @@ theorem length_truncIdx_add_single_le {x : SurrealHahnSeries} (i : Iio x.length)
 theorem truncIdx_truncIdx (x : SurrealHahnSeries) (i j : Ordinal) :
     (x.truncIdx i).truncIdx j = x.truncIdx (min i j) := by
   induction x using termSeqRecOn with | mk s
-  simp [← TermSeq.coe_trunc]
+  simp
 
 @[aesop simp]
 theorem coeffIdx_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).coeffIdx = fun j ↦ if j < i then x.coeffIdx j else 0 := by
   ext j
   induction x using termSeqRecOn with | mk s
-  rw [← TermSeq.coe_trunc, TermSeq.coeffIdx_coe]
   aesop
 
 theorem coeffIdx_truncIdx_of_lt {x : SurrealHahnSeries} {i j : Ordinal} (h : j < i) :
