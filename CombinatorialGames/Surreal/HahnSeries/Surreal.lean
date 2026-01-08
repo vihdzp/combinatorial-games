@@ -911,8 +911,13 @@ private theorem mk_sub_strictMono' (y z : PartialSum x) (h : y < z) :
   sorry
 
 theorem leadingTerm_sub {y z : PartialSum x} (h : y < z) :
-    (x - y.carrier).leadingTerm = z.carrier.term y.length := by
+    (x - y.carrier).leadingTerm = leadingTerm (z.carrier - y.carrier) := by
+  rw [← truncIdx_length_of_le h.le, carrier_truncIdx, ← z.term_eq_leadingTerm_sub h]
   sorry
+
+theorem mk_sub {y z : PartialSum x} (h : y < z) :
+    ArchimedeanClass.mk (x - y.carrier) = .mk (z.carrier - y.carrier) := by
+  rw [← mk_leadingTerm, leadingTerm_sub h, mk_leadingTerm]
 
 theorem mk_sub_strictMono :
     StrictMono fun y : PartialSum x ↦ ArchimedeanClass.mk (x - y.carrier) := by
