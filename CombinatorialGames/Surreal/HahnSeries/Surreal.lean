@@ -620,7 +620,33 @@ theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
 
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
-  sorry
+  obtain hi | hi := lt_or_ge i x.length
+  · rw [term_of_lt hi]
+    apply Surreal.leadingTerm_eq (by simpa) <;> intro s hs <;> apply le_of_lt
+    · rw [lt_sub_iff_add_lt', ← toSurreal_succ, toSurreal_lt_toSurreal_iff]
+      · rw [lt_def, truncIdx_of_lt hi]
+        use x.exp ⟨i, hi⟩
+        dsimp
+        constructor
+        · intro j hj
+          rw [coeff_trunc_of_lt hj]
+          aesop
+        · rw [coeff_trunc_of_le le_rfl, zero_add]
+          simpa
+      · aesop
+    -- Can we do this case from the previous?
+    · rw [sub_lt_iff_lt_add', ← toSurreal_succ, toSurreal_lt_toSurreal_iff]
+      · rw [lt_def, truncIdx_of_lt hi]
+        use x.exp ⟨i, hi⟩
+        dsimp
+        constructor
+        · intro j hj
+          rw [coeff_trunc_of_lt hj]
+          aesop
+        · rw [coeff_trunc_of_le le_rfl, zero_add]
+          simpa
+      · aesop
+  · rw [term_of_le hi, truncIdx_of_le hi, sub_self, Surreal.leadingTerm_zero]
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
