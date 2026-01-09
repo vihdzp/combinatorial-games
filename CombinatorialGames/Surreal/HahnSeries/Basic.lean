@@ -106,6 +106,8 @@ def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
 
 @[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := rfl
 @[simp, grind =] theorem coeff_zero : coeff 0 = 0 := rfl
+@[simp, grind =] theorem coeff_one : coeff 1 = Pi.single 0 1 := by
+  ext x; apply HahnSeries.coeff_one.trans; aesop
 
 @[simp, grind =]
 theorem coeff_neg (x : SurrealHahnSeries) : (-x).coeff = -x.coeff := rfl
@@ -189,9 +191,8 @@ theorem coeff_single_self (x : Surreal) (r : ℝ) : (single x r).coeff x = r := 
 theorem coeff_single_of_ne {x y : Surreal} (h : x ≠ y) (r : ℝ) : (single x r).coeff y = 0 := by
   aesop
 
-@[simp]
-theorem single_zero (x : Surreal) : single x 0 = 0 := by
-  aesop
+@[simp] theorem single_zero (x : Surreal) : single x 0 = 0 := by aesop
+@[simp] theorem single_one : single 0 1 = 1 := by aesop
 
 theorem support_single_subset {x : Surreal} {r : ℝ} : support (single x r) ⊆ {x} := by
   aesop
@@ -913,6 +914,13 @@ theorem length_add_single_le {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
   obtain rfl | hr := eq_or_ne r 0
   · simp
   · rw [length_add_single h hr]
+
+@[simp]
+theorem length_single (i : Surreal) {r : ℝ} (hr : r ≠ 0) : length (.single i r) = 1 := by
+  rw [← zero_add (single i r), length_add_single _ hr] <;> simp
+
+theorem length_single_le (i : Surreal) (r : ℝ) : length (.single i r) ≤ 1 := by
+  obtain rfl | hr := eq_or_ne r 0 <;> simp_all
 
 private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : x.length = o + 1) :
     (x.exp ⟨o, by simp_all⟩).1 ∈ lowerBounds x.support := by
