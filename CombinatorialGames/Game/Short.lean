@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios, Kim Morrison
 import CombinatorialGames.Game.IGame
 import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Data.Finite.Prod
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Short games
