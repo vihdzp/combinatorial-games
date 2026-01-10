@@ -8,8 +8,10 @@ import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Small
+import Mathlib.Algebra.Order.Group.Unbundled.Basic
+import Mathlib.Algebra.Order.ZeroLEOne
+import Mathlib.Data.Rat.Init
 import Mathlib.Lean.PrettyPrinter.Delaborator
-import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 
@@ -370,19 +372,52 @@ private theorem le_rfl' {x : IGame} : x ≤ x := by
 termination_by x
 decreasing_by igame_wf
 
-private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x ≤ z := by
-  rw [le_iff_forall_lf]
-  constructor <;> intro a ha h₃
-  exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
-termination_by subposition_wf.cutExpand.wrap {x, y, z}
-decreasing_by
-  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
-  on_goal 2 => convert Relation.cutExpand_single_add (Subposition.of_mem_moves ha) {x, y}
-  all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
+mutual
+  private theorem le_trans' {x y z : IGame} (x_le_y : x ≤ y) (y_le_k : y ≤ z) : x ≤ z := by {
+    apply le_iff_forall_lf.mpr
+    constructor
+    · intro xl xl_left
+      exact lf_of_lf_of_le (left_lf_of_le x_le_y xl_left) y_le_k
+    · intro zr zr_right
+      exact lf_of_le_of_lf x_le_y (lf_right_of_le y_le_k zr_right)
+  }
+  termination_by (x, y, z)
+  decreasing_by igame_wf
+
+  theorem lf_of_lf_of_le {x y z : IGame} (x_lf_y : x ⧏ y) (y_le_k : y ≤ z) : x ⧏ z := by {
+    cases (lf_iff_exists_le.mp x_lf_y)
+    case inl H =>
+      obtain ⟨yl, yl_left, x_le_yl⟩ := H
+      exact lf_of_le_of_lf x_le_yl (left_lf_of_le y_le_k yl_left)
+    case inr H =>
+      obtain ⟨xr, xr_right, xr_le_y⟩ := H
+      exact lf_of_right_le (le_trans' xr_le_y y_le_k) xr_right
+  }
+  termination_by (x, y, z)
+  decreasing_by igame_wf
+
+  theorem lf_of_le_of_lf {x y z : IGame} (x_le_y : x ≤ y) (y_lf_k : y ⧏ z) : x ⧏ z := by {
+    cases (lf_iff_exists_le.mp y_lf_k)
+    case inl H =>
+      obtain ⟨zl, zl_left, y_le_zl⟩ := H
+      exact lf_of_le_left (le_trans' x_le_y y_le_zl) zl_left
+    case inr H =>
+      obtain ⟨yr, yr_right, yr_le_z⟩ := H
+      exact lf_of_lf_of_le (lf_right_of_le x_le_y yr_right) yr_le_z
+  }
+  termination_by (x, y, z)
+  decreasing_by igame_wf
+end
 
 instance : Preorder IGame where
   le_refl _ := le_rfl'
   le_trans x y z := le_trans'
+
+instance : @Trans IGame IGame IGame (· ⧏ ·) (· ≤ ·) (· ⧏ ·) where
+  trans := lf_of_lf_of_le
+
+instance : @Trans IGame IGame IGame (· ≤ ·) (· ⧏ ·) (· ⧏ ·) where
+  trans := lf_of_le_of_lf
 
 theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
   lf_of_le_left le_rfl h
