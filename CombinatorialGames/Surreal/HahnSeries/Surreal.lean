@@ -32,10 +32,10 @@ unconditionally.
 
 ## Surreals to Hahn series
 
-For a given surreal `x`, we define the type `PartialSum x` of "partial sums". These are surreal Hahn
-series `y` characterized by the equation `y.term i = (x - y).leadingTerm` for every `i < y.length`.
-The idea is that terms of `PartialSum x` represent successive approximations to the Hahn series
-which corresponds to `x`, which will be the longest one.
+For a given surreal `x`, we define the type `PartialSum x` of partial sums of `x`. These are surreal
+Hahn series `y` characterized by the equation `y.term i = (x - y).leadingTerm` for every
+`i < y.length`. The idea is that terms of `PartialSum x` represent successive approximations to the
+Hahn series which corresponds to `x`, which will be the longest one.
 
 We define a `Preorder` instance on `PartialSum x` via the lift of the `length` function. We first
 show that `length` is injective on `PartialSum x`, meaning we can lift this to a linear order. We
@@ -654,11 +654,11 @@ theorem toSurreal_of_length_le_add_one {x : SurrealHahnSeries} {i : Ordinal}
   · rw [Order.lt_add_one_iff] at hi
     rw [truncIdx_of_le hi, term_of_le hi, add_zero]
 
-theorem toSurreal_eq' {x : SurrealHahnSeries.{u}} :
+theorem toSurreal_eq' (x : SurrealHahnSeries) :
     toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
   Surreal.mk_eq <| toIGame_equiv x
 
-theorem toSurreal_eq {x : SurrealHahnSeries.{u}} :
+theorem toSurreal_eq (x : SurrealHahnSeries) :
     toSurreal x = !{toSurreal '' truncLT x | toSurreal '' truncGT x}'(by
       rintro _ ⟨i, hi, rfl⟩ _ ⟨j, hj, rfl⟩
       exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)

@@ -358,8 +358,13 @@ instance : IsOrderedAddMonoid Surreal where
 @[simp] theorem mk_neg (x : IGame) [Numeric x] : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) [Numeric x] [Numeric y] : mk (x - y) = mk x - mk y := rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := .rfl
+
+theorem out_strictMono : StrictMono out := fun _ ↦ by simp [← mk_lt_mk]
+@[simp] theorem out_le_out {x y : Surreal} : x.out ≤ y.out ↔ x ≤ y := out_strictMono.le_iff_le
+@[simp] theorem out_lt_out {x y : Surreal} : x.out < y.out ↔ x < y := out_strictMono.lt_iff_lt
+@[simp] theorem out_inj {x y : Surreal} : x.out = y.out ↔ x = y := out_strictMono.injective.eq_iff
 
 @[simp]
 theorem mk_natCast : ∀ n : ℕ, mk n = n
@@ -432,12 +437,20 @@ Note that although this function is well-defined, this function isn't injective,
 classes in Surreal have a canonical representative. (Note however that every short numeric game has
 a unique "canonical" form!) -/
 instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
-  ofSets st H _ _ := by
-    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp))
-    rw [moves_ofSets, moves_ofSets]
-    rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
-    rw [← Surreal.mk_lt_mk, out_eq, out_eq]
-    exact H x hx y hy
+  ofSets st H _ _ := @mk !{fun p ↦ out '' st p} (.mk (by aesop) (by simp))
+
+theorem ofSets_eq_mk' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)]
+    {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    !{st} = @mk !{fun p ↦ out '' st p} (.mk (by aesop) (by simp)) :=
+  rfl
+
+theorem ofSets_eq_mk {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
+    !{s | t} = @mk !{out '' s | out '' t} (.mk (by aesop) (by simp)) := by
+  rw [ofSets_eq_mk']
+  congr
+  grind
 
 theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
