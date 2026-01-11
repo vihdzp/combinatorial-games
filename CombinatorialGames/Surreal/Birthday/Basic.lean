@@ -6,6 +6,17 @@ Authors: Aaron Liu
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Surreal.Ordinal
 
+
+/-!
+# Birthdays of surreals
+
+We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
+equivalent to it.
+
+The numeric condition can be removed to yield an equivalent definition, but that is proved in
+`CombinatorialGames.Surreal.Birthday.Cut`.
+-/
+
 universe u
 noncomputable section
 
@@ -18,6 +29,8 @@ among all *numeric* pre-games that define it.
 The numeric condition can be removed, see `Surreal.birthday_toGame`. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
+
+/-! ### Basic properties -/
 
 theorem birthday_eq_iGameBirthday (x : Surreal) :
     ∃ (y : IGame) (_ : Numeric y), mk y = x ∧ y.birthday = birthday x := by
@@ -120,6 +133,8 @@ theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := b
   rw [← h, toGame_mk]
   exact Game.birthday_mk_le c
 
+/-! ### Small instances -/
+
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
   have h₁ : {x | birthday x ≤ o} ⊆ toGame ⁻¹' {x | x.birthday ≤ o} := by
@@ -141,5 +156,58 @@ instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthd
 /-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
 instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
   small_setOf_birthday_lt o
+
+/-! ### Surreals from intervals -/
+
+theorem exists_birthday_lt_between {x y : Surreal} (h : x < y) (h' : x.birthday = y.birthday) :
+    ∃ z ∈ Ioo x y, z.birthday < x.birthday := by
+  obtain ⟨x, _, rfl, hx⟩ := birthday_eq_iGameBirthday x
+  obtain ⟨y, _, rfl, hy⟩ := birthday_eq_iGameBirthday y
+  rw [mk_lt_mk] at h
+  have H : Numeric !{xᴸ | yᴿ} := by
+    apply Numeric.mk <;> simp_rw [moves_ofSets]
+    · exact fun a ha b hb ↦ (Numeric.left_lt ha).trans (h.trans (Numeric.lt_right hb))
+    · rintro (_ | _) a ha <;> exact Numeric.of_mem_moves ha
+  have Hle : !{xᴸ | yᴿ}.birthday ≤ x.birthday := by
+    rw [birthday_le_iff']
+    rintro (_ | _) <;> simp_rw [moves_ofSets] <;> intro a ha
+    · exact birthday_lt_of_mem_moves ha
+    · rw [hx, h', ← hy]
+      exact birthday_lt_of_mem_moves ha
+  
+  refine ⟨@mk _ H, ?_, ?_⟩
+  · constructor
+    · apply lt_of_le_of_ne _ sorry
+      generalize_proofs
+      rw [mk_le_mk, le_iff_forall_lf]
+      constructor
+      · intro a ha
+        apply not_le_of_gt
+        apply Numeric.left_lt
+        simpa
+      · intro a ha
+        apply not_le_of_gt
+        apply h.trans
+        apply Numeric.lt_right
+        simpa using ha
+
+
+
+#exit
+
+/-- Returns the surreal with the least birthday in a given set.
+
+This is intended to be used for `OrdConnected` nonempty sets, in which case the specified surreal is
+unique. -/
+def ofInterval (s : Set Surreal) : Surreal :=
+  if h : s.Nonempty
+    then Classical.choose (exists_minimalFor_of_wellFoundedLT (· ∈ s) birthday h)
+    else 0
+
+@[simp]
+theorem ofInterval_empty : ofInterval ∅
+
+theorem birthday_ofInterval_le {x : Surreal} {s : Set Surreal} (h : x ∈ s) :
+    x.birthday ≤ (ofInterval s).birthday := by
 
 end Surreal
