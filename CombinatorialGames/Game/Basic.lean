@@ -167,9 +167,9 @@ theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) 
   simpa using mk_add_mul x (-y) z
 
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
-  induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
-  induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
-  induction z using IGame.ofSetsRecOn with | mk zL zR ihzl ihzr
+  induction x using IGame.ofSetsRecOn generalizing y z with | ofSets xL xR ihxl ihxr
+  induction y using IGame.ofSetsRecOn generalizing z with | ofSets yL yR ihyl ihyr
+  induction z using IGame.ofSetsRecOn with | ofSets zL zR ihzl ihzr
   simp_rw [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption,
     ← Set.image_union, ← ofSets_mul_ofSets,
     Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union,

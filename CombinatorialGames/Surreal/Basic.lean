@@ -73,12 +73,11 @@ protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves 
 elab "numeric" : tactic =>
   addInstances <| .mk [`IGame.Numeric.of_mem_moves]
 
-protected theorem isOption [Numeric x] (h : IsOption y x) : Numeric y := by
-  rw [isOption_iff_mem_union] at h
-  cases h with
-  | _ h => exact .of_mem_moves h
-
-alias _root_.IGame.IsOption.numeric := Numeric.isOption
+protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
+  induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
+  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
 
 @[simp]
 protected instance zero : Numeric 0 := by
@@ -138,9 +137,9 @@ theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x �
   simp_rw [← Numeric.not_le]; tauto
 
 /-- To prove a game is numeric, it suffices to show the left options are less or fuzzy
-to the right options.-/
-theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z)
-    (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) : Numeric x :=
+to the right options. -/
+theorem mk_of_lf (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y ⧏ z) (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) :
+    Numeric x :=
   mk (fun y hy z hz ↦ (@Numeric.not_le z y (h₂ _ z hz) (h₂ _ y hy)).1 (h₁ y hy z hz)) h₂
 
 theorem le_iff_forall_lt [Numeric x] [Numeric y] :
@@ -162,12 +161,12 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @left_lt_right x <;> simp_all
-  · intro p y hy
-    rw [moves_neg] at hy
+  · simp_rw [forall_moves_neg]
+    intro p y hy
     numeric
-    simpa using Numeric.neg (-y)
+    simpa using Numeric.neg y
 termination_by x
-decreasing_by all_goals simp_all; igame_wf
+decreasing_by igame_wf
 
 @[simp]
 theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
@@ -241,6 +240,9 @@ theorem not_fits_iff {x y : IGame} :
 theorem Fits.congr {x y z : IGame} (h : x ≈ y) (hx : x.Fits z) : y.Fits z := by
   constructor <;> intro w hw <;> grw [← h]
   exacts [hx.1 w hw, hx.2 w hw]
+
+theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
+  ⟨.congr h, .congr h.symm⟩
 
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
 theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
