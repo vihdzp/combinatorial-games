@@ -189,8 +189,8 @@ instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthd
 instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
   small_setOf_birthday_lt o
 
-/-! ### Surreals from intervals -/
-
+/-- Given two distinct surreals with the same birthday, there exists one in between with a smaller
+birthday. -/
 theorem exists_birthday_lt_between {x y : Surreal} (h : x < y) (h' : x.birthday = y.birthday) :
     ∃ z ∈ Ioo x y, z.birthday < x.birthday := by
   obtain ⟨x, _, rfl, hx⟩ := birthday_eq_iGameBirthday x
@@ -200,57 +200,30 @@ theorem exists_birthday_lt_between {x y : Surreal} (h : x < y) (h' : x.birthday 
     apply Numeric.mk <;> simp_rw [moves_ofSets]
     · exact fun a ha b hb ↦ (Numeric.left_lt ha).trans (h.trans (Numeric.lt_right hb))
     · rintro (_ | _) a ha <;> exact Numeric.of_mem_moves ha
-  have Hle : !{xᴸ | yᴿ}.birthday < x.birthday := by
-    apply lt_of_le_of_ne
-    · rw [birthday_le_iff]
-      rintro (_ | _) <;> simp_rw [moves_ofSets] <;> intro a ha
-      · exact birthday_lt_of_mem_moves ha
-      · rw [hx, h', ← hy]
-        exact birthday_lt_of_mem_moves ha
-    · intro hb
-      apply h.not_antisymmRel
-      trans !{xᴸ | yᴿ}
-      · apply Fits.equiv_of_forall_birthday_le
-        · constructor <;> simp_rw [moves_ofSets]
-          · exact fun a ha ↦ (Numeric.left_lt ha).not_ge
-          · exact fun a ha ↦ (h.trans <| Numeric.lt_right ha).not_ge
-        · intro z _ hz
-          apply le_birthday_of_fits
-
-
-  refine ⟨@mk _ H, ?_, ?_⟩
-  · constructor
-    · apply lt_of_le_of_ne _ sorry
-      generalize_proofs
-      rw [mk_le_mk, le_iff_forall_lf]
-      constructor
-      · intro a ha
-        apply not_le_of_gt
-        apply Numeric.left_lt
+  suffices (mk !{xᴸ | yᴿ}).birthday < x.birthday by
+    rw [hx] at this
+    refine ⟨_, ⟨?_, ?_⟩, this⟩ <;> apply lt_of_le_of_ne
+    · rw [mk_le_mk, le_iff_forall_lf]
+      constructor <;> intro a ha
+      · apply (Numeric.left_lt _).not_ge
         simpa
-      · intro a ha
-        apply not_le_of_gt
-        apply h.trans
-        apply Numeric.lt_right
-        simpa using ha
-
-
-
-#exit
-
-/-- Returns the surreal with the least birthday in a given set.
-
-This is intended to be used for `OrdConnected` nonempty sets, in which case the specified surreal is
-unique. -/
-def ofInterval (s : Set Surreal) : Surreal :=
-  if h : s.Nonempty
-    then Classical.choose (exists_minimalFor_of_wellFoundedLT (· ∈ s) birthday h)
-    else 0
-
-@[simp]
-theorem ofInterval_empty : ofInterval ∅
-
-theorem birthday_ofInterval_le {x : Surreal} {s : Set Surreal} (h : x ∈ s) :
-    x.birthday ≤ (ofInterval s).birthday := by
+      · rw [moves_ofSets] at ha
+        exact (h.trans <| Numeric.lt_right ha).not_ge
+    · exact fun hn ↦ this.ne' <| congrArg _ hn
+    · rw [mk_le_mk, le_iff_forall_lf]
+      constructor <;> intro a ha
+      · rw [moves_ofSets] at ha
+        exact ((Numeric.left_lt ha).trans h).not_ge
+      · apply (Numeric.lt_right _).not_ge
+        simpa
+    · exact fun hn ↦ this.ne <| h' ▸ congrArg birthday hn
+  rw [hx]
+  obtain hn | hn := (mk_lt_mk.2 h).ne.ne_or_ne (mk !{xᴸ | yᴿ}) <;> rw [ne_eq, mk_eq_mk] at hn
+  · refine Fits.birthday_lt ⟨?_, ?_⟩ hn <;> simp_rw [moves_ofSets]
+    · exact fun a ha ↦ (Numeric.left_lt ha).not_ge
+    · exact fun a ha ↦ (h.trans <| Numeric.lt_right ha).not_ge
+  · refine h' ▸ Fits.birthday_lt ⟨?_, ?_⟩ hn  <;> simp_rw [moves_ofSets]
+    · exact fun a ha ↦ ((Numeric.left_lt ha).trans h).not_ge
+    · exact fun a ha ↦ (Numeric.lt_right ha).not_ge
 
 end Surreal

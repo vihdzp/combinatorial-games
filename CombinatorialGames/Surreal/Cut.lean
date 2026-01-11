@@ -474,20 +474,28 @@ theorem Fits.rightSurreal_le {x : Surreal} {y z : Cut} (h : Fits x y z) : rightS
 theorem not_fits_iff {x : Surreal} {y z : Cut} : ¬ Fits x y z ↔ x ∈ y.left ∪ z.right := by
   rw [Fits, ← mem_compl_iff, compl_inter, compl_left, compl_right]
 
-/-- The simplest surreal number (in terms of birthday) that fits between two cuts. -/
-noncomputable def simplestBtwn {x y : Cut} (h : x < y) : Surreal :=
-  Classical.choose <|
-    exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h)
+/-- The simplest surreal number (in terms of birthday) that fits between two cuts.
+
+If none exists, we set a junk value of `0`. -/
+noncomputable def simplestBtwn (x y : Cut) : Surreal :=
+  if h : x < y then
+    Classical.choose (exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h))
+    else 0
+
+theorem simplestBtwn_of_le {x y : Cut} (h : y ≤ x) : simplestBtwn x y = 0 := by
+  rw [simplestBtwn, dif_neg h.not_gt]
 
 private theorem simplestBtwn_spec {x y : Cut} (h : x < y) :
-    MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn h) :=
-  Classical.choose_spec _
+    MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn x y) := by
+  rw [simplestBtwn, dif_pos h]
+  generalize_proofs H
+  exact Classical.choose_spec H
 
-theorem fits_simplestBtwn {x y : Cut} (h : x < y) : Fits (simplestBtwn h) x y :=
+theorem fits_simplestBtwn {x y : Cut} (h : x < y) : Fits (simplestBtwn x y) x y :=
   (simplestBtwn_spec h).1
 
 theorem birthday_simplestBtwn_le_of_fits {x y : Cut} {z : Surreal}
-    (hz : Fits z x y) : (simplestBtwn hz.lt).birthday ≤ z.birthday := by
+    (hz : Fits z x y) : (simplestBtwn x y).birthday ≤ z.birthday := by
   by_contra! H
   exact H.not_ge <| (simplestBtwn_spec hz.lt).2 hz H.le
 
@@ -495,22 +503,38 @@ theorem fits_supLeft_infRight {x y : IGame} [x.Numeric] :
     Fits (.mk x) (supLeft y) (infRight y) ↔ x.Fits y := by
   simp [Fits, supLeft, infRight, IGame.Fits]
 
+@[simp]
 theorem simplestBtwn_leftGame_rightGame {x : Game} (h : leftGame x < rightGame x) :
-    (simplestBtwn h).toGame = x := by
+    (simplestBtwn (leftGame x) (rightGame x)).toGame = x := by
+  have h' := h
   rw [leftGame_lt_rightGame_iff] at h
   obtain ⟨x, rfl⟩ := h
-  simpa [le_antisymm_iff] using fits_simplestBtwn h
+  simpa [le_antisymm_iff] using fits_simplestBtwn h'
 
 @[simp]
 theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
-    simplestBtwn (leftSurreal_lt_rightSurreal x) = x := by
+    simplestBtwn (leftSurreal x) (rightSurreal x) = x := by
   convert simplestBtwn_leftGame_rightGame (x := x.toGame) _ <;> simp
+
+/-- `simplestBtwn y z` is the unique surreal with minimal birthday which fits between both cuts. -/
+theorem simplestBtwn_eq {x y : Cut} {z : Surreal} (h : Fits z x y)
+    (hz : (simplestBtwn x y).birthday = z.birthday) : simplestBtwn x y = z := by
+  by_contra h'
+  obtain h' | h' := lt_or_gt_of_ne h'
+  · obtain ⟨w, hw, hw'⟩ := exists_birthday_lt_between h' hz
+    refine hw'.not_ge (birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩)
+    · exact x.isUpperSet_right hw.1.le (fits_simplestBtwn h.lt).1
+    · exact y.isLowerSet_left hw.2.le h.2
+  · obtain ⟨w, hw, hw'⟩ := exists_birthday_lt_between h' hz.symm
+    refine (hz ▸ hw').not_ge (birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩)
+    · exact x.isUpperSet_right hw.1.le h.1
+    · exact y.isLowerSet_left hw.2.le (fits_simplestBtwn h.lt).2
 
 /-- If `x` is a game with `supLeft x < infRight x`, then the simplest number between those two cuts
 is equal to `x`. -/
 theorem simplestBtwn_supLeft_infRight {x : IGame} (h : supLeft x < infRight x) :
-    (simplestBtwn h).toGame = .mk x := by
-  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn h)
+    (simplestBtwn (supLeft x) (infRight x)).toGame = .mk x := by
+  obtain ⟨y, _, hy, hy'⟩ := birthday_eq_iGameBirthday (simplestBtwn (supLeft x) (infRight x))
   have H := fits_simplestBtwn h
   rw [← hy, fits_supLeft_infRight] at H
   rw [← hy, toGame_mk, Game.mk_eq_mk]
