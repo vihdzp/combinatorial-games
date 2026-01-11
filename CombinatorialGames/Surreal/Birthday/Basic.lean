@@ -168,13 +168,24 @@ theorem exists_birthday_lt_between {x y : Surreal} (h : x < y) (h' : x.birthday 
     apply Numeric.mk <;> simp_rw [moves_ofSets]
     · exact fun a ha b hb ↦ (Numeric.left_lt ha).trans (h.trans (Numeric.lt_right hb))
     · rintro (_ | _) a ha <;> exact Numeric.of_mem_moves ha
-  have Hle : !{xᴸ | yᴿ}.birthday ≤ x.birthday := by
-    rw [birthday_le_iff']
-    rintro (_ | _) <;> simp_rw [moves_ofSets] <;> intro a ha
-    · exact birthday_lt_of_mem_moves ha
-    · rw [hx, h', ← hy]
-      exact birthday_lt_of_mem_moves ha
-  
+  have Hle : !{xᴸ | yᴿ}.birthday < x.birthday := by
+    apply lt_of_le_of_ne
+    · rw [birthday_le_iff]
+      rintro (_ | _) <;> simp_rw [moves_ofSets] <;> intro a ha
+      · exact birthday_lt_of_mem_moves ha
+      · rw [hx, h', ← hy]
+        exact birthday_lt_of_mem_moves ha
+    · intro hb
+      apply h.not_antisymmRel
+      trans !{xᴸ | yᴿ}
+      · apply Fits.equiv_of_forall_birthday_le
+        · constructor <;> simp_rw [moves_ofSets]
+          · exact fun a ha ↦ (Numeric.left_lt ha).not_ge
+          · exact fun a ha ↦ (h.trans <| Numeric.lt_right ha).not_ge
+        · intro z _ hz
+          apply le_birthday_of_fits
+
+
   refine ⟨@mk _ H, ?_, ?_⟩
   · constructor
     · apply lt_of_le_of_ne _ sorry
