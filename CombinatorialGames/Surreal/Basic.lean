@@ -32,6 +32,8 @@ noncomputable section
 
 /-! ### Simplicity theorem -/
 
+namespace IGame
+
 /-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every
 `z ∈ yᴿ`.
 

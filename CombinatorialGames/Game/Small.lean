@@ -3,6 +3,7 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
+import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Surreal.Basic
 
 /-!
@@ -20,6 +21,8 @@ to infinitesimals.
 -/
 
 namespace IGame
+
+namespace Dicotic
 
 /--
 One half of the **lawnmower theorem**: any dicotic game is smaller than any positive numeric game.
@@ -49,5 +52,19 @@ theorem lt_of_numeric_of_neg (x) [Dicotic x] {y} [Numeric y] (hy : y < 0) : y < 
   have := lt_of_numeric_of_pos (-x) (y := -y); simp_all
 
 end Dicotic
+
+namespace Impartial
+
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+  grw [← nim_grundy_equiv x]
+  exact Dicotic.lt_of_numeric_of_pos _ hy
+
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
+  grw [← nim_grundy_equiv x]
+  exact Dicotic.lt_of_numeric_of_neg _ hy
+
+end Impartial
 
 end IGame
