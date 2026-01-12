@@ -258,6 +258,11 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
+/-- The confusion interval of a game is given by the interval between
+`rightGame x` and `leftGame x`. -/
+example (x : Game) : {y : Surreal | y.toGame ‖ x} = (rightGame x).right ∩ (leftGame x).left := by
+  ext; simp [IncompRel]
+
 @[simp] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
   ext; simp [le_neg]
 
