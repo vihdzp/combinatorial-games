@@ -7,7 +7,6 @@ import CombinatorialGames.Game.Computability.FGame
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Game.Graph
 import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Impartial.Multiplication
 import CombinatorialGames.Game.Loopy.Basic

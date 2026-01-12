@@ -5,7 +5,7 @@ Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.Small
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Nimber.Basic
 
 /-!
