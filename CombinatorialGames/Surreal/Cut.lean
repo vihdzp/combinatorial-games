@@ -262,10 +262,28 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp, grind =] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp, grind =] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
+@[simp, grind =]
+theorem leftGame_mk (x : IGame) [Numeric x] : leftGame (.mk x) = leftSurreal (.mk x) := by
+  rw [← toGame_mk, leftGame_toGame]
+
+@[simp, grind =]
+theorem rightGame_mk (x : IGame) [Numeric x] : rightGame (.mk x) = rightSurreal (.mk x) := by
+  rw [← toGame_mk, rightGame_toGame]
+
+@[simp, grind =]
+theorem leftGame_zero : leftGame 0 = leftSurreal 0 := by simpa using leftGame_toGame 0
+@[simp, grind =]
+theorem rightGame_zero : rightGame 0 = rightSurreal 0 := by simpa using rightGame_toGame 0
+
+@[simp, grind =]
+theorem leftGame_one : leftGame 1 = leftSurreal 1 := by simpa using leftGame_toGame 1
+@[simp, grind =]
+theorem rightGame_one : rightGame 1 = rightSurreal 1 := by simpa using rightGame_toGame 1
+
+@[simp, grind =] theorem rightGame_neg (x : Game) : rightGame (-x) = -leftGame x := by
   ext; simp [le_neg]
 
-@[simp, grind =] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
+@[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
 
 @[simp]
@@ -317,8 +335,13 @@ theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x
 theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
   simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
 
+@[simp]
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by
   simp
+
+@[simp]
+theorem leftSurreal_le_rightSurreal (x : Surreal) : leftSurreal x ≤ rightSurreal x :=
+  (leftSurreal_lt_rightSurreal x).le
 
 theorem leftSurreal_lt_rightSurreal_iff {x y : Surreal} :
     leftSurreal x < rightSurreal y ↔ x ≤ y := by
@@ -427,13 +450,13 @@ theorem right_infRight (x : IGame) :
   simp [infRight]
 
 @[simp]
-theorem neg_supLeft (x : IGame) : -supLeft x = infRight (-x) := by
+theorem infRight_neg (x : IGame) : infRight (-x) = -supLeft x := by
   refine eq_of_forall_le_iff fun y ↦ ?_
   simp [supLeft, infRight]
 
 @[simp]
-theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by
-  rw [← neg_neg (supLeft _), neg_supLeft, neg_neg]
+theorem supLeft_neg (x : IGame) : supLeft (-x) = -infRight x := by
+  rw [← neg_neg (supLeft _), ← infRight_neg, neg_neg]
 
 theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
@@ -454,8 +477,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
-  simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
-    @leftGame_eq_supLeft_of_le (-x)
+  simpa using @leftGame_eq_supLeft_of_le (-x)
 
 /-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
 def Fits (x : Surreal) (y z : Cut) : Prop :=
@@ -531,6 +553,44 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-! ### Some explicit calculations -/
+
+@[simp, grind =] theorem supLeft_star : supLeft ⋆ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_star : infRight ⋆ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_star : leftGame (.mk ⋆) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_star]
+
+@[simp, grind =]
+theorem rightGame_star : rightGame (.mk ⋆) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_star]
+
+@[simp, grind =]
+theorem supLeft_switch (x : IGame) : supLeft (±x) = rightGame (.mk x) := by
+  simp [supLeft]
+
+@[simp, grind =]
+theorem infRight_switch (x : IGame) : infRight (±x) = -rightGame (.mk x) := by
+  rw [← neg_switch, infRight_neg, supLeft_switch]
+
+theorem infRight_switch_le_supLeft_switch {x : IGame} (h : 0 ≤ x) :
+    infRight (±x) ≤ supLeft (±x) := by
+  trans leftSurreal 0
+  · simpa
+  · apply le_of_lt
+    simpa
+
+theorem leftGame_switch {x : IGame} (h : 0 ≤ x) [Numeric x] :
+    leftGame (.mk (±x)) = rightSurreal (.mk x) := by
+  rw [leftGame_eq_supLeft_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
+theorem rightGame_switch {x : IGame} (h : 0 ≤ x) [Numeric x] :
+    rightGame (.mk (±x)) = -rightSurreal (.mk x) := by
+  rw [rightGame_eq_infRight_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
 end Cut
 end Surreal
 
@@ -551,5 +611,39 @@ theorem mem_confusionInterval {x : Game} {y : Surreal} :
 @[simp]
 theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = ∅ := by
   grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_neg (x : Game) : confusionInterval (-x) = -confusionInterval x := by
+  simp [confusionInterval, Set.inter_comm]
+
+@[simp]
+theorem confusionInterval_ordinal (o : NatOrdinal) : confusionInterval o = ∅ := by
+  simpa using confusionInterval_toGame o
+
+@[simp]
+theorem confusionInterval_zero : confusionInterval 0 = ∅ := by
+  simpa using confusionInterval_ordinal 0
+
+@[simp]
+theorem confusionInterval_one : confusionInterval 1 = ∅ := by
+  simpa using confusionInterval_ordinal 1
+
+instance ordConnected_confusionInterval (x : Game) : x.confusionInterval.OrdConnected := by
+  refine ⟨fun y hy z hz w ⟨hw, hw'⟩ ↦ ⟨?_, ?_⟩⟩
+  · apply isUpperSet_right _ hw
+    grind [confusionInterval]
+  · apply isLowerSet_left _ hw'
+    grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_star : confusionInterval (.mk ⋆) = {0} := by
+  grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+    confusionInterval (.mk (±x)) = Set.Icc (-Surreal.mk x) (.mk x) := by
+  rw [confusionInterval, leftGame_switch h, rightGame_switch h]
+  ext
+  simp
 
 end Game
