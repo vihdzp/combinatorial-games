@@ -232,15 +232,19 @@ def rightSurreal : Surreal ↪o Cut where
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
-@[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
-@[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
+@[simp, grind =]
+theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
+@[simp, grind =]
+theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
+@[simp, grind =]
+theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp, grind =]
+theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
-@[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
-@[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
-@[simp] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
-@[simp] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
+@[simp, grind =] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
+@[simp, grind =] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
+@[simp, grind =] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
+@[simp, grind =] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
 
 theorem mem_left_leftGame {x y} : y ∈ (leftGame x).left ↔ y.toGame ⧏ x := .rfl
 theorem mem_right_leftGame {x y} : y ∈ (leftGame x).right ↔ x ≤ y.toGame := .rfl
@@ -252,21 +256,16 @@ theorem mem_right_leftSurreal {x y} : y ∈ (leftSurreal x).right ↔ x ≤ y :=
 theorem mem_left_rightSurreal {x y} : y ∈ (rightSurreal x).left ↔ y ≤ x := .rfl
 theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y := .rfl
 
-@[simp] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
+@[simp, grind =] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
+@[simp, grind =] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-/-- The confusion interval of a game is given by the interval between
-`rightGame x` and `leftGame x`. -/
-example (x : Game) : {y : Surreal | y.toGame ‖ x} = (rightGame x).right ∩ (leftGame x).left := by
-  ext; simp [IncompRel]
-
-@[simp] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
+@[simp, grind =] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
   ext; simp [le_neg]
 
-@[simp] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
+@[simp, grind =] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
   ext; simp [neg_le]
 
 @[simp]
@@ -534,3 +533,23 @@ theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < inf
 
 end Cut
 end Surreal
+
+/-! ### Confusion intervals -/
+
+namespace Game
+open Surreal Cut
+
+/-- The confusion interval of `x` is the set of surreals `y` with `x ‖ y`. -/
+def confusionInterval (x : Game) : Set Surreal :=
+  (rightGame x).right ∩ (leftGame x).left
+
+@[simp]
+theorem mem_confusionInterval {x : Game} {y : Surreal} :
+    y ∈ confusionInterval x ↔ y.toGame ‖ x := by
+  simp [confusionInterval, IncompRel]
+
+@[simp]
+theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = ∅ := by
+  grind [confusionInterval]
+
+end Game
