@@ -280,11 +280,11 @@ theorem leftGame_one : leftGame 1 = leftSurreal 1 := by simpa using leftGame_toG
 @[simp, grind =]
 theorem rightGame_one : rightGame 1 = rightSurreal 1 := by simpa using rightGame_toGame 1
 
-@[simp, grind =] theorem rightGame_neg (x : Game) : rightGame (-x) = -leftGame x := by
-  ext; simp [le_neg]
-
 @[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
+
+@[simp, grind =] theorem rightGame_neg (x : Game) : rightGame (-x) = -leftGame x := by
+  ext; simp [le_neg]
 
 @[simp]
 theorem neg_leftGame_image (s : Set Game) : -leftGame '' s = rightGame '' (-s) := by
