@@ -99,11 +99,11 @@ protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
 termination_by x
 decreasing_by igame_wf
 
-end Dicotic
-
 @[simp]
-theorem dicotic_neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
+theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
   ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
+end Dicotic
 
 /-! ### Impartial games -/
 

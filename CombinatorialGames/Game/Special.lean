@@ -124,17 +124,23 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
-instance (x : IGame) [Short x] : Short (⧾x) := by
-  have : !{{0} | {-x}}.Short := by rw [short_def]; simpa
-  rw [short_def]
-  simpa
+@[simp]
+theorem short_tiny_iff {x : IGame} : Short (⧾x) ↔ Short x := by
+  trans Short !{{0} | {-x}}
+  all_goals
+    rw [short_def]
+    simp
 
-instance (x : IGame) [Dicotic x] : Dicotic (⧾x) := by
-  rw [dicotic_def]
-  simp only [leftMoves_tiny, rightMoves_tiny, Set.singleton_ne_empty, Player.forall,
-    Set.mem_singleton_iff, forall_eq, Dicotic.zero]
-  rw [dicotic_def]
-  simpa
+instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
+
+@[simp]
+theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
+  trans Dicotic !{{0} | {-x}}
+  all_goals
+    rw [dicotic_def]
+    simp
+
+instance (x : IGame) [Dicotic x] : Dicotic (⧾x) := by rwa [dicotic_tiny_iff]
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
@@ -159,12 +165,19 @@ theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
 theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
+@[simp]
+theorem short_miny_iff {x : IGame} : Short (⧿x) ↔ Short x := by
+  rw [← neg_tiny, Short.neg_iff]; simp
+
 instance (x : IGame) [Short x] : Short (⧿x) := by
-  rw [← neg_tiny]; infer_instance
+  rwa [short_miny_iff]
+
+@[simp]
+theorem dicotic_miny_iff {x : IGame} : Dicotic (⧿x) ↔ Dicotic x := by
+  rw [← neg_tiny, Dicotic.neg_iff]; simp
 
 instance (x : IGame) [Dicotic x] : Dicotic (⧿x) := by
-  rw [← dicotic_neg_iff, neg_miny]
-  infer_instance
+  rwa [dicotic_miny_iff]
 
 @[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
 @[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
@@ -195,9 +208,19 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
 
+@[simp]
+theorem short_switch_iff {x : IGame} : Short (±x) ↔ Short x := by
+  rw [short_def]; simp
+
+instance (x : IGame) [Short x] : Short (±x) := by
+  rwa [short_switch_iff]
+
+@[simp]
+theorem dicotic_switch_iff {x : IGame} : Dicotic (±x) ↔ Dicotic x := by
+  rw [dicotic_def]; simp
+
 instance (x : IGame) [Dicotic x] : Dicotic (±x) := by
-  rw [dicotic_def]
-  simpa
+  rwa [dicotic_switch_iff]
 
 end IGame
 end
