@@ -726,6 +726,8 @@ theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
 theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
   recOn'_rightSurreal ..
 
+-- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
+-- are dyadic.
 private theorem short_aux (x : IGame) [Short x] :
     (leftGame <| .mk x).Numeric ∧ (rightGame <| .mk x).Numeric := by
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
