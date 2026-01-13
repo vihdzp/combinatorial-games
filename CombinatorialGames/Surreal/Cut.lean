@@ -527,5 +527,16 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-! ### Numeric cuts -/
+
+/-- We say that a cut is numeric when it's either a left or right cut from a surreal. -/
+@[mk_iff]
+protected class inductive Numeric : Cut → Prop where
+  | leftSurreal : ∀ y, Cut.Numeric (leftSurreal y)
+  | rightSurreal : ∀ y, Cut.Numeric (rightSurreal y)
+
+def Numeric.toSurreal (x : Cut) [x.Numeric] : Surreal := by sorry
+
+
 end Cut
 end Surreal
