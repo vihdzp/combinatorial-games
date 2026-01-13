@@ -44,8 +44,9 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext p; cases p <;> simp [mulOption]
 
-@[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+@[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
 protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
+@[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
 
 /-! ### Half -/
 
@@ -63,8 +64,8 @@ theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
 theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
-protected instance Short.half : Short ½ := by rw [short_def]; simp
 @[simp] protected instance Numeric.half : Numeric ½ := by rw [numeric_def]; simp
+protected instance Short.half : Short ½ := by rw [short_def]; simp
 
 /-! ### Up and down -/
 
@@ -82,6 +83,7 @@ recommended_spelling "up" for "↑" in [«term↑»]
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
+protected instance Dicotic.up : Dicotic ↑ := by rw [dicotic_def]; simp
 protected instance Short.up : Short ↑ := by rw [short_def]; simp
 
 /-- The game `↓ = {⋆ | 0}`. -/
@@ -101,6 +103,7 @@ recommended_spelling "down" for "↓" in [«term↓»]
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
+protected instance Dicotic.down : Dicotic ↓ := by rw [dicotic_def]; simp
 protected instance Short.down : Short ↓ := by rw [short_def]; simp
 
 /-! ### Tiny and miny -/
@@ -124,6 +127,13 @@ theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
 instance (x : IGame) [Short x] : Short (⧾x) := by
   have : !{{0} | {-x}}.Short := by rw [short_def]; simpa
   rw [short_def]
+  simpa
+
+instance (x : IGame) [Dicotic x] : Dicotic (⧾x) := by
+  rw [dicotic_def]
+  simp only [leftMoves_tiny, rightMoves_tiny, Set.singleton_ne_empty, Player.forall,
+    Set.mem_singleton_iff, forall_eq, Dicotic.zero]
+  rw [dicotic_def]
   simpa
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
@@ -151,6 +161,10 @@ theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
 
 instance (x : IGame) [Short x] : Short (⧿x) := by
   rw [← neg_tiny]; infer_instance
+
+instance (x : IGame) [Dicotic x] : Dicotic (⧿x) := by
+  rw [← dicotic_neg_iff, neg_miny]
+  infer_instance
 
 @[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
 @[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
@@ -180,6 +194,10 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 @[simp]
 theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
+
+instance (x : IGame) [Dicotic x] : Dicotic (±x) := by
+  rw [dicotic_def]
+  simpa
 
 end IGame
 end

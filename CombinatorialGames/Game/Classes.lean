@@ -101,6 +101,10 @@ decreasing_by igame_wf
 
 end Dicotic
 
+@[simp]
+theorem dicotic_neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
+  ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
 /-! ### Impartial games -/
 
 private def ImpartialAux (x : IGame) : Prop :=
