@@ -63,8 +63,8 @@ theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
 theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
-protected instance Short.half : Short ½ := by rw [short_def]; simp
 @[simp] protected instance Numeric.half : Numeric ½ := by rw [numeric_def]; simp
+protected instance Short.half : Short ½ := by rw [short_def]; simp
 
 /-! ### Up and down -/
 
