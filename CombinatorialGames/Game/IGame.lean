@@ -215,6 +215,8 @@ theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
 theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
   fun hx ↦ Subposition.irrefl x (.of_mem_moves hx)
 
+/-- `WSubposition x y` means that `x` is reachable from `y` by a sequence of moves.
+It is the non-strict version of `Subposition`. -/
 def WSubposition (x y : IGame) : Prop := x = y ∨ Subposition x y
 
 theorem wsubposition_iff_eq_or_subposition {x y : IGame} :
