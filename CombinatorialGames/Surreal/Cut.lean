@@ -5,7 +5,6 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Surreal.Birthday.Basic
 import Mathlib.Order.Concept
-import Mathlib.Order.ConditionallyCompleteLattice.Finset
 import Mathlib.Order.UpperLower.CompleteLattice
 
 /-!
@@ -34,8 +33,8 @@ universe u
 namespace Surreal
 open Set IGame
 
-/-- A surreal cut, sometimes called a section, consists of two complementary sets of surreals, where
-every surreal in the former is less than every surreal in the latter. -/
+/-- A surreal cut consists of two complementary sets of surreals, where every surreal in the former
+is less than every surreal in the latter. -/
 abbrev Cut := Concept Surreal Surreal (· < ·)
 
 namespace Cut
@@ -359,26 +358,6 @@ theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
   · exact h.1 (mem_Iic.2 le_rfl)
   · constructor <;> simpa
 
-theorem leftSurreal_strictMono : StrictMono leftSurreal :=
-  fun x y ↦ by simp
-
-theorem rightSurreal_strictMono : StrictMono rightSurreal :=
-  fun x y ↦ by simp
-
-theorem leftSurreal_lt_leftSurreal_iff {x y : Surreal} : leftSurreal x < leftSurreal y ↔ x < y :=
-  leftSurreal_strictMono.lt_iff_lt
-
-theorem rightSurreal_lt_rightSurreal_iff {x y : Surreal} : leftSurreal x < leftSurreal y ↔ x < y :=
-  leftSurreal_strictMono.lt_iff_lt
-
-@[simp]
-theorem leftSurreal_inj {x y : Surreal} : leftSurreal x = leftSurreal y ↔ x = y :=
-  leftSurreal_strictMono.injective.eq_iff
-
-@[simp]
-theorem rightSurreal_inj {x y : Surreal} : rightSurreal x = rightSurreal y ↔ x = y :=
-  rightSurreal_strictMono.injective.eq_iff
-
 theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
   refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
   simp
@@ -398,45 +377,6 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
   · rw [lt_iff_nonempty_inter]
     exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
   · aesop
-
-@[simp]
-theorem leftGame_ne_bot (x : Game) : leftGame x ≠ ⊥ := by
-  apply_fun left
-  rw [left_bot, ← Set.nonempty_iff_ne_empty, left_leftGame]
-  refine ⟨-(x.birthday + 1), fun h ↦ ?_⟩
-  simpa [zero_lt_one.not_ge] using (Game.neg_toGame_birthday_le x).trans h
-
-@[simp]
-theorem leftGame_ne_top (x : Game) : leftGame x ≠ ⊤ := by
-  apply_fun right
-  rw [right_top, ← Set.nonempty_iff_ne_empty, right_leftGame]
-  exact ⟨x.birthday, Game.le_toGame_birthday x⟩
-
-@[simp]
-theorem rightGame_ne_bot (x : Game) : rightGame x ≠ ⊥ := by
-  rw [ne_eq, ← neg_inj, ← leftGame_neg, neg_bot]
-  exact leftGame_ne_top _
-
-@[simp]
-theorem rightGame_ne_top (x : Game) : rightGame x ≠ ⊤ := by
-  rw [ne_eq, ← neg_inj, ← leftGame_neg, neg_top]
-  exact leftGame_ne_bot _
-
-@[simp]
-theorem leftSurreal_ne_bot (x : Surreal) : leftSurreal x ≠ ⊥ := by
-  simpa using leftGame_ne_bot x.toGame
-
-@[simp]
-theorem leftSurreal_ne_top (x : Surreal) : leftSurreal x ≠ ⊤ := by
-  simpa using leftGame_ne_top x.toGame
-
-@[simp]
-theorem rightSurreal_ne_bot (x : Surreal) : rightSurreal x ≠ ⊥ := by
-  simpa using rightGame_ne_bot x.toGame
-
-@[simp]
-theorem rightSurreal_ne_top (x : Surreal) : rightSurreal x ≠ ⊤ := by
-  simpa using rightGame_ne_top x.toGame
 
 theorem sInf_leftSurreal_right (x : Cut) : sInf (leftSurreal '' x.right) = x := by
   ext y
@@ -497,10 +437,6 @@ theorem right_supLeft (x : IGame) :
     (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
-theorem supLeft_mem_of_short {x : IGame} [Short x] (hx : xᴸ.Nonempty) :
-    ∃ y ∈ xᴸ, rightGame (.mk y) = supLeft x :=
-  Set.Nonempty.ciSup_mem_image _ hx (Short.finite_moves _ x)
-
 /-- The infimum of all left cuts of right options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
@@ -515,11 +451,6 @@ theorem left_infRight (x : IGame) :
 theorem right_infRight (x : IGame) :
     (infRight x).right = ⋃ i ∈ xᴿ, {y | .mk i ≤ y.toGame} := by
   simp [infRight]
-
-theorem infRight_mem_of_short {x : IGame} [Short x] (hx : xᴿ.Nonempty) :
-    ∃ y ∈ xᴿ, leftGame (.mk y) = infRight x :=
-  -- TODO: missing Mathlib lemma
-  Set.Nonempty.ciSup_mem_image (α := Cutᵒᵈ) _ hx (Short.finite_moves _ x)
 
 @[simp]
 theorem infRight_neg (x : IGame) : infRight (-x) = -supLeft x := by
