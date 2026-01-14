@@ -518,7 +518,8 @@ theorem simplestBtwn_leftSurreal_rightSurreal (x : Surreal) :
 
 /-- `simplestBtwn y z` is the unique surreal with minimal birthday which fits between both cuts. -/
 theorem simplestBtwn_eq {x y : Cut} {z : Surreal} (h : Fits z x y)
-    (hz : (simplestBtwn x y).birthday = z.birthday) : simplestBtwn x y = z := by
+    (hz : z.birthday ≤ (simplestBtwn x y).birthday) : simplestBtwn x y = z := by
+  replace hz := (birthday_simplestBtwn_le_of_fits h).antisymm hz
   by_contra h'
   obtain h' | h' := lt_or_gt_of_ne h'
   · obtain ⟨w, hw, hw'⟩ := exists_birthday_lt_between h' hz
