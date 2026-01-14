@@ -4,8 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.NatOrdinal.Basic
+import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.Order.Hom.Monoid
 
 /-!
@@ -159,18 +160,17 @@ theorem toGame_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
 /-- The natural addition of ordinals corresponds to their sum as games. -/
 theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp [NatOrdinal.lt_add_iff]
-  constructor
+  simp only [game_cmp, leftMoves_toIGame, lt_add_iff]
+  refine ⟨?_, ⟨fun _ ↦ ?_, fun _ ↦ ?_⟩⟩
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
     · rw [← toIGame.le_iff_le] at hd
       apply (hd.trans_lt _).not_ge
       grw [toIGame_add]
       simpa
-  · rintro _ (⟨c, hc, rfl⟩ | ⟨c, hc, rfl⟩)
-    all_goals
-      grw [← toIGame_add]
-      simpa
+  all_goals
+    grw [← toIGame_add]
+    simp
 termination_by (a, b)
 
 @[simp]
@@ -180,18 +180,16 @@ theorem toGame_add (a b : NatOrdinal) : (a + b).toGame = a.toGame + b.toGame :=
 /-- The natural multiplication of ordinals corresponds to their product as games. -/
 theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp [NatOrdinal.lt_mul_iff, mulOption]
-  constructor
-  · rintro _ e c hc d hd he rfl
-    grw [← toIGame.le_iff_le, toIGame_add, toIGame_add] at he
+  simp only [game_cmp, leftMoves_toIGame, lt_mul_iff, mulOption]
+  refine ⟨fun e c hc d hd he ↦ ?_, fun c hc d hd ↦ ?_⟩
+  · grw [← toIGame.le_iff_le, toIGame_add, toIGame_add] at he
     rw [← add_le_add_iff_right (toIGame (c * d))]
     apply mt he.trans'
     grw [toIGame_mul, toIGame_mul, toIGame_mul, ← IGame.le_sub_iff_add_le]
     exact left_lf <| mulOption_mem_moves_mul
       (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
-  · rintro _ c d hc hd rfl
-    grw [IGame.le_sub_iff_add_le, ← toIGame_mul, ← toIGame_mul, ← toIGame_mul, ← toIGame_add,
-      ← toIGame_add, toIGame.le_iff_le, not_le]
+  · grw [← sub_eq_add_neg, IGame.le_sub_iff_add_le, ← toIGame_mul, ← toIGame_mul, ← toIGame_mul,
+      ← toIGame_add, ← toIGame_add, toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
 termination_by (a, b)
 

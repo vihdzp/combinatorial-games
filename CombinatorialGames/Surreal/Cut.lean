@@ -46,10 +46,12 @@ def left (x : Cut) := x.extent
 /-- The right set in a cut. This is an alias for `Concept.intent`. -/
 def right (x : Cut) := x.intent
 
-alias left_lt_right := Concept.rel_extent_intent
-alias disjoint_left_right := Concept.disjoint_extent_intent
-alias codisjoint_left_right := Concept.codisjoint_extent_intent
-alias isCompl_left_right := Concept.isCompl_extent_intent
+theorem left_lt_right {x : Cut} {y z : Surreal} (hy : y ∈ x.left) (hz : z ∈ x.right) : y < z :=
+  x.rel_extent_intent hy hz
+
+theorem disjoint_left_right (x : Cut) : Disjoint x.left x.right := x.disjoint_extent_intent
+theorem codisjoint_left_right (x : Cut) : Codisjoint x.left x.right := x.codisjoint_extent_intent
+theorem isCompl_left_right (x : Cut) : IsCompl x.left x.right := x.isCompl_extent_intent
 
 theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := by
   intro a b hb ha
@@ -72,10 +74,10 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem left_inj {c d : Cut} : c.left = d.left ↔ c = d := left_injective.eq_iff
 @[simp] theorem right_inj {c d : Cut} : c.right = d.right ↔ c = d := right_injective.eq_iff
 
-@[simp] theorem left_subset_left_iff {c d : Cut}: c.left ⊆ d.left ↔ c ≤ d := .rfl
+@[simp] theorem left_subset_left_iff {c d : Cut} : c.left ⊆ d.left ↔ c ≤ d := .rfl
 @[simp] theorem left_ssubset_left_iff {c d : Cut} : c.left ⊂ d.left ↔ c < d := .rfl
 
-@[simp] theorem right_subset_right_iff {c d : Cut}: c.right ⊆ d.right ↔ d ≤ c :=
+@[simp] theorem right_subset_right_iff {c d : Cut} : c.right ⊆ d.right ↔ d ≤ c :=
   Concept.intent_subset_intent_iff
 @[simp] theorem right_ssubset_right_iff {c d : Cut} : c.right ⊂ d.right ↔ d < c :=
   Concept.intent_ssubset_intent_iff
