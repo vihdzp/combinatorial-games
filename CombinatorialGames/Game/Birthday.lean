@@ -261,9 +261,7 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
     · aesop
     · intro p
       have hx (p) : x.moves p ⊆ birthdayFinset n := by cases p <;> simp_all [subset_def]
-      classical
-      have := Set.fintypeSubset _ (hx left)
-      have := Set.fintypeSubset _ (hx right)
+      classical have := Set.fintypeSubset _ (hx ·)
       use xᴸ.toFinset, xᴿ.toFinset
       aesop
 
@@ -276,8 +274,7 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
-theorem short_iff_birthday_finite {x : IGame} :
-    x.Short ↔ x.birthday < of Ordinal.omega0 := by
+theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .omega0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (p : Player) (y : x.moves p) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
@@ -294,7 +291,7 @@ theorem short_iff_birthday_finite {x : IGame} :
 termination_by x
 decreasing_by igame_wf
 
-theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of Ordinal.omega0 :=
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of .omega0 :=
   short_iff_birthday_finite.1 ‹_›
 
 end IGame
