@@ -33,8 +33,8 @@ universe u
 namespace Surreal
 open Set IGame
 
-/-- A surreal cut consists of two complementary sets of surreals, where every surreal in the former
-is less than every surreal in the latter. -/
+/-- A surreal cut, sometimes called a section, consists of two complementary sets of surreals,
+where every surreal in the former is less than every surreal in the latter. -/
 abbrev Cut := Concept Surreal Surreal (· < ·)
 
 namespace Cut
