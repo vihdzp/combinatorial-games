@@ -527,5 +527,16 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-- A characterization of games equivalent to numbers: they're precisely those with
+`supLeft x < infRight x`. -/
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ ∃ y : Subtype Numeric, x ≈ y where
+  mp h := by
+    refine ⟨⟨(simplestBtwn h).out, inferInstance⟩, ?_⟩
+    rw [← Game.mk_eq_mk, gameMk_out, simplestBtwn_supLeft_infRight]
+  mpr := by
+    rintro ⟨⟨y, _⟩, h⟩
+    exact supLeft_lt_infRight_of_equiv_numeric h
+
 end Cut
 end Surreal
