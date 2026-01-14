@@ -287,6 +287,18 @@ theorem wsubposition_antisymm_iff {x y : IGame} : x = y ↔ WSubposition x y ∧
 theorem subposition_of_wsubposition_of_ne {x y : IGame} (hw : WSubposition x y) (hne : x ≠ y) :
     Subposition x y := hw.resolve_left hne
 
+theorem subposition_of_wsubposition_not_wsubposition {x y : IGame}
+    (hxy : WSubposition x y) (hyx : ¬WSubposition y x) : Subposition x y :=
+  hxy.resolve_left fun h => hyx (wsubposition_of_eq h.symm)
+
+theorem subposition_iff_wsubposition_not_wsubposition {x y : IGame} :
+    Subposition x y ↔ WSubposition x y ∧ ¬WSubposition y x :=
+  ⟨fun hxy => ⟨hxy.wsubposition, hxy.not_wsubposition⟩,
+    fun h => subposition_of_wsubposition_not_wsubposition h.1 h.2⟩
+
+theorem WSubposition.of_mem_moves {p : Player} {x y : IGame} (hxy : x ∈ y.moves p) :
+    WSubposition x y := (Subposition.of_mem_moves hxy).wsubposition
+
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
 things for you.
