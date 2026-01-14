@@ -222,14 +222,14 @@ theorem wsubposition_iff_eq_or_subposition {x y : IGame} :
 
 theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
     ∃ p, ∃ z ∈ y.moves p, WSubposition x z := by
-  unfold Subposition
+  unfold WSubposition Subposition
   rw [Relation.transGen_iff_exists]
   simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
   exact exists_comm
 
 @[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
 theorem WSubposition.rfl {x : IGame} : WSubposition x x := .refl x
-theorem wsubposition_of_eq {x y : IGame} (hxy : x = y) : WSubposition x y := h ▸ .rfl
+theorem wsubposition_of_eq {x y : IGame} (hxy : x = y) : WSubposition x y := hxy ▸ .rfl
 
 theorem wsubposition_of_subposition {x y : IGame} (h : Subposition x y) :
     WSubposition x y := .inr h
@@ -248,10 +248,10 @@ theorem subposition_of_subposition_of_wsubposition {x y z : IGame}
   · exact hxy
   · exact hxy.trans hyz
 
-alias WSubposition.trans_subposition := wsubposition_of_wsubposition_of_subposition
-alias Subposition.trans_wsubposition' := wsubposition_of_wsubposition_of_subposition
-alias Subposition.trans_wsubposition := wsuposition_of_subposition_of_wsubposition
-alias WSubposition.trans_subposition' := wsuposition_of_subposition_of_wsubposition
+alias WSubposition.trans_subposition := subposition_of_wsubposition_of_subposition
+alias Subposition.trans_wsubposition' := subposition_of_wsubposition_of_subposition
+alias Subposition.trans_wsubposition := subposition_of_subposition_of_wsubposition
+alias WSubposition.trans_subposition' := subposition_of_subposition_of_wsubposition
 
 @[trans] theorem wsubposition_trans {x y z : IGame}
     (hxy : WSubposition x y) (hyz : WSubposition y z) : WSubposition x z := by
@@ -276,10 +276,8 @@ alias WSubposition.not_subposition := not_subposition_of_wsubposition
 alias Subposition.not_wsubposition := not_wsubposition_of_subposition
 
 theorem wsubposition_antisymm {x y : IGame}
-    (hxy : WSubposition x y) (hyx : WSubposition y x) : x = y := by
-  obtain h | hxy := hxy
-  · exact h
-  exact Subposition.irrefl x (hxy.trans_wsubposition hyx)
+    (hxy : WSubposition x y) (hyx : WSubposition y x) : x = y :=
+  hxy.resolve_right fun h => Subposition.irrefl x (h.trans_wsubposition hyx)
 
 alias WSubposition.antisymm := wsubposition_antisymm
 
