@@ -261,7 +261,7 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
     · aesop
     · intro p
       have hx (p) : x.moves p ⊆ birthdayFinset n := by cases p <;> simp_all [subset_def]
-      classical have := Set.fintypeSubset _ (hx ·)
+      classical have (p : Player) := Set.fintypeSubset _ (hx p)
       use xᴸ.toFinset, xᴿ.toFinset
       aesop
 
