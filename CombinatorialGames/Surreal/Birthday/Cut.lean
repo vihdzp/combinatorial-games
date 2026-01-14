@@ -150,6 +150,9 @@ theorem birthday_leftSurreal (x : Surreal) : (leftSurreal x).birthday = x.birthd
 theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birthday + 1 := by
   simpa [← neg_rightSurreal] using birthday_leftSurreal (-x)
 
+theorem birthday_of_numeric (x : Cut) [hx : x.Numeric] : x.birthday = x.toSurreal.birthday + 1 := by
+  cases hx <;> simp
+
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
   obtain ⟨y, rfl | rfl, hy⟩ := birthday_eq_sSup_birthday y
