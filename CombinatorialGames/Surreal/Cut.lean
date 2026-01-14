@@ -619,6 +619,14 @@ namespace Numeric
 
 attribute [instance] Numeric.leftSurreal Numeric.rightSurreal
 
+@[simp low]
+theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
+  cases hx <;> simp
+
+@[simp low]
+theorem ne_top (x : Cut) [hx : x.Numeric] : x ≠ ⊤ := by
+  cases hx <;> simp
+
 open Classical in
 /-- A version of the recursor which eliminates into `Sort`. -/
 @[elab_as_elim]
@@ -654,18 +662,6 @@ theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : S
   congr
   exact rightSurreal_inj.1 <| Classical.choose_spec H
 
-/-- Returns the surreal defining the cut. -/
-noncomputable def toSurreal (x : Cut) [x.Numeric] : Surreal :=
-  recOn' x (fun y ↦ y) (fun y ↦ y)
-
-@[simp]
-theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
-  recOn'_leftSurreal ..
-
-@[simp]
-theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
-  recOn'_rightSurreal ..
-
 -- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
 -- are dyadic.
 private theorem short_aux (x : IGame) [Short x] :
@@ -678,15 +674,13 @@ private theorem short_aux (x : IGame) [Short x] :
     rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h] at *
     constructor
     · obtain hx | hx := xᴸ.eq_empty_or_nonempty
-      · rw [supLeft, hx] at h₁
-        simp at h₁
+      · simp [supLeft, hx] at h₁
       · obtain ⟨y, hy, hy'⟩ := supLeft_mem_of_short hx
         rw [← hy']
         short
         exact (short_aux y).2
     · obtain hx | hx := xᴿ.eq_empty_or_nonempty
-      · rw [infRight, hx] at h₂
-        simp at h₂
+      · simp [infRight, hx] at h₂
       · obtain ⟨y, hy, hy'⟩ := infRight_mem_of_short hx
         rw [← hy']
         short
@@ -713,5 +707,18 @@ protected theorem infRight {x : IGame} [Short x] (hx : xᴿ.Nonempty) : (infRigh
   infer_instance
 
 end Numeric
+
+/-- Returns the surreal defining the cut. -/
+noncomputable def toSurreal (x : Cut) [x.Numeric] : Surreal :=
+  Numeric.recOn' x (fun y ↦ y) (fun y ↦ y)
+
+@[simp]
+theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
+  Numeric.recOn'_leftSurreal ..
+
+@[simp]
+theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
+  Numeric.recOn'_rightSurreal ..
+
 end Cut
 end Surreal
