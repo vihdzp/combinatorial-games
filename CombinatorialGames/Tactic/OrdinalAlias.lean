@@ -164,7 +164,7 @@ instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
 instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
 
 @[simp]
-theorem $(mkIdent `Iio_one_default_eq) : 
+theorem $(mkIdent `Iio_one_default_eq) :
     (default : Set.Iio (1 : $Alias)) = ⟨0, zero_lt_one' $Alias⟩ :=
   rfl
 
