@@ -9,7 +9,7 @@ import CombinatorialGames.Surreal.Cut
 # Confusion intervals of games
 
 For a game `x`, its confusion interval is the set of surreals that are fuzzy (or confused) with it.
-We prove that this set is always order connected, and calculate some confusion intervals.
+We prove that this set is always order connected, and calculate some explicit confusion intervals.
 -/
 
 /-! ### Some explicit calculations with cuts -/
@@ -69,6 +69,11 @@ theorem mem_confusionInterval {x : Game} {y : Surreal} :
   simp [confusionInterval, IncompRel]
 
 @[simp]
+theorem confusionInterval_of_numeric (x : IGame) [x.Numeric] : confusionInterval (.mk x) = ∅ := by
+  simp [confusionInterval]
+
+#exit
+@[simp]
 theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = ∅ := by
   grind [confusionInterval]
 
@@ -110,6 +115,7 @@ theorem confusionInterval_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
 proof_wanted bddAbove_confusionInterval (x : Game) : BddAbove (confusionInterval x)
 proof_wanted bddBelow_confusionInterval (x : Game) : BddBelow (confusionInterval x)
 
-proof_wanted confusionInterval_subset_zero (x : IGame) [x.Dicotic] : confusionInterval
+-- Do this after #303.
+proof_wanted confusionInterval_subset_zero (x : IGame) [x.Dicotic] : confusionInterval (.mk x) ⊆ {0}
 
 end Game
