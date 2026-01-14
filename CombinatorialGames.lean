@@ -2,11 +2,11 @@ import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Canonical
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Computability.FGame
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Game.Graph
 import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Impartial.Multiplication
 import CombinatorialGames.Game.Loopy.Basic
@@ -16,7 +16,6 @@ import CombinatorialGames.Game.Loopy.StoppingTime
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Player
-import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering

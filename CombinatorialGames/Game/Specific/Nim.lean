@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 
 /-!

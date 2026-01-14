@@ -3,6 +3,7 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
+import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Surreal.Basic
 
 /-!
@@ -21,59 +22,7 @@ to infinitesimals.
 
 namespace IGame
 
-/-! ### Dicotic games -/
-
-private def DicoticAux (x : IGame) : Prop :=
-  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
-termination_by x
-decreasing_by igame_wf
-
-/-- A game `x` is dicotic if both players can move from every nonempty subposition of `x`. -/
-@[mk_iff dicotic_iff_aux]
-class Dicotic (x : IGame) : Prop where of_DicoticAux ::
-  out : DicoticAux x
-
-theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
-  simp_rw [dicotic_iff_aux]; rw [DicoticAux]
-
 namespace Dicotic
-variable {x y z : IGame}
-
-theorem mk (h₁ : xᴸ = ∅ ↔ xᴿ = ∅) (h₂ : ∀ p, ∀ y ∈ x.moves p, Dicotic y) : Dicotic x :=
-  dicotic_def.2 ⟨h₁, h₂⟩
-
-theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
-  rw [dicotic_def] at hx
-  simp_all [Player.exists, IGame.ext_iff]
-
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
-  simpa using eq_zero_iff.not
-
-theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
-  Player.const_of_left_eq_right' (dicotic_def.1 hx).1
-
-protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves p) : Dicotic y :=
-  (dicotic_def.1 hx).2 p y h
-
-/-- `dicotic` eagerly adds all possible `Dicotic` hypotheses. -/
-elab "dicotic" : tactic =>
-  addInstances <| .mk [`IGame.Dicotic.of_mem_moves]
-
-@[simp]
-protected instance zero : Dicotic 0 := by
-  apply mk <;> simp
-
-protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
-  apply mk
-  · simp [moves_eq_empty_iff .left .right]
-  · simp_rw [moves_neg, Set.mem_neg]
-    intro p y hy
-    dicotic
-    rw [← neg_neg y]
-    exact .neg _
-termination_by x
-decreasing_by igame_wf
 
 /--
 One half of the **lawnmower theorem**: any dicotic game is smaller than any positive numeric game.
@@ -103,5 +52,19 @@ theorem lt_of_numeric_of_neg (x) [Dicotic x] {y} [Numeric y] (hy : y < 0) : y < 
   have := lt_of_numeric_of_pos (-x) (y := -y); simp_all
 
 end Dicotic
+
+namespace Impartial
+
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+  grw [← nim_grundy_equiv x]
+  exact Dicotic.lt_of_numeric_of_pos _ hy
+
+/-- One half of the **lawnmower theorem** for impartial games. -/
+protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
+  grw [← nim_grundy_equiv x]
+  exact Dicotic.lt_of_numeric_of_neg _ hy
+
+end Impartial
 
 end IGame
