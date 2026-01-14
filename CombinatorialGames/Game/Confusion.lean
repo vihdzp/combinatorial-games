@@ -69,13 +69,12 @@ theorem mem_confusionInterval {x : Game} {y : Surreal} :
   simp [confusionInterval, IncompRel]
 
 @[simp]
-theorem confusionInterval_of_numeric (x : IGame) [x.Numeric] : confusionInterval (.mk x) = ∅ := by
-  simp [confusionInterval]
-
-#exit
-@[simp]
 theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = ∅ := by
   grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_of_numeric (x : IGame) [x.Numeric] : confusionInterval (.mk x) = ∅ :=
+  confusionInterval_toGame (.mk x)
 
 @[simp]
 theorem confusionInterval_neg (x : Game) : confusionInterval (-x) = -confusionInterval x := by
