@@ -27,6 +27,28 @@ theorem leftGame_star : leftGame (.mk ⋆) = rightSurreal 0 := by
 theorem rightGame_star : rightGame (.mk ⋆) = leftSurreal 0 := by
   rw [rightGame_eq_infRight_of_le (by simp), infRight_star]
 
+@[simp, grind =] theorem supLeft_up : supLeft ↑ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_up : infRight ↑ = rightSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_up : leftGame (.mk ↑) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_up]
+
+@[simp, grind =]
+theorem rightGame_up : rightGame (.mk ↑) = rightSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_up]
+
+@[simp, grind =] theorem supLeft_down : supLeft ↓ = leftSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_down : infRight ↓ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_down : leftGame (.mk ↓) = leftSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_down]
+
+@[simp, grind =]
+theorem rightGame_down : rightGame (.mk ↓) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_down]
+
 @[simp, grind =]
 theorem supLeft_switch (x : IGame) : supLeft (±x) = rightGame (.mk x) := by
   simp [supLeft]
@@ -101,6 +123,14 @@ instance ordConnected_confusionInterval (x : Game) : x.confusionInterval.OrdConn
 
 @[simp]
 theorem confusionInterval_star : confusionInterval (.mk ⋆) = {0} := by
+  grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_up : confusionInterval (.mk ↑) = ∅ := by
+  grind [confusionInterval]
+
+@[simp]
+theorem confusionInterval_down : confusionInterval (.mk ↓) = ∅ := by
   grind [confusionInterval]
 
 @[simp]
