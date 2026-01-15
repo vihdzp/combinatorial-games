@@ -158,6 +158,23 @@ decreasing_by igame_wf
 theorem neg_toIGame_birthday_le (x : IGame) : -x.birthday.toIGame ≤ x := by
   simpa [IGame.neg_le] using le_toIGame_birthday (-x)
 
+/-- A game without right options is equivalent to an ordinal. -/
+theorem equiv_ordinal_of_right_eq_empty {x : IGame} (hx : xᴿ = ∅) :
+    ∃ o : NatOrdinal, x ≈ o := by
+  obtain ⟨o, ho, ho'⟩ := wellFounded_lt.has_min {o : NatOrdinal | x ≤ o} ⟨_, x.le_toIGame_birthday⟩
+  use o
+  apply equiv_of_forall_lf
+  · exact fun a ha ha' ↦ left_lf ha <| ho.trans ha'
+  · simp [hx]
+  · rw [forall_leftMoves_toIGame]
+    exact fun a ha ha' ↦ ho' _ ha' ha
+  · simp
+
+/-- A game without left options is equivalent to the negative of an ordinal. -/
+theorem equiv_neg_ordinal_of_left_eq_empty {x : IGame} (hx : xᴸ = ∅) :
+    ∃ o : NatOrdinal, x ≈ -o := by
+  simpa [hx, ← IGame.neg_equiv] using equiv_ordinal_of_right_eq_empty (x := -x)
+
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
   refine eq_of_forall_lt_iff fun o ↦ ?_
