@@ -4,6 +4,7 @@ import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Canonical
 import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Computability.FGame
+import CombinatorialGames.Game.Confusion
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Game.Graph
 import CombinatorialGames.Game.IGame
