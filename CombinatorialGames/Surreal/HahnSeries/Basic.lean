@@ -41,12 +41,12 @@ attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
 @[simp]
-theorem equivShrink_le_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} α] {x y : α} :
+theorem equivShrink_le_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
     equivShrink α x ≤ equivShrink α y ↔ x ≤ y :=
   (orderIsoShrink α).map_rel_iff
 
 @[simp]
-theorem equivShrink_lt_equivShrink_iff {α : Type*} [LinearOrder α] [Small.{u} α] {x y : α} :
+theorem equivShrink_lt_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
     equivShrink α x < equivShrink α y ↔ x < y :=
   (orderIsoShrink α).toRelIsoLT.map_rel_iff
 
@@ -303,7 +303,7 @@ theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lower
 
 open Ordinal
 
-local instance (x : SurrealHahnSeries) : IsWellOrder (Shrink.{u} x.support) (· > ·) :=
+local instance (x : SurrealHahnSeries.{u}) : IsWellOrder (Shrink.{u} x.support) (· > ·) :=
   (orderIsoShrink x.support).dual.symm.toRelIsoLT.toRelEmbedding.isWellOrder
 
 /-! #### `length` -/
@@ -377,8 +377,9 @@ theorem symm_exp_le_symm_exp_iff {x : SurrealHahnSeries} {i j : x.support} :
   simp [← exp_le_exp_iff]
 
 theorem eq_exp_of_mem_support {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
-    ∃ j, x.exp j = i :=
-  ⟨x.exp.symm ⟨i, h⟩, by simp⟩
+    ∃ j, x.exp j = i := by
+  use x.exp.symm ⟨i, h⟩
+  simp
 
 /-- This lemma is useful for rewriting. -/
 theorem exp_congr {x y : SurrealHahnSeries} (h : x = y) (i : Iio x.length) :
@@ -398,7 +399,7 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
 
 /-- Returns the coefficient which corresponds to the `i`-th largest exponent, or `0` if no such
 coefficient exists. -/
-def coeffIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : ℝ :=
+def coeffIdx (x : SurrealHahnSeries) (i : Ordinal) : ℝ :=
   if h : i < x.length then x.coeff (x.exp ⟨i, h⟩) else 0
 
 theorem coeffIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
@@ -481,12 +482,12 @@ theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (x.truncIdx i).length = min i x.length := by
   obtain hi | hi := lt_or_ge i x.length
   · rw [← lift_inj, ← type_support]
-    trans type (Subrel (· > · : x.support → _ → _) (· > x.exp ⟨i, hi⟩))
+    trans type (Subrel (· > · : x.support → _) (· > x.exp ⟨i, hi⟩))
     · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp ⟨i, hi⟩))
         (· > ·) _).trans _).ordinal_type_eq
       · rw [truncIdx_of_lt hi, support_trunc]
         aesop
-      · use (Equiv.subtypeSubtypeEquivSubtypeExists _ _).symm
+      · use (Equiv.subtypeSubtypeEquivSubtypeExists ..).symm
         aesop
     · simpa using hi.le
   · rw [truncIdx_of_le hi, min_eq_right hi]
