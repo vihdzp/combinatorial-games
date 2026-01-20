@@ -641,11 +641,17 @@ protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
 theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
 
+theorem neg_equiv {x y : IGame} : -x ≈ y ↔ x ≈ -y := by
+  simpa using @neg_equiv_neg_iff x (-y)
+
 alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
 @[simp]
 theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
   simp [IncompRel, and_comm]
+
+theorem neg_fuzzy {x y : IGame} : -x ‖ y ↔ x ‖ -y := by
+  simpa using @neg_fuzzy_neg_iff x (-y)
 
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x
