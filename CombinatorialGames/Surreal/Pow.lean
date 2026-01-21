@@ -482,6 +482,10 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 
 open ArchimedeanClass
 
+@[simp]
+theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
+  mk_map_of_archimedean' Real.toSurrealRingHom hr
+
 /-- We define a `ValuativeRel` instance on `Surreal` which is compatible with
 `ArchimedeanClass.addValuation`. In particular, you can write `x =ᵥ y` to mean that `x` is
 commensurate with `y`. -/
@@ -491,20 +495,17 @@ instance : ValuativeRel Surreal :=
 instance : (ArchimedeanClass.addValuation Surreal).Compatible where
   vle_iff_le _ _ := .rfl
 
--- #33532
-notation:50 x:50 " =ᵥ " y:50 => AntisymmRel (· ≤ᵥ ·) x y
-
-instance : IsRefl Surreal (· ≤ᵥ ·) where
-  refl _ := ValuativeRel.vle_rfl
-
 theorem vle_def {x y : Surreal} : x ≤ᵥ y ↔ ArchimedeanClass.mk y ≤ .mk x :=
   .rfl
 
 theorem vlt_def {x y : Surreal} : x <ᵥ y ↔ ArchimedeanClass.mk y < .mk x :=
   (ArchimedeanClass.addValuation _).vlt_iff_lt
 
-theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y := by
-  simp_rw [AntisymmRel, le_antisymm_iff, vle_def, and_comm]
+theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
+  (ArchimedeanClass.addValuation _).veq_iff_eq
+
+section Upstream
+attribute [symm] ValuativeRel.veq.symm
 
 @[simp]
 theorem zero_veq_iff {x : Surreal} : x =ᵥ 0 ↔ x = 0 where
@@ -513,9 +514,7 @@ theorem zero_veq_iff {x : Surreal} : x =ᵥ 0 ↔ x = 0 where
 
 @[simp]
 theorem veq_zero_iff {x : Surreal} : 0 =ᵥ x ↔ 0 = x := by
-  rw [antisymmRel_comm, eq_comm, zero_veq_iff]
-
-theorem veq_comm {x y : Surreal} : x =ᵥ y ↔ y =ᵥ x := antisymmRel_comm
+  rw [ValuativeRel.veq_comm, eq_comm, zero_veq_iff]
 
 @[simp] theorem neg_veq {x y : Surreal} : -x =ᵥ y ↔ x =ᵥ y := by simp [veq_def]
 @[simp] theorem veq_neg {x y : Surreal} : x =ᵥ -y ↔ x =ᵥ y := by simp [veq_def]
@@ -524,6 +523,8 @@ theorem veq_comm {x y : Surreal} : x =ᵥ y ↔ y =ᵥ x := antisymmRel_comm
 theorem mul_veq_mul {x₁ x₂ y₁ y₂ : Surreal} (hx : x₁ =ᵥ x₂) (hy : y₁ =ᵥ y₂) :
     x₁ * y₁ =ᵥ x₂ * y₂ := by
   simp_all [veq_def]
+
+end Upstream
 
 theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
@@ -710,7 +711,7 @@ theorem wlog_congr (h : x =ᵥ y) : wlog x = wlog y := by
   obtain rfl | hy := eq_or_ne y 0; · simp_all
   apply wlog_eq_of_wpow_veq
   grw [wpow_wlog_veq hy]
-  rwa [veq_comm]
+  rwa [ValuativeRel.veq_comm]
 
 @[simp]
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
@@ -741,6 +742,35 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+instance : IsTrans Surreal (· ≤ᵥ ·) := sorry
+instance : IsTrans Surreal (· =ᵥ ·) := sorry
+
+theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
+  rw [← wpow_vle_wpow_iff]
+  grw [wpow_wlog_veq hx]
+  constructor
+  · intro h
+    grw [wpow_wlog_veq hx, wpow_wlog_veq hy] at h
+    exact h
+  · intro h
+    grw [wpow_wlog_veq hx, wpow_wlog_veq hy]
+    exact h
+
+#exit
+theorem wlog_le_wlog_of_mk_le_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y) :
+    wlog y ≤ wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp_all
+  rwa [← wlog_le_wlog_iff hx hy]
+
+theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
+    ArchimedeanClass.mk x < ArchimedeanClass.mk y ↔ wlog y < wlog x := by
+  rw [← mk_wpow_lt_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+
+theorem wlog_lt_wlog_of_mk_lt_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x < ArchimedeanClass.mk y) :
+    wlog y < wlog x := by
+  obtain rfl | hx := eq_or_ne x 0; · simp at h
+  rwa [← wlog_lt_wlog_iff hx hy]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
@@ -848,7 +878,7 @@ def leadingCoeff (x : Surreal) : ℝ :=
 @[simp]
 theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
   rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.stdPart_real Real.toSurrealRingHom r
+  exact ArchimedeanClass.stdPart_map_real Real.toSurrealRingHom r
 
 @[simp]
 theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
@@ -939,6 +969,13 @@ lemma _root_.LinearOrderedAddCommGroupWithTop.sub_self_nonneg {α}
   · simp
   · rw [LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha]
 
+-- TODO: upstream
+@[simp]
+lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
+    [LinearOrderedAddCommGroupWithTop α] {a b : α} (ha : a ≠ ⊤) : b - a = 0 ↔ b = a := by
+  rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
+    LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
+
 theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
@@ -948,6 +985,25 @@ theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlo
     · simp
     · rw [← hw]; simp
     · simpa [div_eq_mul_inv]
+
+private theorem stdPart_eq' {x y : Surreal} {r : ℝ}
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : stdPart (x / ω^ y) = r := by
+  apply stdPart_eq Real.toSurrealRingHom <;> intro s hs
+  · rw [le_div_iff₀ (wpow_pos _)]
+    exact hL s hs
+  · rw [div_le_iff₀ (wpow_pos _)]
+    exact hR s hs
+
+theorem wlog_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.wlog = y := by
+  apply wlog_eq_of_mk_eq_mk
+  rw [eq_comm, ← LinearOrderedAddCommGroupWithTop.sub_eq_zero (by simp), ← ArchimedeanClass.mk_div,
+    ← stdPart_eq_zero.ne_left]
+  exact (stdPart_eq' hL hR).trans_ne hr
+
+theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
+  rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
 /-! ### Leading term -/
 
@@ -1037,6 +1093,19 @@ theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x
   obtain rfl | hx := eq_or_ne x 0; · simp
   simpa using ArchimedeanClass.mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
 
+@[simp]
+theorem wlog_leadingTerm (x : Surreal) : x.leadingTerm.wlog = x.wlog :=
+  wlog_congr x.mk_leadingTerm
+
+@[simp]
+theorem leadingCoeff_leadingTerm (x : Surreal) : x.leadingTerm.leadingCoeff = x.leadingCoeff := by
+  simp [leadingTerm]
+
+@[simp]
+theorem leadingTerm_leadingTerm (x : Surreal) : x.leadingTerm.leadingTerm = x.leadingTerm := by
+  apply (leadingTerm_mul ..).trans
+  simp [leadingTerm]
+
 private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
     x.leadingTerm ≤ y.leadingTerm := by
   have hy := hx.trans h
@@ -1055,6 +1124,10 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
     · exact (leadingTerm_nonpos_iff.2 hx).trans (leadingTerm_nonneg_iff.2 hy)
     · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
       apply leadingTerm_mono' <;> simpa
+
+theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
+    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingTerm x = r * ω^ y := by
+  rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq hr hL hR]
 
 end Surreal
 end

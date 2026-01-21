@@ -3,8 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.Impartial.Basic
 import Mathlib.Order.WellQuasiOrder
 
 /-!
@@ -57,7 +57,7 @@ theorem not_rel_empty (s : Set α) : ¬ s ≺ ∅ := by
 theorem rel_irrefl (s : Set α) : ¬ s ≺ s :=
   fun h ↦ ssubset_irrefl s <| subrelation_rel h
 
-instance : IsIrrefl (Set α) (· ≺ ·) where
+instance : @Std.Irrefl (Set α) (· ≺ ·) where
   irrefl := rel_irrefl
 
 theorem top_compl_rel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
