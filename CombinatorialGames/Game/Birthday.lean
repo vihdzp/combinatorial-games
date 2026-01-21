@@ -28,11 +28,6 @@ open NatOrdinal Order Set
 
 /-! ### Stuff for Mathlib -/
 
-theorem IncompRel.ne {α : Type*} {r : α → α → Prop} [IsRefl α r] {a b : α}
-    (h : IncompRel r a b) : a ≠ b := by
-  rintro rfl
-  exact h.1 <| refl_of r a
-
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
@@ -395,7 +390,7 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
   · simpa using birthday_mk_le ⋆
   · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
-    exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
+    exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
