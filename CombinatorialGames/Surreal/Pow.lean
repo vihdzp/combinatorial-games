@@ -714,9 +714,7 @@ theorem wlog_surjective : Function.Surjective wlog :=
 
 theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
   intro a ha b hb h
-  rw [← wpow_vle_wpow_iff]
-  -- TODO: how do we make `grw` usable here?
-  apply (wpow_wlog_veq ha.ne').1.trans <| (wpow_wlog_veq hb.ne').2.trans' _
+  grw [← wpow_vle_wpow_iff, wpow_wlog_veq ha.ne', wpow_wlog_veq hb.ne']
   apply mk_antitoneOn ha.le hb.le h
 
 theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
