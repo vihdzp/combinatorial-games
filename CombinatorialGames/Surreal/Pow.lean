@@ -486,8 +486,6 @@ open ArchimedeanClass
 theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
   mk_map_of_archimedean' Real.toSurrealRingHom hr
 
-attribute [symm] ValuativeRel.veq.symm
-
 /-- We define a `ValuativeRel` instance on `Surreal` which is compatible with
 `ArchimedeanClass.addValuation`. In particular, you can write `x =ᵥ y` to mean that `x` is
 commensurate with `y`. -/
