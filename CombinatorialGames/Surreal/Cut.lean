@@ -96,7 +96,7 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem left_top : (⊤ : Cut).left = univ := rfl
 @[simp] theorem right_top : (⊤ : Cut).right = ∅ := by simpa using (compl_left ⊤).symm
 
-instance : IsTotal Cut (· ≤ ·) where
+instance : @Std.Total Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
 
 noncomputable instance : LinearOrder Cut :=

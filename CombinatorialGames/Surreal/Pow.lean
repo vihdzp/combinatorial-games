@@ -816,7 +816,7 @@ def leadingCoeff (x : Surreal) : ℝ :=
 @[simp]
 theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
   rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.stdPart_real Real.toSurrealRingHom r
+  exact ArchimedeanClass.stdPart_map_real Real.toSurrealRingHom r
 
 @[simp]
 theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
