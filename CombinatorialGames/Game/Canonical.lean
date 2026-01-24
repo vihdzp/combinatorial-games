@@ -3,7 +3,9 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
 
 /-!
 # Canonical games
@@ -20,6 +22,7 @@ games through undominating and unreversing games.
 
 universe u
 
+public section
 
 namespace IGame
 
@@ -87,3 +90,4 @@ theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
   ⟨by simpa using le_undominate (-x), le_undominate x⟩
 
 end IGame
+end

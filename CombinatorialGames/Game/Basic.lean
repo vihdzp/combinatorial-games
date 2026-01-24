@@ -3,7 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
 -/
-import CombinatorialGames.Game.Classes
+module
+
+public import CombinatorialGames.Game.Classes
+public import Mathlib.Algebra.CharZero.Defs
+public import Mathlib.Algebra.Order.Monoid.Defs
+
 import Mathlib.Algebra.Order.Ring.Cast
 import Mathlib.Tactic.Abel
 
@@ -21,7 +26,7 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
-noncomputable section
+public noncomputable section
 
 open IGame Set Pointwise
 
@@ -35,13 +40,14 @@ extra move for Left.
 
 In particular, note that a `Game` has no well-defined notion of left and right options. This means
 you should prefer `IGame` when analyzing specific games. -/
+@[expose]
 def Game : Type (u + 1) :=
   Antisymmetrization IGame (· ≤ ·)
 
 namespace Game
 
 /-- The quotient map from `IGame` into `Game`. -/
-def mk (x : IGame) : Game := Quotient.mk _ x
+@[expose] def mk (x : IGame) : Game := Quotient.mk _ x
 theorem mk_eq_mk {x y : IGame} : mk x = mk y ↔ x ≈ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk

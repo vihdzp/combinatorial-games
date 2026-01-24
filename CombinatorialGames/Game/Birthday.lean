@@ -3,10 +3,14 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Game.Special
+module
+
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.Special
+
 import Mathlib.Algebra.Order.Group.OrderIso
 import Mathlib.Data.Fintype.Order
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Birthdays of games
@@ -24,6 +28,8 @@ the birthday of a `Game` more closely matches Conway's original description. The
 
 universe u
 
+public noncomputable section
+
 open NatOrdinal Order Set
 
 /-! ### Stuff for Mathlib -/
@@ -31,12 +37,6 @@ open NatOrdinal Order Set
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
-
-theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
-  Ordinal.lt_omega0
-
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 :=
-  Ordinal.nat_lt_omega0 n
 
 /-! ### `IGame` birthday -/
 
@@ -48,7 +48,7 @@ attribute [-simp] Ordinal.add_one_eq_succ
 
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
-noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
+def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
   ⨆ p, ⨆ y : x.moves p, succ (birthday y)
 termination_by x
 decreasing_by igame_wf
@@ -240,7 +240,7 @@ instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthd
 /-! #### Short games -/
 
 /-- The finset of all games with birthday ≤ n. -/
-noncomputable def birthdayFinset : ℕ → Finset IGame.{u}
+def birthdayFinset : ℕ → Finset IGame.{u}
   | 0 => {0}
   | n + 1 => ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
     ⟨fun a => !{a.1 | a.2}, fun a b hab => by aesop⟩
@@ -249,7 +249,7 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
     ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
   simp [birthdayFinset]
 
-@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
+@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
 
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
@@ -323,7 +323,7 @@ end IGame
 namespace Game
 
 /-- The birthday of a game is defined as the least birthday among all pre-games that define it. -/
-noncomputable def birthday (x : Game.{u}) : NatOrdinal.{u} :=
+def birthday (x : Game.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' (mk ⁻¹' {x}))
 
 theorem birthday_eq_iGameBirthday (x : Game) :
@@ -430,3 +430,4 @@ instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthd
   small_setOf_birthday_lt o
 
 end Game
+end

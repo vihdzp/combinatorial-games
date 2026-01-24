@@ -3,9 +3,15 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
-import CombinatorialGames.Nimber.Field
-import Mathlib.Algebra.Field.Subfield.Defs
+module
+
+public import CombinatorialGames.Nimber.Field
+public import Mathlib.Algebra.Field.Subfield.Defs
+public import Mathlib.SetTheory.Ordinal.Exponential
+
+import Mathlib.Algebra.CharP.Two
 import Mathlib.SetTheory.Ordinal.Principal
+import Mathlib.Tactic.Abel
 
 /-!
 # Simplest extension theorems
@@ -35,8 +41,6 @@ open Order Ordinal Set
 -- TODO: this is a pending Mathlib refactor.
 attribute [-simp] add_one_eq_succ
 attribute [simp] lt_add_one_iff
-
-attribute [simp] principal_zero
 
 /-! ### Order lemmas -/
 
@@ -83,12 +87,6 @@ theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrdered
   simp_rw [le_add_iff_lt_or_exists_le]
   aesop
 
-theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
-    IsGreatest {y | P y} x := by
-  refine ⟨h.1, fun y hy ↦ ?_⟩
-  by_contra! hx
-  exact (h.le_of_ge hy hx.le).not_gt hx
-
 /-! #### Ordinal lemmas-/
 
 namespace Ordinal
@@ -123,7 +121,7 @@ theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
   simp_rw [lt_mul_iff]
   aesop
 
-theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
+public theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
   · apply mul_le_mul_right
@@ -153,6 +151,8 @@ theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
 theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
     a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
   rw [eq_comm, inv_eq_self_iff]
+
+@[expose] public section
 
 namespace Nimber
 variable {x y z w : Nimber}
@@ -574,3 +574,4 @@ theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 end Nimber
+end

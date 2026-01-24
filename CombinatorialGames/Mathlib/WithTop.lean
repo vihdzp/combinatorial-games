@@ -1,6 +1,16 @@
-import CombinatorialGames.NatOrdinal.Basic
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
 
 universe u
+
+public section
+
 open Set NatOrdinal WithTop
 
 instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α] [NoMaxOrder α]
@@ -70,3 +80,4 @@ theorem withTop_sSup_lt_top {s : Set (WithTop NatOrdinal.{u})} [Small.{u} s] :
   rw [sSup_eq_iSup', withTop_iSup_lt_top, Subtype.forall]
 
 end NatOrdinal
+end

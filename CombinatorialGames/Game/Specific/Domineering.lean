@@ -3,13 +3,20 @@ Copyright (c) 2019 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Graph
-import Mathlib.Algebra.Group.Units.Equiv
-import Mathlib.Algebra.Order.Group.Nat
-import Mathlib.Data.Finset.Sort
+module
+
+public import CombinatorialGames.Game.Graph
+public import Mathlib.Algebra.Group.Int.Defs
+public import Mathlib.Algebra.Group.Units.Equiv
+public import Mathlib.Algebra.Order.Group.Nat
+public import Mathlib.Data.Finset.Sort
+
+import Mathlib.Algebra.Order.Sub.Unbundled.Basic
+import Mathlib.Algebra.Ring.Basic
+import Mathlib.Algebra.Ring.Int.Defs
 
 /-!
-# Domineering as a combinatorial game.
+# Domineering as a combinatorial game
 
 We define the game of Domineering, played on a chessboard of arbitrary shape
 (possibly even disconnected).
@@ -25,6 +32,8 @@ disjoint parts of the chessboard give sums of games.
 
 Refactor this file to adhere to the design notes specified in `CombinatorialGames.Game.Graph`.
 -/
+
+@[expose] public section
 
 namespace IGame
 
@@ -160,3 +169,5 @@ open IGame Domineering
 /-- The game of domineering. -/
 def GameGraph.domineering : GameGraph Domineering where
   moves p x := p.cases {y | relLeft y x} {y | relRight y x}
+
+end

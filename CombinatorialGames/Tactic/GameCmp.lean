@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.IGame
+module
+
+public import CombinatorialGames.Game.IGame
 
 /-!
 # Tactic for game inequalities
@@ -44,6 +46,8 @@ macro "game_cmp" : tactic =>
 
 /-! ### Extra tagged lemmas -/
 
+public section
+
 variable {α : Type*} {P : α → Prop}
 
 attribute [game_cmp] Set.forall_mem_empty
@@ -74,3 +78,5 @@ attribute [game_cmp] le_rfl
   false_implies implies_true forall_const and_imp forall_exists_index
   Player.neg_left Player.neg_right Player.left_mul Player.right_mul Player.forall Player.exists
   Set.forall_mem_image Set.exists_mem_image Set.mem_Iio
+
+end

@@ -3,11 +3,14 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Data.Sign.Defs
+public import Mathlib.Order.CompleteLattice.PiLex
+
 import Mathlib.Algebra.Group.Pointwise.Set.Basic
 import Mathlib.Data.Fintype.Order
-import Mathlib.Data.Sign.Defs
-import Mathlib.Order.CompleteLattice.PiLex
 
 /-!
 # Sign expansions
@@ -75,7 +78,7 @@ theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
 
 /-! ### Sign expansions -/
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-- A sign expansion is a an ordinal indexed sequence of `1`s and `-1`s, followed by `0`s. -/
 structure SignExpansion : Type (u + 1) where
@@ -143,7 +146,7 @@ theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 
 
 /-! ### Basic sign expansions -/
 
-private def const (s : SignType) : SignExpansion where
+def const (s : SignType) : SignExpansion where
   sign _ := s
   isUpperSet_preimage_singleton_zero' := by aesop
 
@@ -243,6 +246,7 @@ theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
 /-! ### Order structure -/
 
 -- This has deliberately not been upstreamed to Mathlib.
+@[no_expose]
 instance : CompleteLinearOrder SignType := Fintype.toCompleteLinearOrder _
 
 instance : LinearOrder SignExpansion :=
@@ -252,8 +256,8 @@ theorem le_iff_toLex {x y : SignExpansion} : x ≤ y ↔ toLex ⇑x ≤ toLex �
 theorem lt_iff_toLex {x y : SignExpansion} : x < y ↔ toLex ⇑x < toLex ⇑y := .rfl
 
 instance : BoundedOrder SignExpansion where
-  le_top _ := le_iff_toLex.2 le_top
-  bot_le _ := le_iff_toLex.2 bot_le
+  le_top _ := by exact le_iff_toLex.2 le_top
+  bot_le _ := by exact le_iff_toLex.2 bot_le
 
 protected theorem neg_lt_neg {x y : SignExpansion} (h : x < y) : -y < -x :=
   Pi.Lex.neg_lt_neg h
@@ -530,3 +534,4 @@ theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
   aesop
 
 end SignExpansion
+end

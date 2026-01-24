@@ -3,11 +3,14 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Ring.Defs
+public import Mathlib.Analysis.Normed.Field.Lemmas
+public import Mathlib.Data.Nat.Log
+
 import Mathlib.Algebra.GCDMonoid.Nat
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Ring.Defs
-import Mathlib.Analysis.Normed.Field.Lemmas
-import Mathlib.Data.Nat.Log
 import Mathlib.Data.Nat.Prime.Int
 
 /-!
@@ -22,6 +25,8 @@ on them.
 In the time since this file was created, `Dyadic` got added to Lean core. We've temporarily renamed
 our implementation to `Dyadic'`. In the near future, these two implementations will be merged.
 -/
+
+public section
 
 /-! ### For Mathlib -/
 
@@ -60,7 +65,7 @@ theorem range_zero_pow {M : Type*} [MonoidWithZero M] : Set.range ((0 : M) ^ ·)
 
 instance (b n : ℕ) : Decidable (n ∈ Set.range (b ^ ·)) :=
   match b with
-  | 0 => decidable_of_iff (n ∈ {1, 0}) (by rw [range_zero_pow])
+  | 0 => decidable_of_iff (n ∈ ({1, 0} : Set ℕ)) (by rw [range_zero_pow])
   | b + 1 => decidable_of_iff _ (Nat.pow_log_eq_self_iff b.succ_ne_zero)
 
 theorem pos_of_mem_powers {n : ℕ} (h : n ∈ Submonoid.powers 2) : 0 < n := by
@@ -79,7 +84,7 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
 /-! ### Dyadic numbers -/
 
 /-- A dyadic rational number is one whose denominator is a power of two. -/
-def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
+@[expose] def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
 
 instance {m n : ℕ} : Decidable (m ∈ Submonoid.powers n) :=
   decidable_of_iff (m ∈ Set.range (n ^ ·)) (Submonoid.mem_powers_iff m n)
@@ -278,13 +283,14 @@ instance : NatPow Dyadic' where
 @[simp] theorem val_pow (x : Dyadic') (y : ℕ) : (x ^ y).val = x.val ^ y := rfl
 
 /-- The dyadic number ½. -/
-def half : Dyadic' := ⟨2⁻¹, ⟨1, by simp⟩⟩
+@[expose] def half : Dyadic' := ⟨2⁻¹, ⟨1, by simp⟩⟩
 
 @[simp] theorem val_half : half.val = 2⁻¹ := rfl
 @[simp] theorem num_half : half.num = 1 := show ((2 : ℚ)⁻¹).num = 1 by simp
 @[simp] theorem num_den : half.den = 2 := show ((2 : ℚ)⁻¹).den = 2 by simp
 
 /-- Constructor for the fraction `m / n`. -/
+@[expose]
 protected def mkRat (m : ℤ) {n : ℕ} (h : n ∈ Submonoid.powers 2) : Dyadic' :=
   ⟨mkRat m n, .mkRat m h⟩
 
@@ -415,7 +421,7 @@ theorem den_add_le_den_right {x y : Dyadic'} (h : x.den ≤ y.den) : (x + y).den
   exact den_mkRat_le _ y.den_ne_zero
 
 /-- Coercion as a `RingHom`. -/
-@[simps]
+@[expose, simps]
 def coeRingHom : Dyadic' →+* ℚ where
   toFun := (↑)
   map_zero' := rfl
@@ -424,3 +430,4 @@ def coeRingHom : Dyadic' →+* ℚ where
   map_mul' _ _ := rfl
 
 end Dyadic'
+end

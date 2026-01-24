@@ -3,9 +3,11 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Surreal.Multiplication
-import Mathlib.Algebra.Order.Hom.Ring
+module
+
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Surreal.Multiplication
+public import Mathlib.Algebra.Order.Hom.Ring
 
 /-!
 # Ordinals as surreals
@@ -15,7 +17,7 @@ We define the canonical map `NatOrdinal → Surreal` in terms of the map `NatOrd
 
 open IGame Set Surreal
 
-noncomputable section
+public noncomputable section
 
 /-- Ordinal games are numeric. -/
 instance IGame.Numeric.toIGame (o : NatOrdinal) : Numeric o.toIGame := by
@@ -26,6 +28,7 @@ termination_by o
 namespace NatOrdinal
 
 /-- Converts an ordinal into the corresponding surreal. -/
+@[expose]
 def toSurreal : NatOrdinal ↪o Surreal :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
@@ -59,7 +62,7 @@ theorem toSurreal_mul (a b : NatOrdinal) : (a * b).toSurreal = a.toSurreal * b.t
   mk_eq (toIGame_mul a b)
 
 /-- `NatOrdinal.toGame` as an `OrderRingHom`. -/
-@[simps]
+@[expose, simps]
 def toSurrealRingHom : NatOrdinal →+*o Surreal where
   toFun := toSurreal
   map_zero' := toSurreal_zero

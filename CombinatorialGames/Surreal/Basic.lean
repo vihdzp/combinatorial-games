@@ -3,9 +3,13 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
+
 import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Int.Cast.Lemmas
 
 /-!
 # Surreal numbers
@@ -28,7 +32,7 @@ surreals are a field.
 
 universe u
 
-noncomputable section
+public noncomputable section
 
 /-! ### Simplicity theorem -/
 
@@ -40,6 +44,7 @@ namespace IGame
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
 the games are equivalent. In particular, a numeric game is equivalent to the game of the least
 birthday that fits in it -/
+@[expose]
 def Fits (x y : IGame) : Prop :=
   (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
@@ -120,13 +125,13 @@ open IGame
 
 /-- The type of surreal numbers. These are the numeric games quotiented by the antisymmetrization
 relation `x ≈ y ↔ x ≤ y ∧ y ≤ x`. In the quotient, the order becomes a total order. -/
-def Surreal : Type (u + 1) :=
+@[expose] def Surreal : Type (u + 1) :=
   Antisymmetrization (Subtype Numeric) (· ≤ ·)
 
 namespace Surreal
 
 /-- The quotient map from the subtype of numeric `IGame`s into `Game`. -/
-def mk (x : IGame) [h : Numeric x] : Surreal := Quotient.mk _ ⟨x, h⟩
+@[expose] def mk (x : IGame) [h : Numeric x] : Surreal := Quotient.mk _ ⟨x, h⟩
 theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
@@ -205,6 +210,7 @@ instance : Nontrivial Surreal :=
   ⟨_, _, zero_ne_one⟩
 
 /-- Casts a `Surreal` number into a `Game`. -/
+@[expose]
 def toGame : Surreal ↪o Game where
   toFun := Quotient.lift (fun x ↦ .mk x) fun _ _ ↦ Game.mk_eq
   inj' x y := by
@@ -222,7 +228,7 @@ theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp
 theorem toGame_inj {a b : Surreal} : toGame a = toGame b ↔ a = b := by simp
 
 /-- `Surreal.toGame` as an `OrderAddMonoidHom` -/
-@[simps]
+@[expose, simps]
 def toGameAddHom : Surreal →+o Game where
   toFun := toGame
   map_zero' := rfl

@@ -3,7 +3,12 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public import CombinatorialGames.Game.IGame
+
 import CombinatorialGames.Game.Special
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 # Multiplication of pre-games can't be lifted to the quotient
@@ -32,7 +37,7 @@ theorem star'_equiv_star : ⋆' ≈ ⋆ := by game_cmp
 theorem star'_mul_star_not_equiv : ¬ ⋆' * ⋆ ≈ ⋆ := by game_cmp
 
 /-- Pre-game multiplication cannot be lifted to games. -/
-theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y := by
+public theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y ≈ x₂ * y := by
   refine ⟨_, _, ⋆, star'_equiv_star, fun h ↦ star'_mul_star_not_equiv (h.trans ?_)⟩
   rw [star_mul_star]
 

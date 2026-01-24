@@ -3,7 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu
 -/
-import CombinatorialGames.Surreal.Cut
+module
+
+public import CombinatorialGames.Surreal.Cut
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -22,6 +25,8 @@ universe u
 
 open Set
 
+public noncomputable section
+
 namespace Surreal
 namespace Cut
 
@@ -36,7 +41,7 @@ the set `s` is not small.
 
 This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
 those of their associated games. -/
-noncomputable def birthday (x : Cut) : WithTop NatOrdinal :=
+def birthday (x : Cut) : WithTop NatOrdinal :=
   sInf <| (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
      {s : Set Surreal | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
 
@@ -291,3 +296,4 @@ theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.bir
 
 end Cut
 end Surreal
+end

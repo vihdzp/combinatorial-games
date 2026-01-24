@@ -1,3 +1,12 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import Mathlib.Logic.Small.Defs
+
 import Mathlib.Logic.Small.Set
 import Mathlib.Logic.Relation
 import Mathlib.Order.SetNotation
@@ -25,7 +34,7 @@ private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x
   · exact small_range ..
   · simp [small_level]
 
-instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
+public instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
   refine @small_subset _ _ _ (fun y hy ↦ ?_) (small_sUnion_level r x)
   simp_rw [mem_sUnion, mem_range, exists_exists_eq_and]
   induction hy with
@@ -37,16 +46,16 @@ instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := b
     use n + 1
     simpa [level] using ⟨_, hn, hr⟩
 
-instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+public instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.TransGen r y x} := by
   simp_rw [← Relation.transGen_swap (r := r)]
   infer_instance
 
-instance small_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
+public instance small_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
   simp_rw [Relation.reflTransGen_iff_eq_or_transGen]
   exact @small_insert _ _ _ (small_transGen ..)
 
-instance small_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
+public instance small_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.ReflTransGen r y x} := by
   simp_rw [← Relation.reflTransGen_swap (r := r)]
   infer_instance

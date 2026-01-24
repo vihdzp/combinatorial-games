@@ -3,7 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Dyadic.Basic
+module
+
+public import CombinatorialGames.Surreal.Dyadic.Basic
+public import CombinatorialGames.Surreal.Birthday.Basic
+
 import CombinatorialGames.Surreal.Birthday.Cut
 
 /-!
@@ -11,6 +15,8 @@ import CombinatorialGames.Surreal.Birthday.Cut
 
 We prove that a surreal number has a finite birthday iff it's a dyadic number.
 -/
+
+public section
 
 local notation "ω" => NatOrdinal.of Ordinal.omega0
 
@@ -38,3 +44,5 @@ proof_wanted Surreal.birthday_dyadic (x : Dyadic') :
 -- It's actually possible to explicitly compute the birthday of a dyadic number.
 proof_wanted IGame.birthday_dyadic (x : Dyadic') :
     IGame.birthday x = ⌈x.num.natAbs⌉₊ + Nat.log2 x.den
+
+end

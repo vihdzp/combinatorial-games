@@ -3,7 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Data.Nat.Lattice
+
+import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
 # Finite nimber arithmetic
@@ -13,6 +18,8 @@ The goal is to define the field structure computably, and prove that it matches 
 -/
 
 alias! /-- The natural numbers, endowed with nim operations. -/ NatNimber Nat
+
+public section
 
 namespace NatNimber
 
@@ -30,6 +37,7 @@ instance : ToString NatNimber where
 theorem le_one_iff {a : NatNimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Nat.le_one_iff_eq_zero_or_eq_one
 
 /-- The embedding `NatNimber ↪o Nimber`. -/
+@[expose]
 def toNimber : NatNimber ↪o Nimber where
   toFun x := .of x.val
   inj' x y := by simp
@@ -86,6 +94,7 @@ private def mul (t : ℕ) (x y : NatNimber) : NatNimber :=
     mulHalf t z + of ((z + mul t a d + mul t b c).val * 2 ^ 2 ^ t) + mul t b d
 
 -- TODO: prove correctness
+@[no_expose]
 instance : Mul NatNimber where
   mul x y := mul (max x.val.log2.log2 y.val.log2.log2 + 1) x y
 
