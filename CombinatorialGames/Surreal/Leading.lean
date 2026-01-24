@@ -16,7 +16,10 @@ We don't yet prove this characterization; rather, these functions are a key ingr
 the map from surreals into Hahn series.
 -/
 
+noncomputable section
 namespace Surreal
+
+open ArchimedeanClass
 
 /-! ### Leading coefficient -/
 
@@ -125,7 +128,7 @@ lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
   rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
     LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
 
-theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
+theorem leadingCoeff_monotoneOn (x : Surreal) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
   obtain rfl | hz := eq_or_ne z 0; · simpa
@@ -282,3 +285,4 @@ theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
   rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq hr hL hR]
 
 end Surreal
+end

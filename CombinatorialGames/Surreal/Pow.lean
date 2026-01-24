@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.NatOrdinal.Pow
+import Mathlib.Algebra.Order.Ring.Archimedean
 import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
