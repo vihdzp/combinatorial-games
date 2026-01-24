@@ -14,7 +14,7 @@ public import Mathlib.Order.Comparable
 
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
-import CombinatorialGames.Tactic.Register
+meta import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Finset.DenselyOrdered
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra

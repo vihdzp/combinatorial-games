@@ -3,6 +3,8 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Special
 import Mathlib.Algebra.Order.Group.OrderIso
