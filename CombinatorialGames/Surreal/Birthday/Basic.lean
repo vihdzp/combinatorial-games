@@ -3,11 +3,22 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Surreal.Ordinal
+module
+
+public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Surreal.Ordinal
+
+import Mathlib.Algebra.Order.Group.OrderIso
+
+/-!
+# Birthday of surreals
+
+TODO: add module docstring
+-/
 
 universe u
-noncomputable section
+
+public noncomputable section
 
 namespace Surreal
 open IGame NatOrdinal Order Set

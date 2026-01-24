@@ -3,14 +3,18 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Basic
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import Mathlib.Algebra.Polynomial.Degree.Definitions
+public import Mathlib.Algebra.Polynomial.EraseLead
+public import Mathlib.Algebra.Polynomial.Eval.Defs
+public import Mathlib.Algebra.Polynomial.Splits
+public import Mathlib.Data.Finsupp.WellFounded
+
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Domain
-import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Polynomial.EraseLead
 import Mathlib.Algebra.Polynomial.Eval.Coeff
-import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Splits
-import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.Tactic.ComputeDegree
 
 /-!
@@ -129,6 +133,8 @@ theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorde
   obtain ⟨b, rfl, hb⟩ := WithBot.coe_le_iff.1 hb
   rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
   exact _root_.add_pos_of_pos_of_nonneg ha hb
+
+@[expose] public section
 
 namespace Nimber
 
@@ -441,30 +447,31 @@ instance : NoMaxOrder (Nimber[X]) where
     use X ^ (p.natDegree + 1)
     simpa using degree_le_natDegree
 
-noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
-  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
-  refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
-  · obtain ⟨n, hn, hpq⟩ := hpq
-    cases n with
-    | zero =>
-      obtain hpq' | hpq' := (succ_le_of_lt hpq).lt_or_eq
-      · refine le_of_lt ⟨0, ?_⟩
-        aesop
-      · apply le_of_eq
-        ext k
-        cases k <;> aesop
-    | succ n => refine le_of_lt ⟨n + 1, ?_⟩; aesop
-  · rw [le_iff_lt_or_eq]
-    rintro (hpq | rfl)
+noncomputable instance : SuccOrder (Nimber.{u}[X]) :=
+  .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) (by
+    have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
+    refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
     · obtain ⟨n, hn, hpq⟩ := hpq
-      refine ⟨n, fun k hk ↦ ?_, ?_⟩
-      · specialize hn k hk
+      cases n with
+      | zero =>
+        obtain hpq' | hpq' := (succ_le_of_lt hpq).lt_or_eq
+        · refine le_of_lt ⟨0, ?_⟩
+          aesop
+        · apply le_of_eq
+          ext k
+          cases k <;> aesop
+      | succ n => refine le_of_lt ⟨n + 1, ?_⟩; aesop
+    · rw [le_iff_lt_or_eq]
+      rintro (hpq | rfl)
+      · obtain ⟨n, hn, hpq⟩ := hpq
+        refine ⟨n, fun k hk ↦ ?_, ?_⟩
+        · specialize hn k hk
+          aesop
+        · have (a b : Nimber.{u}) (h : succ a < b) : a < b := (le_succ a).trans_lt h
+          aesop
+      · use 0
         aesop
-      · have (a b : Nimber.{u}) (h : succ a < b) : a < b := (le_succ a).trans_lt h
-        aesop
-    · use 0
-      aesop
+  ) (by simp)
 
 @[aesop simp]
 theorem coeff_succ (p : Nimber[X]) :
@@ -934,3 +941,4 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     aesop
 
 end Nimber
+end

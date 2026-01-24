@@ -3,8 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Dyadic.Basic
-import Mathlib.Algebra.Order.Hom.Ring
+module
+
+public import CombinatorialGames.Surreal.Dyadic.Basic
+public import Mathlib.Algebra.Order.Hom.Ring
+
 import Mathlib.Data.Real.Archimedean
 
 /-!
@@ -23,7 +26,7 @@ universe u
 
 open IGame
 
-noncomputable section
+@[expose] public noncomputable section
 
 theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic', x < q ∧ q < y := by
@@ -348,7 +351,8 @@ private theorem toSurreal_def_aux {x : ℝ} :
 @[simp] theorem toGame_toSurreal (x : ℝ) : x.toSurreal.toGame = x.toGame := rfl
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
-    !{(↑) '' {q : Dyadic' | q < x} | ((↑) '' {q : Dyadic' | x < q})}'toSurreal_def_aux := by
+    !{(↑) '' {q : Dyadic' | q < x} | ((↑) '' {q : Dyadic' | x < q})}'
+      (by exact toSurreal_def_aux) := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
   congr! <;> aesop
 

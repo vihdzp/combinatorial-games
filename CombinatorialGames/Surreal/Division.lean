@@ -3,9 +3,15 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Theodore Hwa
 -/
-import CombinatorialGames.Surreal.Multiplication
+module
+
+public import CombinatorialGames.Surreal.Multiplication
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
+
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
+import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring
 
 /-!
@@ -19,7 +25,7 @@ This is Theorem 1.10 in ONAG, and we follow the broad strokes of the proof. We p
 by simultaneous induction that if `x` is positive and numeric, then (ii) `x⁻¹` is numeric, and (iv)
 `x * x⁻¹ ≈ 1`. We do this by showing the inductive hypothesis implies that (i) `x * y < 1` for
 `y ∈ x⁻¹ᴸ` and `1 < x * y` for `y ∈ x⁻¹ᴿ`, and that (iv) `y < 1` for
-`y ∈ (x * x⁻¹)ᴸ` and `1 < y` for `y ∈ (x * x⁻¹ᴿ)`.
+`y ∈ (x * x⁻¹)ᴸ` and `1 < y` for `y ∈ (x * x⁻¹)ᴿ`.
 
 An important difference is that Conway assumes that `x` has no negative left options, while we don't
 make use of this assumption. This is because our definition of the inverse is tweaked to ensure that
@@ -233,6 +239,8 @@ decreasing_by igame_wf
 end Surreal.Division
 
 /-! ### Instances and corollaries -/
+
+public section
 
 namespace IGame.Numeric
 open Surreal.Division
@@ -520,3 +528,4 @@ theorem ratCast_le_zero {q : ℚ} : (q : Game) ≤ 0 ↔ q ≤ 0 :=
   IGame.ratCast_le_zero
 
 end Game
+end

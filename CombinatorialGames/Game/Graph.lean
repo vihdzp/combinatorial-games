@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Junyan Xu
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Game.Loopy.IGame
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Loopy.IGame
 
 /-!
 # Combinatorial games from a type of states
@@ -20,14 +22,14 @@ Mathematically, `GameGraph.toLGame` is nothing but the corecursor on loopy games
 
 ## Design notes
 
-When working with any "specific" game (nim, domineering, etc.) you can use  `GameGraph` to set up
+When working with any "specific" game (nim, domineering, etc.) you can use `GameGraph` to set up
 the basic theorems and definitions, but the intent is that you're not working with `GameGraph`
 directly most of the time.
 -/
 
 universe u v
 
-noncomputable section
+public noncomputable section
 
 open IGame Set
 
@@ -161,3 +163,4 @@ theorem impartial_toIGame (h : c.moves left = c.moves right) (a : α) : Impartia
   simp_all
 
 end GameGraph
+end

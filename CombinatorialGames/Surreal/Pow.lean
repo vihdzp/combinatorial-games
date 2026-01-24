@@ -3,11 +3,15 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Ordinal
-import CombinatorialGames.Surreal.Real
-import CombinatorialGames.NatOrdinal.Pow
+module
+
+public import CombinatorialGames.Surreal.Ordinal
+public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.NatOrdinal.Pow
+public import Mathlib.Algebra.Order.Ring.Archimedean
+public import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
+
 import Mathlib.Algebra.Order.Ring.Archimedean
-import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
 # Surreal exponentiation
@@ -57,7 +61,7 @@ end ArchimedeanClass
 
 /-! ### ω-map on `IGame` -/
 
-noncomputable section
+public noncomputable section
 namespace IGame
 
 /-- The ω-map on games, which is defined so that `ω^ !{s | t} = {0, r * ω^ a | r * ω^ b}` for
@@ -71,6 +75,7 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
+@[no_expose]
 instance : Wpow IGame where
   wpow := wpow
 

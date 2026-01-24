@@ -130,7 +130,7 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
     toIGame (@univ α) ‖ 0 := by
   apply IGame.Impartial.fuzzy_zero_of_forall_exists
     (mem_moves_toIGame_of_rel default top_compl_rel_univ)
-  refine fun z hz ↦ ⟨z, ?_, by rfl⟩
+  refine fun z hz ↦ ⟨z, ?_, (rfl)⟩
   rw [moves_toIGame, mem_image] at hz ⊢
   exact ⟨_, rel_univ_of_rel_top_compl hz.choose_spec.1, hz.choose_spec.2⟩
 

@@ -60,7 +60,7 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
   rw [← Order.succ_eq_add_one]
   exact Order.le_succ x
 
-noncomputable section
+public noncomputable section
 namespace LGame
 open Order
 
@@ -157,3 +157,4 @@ theorem stoppingTime_coinduction (p : Player)
     exact fun x ↦ (hnp x).trans (iSup₂_mono fun y _ ↦ add_left_mono (up y))
 
 end LGame
+end

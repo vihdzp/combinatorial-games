@@ -3,7 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios, Aaron Liu, and Junyan Xu. All ri
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu, Junyan Xu
 -/
-import CombinatorialGames.Game.Loopy.IGame
+module
+
+public import CombinatorialGames.Game.Loopy.IGame
 
 /-!
 # Outcomes of loopy games
@@ -11,6 +13,8 @@ import CombinatorialGames.Game.Loopy.IGame
 We define when a loopy game is a win, a draw, or a loss with each player going first
 (under the normal play convention).
 -/
+
+@[expose] public section
 
 namespace LGame
 variable {p : Player} {x y : LGame}
@@ -162,3 +166,4 @@ theorem zero_lt_iff_isWin_and_isLoss : 0 < x ↔ IsWin left x ∧ IsLoss right x
   simp [lt_iff_le_not_ge, and_comm]
 
 end IGame
+end

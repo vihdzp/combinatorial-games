@@ -3,6 +3,8 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
 import Mathlib.Data.Nat.Lattice
 import Mathlib.SetTheory.Ordinal.Family
 
@@ -20,15 +22,15 @@ open Lean
 /-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
-def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
+meta def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
   .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
 
 /-- `Alias.of` -/
-def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
+meta def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `of)
 
 /-- `Alias.val` -/
-def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
+meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
 
 /-! ### Macros -/
@@ -36,8 +38,10 @@ def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 /-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 
+public section
+
 $doc:docComment
-def $Alias : Type _ :=
+@[expose] def $Alias : Type _ :=
   $Source deriving Zero, One, Nontrivial, Inhabited, WellFoundedRelation
 
 namespace $Alias
@@ -56,11 +60,11 @@ noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
 theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
 $(mkDocComment s!" The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
-@[match_pattern]
+@[expose, match_pattern]
 def $(mkIdent `of) : $Source ≃o $Alias := .refl _
 
 $(mkDocComment s!" The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
-@[match_pattern]
+@[expose, match_pattern]
 def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
 @[simp] theorem $(mkIdent `of_symm) : .symm $(mkOf Alias) = $(mkVal Alias) := rfl
@@ -128,12 +132,15 @@ protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 :
 protected theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
 
 end $Alias
+end
 )
 
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 alias! $doc $Alias Ordinal
+
+public section
 
 namespace $Alias
 universe u
@@ -193,6 +200,7 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
   Ordinal.iSup_eq_zero_iff
 
 end $Alias
+end
 
 -- TODO: how do we name this correctly?
 -- theorem not_small_nimber : ¬ Small.{u} $Alias.{max u v} := not_small_ordinal

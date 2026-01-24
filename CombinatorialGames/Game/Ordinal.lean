@@ -5,11 +5,15 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.Game.Basic
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Order.Hom.Monoid
+public import Mathlib.Order.Hom.Basic
+
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Ordinals as games
@@ -32,7 +36,7 @@ universe u
 
 open Set IGame
 
-noncomputable section
+public noncomputable section
 
 /-! ### Lemmas to upstream -/
 
@@ -73,6 +77,7 @@ private theorem toIGame'_strictMono : StrictMono toIGame' := by
 termination_by a => a
 
 /-- The canonical map from `NatOrdinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
+@[no_expose]
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
@@ -136,6 +141,7 @@ theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
 /-! ### `NatOrdinal` to `Game` -/
 
 /-- Converts an ordinal into the corresponding game. -/
+@[expose]
 noncomputable def toGame : NatOrdinal.{u} ↪o Game.{u} :=
   .ofStrictMono (fun o ↦ .mk o.toIGame) fun _ _ h ↦ toIGame.strictMono h
 
@@ -200,7 +206,7 @@ theorem toGame_mul (a b : NatOrdinal) : (a * b).toGame = .mk (a.toIGame * b.toIG
   Game.mk_eq (toIGame_mul a b)
 
 /-- `NatOrdinal.toGame` as an `OrderAddMonoidHom`. -/
-@[simps]
+@[expose, simps]
 def toGameAddHom : NatOrdinal →+o Game where
   toFun := toGame
   map_zero' := toGame_zero
@@ -253,3 +259,4 @@ theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   exact lt_omega0 _
 
 end IGame
+end

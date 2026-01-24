@@ -3,12 +3,16 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Mathlib.Dyadic
-import CombinatorialGames.Surreal.Division
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Surreal.Division
+
+import Mathlib.Data.Finset.DenselyOrdered
 
 /-!
-# Dyadic' games
+# Dyadic games
 
 A combinatorial game that is both `Short` and `Numeric` is called dyadic. We show that the dyadic
 games are in correspondence with the `Dyadic'` rationals, in the sense that there exists a map
@@ -30,6 +34,8 @@ the future:
 
 universe u
 open IGame
+
+public section
 
 namespace Dyadic'
 
@@ -120,7 +126,7 @@ theorem le_upper_add_of_den_ge {x y : Dyadic'} (h : y.den ≤ x.den) :
     upper x + y ≤ upper (x + y) := by
   simpa [add_comm] using le_upper_add_of_den_le h
 
-/-! ### Dyadic' numbers to games -/
+/-! ### Dyadic numbers to games -/
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
 
@@ -265,9 +271,9 @@ termination_by x.den
 decreasing_by dyadic_wf
 
 /-- `Dyadic'.toIGame` as an `OrderEmbedding`. -/
-@[simps!]
+@[expose, simps!]
 noncomputable def toIGameEmbedding : Dyadic' ↪o IGame :=
-  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+  .ofStrictMono toIGame fun _ _ ↦ by exact toIGame_lt_toIGame_aux
 
 @[simp, norm_cast]
 theorem toIGame_le_toIGame {x y : Dyadic'} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -633,3 +639,4 @@ theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
   simp
 
 end IGame
+end
