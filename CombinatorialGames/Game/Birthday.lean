@@ -32,12 +32,6 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
-theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
-  Ordinal.lt_omega0
-
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 :=
-  Ordinal.nat_lt_omega0 n
-
 /-! ### `IGame` birthday -/
 
 namespace IGame

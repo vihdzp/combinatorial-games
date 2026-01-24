@@ -50,17 +50,17 @@ variable {a b c d a' b' c' : NatOrdinal.{u}}
 
 /-! ### Natural addition -/
 
+private def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
+  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
+termination_by (a, b)
+decreasing_by all_goals cases x; decreasing_tactic
+
 /-- Natural addition on ordinals `a + b`, also known as the Hessenberg sum, is recursively defined
 as the least ordinal greater than `a' + b` and `a + b'` for all `a' < a` and `b' < b`. In contrast
 to normal ordinal addition, it is commutative.
 
 Natural addition can equivalently be characterized as the ordinal resulting from adding up
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
-noncomputable def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
-termination_by (a, b)
-decreasing_by all_goals cases x; decreasing_tactic
-
 instance : Add NatOrdinal := ⟨add⟩
 
 /-- Add two `NatOrdinal`s as ordinal numbers. -/
@@ -191,6 +191,12 @@ theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P
   change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
   simp [← natCast_image_Iio]
 
+theorem lt_omega0 {o : NatOrdinal} : o < of .omega0 ↔ ∃ n : ℕ, o = n :=
+  Ordinal.lt_omega0
+
+theorem nat_lt_omega0 (n : ℕ) : n < of .omega0 :=
+  Ordinal.nat_lt_omega0 n
+
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
     apply_fun val at h
@@ -221,6 +227,10 @@ theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
 
 /-! ### Natural multiplication -/
 
+private def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
+  sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
+termination_by (a, b)
+
 /-- Natural multiplication on ordinals `a * b`, also known as the Hessenberg product, is recursively
 defined as the least ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for all
 `a' < a` and `b < b'`. In contrast to normal ordinal multiplication, it is commutative and
@@ -229,10 +239,6 @@ distributive (over natural addition).
 Natural multiplication can equivalently be characterized as the ordinal resulting from multiplying
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
-noncomputable def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
-termination_by (a, b)
-
 instance : Mul NatOrdinal := ⟨mul⟩
 
 /-- Multiply two `NatOrdinal`s as ordinal numbers. -/
