@@ -3,8 +3,11 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
+module
+
+public import CombinatorialGames.Surreal.Basic
+
 import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Surreal.Basic
 
 /-!
 # Small games all around
@@ -20,8 +23,9 @@ to infinitesimals.
 - Prove that any short dicotic game is an infinitesimal (but not vice versa, consider `ω⁻¹`)
 -/
 
-namespace IGame
+public section
 
+namespace IGame
 namespace Dicotic
 
 /--
@@ -66,5 +70,5 @@ protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y
   exact Dicotic.lt_of_numeric_of_neg _ hy
 
 end Impartial
-
 end IGame
+end

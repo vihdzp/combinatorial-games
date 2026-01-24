@@ -3,7 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Pow
+module
+
+public import CombinatorialGames.Surreal.Pow
+
 import Mathlib.Algebra.Order.Ring.StandardPart
 
 /-!
@@ -16,7 +19,7 @@ We don't yet prove this characterization; rather, these functions are a key ingr
 the map from surreals into Hahn series.
 -/
 
-noncomputable section
+public noncomputable section
 namespace Surreal
 
 open ArchimedeanClass
@@ -160,6 +163,7 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/
+@[expose]
 def leadingTerm (x : Surreal) : Surreal :=
   x.leadingCoeff * ω^ x.wlog
 
