@@ -3,9 +3,12 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.Game.IGame
+public import CombinatorialGames.NatOrdinal.Basic
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -99,7 +102,6 @@ private theorem lfp_eq_gfp (p : Player) :
 
 /-- `stoppingTime p q x` is the time it takes for `p` to force a win if `q` goes first on `x`,
 counted in moves made by `-p`. -/
-@[irreducible]
 def stoppingTime (p q : Player) (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   if p = q then (stoppingTimeApprox p).lfp x
   else ⨆ i ∈ x.moves q, (stoppingTimeApprox p).lfp i + 1
