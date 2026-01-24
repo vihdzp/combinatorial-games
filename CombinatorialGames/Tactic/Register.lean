@@ -3,7 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Lean.Meta.Tactic.Simp.RegisterCommand
+module
+
+public import Lean.Meta.Tactic.Simp.Simproc
+
+import Lean.Meta.Tactic.Simp.Attr
+meta import Lean.Meta.Tactic.Simp.RegisterCommand
 
 /-!
 We register a `simp` attribute for the `game_cmp` tactic. This needs to be done in a separate file

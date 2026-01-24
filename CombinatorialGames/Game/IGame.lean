@@ -3,11 +3,19 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
+module
+
+public import Batteries.Classes.RatCast
+public import CombinatorialGames.Game.Player
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
+public import Mathlib.Algebra.Order.ZeroLEOne
+public import Mathlib.Logic.Small.Set
+public import Mathlib.Order.Comparable
+
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Small
+import Mathlib.Data.Finset.DenselyOrdered
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
 import Mathlib.Order.Comparable
@@ -82,7 +90,7 @@ universe u
 open Set Pointwise
 
 -- Computations can be performed through the `game_cmp` tactic.
-noncomputable section
+public noncomputable section
 
 /-! ### Game moves -/
 
@@ -115,6 +123,7 @@ export Player (left right)
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+@[no_expose]
 instance : OfSets IGame fun _ ↦ True where
   ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
 
@@ -205,7 +214,6 @@ theorem subposition_wf : WellFounded Subposition := by
   exact h
 
 -- We make no use of `IGame`'s definition from a `QPF` after this point.
-attribute [irreducible] IGame
 
 instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
 instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
@@ -217,7 +225,7 @@ theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
 
 /-- `WSubposition x y` means that `x` is reachable from `y` by a sequence of moves.
 It is the non-strict version of `Subposition`. -/
-def WSubposition (x y : IGame) : Prop := x = y ∨ Subposition x y
+@[expose] def WSubposition (x y : IGame) : Prop := x = y ∨ Subposition x y
 
 theorem wsubposition_iff_eq_or_subposition {x y : IGame} :
     WSubposition x y ↔ x = y ∨ Subposition x y := .rfl
@@ -340,7 +348,7 @@ theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
       ofSets _ _ (fun y _ ↦ ofSetsRecOn y ofSets) (fun y _ ↦ ofSetsRecOn y ofSets) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   simp_rw [ofSetsRecOn]
-  congr! <;> simp
+  congr! <;> simp_all
 
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
@@ -373,6 +381,7 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 /-- The less or equal relation on games.
 
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
+@[no_expose]
 instance : LE IGame where
   le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
     (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
@@ -460,8 +469,8 @@ decreasing_by
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
 instance : Preorder IGame where
-  le_refl _ := le_rfl'
-  le_trans x y z := le_trans'
+  le_refl _ := private le_rfl'
+  le_trans x y z := private le_trans'
 
 theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
   lf_of_le_left le_rfl h
@@ -493,7 +502,7 @@ recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.AntisymmRel]
-def delabEquiv : Delab := do
+meta def delabEquiv : Delab := do
   try
     let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
     have u := f.constLevels![0]!
@@ -513,7 +522,7 @@ def delabEquiv : Delab := do
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
 @[delab app.IncompRel]
-def delabFuzzy : Delab := do
+meta def delabFuzzy : Delab := do
   try
     let_expr f@IncompRel α r _ _ := ← getExpr | failure
     have u := f.constLevels![0]!
@@ -562,6 +571,7 @@ termination_by x
 decreasing_by igame_wf
 
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
+@[no_expose]
 instance : Neg IGame where
   neg := neg'
 
@@ -619,6 +629,7 @@ protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
   dsimp at *
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
+  dsimp
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_moves hz))]
   · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_moves hz))]
@@ -677,6 +688,7 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
+@[no_expose]
 instance : Add IGame where
   add := add'
 
@@ -758,10 +770,10 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
-  add_zero := add_zero'
-  zero_add _ := add_comm' .. ▸ add_zero' _
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_zero := private add_zero'
+  zero_add _ := private add_comm' .. ▸ add_zero' _
+  add_comm := private add_comm'
+  add_assoc := private add_assoc'
   nsmul := nsmulRec
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
@@ -996,7 +1008,7 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
 -- TODO: upstream
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
-def mul' (x y : IGame) : IGame :=
+private def mul' (x y : IGame) : IGame :=
   !{(range fun a : (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ :) ↦
@@ -1010,12 +1022,13 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `IGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
+@[no_expose]
 instance : Mul IGame where
   mul := mul'
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot, game_cmp]
+@[expose, pp_nodot, game_cmp]
 def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
@@ -1087,15 +1100,15 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 instance : CommMagma IGame where
-  mul_comm := mul_comm'
+  mul_comm := private mul_comm'
 
 instance : MulZeroClass IGame where
-  zero_mul := zero_mul'
-  mul_zero x := mul_comm' .. ▸ zero_mul' x
+  zero_mul := private zero_mul'
+  mul_zero x := private mul_comm' .. ▸ zero_mul' x
 
 instance : MulZeroOneClass IGame where
-  one_mul := one_mul'
-  mul_one x := mul_comm' .. ▸ one_mul' x
+  one_mul := private one_mul'
+  mul_one x := private mul_comm' .. ▸ one_mul' x
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
@@ -1116,7 +1129,7 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 instance : HasDistribNeg IGame where
-  neg_mul := neg_mul'
+  neg_mul := private neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
@@ -1172,6 +1185,7 @@ If `x` is negative, we define `x⁻¹ = -(-x)⁻¹`. For any other game, we set 
 
 If `x` is a non-zero numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any non-numeric
 game should be treated as a junk value. -/
+@[no_expose]
 instance : Inv IGame where
   inv x := by classical exact if 0 < x then inv' x else if x < 0 then -inv' (-x) else 0
 
@@ -1211,7 +1225,7 @@ protected theorem inv_neg (x : IGame) : (-x)⁻¹ = -x⁻¹ := by
 
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
 `a` some other "earlier" option of `x⁻¹`. -/
-@[pp_nodot]
+@[expose, pp_nodot]
 def invOption (x y a : IGame) : IGame :=
   (1 + (y - x) * a) / y
 
