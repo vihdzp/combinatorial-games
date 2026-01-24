@@ -3,11 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Tactic.GameCmp
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Fintype.Quotient
-import Mathlib.Data.Multiset.Sort
+module
+
+public import CombinatorialGames.Mathlib.Finlift
+public import CombinatorialGames.Tactic.GameCmp
+public import Mathlib.Data.Fintype.Basic
+public import Mathlib.Data.Fintype.Quotient
+public import Mathlib.Data.Multiset.Sort
 
 /-!
 # Computably short games
@@ -41,6 +43,8 @@ instance {α β : Type*} (r : α → β → Prop)
 
 universe u
 
+public section
+
 /-- The type of "short pre-games", before we have quotiented by equivalence (`identicalSetoid`).
 
 This could perfectly well have been in `Type 0`, but we make it universe polymorphic for
@@ -53,18 +57,22 @@ compile_inductive% SGame
 namespace SGame
 
 /-- The number of left moves on a `SGame`. -/
+@[expose]
 def LeftMoves : SGame → ℕ
   | mk m _ _ _ => m
 
 /-- The number of right moves on a `SGame`. -/
+@[expose]
 def RightMoves : SGame → ℕ
   | mk _ n _ _ => n
 
 /-- Perform a left move. -/
+@[expose]
 def moveLeft : ∀ g : SGame, Fin g.LeftMoves → SGame
   | mk _ _ f _ => f
 
 /-- Perform a right move. -/
+@[expose]
 def moveRight : ∀ g : SGame, Fin g.RightMoves → SGame
   | mk _ _ _ g => g
 
@@ -92,7 +100,8 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
-instance : DecidableEq SGame
+@[no_expose]
+instance instDecidableEq : DecidableEq SGame
   | mk m n f g, mk m' n' f' g' => if h : m = m' ∧ n = n' then
     let : ∀ a b, Decidable (f a = f' b) := fun a b ↦ instDecidableEq ..
     let : ∀ a b, Decidable (g a = g' b) := fun a b ↦ instDecidableEq ..
@@ -145,6 +154,7 @@ theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i
 theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
   | mk .., mk .., ⟨_, hr⟩ => hr.2
 
+@[no_expose]
 instance Identical.instDecidable (a b) : Decidable (a ≡ b) :=
   let : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
   let : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
@@ -163,6 +173,7 @@ end SGame
 Here, we have the distinct advantage of being able to use finsets as our
 backing left and right sets over `IGame`'s small sets.
 -/
+@[expose]
 def FGame : Type u :=
   Quotient SGame.identicalSetoid
 
@@ -170,7 +181,7 @@ namespace FGame
 open scoped SGame
 
 /-- The quotient map from `SGame` into `FGame`. -/
-def mk (x : SGame) : FGame := Quotient.mk _ x
+@[expose] def mk (x : SGame) : FGame := Quotient.mk _ x
 theorem mk_eq_mk {x y : SGame} : mk x = mk y ↔ x ≡ y := Quotient.eq
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
@@ -180,6 +191,7 @@ alias _root_.SGame.Identical.mk_eq := mk_eq
 theorem ind {motive : FGame → Prop} (H : ∀ y, motive (mk y)) (x : FGame) : motive x :=
   Quotient.ind H x
 
+@[no_expose]
 instance : DecidableEq FGame := Quotient.decidableEq (d := SGame.Identical.instDecidable)
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
@@ -187,6 +199,7 @@ noncomputable def out (x : FGame) : SGame := Quotient.out x
 @[simp] theorem out_eq (x : FGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The finset of left moves of the game. -/
+@[expose]
 def leftMoves : FGame → Finset FGame :=
   Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveLeft y)) fun x y h ↦ by
     ext z
@@ -198,6 +211,7 @@ def leftMoves : FGame → Finset FGame :=
       exact ⟨j, hj.mk_eq⟩
 
 /-- The finset of right moves of the game. -/
+@[expose]
 def rightMoves : FGame → Finset FGame :=
   Quotient.lift (fun x ↦ Finset.univ.image fun y ↦ mk (x.moveRight y)) fun x y h ↦ by
     ext z
@@ -384,6 +398,8 @@ private unsafe def instRepr_aux : FGame → Std.Format :=
 /-- The Repr of FGame. We confine inputs to {0} to make universe determinism easy on `#eval`,
 and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flattened out one
 {a, b, c|d, e, f} to match with the `IGame` builder syntax. -/
+@[no_expose]
 unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
 
 end FGame
+end

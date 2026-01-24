@@ -87,12 +87,6 @@ theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrdered
   simp_rw [le_add_iff_lt_or_exists_le]
   aesop
 
-theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
-    IsGreatest {y | P y} x := by
-  refine ⟨h.1, fun y hy ↦ ?_⟩
-  by_contra! hx
-  exact (h.le_of_ge hy hx.le).not_gt hx
-
 /-! #### Ordinal lemmas-/
 
 namespace Ordinal

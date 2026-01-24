@@ -3,7 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Basic
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+
 import Mathlib.Tactic.ComputeDegree
 
 /-!
@@ -15,6 +18,14 @@ nimbers are algebraically closed.
 -/
 
 open Polynomial
+
+theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
+    IsGreatest {y | P y} x := by
+  refine ⟨h.1, fun y hy ↦ ?_⟩
+  by_contra! hx
+  exact (h.le_of_ge hy hx.le).not_gt hx
+
+@[expose] public section
 
 namespace Nimber
 

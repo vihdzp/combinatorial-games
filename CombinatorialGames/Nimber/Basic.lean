@@ -199,16 +199,12 @@ instance : AddCommGroupWithOne Nimber where
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 
-@[game_cmp]
 theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
   simp [natCast_eq_if, Nat.even_iff]
 
-@[simp, game_cmp]
+@[simp]
 theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
   natCast_eq_mod n
-
--- This lets `game_cmp` reduce any instances of `NatCast`.
-@[game_cmp] meta def reduceMod' := Nat.reduceMod
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by
