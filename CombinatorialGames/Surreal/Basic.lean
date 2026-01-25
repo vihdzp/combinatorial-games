@@ -51,7 +51,7 @@ alias AntisymmRel.Fits := fits_of_equiv
 theorem Fits.refl (x : IGame) : x.Fits x :=
   fits_of_equiv .rfl
 
-instance : IsRefl _ Fits where
+instance : Std.Refl Fits where
   refl := Fits.refl
 
 theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
