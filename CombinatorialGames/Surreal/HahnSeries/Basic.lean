@@ -694,10 +694,10 @@ def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
   toFun := toSurrealHahnSeries
   invFun := ofSurrealHahnSeries
   left_inv s := by
-    ext x
+    ext x _ h
     · simp
     · simp
-    · simp_all [coeffIdx_coe_of_lt]
+    · simp [coeffIdx_coe_of_lt h]
   right_inv x := by
     ext i
     by_cases h : i ∈ x.support
