@@ -218,15 +218,19 @@ protected theorem sub_lt_iff_lt_add {x y z : IGame} : x - z < y ↔ x < y + z :=
 protected theorem lt_sub_iff_add_lt {x y z : IGame} : x < z - y ↔ x + y < z :=
   @lt_sub_iff_add_lt Game _ _ _ (.mk x) (.mk y) (.mk z)
 
+@[simp]
 protected theorem sub_nonneg {x y : IGame} : 0 ≤ x - y ↔ y ≤ x :=
   @sub_nonneg Game _ _ _ (.mk x) (.mk y)
 
+@[simp]
 protected theorem sub_nonpos {x y : IGame} : x - y ≤ 0 ↔ x ≤ y :=
   @sub_nonpos Game _ _ _ (.mk x) (.mk y)
 
+@[simp]
 protected theorem sub_pos {x y : IGame} : 0 < x - y ↔ y < x :=
   @sub_pos Game _ _ _ (.mk x) (.mk y)
 
+@[simp]
 protected theorem sub_neg {x y : IGame} : x - y < 0 ↔ x < y :=
   @sub_neg Game _ _ _ (.mk x) (.mk y)
 
