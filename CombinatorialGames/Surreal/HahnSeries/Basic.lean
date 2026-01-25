@@ -615,7 +615,7 @@ instance : Coe TermSeq SurrealHahnSeries where
   coe := toSurrealHahnSeries
 
 /-- Build a `TermSeq` from a `SurrealHahnSeries`. -/
-@[simps!]
+@[simps]
 def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
   length := x.length
   exp := (↑) ∘ x.exp
