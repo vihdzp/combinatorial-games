@@ -149,6 +149,9 @@ instance : BoundedOrder Outcome where
 @[simp] theorem bot_eq_loss : ⊥ = loss := rfl
 @[simp] theorem top_eq_win : ⊤ = win := rfl
 
+@[simp] theorem le_loss_iff : ∀ {x}, x ≤ loss ↔ x = loss := by decide
+@[simp] theorem win_le_iff : ∀ {x}, win ≤ x ↔ x = win := by decide
+
 end Outcome
 
 open Player

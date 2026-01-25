@@ -3,6 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios, Aaron Liu, and Junyan Xu. All ri
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu, Junyan Xu
 -/
+import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Loopy.IGame
 
 /-!
@@ -131,6 +132,15 @@ theorem IsDraw.neg (h : IsDraw p x) : IsDraw (-p) (-x) := by
   rw [← neg_neg p] at h
   exact isDraw_neg.2 h
 
+theorem isStrategy_sub_self : IsStrategy p (.range fun x ↦ x - x) := by
+  simp_rw [sub_eq_add_neg, IsStrategy, Set.forall_mem_range, forall_moves_add, exists_moves_add]
+  refine fun x ↦ ⟨fun y hy ↦ .inr ⟨-y, ?_⟩, fun y hy ↦ .inl ⟨-y, ?_⟩⟩
+  · simpa
+  · simp_all [add_comm]
+
+theorem not_isWin_sub_self (p : Player) (x : LGame) : ¬ IsWin p (x - x) :=
+  isStrategy_sub_self.not_isWin' (by simp)
+
 theorem outcome_trichotomy (p : Player) (x : LGame) : IsWin p x ∨ IsDraw p x ∨ IsLoss p x := by
   rw [IsDraw]; tauto
 
@@ -163,6 +173,61 @@ theorem StopperFor.not_isDraw (h : StopperFor p x) : ¬ IsDraw p x :=
 
 theorem Stopper.not_isDraw (p : Player) (h : Stopper x) : ¬ IsDraw p x :=
   (h p).not_isDraw
+
+instance : Preorder LGame where
+  le x y := ∀ z,
+    (x + z).outcomeFor left ≤ (y + z).outcomeFor left ∧
+    (y + z).outcomeFor right ≤ (x + z).outcomeFor right
+  le_refl := by simp
+  le_trans x y z h₁ h₂ w := ⟨(h₁ _).1.trans (h₂ _).1, (h₂ _).2.trans (h₁ _).2⟩
+
+theorem le_def : x ≤ y ↔ ∀ z,
+    (x + z).outcomeFor left ≤ (y + z).outcomeFor left ∧
+    (y + z).outcomeFor right ≤ (x + z).outcomeFor right :=
+  .rfl
+
+theorem outcomeFor_left_le_of_le (h : x ≤ y) (z : LGame) :
+    (x + z).outcomeFor left ≤ (y + z).outcomeFor left :=
+  (h z).1
+
+theorem outcomeFor_right_le_of_le (h : x ≤ y) (z : LGame) :
+    (y + z).outcomeFor right ≤ (x + z).outcomeFor right :=
+  (h z).2
+
+theorem isWin_left_add_mono (z : LGame) : Monotone fun x ↦ IsWin left (x + z) := by
+  intro x y h h'
+  rw [← outcomeFor_eq_win_iff] at h' ⊢
+  have := h' ▸ (outcomeFor_left_le_of_le h z)
+  simpa using this
+
+theorem isWin_right_add_anti (z : LGame) : Antitone fun x ↦ IsWin right (x + z) := by
+  intro x y h h'
+  rw [← outcomeFor_eq_win_iff] at h' ⊢
+  have := h' ▸ (outcomeFor_right_le_of_le h z)
+  simpa using this
+
+theorem not_isWin_right_sub_of_le (h : x ≤ y) : ¬ IsWin right (y - x) :=
+  fun h' ↦ not_isWin_sub_self _ _ <| isWin_right_add_anti (-x) h h'
+
+theorem not_isWin_left_sub_of_le (h : x ≤ y) : ¬ IsWin left (x - y) := by
+  rw [← neg_sub, isWin_neg]; exact not_isWin_right_sub_of_le h
+
+theorem equiv_def : x ≈ y ↔ ∀ p z,
+    (x + z).outcomeFor p = (y + z).outcomeFor p := by
+  grind [AntisymmRel, le_def]
+
+theorem le_iff_of_stopper (hx : Stopper x) (hy : Stopper y) : x ≤ y ↔ ¬ IsWin right (y - x) where
+  mp := not_isWin_right_sub_of_le
+  mpr h z := by
+    constructor
+    · cases h' : outcomeFor left (x + z) with
+      | loss => simp
+      | draw => sorry
+      | win => sorry
+    · sorry
+
+theorem le_iff_of_stopper' (hx : Stopper x) (hy : Stopper y) : x ≤ y ↔ ¬ IsWin left (x - y) := by
+  rw [← neg_sub, isWin_neg, le_iff_of_stopper hx hy, Player.neg_left]
 
 /-! ### Outcome calculations -/
 
@@ -268,7 +333,7 @@ end LGame
 /-! ### Outcomes of well-founded games -/
 
 namespace IGame
-variable {x : IGame}
+variable {x y : IGame}
 
 open LGame
 
@@ -300,5 +365,22 @@ theorem lt_zero_iff_isLoss_and_isWin : x < 0 ↔ IsLoss left x ∧ IsWin right x
 
 theorem zero_lt_iff_isWin_and_isLoss : 0 < x ↔ IsWin left x ∧ IsLoss right x := by
   simp [lt_iff_le_not_ge, and_comm]
+
+@[simp]
+theorem toLGame_le_toLGame_iff : x.toLGame ≤ y.toLGame ↔ x ≤ y := by
+  rw [le_iff_of_stopper (stopper_toLGame _) (stopper_toLGame _), ← toLGame_sub,
+    isWin_right_iff_lf_zero, not_not, IGame.sub_nonneg]
+
+@[simp]
+theorem toLGame_lt_toLGame_iff : x.toLGame < y.toLGame ↔ x < y := by
+  simp [lt_iff_le_not_ge]
+
+@[simp]
+theorem toLGame_equiv_toLGame_iff : x.toLGame ≈ y.toLGame ↔ x ≈ y := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem toLGame_fuzzy_toLGame_iff : x.toLGame ‖ y.toLGame ↔ x ‖ y := by
+  simp [IncompRel]
 
 end IGame
