@@ -533,23 +533,6 @@ theorem term_eq_zero {x : SurrealHahnSeries} {i : Ordinal} : x.term i = 0 ↔ x.
 
 alias ⟨_, term_of_le⟩ := term_eq_zero
 
-@[simp]
-theorem leadingTerm_term (x : SurrealHahnSeries) (i : Ordinal) :
-    (x.term i).leadingTerm = x.term i := by
-  rw [term]
-  aesop
-
-@[simp]
-theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
-    (x.term i).leadingCoeff = x.coeffIdx i := by
-  rw [term]
-  aesop (add simp [eq_comm 0])
-
-theorem wlog_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
-    (x.term i).wlog = x.exp ⟨i, hi⟩ := by
-  rw [term]
-  aesop
-
 /-! ### Assemble Hahn series from sequences -/
 
 /-- An auxiliary structure for a decreasing sequence of exponents and their bundled coefficients.
@@ -740,3 +723,4 @@ theorem ofSurrealHahnSeries_inj {x y : SurrealHahnSeries} :
   surrealHahnSeriesEquiv.symm.apply_eq_iff_eq
 
 end TermSeq
+end SurrealHahnSeries
