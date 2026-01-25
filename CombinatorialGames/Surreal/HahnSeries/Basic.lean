@@ -137,6 +137,9 @@ def support (x : SurrealHahnSeries) : Set Surreal :=
 theorem mem_support_iff {x : SurrealHahnSeries} {i : Surreal} : i ∈ x.support ↔ x.coeff i ≠ 0 :=
   .rfl
 
+theorem notMem_support_iff {x : SurrealHahnSeries} {i : Surreal} : i ∉ x.support ↔ x.coeff i = 0 :=
+  mem_support_iff.not_left
+
 @[simp]
 theorem support_eq_empty {x : SurrealHahnSeries} : support x = ∅ ↔ x = 0 := by
   aesop (add simp [Set.eq_empty_iff_forall_notMem])
@@ -503,7 +506,7 @@ theorem coeff_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {j k : Surre
   · by_cases hk : k ∈ (x.truncIdx i).support
     · rw [truncIdx_of_lt hi, coeff_trunc_of_mem]
       rwa [trunc_exp]
-    · rw [mem_support_iff, not_ne_iff] at hk
+    · rw [notMem_support_iff] at hk
       rw [hk, eq_comm]
       rwa [truncIdx_of_lt hi, coeff_trunc_of_lt] at hk
       apply hjk.trans_lt'
@@ -621,7 +624,7 @@ def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
   coeff_ne_zero := by simp
 
 @[simp, grind =]
-theorem coeff_exp {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff i := by
+theorem coeff_coe {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff i := by
   rw [toSurrealHahnSeries, coeff_mk, dif_pos ⟨i, rfl⟩]
   generalize_proofs H
   rw [s.exp_strictAnti.injective <| Classical.choose_spec H]
@@ -659,7 +662,7 @@ theorem exp_coe (s : TermSeq) (i) : exp s i = s.exp ⟨i, by simpa using i.2⟩ 
 
 theorem coeffIdx_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
     coeffIdx s i = s.coeff ⟨i, h⟩ := by
-  rw [coeffIdx_of_lt (by simpa), exp_coe, coeff_exp]
+  rw [coeffIdx_of_lt (by simpa), exp_coe, coeff_coe]
 
 theorem coeffIdx_coe_of_le {s : TermSeq} {i} (h : s.length ≤ i) : coeffIdx s i = 0 :=
   coeffIdx_of_le (by simpa)
@@ -691,7 +694,7 @@ def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
   toFun := toSurrealHahnSeries
   invFun := ofSurrealHahnSeries
   left_inv s := by
-    ext
+    ext x
     · simp
     · simp
     · simp_all [coeffIdx_coe_of_lt]
@@ -699,9 +702,9 @@ def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
     ext i
     by_cases h : i ∈ x.support
     · obtain ⟨i, hi, rfl⟩ := eq_exp_of_mem_support h
-      apply (coeff_exp (s := ofSurrealHahnSeries x) i).trans
+      apply (coeff_coe (s := ofSurrealHahnSeries x) i).trans
       simp
-    · have hx : x.coeff i = 0 := by rwa [← not_ne_iff, ← mem_support_iff]
+    · have hx : x.coeff i = 0 := by rwa [← notMem_support_iff]
       rw [coeff_coe_of_notMem, hx]
       simpa [ofSurrealHahnSeries]
 
