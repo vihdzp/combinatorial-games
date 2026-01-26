@@ -55,71 +55,74 @@ end CommGroup
 namespace Surreal
 open IGame Set
 
-/-! ### Expand operation -/
+/-! ### Truncation operation -/
 
-/-- We define `x.expand r = {x - r | x + r}` whenever `0 < r`. For `r ≤ 0`, we set the junk value
-`x.expand r = x`. -/
-def expand (x r : Surreal) : Surreal :=
+/-- We define `x.trunc r = {x - r | x + r}` whenever `0 < r`. For `r ≤ 0`, we set the junk value
+`x.trunc r = x`.
+
+If `r = 1`, this operation truncates the fractional part of `x`, rounding up or down to whichever
+surreal is simplest. -/
+def trunc (x r : Surreal) : Surreal :=
   if hr : 0 < r then !{{x - r} | {x + r}} else x
 
-theorem expand_of_pos {x r : Surreal} (hr : 0 < r) : x.expand r = !{{x - r} | {x + r}} :=
+theorem trunc_of_pos {x r : Surreal} (hr : 0 < r) : x.trunc r = !{{x - r} | {x + r}} :=
   dif_pos hr
 
-theorem expand_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.expand r = x :=
+theorem trunc_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.trunc r = x :=
   dif_neg hr.not_gt
 
-theorem expand_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
-    (mk x).expand (mk r) = @mk !{{x - r} | {x + r}}
+theorem trunc_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
+    (mk x).trunc (mk r) = @mk !{{x - r} | {x + r}}
       (.mk (by simpa [← Surreal.mk_lt_mk]) (by aesop)) := by
-  rw [expand_of_pos hr, mk_ofSets]
+  rw [trunc_of_pos hr, mk_ofSets]
   congr <;> aesop
 
-theorem expand_of_zero_mem {x r : Surreal} (h : 0 ∈ Ioo (x - r) (x + r)) : x.expand r = 0 := by
+theorem trunc_of_zero_mem {x r : Surreal} (h : 0 ∈ Ioo (x - r) (x + r)) : x.trunc r = 0 := by
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨0, h⟩
   cases x with | mk x
   cases r with | mk r
-  rw [← mk_zero, expand_mk_of_pos hr, mk_eq_mk', ← fits_zero_iff_equiv]
+  rw [← mk_zero, trunc_mk_of_pos hr, mk_eq_mk', ← fits_zero_iff_equiv]
   simpa [Fits]
 
 @[simp]
-theorem expand_zero (r : Surreal) : expand 0 r = 0 := by
+theorem trunc_zero (r : Surreal) : trunc 0 r = 0 := by
   obtain h | h := le_or_gt r 0
-  · rw [expand_of_nonpos h]
-  · apply expand_of_zero_mem
+  · rw [trunc_of_nonpos h]
+  · apply trunc_of_zero_mem
     simpa
 
 @[simp]
-theorem expand_neg {x r : Surreal} : (-x).expand r = -x.expand r := by
+theorem trunc_neg {x r : Surreal} : (-x).trunc r = -x.trunc r := by
   obtain h | h := le_or_gt r 0
-  · simp_rw [expand_of_nonpos h]
+  · simp_rw [trunc_of_nonpos h]
   cases x with | mk x
   cases r with | mk r
-  simp only [← mk_neg, expand_mk_of_pos h, neg_ofSets, neg_singleton,
+  simp only [← mk_neg, trunc_mk_of_pos h, neg_ofSets, neg_singleton,
     sub_eq_add_neg, neg_add, neg_neg]
 
-theorem expand_add_of_eq {x y r : Surreal} (hx : x.expand r = x) (hy : y.expand r = y) :
-    (x + y).expand r = x + y := by
+theorem trunc_add_of_eq {x y r : Surreal} (hx : x.trunc r = x) (hy : y.trunc r = y) :
+    (x + y).trunc r = x + y := by
   obtain h | h := le_or_gt r 0
-  · rw [expand_of_nonpos h]
+  · rw [trunc_of_nonpos h]
   cases x with | mk x
   cases y with | mk y
   cases r with | mk r
   conv_rhs => rw [← hx, ← hy]
-  simp only [← mk_add, expand_mk_of_pos h] at *
+  simp only [← mk_add, trunc_mk_of_pos h] at *
   generalize_proofs at hx hy
   simp only [ofSets_add_ofSets, mk_ofSets, image_singleton, union_singleton,
     range_singleton, range_insert]
   dsimp
   congr <;> rw [hx, hy] <;> grind
 
-theorem expand_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.expand r = x) (hy : y.expand r = y) :
-    (x * y).expand (r * r) = x * y := by
+theorem trunc_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.trunc r = x) (hy : y.trunc r = y) :
+    (x * y).trunc (r * r) = x * y := by
   have h' : 0 < r * r := mul_self_pos.2 h.ne'
   cases x with | mk x
   cases y with | mk y
   cases r with | mk r
   conv_rhs => rw [← hx, ← hy]
-  simp only [← mk_mul, expand_mk_of_pos h, expand_mk_of_pos h'] at *
+  simp only [← mk_mul, trunc_mk_of_pos h, trunc_mk_of_pos h'] at *
   generalize_proofs at hx hy
   simp only [ofSets_mul_ofSets, mk_ofSets, mulOption, singleton_prod_singleton,
     union_singleton, image_insert_eq, image_singleton, range_singleton, range_insert]
@@ -130,15 +133,15 @@ theorem expand_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.expand r = x) (hy
 /-- An omnific integer is one such that `x = {x - 1 | x + 1}`. These are an analog of the integers
 to the surreals. -/
 def IsOmnific (x : Surreal) : Prop :=
-  x.expand 1 = x
+  x.trunc 1 = x
 
-theorem IsOmnific.eq {x : Surreal} (h : IsOmnific x) : x.expand 1 = x := h
+theorem IsOmnific.eq {x : Surreal} (h : IsOmnific x) : x.trunc 1 = x := h
 
 @[simp] theorem IsOmnific.zero : IsOmnific 0 := by simp [IsOmnific]
 
 @[simp]
 theorem IsOmnific.one : IsOmnific 1 := by
-  rw [IsOmnific, ← mk_one, expand_mk_of_pos IGame.zero_lt_one, mk_eq_mk']
+  rw [IsOmnific, ← mk_one, trunc_mk_of_pos IGame.zero_lt_one, mk_eq_mk']
   apply equiv_one_of_fits
   on_goal 2 => rw [← fits_zero_iff_equiv]
   all_goals simp [Fits, ← Game.mk_lt_mk]
@@ -152,7 +155,7 @@ theorem isOmnific_neg_iff {x : Surreal} : IsOmnific (-x) ↔ IsOmnific x :=
 
 theorem IsOmnific.add {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x + y) :=
-  expand_add_of_eq hx hy
+  trunc_add_of_eq hx hy
 
 theorem IsOmnific.sub {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) :=
@@ -160,13 +163,13 @@ theorem IsOmnific.sub {x y : Surreal}
 
 theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
-  simpa using expand_mul_of_eq zero_lt_one hx hy
+  simpa using trunc_mul_of_eq zero_lt_one hx hy
 
 theorem IsOmnific.one_le_iff_pos {x : Surreal} (h : IsOmnific x) : 1 ≤ x ↔ 0 < x where
   mp := zero_lt_one.trans_le
   mpr hx := by
     by_contra!
-    rw [IsOmnific, expand_of_zero_mem] at h
+    rw [IsOmnific, trunc_of_zero_mem] at h
     · exact hx.ne h
     · grind
 
