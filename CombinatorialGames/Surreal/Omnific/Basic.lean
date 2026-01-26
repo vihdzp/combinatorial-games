@@ -3,7 +3,7 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Real
 import Mathlib.Algebra.Ring.Subring.Defs
 
 /-!
@@ -53,33 +53,40 @@ theorem div_le_mul_self_iff : x / y ≤ x * y ↔ 1 ≤ y := by
 end CommGroup
 
 namespace Surreal
+open IGame Set
 
 /-! ### Expand operation -/
 
 /-- We define `x.expand r = {x - r | x + r}` whenever `0 < r`. For `r ≤ 0`, we set the junk value
 `x.expand r = x`. -/
 def expand (x r : Surreal) : Surreal :=
-  if h : 0 < r then !{{x - r} | {x + r}} else x
+  if hr : 0 < r then !{{x - r} | {x + r}} else x
 
-theorem expand_of_pos {x r : Surreal} (h : 0 < r) : x.expand r = !{{x - r} | {x + r}} :=
-  dif_pos h
+theorem expand_of_pos {x r : Surreal} (hr : 0 < r) : x.expand r = !{{x - r} | {x + r}} :=
+  dif_pos hr
 
-theorem expand_of_nonpos {x r : Surreal} (h : r ≤ 0) : x.expand r = x :=
-  dif_neg h.not_gt
+theorem expand_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.expand r = x :=
+  dif_neg hr.not_gt
 
-theorem expand_mk_of_pos {x r : IGame} (h : 0 < r) [x.Numeric] [r.Numeric] :
+theorem expand_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
     (mk x).expand (mk r) = @mk !{{x - r} | {x + r}}
       (.mk (by simpa [← Surreal.mk_lt_mk]) (by aesop)) := by
-  rw [expand_of_pos h, mk_ofSets]
+  rw [expand_of_pos hr, mk_ofSets]
   congr <;> aesop
+
+theorem expand_of_zero_mem {x r : Surreal} (h : 0 ∈ Ioo (x - r) (x + r)) : x.expand r = 0 := by
+  have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨0, h⟩
+  cases x with | mk x
+  cases r with | mk r
+  rw [← mk_zero, expand_mk_of_pos hr, mk_eq_mk', ← fits_zero_iff_equiv]
+  simpa [Fits]
 
 @[simp]
 theorem expand_zero (r : Surreal) : expand 0 r = 0 := by
   obtain h | h := le_or_gt r 0
   · rw [expand_of_nonpos h]
-  cases r with | mk r
-  rw [← mk_zero, expand_mk_of_pos h, mk_eq_mk', ← IGame.fits_zero_iff_equiv]
-  simpa [IGame.Fits]
+  · apply expand_of_zero_mem
+    simpa
 
 @[simp]
 theorem expand_neg {x r : Surreal} : (-x).expand r = -x.expand r := by
@@ -87,7 +94,7 @@ theorem expand_neg {x r : Surreal} : (-x).expand r = -x.expand r := by
   · simp_rw [expand_of_nonpos h]
   cases x with | mk x
   cases r with | mk r
-  simp only [← mk_neg, expand_mk_of_pos h, IGame.neg_ofSets, Set.neg_singleton,
+  simp only [← mk_neg, expand_mk_of_pos h, neg_ofSets, neg_singleton,
     sub_eq_add_neg, neg_add, neg_neg]
 
 theorem expand_add_of_eq {x y r : Surreal} (hx : x.expand r = x) (hy : y.expand r = y) :
@@ -100,8 +107,8 @@ theorem expand_add_of_eq {x y r : Surreal} (hx : x.expand r = x) (hy : y.expand 
   conv_rhs => rw [← hx, ← hy]
   simp only [← mk_add, expand_mk_of_pos h] at *
   generalize_proofs at hx hy
-  simp only [IGame.ofSets_add_ofSets, mk_ofSets, Set.image_singleton, Set.union_singleton,
-    Set.range_singleton, Set.range_insert]
+  simp only [ofSets_add_ofSets, mk_ofSets, image_singleton, union_singleton,
+    range_singleton, range_insert]
   dsimp
   congr <;> rw [hx, hy] <;> grind
 
@@ -114,9 +121,8 @@ theorem expand_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.expand r = x) (hy
   conv_rhs => rw [← hx, ← hy]
   simp only [← mk_mul, expand_mk_of_pos h, expand_mk_of_pos h'] at *
   generalize_proofs at hx hy
-  simp only [IGame.ofSets_mul_ofSets, mk_ofSets, IGame.mulOption, Set.singleton_prod_singleton,
-    Set.union_singleton, Set.image_insert_eq, Set.image_singleton,
-    Set.range_singleton, Set.range_insert]
+  simp only [ofSets_mul_ofSets, mk_ofSets, mulOption, singleton_prod_singleton,
+    union_singleton, image_insert_eq, image_singleton, range_singleton, range_insert]
   congr <;> dsimp <;> rw [hx, hy] <;> grind
 
 /-! ### Omnific integers -/
@@ -128,17 +134,14 @@ def IsOmnific (x : Surreal) : Prop :=
 
 theorem IsOmnific.eq {x : Surreal} (h : IsOmnific x) : x.expand 1 = x := h
 
-theorem IsOmnific.zero : IsOmnific 0 := by simp [IsOmnific]
+@[simp] theorem IsOmnific.zero : IsOmnific 0 := by simp [IsOmnific]
 
+@[simp]
 theorem IsOmnific.one : IsOmnific 1 := by
   rw [IsOmnific, ← mk_one, expand_mk_of_pos IGame.zero_lt_one, mk_eq_mk']
-  apply IGame.equiv_one_of_fits
-  on_goal 2 => rw [← IGame.fits_zero_iff_equiv]
-  all_goals simp [IGame.Fits, ← Game.mk_lt_mk]
-
-theorem IsOmnific.add {x y : Surreal}
-    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x + y) :=
-  expand_add_of_eq hx hy
+  apply equiv_one_of_fits
+  on_goal 2 => rw [← fits_zero_iff_equiv]
+  all_goals simp [Fits, ← Game.mk_lt_mk]
 
 theorem IsOmnific.neg {x : Surreal} (hx : IsOmnific x) : IsOmnific (-x) := by
   simpa [IsOmnific]
@@ -147,9 +150,29 @@ theorem IsOmnific.neg {x : Surreal} (hx : IsOmnific x) : IsOmnific (-x) := by
 theorem isOmnific_neg_iff {x : Surreal} : IsOmnific (-x) ↔ IsOmnific x :=
   ⟨fun h ↦ neg_neg x ▸ h.neg, .neg⟩
 
+theorem IsOmnific.add {x y : Surreal}
+    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x + y) :=
+  expand_add_of_eq hx hy
+
+theorem IsOmnific.sub {x y : Surreal}
+    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) :=
+  hx.add hy.neg
+
 theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
   simpa using expand_mul_of_eq zero_lt_one hx hy
+
+theorem IsOmnific.one_le_iff_pos {x : Surreal} (h : IsOmnific x) : 1 ≤ x ↔ 0 < x where
+  mp := zero_lt_one.trans_le
+  mpr hx := by
+    by_contra!
+    rw [IsOmnific, expand_of_zero_mem] at h
+    · exact hx.ne h
+    · grind
+
+theorem IsOmnific.lt_one_iff_nonpos {x : Surreal} (h : IsOmnific x) : x < 1 ↔ x ≤ 0 := by
+  rw [← not_iff_not]
+  simpa using h.one_le_iff_pos
 
 /-- The subring of `IsOmnific` surreal numbers. -/
 def Omnific : Subring Surreal where
@@ -160,8 +183,26 @@ def Omnific : Subring Surreal where
   add_mem' := .add
   mul_mem' := .mul
 
-theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).2
-theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).2
+@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).2
+@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).2
+
+@[simp]
+theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where
+  mpr := by rintro ⟨n, rfl⟩; simp
+  mp h := by
+    rw [← Int.fract_eq_zero_iff]
+    apply (Int.fract_nonneg r).antisymm'
+    rw [← Real.toSurreal_le_iff, Real.toSurreal_zero, ← IsOmnific.lt_one_iff_nonpos]
+    · exact_mod_cast Int.fract_lt_one r
+    · rw [Int.fract, Real.toSurreal_sub]
+      apply h.sub
+      simp
+
+@[simp]
+theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : ℤ → ℚ) := by
+  rw [← Real.toSurreal_ratCast, isOmnific_realCast_iff]
+  refine exists_congr fun _ ↦ ?_
+  norm_cast
 
 end Surreal
 end
