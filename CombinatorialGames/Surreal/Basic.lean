@@ -131,6 +131,10 @@ theorem mk_eq_mk {x y : IGame} [Numeric x] [Numeric y] : mk x = mk y ↔ x ≈ y
 
 alias ⟨_, mk_eq⟩ := mk_eq_mk
 
+/-- An alternate version of `mk_eq_mk` which takes the numeric hypotheses as implicit arguments.
+Useful for rewriting. -/
+theorem mk_eq_mk' {x y : IGame} {_ : Numeric x} {_ : Numeric y} : mk x = mk y ↔ x ≈ y := mk_eq_mk
+
 @[cases_eliminator]
 theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
     motive x := Quotient.ind (fun h ↦ @mk _ h.2) x

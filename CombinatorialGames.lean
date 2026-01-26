@@ -44,6 +44,7 @@ import CombinatorialGames.Surreal.Dyadic.Basic
 import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.HahnSeries.Basic
 import CombinatorialGames.Surreal.Multiplication
+import CombinatorialGames.Surreal.Omnific.Basic
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Pow
 import CombinatorialGames.Surreal.Real
