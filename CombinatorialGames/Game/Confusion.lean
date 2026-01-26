@@ -90,6 +90,9 @@ theorem mem_confusionInterval {x : Game} {y : Surreal} :
     y ∈ confusionInterval x ↔ y.toGame ‖ x := by
   simp [confusionInterval, IncompRel]
 
+theorem ordConnected_confusionInterval (x : Game) : x.confusionInterval.OrdConnected :=
+  (isUpperSet_right _).ordConnected.inter (isLowerSet_left _).ordConnected
+
 @[simp]
 theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = ∅ := by
   grind [confusionInterval]
@@ -113,13 +116,6 @@ theorem confusionInterval_zero : confusionInterval 0 = ∅ := by
 @[simp]
 theorem confusionInterval_one : confusionInterval 1 = ∅ := by
   simpa using confusionInterval_ordinal 1
-
-instance ordConnected_confusionInterval (x : Game) : x.confusionInterval.OrdConnected := by
-  refine ⟨fun y hy z hz w ⟨hw, hw'⟩ ↦ ⟨?_, ?_⟩⟩
-  · apply isUpperSet_right _ hw
-    grind [confusionInterval]
-  · apply isLowerSet_left _ hw'
-    grind [confusionInterval]
 
 @[simp]
 theorem confusionInterval_star : confusionInterval (.mk ⋆) = {0} := by
