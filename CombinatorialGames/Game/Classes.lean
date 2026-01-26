@@ -463,7 +463,7 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
     (@ih p y hy (.of_mem_moves hy)).insert y
   ext
   rw [Set.mem_setOf, subposition_iff_exists]
-  simp
+  simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
   (Short.finite_setOf_subposition x).to_subtype

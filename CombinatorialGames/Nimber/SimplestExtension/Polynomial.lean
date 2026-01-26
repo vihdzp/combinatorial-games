@@ -862,7 +862,7 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
 theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p.roots = (h.embed hx₁ p hpk).roots.map (Subfield.subtype _) := by
-  simpa using (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)).map_roots
+  simpa using (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)).roots_map
     (Subfield.subtype _)
 
 theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}

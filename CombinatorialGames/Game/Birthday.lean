@@ -28,11 +28,6 @@ open NatOrdinal Order Set
 
 /-! ### Stuff for Mathlib -/
 
-theorem IncompRel.ne {α : Type*} {r : α → α → Prop} [IsRefl α r] {a b : α}
-    (h : IncompRel r a b) : a ≠ b := by
-  rintro rfl
-  exact h.1 <| refl_of r a
-
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
@@ -157,6 +152,23 @@ decreasing_by igame_wf
 
 theorem neg_toIGame_birthday_le (x : IGame) : -x.birthday.toIGame ≤ x := by
   simpa [IGame.neg_le] using le_toIGame_birthday (-x)
+
+/-- A game without right options is equivalent to an ordinal. -/
+theorem equiv_ordinal_of_right_eq_empty {x : IGame} (hx : xᴿ = ∅) :
+    ∃ o : NatOrdinal, x ≈ o := by
+  obtain ⟨o, ho, ho'⟩ := wellFounded_lt.has_min {o : NatOrdinal | x ≤ o} ⟨_, x.le_toIGame_birthday⟩
+  use o
+  apply equiv_of_forall_lf
+  · exact fun a ha ha' ↦ left_lf ha <| ho.trans ha'
+  · simp [hx]
+  · rw [forall_leftMoves_toIGame]
+    exact fun a ha ha' ↦ ho' _ ha' ha
+  · simp
+
+/-- A game without left options is equivalent to the negative of an ordinal. -/
+theorem equiv_neg_ordinal_of_left_eq_empty {x : IGame} (hx : xᴸ = ∅) :
+    ∃ o : NatOrdinal, x ≈ -o := by
+  simpa [hx, ← IGame.neg_equiv] using equiv_ordinal_of_right_eq_empty (x := -x)
 
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
@@ -378,7 +390,7 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
   · simpa using birthday_mk_le ⋆
   · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
-    exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
+    exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
