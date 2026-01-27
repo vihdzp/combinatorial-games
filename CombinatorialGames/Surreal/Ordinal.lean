@@ -47,7 +47,6 @@ theorem toSurreal_def (o : NatOrdinal) : o.toSurreal = !{toSurreal '' Iio o | �
 @[simp] theorem toSurreal_zero : toSurreal 0 = 0 := by simp [← Surreal.mk_natOrdinal_toIGame]
 @[simp] theorem toSurreal_one : toSurreal 1 = 1 := by simp [← Surreal.mk_natOrdinal_toIGame]
 
-@[simp]
 theorem toSurreal_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
   toIGame_nonneg a
 

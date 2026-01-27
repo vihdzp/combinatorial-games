@@ -121,6 +121,7 @@ This definition enforces that `x` is impartial. If you want to talk about the le
 values of a game (e.g. if you don't yet know it to be impartial), use `grundyAux`.
 The lemma `grundyAux_eq_grundy` shows that both definitions match in
 the case of an impartial game. -/
+@[nolint unusedArguments]
 def grundy (x : IGame) [Impartial x] : Nimber :=
   x.grundyAux right
 
@@ -132,10 +133,10 @@ theorem nim_grundy_equiv (x : IGame) [Impartial x] : nim (grundy x) ≈ x := by
   · rw [moves_nim] at hy
     obtain ⟨o, ho, rfl⟩ := hy
     obtain ⟨z, hz, rfl⟩ := mem_grundyAux_image_of_lt ho
-    have := Impartial.of_mem_moves hz
+    impartial
     rw [← grundy, (nim_grundy_equiv _).incompRel_congr_left]
     exact fuzzy_of_mem_moves hz
-  · have := Impartial.of_mem_moves hy
+  · impartial
     rw [← (nim_grundy_equiv _).incompRel_congr_right, nim_fuzzy_iff]
     exact (grundyAux_ne hy).symm
 termination_by x
@@ -187,16 +188,6 @@ theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.m
   | right =>
     exact grundyAux_ne hy
 
-/-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
-  rw [← (nim_grundy_equiv x).lt_congr_left]
-  exact Dicotic.lt_of_numeric_of_pos _ hy
-
-/-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
-  rw [← (nim_grundy_equiv x).lt_congr_right]
-  exact Dicotic.lt_of_numeric_of_neg _ hy
-
 private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
     (H : grundyAux left x = grundyAux right x) : nim (grundyAux right x) ≈ x := by
@@ -210,13 +201,13 @@ private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     exact lf_of_le_left (nim_grundy_equiv y).le hy
   · intro y hy
     have := h right y hy
-    rw [← (nim_grundy_equiv y).le_congr_left, lf_iff_fuzzy, nim_fuzzy_iff,
-      ← grundyAux_eq_grundy right]
+    grw [← nim_grundy_equiv y]
+    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyAux_eq_grundy right]
     exact (grundyAux_ne hy).symm
   · intro y hy
     have := h left y hy
-    rw [← (nim_grundy_equiv y).le_congr_right, lf_iff_fuzzy, nim_fuzzy_iff,
-      ← grundyAux_eq_grundy left]
+    grw [← nim_grundy_equiv y]
+    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyAux_eq_grundy left]
     exact H ▸ grundyAux_ne hy
   · rw [forall_moves_nim]
     intro a ha

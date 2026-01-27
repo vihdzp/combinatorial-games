@@ -32,7 +32,8 @@ decreasing_by igame_wf
 
 theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthday := by
   rw [undominate, birthday_le_iff']
-  have (w) (hw : IsOption w x) := (birthday_undominate_le w).trans_lt (birthday_lt_of_isOption hw)
+  have (p w) (hw : w ∈ x.moves p) :=
+    (birthday_undominate_le w).trans_lt (birthday_lt_of_mem_moves hw)
   aesop
 termination_by x
 decreasing_by igame_wf
@@ -71,13 +72,13 @@ private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
   rw [le_def, leftMoves_undominate, rightMoves_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
-    have := Short.of_mem_moves hz
+    short
     have IH := le_undominate z
     refine .inl ⟨_, ⟨⟨Set.mem_image_of_mem _ hz, fun a ha h ↦ ?_⟩, hyz.trans IH⟩⟩
     replace h := IH.trans_lt h
     exact (hz' ha h.le).not_gt h
   · rintro y ⟨⟨z, ⟨hz, rfl⟩⟩, _⟩
-    have := Short.of_mem_moves hz
+    short
     exact .inr ⟨z, hz, le_undominate z⟩
 termination_by x
 decreasing_by igame_wf

@@ -3,7 +3,7 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.Game.Short
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Tactic.GameCmp
 
 /-!
@@ -32,10 +32,6 @@ def star : IGame :=
 @[inherit_doc] notation "⋆" => star
 recommended_spelling "star" for "⋆" in [«term⋆»]
 
-@[simp, game_cmp] theorem leftMoves_star : ⋆ᴸ = {0} := moves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_star : ⋆ᴿ = {0} := moves_ofSets ..
-
--- TODO: remove the above theorems
 @[simp, game_cmp] theorem moves_star (p : Player) : moves p ⋆ = {0} := moves_ofSets ..
 
 @[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
@@ -48,7 +44,8 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext p; cases p <;> simp [mulOption]
 
-@[simp] instance : Short ⋆ := by rw [short_def]; simp
+@[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 
 /-! ### Half -/
 
@@ -66,7 +63,8 @@ theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
 theorem half_add_half_equiv_one : ½ + ½ ≈ 1 := by game_cmp
 
-instance : Short ½ := by rw [short_def]; simp
+protected instance Short.half : Short ½ := by rw [short_def]; simp
+@[simp] protected instance Numeric.half : Numeric ½ := by rw [numeric_def]; simp
 
 /-! ### Up and down -/
 
@@ -84,7 +82,7 @@ recommended_spelling "up" for "↑" in [«term↑»]
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 
-instance : Short ↑ := by rw [short_def]; simp
+protected instance Short.up : Short ↑ := by rw [short_def]; simp
 
 /-- The game `↓ = {⋆ | 0}`. -/
 def down : IGame :=
@@ -103,7 +101,7 @@ recommended_spelling "down" for "↓" in [«term↓»]
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
 
-instance : Short ↓ := by rw [short_def]; simp
+protected instance Short.down : Short ↓ := by rw [short_def]; simp
 
 /-! ### Tiny and miny -/
 

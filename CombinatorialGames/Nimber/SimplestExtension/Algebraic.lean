@@ -113,8 +113,8 @@ theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 :=
 protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
     (H : ∀ x ∈ s, IsNthDegreeClosed n x) : IsNthDegreeClosed n (sSup s) := by
   have : IsNthDegreeClosed n (sSup ∅) := by simp
-  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  by_cases! hs : ¬ BddAbove s; · rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; · assumption
   refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hpn hp ↦ ?_⟩
   simp_rw [lt_csSup_iff hs hs'] at *
   obtain ⟨c, hc, hc'⟩ := exists_gt_of_forall_coeff_gt hp

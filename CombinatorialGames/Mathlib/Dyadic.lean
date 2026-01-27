@@ -338,13 +338,14 @@ instance : CommRing Dyadic' where
   zsmul_succ' n x := by ext; simp [add_one_mul]
   zsmul_neg' n x := by ext; simp [add_mul]
   npow n x := x ^ n
+  npow_zero x := by ext; simp
   npow_succ n x := by ext; simp [pow_succ]
 
 instance : IsStrictOrderedRing Dyadic' where
   add_le_add_left x y h z := add_le_add_left (α := ℚ) h z
   le_of_add_le_add_left x y z := le_of_add_le_add_left (α := ℚ)
-  mul_lt_mul_of_pos_left x y z := mul_lt_mul_of_pos_left (α := ℚ)
-  mul_lt_mul_of_pos_right x y z := mul_lt_mul_of_pos_right (α := ℚ)
+  mul_lt_mul_of_pos_left x hx y z h := mul_lt_mul_of_pos_left (α := ℚ) h hx
+  mul_lt_mul_of_pos_right x hx y z h := mul_lt_mul_of_pos_right (α := ℚ) h hx
   zero_le_one := by decide
 
 instance : DenselyOrdered Dyadic' where

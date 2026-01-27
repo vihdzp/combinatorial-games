@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
 -/
-import CombinatorialGames.Game.IGame
+import CombinatorialGames.Game.Classes
 import Mathlib.Algebra.Order.Ring.Cast
 import Mathlib.Tactic.Abel
 
@@ -142,7 +142,6 @@ instance : CharZero Game := AddMonoidWithOne.toCharZero
 theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) := by
   rw [← mk_add, add_eq' (x * y), mul_eq']
   simp only [moves_add, moves_mul, prod_union, union_assoc, image_image, image_union, mk_ofSets']
-  dsimp
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
@@ -167,20 +166,10 @@ theorem mk_add_mul (x y z : IGame) : mk ((x + y) * z) = mk (x * z) + mk (y * z) 
 theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
   simpa using mk_add_mul x (-y) z
 
--- TODO: upstream
-theorem _root_.Set.prod_image_left {α β γ : Type*} (f : α → γ) (s : Set α) (t : Set β) :
-    (f '' s) ×ˢ t = (fun x ↦ (f x.1, x.2)) '' s ×ˢ t := by
-  aesop
-
--- TODO: upstream
-theorem _root_.Set.prod_image_right {α β γ : Type*} (f : α → γ) (s : Set α) (t : Set β) :
-    t ×ˢ (f '' s) = (fun x ↦ (x.1, f x.2)) '' t ×ˢ s := by
-  aesop
-
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
-  induction x using IGame.ofSetsRecOn generalizing y z with | mk xL xR ihxl ihxr
-  induction y using IGame.ofSetsRecOn generalizing z with | mk yL yR ihyl ihyr
-  induction z using IGame.ofSetsRecOn with | mk zL zR ihzl ihzr
+  induction x using IGame.ofSetsRecOn generalizing y z with | ofSets xL xR ihxl ihxr
+  induction y using IGame.ofSetsRecOn generalizing z with | ofSets yL yR ihyl ihyr
+  induction z using IGame.ofSetsRecOn with | ofSets zL zR ihzl ihzr
   simp_rw [ofSets_mul_ofSets, mk_ofSets, Set.image_union, Set.image_image, mk_mulOption,
     ← Set.image_union, ← ofSets_mul_ofSets,
     Set.prod_image_left, Set.prod_image_right, Set.union_prod, Set.prod_union,
@@ -319,5 +308,41 @@ theorem zero_le_intCast {n : ℤ} : 0 ≤ (n : IGame) ↔ 0 ≤ n := by
 theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
+namespace Impartial
+variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
+
+@[simp]
+theorem neg_mk : -Game.mk x = Game.mk x :=
+  Game.mk_eq (equiv_neg x).symm
+
+@[simp]
+theorem sub_mk (x : Game) : x - Game.mk y = x + Game.mk y := by
+  rw [sub_eq_add_neg, neg_mk]
+
+@[simp]
+theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
+  rw [add_eq_zero_iff_neg_eq, neg_mk]
+
+-- TODO: move these four lemmas earlier:
+
+theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
+  Game.mk_eq_mk.1 (mk_add_self x)
+
+variable {x y}
+
+omit hx in
+/-- This lemma doesn't require `x` to be impartial. -/
+theorem equiv_iff_add_equiv_zero : x ≈ y ↔ x + y ≈ 0 := by
+  rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, Game.mk_add, Game.mk_zero, add_eq_zero_iff_eq_neg, neg_mk]
+
+omit hy in
+/-- This lemma doesn't require `y` to be impartial. -/
+theorem equiv_iff_add_equiv_zero' : x ≈ y ↔ x + y ≈ 0 := by
+  rw [antisymmRel_comm, add_comm, equiv_iff_add_equiv_zero]
+
+theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
+  simpa using (@equiv_iff_add_equiv_zero x y).not
+
+end Impartial
 end IGame
 end
