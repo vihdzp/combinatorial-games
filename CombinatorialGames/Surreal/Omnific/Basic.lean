@@ -207,5 +207,10 @@ theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : �
   refine exists_congr fun _ ↦ ?_
   norm_cast
 
+/-- This seemingly easy theorem seems to require the result that any surreal is at distance at most
+1 from an omnific integer, which itself seems to require the characterization in the module
+docstring. -/
+proof_wanted IsOmnific.trunc (x : Surreal) : (x.trunc 1).IsOmnific
+
 end Surreal
 end
