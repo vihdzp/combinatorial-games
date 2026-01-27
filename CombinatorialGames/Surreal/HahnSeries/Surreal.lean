@@ -1001,7 +1001,7 @@ theorem wlog_sub_lt {y : PartialSum x} (h : x ≠ y.carrier) (i) :
   have hi' : (y.truncIdx i).length = i := by simpa using hi.le
   have hy := hi' ▸ hi
   rw [← wlog_term, term_eq_leadingTerm_sub _ hi, ← carrier_truncIdx, wlog_leadingTerm]
-  exact wlog_lt_wlog_of_mk_lt_mk (by simpa [sub_eq_zero]) (mk_sub_strictMono hy)
+  exact wlog_lt_wlog_of_vlt (by simpa [sub_eq_zero]) (vlt_def.2 <| mk_sub_strictMono hy)
 
 private def succ' (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
@@ -1119,7 +1119,7 @@ theorem toHahnSeries_intCast (n : ℤ) : toHahnSeries n = .single 0 n :=
 theorem toHahnSeries_natCast (n : ℕ) : toHahnSeries n = .single 0 n :=
   mod_cast toHahnSeries_realCast n
 
-@[simp]
+@[simp, norm_cast]
 theorem toHahnSeries_zero : toHahnSeries 0 = 0 := by
   simpa using toHahnSeries_natCast 0
 
@@ -1127,24 +1127,16 @@ theorem toHahnSeries_zero : toHahnSeries 0 = 0 := by
 theorem toHahnSeries_wpow (x : Surreal) : toHahnSeries (ω^ x) = .single x 1 :=
   toHahnSeries_eq (by simp)
 
-@[simp]
+@[simp, norm_cast]
 theorem toHahnSeries_one : toHahnSeries 1 = 1 := by
   simpa using toHahnSeries_wpow 0
 
-/-- The length of a surreal's Hahn series. -/
-def length (x : Surreal) : Ordinal :=
-  x.toHahnSeries.length
+@[simp, norm_cast]
+theorem toHahnSeries_eq_zero {x : Surreal} : toHahnSeries x = 0 ↔ x = 0 := by
+  rw [← toHahnSeries_zero, toHahnSeries_inj]
 
-@[simp]
-theorem length_toHahnSeries (x : Surreal) : x.toHahnSeries.length = x.length :=
-  rfl
-
-@[simp]
-theorem _root_.SurrealHahnSeries.length_toSurreal (x : SurrealHahnSeries) :
-    x.toSurreal.length = x.length := by
-  simp [length]
-
-@[simp] theorem length_zero : length 0 = 0 := by simp [length]
-@[simp] theorem length_wpow (x : Surreal) : length (ω^ x) = 1 := by simp [length]
+@[simp, norm_cast]
+theorem toHahnSeries_eq_one {x : Surreal} : toHahnSeries x = 1 ↔ x = 1 := by
+  rw [← toHahnSeries_one, toHahnSeries_inj]
 
 end Surreal

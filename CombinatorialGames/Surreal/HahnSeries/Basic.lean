@@ -3,7 +3,7 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Pow
+import CombinatorialGames.Surreal.Leading
 import Mathlib.Algebra.Ring.Subring.Order
 import Mathlib.Order.Shrink
 import Mathlib.RingTheory.HahnSeries.Cardinal
@@ -149,6 +149,10 @@ theorem support_eq_empty {x : SurrealHahnSeries} : support x = ∅ ↔ x = 0 := 
 @[simp]
 theorem support_zero : support 0 = ∅ :=
   support_eq_empty.2 rfl
+
+@[simp]
+theorem support_one : support 1 = {0} := by
+  simp [support]
 
 theorem support_add_subset {x y : SurrealHahnSeries} : (x + y).support ⊆ x.support ∪ y.support :=
   Function.support_add ..
@@ -561,6 +565,11 @@ theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
 
 theorem wlog_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
     (x.term i).wlog = x.exp ⟨i, hi⟩ := by
+  rw [term]
+  aesop
+
+theorem mk_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
+    ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, hi⟩)) := by
   rw [term]
   aesop
 

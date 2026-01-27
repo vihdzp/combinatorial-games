@@ -134,6 +134,33 @@ theorem birthday_ofSets_le {s t : Set Surreal.{u}}
   simp_rw [IGame.birthday_ofSets, image_comp]
   congr! <;> aesop
 
+theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.birthday_le
+  simp_all [Fits]
+
+theorem birthday_ofSets_lt_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    !{s | t}.birthday < z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.birthday_lt
+  · simp_all [Fits]
+  · rwa [← mk_eq_mk, ← ofSets_eq_mk, out_eq, eq_comm]
+
+theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
+    (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
+    !{s | t} = z := by
+  by_contra hz
+  exact (birthday_ofSets_lt_of_mem hL hR hz).not_ge <|
+    h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
+
 theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, _, ha, ha'⟩ := birthday_eq_iGameBirthday x
   obtain ⟨b, _, hb, hb'⟩ := birthday_eq_iGameBirthday y

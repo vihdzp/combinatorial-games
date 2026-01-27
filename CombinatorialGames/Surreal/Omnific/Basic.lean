@@ -3,6 +3,7 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Surreal.Birthday.Basic
 import CombinatorialGames.Surreal.Real
 import Mathlib.Algebra.Ring.Subring.Defs
 
@@ -77,12 +78,25 @@ theorem round_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
   rw [round_of_pos hr, mk_ofSets]
   congr <;> aesop
 
+theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
+    (x.round r).birthday ≤ y.birthday := by
+  have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
+  cases h
+  rw [round_of_pos hr]
+  apply birthday_ofSets_le_of_mem <;> simpa
+
+theorem round_eq_of_forall_birthday_le {x y r : Surreal}
+    (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
+    x.round r = y := by
+  have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
+  cases h
+  rw [round_of_pos hr, ofSets_eq_of_forall_birthday_le]
+  · simpa
+  · simpa
+  · simpa using hz
+
 theorem round_of_zero_mem {x r : Surreal} (h : 0 ∈ Ioo (x - r) (x + r)) : x.round r = 0 := by
-  have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨0, h⟩
-  cases x with | mk x
-  cases r with | mk r
-  rw [← mk_zero, round_mk_of_pos hr, mk_eq_mk', ← fits_zero_iff_equiv]
-  simpa [Fits]
+  simpa using birthday_round_le h
 
 @[simp]
 theorem round_zero (r : Surreal) : round 0 r = 0 := by
