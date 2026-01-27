@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
 import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
@@ -34,54 +35,9 @@ open Order Ordinal Set
 
 -- TODO: this is a pending Mathlib refactor.
 attribute [-simp] add_one_eq_succ
-attribute [simp] lt_add_one_iff
-
 attribute [simp] principal_zero
 
 /-! ### Order lemmas -/
-
--- #27701
-theorem lt_add_iff_lt_or_exists_lt {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftReflectLT α] [IsLeftCancelAdd α] {a b c : α} :
-    a < b + c ↔ a < b ∨ ∃ d < c, a = b + d := by
-  obtain h | h := lt_or_ge a b
-  · have : a < b + c := h.trans_le (le_self_add ..)
-    tauto
-  · obtain ⟨a, rfl⟩ := exists_add_of_le h
-    simp
-
-theorem forall_lt_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftReflectLT α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
-    (∀ a < b + c, P a) ↔ (∀ a < b, P a) ∧ (∀ a < c, P (b + a)) := by
-  simp_rw [lt_add_iff_lt_or_exists_lt]
-  aesop
-
-theorem exists_lt_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftReflectLT α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
-    (∃ a < b + c, P a) ↔ (∃ a < b, P a) ∨ (∃ a < c, P (b + a)) := by
-  simp_rw [lt_add_iff_lt_or_exists_lt]
-  aesop
-
-theorem le_add_iff_lt_or_exists_le {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftMono α] [IsLeftCancelAdd α] {a b c : α} :
-    a ≤ b + c ↔ a < b ∨ ∃ d ≤ c, a = b + d := by
-  obtain h | h := lt_or_ge a b
-  · have : a ≤ b + c := h.le.trans (le_self_add ..)
-    tauto
-  · obtain ⟨a, rfl⟩ := exists_add_of_le h
-    simp
-
-theorem forall_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftMono α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
-    (∀ a ≤ b + c, P a) ↔ (∀ a < b, P a) ∧ (∀ a ≤ c, P (b + a)) := by
-  simp_rw [le_add_iff_lt_or_exists_le]
-  aesop
-
-theorem exists_le_add {α : Type*} [Add α] [LinearOrder α] [CanonicallyOrderedAdd α]
-    [AddLeftMono α] [IsLeftCancelAdd α] {b c : α} {P : α → Prop} :
-    (∃ a ≤ b + c, P a) ↔ (∃ a < b, P a) ∨ (∃ a ≤ c, P (b + a)) := by
-  simp_rw [le_add_iff_lt_or_exists_le]
-  aesop
 
 theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : α} (h : Maximal P x) :
     IsGreatest {y | P y} x := by
@@ -89,7 +45,7 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
   by_contra! hx
   exact (h.le_of_ge hy hx.le).not_gt hx
 
-/-! #### Ordinal lemmas-/
+/-! #### Ordinal lemmas -/
 
 namespace Ordinal
 
@@ -229,7 +185,7 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
   apply le_antisymm
   · apply le_of_forall_lt_imp_ne
     simp_rw [← of.toEquiv.forall_congr_right, RelIso.coe_fn_toEquiv, OrderIso.lt_iff_lt]
-    rw [forall_lt_add, forall_lt_mul]
+    rw [forall_lt_add_iff_lt_left, forall_lt_mul]
     refine ⟨fun a ha b hb ↦ ?_, fun a ha ↦ ?_⟩
     · have hx : val (∗b + ∗y) < x := h.add_lt hb hy
       rw [ne_eq, h.mul_add_eq_of_lt' hb, ← CharTwo.add_eq_iff_eq_add, add_assoc,
