@@ -28,8 +28,8 @@ namespace Set
 variable {α β : Type*}
 
 @[simp]
-theorem range_singleton (x : α) (f : ({x} : Set α) → β) : range f = {f ⟨x, mem_singleton x⟩} := by
-  aesop
+theorem range_singleton (x : α) (f : ({x} : Set α) → β) : range f = {f ⟨x, mem_singleton x⟩} :=
+  range_unique
 
 @[simp]
 theorem range_insert (x : α) (s : Set α) (f : ((insert x s) : Set α) → β) :
