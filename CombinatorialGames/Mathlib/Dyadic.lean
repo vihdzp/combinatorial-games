@@ -76,68 +76,6 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
   obtain ⟨n, rfl⟩ := hn
   simp_all [pow_dvd_pow_iff, pow_le_pow_iff_right₀]
 
-/-! ### Dyadic numbers -/
-
-/-- A dyadic rational number is one whose denominator is a power of two. -/
-def IsDyadic (x : ℚ) : Prop := x.den ∈ Submonoid.powers 2
-
-instance {m n : ℕ} : Decidable (m ∈ Submonoid.powers n) :=
-  decidable_of_iff (m ∈ Set.range (n ^ ·)) (Submonoid.mem_powers_iff m n)
-
-instance : DecidablePred IsDyadic :=
-  fun x ↦ inferInstanceAs (Decidable (x.den ∈ _))
-
-theorem IsDyadic.mkRat (x : ℤ) {y : ℕ} (hy : y ∈ Submonoid.powers 2) : IsDyadic (mkRat x y) := by
-  obtain ⟨n, rfl⟩ := hy
-  have := Rat.den_dvd x (2 ^ n)
-  rw [dvd_prime_pow Int.prime_two] at this
-  obtain ⟨m, -, hm⟩ := this
-  obtain hm | hm := Int.associated_iff.1 hm
-  · use m
-    rw [Rat.mkRat_eq_divInt, Nat.cast_pow, Nat.cast_ofNat, ← Nat.cast_inj (R := ℤ), hm]
-    simp
-  · rw [← Nat.cast_ofNat, ← Nat.cast_pow 2 m, Nat.cast_eq_neg_cast] at hm
-    simp_all
-
-theorem IsDyadic.neg {x : ℚ} (hx : IsDyadic x) : IsDyadic (-x) := hx
-@[simp] theorem IsDyadic.neg_iff {x : ℚ} : IsDyadic (-x) ↔ IsDyadic x := .rfl
-
-theorem IsDyadic.natCast (n : ℕ) : IsDyadic n := ⟨0, rfl⟩
-theorem IsDyadic.intCast (n : ℤ) : IsDyadic n := ⟨0, rfl⟩
-
-theorem IsDyadic.add {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x + y) := by
-  rw [Rat.add_def']
-  exact .mkRat _ (Submonoid.mul_mem _ hx hy)
-
-theorem IsDyadic.sub {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x - y) := by
-  rw [sub_eq_add_neg]
-  exact hx.add hy.neg
-
-theorem IsDyadic.mul {x y : ℚ} (hx : IsDyadic x) (hy : IsDyadic y) : IsDyadic (x * y) := by
-  rw [Rat.mul_def, Rat.normalize_eq_mkRat]
-  exact .mkRat _ (Submonoid.mul_mem _ hx hy)
-
-theorem IsDyadic.nsmul {x : ℚ} (n : ℕ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  simpa using .mul (.natCast n) hx
-
-theorem IsDyadic.zsmul {x : ℚ} (n : ℤ) (hx : IsDyadic x) : IsDyadic (n • x) := by
-  simpa using .mul (.intCast n) hx
-
-theorem IsDyadic.pow {x : ℚ} (hx : IsDyadic x) (n : ℕ) : IsDyadic (x ^ n) := by
-  induction n with
-  | zero => exact ⟨0, rfl⟩
-  | succ n ih =>
-    rw [pow_succ]
-    exact ih.mul hx
-
-/-- The subtype of `IsDyadic` numbers.
-
-We don't use `Localization.Away 2`, as this would not give us any computability, nor would it allow
-us to talk about numerators and denominators.
-
-TODO: replace this with `Dyadic` from Lean core. -/
-@[deprecated (since := "now")] alias Dyadic' := Dyadic
-
 namespace Dyadic
 
 theorem le_def {x y : Dyadic} : x ≤ y ↔ x.toRat ≤ y.toRat := toRat_le_toRat_iff.symm
