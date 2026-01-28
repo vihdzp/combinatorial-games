@@ -13,14 +13,8 @@ import Mathlib.Data.Nat.Prime.Int
 /-!
 # Dyadic numbers
 
-A dyadic (rational) number is a rational number whose denominator is a power of two. We define them
-as a subtype of `ℚ`, and build the `CommRing` structure, as well as proving some auxiliary theorems
-on them.
-
-## Todo
-
-In the time since this file was created, `Dyadic` got added to Lean core. We've temporarily renamed
-our implementation to `Dyadic'`. In the near future, these two implementations will be merged.
+A dyadic (rational) number is a rational number whose denominator is a power of two. We provide
+the `CommRing` structure, as well as proving some auxiliary theorems on them.
 -/
 
 /-! ### For Mathlib -/
