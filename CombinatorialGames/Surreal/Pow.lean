@@ -40,7 +40,7 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-theorem mk_dyadic {r : Dyadic'} (h : r ≠ 0) : mk (r : Surreal) = 0 :=
+theorem mk_dyadic {r : Dyadic} (h : r ≠ 0) : mk (r.toRat : Surreal) = 0 :=
   mk_ratCast (mod_cast h)
 
 @[simp]
@@ -48,10 +48,10 @@ theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
-    mk x ≤ mk y ↔ ∃ q : Dyadic', 0 < q ∧ q * |y| ≤ |x| := by
-  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic'.coeRingHom) (x := x) ?_
+    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q.toRat * |y| ≤ |x| := by
+  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
-  · exact Rat.cast_strictMono.comp fun x y ↦ id
+  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.toRat_lt_toRat_iff.mpr
 
 end ArchimedeanClass
 
@@ -66,8 +66,8 @@ namespace IGame
 The standard definition in the literature instead has `r` ranging over positive reals,
 but this makes no difference as to the equivalence class of the games. -/
 private def wpow (x : IGame.{u}) : IGame.{u} :=
-  !{insert 0 (range (fun y : Ioi (0 : Dyadic') × xᴸ ↦ y.1 * wpow y.2)) |
-    range (fun y : Ioi (0 : Dyadic') × xᴿ ↦ y.1 * wpow y.2)}
+  !{insert 0 (range (fun y : Ioi (0 : Dyadic) × xᴸ ↦ y.1 * wpow y.2)) |
+    range (fun y : Ioi (0 : Dyadic) × xᴿ ↦ y.1 * wpow y.2)}
 termination_by x
 decreasing_by igame_wf
 
@@ -75,42 +75,42 @@ instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
-    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴸ) |
-      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic')) xᴿ} := by
+    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) |
+      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) xᴿ} := by
   change wpow _ = _
   rw [wpow]
   simp_rw [Set.image2_eq_range]
   rfl
 
 theorem leftMoves_wpow (x : IGame) : (ω^ x)ᴸ =
-    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴸ) := by
+    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) := by
   rw [wpow_def, leftMoves_ofSets, Set.image2_eq_range]
 
 theorem rightMoves_wpow (x : IGame) : (ω^ x)ᴿ =
-    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴿ := by
+    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴿ := by
   rw [wpow_def, rightMoves_ofSets, Set.image2_eq_range]
 
 @[simp]
 theorem forall_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴸ, P y) ↔
-    P 0 ∧ ∀ r : Dyadic', 0 < r → ∀ y ∈ xᴸ, P (r * ω^ y) := by
+    P 0 ∧ ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, forall_mem_insert, forall_mem_image2]
   rfl
 
 @[simp]
 theorem forall_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴿ, P y) ↔
-    ∀ r : Dyadic', 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
+    ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact forall_mem_image2
 
 @[simp]
 theorem exists_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴸ, P y) ↔
-    P 0 ∨ ∃ r : Dyadic', 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
+    P 0 ∨ ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, exists_mem_insert, exists_mem_image2]
   rfl
 
 @[simp]
 theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴿ, P y) ↔
-    ∃ r : Dyadic', 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
+    ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact exists_mem_image2
 
@@ -118,7 +118,7 @@ theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω
 theorem zero_mem_leftMoves_wpow (x : IGame) : 0 ∈ (ω^ x)ᴸ := by
   simp [leftMoves_wpow]
 
-theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 ≤ r)
+theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 ≤ r)
     (hy : y ∈ xᴸ) : r * ω^ y ∈ (ω^ x)ᴸ := by
   obtain rfl | hr := hr.eq_or_lt
   · simp
@@ -126,7 +126,7 @@ theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 ≤ r)
     apply mem_insert_of_mem
     use r, hr, y
 
-theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 < r)
+theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 < r)
     (hy : y ∈ xᴿ) : r * ω^ y ∈ (ω^ x)ᴿ := by
   rw [rightMoves_wpow]
   use r, hr, y
@@ -189,7 +189,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       exact (wpow_strictMono_aux.1 ((Numeric.left_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := wpow_mem_rightMoves_wpow hz
       numeric
-      have hr' : 0 < (r : ℝ)⁻¹ := by simpa
+      have hr' : 0 < (r.toRat : ℝ)⁻¹ := by simpa
       rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
       simpa [← Surreal.mk_lt_mk] using
         wpow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_right hz)) hr'
@@ -223,16 +223,16 @@ theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
   · exact wpow_strictMono_aux.1 h hr
 
 /-- A version of `mul_wpow_lt_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_wpow' (r : Dyadic') (h : x < y) : r * ω^ x < ω^ y := by
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r h
+theorem mul_wpow_lt_wpow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r.toRat h
 
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
   simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow (r⁻¹) h
 
 /-- A version of `wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem wpow_lt_mul_wpow' {r : Dyadic'} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  have hr : (0 : ℝ) < r := by simpa
+theorem wpow_lt_mul_wpow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
+  have hr : (0 : ℝ) < r.toRat := by simpa
   simpa [← Surreal.mk_lt_mk] using wpow_lt_mul_wpow hr h
 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
@@ -242,10 +242,10 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
   exact mul_wpow_lt_wpow _ h
 
 /-- A version of `mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_mul_wpow' (r : Dyadic') {s : Dyadic'} (hs : 0 < s) (h : x < y) :
+theorem mul_wpow_lt_mul_wpow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r hs h
+  have hs : (0 : ℝ) < s.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r.toRat hs h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
@@ -254,10 +254,10 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic') {t : Dyadic'} (ht : 0 < t)
+theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic) {t : Dyadic} (ht : 0 < t)
     (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
-  have ht : (0 : ℝ) < t := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r s ht hx hy
+  have ht : (0 : ℝ) < t.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r.toRat s.toRat ht hx hy
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
@@ -265,11 +265,11 @@ theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic') {s t : Dyadic'} (hs : 0 < s) (ht : 0 < t)
+theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic) {s t : Dyadic} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  have hs : (0 : ℝ) < s := by simpa
-  have ht : (0 : ℝ) < t := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r hs ht hx hy
+  have hs : (0 : ℝ) < s.toRat := by simpa
+  have ht : (0 : ℝ) < t.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r.toRat hs ht hx hy
 
 @[simp]
 theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := by
@@ -286,7 +286,7 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simpa [AntisymmRel] using h
 
-private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) < ω^ (x + y) := by
@@ -296,21 +296,21 @@ private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
 
-private theorem mulOption_lt_wpow' {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem mulOption_lt_wpow' {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : z < x) (h₂ : w < y) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) < ω^ (x + y) := by
   apply IGame.sub_lt_iff_lt_add.2
-  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic') * ω^ (x + y) + (r * s) * ω^ (z + w) := by
+  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic) * ω^ (x + y) + (r * s) * ω^ (z + w) := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
 
-private theorem wpow_lt_mulOption {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem wpow_lt_mulOption {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : w < y) (IH₁ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₂ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     ω^(x + y) < mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) := by
   apply IGame.lt_sub_iff_add_lt.2
-  have H : (1 : Dyadic') * ω^ (x + y) + ↑(r * s) * ω^ (z + w)
+  have H : (1 : Dyadic) * ω^ (x + y) + ↑(r * s) * ω^ (z + w)
       < r * ω^ (z + y) + s * ω^ x * ω^ w := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
