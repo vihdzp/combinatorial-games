@@ -108,8 +108,6 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 
 @[ext] theorem ext {x y : Dyadic} (h : x.toRat = y.toRat) : x = y := toRat_inj.1 h
 
-#synth NatCast Dyadic
-
 -- @[simp, norm_cast] theorem val_natCast (n : ℕ) : (n : Dyadic).toRat = n := toRat_natCast n
 @[simp, norm_cast] theorem num_natCast (n : ℕ) : (n : Dyadic).num = n :=
   congrArg Rat.num (toRat_natCast n)
@@ -137,8 +135,6 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 @[simp, norm_cast] theorem natCast_eq_val {x : ℕ} {y : Dyadic} : x = y.toRat ↔ x = y := by
   rw [← toRat_natCast, toRat_inj]
 
-#synth IntCast Dyadic
-
 -- @[simp] theorem val_intCast (n : ℤ) : (n : Dyadic).toRat = n := toRat_intCast n
 -- @[simp] theorem mk_intCast {n : ℤ} (h : IsDyadic n) : (⟨n, h⟩ : Dyadic') = n := rfl
 @[simp] theorem num_intCast (n : ℤ) : (n : Dyadic).num = n :=
@@ -159,8 +155,6 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 @[simp, norm_cast] theorem intCast_eq_val {x : ℤ} {y : Dyadic} : x = y.toRat ↔ x = y := by
   rw [← toRat_intCast, toRat_inj]
 
-#synth Zero Dyadic
-
 instance : Inhabited Dyadic := ⟨0⟩
 
 -- why is the same attribute `@[coe]` used in `norm_cast` and also the pretty printer
@@ -177,8 +171,6 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp /-, norm_cast-/] theorem val_eq_zero {x : Dyadic} : x.toRat = 0 ↔ x = 0 := val_eq_intCast
 @[simp /-, norm_cast-/] theorem zero_eq_val {x : Dyadic} : 0 = x.toRat ↔ 0 = x := intCast_eq_val
 
-#synth One Dyadic
-
 @[simp /-, norm_cast-/] theorem val_one : (1 : Dyadic).toRat = 1 := rfl
 -- @[simp] theorem mk_one (h : IsDyadic 1) : (⟨1, h⟩ : Dyadic') = 1 := rfl
 @[simp] theorem num_one : (1 : Dyadic).num = 1 := rfl
@@ -194,8 +186,6 @@ instance : Inhabited Dyadic := ⟨0⟩
 instance : Nontrivial Dyadic where
   exists_pair_ne := ⟨0, 1, by decide⟩
 
-#synth Neg Dyadic
-
 -- @[simp] theorem val_neg (x : Dyadic) : (-x).toRat = -x.toRat := toRat_neg x
 -- @[simp] theorem neg_mk {x : ℚ} (hx : IsDyadic x) : -(⟨x, hx⟩ : Dyadic') = ⟨-x, hx.neg⟩ := rfl
 @[simp] theorem num_neg (x : Dyadic) : (-x).num = -x.num :=
@@ -203,20 +193,11 @@ instance : Nontrivial Dyadic where
 @[simp] theorem den_neg (x : Dyadic) : (-x).den = x.den :=
   (congrArg Rat.den (toRat_neg x) :)
 
-#synth Add Dyadic
-
 -- @[simp] theorem val_add (x y : Dyadic) : (x + y).toRat = x.toRat + y.toRat := toRat_add x y
-
-#synth Sub Dyadic
 
 -- @[simp] theorem val_sub (x y : Dyadic) : (x - y).toRat = x.toRat - y.toRat := toRat_sub x y
 
-#synth Mul Dyadic
-
 -- @[simp] theorem val_mul (x y : Dyadic) : (x * y).toRat = x.toRat * y.toRat := toRat_mul x y
-
--- Lean.Grind.NatModule.nsmul
-#synth SMul Nat Dyadic
 
 instance : SMul Nat Dyadic where
   smul x y := x * y
@@ -224,16 +205,11 @@ instance : SMul Nat Dyadic where
 @[simp] theorem val_nsmul (x : ℕ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (toRat_mul x y).trans (by simp)
 
--- Lean.Grind.IntModule.zsmul
-#synth SMul Int Dyadic
-
 instance : SMul Int Dyadic where
   smul x y := x * y
 
 @[simp] theorem val_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (toRat_mul x y).trans (by simp)
-
-#synth Pow Dyadic Nat
 
 -- @[simp] theorem val_pow (x : Dyadic) (y : ℕ) : (x ^ y).toRat = x.toRat ^ y := toRat_pow x y
 
