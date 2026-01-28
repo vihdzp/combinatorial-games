@@ -226,6 +226,7 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 instance : Inhabited Dyadic := ⟨0⟩
 
 -- why is the same attribute `@[coe]` used in `norm_cast` and also the pretty printer
+-- should we make `Dyadic.toRat` a coercion maybe?
 @[simp /-, norm_cast-/] theorem val_zero : (0 : Dyadic).toRat = 0 := rfl
 -- @[simp] theorem mk_zero (h : IsDyadic 0) : (⟨0, h⟩ : Dyadic') = 0 := rfl
 @[simp] theorem num_zero : (0 : Dyadic).num = 0 := rfl
