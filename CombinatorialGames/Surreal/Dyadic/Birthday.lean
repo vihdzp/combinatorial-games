@@ -31,7 +31,7 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
 
--- `Dyadic'.toIGame` is canonical, so it minimizes the birthday in its equivalence class.
+-- `Dyadic.toIGame` is canonical, so it minimizes the birthday in its equivalence class.
 proof_wanted Surreal.birthday_dyadic (x : Dyadic) :
     Surreal.birthday x.toRat = IGame.birthday x
 
