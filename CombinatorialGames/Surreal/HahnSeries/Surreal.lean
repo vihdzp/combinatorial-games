@@ -668,33 +668,21 @@ theorem toSurreal_eq (x : SurrealHahnSeries) :
 
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
-  obtain hi | hi := lt_or_ge i x.length
-  · rw [term_of_lt hi]
-    apply Surreal.leadingTerm_eq (by simpa) <;> intro s hs <;> apply le_of_lt
-    · rw [lt_sub_iff_add_lt', ← toSurreal_succ, toSurreal_lt_toSurreal_iff]
-      · rw [lt_def, truncIdx_of_lt hi]
-        use x.exp ⟨i, hi⟩
-        dsimp
-        constructor
-        · intro j hj
-          rw [coeff_trunc_of_lt hj]
-          aesop
-        · rw [coeff_trunc_of_le le_rfl, zero_add]
-          simpa
-      · aesop
-    -- Can we do this case from the previous?
-    · rw [sub_lt_iff_lt_add', ← toSurreal_succ, toSurreal_lt_toSurreal_iff]
-      · rw [lt_def, truncIdx_of_lt hi]
-        use x.exp ⟨i, hi⟩
-        dsimp
-        constructor
-        · intro j hj
-          rw [coeff_trunc_of_lt hj]
-          aesop
-        · rw [coeff_trunc_of_le le_rfl, zero_add]
-          simpa
-      · aesop
+  obtain hi | hi := le_or_gt x.length i
   · rw [term_of_le hi, truncIdx_of_le hi, sub_self, Surreal.leadingTerm_zero]
+  · rw [term_of_lt hi]
+    apply Surreal.leadingTerm_eq (by simpa) <;> refine fun s hs ↦ le_of_lt ?_
+    on_goal 1 => rw [lt_sub_iff_add_lt']
+    on_goal 2 => rw [sub_lt_iff_lt_add']
+    all_goals
+      rw [← toSurreal_succ (by aesop), toSurreal_lt_toSurreal_iff, lt_def, truncIdx_of_lt hi]
+      use x.exp ⟨i, hi⟩
+      dsimp
+      refine ⟨fun j hj ↦ ?_, ?_⟩
+      · rw [coeff_trunc_of_lt hj]
+        aesop
+      · rw [coeff_trunc_of_le le_rfl, zero_add]
+        simpa
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
@@ -874,6 +862,10 @@ theorem term_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : 
     term y.carrier i = term z.carrier i := by
   obtain hyz | hyz := le_total y z <;>
     rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, term_truncIdx_of_lt]
+
+theorem exp_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : i < z.length) :
+    (exp y.carrier ⟨i, hy⟩).1 = exp z.carrier ⟨i, hz⟩ := by
+  simp_rw [← wlog_term, term_congr hy hz]
 
 theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
@@ -1067,6 +1059,18 @@ theorem length_succ_of_ne_top (y : PartialSum x) (h : y ≠ ⊤) :
   apply length_succ'_of_ne
   conv_lhs => rw [← coe_carrier_top x]
   rwa [ne_eq, toSurreal_inj, carrier_inj, eq_comm]
+
+@[simp]
+theorem term_succ_length (y : PartialSum x) :
+    (succ y).carrier.term y.length = (x - y.carrier).leadingTerm := by
+  obtain rfl | hy := eq_top_or_lt_top y
+  · rw [succ_top, coe_carrier_top, term_of_le]
+    · simp
+    · rfl
+  · rw [term_eq_leadingTerm_sub]
+    · rw [← carrier_truncIdx, truncIdx_length_of_le]
+      exact le_succ y
+    · exact lt_succ_of_not_isMax hy.not_isMax
 
 end PartialSum
 

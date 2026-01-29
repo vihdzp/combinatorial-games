@@ -619,12 +619,12 @@ theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
   rw [term]
   aesop (add simp [eq_comm 0])
 
-theorem wlog_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
+theorem wlog_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     (x.term i).wlog = x.exp ⟨i, hi⟩ := by
   rw [term]
   aesop
 
-theorem mk_term (x : SurrealHahnSeries) {i : Ordinal} (hi : i < x.length) :
+theorem mk_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, hi⟩)) := by
   rw [term]
   aesop

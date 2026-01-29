@@ -163,10 +163,18 @@ theorem coeff_trunc_of_mem {x i j : Surreal} (h : j ∈ (x.trunc i).support) :
     (x.trunc i).coeff j = x.coeff j := by
   aesop
 
+theorem trunc_eq_self_iff {x i : Surreal} : x.trunc i = x ↔ ∀ j ∈ x.support, i < j := by
+  nth_rw 2 [← toSurreal_toHahnSeries x]
+  rw [trunc, SurrealHahnSeries.toSurreal_inj]
+  exact SurrealHahnSeries.trunc_eq_self_iff
+
+alias ⟨_, trunc_eq_self⟩ := trunc_eq_self_iff
+
 theorem trunc_eq_trunc {x i j : Surreal} (h : i ≤ j)
     (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
   simpa [← toHahnSeries_trunc] using x.toHahnSeries.trunc_eq_trunc h H
 
+-- Do I need this one?
 open SurrealHahnSeries in
 theorem PartialSum.mem_range_trunc {x : Surreal} (y : PartialSum x) :
     y.1.toSurreal ∈ range x.trunc := by
