@@ -114,11 +114,11 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 @[simp, norm_cast] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 :=
   congrArg Rat.den (toRat_natCast n)
 
-@[simp] theorem coe_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).toRat = n :=
+@[simp] theorem coe_ofNat (n : ℕ) : (ofNat(n) : Dyadic).toRat = n :=
   toRat_natCast n
-@[simp] theorem num_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).num = n :=
+@[simp] theorem num_ofNat (n : ℕ) : (ofNat(n) : Dyadic).num = n :=
   num_natCast n
-@[simp] theorem den_ofNat (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Dyadic).den = 1 :=
+@[simp] theorem den_ofNat (n : ℕ) : (ofNat(n) : Dyadic).den = 1 :=
   den_natCast n
 
 @[simp] theorem natCast_lt_coe {x : ℕ} {y : Dyadic} : x < y.toRat ↔ x < y := by norm_cast
