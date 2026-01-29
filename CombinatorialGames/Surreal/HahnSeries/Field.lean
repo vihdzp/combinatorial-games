@@ -61,6 +61,10 @@ theorem support_subset_of_round_eq {x y : Surreal} (hx : x.round y = x) (hy : 0 
   · apply (birthday_truncIdx_lt i.2).trans_eq
     simp [hx]
 
+theorem support_subset_of_round_wpow_eq {x y : Surreal} (h : x.round (ω^ y) = x) :
+    support x ⊆ Ici y := by
+  simpa using support_subset_of_round_eq h
+
 theorem IsOmnific.support_subset {x : Surreal} (h : IsOmnific x) : support x ⊆ Ici 0 := by
   simpa using support_subset_of_round_eq h
 
@@ -69,7 +73,9 @@ theorem eq_round_of_support_subset {x y z : Surreal}
   apply round_eq_of_forall_birthday_le
   · simpa
   · intro w hw
-    sorry
+    convert birthday_trunc_le w.toHahnSeries y
+    · sorry
+    · exact (toSurreal_toHahnSeries w).symm
 
 theorem eq_round_wpow_of_support_subset {x y : Surreal} (hx : x.support ⊆ Ioi y) :
     x.round (ω^ y) = x := by
@@ -93,7 +99,7 @@ theorem support_subset_Ioi_iff {x y : Surreal} :
 
 theorem support_add_subset_Ioi {x y z : Surreal} (hx : x.support ⊆ Ioi z) (hy : y.support ⊆ Ioi z) :
     (x + y).support ⊆ Ioi z := by
-  apply (support_subset_of_round_eq (y := ω^ !{{z} | x.support ∪ y.support}) _ (wpow_pos _)).trans
+  apply (support_subset_of_round_wpow_eq (y := !{{z} | x.support ∪ y.support}) _).trans
   · aesop
   · apply round_add_of_eq
     all_goals

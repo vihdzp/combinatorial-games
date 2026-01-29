@@ -708,7 +708,7 @@ theorem birthday_truncIdx_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.le
   grw [← toIGame_equiv, toIGame_equiv_toIGame_iff]
   exact (truncIdx_ne h).symm
 
-theorem birthday_truncIdx_monotone (x : SurrealHahnSeries) :
+theorem birthday_truncIdx_mono (x : SurrealHahnSeries) :
     Monotone fun i ↦ Surreal.birthday (truncIdx x i) := by
   intro i j h
   convert birthday_truncIdx_le (x.truncIdx j) i using 3
@@ -720,6 +720,19 @@ theorem birthday_truncIdx_strictMonoOn (x : SurrealHahnSeries) :
   convert birthday_truncIdx_lt (x := x.truncIdx j) (i := i) _ using 3
   · rw [truncIdx_truncIdx, min_eq_right h.le]
   · simp_all
+
+theorem birthday_trunc_le (x : SurrealHahnSeries) (i : Surreal) :
+    Surreal.birthday (x.trunc i) ≤ Surreal.birthday x := by
+  obtain ⟨j, hj⟩ := trunc_mem_range_truncIdx x i
+  rw [← hj]
+  exact birthday_truncIdx_le ..
+
+theorem birthday_trunc_anti (x : SurrealHahnSeries) :
+    Antitone fun i ↦ Surreal.birthday (trunc x i) := by
+  intro i j h
+  dsimp
+  convert birthday_trunc_le (x.trunc i) j using 2
+  rw [trunc_trunc, max_eq_right h]
 
 end SurrealHahnSeries
 

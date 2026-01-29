@@ -535,6 +535,22 @@ theorem trunc_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {a b : Surre
   · rw [coeff_trunc_of_lt h, coeff_trunc_of_lt h, coeff_truncIdx_of_mem (hab.trans h.le) ha]
   · rw [coeff_trunc_of_le h, coeff_trunc_of_le h]
 
+theorem trunc_mem_range_truncIdx (x : SurrealHahnSeries) (i : Surreal) :
+    x.trunc i ∈ range x.truncIdx := by
+  by_cases! hx : ∀ j ∈ x.support, i < j
+  · rw [trunc_eq_self_iff.2 hx]
+    use x.length
+    simp
+  · have H : {j : x.support | j.1 ≤ i}.Nonempty := by
+      obtain ⟨j, hj, hj'⟩ := hx
+      exact ⟨⟨j, hj⟩, hj'⟩
+    obtain ⟨j, hj, hj'⟩ := wellFounded_gt.has_min _ H
+    use x.exp.symm j
+    rw [truncIdx_symm_exp]
+    refine trunc_eq_trunc hj fun k hk hk' ↦ ?_
+    by_contra hk''
+    exact hj' ⟨k, hk''⟩ hk' hk
+
 /-! #### `term` -/
 
 /-- Returns the `i`-th largest term of the sum, or `0` if it doesn't exist. -/
