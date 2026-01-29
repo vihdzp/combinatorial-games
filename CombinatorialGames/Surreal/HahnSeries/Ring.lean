@@ -27,11 +27,9 @@ def PartialSum.ofAdd {x : SurrealHahnSeries} {y i : Surreal}
     (hx : x.support ⊆ Ioi i) (hy : y.wlog ≤ i) : PartialSum (x + y) where
   carrier := x
   term_eq_leadingTerm_sub {i} hi := by
-    rw [← leadingTerm_sub_truncIdx]
-    have : x.term i = (x - x.truncIdx i).toSurreal.leadingTerm := by
-      rw [← leadingTerm_sub_truncIdx]
-      simp
-      have := leadingTerm_sub_truncIdx (x := x) (i := i)
+    rw [← leadingTerm_sub_truncIdx, add_sub_right_comm, leadingTerm_add_eq_left]
+    rw [vlt_def]
+
 
     sorry
 
