@@ -241,8 +241,8 @@ theorem mul_wpow_lt_mul_wpow_of_pos (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y)
 /-- A version of `mul_wpow_lt_mul_wpow_of_pos` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_of_pos' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos r hs h
+  have hs : (0 : ℝ) < s.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos r.toRat hs h
 
 theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x) :
     r * ω^ x < s * ω^ y := by
@@ -251,8 +251,8 @@ theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x)
 /-- A version of `mul_wpow_lt_mul_wpow_of_neg` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_of_neg' (r : Dyadic) {s : Dyadic} (hr : r < 0) (h : y < x) :
     r * ω^ x < s * ω^ y := by
-  have hr : r < (0 : ℝ) := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_neg s hr h
+  have hr : r.toRat < (0 : ℝ) := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_neg s.toRat hr h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
