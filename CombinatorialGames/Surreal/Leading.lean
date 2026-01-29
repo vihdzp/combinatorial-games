@@ -158,8 +158,11 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
   rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
 theorem leadingCoeff_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
-    leadingCoeff (y + x) = leadingCoeff y := by
-  rw [leadingCoeff, add_div, stdPart_add_eq_left, wlog_add_eq_left]
+    leadingCoeff (x + y) = leadingCoeff x := by
+  rw [leadingCoeff, leadingCoeff, add_div, wlog_add_eq_left h, stdPart_add_eq_left]
+  rw [ArchimedeanClass.mk_div, LinearOrderedAddCommGroupWithTop.sub_pos]
+  left
+  rw [(wpow_wlog_veq h.ne)]
 
 #exit
 
