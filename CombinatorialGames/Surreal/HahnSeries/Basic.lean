@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Surreal.Pow
+import Mathlib.Algebra.Ring.Subring.Order
 import Mathlib.Order.Shrink
 import Mathlib.RingTheory.HahnSeries.Cardinal
 import Mathlib.RingTheory.HahnSeries.Lex
