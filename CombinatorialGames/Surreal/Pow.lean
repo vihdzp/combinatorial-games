@@ -40,18 +40,15 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-theorem mk_dyadic {r : Dyadic} (h : r ≠ 0) : mk (r.toRat : Surreal) = 0 :=
-  mk_ratCast (mod_cast h)
-
 @[simp]
 theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
-    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q.toRat * |y| ≤ |x| := by
+    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
   convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
-  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.toRat_lt_toRat_iff.mpr
+  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.coe_lt_coe.mpr
 
 end ArchimedeanClass
 
@@ -189,7 +186,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       exact (wpow_strictMono_aux.1 ((Numeric.left_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := wpow_mem_rightMoves_wpow hz
       numeric
-      have hr' : 0 < (r.toRat : ℝ)⁻¹ := by simpa
+      have hr' : 0 < (r : ℝ)⁻¹ := by simpa
       rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
       simpa [← Surreal.mk_lt_mk] using
         wpow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_right hz)) hr'
@@ -224,7 +221,7 @@ theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
 
 /-- A version of `mul_wpow_lt_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_wpow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r.toRat h
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r h
 
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
@@ -232,7 +229,7 @@ theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y 
 
 /-- A version of `wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem wpow_lt_mul_wpow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  have hr : (0 : ℝ) < r.toRat := by simpa
+  have hr : (0 : ℝ) < r := by simpa
   simpa [← Surreal.mk_lt_mk] using wpow_lt_mul_wpow hr h
 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
@@ -244,8 +241,8 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
 /-- A version of `mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r.toRat hs h
+  have hs : (0 : ℝ) < s := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r hs h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
@@ -256,8 +253,8 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic) {t : Dyadic} (ht : 0 < t)
     (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
-  have ht : (0 : ℝ) < t.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r.toRat s.toRat ht hx hy
+  have ht : (0 : ℝ) < t := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r s ht hx hy
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
@@ -267,9 +264,9 @@ theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic) {s t : Dyadic} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  have hs : (0 : ℝ) < s.toRat := by simpa
-  have ht : (0 : ℝ) < t.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r.toRat hs ht hx hy
+  have hs : (0 : ℝ) < s := by simpa
+  have ht : (0 : ℝ) < t := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r hs ht hx hy
 
 @[simp]
 theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := by
