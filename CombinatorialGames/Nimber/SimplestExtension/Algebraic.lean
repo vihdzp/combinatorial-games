@@ -548,7 +548,7 @@ theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
   exact ⟨_, algClosureSet.root_mem hp₀ hn hr, le_rfl⟩
 
 protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
-  obtain h | h := le_or_gt (algClosure x) 1; exact .of_le_one h
+  obtain h | h := le_or_gt (algClosure x) 1; · exact .of_le_one h
   refine ⟨⟨⟨@algClosure.add_lt x⟩, @algClosure.mul_lt x⟩, fun y hy₀ hy ↦ ?_⟩
   apply algClosure.root_lt (p := C y * X + 1)
   · apply_fun (coeff · 0)
@@ -563,7 +563,7 @@ private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < 
   apply le_antisymm
   · exact leastNoRoots_le_of_not_isRoot hp
       (fun k ↦ (hpk k).trans_le (le_algClosure x)) fun r _ ↦ hr r
-  · apply le_of_forall_ne
+  · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe]
     intro q hq hq'
     have ht := hq' ▸ WithTop.coe_ne_top
