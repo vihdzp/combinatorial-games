@@ -25,12 +25,12 @@ open ArchimedeanClass
 
 /-- The leading coefficient of a surreal's Hahn series. -/
 def leadingCoeff (x : Surreal) : ℝ :=
-  ArchimedeanClass.stdPart (x / ω^ x.wlog)
+  stdPart (x / ω^ x.wlog)
 
 @[simp]
 theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
   rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.stdPart_map_real Real.toSurrealRingHom r
+  exact stdPart_map_real Real.toSurrealRingHom r
 
 @[simp]
 theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
@@ -62,7 +62,7 @@ theorem leadingCoeff_mul (x y : Surreal) :
   unfold leadingCoeff
   by_cases hx : x = 0; · simp [hx]
   by_cases hy : y = 0; · simp [hy]
-  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.stdPart_mul, mul_div_mul_comm]
+  rw [wlog_mul hx hy, wpow_add, ← stdPart_mul, mul_div_mul_comm]
   all_goals
     rw [archimedeanClassMk_div_wpow_wlog,
       LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
@@ -157,6 +157,15 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
   rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
+theorem leadingCoeff_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
+    leadingCoeff (x + y) = leadingCoeff x := by
+  rw [leadingCoeff, leadingCoeff, add_div, wlog_add_eq_left h, stdPart_add_eq_left]
+  rw [ArchimedeanClass.mk_div, LinearOrderedAddCommGroupWithTop.sub_pos]
+  left
+  rw [(wpow_wlog_veq h.ne)]
+
+#exit
+
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/
@@ -243,7 +252,7 @@ theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
 @[simp]
 theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
   obtain rfl | hx := eq_or_ne x 0; · simp
-  simpa using ArchimedeanClass.mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
+  simpa using mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
 
 theorem leadingTerm_veq (x : Surreal) : x.leadingTerm =ᵥ x :=
   veq_def.2 (mk_leadingTerm x)
