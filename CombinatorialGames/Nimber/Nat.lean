@@ -73,7 +73,7 @@ private def mulHalf (t : ℕ) (x : NatNimber) : NatNimber :=
 
 $$(a2^{2^t}+b)(c2^{2^t}+d)=(ac)2^{2^t-1}+(ac+ad+bc)2^{2^t}+bd$$
 
-for $a, b, c, d < \ast 2 ^ {2 ^ t}$.-/
+for $a, b, c, d < \ast 2 ^ {2 ^ t}$. -/
 private def mul (t : ℕ) (x y : NatNimber) : NatNimber :=
   match t with
   | 0 => if x = 0 then 0 else if y = 0 then 0 else 1

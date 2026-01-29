@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
 import CombinatorialGames.Game.Birthday
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.Small
 import CombinatorialGames.Nimber.Basic
 
 /-!
@@ -103,9 +103,6 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   exact congrArg _ (birthday_nim _)
 termination_by o
 
-/-- This would show that the birthday of an impartial game equals its Grundy value! -/
-proof_wanted _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val
-
 @[simp, game_cmp]
 theorem neg_nim (o : Nimber) : -nim o = nim o :=
   GameGraph.neg_toIGame rfl ..
@@ -131,5 +128,32 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
   rw [← Impartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+
+theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val := by
+  apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
+  simp_rw [Game.le_birthday_iff, Game.mk_eq_mk]
+  refine fun x hxo ↦ le_of_not_gt fun hxb ↦ ?_
+  induction o using Nimber.induction generalizing x with | _ o iho
+  have hu {u : IGame} (hu : u ∈ (nim (.of x.birthday.val))ᴸ) : u ⧏ x := by
+    rw [moves_nim] at hu
+    obtain ⟨o', ho', rfl⟩ := hu
+    grw [hxo]
+    simpa using (ho'.trans hxb).ne'
+  obtain ⟨y, hy, hxy⟩ | ⟨y, hy, hyx⟩ := (le_def.1 hxo.le).2 _ (mem_moves_nim_of_lt _ hxb)
+  · exact hu hy hxy
+  have hyo := lf_right_of_le hxo.ge hy
+  replace hy := Subposition.of_mem_moves hy
+  induction y using IsWellFounded.induction Subposition with | ind y ihy
+  obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
+  · refine lf_of_le_left ?_ hw hyx
+    rw [le_iff_forall_lf]
+    constructor <;> intro k hk hk'
+    · exact hu hk ((hxo.le.trans how).trans hk')
+    · have hky := Subposition.trans (.of_mem_moves hk) (.of_mem_moves hw)
+      exact ihy k hky hk' (lf_right_of_le how hk) (hky.trans hy)
+  · rw [moves_nim] at hw
+    obtain ⟨o', ho', rfl⟩ := hw
+    obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
+    exact iho _ ho' y ⟨hyx, hxy⟩ (birthday_lt_of_subposition hy)
 
 end IGame

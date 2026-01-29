@@ -31,7 +31,7 @@ open Order Polynomial
 /-! ### For Mathlib -/
 
 -- TODO: should some of these be global?
-attribute [local aesop simp] Function.update coeff_one coeff_C coeff_X
+attribute [local aesop simp] Function.update
 
 -- TODO: upstream attr.
 attribute [simp] mem_lowerBounds
@@ -70,8 +70,6 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
-theorem eval_X_pow {R} [CommRing R] (x : R) (n : ℕ) : eval x (X ^ n : R[X]) = x ^ n := by simp
-
 theorem degree_pos_of_mem_roots {R} [CommRing R] [IsDomain R] {p : R[X]} {r} (h : r ∈ p.roots) :
     0 < p.degree := by
   by_contra!
@@ -99,8 +97,6 @@ theorem eq_add_C_mul_X_pow_of_degree_le {p : R[X]} {n : ℕ} (h : p.degree ≤ n
   · refine ⟨p.leadingCoeff, p.eraseLead, ?_, hp ▸ degree_eraseLead_lt ?_⟩
     · rw [← natDegree_eq_of_degree_eq_some hp, eraseLead_add_C_mul_X_pow]
     · aesop
-
-alias ⟨_, IsRoot.mul_div_eq⟩ := mul_div_eq_iff_isRoot
 
 end Polynomial
 
@@ -251,7 +247,7 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
   .rfl
 
 instance : WellFoundedLT (Lex (ℕᵒᵈ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_lt_zero lt_wf (wellFounded_lt (α := ℕ))
+  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf (wellFounded_lt (α := ℕ))
 
 instance : WellFoundedLT (Nimber[X]) where
   wf := InvImage.wf
@@ -273,7 +269,7 @@ theorem forall_lt_quadratic {P : Nimber[X] → Prop} {x y z : Nimber} :
       (∀ b < y, ∀ c, P (C x * X ^ 2 + C b * X + C c)) ∧
       (∀ a < x, ∀ b c, P (C a * X ^ 2 + C b * X + C c)) := by
   refine ⟨fun H ↦
-    ⟨fun c hc ↦ H _ ⟨0, by aesop⟩, fun b hb c ↦ H _ ⟨1, by aesop⟩, fun a ha b c ↦ H _ ⟨2, by aesop⟩⟩,
+    ⟨fun c _ ↦ H _ ⟨0, by aesop⟩, fun b _ c ↦ H _ ⟨1, by aesop⟩, fun a _ b c ↦ H _ ⟨2, by aesop⟩⟩,
     fun ⟨H₁, H₂, H₃⟩ p ⟨n, hn, hp⟩ ↦ ?_⟩
   match n with
   | 0 =>
@@ -357,7 +353,7 @@ theorem exists_le_C {P : Nimber[X] → Prop} {x : Nimber} :
 
 theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   intro p q h
-  obtain rfl | hq₀ := eq_or_ne q 0; aesop
+  obtain rfl | hq₀ := eq_or_ne q 0; · aesop
   contrapose! h
   have h' := natDegree_lt_natDegree hq₀ h
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
@@ -442,8 +438,8 @@ theorem mul_leadingCoeff_inv_lt {p : Nimber[X]} (h₀ : p ≠ 0) (h₁ : ¬p.Mon
 
 theorem mul_leadingCoeff_inv_le (p : Nimber[X]) :
     p * C p.leadingCoeff⁻¹ ≤ p := by
-  obtain rfl | h₀ := eq_or_ne p 0; simp
-  by_cases h₁ : p.leadingCoeff = 1; simp [h₁]
+  obtain rfl | h₀ := eq_or_ne p 0; · simp
+  by_cases h₁ : p.leadingCoeff = 1; · simp [h₁]
   exact (mul_leadingCoeff_inv_lt h₀ h₁).le
 
 instance : NoMaxOrder (Nimber[X]) where
@@ -500,7 +496,7 @@ end Lex
 
 /-- Evaluate a nimber polynomial using ordinal arithmetic.
 
-TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this.  -/
+TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this. -/
 def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
   ∗((List.range (p.natDegree + 1)).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum
 
@@ -521,7 +517,7 @@ theorem oeval_eq_of_natDegree_le {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 
 
 theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a : Nimber) :
     oeval x (C a * X ^ n + p) = ∗(x.val ^ n * a.val + val (oeval x p)) := by
-  obtain rfl | ha := eq_or_ne a 0; simp [oeval]
+  obtain rfl | ha := eq_or_ne a 0; · simp [oeval]
   · have hp' : p.natDegree ≤ n := p.natDegree_le_of_degree_le hp.le
     have hp'' : (C a * X ^ n + p).natDegree ≤ n := by compute_degree!
     rw [oeval_eq_of_natDegree_le (add_left_mono hp'),
@@ -538,7 +534,7 @@ theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a
 
 theorem oeval_eq (x : Nimber) (p : Nimber[X]) :
     oeval x p = ∗(x.val ^ p.natDegree * p.leadingCoeff.val + val (oeval x p.eraseLead)) := by
-  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain rfl | hp₀ := eq_or_ne p 0; · simp
   conv_lhs => rw [← eraseLead_add_C_mul_X_pow p, add_comm]
   exact oeval_C_mul_X_pow_add ((degree_eraseLead_lt hp₀).trans_eq (degree_eq_natDegree hp₀)) ..
 
@@ -547,8 +543,8 @@ theorem oeval_X_pow_mul (x : Nimber) (n : ℕ) (p : Nimber[X]) :
     oeval x (X ^ n * p) = ∗(x.val ^ n * (oeval x p).val) := by
   induction p using monomial_induction with
   | zero => simp
-  | add a m p hp IH =>
-    rw [mul_add, mul_comm, mul_assoc, ← pow_add, oeval_C_mul_X_pow_add, oeval_C_mul_X_pow_add hp, IH]
+  | add a m p hp H =>
+    rw [mul_add, mul_comm, mul_assoc, ← pow_add, oeval_C_mul_X_pow_add, oeval_C_mul_X_pow_add hp, H]
     · simp [mul_add, ← mul_assoc, ← pow_add, add_comm]
     · rwa [degree_mul, degree_X_pow, add_comm, WithBot.natCast_eq_coe, WithBot.natCast_eq_coe,
         WithBot.coe_add, WithBot.add_lt_add_iff_right WithBot.coe_ne_bot]
@@ -580,7 +576,7 @@ theorem oeval_one (x : Nimber) : oeval x 1 = 1 := by
 
 theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
     ∗(x.val ^ k * (p.coeff k).val) ≤ oeval x p := by
-  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain rfl | hp₀ := eq_or_ne p 0; · simp
   obtain hk | hk := le_or_gt k p.natDegree
   · rw [oeval, of.le_iff_le]
     apply List.le_sum_of_mem' rfl
@@ -591,11 +587,11 @@ theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
 theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
     ∗(x.val ^ p.natDegree) ≤ oeval x p := by
   apply (Ordinal.le_mul_left ..).trans (mul_coeff_le_oeval x p p.natDegree)
-  simpa [Ordinal.pos_iff_ne_zero]
+  simpa [pos_iff_ne_zero]
 
 theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
-  obtain rfl | hx₀ := x.eq_zero_or_pos; simp at hpk
+  obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
@@ -612,8 +608,8 @@ theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
 theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
   mp H := by
-    obtain rfl | hp₀ := eq_or_ne p 0; simp
-    obtain hx₁ | hx₁ := le_or_gt x 1; cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
+    obtain rfl | hp₀ := eq_or_ne p 0; · simp
+    obtain hx₁ | hx₁ := le_or_gt x 1; · cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
     have H' := (opow_natDegree_le_oeval x hp₀).trans_lt H
     rw [of.lt_iff_lt, ← Ordinal.opow_natCast, ← Ordinal.opow_natCast,
       Ordinal.opow_lt_opow_iff_right (a := x.val) hx₁] at H'
@@ -640,9 +636,9 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     have hpe (k : Nat) : (p.erase n).coeff k < x := by
       rw [p.coeff_erase]
       split <;> simp [hpk, hx]
-    apply (add_lt_add_left (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
+    apply (add_lt_add_right (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
     rw [← mul_add_one]
-    apply mul_le_mul_left'
+    apply mul_le_mul_right
     rwa [add_one_le_iff, val.lt_iff_lt]
   | ind k ih =>
     have hp0 : p ≠ 0 := by rintro rfl; simp at hk
@@ -717,7 +713,7 @@ theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
 theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
   induction n generalizing y with
-  | zero => use 0; simp_all [Ordinal.pos_iff_ne_zero]
+  | zero => use 0; simp_all [pos_iff_ne_zero]
   | succ n IH =>
     obtain ⟨p, hpn, hpk, hp⟩ := IH (Ordinal.mod_lt y (pow_ne_zero n hx₀))
     refine ⟨C (∗(y / x ^ n)) * X ^ n + p, ?_, fun k ↦ ?_, ?_⟩
@@ -854,16 +850,16 @@ theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
 
 theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
     {p : (h.toSubfield hx₁)[X]} (hpn : map (Subfield.subtype _) p < leastNoRoots x) :
-    p.Splits (.id _) := by
+    p.Splits := by
   obtain hp₀ | hp₀ := le_or_gt p.degree 0
-  · exact splits_of_degree_le_one _ (hp₀.trans zero_le_one)
+  · exact .of_degree_le_one (hp₀.trans zero_le_one)
   induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
   subst hp
   have ⟨r, hr⟩ := h.exists_root_subfield hx₁ hp₀.ne' hpn
   rw [← hr.mul_div_eq]
-  apply splits_mul _ (splits_X_sub_C _)
+  apply Splits.mul (.X_sub_C _)
   obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
-  · exact splits_of_degree_le_one _ hp₀'
+  · exact .of_degree_le_one hp₀'
   · have hp : (p / (X - C r)).degree < p.degree := by apply degree_div_lt <;> aesop
     apply IH _ hp _ (zero_lt_one.trans hp₀') rfl
     apply (WithTop.coe_strictMono (Lex.lt_of_degree_lt _)).trans hpn
@@ -872,21 +868,23 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
 theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) (hx₁ : 1 < x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p.roots = (h.embed hx₁ p hpk).roots.map (Subfield.subtype _) := by
-  simpa using roots_map (Subfield.subtype _)
-    (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa))
+  simpa using (h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)).roots_map
+    (Subfield.subtype _)
 
 theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [polynomial_eq_zero_of_le_one hx₁ hpk] at hr
-  have := h.roots_eq_map hx₁ hpn hpk ▸ hr; aesop
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · simp [polynomial_eq_zero_of_le_one hx₁ hpk] at hr
+  · have := h.roots_eq_map hx₁ hpn hpk ▸ hr
+    aesop
 
 theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
     {p : Nimber[X]} (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
-  obtain rfl | hp₀ := eq_or_ne p 0; simp
+  obtain rfl | hp₀ := eq_or_ne p 0; · simp
   have hx₁ := lt_of_not_ge fun h ↦ hp₀ (polynomial_eq_zero_of_le_one h hpk)
   have hs := h.splits_subfield hx₁ (p := h.embed hx₁ p hpk) (by simpa)
-  conv_lhs => rw [← h.map_embed hx₁ hpk, eq_prod_roots_of_splits_id hs]
+  conv_lhs => rw [← h.map_embed hx₁ hpk, hs.eq_prod_roots]
   simp [h.roots_eq_map hx₁ hpn hpk]
 
 theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
@@ -903,7 +901,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
       rw [Nimber.add_eq_zero] at H
       obtain rfl := eq_of_inv_mul_eq_one H
       exact hr.false
-  · apply le_of_forall_ne
+  · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
     · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]

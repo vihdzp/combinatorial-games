@@ -21,46 +21,11 @@ open Order Ordinal Polynomial Set
 
 /-! ### For Mathlib -/
 
--- TODO: upstream to Mathlib
-attribute [aesop simp] coeff_C coeff_X coeff_one
-
 namespace Finsupp
 
 variable {α β : Type*} [Zero β]
 
-theorem mem_frange_of_mem {x} {f : α →₀ β} (h : x ∈ f.support) : f x ∈ f.frange := by
-  rw [mem_frange]
-  constructor
-  · rwa [mem_support_iff] at h
-  · use x
-
-theorem range_subset_insert_frange (f : α →₀ β) : range f ⊆ insert 0 f.frange := by
-  rintro _ ⟨x, rfl⟩
-  by_cases hx : x ∈ f.support
-  · exact mem_insert_of_mem _ (mem_frange_of_mem hx)
-  · rw [mem_support_iff, not_not] at hx
-    rw [hx]
-    exact mem_insert ..
-
-theorem finite_range (f : α →₀ β) : (range f).Finite := by
-  apply Finite.subset _ (range_subset_insert_frange f)
-  simp
-
 end Finsupp
-
-namespace Polynomial
-
-variable {R : Type*}
-
-theorem Irreducible.degree_pos [DivisionSemiring R] {f : R[X]} (h : Irreducible f) :
-    0 < f.degree := by
-  rw [← natDegree_pos_iff_degree_pos]
-  exact h.natDegree_pos
-
-theorem finite_range_coeff [Semiring R] (p : R[X]) : (range p.coeff).Finite :=
-  Finsupp.finite_range _
-
-end Polynomial
 
 -- TODO: can we golf this using `finite_range_coeff`?
 private theorem Polynomial.exists_gt_of_forall_coeff_gt {s : Set Nimber} {p : Nimber[X]}
@@ -68,7 +33,7 @@ private theorem Polynomial.exists_gt_of_forall_coeff_gt {s : Set Nimber} {p : Ni
   choose f hf using h
   obtain ⟨c, hc⟩ := ((Finset.range (p.natDegree + 1)).image f).exists_maximal (by simp)
   have hc' := hc.1
-  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ] at hc'
+  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ_iff] at hc'
   obtain ⟨n, hn, rfl⟩ := hc'
   refine ⟨_, (hf n).1, fun k ↦ ?_⟩
   obtain hk | hk := le_or_gt k p.natDegree
@@ -88,7 +53,8 @@ nimbers with degree less or equal to `n` and coefficients less than `x` has a ro
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
-`IsNthDegreeClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
+`IsNthDegreeClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well.
+-/
 @[mk_iff]
 structure IsNthDegreeClosed (n : ℕ) (x : Nimber) extends IsRing x where
   exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hpn : p.degree ≤ n) (hp : ∀ k, p.coeff k < x) :
@@ -124,8 +90,8 @@ theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 :=
 protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
     (H : ∀ x ∈ s, IsNthDegreeClosed n x) : IsNthDegreeClosed n (sSup s) := by
   have : IsNthDegreeClosed n (sSup ∅) := by simp
-  by_cases hs : BddAbove s; swap; rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; assumption
+  by_cases! hs : ¬ BddAbove s; · rwa [csSup_of_not_bddAbove hs]
+  obtain rfl | hs' := s.eq_empty_or_nonempty; · assumption
   refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hpn hp ↦ ?_⟩
   simp_rw [lt_csSup_iff hs hs'] at *
   obtain ⟨c, hc, hc'⟩ := exists_gt_of_forall_coeff_gt hp
@@ -200,11 +166,10 @@ protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i
 
 theorem IsNthDegreeClosed.X_pow_lt_leastNoRoots {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) < leastNoRoots x := by
-  refine (leastNoRoots_ne_X_pow x _).lt_of_le' (le_of_forall_ne fun p hp hp' ↦ ?_)
+  refine (leastNoRoots_ne_X_pow x _).lt_of_le' (le_of_forall_lt_imp_ne fun p hp hp' ↦ ?_)
   obtain ⟨p, rfl, hp⟩ := WithTop.lt_iff_exists_coe.1 hp
   have h' := hp' ▸ WithTop.coe_ne_top
-  have ⟨r, hr, hr'⟩ := h.exists_root' (degree_leastNoRoots_pos h') ?_
-    (coeff_leastNoRoots_lt h')
+  have ⟨r, hr, hr'⟩ := h.exists_root' (degree_leastNoRoots_pos h') ?_ (coeff_leastNoRoots_lt h')
   · exact leastNoRoots_not_root_of_lt h' hr hr'
   · simp_rw [← hp']
     simpa using hp
@@ -242,14 +207,15 @@ theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClose
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  obtain hx₁ | hx₁ := le_or_gt x 1; simp [polynomial_eq_zero_of_le_one hx₁ hpk]
+  obtain hx₁ | hx₁ := le_or_gt x 1
+  · simp [polynomial_eq_zero_of_le_one hx₁ hpk]
   have hx₀ := zero_lt_one.trans hx₁
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
     have h' := h.le n.le_succ
     have hx : ∗(x.val ^ (n + 1)) = x ^ (n + 1) := by
-      refine le_antisymm (le_of_forall_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
+      refine le_antisymm (le_of_forall_lt_imp_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
       · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' hy
         have : p.coeff (n + 1) = 0 := p.coeff_eq_zero_of_degree_lt hpn
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
@@ -285,8 +251,8 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
       · convert hpk k using 1
         aesop
       · rwa [q.coeff_eq_zero_of_degree_lt (hqn'.trans_lt (mod_cast hk))]
-    rw [eval_add, eval_mul, eval_C, eval_X_pow, add_comm q, oeval_C_mul_X_pow_add hqn, IH h' hqn' hqk,
-      (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
+    rw [eval_add, eval_mul, eval_C, eval_X_pow, add_comm q, oeval_C_mul_X_pow_add hqn,
+      IH h' hqn' hqk, (h.pow (n + 1)).mul_add_eq_of_lt', mul_comm, eq_comm, ← hx]
     · have hxn : val x ≤ val x ^ (n + 1) := by
         rw [← opow_natCast]
         exact left_le_opow _ (mod_cast n.succ_pos)
@@ -386,7 +352,7 @@ theorem IsAlgClosed.leastNoRoots_eq_top {x : Nimber} (h : IsAlgClosed x) :
     leastNoRoots x = ⊤ := by
   rw [WithTop.eq_top_iff_forall_ge]
   refine fun p ↦ le_of_lt ?_
-  apply (h.toIsNthDegreeClosed _).X_pow_lt_leastNoRoots.trans'
+  apply (h.toIsNthDegreeClosed p.natDegree).X_pow_lt_leastNoRoots.trans'
   rw [WithTop.coe_lt_coe]
   simpa using degree_le_natDegree
 
@@ -433,7 +399,7 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       apply (degree_sub_lt ..).trans_eq <;> aesop
     conv_lhs => left; rw [← eval_X_pow]
     rw [← eval_add, h''.eval_eq_of_lt hp hxp]
-    apply le_of_forall_ne
+    apply le_of_forall_lt_imp_ne
     rw [forall_lt_oeval_iff hx₁ hxp]
     intro q hq hqk
     have hq' : q.degree ≤ .some (n - 1) := hp.trans' (Lex.degree_mono hq.le)

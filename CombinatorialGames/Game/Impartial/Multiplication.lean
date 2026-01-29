@@ -30,8 +30,7 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
       rw [moves_mul] at hz
       obtain ⟨⟨a, b⟩, ⟨ha, hb⟩ | ⟨ha, hb⟩, rfl⟩ := hz
       all_goals
-        have := Impartial.of_mem_moves ha
-        have := Impartial.of_mem_moves hb
+        impartial
         have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
         simp_rw [mulOption, grundyAux_sub, grundyAux_add, grundyAux_eq_grundy,
           ← grundyAux_eq_grundy right] at hz'
@@ -44,8 +43,7 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
       obtain ⟨a, ha', rfl⟩ := mem_grundyAux_image_of_lt ha
       obtain ⟨b, hb', rfl⟩ := mem_grundyAux_image_of_lt hb
       refine ⟨_, mulOption_mem_moves_mul ha' hb', ?_⟩
-      have := Impartial.of_mem_moves ha'
-      have := Impartial.of_mem_moves hb'
+      impartial
       have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
       simp_rw [mulOption, grundyAux_sub, grundyAux_add, grundyAux_eq_grundy,
         ← grundyAux_eq_grundy right]
@@ -55,8 +53,7 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
   intro p
   simp only [forall_moves_mul, mulOption]
   intro p' a ha b hb
-  have := Impartial.of_mem_moves ha
-  have := Impartial.of_mem_moves hb
+  impartial
   have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
   infer_instance
 termination_by (x, y)

@@ -236,7 +236,8 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
 
 private theorem birthday_game_le (x : IGame) :
     (supLeft x).birthday ≤ x.birthday ∧ (infRight x).birthday ≤ x.birthday ∧
-    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧ (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
+    (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧
+    (rightGame (.mk x)).birthday ≤ x.birthday + 1 := by
   have H₁ : (supLeft x).birthday ≤ x.birthday := by
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
@@ -251,7 +252,7 @@ private theorem birthday_game_le (x : IGame) :
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
     constructor <;>
-      simpa using add_le_add_right ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
+      simpa using add_le_add_left ((birthday_simplestBtwn_le h).trans (max_le H₁ H₂)) _
   · rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h]
     refine ⟨H₁.trans ?_, H₂.trans ?_⟩ <;>
       exact (WithTop.coe_lt_coe.2 <| Order.lt_add_one_iff.2 le_rfl).le

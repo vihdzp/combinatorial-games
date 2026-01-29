@@ -89,10 +89,10 @@ theorem mul_le_of_forall_ne (h : ∀ a' < a, ∀ b' < b, a' * b + a * b' + a' * 
 instance : MulZeroClass Nimber where
   mul_zero a := by
     rw [← Nimber.le_zero]
-    exact mul_le_of_forall_ne fun _ _ _ h ↦ (Nimber.not_lt_zero _ h).elim
+    exact mul_le_of_forall_ne fun _ _ _ h ↦ (Nimber.not_neg _ h).elim
   zero_mul a := by
     rw [← Nimber.le_zero]
-    exact mul_le_of_forall_ne fun _ h ↦ (Nimber.not_lt_zero _ h).elim
+    exact mul_le_of_forall_ne fun _ h ↦ (Nimber.not_neg _ h).elim
 
 private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
     a' * b + a * b' + a' * b' ≠ a * b := by
@@ -223,7 +223,6 @@ instance : CommRing Nimber where
   __ : AddCommGroupWithOne Nimber := inferInstance
 
 instance : IsDomain Nimber where
-instance : CancelMonoidWithZero Nimber where
 
 theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
     a' * b + a * b' + a' * b' ≠ a * b := by
@@ -296,17 +295,15 @@ theorem invSet_recOn {p : Nimber → Prop} (a : Nimber) (h0 : p 0)
   exact Set.sInter_subset_of_mem ⟨h0, hi⟩
 
 /-- An enumeration of elements in `invSet` by a type in the same universe. -/
-private def List.toNimber {a : Nimber} : List a.val.toType → Nimber
+private def List.toNimber {a : Nimber} : List a.val.ToType → Nimber
   | [] => 0
-  | x :: l =>
-    let a' := ∗((Ordinal.enumIsoToType a.val).symm x)
-    invAux a' * (1 + (a + a') * toNimber l)
+  | x :: l => invAux (∗x) * (1 + (a + ∗x) * toNimber l)
 
 instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
   refine @small_subset.{u, u + 1} _ _ _ ?_ (small_range (@List.toNimber a))
   refine fun x hx ↦ invSet_recOn a ⟨[], rfl⟩ ?_ x hx
   rintro a' ha _ _ ⟨l, rfl⟩
-  use Ordinal.enumIsoToType _ ⟨val a', ha⟩ :: l
+  use Ordinal.ToType.mk ⟨val a', ha⟩ :: l
   rw [List.toNimber]
   simp
 
