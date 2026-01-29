@@ -162,9 +162,19 @@ theorem leadingCoeff_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
   rw [leadingCoeff, leadingCoeff, add_div, wlog_add_eq_left h, stdPart_add_eq_left]
   rw [ArchimedeanClass.mk_div, LinearOrderedAddCommGroupWithTop.sub_pos]
   left
-  rw [(wpow_wlog_veq h.ne)]
+  rwa [veq_def.1 (wpow_wlog_veq h.ne_zero), ← vlt_def]
 
-#exit
+theorem leadingCoeff_add_eq_right {x y : Surreal} (h : y <ᵥ x) :
+    leadingCoeff (y + x) = leadingCoeff x := by
+  rw [add_comm, leadingCoeff_add_eq_left h]
+
+theorem leadingCoeff_sub_eq_left {x y : Surreal} : y <ᵥ x →
+    leadingCoeff (x - y) = leadingCoeff x := by
+  simpa using @leadingCoeff_add_eq_left x (-y)
+
+theorem leadingCoeff_sub_eq_right {x y : Surreal} : y <ᵥ x →
+    leadingCoeff (y - x) = -leadingCoeff x := by
+  simpa using @leadingCoeff_add_eq_right (-x) y
 
 /-! ### Leading term -/
 
@@ -292,6 +302,22 @@ theorem leadingTerm_mono : Monotone leadingTerm := by
 theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingTerm x = r * ω^ y := by
   rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq hr hL hR]
+
+theorem leadingTerm_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
+    leadingTerm (x + y) = leadingTerm x := by
+  rw [leadingTerm, leadingTerm, leadingCoeff_add_eq_left h, wlog_add_eq_left h]
+
+theorem leadingTerm_add_eq_right {x y : Surreal} (h : y <ᵥ x) :
+    leadingTerm (y + x) = leadingTerm x := by
+  rw [add_comm, leadingTerm_add_eq_left h]
+
+theorem leadingTerm_sub_eq_left {x y : Surreal} : y <ᵥ x →
+    leadingTerm (x - y) = leadingTerm x := by
+  simpa using @leadingTerm_add_eq_left x (-y)
+
+theorem leadingTerm_sub_eq_right {x y : Surreal} : y <ᵥ x →
+    leadingTerm (y - x) = -leadingTerm x := by
+  simpa using @leadingTerm_add_eq_right (-x) y
 
 end Surreal
 end
