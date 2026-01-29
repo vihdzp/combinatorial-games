@@ -73,6 +73,38 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
+theorem birthday_eq_iInf_fits (x : IGame) [hx : Numeric x] :
+    birthday (.mk x) = ⨅ y : {y : Subtype Numeric // Fits y x}, birthday (.mk y.1.1) := by
+  let f (y : {y : Subtype Numeric // Fits y x}) := birthday (.mk y.1)
+  let : Inhabited {y : Subtype Numeric // Fits y x} := ⟨⟨x, hx⟩, Fits.refl _⟩
+  apply (ciInf_le' f default).antisymm'
+  obtain ⟨⟨⟨y, _⟩, hy⟩, hy'⟩ := ciInf_mem f
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk y)
+  rw [← hz'.trans hy']
+  apply (birthday_mk_le z).trans'
+  congr! 1
+  rw [eq_comm, mk_eq_mk] at hz ⊢
+  refine (hy.congr hz).equiv_of_forall_birthday_le fun w hw hw' ↦ hz' ▸ ?_
+  exact hy'.trans_le <| (ciInf_le' f ⟨⟨w, hw⟩, hw'⟩).trans (birthday_mk_le _)
+
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [hx : Numeric x] [Numeric y] (h : Fits x y) :
+    birthday (.mk y) ≤ birthday (.mk x) := by
+  let f (x : {x : Subtype Numeric // Fits x y}) := birthday (.mk x.1)
+  rw [birthday_eq_iInf_fits y]
+  exact ciInf_le' f ⟨⟨x, hx⟩, h⟩
+
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] [Numeric y]
+    (h : Fits x y) (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+  apply h.birthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
+
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
     !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
@@ -101,6 +133,33 @@ theorem birthday_ofSets_le {s t : Set Surreal.{u}}
   apply (birthday_mk_le _).trans
   simp_rw [IGame.birthday_ofSets, image_comp]
   congr! <;> aesop
+
+theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.birthday_le
+  simp_all [Fits]
+
+theorem birthday_ofSets_lt_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    !{s | t}.birthday < z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.birthday_lt
+  · simp_all [Fits]
+  · rwa [← mk_eq_mk, ← ofSets_eq_mk, out_eq, eq_comm]
+
+theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
+    (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
+    !{s | t} = z := by
+  by_contra hz
+  exact (birthday_ofSets_lt_of_mem hL hR hz).not_ge <|
+    h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
 
 theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, _, ha, ha'⟩ := birthday_eq_iGameBirthday x

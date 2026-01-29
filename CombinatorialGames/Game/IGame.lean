@@ -870,6 +870,7 @@ instance : AddRightReflectLT IGame :=
 
 -- TODO: add the general versions of this to Mathlib
 
+@[gcongr]
 theorem add_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a + c ≈ b + d :=
   ⟨add_le_add h₁.1 h₂.1, add_le_add h₁.2 h₂.2⟩
 
@@ -880,6 +881,22 @@ theorem add_congr_right {a b c : IGame} (h : a ≈ b) : c + a ≈ c + b :=
   add_congr .rfl h
 
 @[simp]
+theorem add_equiv_add_iff_left {a b c : IGame} : a + b ≈ a + c ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_add_iff_right {a b c : IGame} : b + a ≈ c + a ↔ b ≈ c := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem add_equiv_left_iff {a b : IGame} : a + b ≈ a ↔ b ≈ 0 := by
+  simpa using @add_equiv_add_iff_left a b 0
+
+@[simp]
+theorem add_equiv_right_iff {a b : IGame} : a + b ≈ b ↔ a ≈ 0 := by
+  simpa using @add_equiv_add_iff_right b a 0
+
+@[simp]
 theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := by
   simp [IncompRel]
 
@@ -887,6 +904,7 @@ theorem add_fuzzy_add_iff_left {a b c : IGame} : a + b ‖ a + c ↔ b ‖ c := 
 theorem add_fuzzy_add_iff_right {a b c : IGame} : b + a ‖ c + a ↔ b ‖ c := by
   simp [IncompRel]
 
+@[gcongr]
 theorem sub_congr {a b : IGame} (h₁ : a ≈ b) {c d : IGame} (h₂ : c ≈ d) : a - c ≈ b - d :=
   add_congr h₁ (neg_congr h₂)
 

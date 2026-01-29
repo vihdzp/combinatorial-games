@@ -44,7 +44,7 @@ rationals. -/
 
 instance : Coe ℝ IGame := ⟨toIGame⟩
 
-instance Numeric.toIGame (x : ℝ) : Numeric x := by
+instance numeric (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
   · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]
@@ -379,11 +379,16 @@ theorem toSurreal_inj {x y : ℝ} : (x : Surreal) = y ↔ x = y :=
 theorem toSurreal_ratCast (q : ℚ) : toSurreal q = q := by
   simpa using Surreal.mk_eq (toIGame_ratCast_equiv q)
 
-@[simp, norm_cast] theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by
+@[simp, norm_cast]
+theorem toSurreal_natCast (n : ℕ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
-@[simp] theorem toSurreal_ofNat (n : ℕ) [n.AtLeastTwo] : toSurreal ofNat(n) = n :=
+
+@[simp]
+theorem toSurreal_ofNat (n : ℕ) [n.AtLeastTwo] : toSurreal ofNat(n) = n :=
   toSurreal_natCast n
-@[simp, norm_cast] theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by
+
+@[simp, norm_cast]
+theorem toSurreal_intCast (n : ℤ) : toSurreal n = n := by
   simpa using toSurreal_ratCast n
 
 @[simp, norm_cast] theorem toSurreal_zero : toSurreal 0 = 0 := by simpa using toSurreal_natCast 0
