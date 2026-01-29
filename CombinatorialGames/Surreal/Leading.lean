@@ -157,6 +157,12 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
   rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
+theorem leadingCoeff_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
+    leadingCoeff (y + x) = leadingCoeff y := by
+  rw [leadingCoeff, add_div, stdPart_add_eq_left, wlog_add_eq_left]
+
+#exit
+
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/

@@ -21,10 +21,6 @@ Among other things, we prove that every non-zero surreal number is commensurate 
   `-ω` is commensurate to `ω`.
 - The order in `ArchimedeanClass` is defined so that the equivalence class of `0` is the **largest**
   equivalence class, rather than the smallest.
-
-## Todo
-
-- Define the normal form of a surreal number.
 -/
 
 universe u
@@ -583,6 +579,10 @@ theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
 
 @[simp] theorem neg_veq {x y : Surreal} : -x =ᵥ y ↔ x =ᵥ y := by simp [veq_def]
 @[simp] theorem veq_neg {x y : Surreal} : x =ᵥ -y ↔ x =ᵥ y := by simp [veq_def]
+@[simp] theorem vle_neg {x y : Surreal} : x ≤ᵥ -y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem neg_vle {x y : Surreal} : -x ≤ᵥ y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem vlt_neg {x y : Surreal} : x <ᵥ -y ↔ x <ᵥ y := by simp [vlt_def]
+@[simp] theorem neg_vlt {x y : Surreal} : -x <ᵥ y ↔ x <ᵥ y := by simp [vlt_def]
 
 theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
@@ -798,6 +798,19 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+theorem wlog_add_eq_left {x y : Surreal} (h : y <ᵥ x) : wlog (x + y) = wlog x := by
+  apply wlog_congr
+  rw [veq_def, mk_add_eq_mk_left (vlt_def.1 h)]
+
+theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x := by
+  rw [add_comm, wlog_add_eq_left h]
+
+theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
+  simpa using @wlog_add_eq_left x (-y)
+
+theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
+  simpa using @wlog_add_eq_right (-x) y
 
 theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
   rw [← wpow_vle_wpow_iff]

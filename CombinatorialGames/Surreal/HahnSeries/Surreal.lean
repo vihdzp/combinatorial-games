@@ -10,7 +10,7 @@ import CombinatorialGames.Surreal.Birthday.Basic
 # Converting between surreal Hahn series and surreals
 
 This map defines the two-way conversion between `SurrealHahnSeries` and `Surreal`, and proves it an
-order isomorphism (`SurrealHahnSeries.toSurrealOrderIso`). Both sides of this conversion are quite
+order isomorphism (`Surreal.toHahnSeriesOrderIso`). Both sides of this conversion are quite
 technical constructions which require auxiliary definitions.
 
 ## Hahn series to surreals
@@ -1047,8 +1047,7 @@ private theorem length_succ'_of_ne {y : PartialSum x} (h : x ≠ y.carrier) :
 
 variable (x) in
 /-- The longest partial sum is the one that we're looking for. -/
-@[simp]
-theorem toSurreal_top : (⊤ : PartialSum x).carrier = x := by
+theorem coe_carrier_top : (⊤ : PartialSum x).carrier = x := by
   by_contra! h
   apply (le_top (a := succ' ⊤)).not_gt
   rw [← length_lt_length, length_succ'_of_ne h.symm, Order.lt_add_one_iff]
@@ -1059,14 +1058,14 @@ instance : SuccOrder (PartialSum x) :=
     rw [isMax_iff_eq_top] at hy
     rw [← length_lt_length, ← length_le_length, length_succ'_of_ne, Order.add_one_le_iff]
     contrapose! hy
-    rwa [← carrier_inj, ← toSurreal_inj, toSurreal_top, eq_comm]
-  ) (by simp [succ'])
+    rwa [← carrier_inj, ← toSurreal_inj, coe_carrier_top, eq_comm]
+  ) (by simp [succ', coe_carrier_top])
 
 @[simp]
 theorem length_succ_of_ne_top (y : PartialSum x) (h : y ≠ ⊤) :
     (succ y).length = y.length + 1 := by
   apply length_succ'_of_ne
-  conv_lhs => rw [← toSurreal_top x]
+  conv_lhs => rw [← coe_carrier_top x]
   rwa [ne_eq, toSurreal_inj, carrier_inj, eq_comm]
 
 end PartialSum
@@ -1080,7 +1079,11 @@ def toHahnSeries (x : Surreal) : SurrealHahnSeries :=
 
 @[simp]
 theorem toSurreal_toHahnSeries (x : Surreal) : x.toHahnSeries = x :=
-  PartialSum.toSurreal_top x
+  PartialSum.coe_carrier_top x
+
+@[simp]
+theorem PartialSum.carrier_top (x : Surreal) : (⊤ : PartialSum x).carrier = x.toHahnSeries :=
+  rfl
 
 @[simp]
 theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) :
@@ -1088,17 +1091,19 @@ theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) 
   apply SurrealHahnSeries.toSurreal_strictMono.injective
   rw [toSurreal_toHahnSeries]
 
-/-- `SurrealHahnSeries.toSurreal` as an `OrderIso`. -/
-@[simps]
-def _root_.SurrealHahnSeries.toSurrealOrderIso : SurrealHahnSeries ≃o Surreal where
-  toFun := SurrealHahnSeries.toSurreal
-  invFun := toHahnSeries
-  left_inv := SurrealHahnSeries.toHahnSeries_toSurreal
-  right_inv := toSurreal_toHahnSeries
-  map_rel_iff' := SurrealHahnSeries.toSurreal_le_toSurreal_iff
+/-- `Surreal.toHahnSeries` as an `OrderIso`. -/
+@[simps!]
+def toHahnSeriesOrderIso : Surreal ≃o SurrealHahnSeries :=
+  .symm {
+    toFun := SurrealHahnSeries.toSurreal
+    invFun := toHahnSeries
+    left_inv := SurrealHahnSeries.toHahnSeries_toSurreal
+    right_inv := toSurreal_toHahnSeries
+    map_rel_iff' := SurrealHahnSeries.toSurreal_le_toSurreal_iff
+  }
 
 theorem toHahnSeries_strictMono : StrictMono toHahnSeries :=
-  SurrealHahnSeries.toSurrealOrderIso.symm.strictMono
+  toHahnSeriesOrderIso.strictMono
 
 @[simp, norm_cast]
 theorem toHahnSeries_lt_toHahnSeries_iff : toHahnSeries x < toHahnSeries y ↔ x < y :=

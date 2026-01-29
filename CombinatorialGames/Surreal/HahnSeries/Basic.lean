@@ -142,6 +142,9 @@ def support (x : SurrealHahnSeries) : Set Surreal :=
 theorem mem_support_iff {x : SurrealHahnSeries} {i : Surreal} : i ∈ x.support ↔ x.coeff i ≠ 0 :=
   .rfl
 
+theorem notMem_support_iff {x : SurrealHahnSeries} {i : Surreal} : i ∉ x.support ↔ x.coeff i = 0 :=
+  x.mem_support_iff.not_left
+
 @[simp]
 theorem support_eq_empty {x : SurrealHahnSeries} : support x = ∅ ↔ x = 0 := by
   aesop (add simp [Set.eq_empty_iff_forall_notMem])
@@ -185,7 +188,7 @@ def single (x : Surreal) (r : ℝ) : SurrealHahnSeries :=
   mk (Pi.single x r) (small_subset Pi.support_single_subset)
     (WellFoundedOn.subset wellFoundedOn_singleton Pi.support_single_subset)
 
-@[aesop simp]
+@[simp]
 theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r := rfl
 
 @[simp, grind =]
@@ -215,6 +218,16 @@ theorem coeff_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).coeff = fun j ↦ if i < j then x.coeff j else 0 :=
   rfl
 
+@[simp]
+theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
+    (x.trunc i).coeff j = x.coeff j :=
+  if_pos h
+
+@[simp]
+theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
+    (x.trunc i).coeff j = 0 :=
+  if_neg h.not_gt
+
 @[simp, grind =]
 theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).support = x.support ∩ Ioi i := by
@@ -227,22 +240,21 @@ theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
 theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
   fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
 
-@[simp]
-theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
-    (x.trunc i).coeff j = x.coeff j :=
-  if_pos h
-
-@[simp]
-theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
-    (x.trunc i).coeff j = 0 :=
-  if_neg h.not_gt
-
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by
   aesop
 
 theorem coeff_trunc_of_mem {x : SurrealHahnSeries} {i j : Surreal} (h : j ∈ (x.trunc i).support) :
     (x.trunc i).coeff j = x.coeff j := by
+  aesop
+
+@[simp]
+theorem trunc_zero (i : Surreal) : trunc 0 i = 0 := by
+  aesop
+
+@[simp]
+theorem trunc_neg (x : SurrealHahnSeries) (i : Surreal) :
+    (-x).trunc i = -x.trunc i := by
   aesop
 
 @[simp]
@@ -286,6 +298,10 @@ theorem trunc_eq_self_iff {x : SurrealHahnSeries} {i : Surreal} :
     by_cases j ∈ x.support <;> aesop
 
 alias ⟨_, trunc_eq_self⟩ := trunc_eq_self_iff
+
+theorem self_mem_range_trunc (x : SurrealHahnSeries) : x ∈ range x.trunc := by
+  refine ⟨!{∅ | x.support}, trunc_eq_self ?_⟩
+  aesop
 
 theorem trunc_eq_trunc {x : SurrealHahnSeries} {i j : Surreal} (h : i ≤ j)
     (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
@@ -515,6 +531,10 @@ theorem truncIdx_eq_self {x : SurrealHahnSeries} {i : Ordinal} :
     exact truncIdx_ne h
   mpr := truncIdx_of_le
 
+@[simp]
+theorem truncIdx_length (x : SurrealHahnSeries) : x.truncIdx x.length = x := by
+  simp
+
 theorem coeff_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {j k : Surreal}
     (hjk : j ≤ k) (h : j ∈ (x.truncIdx i).support) : (x.truncIdx i).coeff k = x.coeff k := by
   obtain hi | hi := lt_or_ge i x.length
@@ -535,21 +555,41 @@ theorem trunc_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {a b : Surre
   · rw [coeff_trunc_of_lt h, coeff_trunc_of_lt h, coeff_truncIdx_of_mem (hab.trans h.le) ha]
   · rw [coeff_trunc_of_le h, coeff_trunc_of_le h]
 
+theorem self_mem_range_truncIdx (x : SurrealHahnSeries) : x ∈ range x.truncIdx :=
+  ⟨_, x.truncIdx_length⟩
+
+theorem range_truncIdx_eq_range_trunc (x : SurrealHahnSeries) :
+    range x.truncIdx = range x.trunc := by
+  ext y
+  constructor
+  · rintro ⟨i, rfl⟩
+    obtain h | h := lt_or_ge i x.length
+    · rw [truncIdx_of_lt h]
+      exact mem_range_self _
+    · rw [truncIdx_of_le h]
+      exact self_mem_range_trunc x
+  · rintro ⟨i, rfl⟩
+    by_cases! hx : ∀ j ∈ x.support, i < j
+    · rw [trunc_eq_self_iff.2 hx]
+      use x.length
+      simp
+    · have H : {j : x.support | j.1 ≤ i}.Nonempty := by
+        obtain ⟨j, hj, hj'⟩ := hx
+        exact ⟨⟨j, hj⟩, hj'⟩
+      obtain ⟨j, hj, hj'⟩ := wellFounded_gt.has_min _ H
+      use x.exp.symm j
+      rw [truncIdx_symm_exp]
+      refine trunc_eq_trunc hj fun k hk hk' ↦ ?_
+      by_contra hk''
+      exact hj' ⟨k, hk''⟩ hk' hk
+
+theorem truncIdx_mem_range_trunc (x : SurrealHahnSeries) (i : Ordinal) :
+    x.truncIdx i ∈ range x.trunc := by
+  simp [← range_truncIdx_eq_range_trunc]
+
 theorem trunc_mem_range_truncIdx (x : SurrealHahnSeries) (i : Surreal) :
     x.trunc i ∈ range x.truncIdx := by
-  by_cases! hx : ∀ j ∈ x.support, i < j
-  · rw [trunc_eq_self_iff.2 hx]
-    use x.length
-    simp
-  · have H : {j : x.support | j.1 ≤ i}.Nonempty := by
-      obtain ⟨j, hj, hj'⟩ := hx
-      exact ⟨⟨j, hj⟩, hj'⟩
-    obtain ⟨j, hj, hj'⟩ := wellFounded_gt.has_min _ H
-    use x.exp.symm j
-    rw [truncIdx_symm_exp]
-    refine trunc_eq_trunc hj fun k hk hk' ↦ ?_
-    by_contra hk''
-    exact hj' ⟨k, hk''⟩ hk' hk
+  simp [range_truncIdx_eq_range_trunc]
 
 /-! #### `term` -/
 
@@ -948,6 +988,10 @@ theorem length_single (i : Surreal) {r : ℝ} (hr : r ≠ 0) : length (.single i
 
 theorem length_single_le (i : Surreal) (r : ℝ) : length (.single i r) ≤ 1 := by
   obtain rfl | hr := eq_or_ne r 0 <;> simp_all
+
+@[simp]
+theorem length_one : length 1 = 1 := by
+  simpa using length_single 0 one_ne_zero
 
 private theorem isLeast_support_succ {x : SurrealHahnSeries} {o : Ordinal} (h : x.length = o + 1) :
     (x.exp ⟨o, by simp_all⟩).1 ∈ lowerBounds x.support := by
