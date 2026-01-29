@@ -70,6 +70,12 @@ theorem self_sub_X_pow_of_monic {R} [Ring R] {p : R[X]} (h : p.Monic) :
     p - X ^ p.natDegree = p.eraseLead := by
   rw [← self_sub_C_mul_X_pow, h, C_1, one_mul]
 
+theorem degree_pos_of_mem_roots {R} [CommRing R] [IsDomain R] {p : R[X]} {r} (h : r ∈ p.roots) :
+    0 < p.degree := by
+  by_contra!
+  rw [p.eq_C_of_degree_le_zero this, roots_C] at h
+  cases h
+
 theorem monomial_induction {motive : R[X] → Prop} (zero : motive 0)
     (add : ∀ a n q, degree q < .some n → motive q → motive (C a * X ^ n + q)) (p : R[X]) :
     motive p := by
@@ -827,7 +833,7 @@ theorem leastNoRoots_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
   rw [leastNoRoots, sInf_le_iff]
   aesop
 
-theorem has_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
+theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpk : ∀ k, p.coeff k < x) (hpn : p < leastNoRoots x) :
     ∃ r < x, p.IsRoot r := by
   obtain hp | hp₀ := le_or_gt p.degree 0
@@ -835,11 +841,11 @@ theorem has_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   contrapose! hpn
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
 
-theorem IsField.has_root_subfield {x : Nimber} (h : IsField x)
+theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     (hx₁ : 1 < x) {p : (h.toSubfield hx₁)[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
   have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
-  have ⟨r, hr, hr'⟩ := has_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
+  have ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
 theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
@@ -849,7 +855,7 @@ theorem IsField.splits_subfield {x : Nimber} (h : IsField x) (hx₁ : 1 < x)
   · exact .of_degree_le_one (hp₀.trans zero_le_one)
   induction hp : p.degree using WellFoundedLT.induction generalizing p with | ind n IH
   subst hp
-  have ⟨r, hr⟩ := h.has_root_subfield hx₁ hp₀.ne' hpn
+  have ⟨r, hr⟩ := h.exists_root_subfield hx₁ hp₀.ne' hpn
   rw [← hr.mul_div_eq]
   apply Splits.mul (.X_sub_C _)
   obtain hp₀' | hp₀' := le_or_gt (p / (X - C r)).degree 1
