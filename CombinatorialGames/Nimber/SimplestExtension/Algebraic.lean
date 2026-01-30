@@ -428,93 +428,41 @@ private def rootSet (x : Nimber) : Set Nimber :=
 private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
   small_iUnion _
 
-private theorem rootSet_mono : Monotone rootSet :=
-  fun _ _ h ↦ sUnion_mono fun _ ⟨p, hp⟩ ↦ ⟨⟨p, fun k ↦ (p.2 k).trans_le h⟩, hp⟩
-
-/-- A single step in the algebraic closure construction. -/
-private def algClosureSet (x : Nimber) : Set Nimber :=
-  Iio (fieldClosure x) ∪ rootSet x
-
-private instance (x : Nimber.{u}) : Small.{u} (algClosureSet x) :=
-  small_union ..
-
-private theorem algClosureSet.root_mem {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
-    (hpk : ∀ k, p.coeff k < x) (hr : p.IsRoot r) :
-    r ∈ algClosureSet x := by
-  apply mem_union_right
-  rw [rootSet]
-  aesop
-
-private theorem algClosureSet_mono : Monotone algClosureSet := by
-  intro x y h
-  have h' : Iio x ⊆ Iio y := by rwa [Iio_subset_Iio_iff]
-  exact union_subset_union (union_subset_union (add_subset_add h' h') (mul_subset_mul h' h'))
-    (rootSet_mono h)
-
-private theorem le_sSup_algClosureSet (x : Nimber) : x ≤ sSup (succ '' algClosureSet x) := by
-  refine le_of_forall_lt fun y hy ↦ ?_
-  rw [← succ_le_iff]
-  apply le_csSup (bddAbove_of_small _)
-  simpa using algClosure.mem_of_lt hy
-
-private theorem iterate_algClosureSet_mono {x : Nimber} :
-    Monotone (fun n ↦ (fun y ↦ sSup (succ '' algClosureSet y))^[n] x) := by
-  refine Monotone.monotone_iterate_of_le_map (fun y z h ↦ ?_) (le_sSup_algClosureSet x)
-  exact csSup_le_csSup' (bddAbove_of_small _) (image_mono (algClosureSet_mono h))
-
-/-- Returns the smallest `IsAlgClosed` containing `x`. -/
+/-- Returns the smallest `IsAlgClosed` that's at least `x`. -/
 noncomputable def algClosure (x : Nimber) : Nimber :=
-  ⨆ n : ℕ, (fun y ↦ sSup (succ '' algClosureSet y))^[n] x
+  ⨆ n : ℕ, (fun y ↦ fieldClosure (sSup <| (succ '' rootSet y)))^[n] x.fieldClosure
 
-theorem le_algClosure (x : Nimber) : x ≤ algClosure x := by
-  apply le_ciSup_of_le (bddAbove_of_small _) 1
-  simpa using le_sSup_algClosureSet x
+@[simp]
+theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
+  le_ciSup_of_le (bddAbove_of_small _) 0 (by simp)
+
+private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
+  refine IsField.iSup fun n ↦ ?_
+  cases n
+  · simp
+  · rw [Function.iterate_succ_apply']
+    simp
 
 private theorem lt_algClosure_iff {x y : Nimber} :
-    y < algClosure x ↔ ∃ n, y < (fun y ↦ sSup (succ '' algClosureSet y))^[n] x :=
+    y < algClosure x ↔ ∃ n,
+      y < (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure :=
   lt_ciSup_iff (bddAbove_of_small _)
 
-private theorem algClosure.op_lt {x y z : Nimber} {op : Nimber → Nimber → Nimber}
-    (hy : y < algClosure x) (hz : z < algClosure x)
-    (H : ∀ {x y z}, y < x → z < x → op y z ∈ algClosureSet x) :
-    op y z < algClosure x := by
-  rw [lt_algClosure_iff] at *
-  obtain ⟨m, hm⟩ := hy
-  obtain ⟨n, hn⟩ := hz
-  use max m n + 1
-  simp_rw [Function.iterate_succ_apply', lt_csSup_iff' (bddAbove_of_small _),
-    mem_image, exists_exists_and_eq_and, lt_succ_iff]
-  refine ⟨_, H (hm.trans_le ?_) (hn.trans_le ?_), le_rfl⟩
-  all_goals apply iterate_algClosureSet_mono; simp
-
-theorem algClosure.add_lt {x y z : Nimber} (hy : y < algClosure x) (hz : z < algClosure x) :
-    y + z < algClosure x :=
-  algClosure.op_lt hy hz algClosureSet.add_mem
-
-theorem algClosure.mul_lt {x y z : Nimber} (hy : y < algClosure x) (hz : z < algClosure x) :
-    y * z < algClosure x :=
-  algClosure.op_lt hy hz algClosureSet.mul_mem
-
-theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
+private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
     (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
   simp_rw [lt_algClosure_iff] at hpk ⊢
-  have hpk' : ∀ k, ∃ a ∈ (range fun n ↦ (fun y ↦ sSup (succ '' algClosureSet y))^[n] x),
-    p.coeff k < a := by simpa
+  have hpk' : ∀ k, ∃ a ∈ (range fun n ↦
+      (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure), p.coeff k < a :=
+    by simpa
   obtain ⟨_, ⟨n, rfl⟩, hn⟩ := exists_gt_of_forall_coeff_gt hpk'
   use n + 1
-  simp_rw [Function.iterate_succ_apply', lt_csSup_iff' (bddAbove_of_small _),
-    mem_image, exists_exists_and_eq_and, lt_succ_iff]
-  exact ⟨_, algClosureSet.root_mem hp₀ hn hr, le_rfl⟩
-
-protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
-  obtain h | h := le_or_gt (algClosure x) 1; · exact .of_le_one h
-  refine ⟨⟨⟨@algClosure.add_lt x⟩, @algClosure.mul_lt x⟩, fun y hy₀ hy ↦ ?_⟩
-  apply algClosure.root_lt (p := C y * X + 1)
-  · apply_fun (coeff · 0)
-    simp
-  · have := h.bot_lt
-    aesop
-  · simp [hy₀]
+  rw [Function.iterate_succ_apply', ← mem_subfieldClosure_Iio]
+  apply Subfield.mem_closure_of_mem
+  rw [mem_Iio, ← succ_le_iff]
+  apply le_csSup (bddAbove_of_small _) (mem_image_of_mem ..)
+  rw [rootSet, mem_iUnion]
+  refine ⟨⟨p, hn⟩, ?_⟩
+  simp_all
 
 private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
     (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
@@ -550,6 +498,6 @@ instance : _root_.IsAlgClosed Nimber := by
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
-proof_wanted algClosure_two : algClosure (∗2) = ∗(ω ^ ω ^ ω)
+proof_wanted algClosure_three : algClosure (∗3) = ∗(ω ^ ω ^ ω)
 
 end Nimber

@@ -138,10 +138,12 @@ theorem coe_addSubgroupClosure_Iio (x : Nimber) :
 theorem mem_addSubgroupClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < groupClosure x := by
   rw [← SetLike.mem_coe, coe_addSubgroupClosure_Iio, mem_Iio]
 
+@[simp]
 theorem le_groupClosure (x : Nimber) : x ≤ groupClosure x := by
   by_contra! hx
   exact (mem_addSubgroupClosure_Iio.1 (mem_closure_of_mem hx)).false
 
+@[simp]
 protected theorem IsGroup.groupClosure (x : Nimber) : IsGroup (groupClosure x) where
   ne_zero := (mem_addSubgroupClosure_Iio.1 (AddSubgroup.zero_mem _)).ne'
   add_lt y z := by
@@ -220,10 +222,12 @@ theorem coe_subringClosure_Iio (x : Nimber) :
 theorem mem_subringClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < ringClosure x := by
   rw [← SetLike.mem_coe, coe_subringClosure_Iio, mem_Iio]
 
+@[simp]
 theorem le_ringClosure (x : Nimber) : x ≤ ringClosure x := by
   by_contra! hx
   exact (mem_subringClosure_Iio.1 (mem_closure_of_mem hx)).false
 
+@[simp]
 protected theorem IsRing.ringClosure (x : Nimber) : IsRing (ringClosure x) where
   ne_zero := (mem_subringClosure_Iio.1 (Subring.zero_mem _)).ne'
   ne_one := (mem_subringClosure_Iio.1 (Subring.one_mem _)).ne'
@@ -301,10 +305,12 @@ theorem coe_subfieldClosure_Iio (x : Nimber) :
 theorem mem_subfieldClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < fieldClosure x := by
   rw [← SetLike.mem_coe, coe_subfieldClosure_Iio, mem_Iio]
 
+@[simp]
 theorem le_fieldClosure (x : Nimber) : x ≤ fieldClosure x := by
   by_contra! hx
   exact (mem_subfieldClosure_Iio.1 (mem_closure_of_mem hx)).false
 
+@[simp]
 protected theorem IsField.fieldClosure (x : Nimber) : IsField (fieldClosure x) where
   ne_zero := (mem_subfieldClosure_Iio.1 (Subfield.zero_mem _)).ne'
   ne_one := (mem_subfieldClosure_Iio.1 (Subfield.one_mem _)).ne'
