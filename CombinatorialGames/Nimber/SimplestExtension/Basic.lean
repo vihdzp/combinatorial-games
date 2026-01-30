@@ -128,6 +128,7 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
   out := h.ne_zero
 
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
+alias IsGroup.pos := IsGroup.zero_lt
 
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
