@@ -935,10 +935,10 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
 theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     Irreducible (h.embed (x.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht)) := by
   set p := h.embed (x.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht)
-  have hd : 0 < p.degree := ((degree_leastNoRoots_pos ht).trans_eq (degree_embed _ _).symm)
+  have hd : 0 < p.degree := (degree_leastNoRoots_pos ht).trans_eq (degree_embed _ _).symm
   obtain ⟨f, hf, dvd⟩ := exists_irreducible_of_degree_pos hd
   refine (associated_of_dvd_of_degree_eq dvd ?_).irreducible hf
-  refine le_antisymm (degree_le_of_dvd dvd (ne_zero_of_degree_gt hd)) ?_
+  apply (degree_le_of_dvd dvd (ne_zero_of_degree_gt hd)).antisymm
   rw [← p.degree_map h.toSubfield.subtype, ← f.degree_map h.toSubfield.subtype]
   apply Nimber.Lex.degree_mono
   rw [map_embed, ← WithTop.coe_le_coe, WithTop.coe_untop]
