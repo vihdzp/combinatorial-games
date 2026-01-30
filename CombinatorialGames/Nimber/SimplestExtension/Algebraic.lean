@@ -443,14 +443,9 @@ private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure 
   · rw [Function.iterate_succ_apply']
     simp
 
-private theorem lt_algClosure_iff {x y : Nimber} :
-    y < algClosure x ↔ ∃ n,
-      y < (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure :=
-  lt_ciSup_iff (bddAbove_of_small _)
-
 private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
     (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
-  simp_rw [lt_algClosure_iff] at hpk ⊢
+  simp_rw [algClosure, lt_ciSup_iff (bddAbove_of_small _)] at hpk ⊢
   have hpk' : ∀ k, ∃ a ∈ (range fun n ↦
       (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure), p.coeff k < a :=
     by simpa
