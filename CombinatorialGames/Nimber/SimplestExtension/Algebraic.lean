@@ -411,4 +411,59 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       · exact leastNoRoots_not_root_of_lt _ (f i).2
       · simp
 
+theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
+    (x.leastNoRoots.untop ht).IsRoot x := by
+  revert ht
+  by_cases hf : IsField x
+  · exact hf.isRoot_leastNoRoots
+  rw [h.leastNoRoots_eq_of_not_isField hf]
+  intro ht
+  rw [WithTop.untop_coe]
+  simp [h.ne_zero]
+
+theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) {p : Nimber[X]}
+    (hp : x.leastNoRoots = p) {n : ℕ} (hn : p.degree = n) :
+    IsRing (of (val x ^ n)) := by
+  obtain rfl | hn1 := eq_or_ne n 1
+  · simpa using h
+  have ht : x.leastNoRoots ≠ ⊤ := fun h => WithTop.coe_ne_top (hp.symm.trans h)
+  have hu : x.leastNoRoots.untop ht = p := (WithTop.untop_eq_iff ht).2 hp
+  have h0n := degree_leastNoRoots_pos ht
+  rw [hu, hn, ← WithBot.coe_zero, WithBot.natCast_eq_coe, WithBot.coe_lt_coe] at h0n
+  replace h : IsNthDegreeClosed (n - 1) x := by
+    rw [isNthDegreeClosed_iff_X_pow_le_leastNoRoots h,
+      Nat.sub_add_cancel (Nat.one_le_iff_ne_zero.2 h0n.ne'),
+      hp, WithTop.coe_le_coe, Nimber.Lex.X_pow_le_iff, hn]
+  have hf : IsField x := h.toIsField (by omega)
+  have hpm := hf.monic_leastNoRoots ht
+  have hpe := h.isRoot_leastNoRoots ht
+  have hpc := coeff_leastNoRoots_lt ht
+  rw [hu] at hpm hpe hpc
+  have hem : (hf.embed p hpc).Monic := by
+    rw [Monic, hf.leadingCoeff_embed, Subtype.ext_iff, Subfield.coe_one, ← hpm]
+  have hx1 : of (val x ^ n) ≠ 1 := by
+    obtain ⟨n, rfl⟩ := Nat.exists_eq_succ_of_ne_zero h0n.ne'
+    rw [ne_eq, of_eq_one, ← Ordinal.one_opow (succ n), ← Ordinal.opow_natCast,
+      Ordinal.natCast_succ]
+    apply ne_of_gt
+    apply opow_lt_opow_left_of_succ
+    rw [← val_one, val.lt_iff_lt]
+    exact h.one_lt
+  refine { toIsGroup := h.toIsGroup.pow n, ne_one := hx1, mul_lt y z hy hz := ?_ }
+  obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
+  obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
+  have hd {q : Nimber[X]} (hq : q.degree < n) : q.degree ≤ Nat.cast (n - 1) := by
+    obtain ⟨n, rfl⟩ := Nat.exists_eq_succ_of_ne_zero h0n.ne'
+    rw [WithBot.natCast_eq_coe, Nat.succ_sub_one,
+      ← (WithBot.coe_covBy_coe.2 (Order.covBy_add_one n)).lt_iff_le_left, ← WithBot.natCast_eq_coe]
+    exact hq
+  rw [← h.eval_eq_of_lt (hd hyd) hyc, ← h.eval_eq_of_lt (hd hzd) hzc,
+    ← hf.map_embed hyc, ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul,
+    ← Polynomial.modByMonic_add_div (_ * _) hem, Polynomial.map_add, eval_add,
+    Polynomial.map_mul, eval_mul, hf.map_embed, hpe, zero_mul, add_zero,
+    h.eval_eq_of_lt (hd <| (degree_map _ _).trans_lt
+      ((degree_modByMonic_lt _ hem).trans_le (by simp [hn]))) (by simp)]
+  exact oeval_lt_opow (by simp) <| (degree_map _ _).trans_lt
+    ((degree_modByMonic_lt _ hem).trans_le (by simp [hn]))
+
 end Nimber
