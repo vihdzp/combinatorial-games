@@ -161,6 +161,11 @@ theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
     x < groupClosure y ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
+theorem groupClosure_mono : Monotone groupClosure := by
+  intro x y h
+  rw [(IsGroup.groupClosure y).groupClosure_le_iff]
+  exact h.trans (le_groupClosure y)
+
 end AddSubgroup
 
 /-! ### Rings -/
@@ -203,7 +208,7 @@ theorem subringClosure_Iio_eq_Iio (x : Nimber) : ∃ y, (closure (Iio x) : Set N
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
 
-/-- Returns the smallest `IsRing` containing `x`. -/
+/-- Returns the smallest `IsRing` that's at least `x`. -/
 def ringClosure (x : Nimber) : Nimber := Classical.choose (subringClosure_Iio_eq_Iio x)
 
 @[simp]
@@ -242,6 +247,11 @@ theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
     x < ringClosure y ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
+theorem ringClosure_mono : Monotone ringClosure := by
+  intro x y h
+  rw [(IsRing.ringClosure y).ringClosure_le_iff]
+  exact h.trans (le_ringClosure y)
+
 end Subring
 
 /-! ### Fields -/
@@ -279,7 +289,7 @@ theorem subfieldClosure_Iio_eq_Iio (x : Nimber) : ∃ y, (closure (Iio x) : Set 
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
 
-/-- Returns the smallest `IsField` containing `x`. -/
+/-- Returns the smallest `IsField` that's at least `x`. -/
 def fieldClosure (x : Nimber) : Nimber := Classical.choose (subfieldClosure_Iio_eq_Iio x)
 
 @[simp]
@@ -320,6 +330,11 @@ theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
 theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
     x < fieldClosure y ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
+
+theorem fieldClosure_mono : Monotone fieldClosure := by
+  intro x y h
+  rw [(IsField.fieldClosure y).fieldClosure_le_iff]
+  exact h.trans (le_fieldClosure y)
 
 end Subfield
 end Nimber
