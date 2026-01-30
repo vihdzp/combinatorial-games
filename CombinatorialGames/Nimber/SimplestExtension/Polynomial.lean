@@ -11,6 +11,7 @@ import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Splits
 import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Tactic.ComputeDegree
 
 /-!
