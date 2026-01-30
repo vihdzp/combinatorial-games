@@ -174,7 +174,7 @@ theorem IsGroup.le_add_self (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
   simpa using h.add_lt this hy
 
-/-- The first **simplest extension theorem**: if `x` is not a group, then `x` can be written as
+/-- The first **simplest extension theorem**: if `x ≠ 0` is not a group, then `x` can be written as
 `y + z` for some `y, z < x`. -/
 theorem exists_add_of_not_isGroup (h : ¬IsGroup x) (ne : x ≠ 0) : ∃ y < x, ∃ z < x, y + z = x := by
   simp_rw [isGroup_iff, and_iff_left ne, not_forall, not_lt] at h
