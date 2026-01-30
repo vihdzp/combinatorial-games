@@ -122,11 +122,6 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
   rfl
 
 @[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
-@[simp] theorem $(mkIdent `succ_one) : Order.succ (1 : $Alias) = $(mkOf Alias) 2 := Ordinal.succ_one
-
-@[simp] theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
-@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -164,6 +159,11 @@ theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ord
 @[simp]
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
+
+@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
+
+@[simp] theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
+@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
 
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
