@@ -3,6 +3,7 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Mathlib.Range
 import CombinatorialGames.Tactic.OrdinalAlias
 import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
@@ -54,6 +55,9 @@ attribute [game_cmp] of_zero of_one
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
+
+@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
+theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
 
 /-! ### Nimber addition -/
 
@@ -196,6 +200,12 @@ instance : AddCommGroupWithOne Nimber where
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 
+@[simp]
+theorem range_natCast : Set.range ((↑) : ℕ → Nimber) = {0, 1} := by
+  rw [funext natCast_eq_if, Set.range_if]
+  · use 0; simp
+  · use 1; simp
+
 @[game_cmp]
 theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
   simp [natCast_eq_if, Nat.even_iff]
@@ -203,6 +213,19 @@ theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
 @[simp, game_cmp]
 theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
   natCast_eq_mod n
+
+theorem intCast_eq_if (n : ℤ) : (n : Nimber) = if Even n then 0 else 1 := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simpa using natCast_eq_if n
+
+@[simp]
+theorem range_intCast : Set.range ((↑) : ℤ → Nimber) = {0, 1} := by
+  rw [funext intCast_eq_if, Set.range_if]
+  · use 0; simp
+  · use 1; simp
+
+@[game_cmp]
+theorem intCast_eq_mod (n : ℤ) : (n : Nimber) = (n % 2 : ℤ) := by
+  simp [intCast_eq_if, Int.even_iff]
 
 -- This lets `game_cmp` reduce any instances of `NatCast`.
 attribute [game_cmp] Nat.reduceMod

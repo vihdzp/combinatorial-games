@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
-import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -100,16 +100,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
 
 end Ordinal
 
-theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
-    a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  obtain rfl | ha := eq_or_ne a 0; · simp
-  rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
-  tauto
-
-theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
-    a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  rw [eq_comm, inv_eq_self_iff]
-
 namespace Nimber
 variable {x y z w : Nimber}
 
@@ -146,9 +136,8 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   add_mem' := @h.add_lt
   neg_mem' := id
 
-@[simp]
-theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x :=
-  y.2
+@[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
+@[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
 
 @[simp]
 theorem IsGroup.one : IsGroup 1 where
@@ -259,6 +248,8 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · exact H hyz hy'
 termination_by x
 
+@[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
+
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
   ((IsGroup.two_opow _).add_eq_of_lt (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm.trans
     (o.two_opow_log_add ho)
@@ -301,6 +292,32 @@ theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := b
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
 
+open AddSubgroup in
+theorem isGroup_sInf_compl (s : AddSubgroup Nimber) (hs : s ≠ ⊤) : IsGroup (sInf sᶜ) := by
+  obtain rfl | hsb := eq_or_ne s ⊥
+  · simp [← Iio_one]
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
+      contrapose! hs
+      simpa using hs
+    have hI := csInf_mem hsn
+    by_contra hs
+    obtain ⟨y, hy, z, hz, hyz⟩ := exists_add_of_not_isGroup hs fun _ ↦ by simp_all
+    apply (hyz ▸ hI) (add_mem ..)
+    · simpa using notMem_of_lt_csInf' hy
+    · simpa using notMem_of_lt_csInf' hz
+
+open AddSubgroup in
+theorem isLowerSet_subgroup_closure {s : Set Nimber} (hs : IsLowerSet s) :
+    IsLowerSet (closure s : Set Nimber) := by
+  intro a b h ha
+  by_contra hb
+  have hx := isGroup_sInf_compl (AddSubgroup.closure s) (by contrapose hb; simp [hb])
+  apply notMem_of_lt_csInf' (h.trans_lt (hx.toAddSubgroup.closure_le.2 _ ha)) hb
+  intro y hy
+  rw [SetLike.mem_coe, mem_toAddSubgroup_iff]
+  by_contra! hy'
+  exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
+
 /-! ### Rings -/
 
 /-- Multiply two nimbers as ordinal numbers. -/
@@ -326,15 +343,20 @@ theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
     rw [pow_succ]
     exact h.mul_lt ih hy
 
+@[simp]
+theorem IsRing.two : IsRing (∗2) where
+  ne_one := by rw [← of_one, of.eq_iff_eq.ne]; simp
+  mul_lt := by simp_rw [lt_two_iff]; aesop
+  __ := IsGroup.two
+
 /-- `Iio x` as a subring of `Nimber`. -/
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
   mul_mem' := @h.mul_lt
 
-@[simp]
-theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x :=
-  y.2
+@[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
+@[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
@@ -408,6 +430,40 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
 theorem IsRing.mul_eq_of_lt (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
+
+-- For Mathlib:
+@[simp]
+theorem _root_.Subring.coe_eq_univ {G : Type*} [Ring G] {H : Subring G} :
+    (H : Set G) = Set.univ ↔ H = ⊤ :=
+  (SetLike.ext'_iff.trans (by rfl)).symm
+
+open Subring in
+theorem isRing_sInf_compl (s : Subring Nimber) (hs : s ≠ ⊤) : IsRing (sInf sᶜ) := by
+  obtain rfl | hsb := eq_or_ne s ⊥
+  · simp [coe_bot, ← Iio_two]
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
+      contrapose! hs
+      simpa using hs
+    have hI := csInf_mem hsn
+    by_contra hs'
+    have ⟨y, hy, z, hz, hyz⟩ :=
+      (isGroup_sInf_compl s.toAddSubgroup (by simpa)).exists_mul_of_not_isRing hs'
+      fun _ ↦ by simp_all
+    apply (hyz ▸ hI) (mul_mem ..)
+    · simpa using notMem_of_lt_csInf' hy
+    · simpa using notMem_of_lt_csInf' hz
+
+open Subring in
+theorem isLowerSet_subring_closure {s : Set Nimber} (hs : IsLowerSet s) :
+    IsLowerSet (closure s : Set Nimber) := by
+  intro a b h ha
+  by_contra hb
+  have hx := isRing_sInf_compl (Subring.closure s) (by contrapose hb; simp [hb])
+  apply notMem_of_lt_csInf' (h.trans_lt (hx.toSubring.closure_le.2 _ ha)) hb
+  intro y hy
+  rw [SetLike.mem_coe, mem_toSubring_iff]
+  by_contra! hy'
+  exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
 
 -- TODO: characterize nim arithmetic on the naturals.
 proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
@@ -512,6 +568,41 @@ theorem IsRing.inv_le_of_not_isField (h' : IsRing x) (h : ¬ IsField x)
 written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
+
+@[simp]
+theorem _root_.Subfield.coe_bot {K : Type*} [Field K] :
+    (⊥ : Subfield K) = Set.range ((↑) : ℚ → K) :=
+  sorry
+
+open Subfield in
+theorem isField_sInf_compl (s : Subfield Nimber) (hs : s ≠ ⊤) : IsField (sInf sᶜ) := by
+  obtain rfl | hsb := eq_or_ne s ⊥
+  · simp [coe_bot, ← Iio_two]
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
+      contrapose! hs
+      simpa using hs
+    have hI := csInf_mem hsn
+    by_contra hs'
+    have ⟨y, hy, z, hz, hyz⟩ :=
+      (isGroup_sInf_compl s.toAddSubgroup (by simpa)).exists_mul_of_not_isRing hs'
+      fun _ ↦ by simp_all
+    apply (hyz ▸ hI) (mul_mem ..)
+    · simpa using notMem_of_lt_csInf' hy
+    · simpa using notMem_of_lt_csInf' hz
+
+open Subring in
+theorem isLowerSet_subring_closure {s : Set Nimber} (hs : IsLowerSet s) :
+    IsLowerSet (closure s : Set Nimber) := by
+  intro a b h ha
+  by_contra hb
+  have hx := isRing_sInf_compl (Subring.closure s) (by contrapose hb; simp [hb])
+  apply notMem_of_lt_csInf' (h.trans_lt (hx.toSubring.closure_le.2 _ ha)) hb
+  intro y hy
+  rw [SetLike.mem_coe, mem_toSubring_iff]
+  by_contra! hy'
+  exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
+
+  #exit
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
