@@ -372,26 +372,15 @@ instance : Field Nimber where
   nnqsmul := _
   qsmul := _
 
--- TODO: we have `inv_eq_self` with different assumptions.
-theorem _root_.inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
-    a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  obtain rfl | ha := eq_or_ne a 0; · simp
-  rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
-  tauto
+-- #34622
+section Mathlib
 
-theorem _root_.self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
-    a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  rw [eq_comm, inv_eq_self_iff]
-
--- TODO: generalize to `CharTwo`
 @[simp]
 theorem inv_natCast (n : ℕ) : (n : Nimber)⁻¹ = n := by
-  rw [inv_eq_self_iff]
   grind [natCast_eq_if]
 
 @[simp]
 theorem inv_intCast (n : ℤ) : (n : Nimber)⁻¹ = n := by
-  rw [inv_eq_self_iff]
   grind [intCast_eq_if]
 
 theorem ratCast_eq_if (q : ℚ) : (q : Nimber) = if Odd q.num ∧ Odd q.den then 1 else 0 := by
@@ -404,4 +393,5 @@ theorem range_ratCast : Set.range ((↑) : ℚ → Nimber) = {0, 1} := by
   · use 1; simp
   · use 0; simp
 
+end Mathlib
 end Nimber

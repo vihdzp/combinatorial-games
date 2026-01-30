@@ -3,7 +3,6 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Mathlib.Range
 import CombinatorialGames.Tactic.OrdinalAlias
 import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
@@ -197,6 +196,14 @@ instance : AddCommGroupWithOne Nimber where
   neg_add_cancel := add_self
   add_comm := Nimber.add_comm
 
+-- #34622
+section Mathlib
+
+theorem _root_.Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] {x y : β}
+    (hp : ∃ a, p a) (hn : ∃ a, ¬ p a) :
+    Set.range (fun a ↦ if p a then x else y) = {x, y} := by
+  grind
+
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 
@@ -226,6 +233,8 @@ theorem range_intCast : Set.range ((↑) : ℤ → Nimber) = {0, 1} := by
 @[game_cmp]
 theorem intCast_eq_mod (n : ℤ) : (n : Nimber) = (n % 2 : ℤ) := by
   simp [intCast_eq_if, Int.even_iff]
+
+end Mathlib
 
 -- This lets `game_cmp` reduce any instances of `NatCast`.
 attribute [game_cmp] Nat.reduceMod

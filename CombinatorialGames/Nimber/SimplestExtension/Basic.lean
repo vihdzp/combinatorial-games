@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
+import Mathlib.Algebra.CharP.Algebra
 import Mathlib.Algebra.Field.Subfield.Basic
+import Mathlib.Algebra.Field.ZMod
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -296,9 +298,7 @@ open AddSubgroup in
 theorem isGroup_sInf_compl (s : AddSubgroup Nimber) (hs : s ≠ ⊤) : IsGroup (sInf sᶜ) := by
   obtain rfl | hsb := eq_or_ne s ⊥
   · simp [← Iio_one]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
-      contrapose! hs
-      simpa using hs
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
     have hI := csInf_mem hsn
     by_contra hs
     obtain ⟨y, hy, z, hz, hyz⟩ := exists_add_of_not_isGroup hs fun _ ↦ by simp_all
@@ -311,7 +311,7 @@ theorem isLowerSet_subgroup_closure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
   intro a b h ha
   by_contra hb
-  have hx := isGroup_sInf_compl (AddSubgroup.closure s) (by contrapose hb; simp [hb])
+  have hx := isGroup_sInf_compl (closure s) (by contrapose hb; simp [hb])
   apply notMem_of_lt_csInf' (h.trans_lt (hx.toAddSubgroup.closure_le.2 _ ha)) hb
   intro y hy
   rw [SetLike.mem_coe, mem_toAddSubgroup_iff]
@@ -441,9 +441,7 @@ open Subring in
 theorem isRing_sInf_compl (s : Subring Nimber) (hs : s ≠ ⊤) : IsRing (sInf sᶜ) := by
   obtain rfl | hsb := eq_or_ne s ⊥
   · simp [coe_bot, ← Iio_two]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
-      contrapose! hs
-      simpa using hs
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
     have hI := csInf_mem hsn
     by_contra hs'
     have ⟨y, hy, z, hz, hyz⟩ :=
@@ -458,7 +456,7 @@ theorem isLowerSet_subring_closure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
   intro a b h ha
   by_contra hb
-  have hx := isRing_sInf_compl (Subring.closure s) (by contrapose hb; simp [hb])
+  have hx := isRing_sInf_compl (closure s) (by contrapose hb; simp [hb])
   apply notMem_of_lt_csInf' (h.trans_lt (hx.toSubring.closure_le.2 _ ha)) hb
   intro y hy
   rw [SetLike.mem_coe, mem_toSubring_iff]
@@ -487,14 +485,18 @@ theorem IsField.inv_lt (h : IsField x) (hy : y < x) : y⁻¹ < x := by
 theorem IsField.div_lt (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
 
+@[simp]
+theorem IsField.two : IsField (∗2) where
+  inv_lt' := by simp [lt_two_iff]
+  __ := IsRing.two
+
 /-- `Iio x` as a subring of `Nimber`. -/
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
 
-@[simp]
-theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x :=
-  y.2
+@[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
+@[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
     x *ₒ z = x * z :=
@@ -569,40 +571,75 @@ written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
 
+-- For Mathlib:
 @[simp]
-theorem _root_.Subfield.coe_bot {K : Type*} [Field K] :
-    (⊥ : Subfield K) = Set.range ((↑) : ℚ → K) :=
-  sorry
+theorem _root_.Subfield.coe_bot {K : Type*} [DivisionRing K] :
+    (⊥ : Subfield K) = Set.range ((↑) : ℚ → K) := by
+  obtain _ | ⟨p, _, _⟩ := CharP.exists' K
+  · change _ = (RingHom.fieldRange (Rat.castHom K) : Set K)
+    refine congrArg SetLike.coe (le_antisymm bot_le ?_)
+    rw [← Subfield.fieldRange_subtype (⊥ : Subfield K),
+      Subsingleton.elim (Rat.castHom K) ((⊥ : Subfield K).subtype.comp
+      (Rat.castHom (⊥ : Subfield K))),
+      RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
+    exact (Subfield.gc_map_comap _).monotone_l le_top
+  · trans (RingHom.fieldRange (ZMod.castHom (dvd_refl p) K) : Set K)
+    · -- todo: generalize `Subfield.charP` to division rings
+      -- have := Subfield.charP (⊥ : Subfield K) p
+      have := (⊥ : Subfield K).subtype.charP (⊥ : Subfield K).subtype_injective p
+      refine congrArg SetLike.coe (le_antisymm bot_le ?_)
+      rw [← Subfield.fieldRange_subtype (⊥ : Subfield K),
+        Subsingleton.elim (ZMod.castHom (dvd_refl p) K)
+          ((⊥ : Subfield K).subtype.comp (ZMod.castHom (dvd_refl p) (⊥ : Subfield K))),
+        RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
+      exact (Subfield.gc_map_comap _).monotone_l le_top
+    · apply subset_antisymm
+      · rw [RingHom.coe_fieldRange, Set.range_subset_iff]
+        intro x
+        refine ⟨x.val, ?_⟩
+        trans Int.cast (ZMod.cast x)
+        · rw [← Rat.cast_intCast]
+          exact congrArg Rat.cast (by simp)
+        · simp
+      · rw [Set.range_subset_iff]
+        intro x
+        rw [Rat.cast_def, SetLike.mem_coe]
+        apply div_mem
+        · apply intCast_mem
+        · apply natCast_mem
+
+@[simp]
+theorem _root_.Subfield.coe_eq_univ {G : Type*} [Field G] {H : Subfield G} :
+    (H : Set G) = Set.univ ↔ H = ⊤ :=
+  (SetLike.ext'_iff.trans (by rfl)).symm
+
+@[simp]
+theorem _root_.Subfield.toSubring_eq_top {G : Type*} [Field G] {H : Subfield G} :
+    H.toSubring = ⊤ ↔ H = ⊤ := by
+  rw [← SetLike.coe_set_eq, Subfield.coe_toSubring]; simp
 
 open Subfield in
 theorem isField_sInf_compl (s : Subfield Nimber) (hs : s ≠ ⊤) : IsField (sInf sᶜ) := by
   obtain rfl | hsb := eq_or_ne s ⊥
   · simp [coe_bot, ← Iio_two]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by
-      contrapose! hs
-      simpa using hs
+  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
     have hI := csInf_mem hsn
-    by_contra hs'
-    have ⟨y, hy, z, hz, hyz⟩ :=
-      (isGroup_sInf_compl s.toAddSubgroup (by simpa)).exists_mul_of_not_isRing hs'
-      fun _ ↦ by simp_all
-    apply (hyz ▸ hI) (mul_mem ..)
-    · simpa using notMem_of_lt_csInf' hy
-    · simpa using notMem_of_lt_csInf' hz
+    contrapose hI
+    have := notMem_of_lt_csInf' <|
+      (isRing_sInf_compl s.toSubring (by simpa)).inv_lt_self_of_not_isField hI
+    simpa
 
-open Subring in
-theorem isLowerSet_subring_closure {s : Set Nimber} (hs : IsLowerSet s) :
+open Subfield in
+theorem isLowerSet_subfield_closure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
   intro a b h ha
   by_contra hb
-  have hx := isRing_sInf_compl (Subring.closure s) (by contrapose hb; simp [hb])
-  apply notMem_of_lt_csInf' (h.trans_lt (hx.toSubring.closure_le.2 _ ha)) hb
+  have hx := isField_sInf_compl (closure s) (by contrapose hb; simp [hb])
+  apply notMem_of_lt_csInf' (h.trans_lt (hx.toSubfield.closure_le.2 _ ha)) hb
   intro y hy
-  rw [SetLike.mem_coe, mem_toSubring_iff]
+  rw [SetLike.mem_coe, mem_toSubfield_iff]
   by_contra! hy'
   exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
-
-  #exit
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
