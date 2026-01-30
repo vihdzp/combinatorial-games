@@ -73,35 +73,20 @@ theorem IsNthDegreeClosed.le {m n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x
   exists_root' _p hp₀ hpm := h.exists_root' hp₀ (hpm.trans (mod_cast hmn))
   __ := h.toIsRing
 
-theorem IsNthDegreeClosed.of_le_one (n : ℕ) {x : Nimber} (h : x ≤ 1) : IsNthDegreeClosed n x where
-  exists_root' p hp₀ _ hp := by
-    have := polynomial_eq_zero_of_le_one h hp
-    simp_all
-  __ := IsRing.of_le_one h
-
-@[simp]
-theorem IsNthDegreeClosed.zero (n : ℕ) : IsNthDegreeClosed n 0 :=
-  .of_le_one n zero_le_one
-
-@[simp]
-theorem IsNthDegreeClosed.one (n : ℕ) : IsNthDegreeClosed n 1 :=
-  .of_le_one n le_rfl
-
 protected theorem IsNthDegreeClosed.sSup {n : ℕ} {s : Set Nimber}
-    (H : ∀ x ∈ s, IsNthDegreeClosed n x) : IsNthDegreeClosed n (sSup s) := by
-  have : IsNthDegreeClosed n (sSup ∅) := by simp
-  by_cases! hs : ¬ BddAbove s; · rwa [csSup_of_not_bddAbove hs]
-  obtain rfl | hs' := s.eq_empty_or_nonempty; · assumption
-  refine ⟨IsRing.sSup fun x hx ↦ (H x hx).toIsRing, fun p hp₀ hpn hp ↦ ?_⟩
-  simp_rw [lt_csSup_iff hs hs'] at *
+    (H : ∀ x ∈ s, IsNthDegreeClosed n x) (ne : s.Nonempty) (bdd : BddAbove s) :
+    IsNthDegreeClosed n (sSup s) := by
+  refine ⟨IsRing.sSup (fun x hx ↦ (H x hx).toIsRing) ne bdd, fun p hp₀ hpn hp ↦ ?_⟩
+  simp_rw [lt_csSup_iff bdd ne] at *
   obtain ⟨c, hc, hc'⟩ := exists_gt_of_forall_coeff_gt hp
   obtain ⟨r, hr, hr'⟩ := (H _ hc).exists_root' hp₀ hpn fun m ↦ hc' _
   exact ⟨r, ⟨_, hc, hr⟩, hr'⟩
 
-protected theorem IsNthDegreeClosed.iSup {n : ℕ} {ι} {f : ι → Nimber}
-    (H : ∀ i, IsNthDegreeClosed n (f i)) : IsNthDegreeClosed n (⨆ i, f i) := by
-  apply IsNthDegreeClosed.sSup
-  simpa
+protected theorem IsNthDegreeClosed.iSup {n : ℕ} {ι} [Nonempty ι] {f : ι → Nimber}
+    (H : ∀ i, IsNthDegreeClosed n (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
+    IsNthDegreeClosed n (⨆ i, f i) :=
+  IsNthDegreeClosed.sSup (by simpa) (range_nonempty f) bdd
 
 /-- If `x` is a field, to prove it `n`-th degree closed, it suffices to check *monic* polynomials of
 degree less or equal to `n`. -/
@@ -125,20 +110,18 @@ theorem isNthDegreeClosed_zero_iff_isRing {x : Nimber} : IsNthDegreeClosed 0 x �
 
 theorem IsNthDegreeClosed.toIsField {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) (hn : 1 ≤ n) :
     IsField x := by
-  obtain hx₁ | hx₁ := le_or_gt x 1
-  · exact IsField.of_le_one hx₁
-  · refine ⟨h.toIsRing, fun y hy₀ hy ↦ ?_⟩
-    have hp : degree (C y * (X : Nimber[X]) + 1) = 1 := by compute_degree!
-    have ⟨r, hr, hr₀⟩ := h.exists_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
-    · convert hr
-      apply inv_eq_of_mul_eq_one_right
-      rw [← Nimber.add_eq_zero]
-      simpa using hr₀
-    · obtain hk | hk := le_or_gt k 1
-      · obtain rfl | rfl := Nat.le_one_iff_eq_zero_or_eq_one.1 hk <;> simpa [coeff_one]
-      · rw [coeff_eq_zero_of_degree_lt]
-        · exact zero_lt_one.trans hx₁
-        · simp_all
+  refine ⟨h.toIsRing, fun y hy₀ hy ↦ ?_⟩
+  have hp : degree (C y * (X : Nimber[X]) + 1) = 1 := by compute_degree!
+  have ⟨r, hr, hr₀⟩ := h.exists_root (hp ▸ one_ne_zero) (by simpa [hp]) fun k ↦ ?_
+  · convert hr
+    apply inv_eq_of_mul_eq_one_right
+    rw [← Nimber.add_eq_zero]
+    simpa using hr₀
+  · obtain hk | hk := le_or_gt k 1
+    · obtain rfl | rfl := Nat.le_one_iff_eq_zero_or_eq_one.1 hk <;> simp [coeff_one, h.one_lt, hy]
+    · rw [coeff_eq_zero_of_degree_lt]
+      · exact h.zero_lt
+      · simp_all
 
 @[simp]
 theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x ↔ IsField x := by
@@ -154,15 +137,16 @@ theorem isNthDegreeClosed_one_iff_isField {x : Nimber} : IsNthDegreeClosed 1 x �
 
 -- We could have proved this earlier, but going through `IsNthDegreeClosed`
 -- gives a much shorter proof.
-protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x) :
+protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
+    (ne : s.Nonempty) (bdd : BddAbove s) :
     IsField (sSup s) := by
   simp_rw [← isNthDegreeClosed_one_iff_isField] at *
-  exact IsNthDegreeClosed.sSup H
+  exact IsNthDegreeClosed.sSup H ne bdd
 
-protected theorem IsField.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsField (f i)) :
-    IsField (⨆ i, f i) := by
-  apply IsField.sSup
-  simpa
+protected theorem IsField.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsField (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
+    IsField (⨆ i, f i) :=
+  IsField.sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsNthDegreeClosed.X_pow_lt_leastNoRoots {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) < leastNoRoots x := by
@@ -207,9 +191,8 @@ theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClose
 theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x)
     {p : Nimber[X]} (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) :
     p.eval x = oeval x p := by
-  obtain hx₁ | hx₁ := le_or_gt x 1
-  · simp [polynomial_eq_zero_of_le_one hx₁ hpk]
-  have hx₀ := zero_lt_one.trans hx₁
+  have hx₁ := h.one_lt
+  have hx₀ := h.zero_lt
   induction n generalizing p with
   | zero => rw [p.eq_C_of_degree_le_zero hpn]; simp
   | succ n IH =>
@@ -237,7 +220,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           rw [← lt_succ_iff, ← CharTwo.sub_eq_add]
           convert degree_sub_lt .. <;> simp_all
         have H : ∀ k, (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
-          refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt hx₁ fun y hy ↦ ?_
+          refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
           have : (f y).1 < x := (f y).2
           apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
         have IH := IH h' hq' H
@@ -275,13 +258,12 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
 
 theorem IsNthDegreeClosed.pow_mul_eq {n : ℕ} {x y : Nimber}
     (h : IsNthDegreeClosed n x) (hy : y < x) : x ^ n * y = ∗(x.val ^ n * y.val) := by
-  obtain hx₁ | hx₁ := le_or_gt x 1
-  · have := le_one_iff.1 hx₁; aesop
-  · conv_lhs => rw [← eval_X_pow, ← eval_C (a := y), ← eval_mul]
-    rw [h.eval_eq_of_lt, mul_comm, oeval_C_mul_X_pow]
-    · compute_degree!
-    · have := zero_lt_one.trans hx₁
-      aesop
+  have hx₁ := h.one_lt
+  conv_lhs => rw [← eval_X_pow, ← eval_C (a := y), ← eval_mul]
+  rw [h.eval_eq_of_lt, mul_comm, oeval_C_mul_X_pow]
+  · compute_degree!
+  · have := zero_lt_one.trans hx₁
+    aesop
 
 theorem IsNthDegreeClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsNthDegreeClosed n x) :
     x ^ n = ∗(x.val ^ n) := by
@@ -319,26 +301,16 @@ theorem IsAlgClosed.exists_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r :=
   (h.toIsNthDegreeClosed _).exists_root hp₀ degree_le_natDegree hp
 
-@[simp]
-theorem IsAlgClosed.zero : IsAlgClosed 0 := by
-  simp [isAlgClosed_iff_forall]
-
-@[simp]
-theorem IsAlgClosed.one : IsAlgClosed 1 := by
-  simp [isAlgClosed_iff_forall]
-
-theorem IsAlgClosed.of_le_one {x : Nimber} (h : x ≤ 1) : IsAlgClosed x := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
-
-protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x) :
+protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x)
+    (ne : s.Nonempty) (bdd : BddAbove s) :
     IsAlgClosed (sSup s) := by
   rw [isAlgClosed_iff_forall]
-  exact fun n ↦ IsNthDegreeClosed.sSup fun x hx ↦ (H x hx).toIsNthDegreeClosed n
+  exact fun n ↦ IsNthDegreeClosed.sSup (fun x hx ↦ (H x hx).toIsNthDegreeClosed n) ne bdd
 
-protected theorem IsAlgClosed.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsAlgClosed (f i)) :
-    IsAlgClosed (⨆ i, f i) := by
-  apply IsAlgClosed.sSup
-  simpa
+protected theorem IsAlgClosed.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsAlgClosed (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
+    IsAlgClosed (⨆ i, f i) :=
+  IsAlgClosed.sSup (by simpa) (range_nonempty f) bdd
 
 /-- If `x` is a field, to prove it algebraically closed, it suffices to check
 *monic* polynomials. -/
@@ -363,11 +335,14 @@ theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
     exists_root_of_lt_leastNoRoots hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
 
 @[simp]
-theorem leastNoRoots_one : leastNoRoots 1 = ⊤ :=
-  IsAlgClosed.one.leastNoRoots_eq_top
+theorem leastNoRoots_one : leastNoRoots 1 = ⊤ := by
+  rw [leastNoRoots, sInf_eq_top, forall_mem_image]
+  intro x hx
+  obtain rfl : x = 0 := by ext k; simpa using hx.2.1 k
+  simp at hx
 
-theorem leastNoRoots_of_le_one {x : Nimber} (h : x ≤ 1) : leastNoRoots x = ⊤ :=
-  (IsAlgClosed.of_le_one h).leastNoRoots_eq_top
+theorem leastNoRoots_of_le_one {x : Nimber} (h : x ≤ 1) : leastNoRoots x = ⊤ := by
+  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
 
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
@@ -378,8 +353,8 @@ attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 then `x` is the root of some polynomial with coefficients `< x`. -/
 theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
-  have hx₁ : 1 < x := by by_contra! hx; cases ht (leastNoRoots_of_le_one hx)
-  have hx₀ : 0 < x := hx₁.bot_lt
+  have hx₁ : 1 < x := h.one_lt
+  have hx₀ : 0 < x := h.zero_lt
   generalize_proofs ht
   let n := (x.leastNoRoots.untop ht).natDegree
   have hn : 1 ≤ n := natDegree_leastNoRoots_pos _
@@ -400,7 +375,7 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     conv_lhs => left; rw [← eval_X_pow]
     rw [← eval_add, h''.eval_eq_of_lt hp hxp]
     apply le_of_forall_lt_imp_ne
-    rw [forall_lt_oeval_iff hx₁ hxp]
+    rw [forall_lt_oeval_iff hxp]
     intro q hq hqk
     have hq' : q.degree ≤ .some (n - 1) := hp.trans' (Lex.degree_mono hq.le)
     rw [← h''.eval_eq_of_lt _ hqk, ne_eq, ← add_right_inj (x ^ n), add_self,
@@ -427,7 +402,7 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       apply Lex.lt_of_degree_lt (degree_sub_lt _ (leastNoRoots_ne_zero' ht) _)
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
-    · apply h.coeff_add_lt (h.coeff_prod_lt hx₁ _) (coeff_leastNoRoots_lt _)
+    · apply h.coeff_add_lt (h.coeff_prod_lt _) (coeff_leastNoRoots_lt _)
       aesop
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_leastNoRoots_pos ht⟩
