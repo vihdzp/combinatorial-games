@@ -141,7 +141,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
 /-- `Iio x` as a subgroup of `Nimber`. -/
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
-  zero_mem' := Nimber.pos_iff_ne_zero.2 h.ne_zero
+  zero_mem' := h.zero_lt
   add_mem' := @h.add_lt
   neg_mem' := id
 
