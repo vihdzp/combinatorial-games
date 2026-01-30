@@ -128,6 +128,7 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
   out := h.ne_zero
 
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
+alias IsGroup.pos := IsGroup.zero_lt
 
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
@@ -141,7 +142,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
 /-- `Iio x` as a subgroup of `Nimber`. -/
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
-  zero_mem' := Nimber.pos_iff_ne_zero.2 h.ne_zero
+  zero_mem' := h.zero_lt
   add_mem' := @h.add_lt
   neg_mem' := id
 
@@ -174,7 +175,7 @@ theorem IsGroup.le_add_self (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
   simpa using h.add_lt this hy
 
-/-- The first **simplest extension theorem**: if `x` is not a group, then `x` can be written as
+/-- The first **simplest extension theorem**: if `x ≠ 0` is not a group, then `x` can be written as
 `y + z` for some `y, z < x`. -/
 theorem exists_add_of_not_isGroup (h : ¬IsGroup x) (ne : x ≠ 0) : ∃ y < x, ∃ z < x, y + z = x := by
   simp_rw [isGroup_iff, and_iff_left ne, not_forall, not_lt] at h
@@ -351,7 +352,7 @@ protected theorem IsRing.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i,
     IsRing (⨆ i, f i) :=
   IsRing.sSup (by simpa) (range_nonempty f) bdd
 
-/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
+/-- The second **simplest extension theorem**: if `x ≠ 1` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne : x ≠ 1) :
     ∃ y < x, ∃ z < x, y * z = x := by

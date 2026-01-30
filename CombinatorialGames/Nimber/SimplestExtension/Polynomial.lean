@@ -734,12 +734,12 @@ theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
   refine ⟨q, ?_, hqk, rfl⟩
   rwa [oeval_lt_oeval_iff hqk hpk] at h
 
-theorem forall_lt_oeval_iff {x : Nimber} (hx₀ : x ≠ 0) {P : Ordinal → Prop}
+theorem forall_lt_oeval_iff {x : Nimber} {P : Ordinal → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
   mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk
   mpr H y hy := by
-    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval hx₀ hpk hy
+    obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_oeval (fun h => by simp [h] at hpk) hpk hy
     exact H q hqn hqk
 
 /-! ### Least irreducible polynomial -/
