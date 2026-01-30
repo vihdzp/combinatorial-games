@@ -351,7 +351,7 @@ protected theorem IsRing.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i,
     IsRing (⨆ i, f i) :=
   IsRing.sSup (by simpa) (range_nonempty f) bdd
 
-/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
+/-- The second **simplest extension theorem**: if `x ≠ 1` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne : x ≠ 1) :
     ∃ y < x, ∃ z < x, y * z = x := by
