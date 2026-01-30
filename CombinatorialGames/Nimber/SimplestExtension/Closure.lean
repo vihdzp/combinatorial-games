@@ -138,9 +138,6 @@ theorem coe_addSubgroupClosure_Iio (x : Nimber) :
 theorem mem_addSubgroupClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < groupClosure x := by
   rw [← SetLike.mem_coe, coe_addSubgroupClosure_Iio, mem_Iio]
 
-theorem groupClosure_le_iff {x y : Nimber} : groupClosure x ≤ y ↔ y ∉ closure (Iio x) := by
-  rw [← not_lt, ← mem_addSubgroupClosure_Iio]
-
 theorem le_groupClosure (x : Nimber) : x ≤ groupClosure x := by
   by_contra! hx
   exact (mem_addSubgroupClosure_Iio.1 (mem_closure_of_mem hx)).false
@@ -151,14 +148,18 @@ protected theorem IsGroup.groupClosure (x : Nimber) : IsGroup (groupClosure x) w
     simp_rw [← mem_addSubgroupClosure_Iio]
     exact AddSubgroup.add_mem _
 
-theorem IsGroup.groupClosure_le {x y : Nimber} (h : IsGroup x) :
+theorem IsGroup.groupClosure_le_iff {x y : Nimber} (h : IsGroup x) :
     groupClosure y ≤ x ↔ y ≤ x where
   mp := le_trans (le_groupClosure y)
   mpr hyx := by
-    rw [groupClosure_le_iff]
+    rw [← not_lt, ← mem_addSubgroupClosure_Iio]
     intro hx
     have := h.closure_Iio ▸ closure_mono (Iio_subset_Iio hyx) hx
     simpa
+
+theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
+    x < groupClosure y ↔ x < y :=
+  le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
 end AddSubgroup
 
@@ -214,9 +215,6 @@ theorem coe_subringClosure_Iio (x : Nimber) :
 theorem mem_subringClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < ringClosure x := by
   rw [← SetLike.mem_coe, coe_subringClosure_Iio, mem_Iio]
 
-theorem ringClosure_le_iff {x y : Nimber} : ringClosure x ≤ y ↔ y ∉ closure (Iio x) := by
-  rw [← not_lt, ← mem_subringClosure_Iio]
-
 theorem le_ringClosure (x : Nimber) : x ≤ ringClosure x := by
   by_contra! hx
   exact (mem_subringClosure_Iio.1 (mem_closure_of_mem hx)).false
@@ -231,13 +229,18 @@ protected theorem IsRing.ringClosure (x : Nimber) : IsRing (ringClosure x) where
     simp_rw [← mem_subringClosure_Iio]
     exact Subring.mul_mem _
 
-theorem IsRing.ringClosure_le {x y : Nimber} (h : IsRing x) : ringClosure y ≤ x ↔ y ≤ x where
+theorem IsRing.ringClosure_le_iff {x y : Nimber} (h : IsRing x) :
+    ringClosure y ≤ x ↔ y ≤ x where
   mp := le_trans (le_ringClosure y)
   mpr hyx := by
-    rw [ringClosure_le_iff]
+    rw [← not_lt, ← mem_subringClosure_Iio]
     intro hx
     have := h.closure_Iio ▸ closure_mono (Iio_subset_Iio hyx) hx
     simpa
+
+theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
+    x < ringClosure y ↔ x < y :=
+  le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
 end Subring
 
@@ -288,9 +291,6 @@ theorem coe_subfieldClosure_Iio (x : Nimber) :
 theorem mem_subfieldClosure_Iio {x y : Nimber} : y ∈ closure (Iio x) ↔ y < fieldClosure x := by
   rw [← SetLike.mem_coe, coe_subfieldClosure_Iio, mem_Iio]
 
-theorem fieldClosure_le_iff {x y : Nimber} : fieldClosure x ≤ y ↔ y ∉ closure (Iio x) := by
-  rw [← not_lt, ← mem_subfieldClosure_Iio]
-
 theorem le_fieldClosure (x : Nimber) : x ≤ fieldClosure x := by
   by_contra! hx
   exact (mem_subfieldClosure_Iio.1 (mem_closure_of_mem hx)).false
@@ -308,13 +308,18 @@ protected theorem IsField.fieldClosure (x : Nimber) : IsField (fieldClosure x) w
     simp_rw [← mem_subfieldClosure_Iio]
     exact Subfield.inv_mem _
 
-theorem IsField.fieldClosure_le {x y : Nimber} (h : IsField x) : fieldClosure y ≤ x ↔ y ≤ x where
+theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
+    fieldClosure y ≤ x ↔ y ≤ x where
   mp := le_trans (le_fieldClosure y)
   mpr hyx := by
-    rw [fieldClosure_le_iff]
+    rw [← not_lt, ← mem_subfieldClosure_Iio]
     intro hx
     have := h.closure_Iio ▸ closure_mono (Iio_subset_Iio hyx) hx
     simpa
+
+theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
+    x < fieldClosure y ↔ x < y :=
+  le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
 
 end Subfield
 end Nimber
