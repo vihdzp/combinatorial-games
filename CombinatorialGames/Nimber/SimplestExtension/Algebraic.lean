@@ -375,7 +375,7 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     conv_lhs => left; rw [← eval_X_pow]
     rw [← eval_add, h''.eval_eq_of_lt hp hxp]
     apply le_of_forall_lt_imp_ne
-    rw [forall_lt_oeval_iff hx₀.ne' hxp]
+    rw [forall_lt_oeval_iff hxp]
     intro q hq hqk
     have hq' : q.degree ≤ .some (n - 1) := hp.trans' (Lex.degree_mono hq.le)
     rw [← h''.eval_eq_of_lt _ hqk, ne_eq, ← add_right_inj (x ^ n), add_self,
