@@ -3,6 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -415,7 +416,7 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
 
 open Pointwise
 
-instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
+private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
   refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
   ext k
   simpa using congrFun h k
@@ -432,20 +433,10 @@ private theorem rootSet_mono : Monotone rootSet :=
 
 /-- A single step in the algebraic closure construction. -/
 private def algClosureSet (x : Nimber) : Set Nimber :=
-  (Iio x + Iio x) ∪ (Iio x * Iio x) ∪ rootSet x
+  Iio (fieldClosure x) ∪ rootSet x
 
 private instance (x : Nimber.{u}) : Small.{u} (algClosureSet x) :=
   small_union ..
-
-private theorem algClosureSet.add_mem {x y z : Nimber} (hy : y < x) (hz : z < x) :
-    y + z ∈ algClosureSet x := by
-  apply mem_union_left _ (mem_union_left ..)
-  use y, hy, z, hz
-
-private theorem algClosureSet.mul_mem {x y z : Nimber} (hy : y < x) (hz : z < x) :
-    y * z ∈ algClosureSet x := by
-  apply mem_union_left _ (mem_union_right ..)
-  use y, hy, z, hz
 
 private theorem algClosureSet.root_mem {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
     (hpk : ∀ k, p.coeff k < x) (hr : p.IsRoot r) :
@@ -453,9 +444,6 @@ private theorem algClosureSet.root_mem {x r : Nimber} {p : Nimber[X]} (hp₀ : p
   apply mem_union_right
   rw [rootSet]
   aesop
-
-private theorem algClosure.mem_of_lt {x y : Nimber} (h : y < x) : y ∈ algClosureSet x := by
-  simpa using algClosureSet.add_mem h h.bot_lt
 
 private theorem algClosureSet_mono : Monotone algClosureSet := by
   intro x y h
@@ -474,11 +462,7 @@ private theorem iterate_algClosureSet_mono {x : Nimber} :
   refine Monotone.monotone_iterate_of_le_map (fun y z h ↦ ?_) (le_sSup_algClosureSet x)
   exact csSup_le_csSup' (bddAbove_of_small _) (image_mono (algClosureSet_mono h))
 
-/-- The algebraic closure of a nimber is the smallest nimber which all sums, products, and all roots
-of all polynomials with coefficients less than `x`.
-
-A priori this might not be algebraically closed; we'll prove that it is as part of proving that the
-nimbers are algebraically closed. -/
+/-- Returns the smallest `IsAlgClosed` containing `x`. -/
 noncomputable def algClosure (x : Nimber) : Nimber :=
   ⨆ n : ℕ, (fun y ↦ sSup (succ '' algClosureSet y))^[n] x
 
