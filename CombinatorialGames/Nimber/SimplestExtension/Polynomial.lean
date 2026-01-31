@@ -489,6 +489,8 @@ theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) : succ
 
 end Lex
 
+open Ordinal
+
 /-- Evaluate a nimber polynomial using ordinal arithmetic.
 
 TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this. -/
@@ -584,7 +586,7 @@ theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
   apply (Ordinal.le_mul_left ..).trans (mul_coeff_le_oeval x p p.natDegree)
   simpa [pos_iff_ne_zero]
 
-theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
+theorem oeval_lt_pow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
   obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
   induction n generalizing p with
@@ -600,7 +602,7 @@ theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
       · rwa [q.coeff_eq_zero_of_degree_lt (hq.trans_le (mod_cast h))]
     · simpa [q.coeff_eq_zero_of_degree_lt hq] using hpk n
 
-theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
+theorem oeval_lt_pow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
   mp H := by
     obtain rfl | hp₀ := eq_or_ne p 0; · simp
@@ -610,7 +612,15 @@ theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
       Ordinal.opow_lt_opow_iff_right (a := x.val) hx₁] at H'
     rw [← natDegree_lt_iff_degree_lt hp₀]
     simpa using H'
-  mpr := oeval_lt_opow hpk
+  mpr := oeval_lt_pow hpk
+
+theorem oeval_lt_opow_omega0 {x : Nimber} {p : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ ω) := by
+  apply (oeval_lt_pow hpk (n := p.natDegree + 1) _).trans_le
+  · simp
+  · simpa using degree_le_natDegree
+
+  #exit
 
 theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
