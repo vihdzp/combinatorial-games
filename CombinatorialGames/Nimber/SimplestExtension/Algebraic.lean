@@ -442,8 +442,8 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     have hem : (hf.embed _ (coeff_leastNoRoots_lt ht)).Monic := by
       simpa using hf.monic_leastNoRoots _
     refine ⟨h.pow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
-    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
-    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hy
+    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hz
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd hzd
     rw [← h.eval_eq_of_lt hyd hyc, ← h.eval_eq_of_lt hzd hzc, ← hf.map_embed hyc,
       ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
@@ -454,7 +454,6 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
-#exit
 theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -482,7 +481,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
         ← Subtype.val_inj, ← Subring.subtype_apply, Subring.coe_zero,
         coe_eval₂RingHom, Polynomial.hom_eval₂, ← eval_map, hoc, map_embed]
       exact hf.isRoot_leastNoRoots ht
-    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow hf.ne_zero hy
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow hf.ne_zero hy
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd
     rw [← h.eval_eq_of_lt hyd hyc, ← hf.map_embed hyc, ← hoc, eval_map,
       show eval₂ _ x _ = eval₂ _ (hxr.toSubring.subtype ⟨x, hxn⟩) _ from rfl,
@@ -498,6 +497,10 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
 
 theorem IsAlgClosed.isRing_pow_omega0 {x : Nimber} (h : IsAlgClosed x) :
     IsRing (of (val x ^ ω)) := by
-  refine ⟨h.opow _, ?_, (by simp)⟩
+  refine ⟨h.opow _, fun y hy z hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+  obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+  obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hz
+
+
 
 end Nimber
