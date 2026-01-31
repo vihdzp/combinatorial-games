@@ -219,7 +219,8 @@ private theorem algebraTrace_eq {m n : ℕ} (h : m ≤ n) :
     conv =>
       enter [1, 1, 2]
       equals ⟨∗Nat.cast (x / 2 ^ (2 ^ n)), ht ▸ ua.2⟩ => exact Subtype.ext ht
-    rw [(algebraTrace_eq (Nat.le_of_lt_add_one h)).2.2, Nat.div_div_eq_div_mul, ← Nat.pow_add,
+    obtain ⟨_, _, htr⟩ := algebraTrace_eq (Nat.le_of_lt_add_one h)
+    rw [htr, Nat.div_div_eq_div_mul, ← Nat.pow_add,
       ← Nat.add_sub_assoc (Nat.pow_le_pow_right (by simp) (by omega)),
       ← Nat.mul_two, ← Nat.pow_add_one]
   change (algebraMap (hfm n (by simp)).toSubfield hf.toSubfield ua).1 = ∗Nat.cast (x / 2 ^ (2 ^ n))
@@ -326,7 +327,8 @@ theorem leastNoRoots_eq (n : ℕ) : leastNoRoots (∗Nat.cast (2 ^ 2 ^ n)) =
       change hf.toSubfield.subtype (or ^ 2 + or) ≠ hf.toSubfield.subtype oc
       rw [hf.toSubfield.subtype_injective.ne_iff]
       apply ne_of_apply_ne (Algebra.trace IsField.two.toSubfield hf.toSubfield)
-      rw [tr, ne_eq, ← SetLike.coe_eq_coe, (algebraTrace_eq (Nat.zero_le n)).2.2,
+      obtain ⟨_, _, htr⟩ := algebraTrace_eq (Nat.zero_le n)
+      rw [tr, ne_eq, ← SetLike.coe_eq_coe, htr,
         Subfield.coe_zero, ← val_eq_iff, val_zero, ← Nat.cast_zero, Nat.cast_inj]
       simp
   · apply le_of_forall_lt_imp_ne
@@ -369,8 +371,8 @@ theorem leastNoRoots_eq (n : ℕ) : leastNoRoots (∗Nat.cast (2 ^ 2 ^ n)) =
       have tc : Algebra.trace IsField.two.toSubfield hf.toSubfield ⟨c, hc⟩ = 0 := by
         induction c with | mk c
         obtain ⟨c, rfl⟩ := Ordinal.lt_omega0.1 ((of.lt_iff_lt.1 hc).trans (Ordinal.nat_lt_omega0 _))
-        rw [← SetLike.coe_eq_coe, Subfield.coe_zero, (algebraTrace_eq (Nat.zero_le n)).2.2,
-          of_eq_iff, val_zero, Nat.cast_eq_zero]
+        obtain ⟨_, _, htr⟩ := algebraTrace_eq (Nat.zero_le n)
+        rw [← SetLike.coe_eq_coe, Subfield.coe_zero, htr, of_eq_iff, val_zero, Nat.cast_eq_zero]
         rw [of.lt_iff_lt, Nat.cast_lt] at hcs
         rw [Nat.pow_zero, Nat.div_eq_zero_iff_lt (by simp)]
         exact hcs
