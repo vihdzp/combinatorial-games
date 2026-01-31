@@ -349,9 +349,7 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
 
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
-/-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
-then `x` is the root of some polynomial with coefficients `< x`. -/
-theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
+private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
   have hx₀ : 0 < x := h.zero_lt
@@ -411,6 +409,8 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       · exact leastNoRoots_not_root_of_lt _ (f i).2
       · simp
 
+/-- The fourth **simplest extension theorem**: if `x` is a ring that isn't algebraically closed,
+then `x` is the root of some polynomial with coefficients `< x`. -/
 theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   by_cases hf : IsField x
