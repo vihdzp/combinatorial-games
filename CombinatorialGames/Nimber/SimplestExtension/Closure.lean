@@ -164,9 +164,9 @@ theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
 theorem groupClosure_mono : Monotone groupClosure := by
-  intro x y h
+  intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
-  exact h.trans (le_groupClosure y)
+  exact (le_groupClosure y).trans'
 
 end AddSubgroup
 
@@ -252,9 +252,9 @@ theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
 theorem ringClosure_mono : Monotone ringClosure := by
-  intro x y h
+  intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
-  exact h.trans (le_ringClosure y)
+  exact (le_ringClosure y).trans'
 
 end Subring
 
@@ -338,9 +338,9 @@ theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
 
 theorem fieldClosure_mono : Monotone fieldClosure := by
-  intro x y h
+  intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
-  exact h.trans (le_fieldClosure y)
+  exact (le_fieldClosure y).trans'
 
 end Subfield
 end Nimber
