@@ -587,14 +587,14 @@ theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
   simpa [pos_iff_ne_zero]
 
 theorem oeval_lt_pow {x : Nimber} {p : Nimber[X]} {n : ℕ}
-    (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
+    (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : oeval x p < ∗(x.val ^ n) := by
   obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
     have hn' : p.degree ≤ n := le_of_lt_succ hn
     obtain ⟨a, q, rfl, hq⟩ := eq_add_C_mul_X_pow_of_degree_le hn'
-    rw [add_comm, oeval_C_mul_X_pow_add hq, val_of, pow_succ]
+    rw [add_comm, oeval_C_mul_X_pow_add hq, of.lt_iff_lt, pow_succ]
     refine Ordinal.mul_add_lt (IH (fun k ↦ ?_) hq) ?_
     · obtain h | h := lt_or_ge k n
       · convert hpk k using 1
@@ -603,7 +603,7 @@ theorem oeval_lt_pow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     · simpa [q.coeff_eq_zero_of_degree_lt hq] using hpk n
 
 theorem oeval_lt_pow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
-    (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
+    (hpk : ∀ k, p.coeff k < x) : oeval x p < ∗(x.val ^ n) ↔ p.degree < n where
   mp H := by
     obtain rfl | hp₀ := eq_or_ne p 0; · simp
     obtain hx₁ | hx₁ := le_or_gt x 1; · cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
@@ -617,10 +617,10 @@ theorem oeval_lt_pow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
 theorem oeval_lt_opow_omega0 {x : Nimber} {p : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ ω) := by
   apply (oeval_lt_pow hpk (n := p.natDegree + 1) _).trans_le
-  · simp
+  · rw [of.le_iff_le, ← opow_natCast]
+    apply opow_le_opow_right (hpk 0).bot_lt
+    simp [nat_lt_omega0]
   · simpa using degree_le_natDegree
-
-  #exit
 
 theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
@@ -641,7 +641,7 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     have hpe (k : Nat) : (p.erase n).coeff k < x := by
       rw [p.coeff_erase]
       split <;> simp [hpk, hx]
-    apply (add_lt_add_right (val_lt_iff.2 (oeval_lt_opow hpe hpn)) _).trans_le
+    apply (add_lt_add_right (val_lt_iff.2 (oeval_lt_pow hpe hpn)) _).trans_le
     rw [← mul_add_one]
     apply mul_le_mul_right
     rwa [add_one_le_iff, val.lt_iff_lt]
@@ -751,7 +751,7 @@ theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
     (hpk : ∀ k, p.coeff k < x) (h : y < oeval x p) :
     ∃ q : Nimber[X], q < p ∧ (∀ k, q.coeff k < x) ∧ oeval x q = y := by
   have hpd : p.degree < (p.natDegree + 1 :) := by simpa using degree_le_natDegree
-  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_pow hx₀ <| h.trans (oeval_lt_opow hpk hpd)
+  obtain ⟨q, hqn, hqk, rfl⟩ := eq_oeval_of_lt_pow hx₀ <| h.trans (oeval_lt_pow hpk hpd)
   refine ⟨q, ?_, hqk, rfl⟩
   rwa [oeval_lt_oeval_iff hqk hpk] at h
 

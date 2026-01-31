@@ -225,7 +225,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
         have IH := IH h' hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
-        exact IH ▸ (oeval_lt_opow H (lt_succ_of_le hq')).ne
+        exact IH ▸ (oeval_lt_pow H (lt_succ_of_le hq')).ne
     obtain ⟨a, q, rfl, hqn⟩ := eq_add_C_mul_X_pow_of_degree_le hpn
     have hqn' := hqn
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
@@ -252,9 +252,9 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           simp_rw [coeff_mul_C]
           exact fun k ↦ h.mul_lt (hpk k) hb
         rw [← IH h' hpn hpk, ← eval_C (a := b), ← eval_mul, IH h' hpn' H]
-        apply oeval_lt_opow H
+        apply oeval_lt_pow H
         simpa using hpn'
-    · exact oeval_lt_opow hqk hqn
+    · exact oeval_lt_pow hqk hqn
 
 theorem IsNthDegreeClosed.pow_mul_eq {n : ℕ} {x y : Nimber}
     (h : IsNthDegreeClosed n x) (hy : y < x) : x ^ n * y = ∗(x.val ^ n * y.val) := by
