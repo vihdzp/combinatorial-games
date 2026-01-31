@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import Mathlib.Algebra.Group.Pointwise.Set.Small
+import Mathlib.FieldTheory.AlgebraicClosure
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 /-!
@@ -490,6 +491,13 @@ instance : _root_.IsAlgClosed Nimber := by
   have hp' := (IsField.algClosure x).isRoot_leastNoRoots (ht ▸ WithTop.coe_ne_top)
   simp_rw [ht, WithTop.untop_coe] at hp'
   exact hr _ hp'
+
+/-! ### Algebraic closure -/
+
+@[simp]
+theorem coe_algebraicClosure_Iio (x : Nimber) :
+    (algebraicClosure (Subfield.closure (Iio x)) Nimber : Set Nimber) = Iio (algClosure x) :=
+  Classical.choose_spec (subringClosure_Iio_eq_Iio x)
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
