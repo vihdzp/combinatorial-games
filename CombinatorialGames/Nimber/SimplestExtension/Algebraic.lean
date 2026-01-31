@@ -21,6 +21,16 @@ open Order Ordinal Polynomial Set
 
 /-! ### For Mathlib -/
 
+@[simp]
+theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
+  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
+  · simp
+  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
+
+@[simp]
+theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
+  mod_cast one_lt_opow (y := n) h
+
 namespace Finsupp
 
 variable {α β : Type*} [Zero β]
@@ -431,21 +441,20 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     have hf : IsField x := h.toIsField (by lia)
     have hem : (hf.embed _ (coeff_leastNoRoots_lt ht)).Monic := by
       simpa using hf.monic_leastNoRoots _
-    refine ⟨h.pow _, fun y z hy hz ↦ ?_, ?_⟩
-    · obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
-      obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
-      rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd hzd
-      rw [← h.eval_eq_of_lt hyd hyc, ← h.eval_eq_of_lt hzd hzc, ← hf.map_embed hyc,
-        ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
-        Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
-        h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
-      on_goal 1 => apply oeval_lt_opow (by simp)
-      on_goal 2 => rw [← WithBot.lt_add_one]
-      all_goals exact (degree_map ..).trans_lt <|
-        (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
-    · rw [of_eq_one.ne, ← Ordinal.one_opow (n + 1), ← Ordinal.opow_natCast]
-      exact (opow_lt_opow_left_of_succ h.one_lt).ne'
+    refine ⟨h.pow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
+    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd hzd
+    rw [← h.eval_eq_of_lt hyd hyc, ← h.eval_eq_of_lt hzd hzc, ← hf.map_embed hyc,
+      ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
+      Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
+      h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
+    on_goal 1 => apply oeval_lt_opow (by simp)
+    on_goal 2 => rw [← WithBot.lt_add_one]
+    all_goals exact (degree_map ..).trans_lt <|
+      (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
+#exit
 theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -486,5 +495,9 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
       simpa using  congrArg hxr.toSubring.subtype hi
+
+theorem IsAlgClosed.isRing_pow_omega0 {x : Nimber} (h : IsAlgClosed x) :
+    IsRing (of (val x ^ ω)) := by
+  refine ⟨h.opow _, ?_, (by simp)⟩
 
 end Nimber
