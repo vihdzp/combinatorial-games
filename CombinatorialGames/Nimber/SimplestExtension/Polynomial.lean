@@ -737,7 +737,6 @@ theorem eq_oeval_of_lt_pow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < o
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y :=
   eq_oeval_of_lt_pow' hx₀ h
 
-open Ordinal in
 theorem eq_oeval_of_lt_opow_omega0 {x y : Nimber} (h : y < of (x.val ^ ω)) :
     ∃ p : Nimber[X], (∀ k, p.coeff k < x) ∧ oeval x p = y := by
   have hx₀ : x ≠ 0 := by rintro rfl; simp at h
