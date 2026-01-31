@@ -205,6 +205,11 @@ theorem IsField.leadingCoeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
   rfl
 
 @[simp]
+theorem IsField.monic_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed p hp).Monic ↔ p.Monic := by
+  simp [Monic, ← Subtype.val_inj]
+
+@[simp]
 theorem IsField.map_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
     (hp : ∀ k, p.coeff k < x) : (h.embed p hp).map (Subfield.subtype _) = p := by
   ext; simp
