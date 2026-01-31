@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
-import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.CharP.Algebra
+import Mathlib.Algebra.Field.Subfield.Basic
+import Mathlib.Algebra.Field.ZMod
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -100,16 +102,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
 
 end Ordinal
 
-theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
-    a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  obtain rfl | ha := eq_or_ne a 0; · simp
-  rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
-  tauto
-
-theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
-    a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  rw [eq_comm, inv_eq_self_iff]
-
 namespace Nimber
 variable {x y z w : Nimber}
 
@@ -118,60 +110,69 @@ variable {x y z w : Nimber}
 /-- Add two nimbers as ordinal numbers. -/
 scoped notation:65 x:65 "+ₒ" y:66 => ∗(val x + val y)
 
-/-- A nimber `x` is a group when `Iio x` is closed under addition. Note that `0` is a group under
-this definition. -/
+/-- A nonzero nimber `x` is a group when `Iio x` is closed under addition. -/
 @[mk_iff]
 structure IsGroup (x : Nimber) where
   add_lt ⦃y z : Nimber⦄ (hy : y < x) (hz : z < x) : y + z < x
+  ne_zero : x ≠ 0
 
-theorem IsGroup.sum_lt (h : IsGroup x) (hx₀ : x ≠ 0) {ι} {s : Finset ι}
+theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
+  out := h.ne_zero
+
+theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
+alias IsGroup.pos := IsGroup.zero_lt
+
+theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
   induction s using Finset.induction with
-  | empty => simp_all [Nimber.pos_iff_ne_zero]
+  | empty => simpa using h.zero_lt
   | insert a s ha IH =>
     rw [Finset.sum_insert ha]
     apply h.add_lt <;> simp_all
 
 /-- `Iio x` as a subgroup of `Nimber`. -/
-def IsGroup.toAddSubgroup (h : IsGroup x) (hx₀ : x ≠ 0) : AddSubgroup Nimber where
+def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
-  zero_mem' := Nimber.pos_iff_ne_zero.2 hx₀
+  zero_mem' := h.zero_lt
   add_mem' := @h.add_lt
   neg_mem' := id
 
-@[simp]
-theorem val_toAddSubgroup_lt (h : IsGroup x) (hx₀ : x ≠ 0) (y : h.toAddSubgroup hx₀) : y < x :=
-  y.2
+@[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
+@[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
 
-@[simp]
-theorem IsGroup.zero : IsGroup 0 where
-  add_lt := by simp
+theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.toAddSubgroup :=
+  h.toAddSubgroup.closure_eq
 
 @[simp]
 theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
+  ne_zero := one_ne_zero
 
-theorem IsGroup.of_le_one (h : x ≤ 1) : IsGroup x := by
-  cases Nimber.le_one_iff.1 h <;> simp_all
+protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
+    (ne : s.Nonempty) (bdd : BddAbove s) :
+    IsGroup (sSup s) where
+  add_lt := Principal.sSup (fun x hx ↦ (H x hx).add_lt)
+  ne_zero h := by
+    have lub := isLUB_csSup ne bdd
+    obtain ⟨x, hx⟩ := ne
+    apply (H x hx).ne_zero
+    rw [← Nimber.le_zero, ← h]
+    exact lub.left hx
 
-protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x) :
-    IsGroup (sSup s) :=
-  ⟨Principal.sSup (fun x hx ↦ (H x hx).add_lt)⟩
-
-protected theorem IsGroup.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsGroup (f i)) :
-    IsGroup (⨆ i, f i) := by
-  apply IsGroup.sSup
-  simpa
+protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
+    IsGroup (⨆ i, f i) :=
+  IsGroup.sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsGroup.le_add_self (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
   simpa using h.add_lt this hy
 
-/-- The first **simplest extension theorem**: if `x` is not a group, then `x` can be written as
+/-- The first **simplest extension theorem**: if `x ≠ 0` is not a group, then `x` can be written as
 `y + z` for some `y, z < x`. -/
-theorem exists_add_of_not_isGroup (h : ¬ IsGroup x) : ∃ y < x, ∃ z < x, y + z = x := by
-  simp_rw [isGroup_iff, not_forall, not_lt] at h
+theorem exists_add_of_not_isGroup (h : ¬IsGroup x) (ne : x ≠ 0) : ∃ y < x, ∃ z < x, y + z = x := by
+  simp_rw [isGroup_iff, and_iff_left ne, not_forall, not_lt] at h
   obtain ⟨y, z, hy, hz, hx⟩ := h
   obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
     (fun p : Iio x × Iio x ↦ x ≤ p.1 + p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
@@ -219,7 +220,7 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
 
 @[simp]
 theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
-  refine ⟨fun y z hy hz ↦ ?_⟩
+  refine ⟨fun y z hy hz ↦ ?_, by simp⟩
   induction y with | mk y
   induction z with | mk z
   obtain rfl | hy₀ := eq_or_ne y 0; · simpa
@@ -252,6 +253,8 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · exact H hyz hy'
 termination_by x
 
+@[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
+
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
   ((IsGroup.two_opow _).add_eq_of_lt (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm.trans
     (o.two_opow_log_add ho)
@@ -268,32 +271,28 @@ theorem exists_isGroup_add_lt (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y 
   refine ⟨_, opow_log_le_self _ hx, .two_opow _, ?_⟩
   exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
 
-/-- The nimbers that are groups are exactly `0` and the powers of `2`. -/
-theorem isGroup_iff_zero_or_mem_range_two_opow :
-    IsGroup x ↔ x = 0 ∨ x ∈ range fun y : Ordinal ↦ ∗(2 ^ y) := by
-  constructor
-  · by_contra! H
-    obtain ⟨h, hx, hx'⟩ := H
-    apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add hx).symm).false
-    · rw [of.lt_iff_lt]
-      apply (opow_log_le_self _ hx).lt_of_ne
-      contrapose! hx'
-      exact hx' ▸ mem_range_self _
-    · exact mod_opow_log_lt_self _ hx
-  · rintro (rfl | ⟨x, hx, rfl⟩)
-    · exact .zero
-    · exact .two_opow x
+/-- The nimbers that are groups are exactly the powers of `2`. -/
+theorem isGroup_iff_mem_range_two_opow :
+    IsGroup x ↔ x ∈ range fun y : Ordinal ↦ ∗(2 ^ y) := by
+  refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
+  by_contra! H
+  obtain ⟨h, hx⟩ := H
+  apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add h.ne_zero).symm).false
+  · rw [of.lt_iff_lt]
+    apply (opow_log_le_self _ h.ne_zero).lt_of_ne
+    contrapose! hx
+    exact hx ▸ mem_range_self _
+  · exact mod_opow_log_lt_self _ h.ne_zero
 
 /-- A version of `isGroup_iff_zero_or_mem_range_two_opow` stated in terms of `Ordinal`. -/
 theorem isGroup_iff_zero_or_mem_range_two_opow' {x : Ordinal} :
-    IsGroup (∗x) ↔ x = 0 ∨ x ∈ range (2 ^ · : Ordinal → _) :=
-  isGroup_iff_zero_or_mem_range_two_opow
+    IsGroup (∗x) ↔ x ∈ range (2 ^ · : Ordinal → _) :=
+  isGroup_iff_mem_range_two_opow
 
 theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := by
-  rw [isGroup_iff_zero_or_mem_range_two_opow] at h
-  obtain rfl | ⟨b, hb, rfl⟩ := h
-  · exact .of_le_one (zero_opow_le _)
-  · simp [← opow_mul]
+  rw [isGroup_iff_mem_range_two_opow] at h
+  obtain ⟨b, hb, rfl⟩ := h
+  simp [← opow_mul]
 
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
@@ -303,60 +302,65 @@ theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
 /-- Multiply two nimbers as ordinal numbers. -/
 scoped notation:70 x:70 "*ₒ" y:71 => ∗(val x * val y)
 
-/-- A nimber `x` is a ring when `Iio x` is closed under addition and multiplication. Note that `0`
-is a ring under this definition. -/
+/-- A nimber `x` is a ring when `1 < x` and `Iio x` is closed under addition and multiplication. -/
 @[mk_iff]
 structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z : Nimber⦄ (hy : y < x) (hz : z < x) : y * z < x
+  ne_one : x ≠ 1
 
-theorem IsRing.pow_lt' (h : IsRing x) {n : ℕ} (hn : n ≠ 0) (hy : y < x) : y ^ n < x := by
-  induction n using Nat.twoStepInduction with
-  | zero => contradiction
-  | one => simpa
-  | more n _ IH => rw [pow_succ]; exact h.mul_lt (IH n.succ_ne_zero) hy
+theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
+  rw [← not_le, Nimber.le_one_iff, not_or]
+  exact ⟨h.ne_zero, h.ne_one⟩
 
-theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hx : 1 < x) (hy : y < x) :
+theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
     y ^ n < x := by
-  obtain rfl | hn := eq_or_ne n 0
-  · simpa
-  · exact h.pow_lt' hn hy
+  induction n with
+  | zero =>
+    rw [pow_zero]
+    exact h.one_lt
+  | succ n ih =>
+    rw [pow_succ]
+    exact h.mul_lt ih hy
+
+@[simp]
+theorem IsRing.two : IsRing (∗2) where
+  ne_one := by rw [← of_one, of.eq_iff_eq.ne]; simp
+  mul_lt := by simp_rw [lt_two_iff]; aesop
+  __ := IsGroup.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
-def IsRing.toSubring (h : IsRing x) (hx₁ : 1 < x) : Subring Nimber where
-  one_mem' := hx₁
+def IsRing.toSubring (h : IsRing x) : Subring Nimber where
+  toAddSubgroup := h.toAddSubgroup
+  one_mem' := h.one_lt
   mul_mem' := @h.mul_lt
-  __ := h.toAddSubgroup (by aesop)
 
-@[simp]
-theorem val_toSubring_lt (h : IsRing x) (hx₁ : 1 < x) (y : h.toSubring hx₁) : y < x :=
-  y.2
+@[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
+@[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
 
-@[simp]
-theorem IsRing.zero : IsRing 0 where
-  mul_lt := by simp
-  __ := IsGroup.zero
+theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
+  h.toSubring.closure_eq
 
-@[simp]
-theorem IsRing.one : IsRing 1 where
-  mul_lt := by simp
-  __ := IsGroup.one
+protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
+    (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
+  toIsGroup := IsGroup.sSup (fun x hx => (H x hx).toIsGroup) ne bdd
+  mul_lt := Principal.sSup fun x hx ↦ (H x hx).mul_lt
+  ne_one h := by
+    have lub := isLUB_csSup ne bdd
+    obtain ⟨x, hx⟩ := ne
+    apply (H x hx).one_lt.not_ge
+    rw [← h]
+    exact lub.left hx
 
-theorem IsRing.of_le_one (h : x ≤ 1) : IsRing x := by
-  cases Nimber.le_one_iff.1 h <;> simp_all
+protected theorem IsRing.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsRing (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
+    IsRing (⨆ i, f i) :=
+  IsRing.sSup (by simpa) (range_nonempty f) bdd
 
-protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x) : IsRing (sSup s) :=
-  ⟨IsGroup.sSup fun x hx ↦ (H x hx).toIsGroup, Principal.sSup fun x hx ↦ (H x hx).mul_lt⟩
-
-protected theorem IsRing.iSup {ι} {f : ι → Nimber} (H : ∀ i, IsRing (f i)) :
-    IsRing (⨆ i, f i) := by
-  apply IsRing.sSup
-  simpa
-
-/-- The second **simplest extension theorem**: if `x` is a group but not a ring, then `x` can be
+/-- The second **simplest extension theorem**: if `x ≠ 1` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
-theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬ IsRing x) :
+theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne : x ≠ 1) :
     ∃ y < x, ∃ z < x, y * z = x := by
-  simp_rw [isRing_iff, h', true_and, not_forall, not_lt] at h
+  simp_rw [isRing_iff, and_iff_right h', and_iff_left ne, not_forall, not_lt] at h
   obtain ⟨y, z, hy, hz, hx⟩ := h
   obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
     (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
@@ -414,8 +418,8 @@ proof_wanted IsRing.two_two_pow (n : ℕ) : IsRing (∗(2 ^ 2 ^ n))
 
 /-! ### Fields -/
 
-/-- A nimber `x` is a field when `Iio x` is closed under addition, multiplication, and division.
-Note that `0` and `1` are fields under this definition.
+/-- A nimber `x` is a field when `1 < x` and `Iio x` is closed under
+addition, multiplication, and division.
 
 For simplicity, the constructor takes a redundant `y ≠ 0` assumption. The lemma `IsField.inv_lt`
 proves that this theorem applies when `y = 0` as well. -/
@@ -431,27 +435,21 @@ theorem IsField.inv_lt (h : IsField x) (hy : y < x) : y⁻¹ < x := by
 theorem IsField.div_lt (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
 
+@[simp]
+theorem IsField.two : IsField (∗2) where
+  inv_lt' := by simp [lt_two_iff]
+  __ := IsRing.two
+
 /-- `Iio x` as a subring of `Nimber`. -/
-def IsField.toSubfield (h : IsField x) (hx₁ : 1 < x) : Subfield Nimber where
+def IsField.toSubfield (h : IsField x) : Subfield Nimber where
+  toSubring := h.toSubring
   inv_mem' := @h.inv_lt
-  __ := h.toSubring hx₁
 
-@[simp]
-theorem val_toSubfield_lt (h : IsField x) (hx₁ : 1 < x) (y : h.toSubfield hx₁) : y < x :=
-  y.2
+@[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
+@[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
 
-@[simp]
-theorem IsField.zero : IsField 0 where
-  inv_lt' := by simp
-  __ := IsRing.zero
-
-@[simp]
-theorem IsField.one : IsField 1 where
-  inv_lt' := by simp
-  __ := IsRing.one
-
-theorem IsField.of_le_one (h : x ≤ 1) : IsField x := by
-  cases Nimber.le_one_iff.1 h <;> simp_all
+theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
+  h.toSubfield.closure_eq
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
     x *ₒ z = x * z :=
@@ -462,9 +460,9 @@ theorem IsField.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsFie
     (hyx : y ≤ x) (hzy : z < y) : x * z = val (∗x * ∗z) :=
   hy.mul_eq_of_lt hx hyx hzy
 
-private theorem inv_lt_of_not_isField_aux (h' : IsRing x) (h : ¬ IsField x) :
+private theorem inv_lt_of_not_isField_aux (h' : IsRing x) (h : ¬IsField x) :
     x⁻¹ < x ∧ ∀ y < x⁻¹, y⁻¹ < x := by
-  have hx₁ : 1 < x := lt_of_not_ge <| mt IsField.of_le_one h
+  have hx₁ : 1 < x := h'.one_lt
   have hx₀ : x ≠ 0 := hx₁.ne_bot
   let s := {z | x ≤ z⁻¹}
   simp_rw [isField_iff, h', true_and, not_forall, not_lt] at h
