@@ -4,7 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 import CombinatorialGames.Nimber.Field
-import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.CharP.Algebra
+import Mathlib.Algebra.Field.Subfield.Basic
+import Mathlib.Algebra.Field.ZMod
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -100,16 +102,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
 
 end Ordinal
 
-theorem inv_eq_self_iff {α : Type*} [DivisionRing α] {a : α} :
-    a⁻¹ = a ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  obtain rfl | ha := eq_or_ne a 0; · simp
-  rw [← mul_eq_one_iff_inv_eq₀ ha, ← pow_two, sq_eq_one_iff]
-  tauto
-
-theorem self_eq_inv_iff {α : Type*} [DivisionRing α] {a : α} :
-    a = a⁻¹ ↔ a = -1 ∨ a = 0 ∨ a = 1 := by
-  rw [eq_comm, inv_eq_self_iff]
-
 namespace Nimber
 variable {x y z w : Nimber}
 
@@ -146,9 +138,11 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   add_mem' := @h.add_lt
   neg_mem' := id
 
-@[simp]
-theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x :=
-  y.2
+@[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
+@[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
+
+theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.toAddSubgroup :=
+  h.toAddSubgroup.closure_eq
 
 @[simp]
 theorem IsGroup.one : IsGroup 1 where
@@ -259,6 +253,8 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · exact H hyz hy'
 termination_by x
 
+@[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
+
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
   ((IsGroup.two_opow _).add_eq_of_lt (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm.trans
     (o.two_opow_log_add ho)
@@ -326,15 +322,23 @@ theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
     rw [pow_succ]
     exact h.mul_lt ih hy
 
+@[simp]
+theorem IsRing.two : IsRing (∗2) where
+  ne_one := by rw [← of_one, of.eq_iff_eq.ne]; simp
+  mul_lt := by simp_rw [lt_two_iff]; aesop
+  __ := IsGroup.two
+
 /-- `Iio x` as a subring of `Nimber`. -/
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
   mul_mem' := @h.mul_lt
 
-@[simp]
-theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x :=
-  y.2
+@[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
+@[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
+
+theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
+  h.toSubring.closure_eq
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
@@ -431,14 +435,21 @@ theorem IsField.inv_lt (h : IsField x) (hy : y < x) : y⁻¹ < x := by
 theorem IsField.div_lt (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
   h.toIsRing.mul_lt hy (h.inv_lt hz)
 
+@[simp]
+theorem IsField.two : IsField (∗2) where
+  inv_lt' := by simp [lt_two_iff]
+  __ := IsRing.two
+
 /-- `Iio x` as a subring of `Nimber`. -/
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
 
-@[simp]
-theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x :=
-  y.2
+@[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
+@[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
+
+theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
+  h.toSubfield.closure_eq
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
     x *ₒ z = x * z :=
