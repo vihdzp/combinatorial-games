@@ -11,6 +11,7 @@ import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Splits
 import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Tactic.ComputeDegree
 
 /-!
@@ -935,5 +936,22 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
   · have := @leastNoRoots_not_root_of_lt x
     aesop
+
+theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
+    Irreducible (h.embed (x.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht)) := by
+  set p := h.embed (x.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht)
+  have hd : 0 < p.degree := (degree_leastNoRoots_pos ht).trans_eq (degree_embed _ _).symm
+  obtain ⟨f, hf, dvd⟩ := exists_irreducible_of_degree_pos hd
+  refine (associated_of_dvd_of_degree_eq dvd ?_).irreducible hf
+  apply (degree_le_of_dvd dvd (ne_zero_of_degree_gt hd)).antisymm
+  rw [← p.degree_map h.toSubfield.subtype, ← f.degree_map h.toSubfield.subtype]
+  apply Nimber.Lex.degree_mono
+  rw [map_embed, ← WithTop.coe_le_coe, WithTop.coe_untop]
+  refine leastNoRoots_le_of_not_isRoot (by simp [hf.degree_pos]) (by simp) fun r hr root => ?_
+  change IsRoot _ (h.toSubfield.subtype ⟨r, hr⟩) at root
+  rw [isRoot_map_iff h.toSubfield.subtype_injective] at root
+  replace root := root.dvd dvd
+  rw [← isRoot_map_iff h.toSubfield.subtype_injective, map_embed] at root
+  exact leastNoRoots_not_root_of_lt ht hr root
 
 end Nimber
