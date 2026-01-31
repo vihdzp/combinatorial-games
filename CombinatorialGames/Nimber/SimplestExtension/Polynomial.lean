@@ -227,6 +227,13 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
     (hp : ∀ k, p.coeff k < x) (y) : (h.embed p hp).eval y = ⟨_, h.eval_lt hp y.2⟩ := by
   simp [← Subtype.val_inj, embed, sum, eval_eq_sum]
 
+-- TODO: generalize to `Subring`
+theorem forall_coeff_mul_lt {x : Nimber} (h : IsRing x) {p q : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
+  intro k
+  rw [coeff_mul]
+  exact h.sum_lt fun _ _ ↦ h.mul_lt (hp _) (hq _)
+
 /-! ### Lexicographic ordering on polynomials -/
 
 namespace Lex

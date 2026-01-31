@@ -449,7 +449,7 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
       ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
       Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
       h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
-    on_goal 1 => apply oeval_lt_opow (by simp)
+    on_goal 1 => apply oeval_lt_pow (by simp)
     on_goal 2 => rw [← WithBot.lt_add_one]
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
@@ -501,7 +501,7 @@ theorem IsAlgClosed.isRing_pow_omega0 {x : Nimber} (h : IsAlgClosed x) :
   obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
   obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
   rw [← h.eval_eq_of_lt hyd, ← h.eval_eq_of_lt hzd, ← eval_mul, h.eval_eq_of_lt]
-  · apply oeval_lt_opow
-
+  on_goal 1 => apply oeval_lt_opow_omega0
+  all_goals exact forall_coeff_mul_lt h.toIsRing hyd hzd
 
 end Nimber
