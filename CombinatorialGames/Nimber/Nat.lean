@@ -110,23 +110,6 @@ theorem one_lt_two_two_pow (n : ℕ) : 1 < ∗Nat.cast (2 ^ 2 ^ n) := by
   rw [← of_one, of.lt_iff_lt, ← Nat.cast_one, Nat.cast_lt]
   simp
 
-theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := by
-  induction x with | mk x
-  simp [← Ordinal.succ_one, Ordinal.le_one_iff]
-
-theorem IsField.two : IsField (∗2) where
-  ne_zero := by simp
-  ne_one := by simp
-  add_lt := by
-    simp_rw [lt_two_iff]
-    aesop
-  mul_lt := by
-    simp_rw [lt_two_iff]
-    aesop
-  inv_lt' := by
-    simp_rw [lt_two_iff]
-    aesop
-
 private theorem two_two_pow_le {n m : ℕ} (h : n ≤ m) :
     ∗Nat.cast (2 ^ 2 ^ n) ≤ ∗Nat.cast (2 ^ 2 ^ m) :=
   of.monotone (Nat.cast_le.2
@@ -175,7 +158,7 @@ mutual
 
 theorem IsField.two_two_pow (n : ℕ) : IsField (∗Nat.cast (2 ^ 2 ^ n)) := by
   cases n with
-  | zero => simpa using IsField.two
+  | zero => simp
   | succ n =>
     have hf := IsField.two_two_pow n
     have he : Nat.cast (2 ^ 2 ^ (n + 1)) = (val (∗Nat.cast (2 ^ 2 ^ n))) ^ 2 := by
