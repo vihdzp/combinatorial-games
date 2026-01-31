@@ -615,7 +615,7 @@ theorem oeval_lt_pow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
   mpr := oeval_lt_pow hpk
 
 theorem oeval_lt_opow_omega0 {x : Nimber} {p : Nimber[X]}
-    (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ ω) := by
+    (hpk : ∀ k, p.coeff k < x) : oeval x p < ∗(x.val ^ ω) := by
   apply (oeval_lt_pow hpk (n := p.natDegree + 1) _).trans_le
   · rw [of.le_iff_le, ← opow_natCast]
     apply opow_le_opow_right (hpk 0).bot_lt
@@ -714,8 +714,8 @@ theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q ↔ p ≤ q :=
   le_iff_le_iff_lt_iff_lt.2 (oeval_lt_oeval_iff hqk hpk)
 
-/-- A version of `eq_oeval_of_lt_opow` stated in terms of `Ordinal`. -/
-theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
+/-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
+theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
   induction n generalizing y with
   | zero => use 0; simp_all [pos_iff_ne_zero]
@@ -735,7 +735,7 @@ theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y 
 
 theorem eq_oeval_of_lt_pow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < of (x.val ^ n)) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, p.coeff k < x) ∧ oeval x p = y :=
-  eq_oeval_of_lt_opow' hx₀ h
+  eq_oeval_of_lt_pow' hx₀ h
 
 open Ordinal in
 theorem eq_oeval_of_lt_opow_omega0 {x y : Nimber} (h : y < of (x.val ^ ω)) :
