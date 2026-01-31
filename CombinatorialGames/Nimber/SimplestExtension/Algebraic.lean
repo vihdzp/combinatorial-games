@@ -58,7 +58,7 @@ namespace Nimber
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
 nimbers with degree less or equal to `n` and coefficients less than `x` has a root that's less than
-`x`. Note that `0` and `1` are `n`-th degree closed under this definition.
+`x`.
 
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
@@ -209,7 +209,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
     have h' := h.le n.le_succ
     have hx : ∗(x.val ^ (n + 1)) = x ^ (n + 1) := by
       refine le_antisymm (le_of_forall_lt_imp_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
-      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' hy
+      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' hy
         have : p.coeff (n + 1) = 0 := p.coeff_eq_zero_of_degree_lt hpn
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
         rw [← IH h' hpn hpk, ← Nimber.add_eq_zero.ne]
@@ -255,7 +255,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
       · convert hpk (n + 1)
         simpa using q.coeff_eq_zero_of_degree_lt hqn
-      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' ha
+      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' ha
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
         have hpn' : (p * C b).degree ≤ n := by compute_degree!
         have H : ∀ k, (p * C b).coeff k < x := by
