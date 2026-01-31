@@ -728,8 +728,9 @@ theorem eq_oeval_of_lt_pow {x y : Nimber} {n : ℕ} (hx₀ : x ≠ 0) (h : y < o
   eq_oeval_of_lt_opow' hx₀ h
 
 open Ordinal in
-theorem eq_oeval_of_lt_opow_omega0 {x y : Nimber} (hx₀ : x ≠ 0) (h : y < of (x.val ^ ω)) :
+theorem eq_oeval_of_lt_opow_omega0 {x y : Nimber} (h : y < of (x.val ^ ω)) :
     ∃ p : Nimber[X], (∀ k, p.coeff k < x) ∧ oeval x p = y := by
+  have hx₀ : x ≠ 0 := by rintro rfl; simp at h
   obtain ⟨c, hc, h : y < of (val x ^ c)⟩ := (lt_opow_of_isSuccLimit hx₀ isSuccLimit_omega0).1 h
   obtain ⟨n, rfl⟩ := lt_omega0.1 hc
   rw [opow_natCast] at h
