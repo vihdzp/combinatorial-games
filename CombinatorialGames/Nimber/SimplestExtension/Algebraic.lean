@@ -497,10 +497,11 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
 
 theorem IsAlgClosed.isRing_pow_omega0 {x : Nimber} (h : IsAlgClosed x) :
     IsRing (of (val x ^ ω)) := by
-  refine ⟨h.opow _, fun y hy z hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
-  obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
-  obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hz
-
+  refine ⟨h.opow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+  obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+  obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+  rw [← h.eval_eq_of_lt hyd, ← h.eval_eq_of_lt hzd, ← eval_mul, h.eval_eq_of_lt]
+  · apply oeval_lt_opow
 
 
 end Nimber
