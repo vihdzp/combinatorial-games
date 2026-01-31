@@ -48,7 +48,7 @@ namespace Nimber
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
 nimbers with degree less or equal to `n` and coefficients less than `x` has a root that's less than
-`x`. Note that `0` and `1` are `n`-th degree closed under this definition.
+`x`.
 
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
