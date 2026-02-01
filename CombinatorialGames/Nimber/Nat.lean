@@ -161,11 +161,16 @@ theorem IsField.two_two_pow (n : ℕ) : IsField (∗Nat.cast (2 ^ 2 ^ n)) := by
   | zero => simp
   | succ n =>
     have hf := IsField.two_two_pow n
+    have hl := leastNoRoots_eq n
     have he : Nat.cast (2 ^ 2 ^ (n + 1)) = (val (∗Nat.cast (2 ^ 2 ^ n))) ^ 2 := by
       rw [val_of, ← Ordinal.opow_natCast, Nat.pow_succ, Nat.pow_mul]
       simp
     rw [he]
-    apply hf.pow_degree_leastNoRoots (leastNoRoots_eq n)
+    have ht : leastNoRoots (∗Nat.cast (2 ^ 2 ^ n)) ≠ ⊤ :=
+      fun h => WithTop.coe_ne_top (hl.symm.trans h)
+    rw [← WithTop.untop_eq_iff ht] at hl
+    apply hf.pow_degree_leastNoRoots ht
+    rw [hl]
     compute_degree!
 termination_by (n, 0)
 
