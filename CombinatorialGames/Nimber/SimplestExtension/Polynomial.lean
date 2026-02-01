@@ -374,6 +374,10 @@ theorem C_strictMono : StrictMono (α := Nimber) C := by
 theorem C_lt_C_iff {x y : Nimber} : C x < C y ↔ x < y :=
   C_strictMono.lt_iff_lt
 
+@[simp]
+theorem C_le_C_iff {x y : Nimber} : C x ≤ C y ↔ x ≤ y :=
+  C_strictMono.le_iff_le
+
 theorem lt_of_degree_lt {p q : Nimber[X]} (h : p.degree < q.degree) : p < q := by
   contrapose! h; exact degree_mono h
 
@@ -396,6 +400,15 @@ theorem X_pow_le_iff {p : Nimber[X]} {n : ℕ} : X ^ n ≤ p ↔ n ≤ p.degree 
 @[simp]
 theorem X_pow_le_coe_iff {p : Nimber[X]} {n : ℕ} : .some X ^ n ≤ WithTop.some p ↔ n ≤ p.degree := by
   rw [← not_lt, coe_lt_X_pow_iff, not_lt]
+
+theorem strictMono_X_pow : StrictMono fun n ↦ (X : Nimber[X]) ^ n :=
+  fun _ ↦ by simp
+
+theorem X_pow_lt_X_pow_iff {m n : ℕ} : (X : Nimber[X]) ^ m < X ^ n ↔ m < n :=
+  strictMono_X_pow.lt_iff_lt
+
+theorem X_pow_le_X_pow_iff {m n : ℕ} : (X : Nimber[X]) ^ m ≤ X ^ n ↔ m ≤ n :=
+  strictMono_X_pow.le_iff_le
 
 theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree + p) :
     X ^ p.natDegree + q < p := by
@@ -449,7 +462,6 @@ instance : NoMaxOrder (Nimber[X]) where
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
   refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
-  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
