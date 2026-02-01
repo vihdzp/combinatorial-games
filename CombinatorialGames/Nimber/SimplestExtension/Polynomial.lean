@@ -137,6 +137,18 @@ theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorde
   rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
   exact _root_.add_pos_of_pos_of_nonneg ha hb
 
+@[simp] theorem WithBot.succ_one' : Order.succ (1 : WithBot ℕ) = 2 := rfl
+
+theorem WithTop.untop_eq {α} {x : WithTop α} {y : α} (h : x = y) :
+    x.untop (h ▸ coe_ne_top) = y := by
+  subst h
+  rfl
+
+theorem WithTop.eq_untop {α} {x : WithTop α} {y : α} (h : y = x) :
+    y = x.untop (h ▸ coe_ne_top) := by
+  subst h
+  rfl
+
 namespace Nimber
 
 /-! ### Basic results -/
@@ -374,6 +386,10 @@ theorem C_strictMono : StrictMono (α := Nimber) C := by
 theorem C_lt_C_iff {x y : Nimber} : C x < C y ↔ x < y :=
   C_strictMono.lt_iff_lt
 
+@[simp]
+theorem C_le_C_iff {x y : Nimber} : C x ≤ C y ↔ x ≤ y :=
+  C_strictMono.le_iff_le
+
 theorem lt_of_degree_lt {p q : Nimber[X]} (h : p.degree < q.degree) : p < q := by
   contrapose! h; exact degree_mono h
 
@@ -396,6 +412,25 @@ theorem X_pow_le_iff {p : Nimber[X]} {n : ℕ} : X ^ n ≤ p ↔ n ≤ p.degree 
 @[simp]
 theorem X_pow_le_coe_iff {p : Nimber[X]} {n : ℕ} : .some X ^ n ≤ WithTop.some p ↔ n ≤ p.degree := by
   rw [← not_lt, coe_lt_X_pow_iff, not_lt]
+
+theorem strictMono_X_pow : StrictMono fun n ↦ (X : Nimber[X]) ^ n :=
+  fun _ ↦ by simp
+
+theorem X_pow_le_X_pow_iff {m n : ℕ} : (X : Nimber[X]) ^ m ≤ X ^ n ↔ m ≤ n :=
+  strictMono_X_pow.le_iff_le
+
+theorem X_pow_lt_X_pow_iff {m n : ℕ} : (X : Nimber[X]) ^ m < X ^ n ↔ m < n :=
+  strictMono_X_pow.lt_iff_lt
+
+@[simp]
+theorem coe_X_pow_le_coe_X_pow_iff {m n : ℕ} :
+    (.some X : WithTop Nimber[X]) ^ m ≤ .some X ^ n ↔ m ≤ n := by
+  simp_rw [← WithTop.coe_pow, WithTop.coe_le_coe, X_pow_le_X_pow_iff]
+
+@[simp]
+theorem coe_X_pow_lt_coe_X_pow_iff {m n : ℕ} :
+    (.some X : WithTop Nimber[X]) ^ m < .some X ^ n ↔ m < n := by
+  simp_rw [← WithTop.coe_pow, WithTop.coe_lt_coe, X_pow_lt_X_pow_iff]
 
 theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree + p) :
     X ^ p.natDegree + q < p := by
@@ -449,7 +484,6 @@ instance : NoMaxOrder (Nimber[X]) where
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
   refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
-  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -493,6 +527,8 @@ theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) : succ
   aesop
 
 end Lex
+
+/-! ### Evaluating nimber polynomials as ordinals -/
 
 /-- Evaluate a nimber polynomial using ordinal arithmetic.
 
@@ -779,12 +815,22 @@ theorem natDegree_leastNoRoots_pos {x : Nimber} (ht) :
     0 < (x.leastNoRoots.untop ht).natDegree :=
   natDegree_pos_iff_degree_pos.2 (degree_leastNoRoots_pos ht)
 
+theorem one_le_degree_leastNoRoots_pos {x : Nimber} (ht) :
+    1 ≤ (x.leastNoRoots.untop ht).degree := by
+  rw [WithBot.one_le_iff_pos]
+  exact degree_leastNoRoots_pos ht
+
+theorem one_le_natDegree_leastNoRoots {x : Nimber} (ht) :
+    1 ≤ (x.leastNoRoots.untop ht).natDegree := by
+  rw [one_le_iff_pos]
+  exact natDegree_leastNoRoots_pos ht
+
 theorem coeff_leastNoRoots_lt {x : Nimber} (ht) :
     ∀ k, (x.leastNoRoots.untop ht).coeff k < x :=
   (leastNoRoots_mem ht).2.1
 
-theorem leastNoRoots_not_root_of_lt {x r : Nimber} (ht) (hr : r < x) :
-    (x.leastNoRoots.untop ht).eval r ≠ 0 :=
+theorem not_isRoot_leastNoRoots_of_lt {x r : Nimber} (ht) (hr : r < x) :
+    ¬ IsRoot (x.leastNoRoots.untop ht) r :=
   (leastNoRoots_mem ht).2.2 r hr
 
 @[simp]
@@ -797,7 +843,7 @@ theorem coeff_leastNoRoots_zero_ne {x : Nimber} (ht) :
   obtain rfl | hx := eq_bot_or_bot_lt x
   · simp at ht
   · rw [coeff_zero_eq_eval_zero]
-    exact leastNoRoots_not_root_of_lt _ hx
+    exact not_isRoot_leastNoRoots_of_lt _ hx
 
 @[simp]
 theorem leastNoRoots_ne_zero (x : Nimber) : leastNoRoots x ≠ 0 := by
@@ -826,6 +872,11 @@ theorem leastNoRoots_ne_X_pow (x : Nimber) (n : ℕ) :
   have ht := hp ▸ WithTop.coe_ne_top
   rw [← WithTop.coe_untop _ ht, WithTop.coe_inj] at hp
   exact leastNoRoots_ne_X_pow' _ _ _ hp
+
+theorem X_pow_lt_leastNoRoots_of_le_degree {x : Nimber} {n : ℕ} (ht)
+    (h : n ≤ (x.leastNoRoots.untop ht).degree) : .some (X ^ n) < x.leastNoRoots := by
+  apply lt_of_le_of_ne _ (leastNoRoots_ne_X_pow _ _).symm
+  rwa [← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Lex.X_pow_le_iff]
 
 theorem leastNoRoots_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
     (hp₀ : 0 < p.degree) (hpk : ∀ k, p.coeff k < x) (hr : ∀ r < x, ¬ p.IsRoot r) :
@@ -871,6 +922,7 @@ theorem IsField.roots_eq_map {x : Nimber} (h : IsField x) {p : Nimber[X]}
   simpa using (h.splits_subfield (p := h.embed p hpk) (by simpa)).roots_map
     (Subfield.subtype _)
 
+-- TODO: use `Polynomial.toSubring` and generalize to rings.
 theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
     (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
   have := h.roots_eq_map hpn hpk ▸ hr
@@ -907,7 +959,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
       have ht' := ht ▸ WithTop.coe_ne_top
       simpa [← ht] using coeff_leastNoRoots_zero_ne ht'
     · have ht' := ht ▸ WithTop.coe_ne_top
-      apply leastNoRoots_not_root_of_lt ht' (r := z / y)
+      apply not_isRoot_leastNoRoots_of_lt ht' (r := z / y)
       · apply h.mul_lt _ (h.inv_lt_of_not_isField h' hy)
         simpa [← ht] using coeff_leastNoRoots_lt ht' 0
       · have hy₀ : y ≠ 0 := by
@@ -915,6 +967,29 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
           apply (degree_C_le (R := Nimber)).not_gt
           simpa [← ht] using degree_leastNoRoots_pos ht'
         simp [← ht, mul_div_cancel₀, hy₀]
+
+theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
+    .some (X ^ 2) < leastNoRoots x := by
+  apply (le_of_forall_lt_imp_ne ..).lt_of_ne (leastNoRoots_ne_X_pow x 2).symm
+  simp_rw [WithTop.forall_lt_coe, Lex.lt_X_pow_iff, Nat.cast_ofNat, ← WithBot.succ_one',
+    Order.lt_succ_iff]
+  intro y hy hy'
+  rw [WithTop.eq_untop hy'] at hy
+  generalize_proofs ht at hy
+  obtain ⟨a, ha, b, hp⟩ := natDegree_eq_one.1 <| natDegree_eq_of_degree_eq_some <|
+    hy.eq_of_not_lt (by simp [one_le_degree_leastNoRoots_pos])
+  apply hp ▸ not_isRoot_leastNoRoots_of_lt ht (r := b / a) (h.div_lt ..)
+  · simp [mul_div_cancel₀, ha]
+  · convert hp ▸ coeff_leastNoRoots_lt ht 0
+    simp
+  · convert hp ▸ coeff_leastNoRoots_lt ht 1
+    simp
+
+theorem IsRing.toIsField_of_X_sq_lt_leastNoRoots {x : Nimber} (h : IsRing x)
+    (h' : .some (X ^ 2) ≤ leastNoRoots x) : IsField x := by
+  contrapose! h'
+  rw [h.leastNoRoots_eq_of_not_isField h', WithTop.coe_lt_coe]
+  exact ⟨2, by aesop⟩
 
 theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     Monic (x.leastNoRoots.untop ht) := by
@@ -934,7 +1009,7 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
   · have H := coeff_leastNoRoots_lt ht
     have : c⁻¹ < x := h.inv_lt (H _)
     apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
-  · have := @leastNoRoots_not_root_of_lt x
+  · have := @not_isRoot_leastNoRoots_of_lt x
     aesop
 
 theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
@@ -952,6 +1027,41 @@ theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht)
   rw [isRoot_map_iff h.toSubfield.subtype_injective] at root
   replace root := root.dvd dvd
   rw [← isRoot_map_iff h.toSubfield.subtype_injective, map_embed] at root
-  exact leastNoRoots_not_root_of_lt ht hr root
+  exact not_isRoot_leastNoRoots_of_lt ht hr root
+
+-- TODO: can we golf this using `finite_range_coeff`?
+theorem _root_.Polynomial.exists_gt_of_forall_coeff_gt {s : Set Nimber} {p : Nimber[X]}
+    (h : ∀ k, ∃ a ∈ s, p.coeff k < a) : ∃ a ∈ s, ∀ k, p.coeff k < a := by
+  choose f hf using h
+  obtain ⟨c, hc⟩ := ((Finset.range (p.natDegree + 1)).image f).exists_maximal (by simp)
+  have hc' := hc.1
+  simp_rw [Finset.mem_image, Finset.mem_range, Nat.lt_succ_iff] at hc'
+  obtain ⟨n, hn, rfl⟩ := hc'
+  refine ⟨_, (hf n).1, fun k ↦ ?_⟩
+  obtain hk | hk := le_or_gt k p.natDegree
+  · apply (hf k).2.trans_le (hc.isGreatest.2 _)
+    aesop
+  · rw [p.coeff_eq_zero_of_natDegree_lt hk]
+    exact (hf n).2.bot_lt
+
+theorem le_leastNoRoots_sSup {s : Set Nimber} {p : WithTop Nimber[X]}
+    (H : ∀ x ∈ s, p ≤ leastNoRoots x) : p ≤ leastNoRoots (sSup s) := by
+  by_cases! bdd : ¬ BddAbove s
+  · simp [csSup_of_not_bddAbove bdd]
+  obtain rfl | ne := s.eq_empty_or_nonempty
+  · simp
+  apply le_of_forall_lt_imp_ne
+  rintro _ hp rfl
+  have := coeff_leastNoRoots_lt hp.ne_top
+  simp_rw [lt_csSup_iff bdd ne] at this
+  obtain ⟨x, hx, hx'⟩ := exists_gt_of_forall_coeff_gt this
+  apply (hp.trans_le (H x hx)).not_ge
+  rw [← WithTop.coe_untop _ hp.ne_top]
+  exact leastNoRoots_le_of_not_isRoot (degree_leastNoRoots_pos ..) hx'
+    fun r hr ↦ not_isRoot_leastNoRoots_of_lt _ (hr.trans_le <| le_csSup bdd hx)
+
+theorem le_leastNoRoots_iSup {ι} {f : ι → Nimber} {p : WithTop Nimber[X]}
+    (H : ∀ i, p ≤ leastNoRoots (f i)) : p ≤ leastNoRoots (⨆ i, f i) :=
+  le_leastNoRoots_sSup (by simpa)
 
 end Nimber
