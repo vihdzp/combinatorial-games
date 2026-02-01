@@ -561,6 +561,15 @@ theorem IsField.mul_opow_eq_of_lt (hx : IsField x) (y : Ordinal) (hz : z < x) :
     ∗(val x ^ y * val z) = ∗(val x ^ y) * z :=
   hx.mul_opow_eq_of_lt' y hz
 
+/-- A version of `IsField.mul_pow_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.mul_pow_eq_of_lt' {x z : Ordinal}
+    (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : x ^ n * z = val (∗(x ^ n) * ∗z) :=
+  mod_cast hx.mul_opow_eq_of_lt' n hz
+
+theorem IsField.mul_pow_eq_of_lt {x z : Nimber}
+    (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
+  mod_cast hx.mul_opow_eq_of_lt n hz
+
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
