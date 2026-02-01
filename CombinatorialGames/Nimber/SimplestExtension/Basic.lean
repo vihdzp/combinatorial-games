@@ -532,8 +532,8 @@ written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
 
-/-- A version of `IsField.mul_opow_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsField.mul_opow_eq_of_lt' {x z : Ordinal}
+/-- A version of `IsField.opow_mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
     (hx : IsField (∗x)) (y : Ordinal) (hz : z < x) : x ^ y * z = val (∗(x ^ y) * ∗z) := by
   have hx' := hx.opow' y
   obtain rfl | hy := eq_zero_or_pos y; · simp
@@ -548,8 +548,8 @@ theorem IsField.mul_opow_eq_of_lt' {x z : Ordinal}
       have hay : log x a < y := by
         rwa [← lt_opow_iff_log_lt _ ha']
         exact hx.one_lt
-      rw [IsField.mul_opow_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
-        ← of_val (∗_ * ∗_), ← IsField.mul_opow_eq_of_lt' hx _ hax]
+      rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
+        ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
       apply (opow_le_opow_right hx.pos hay.succ_le).trans_lt'
       rw [opow_succ]
       exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
@@ -557,18 +557,18 @@ theorem IsField.mul_opow_eq_of_lt' {x z : Ordinal}
   · exact mod_lt _ (opow_ne_zero _ hz.ne_bot)
 termination_by y
 
-theorem IsField.mul_opow_eq_of_lt (hx : IsField x) (y : Ordinal) (hz : z < x) :
+theorem IsField.opow_mul_eq_of_lt (hx : IsField x) (y : Ordinal) (hz : z < x) :
     ∗(val x ^ y * val z) = ∗(val x ^ y) * z :=
-  hx.mul_opow_eq_of_lt' y hz
+  hx.opow_mul_eq_of_lt' y hz
 
-/-- A version of `IsField.mul_pow_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsField.mul_pow_eq_of_lt' {x z : Ordinal}
+/-- A version of `IsField.pow_mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.pow_mul_eq_of_lt' {x z : Ordinal}
     (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : x ^ n * z = val (∗(x ^ n) * ∗z) :=
-  mod_cast hx.mul_opow_eq_of_lt' n hz
+  mod_cast hx.opow_mul_eq_of_lt' n hz
 
-theorem IsField.mul_pow_eq_of_lt {x z : Nimber}
+theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
-  mod_cast hx.mul_opow_eq_of_lt n hz
+  mod_cast hx.opow_mul_eq_of_lt n hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))

@@ -222,7 +222,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have H : ∀ k, (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
           refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
           have : (f y).1 < x := (f y).2
-          apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
+          apply h.coeff_add_lt <;> aesop
         have IH := IH h' hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
         exact IH ▸ (oeval_lt_opow H (lt_succ_of_le hq')).ne
