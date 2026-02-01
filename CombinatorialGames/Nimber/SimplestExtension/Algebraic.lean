@@ -3,6 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -20,6 +21,16 @@ universe u
 open Order Ordinal Polynomial Set
 
 /-! ### For Mathlib -/
+
+@[simp]
+theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
+  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
+  · simp
+  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
+
+@[simp]
+theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
+  mod_cast one_lt_opow (y := n) h
 
 namespace Finsupp
 
@@ -48,7 +59,7 @@ namespace Nimber
 
 /-- A nimber `x` is `n`-th degree closed when `IsRing x`, and every non-constant polynomial in the
 nimbers with degree less or equal to `n` and coefficients less than `x` has a root that's less than
-`x`. Note that `0` and `1` are `n`-th degree closed under this definition.
+`x`.
 
 We don't extend `IsField x`, as for `1 ≤ n`, this predicate implies it.
 
@@ -462,5 +473,88 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) {p : Nimber[X
       ((degree_modByMonic_lt _ hem).trans_le (by simp [hn]))) (by simp)]
   exact oeval_lt_opow (by simp) <| (degree_map _ _).trans_lt
     ((degree_modByMonic_lt _ hem).trans_le (by simp [hn]))
+
+/-! ### Nimbers are algebraically closed -/
+
+open Pointwise
+
+private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
+  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
+  ext k
+  simpa using congrFun h k
+
+/-- The set of roots of polynomials with coefficients less than `x`. -/
+private def rootSet (x : Nimber) : Set Nimber :=
+  ⋃ p : {p : Nimber[X] // ∀ k, p.coeff k < x}, p.1.roots.toFinset
+
+private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
+  small_iUnion _
+
+/-- Returns the smallest `IsAlgClosed` that's at least `x`. -/
+noncomputable def algClosure (x : Nimber) : Nimber :=
+  ⨆ n : ℕ, (fun y ↦ fieldClosure (sSup <| (succ '' rootSet y)))^[n] x.fieldClosure
+
+@[simp]
+theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
+  le_ciSup_of_le (bddAbove_of_small _) 0 (by simp)
+
+private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
+  refine IsField.iSup fun n ↦ ?_
+  cases n
+  · simp
+  · rw [Function.iterate_succ_apply']
+    simp
+
+private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
+    (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
+  simp_rw [algClosure, lt_ciSup_iff (bddAbove_of_small _)] at hpk ⊢
+  have hpk' : ∀ k, ∃ a ∈ (range fun n ↦
+      (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure), p.coeff k < a :=
+    by simpa
+  obtain ⟨_, ⟨n, rfl⟩, hn⟩ := exists_gt_of_forall_coeff_gt hpk'
+  use n + 1
+  rw [Function.iterate_succ_apply', ← mem_subfieldClosure_Iio]
+  apply Subfield.mem_closure_of_mem
+  rw [mem_Iio, ← succ_le_iff]
+  apply le_csSup (bddAbove_of_small _) (mem_image_of_mem ..)
+  rw [rootSet, mem_iUnion]
+  refine ⟨⟨p, hn⟩, ?_⟩
+  simp_all
+
+private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
+    (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
+    (hr : ∀ r, ¬ p.IsRoot r) : leastNoRoots (algClosure x) = p := by
+  apply le_antisymm
+  · exact leastNoRoots_le_of_not_isRoot hp
+      (fun k ↦ (hpk k).trans_le (le_algClosure x)) fun r _ ↦ hr r
+  · apply le_of_forall_lt_imp_ne
+    rw [WithTop.forall_lt_coe]
+    intro q hq hq'
+    have ht := hq' ▸ WithTop.coe_ne_top
+    have hq' : q = x.algClosure.leastNoRoots.untop ht := by simp_rw [← hq', WithTop.untop_coe]
+    obtain ⟨r, hr⟩ := IH q hq (hq' ▸ degree_leastNoRoots_pos ht)
+    exact leastNoRoots_not_root_of_lt ht
+      (algClosure.root_lt (by aesop) (hq' ▸ coeff_leastNoRoots_lt ht) hr) (hq' ▸ hr)
+
+/-- The nimbers are an algebraically closed field. -/
+instance : _root_.IsAlgClosed Nimber := by
+  suffices H : ∀ p : Nimber[X], 0 < p.degree → ∃ r, p.IsRoot r from
+    .of_exists_root _ fun p _ hp ↦ H _ hp.degree_pos
+  intro p
+  induction p using WellFoundedLT.induction with | ind p IH
+  intro hp
+  by_contra! hr
+  obtain ⟨x, hpk⟩ : ∃ x, ∀ k, p.coeff k < x := by
+    refine ⟨⨆ k, succ (p.coeff k), fun k ↦ ?_⟩
+    rw [lt_ciSup_iff' (bddAbove_of_small _)]
+    exact ⟨k, lt_succ _⟩
+  have ht := leastNoRoots_algClosure' hp hpk IH hr
+  have hp' := (IsField.algClosure x).isRoot_leastNoRoots (ht ▸ WithTop.coe_ne_top)
+  simp_rw [ht, WithTop.untop_coe] at hp'
+  exact hr _ hp'
+
+/-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
+corollary. -/
+proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
 end Nimber

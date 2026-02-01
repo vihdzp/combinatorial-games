@@ -35,28 +35,6 @@ theorem Nat.pow_log_eq_self_iff {b n : ℕ} (hb : b ≠ 0) :
     · simp
     · rw [Nat.log_pow hb]
 
-theorem Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] {x y : β}
-    (hp : ∃ a, p a) (hn : ∃ a, ¬ p a) :
-    Set.range (fun a ↦ if p a then x else y) = {x, y} := by
-  ext
-  constructor
-  · rintro ⟨a, rfl⟩
-    dsimp
-    split_ifs <;> simp
-  · rintro (rfl | rfl)
-    on_goal 1 => obtain ⟨a, ha⟩ := hp
-    on_goal 2 => obtain ⟨a, ha⟩ := hn
-    all_goals use a; simp_all
-
-theorem range_zero_pow {M : Type*} [MonoidWithZero M] : Set.range ((0 : M) ^ ·) = {1, 0} := by
-  simp_rw [zero_pow_eq]
-  exact Set.range_if ⟨0, rfl⟩ ⟨1, one_ne_zero⟩
-
-instance (b n : ℕ) : Decidable (n ∈ Set.range (b ^ ·)) :=
-  match b with
-  | 0 => decidable_of_iff (n ∈ {1, 0}) (by rw [range_zero_pow])
-  | b + 1 => decidable_of_iff _ (Nat.pow_log_eq_self_iff b.succ_ne_zero)
-
 theorem pos_of_mem_powers {n : ℕ} (h : n ∈ Submonoid.powers 2) : 0 < n := by
   obtain ⟨n, rfl⟩ := h
   exact pow_pos (Nat.succ_pos 1) n

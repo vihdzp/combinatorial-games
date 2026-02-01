@@ -17,6 +17,21 @@ API between both stays consistent.
 
 open Lean
 
+/-! ### For Mathlib -/
+
+namespace Ordinal
+
+theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+
+@[simp] theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
+@[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
+  rw [← succ_zero, Order.Iio_succ]; exact Set.Iic_bot
+@[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
+  rw [← succ_one, Order.Iio_succ]; ext; simp [le_one_iff]
+
+end Ordinal
+
 /-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
@@ -98,6 +113,14 @@ theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+@[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
+@[simp] theorem $(mkIdent `val_le_one) {a} : $(mkVal Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
+@[simp] theorem $(mkIdent `one_le_of) {a} : 1 ≤ $(mkOf Alias) a ↔ 1 ≤ a := .rfl
+@[simp] theorem $(mkIdent `one_le_val) {a} : 1 ≤ $(mkVal Alias) a ↔ 1 ≤ a := .rfl
+@[simp] theorem $(mkIdent `of_lt_one) {a} : $(mkOf Alias) a < 1 ↔ a < 1 := .rfl
+@[simp] theorem $(mkIdent `val_lt_one) {a} : $(mkVal Alias) a < 1 ↔ a < 1 := .rfl
+@[simp] theorem $(mkIdent `one_lt_of) {a} : 1 < $(mkOf Alias) a ↔ 1 < a := .rfl
+@[simp] theorem $(mkIdent `one_lt_val) {a} : 1 < $(mkVal Alias) a ↔ 1 < a := .rfl
 
 theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVal Alias) a + 1) :=
   rfl
@@ -107,9 +130,6 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
   rfl
 
 @[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := by
-  change Order.succ (0 : $Source) = 1
-  simp
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -148,10 +168,14 @@ theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ord
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
 
--- TODO: upstream to Mathlib for Ordinal
+@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
+
+@[simp] theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
+@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
+
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+  Ordinal.eq_natCast_of_le_natCast h
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
@@ -164,7 +188,7 @@ instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
 instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
 
 @[simp]
-theorem $(mkIdent `Iio_one_default_eq) : 
+theorem $(mkIdent `Iio_one_default_eq) :
     (default : Set.Iio (1 : $Alias)) = ⟨0, zero_lt_one' $Alias⟩ :=
   rfl
 
