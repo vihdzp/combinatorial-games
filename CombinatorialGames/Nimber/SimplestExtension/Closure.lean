@@ -161,11 +161,27 @@ theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
     x < groupClosure y ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
+theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = x := by
+  apply (le_groupClosure x).antisymm'
+  rw [h.groupClosure_le_iff]
+
+@[simp]
+theorem groupClosure_zero : groupClosure 0 = 1 := by
+  rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
+  simp
+
+@[simp]
+theorem groupClosure_one : groupClosure 1 = 1 :=
+  IsGroup.one.groupClosure_eq
+
 theorem groupClosure_mono : Monotone groupClosure := by
   intro x y h
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact h.trans (le_groupClosure y)
 
+theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) : sorry := sorry
+
+#exit
 end AddSubgroup
 
 /-! ### Rings -/
