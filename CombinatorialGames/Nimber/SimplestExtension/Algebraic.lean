@@ -455,6 +455,47 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
+theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
+  obtain rfl | hn1 := eq_or_ne n 1
+  · simpa using hf
+  cases n with
+  | zero => simpa [hn] using degree_leastNoRoots_pos ht
+  | succ n =>
+    replace h : IsNthDegreeClosed n x := by
+      rw [isNthDegreeClosed_iff_X_pow_le_leastNoRoots hf.toIsRing,
+        ← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Nimber.Lex.X_pow_le_iff, hn]
+    have hxr := hf.toIsRing.pow_degree_leastNoRoots _ hn
+    refine ⟨hxr, fun y hy0 hy ↦ ?_⟩
+    obtain ⟨hc, hm⟩ : ∃ hc, Irreducible (hf.embed _ hc) :=
+      ⟨coeff_leastNoRoots_lt ht, irreducible_embed_leastNoRoots hf ht⟩
+    have hxn : x < of (val x ^ (n + 1)) := by
+      simpa using (Ordinal.opow_lt_opow_iff_right hf.one_lt).2
+        (Nat.cast_lt.2 (show 1 < n + 1 by lia))
+    have hcc := Set.Iio_subset_Iio hxn.le
+    let r : hf.toSubfield[X] →+* hxr.toSubring := eval₂RingHom (Subring.inclusion hcc) ⟨x, hxn⟩
+    have hoc : hxr.toSubring.subtype.comp (Subring.inclusion hcc) = hf.toSubfield.subtype := rfl
+    have hr : (RingHom.ker r).IsMaximal := by
+      have hm' := PrincipalIdealRing.isMaximal_of_irreducible hm
+      refine hm'.eq_of_le (RingHom.ker_ne_top r) ?_ ▸ hm'
+      rw [Submodule.span_le, Set.singleton_subset_iff, SetLike.mem_coe, RingHom.mem_ker,
+        ← Subtype.val_inj, ← Subring.subtype_apply, Subring.coe_zero,
+        coe_eval₂RingHom, Polynomial.hom_eval₂, ← eval_map, hoc, map_embed]
+      exact hf.isRoot_leastNoRoots ht
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow hf.ne_zero hy
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd
+    rw [← h.eval_eq_of_lt hyd hyc, ← hf.map_embed hyc, ← hoc, eval_map,
+      show eval₂ _ x _ = eval₂ _ (hxr.toSubring.subtype ⟨x, hxn⟩) _ from rfl,
+      ← Polynomial.hom_eval₂, ← coe_eval₂RingHom] at hy0 ⊢
+    rw [← map_zero hxr.toSubring.subtype, hxr.toSubring.subtype_injective.ne_iff,
+      ne_eq, ← RingHom.mem_ker] at hy0
+    obtain ⟨i, s, hs, hi⟩ := hr.exists_inv hy0
+    rw [inv_eq_of_mul_eq_one_left]
+    · exact (r i).2
+    · replace hi := congrArg r hi
+      rw [map_add, map_mul, hs] at hi
+      simpa using congrArg hxr.toSubring.subtype hi
+
 /-! ### Nimbers are algebraically closed -/
 
 open Pointwise
