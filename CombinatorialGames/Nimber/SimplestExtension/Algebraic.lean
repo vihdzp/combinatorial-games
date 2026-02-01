@@ -495,7 +495,7 @@ instance : _root_.IsAlgClosed Nimber := by
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
-/-! ### Perfect fields -/
+/-! ### Square roots -/
 
 /-- The square root of a nimber `x` is the unique value with `(√x)^2 = x`. -/
 noncomputable def sqrt : Nimber ≃+* Nimber :=
@@ -517,21 +517,9 @@ theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
 
 theorem sqrt_eq {x y : Nimber} (h : x ^ 2 = y) : √y = x := by rw [← h, sqrt_sq]
 
-/-- A nimber `x` is a perfect field when it's a field closed under square roots. -/
-@[mk_iff]
-structure IsPerfect (x : Nimber) extends IsField x where
-  sqrt_lt ⦃y : Nimber⦄ (hy : y < x) : √y < x
-
-theorem isPerfect_iff
-
-#exit
-
-theorem IsNthDegreeClosed.toIsPerfect {x y : Nimber} {n : ℕ} (h : IsNthDegreeClosed n x)
-    (hn : 2 ≤ n) (hy : y < x) : √y < x := by
-  apply h.root_lt (p := X ^ 2 - C y)
-  · apply (Nat.cast_le.2 hn).trans'
-    rw [Nat.cast_ofNat]
-    compute_degree
+theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + C y) < leastNoRoots x) : √y < x := by
+  apply h.root_lt hx
   · have := h.pos
     have := h.one_lt
     aesop
@@ -540,9 +528,10 @@ theorem IsNthDegreeClosed.toIsPerfect {x y : Nimber} {n : ℕ} (h : IsNthDegreeC
     · apply_fun (coeff · 2)
       simp
 
-theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x :=
-  (h.toIsNthDegreeClosed 2).sqrt_lt le_rfl hy
-
-proof_wanted sqrt_
+theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
+  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
+  use 1
+  aesop
 
 end Nimber
