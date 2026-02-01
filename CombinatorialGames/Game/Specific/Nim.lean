@@ -93,7 +93,7 @@ theorem nim_injective : Function.Injective nim := by
 @[simp] theorem nim_inj {a b : Nimber} : nim a = nim b ↔ a = b := nim_injective.eq_iff
 
 @[simp, game_cmp] theorem nim_zero : nim 0 = 0 := by ext p; cases p <;> simp
-@[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp [eq_comm]
+@[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
