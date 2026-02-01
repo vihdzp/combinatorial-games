@@ -493,6 +493,6 @@ instance : _root_.IsAlgClosed Nimber := by
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
-proof_wanted algClosure_two : algClosure (∗2) = ∗(ω ^ ω ^ ω)
+proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
 end Nimber
