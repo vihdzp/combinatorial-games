@@ -241,7 +241,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         exact left_le_opow _ (mod_cast n.succ_pos)
       rw [add_comm]
       congr
-      refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
+      refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn le_rfl ?_
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
       · convert hpk (n + 1)
         simpa using q.coeff_eq_zero_of_degree_lt hqn
