@@ -40,9 +40,6 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-theorem mk_dyadic {r : Dyadic} (h : r ≠ 0) : mk (r.toRat : Surreal) = 0 :=
-  mk_ratCast (mod_cast h)
-
 @[simp]
 theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
@@ -506,6 +503,19 @@ theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
 
 @[simp] theorem neg_veq {x y : Surreal} : -x =ᵥ y ↔ x =ᵥ y := by simp [veq_def]
 @[simp] theorem veq_neg {x y : Surreal} : x =ᵥ -y ↔ x =ᵥ y := by simp [veq_def]
+@[simp] theorem vle_neg {x y : Surreal} : x ≤ᵥ -y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem neg_vle {x y : Surreal} : -x ≤ᵥ y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem vlt_neg {x y : Surreal} : x <ᵥ -y ↔ x <ᵥ y := by simp [vlt_def]
+@[simp] theorem neg_vlt {x y : Surreal} : -x <ᵥ y ↔ x <ᵥ y := by simp [vlt_def]
+
+-- #34579
+@[simp]
+theorem not_vlt_zero (x : Surreal) : ¬ x <ᵥ 0 := by
+  simp
+
+-- #34579
+theorem _root_.ValuativeRel.vlt.ne_zero (h : x <ᵥ y) : y ≠ 0 := by
+  rintro rfl; exact not_vlt_zero _ h
 
 theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
@@ -606,14 +616,14 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
     · simp
     · exact abs_of_pos <| h.trans (Numeric.lt_right hy)
 
-private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
+private theorem exists_mk_wpow_eq {x : IGame.{u}} [Numeric x] (h : 0 < x) :
     ∃ y : Subtype Numeric, ArchimedeanClass.mk (ω^ mk y) = .mk (mk x) := by
   have IHl (y : (xᴸ ∩ Ioi 0 :)) :
       ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
-    have := y.2.1; exists_mk_wpow_eq' y.2.2
+    have := y.2.1; exists_mk_wpow_eq y.2.2
   have IHr (y : xᴿ) :
       ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
-    exists_mk_wpow_eq' (h.trans (Numeric.lt_right y.2))
+    exists_mk_wpow_eq (h.trans (Numeric.lt_right y.2))
   choose f hf using IHl
   choose g hg using IHr
   by_contra! H
@@ -639,10 +649,10 @@ decreasing_by igame_wf
 theorem exists_wpow_veq (h : x ≠ 0) : ∃ y, ω^ y =ᵥ x := by
   simp_rw [veq_def]
   obtain h | h := h.lt_or_gt <;> cases x
-  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' (IGame.zero_lt_neg.2 h)
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq (IGame.zero_lt_neg.2 h)
     use .mk y
     simpa using hy
-  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' h
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq h
     exact ⟨_, hy⟩
 
 /-! ### ω-logarithm -/
@@ -721,6 +731,19 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
+
+theorem wlog_add_eq_left {x y : Surreal} (h : y <ᵥ x) : wlog (x + y) = wlog x := by
+  apply wlog_congr
+  rw [veq_def, mk_add_eq_mk_left (vlt_def.1 h)]
+
+theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x := by
+  rw [add_comm, wlog_add_eq_left h]
+
+theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
+  simpa using @wlog_add_eq_left x (-y)
+
+theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
+  simpa using @wlog_add_eq_right (-x) y
 
 theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
   rw [← wpow_vle_wpow_iff]

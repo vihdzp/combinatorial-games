@@ -121,7 +121,7 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
   simpa
 
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext p; cases p <;> simp
-@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp [eq_comm]
+@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
