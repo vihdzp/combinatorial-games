@@ -360,9 +360,7 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
 
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
-/-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
-then `x` is the root of some polynomial with coefficients `< x`. -/
-theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
+private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
   have hx₀ : 0 < x := h.zero_lt
@@ -421,6 +419,41 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       rw [eval_prod, Finset.prod_eq_zero (Finset.mem_univ i), ne_comm]
       · exact leastNoRoots_not_root_of_lt _ (f i).2
       · simp
+
+/-- The fourth **simplest extension theorem**: if `x` is a ring that isn't algebraically closed,
+then `x` is the root of some polynomial with coefficients `< x`. -/
+theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
+    (x.leastNoRoots.untop ht).IsRoot x := by
+  by_cases hf : IsField x
+  · exact hf.isRoot_leastNoRoots ht
+  · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
+    simp [h.ne_zero]
+
+theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
+  obtain rfl | hn1 := eq_or_ne n 1
+  · simpa using h
+  cases n with
+  | zero => simpa [hn] using degree_leastNoRoots_pos ht
+  | succ n =>
+    replace h : IsNthDegreeClosed n x := by
+      rwa [isNthDegreeClosed_iff_X_pow_le_leastNoRoots, ← WithTop.coe_untop _ ht,
+        WithTop.coe_le_coe, Nimber.Lex.X_pow_le_iff, hn]
+    have hf : IsField x := h.toIsField (by lia)
+    have hem : (hf.embed _ (coeff_leastNoRoots_lt ht)).Monic := by
+      simpa using hf.monic_leastNoRoots _
+    refine ⟨h.pow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
+    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd hzd
+    rw [← h.eval_eq_of_lt hyd hyc, ← h.eval_eq_of_lt hzd hzc, ← hf.map_embed hyc,
+      ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
+      Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
+      h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
+    on_goal 1 => apply oeval_lt_opow (by simp)
+    on_goal 2 => rw [← WithBot.lt_add_one]
+    all_goals exact (degree_map ..).trans_lt <|
+      (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
 /-! ### Nimbers are algebraically closed -/
 
