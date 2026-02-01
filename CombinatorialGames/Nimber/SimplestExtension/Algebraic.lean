@@ -97,6 +97,7 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
         have hxn : val x ≤ val x ^ (n + 1) := by
           rw [← opow_natCast]
           exact left_le_opow _ (mod_cast n.succ_pos)
+        -- replace h : IsField x := h.toIsField_of_X_sq_lt_leastNoRoots (h'.trans' (by simp))
         refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
           @h.inv_lt fun a b ha hb ↦ ?_
         · convert hpk (n + 1)
