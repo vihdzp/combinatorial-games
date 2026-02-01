@@ -374,7 +374,7 @@ theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne :
 theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hw : IsGroup (∗w))
     (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
-    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < x) :
+    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < ∗x) :
     x * z = val (∗x * ∗z) := by
   apply le_antisymm
   · apply le_of_forall_lt_imp_ne

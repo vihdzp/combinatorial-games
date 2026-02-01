@@ -206,6 +206,11 @@ theorem IsField.leadingCoeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
   rfl
 
 @[simp]
+theorem IsField.monic_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
+    (hp : ∀ k, p.coeff k < x) : (h.embed p hp).Monic ↔ p.Monic := by
+  simp [Monic, ← Subtype.val_inj]
+
+@[simp]
 theorem IsField.map_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
     (hp : ∀ k, p.coeff k < x) : (h.embed p hp).map (Subfield.subtype _) = p := by
   ext; simp
@@ -585,14 +590,14 @@ theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
   simpa [pos_iff_ne_zero]
 
 theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
-    (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : val (oeval x p) < ∗(x.val ^ n) := by
+    (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : oeval x p < ∗(x.val ^ n) := by
   obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
     have hn' : p.degree ≤ n := le_of_lt_succ hn
     obtain ⟨a, q, rfl, hq⟩ := eq_add_C_mul_X_pow_of_degree_le hn'
-    rw [add_comm, oeval_C_mul_X_pow_add hq, val_of, pow_succ]
+    rw [add_comm, oeval_C_mul_X_pow_add hq, of.lt_iff_lt, pow_succ]
     refine Ordinal.mul_add_lt (IH (fun k ↦ ?_) hq) ?_
     · obtain h | h := lt_or_ge k n
       · convert hpk k using 1
@@ -601,7 +606,7 @@ theorem oeval_lt_opow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     · simpa [q.coeff_eq_zero_of_degree_lt hq] using hpk n
 
 theorem oeval_lt_opow_iff {x : Nimber} {p : Nimber[X]} {n : ℕ}
-    (hpk : ∀ k, p.coeff k < x) : val (oeval x p) < ∗(x.val ^ n) ↔ p.degree < n where
+    (hpk : ∀ k, p.coeff k < x) : oeval x p < ∗(x.val ^ n) ↔ p.degree < n where
   mp H := by
     obtain rfl | hp₀ := eq_or_ne p 0; · simp
     obtain hx₁ | hx₁ := le_or_gt x 1; · cases hp₀ <| polynomial_eq_zero_of_le_one hx₁ hpk
@@ -706,7 +711,7 @@ theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
 
 /-- A version of `eq_oeval_of_lt_opow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_opow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
-    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
+    ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ oeval (∗x) p = y := by
   induction n generalizing y with
   | zero => use 0; simp_all [pos_iff_ne_zero]
   | succ n IH =>
