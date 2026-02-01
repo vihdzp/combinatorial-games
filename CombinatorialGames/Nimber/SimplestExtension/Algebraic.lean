@@ -34,7 +34,7 @@ theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n
 
 namespace Nimber
 
-/-! ### More lemmas about rings -/
+/-! ### Lemmas relating rings to `leastNoRoots` -/
 
 -- TODO: We're missing `IsRing.root_lt` which would avoid the duplication.
 private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
