@@ -381,7 +381,7 @@ theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne :
 /-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hz : IsGroup (∗z))
-    (hyx : y ≤ x) (hwy : w < y) (hyz : y ≤ z)
+    (hyx : y ≤ x) (hyz : y ≤ z) (hwy : w < y)
     (H : ∀ a < y, (∗a)⁻¹ < ∗z) (H' : ∀ ⦃a b⦄, a < x → b < z → ∗a * ∗b < ∗x) :
     x * w = val (∗x * ∗w) := by
   apply le_antisymm
@@ -389,7 +389,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     rw [forall_lt_mul]
     intro a ha b hb
     rw [ne_eq, ← of_eq_iff, hx.mul_add_eq_of_lt' hb,
-      hx.mul_eq_of_lt' hy hz hyx (ha.trans hwy) hyz H H', add_comm, CharTwo.add_eq_iff_eq_add,
+      hx.mul_eq_of_lt' hy hz hyx hyz (ha.trans hwy) H H', add_comm, CharTwo.add_eq_iff_eq_add,
       of_val, ← mul_add]
     obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hwa)
@@ -402,20 +402,20 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     rw [of.lt_iff_lt] at hb
     have hwz := hwy.trans_le hyz
     have hx' : val (a * (∗b + ∗w)) < x := H' ha (hz.add_lt (hb.trans hwz) hwz)
-    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hz hyx (hb.trans hwy) hyz H H',
+    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hz hyx hyz (hb.trans hwy) H H',
       ← of_val (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by w
 
 theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z)
-    (hyx : y ≤ x) (hwy : w < y) (hyz : y ≤ z)
+    (hyx : y ≤ x) (hyz : y ≤ z) (hwy : w < y)
     (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : x *ₒ w = x * w :=
-  hx.mul_eq_of_lt' hy hz hyx hwy hyz H H'
+  hx.mul_eq_of_lt' hy hz hyx hyz hwy H H'
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = val (∗x * ∗z) :=
-  hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hyx hzy hyx H hx.mul_lt
+  hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hyx hyx hzy H hx.mul_lt
 
 theorem IsRing.mul_eq_of_lt (hx : IsRing x) (hy : IsGroup y)
     (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
@@ -537,7 +537,7 @@ theorem IsField.mul_opow_eq_of_lt' {x z : Ordinal}
     (hx : IsField (∗x)) (y : Ordinal) (hz : z < x) : x ^ y * z = val (∗(x ^ y) * ∗z) := by
   have hx' := hx.opow' y
   obtain rfl | hy := eq_zero_or_pos y; · simp
-  apply hx'.mul_eq_of_lt' hx.toIsGroup hx.toIsGroup (left_le_opow _ hy) hz le_rfl @hx.inv_lt
+  apply hx'.mul_eq_of_lt' hx.toIsGroup hx.toIsGroup (left_le_opow _ hy) le_rfl hz @hx.inv_lt
   intro a b ha hb
   induction a using WellFoundedLT.induction with | ind a IH
   obtain rfl | ha' := eq_or_ne a 0; · simpa
