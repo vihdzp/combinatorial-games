@@ -495,4 +495,54 @@ instance : _root_.IsAlgClosed Nimber := by
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
+/-! ### Perfect fields -/
+
+/-- The square root of a nimber `x` is the unique value with `(√x)^2 = x`. -/
+noncomputable def sqrt : Nimber ≃+* Nimber :=
+  (frobeniusEquiv _ 2).symm
+
+@[inherit_doc] prefix:max "√" => sqrt
+recommended_spelling "sqrt" for "√" in [sqrt, «term√_»]
+
+theorem sqrt_zero : √0 = 0 := map_zero _
+theorem sqrt_one : √1 = 1 := map_one _
+theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
+theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
+theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
+
+@[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
+@[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
+@[simp] theorem sqrt_self_mul_self (x : Nimber) : √(x * x) = x := by rw [← pow_two, sqrt_sq]
+@[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
+
+theorem sqrt_eq {x y : Nimber} (h : x ^ 2 = y) : √y = x := by rw [← h, sqrt_sq]
+
+/-- A nimber `x` is a perfect field when it's a field closed under square roots. -/
+@[mk_iff]
+structure IsPerfect (x : Nimber) extends IsField x where
+  sqrt_lt ⦃y : Nimber⦄ (hy : y < x) : √y < x
+
+theorem isPerfect_iff
+
+#exit
+
+theorem IsNthDegreeClosed.toIsPerfect {x y : Nimber} {n : ℕ} (h : IsNthDegreeClosed n x)
+    (hn : 2 ≤ n) (hy : y < x) : √y < x := by
+  apply h.root_lt (p := X ^ 2 - C y)
+  · apply (Nat.cast_le.2 hn).trans'
+    rw [Nat.cast_ofNat]
+    compute_degree
+  · have := h.pos
+    have := h.one_lt
+    aesop
+  · rw [mem_roots]
+    · simp
+    · apply_fun (coeff · 2)
+      simp
+
+theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x :=
+  (h.toIsNthDegreeClosed 2).sqrt_lt le_rfl hy
+
+proof_wanted sqrt_
+
 end Nimber
