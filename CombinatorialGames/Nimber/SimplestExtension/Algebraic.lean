@@ -3,6 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -20,6 +21,16 @@ universe u
 open Order Ordinal Polynomial Set
 
 /-! ### For Mathlib -/
+
+@[simp]
+theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
+  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
+  · simp
+  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
+
+@[simp]
+theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
+  mod_cast one_lt_opow (y := n) h
 
 namespace Finsupp
 
@@ -173,6 +184,11 @@ theorem isNthDegreeClosed_iff_X_pow_le_leastNoRoots {n : ℕ} {x : Nimber} (h : 
   mpr hx := (isNthDegreeClosed_iff_X_pow_lt_leastNoRoots h).2
     (hx.lt_of_ne' (leastNoRoots_ne_X_pow x _))
 
+theorem IsNthDegreeClosed.of_degree_leastNoRoots_eq {n : ℕ} {x : Nimber} (h : IsRing x)
+    (ht) (hn : (x.leastNoRoots.untop ht).degree = n + 1) : IsNthDegreeClosed n x := by
+  rw [isNthDegreeClosed_iff_X_pow_le_leastNoRoots h,
+    ← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Nimber.Lex.X_pow_le_iff, hn, Nat.cast_add_one]
+
 theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
     .some (X ^ 2) < leastNoRoots x := by
   rw [← isNthDegreeClosed_one_iff_isField] at h
@@ -199,7 +215,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
     have h' := h.le n.le_succ
     have hx : ∗(x.val ^ (n + 1)) = x ^ (n + 1) := by
       refine le_antisymm (le_of_forall_lt_imp_ne fun y hy ↦ ?_) (pow_le_of_forall_ne fun f ↦ ?_)
-      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' hy
+      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' hy
         have : p.coeff (n + 1) = 0 := p.coeff_eq_zero_of_degree_lt hpn
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
         rw [← IH h' hpn hpk, ← Nimber.add_eq_zero.ne]
@@ -225,7 +241,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
           apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
         have IH := IH h' hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
-        exact IH ▸ (oeval_lt_opow H (lt_succ_of_le hq')).ne
+        exact IH ▸ (oeval_lt_pow H (lt_succ_of_le hq')).ne
     obtain ⟨a, q, rfl, hqn⟩ := eq_add_C_mul_X_pow_of_degree_le hpn
     have hqn' := hqn
     rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hqn'
@@ -245,16 +261,16 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
       · convert hpk (n + 1)
         simpa using q.coeff_eq_zero_of_degree_lt hqn
-      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_opow hx₀.ne' ha
+      · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' ha
         rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hpn
         have hpn' : (p * C b).degree ≤ n := by compute_degree!
         have H : ∀ k, (p * C b).coeff k < x := by
           simp_rw [coeff_mul_C]
           exact fun k ↦ h.mul_lt (hpk k) hb
         rw [← IH h' hpn hpk, ← eval_C (a := b), ← eval_mul, IH h' hpn' H]
-        apply oeval_lt_opow H
+        apply oeval_lt_pow H
         simpa using hpn'
-    · exact oeval_lt_opow hqk hqn
+    · exact oeval_lt_pow hqk hqn
 
 theorem IsNthDegreeClosed.pow_mul_eq {n : ℕ} {x y : Nimber}
     (h : IsNthDegreeClosed n x) (hy : y < x) : x ^ n * y = ∗(x.val ^ n * y.val) := by
@@ -349,9 +365,7 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
 
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
-/-- The fourth **simplest extension theorem**: if `x` is a field that isn't algebraically closed,
-then `x` is the root of some polynomial with coefficients `< x`. -/
-theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
+private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
   have hx₀ : 0 < x := h.zero_lt
@@ -410,5 +424,135 @@ theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       rw [eval_prod, Finset.prod_eq_zero (Finset.mem_univ i), ne_comm]
       · exact leastNoRoots_not_root_of_lt _ (f i).2
       · simp
+
+/-- The fourth **simplest extension theorem**: if `x` is a ring that isn't algebraically closed,
+then `x` is the root of some polynomial with coefficients `< x`. -/
+theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
+    (x.leastNoRoots.untop ht).IsRoot x := by
+  by_cases hf : IsField x
+  · exact hf.isRoot_leastNoRoots ht
+  · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
+    simp [h.ne_zero]
+
+theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
+  obtain rfl | hn1 := eq_or_ne n 1
+  · simpa using h
+  cases n with
+  | zero => simpa [hn] using degree_leastNoRoots_pos ht
+  | succ n =>
+    replace h : IsNthDegreeClosed n x := .of_degree_leastNoRoots_eq h _ hn
+    have hf : IsField x := h.toIsField (by lia)
+    have hem : (hf.embed _ (coeff_leastNoRoots_lt ht)).Monic := by
+      simpa using hf.monic_leastNoRoots _
+    refine ⟨h.pow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hy
+    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hz
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd hzd
+    rw [← h.eval_eq_of_lt hyd hyc, ← h.eval_eq_of_lt hzd hzc, ← hf.map_embed hyc,
+      ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
+      Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
+      h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
+    on_goal 1 => apply oeval_lt_pow (by simp)
+    on_goal 2 => rw [← WithBot.lt_add_one]
+    all_goals exact (degree_map ..).trans_lt <|
+      (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
+
+theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
+  obtain rfl | hn1 := eq_or_ne n 1
+  · simpa using hf
+  cases n with
+  | zero => simpa [hn] using degree_leastNoRoots_pos ht
+  | succ n =>
+    replace h : IsNthDegreeClosed n x := .of_degree_leastNoRoots_eq hf.toIsRing _ hn
+    have hxr := hf.toIsRing.pow_degree_leastNoRoots _ hn
+    refine ⟨hxr, fun y hy0 hy ↦ ?_⟩
+    obtain ⟨hc, hm⟩ : ∃ hc, Irreducible (hf.embed _ hc) :=
+      ⟨coeff_leastNoRoots_lt ht, irreducible_embed_leastNoRoots hf ht⟩
+    have hxn : x < of (val x ^ (n + 1)) := by
+      simpa using (Ordinal.opow_lt_opow_iff_right hf.one_lt).2
+        (Nat.cast_lt.2 (show 1 < n + 1 by lia))
+    have hcc := Set.Iio_subset_Iio hxn.le
+    let r : hf.toSubfield[X] →+* hxr.toSubring := eval₂RingHom (Subring.inclusion hcc) ⟨x, hxn⟩
+    have hoc : hxr.toSubring.subtype.comp (Subring.inclusion hcc) = hf.toSubfield.subtype := rfl
+    have hr : (RingHom.ker r).IsMaximal := by
+      have hm' := PrincipalIdealRing.isMaximal_of_irreducible hm
+      refine hm'.eq_of_le (RingHom.ker_ne_top r) ?_ ▸ hm'
+      rw [Submodule.span_le, Set.singleton_subset_iff, SetLike.mem_coe, RingHom.mem_ker,
+        ← Subtype.val_inj, ← Subring.subtype_apply, Subring.coe_zero,
+        coe_eval₂RingHom, Polynomial.hom_eval₂, ← eval_map, hoc, map_embed]
+      exact hf.isRoot_leastNoRoots ht
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow hf.ne_zero hy
+    rw [WithBot.natCast_eq_coe, WithBot.coe_add_one, WithBot.lt_add_one] at hyd
+    rw [← h.eval_eq_of_lt hyd hyc, ← hf.map_embed hyc, ← hoc, eval_map,
+      show eval₂ _ x _ = eval₂ _ (hxr.toSubring.subtype ⟨x, hxn⟩) _ from rfl,
+      ← Polynomial.hom_eval₂, ← coe_eval₂RingHom] at hy0 ⊢
+    rw [← map_zero hxr.toSubring.subtype, hxr.toSubring.subtype_injective.ne_iff,
+      ne_eq, ← RingHom.mem_ker] at hy0
+    obtain ⟨i, s, hs, hi⟩ := hr.exists_inv hy0
+    rw [inv_eq_of_mul_eq_one_left]
+    · exact (r i).2
+    · replace hi := congrArg r hi
+      rw [map_add, map_mul, hs] at hi
+      simpa using  congrArg hxr.toSubring.subtype hi
+
+private theorem succ_le_pow {x : Nimber} (h : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : succ x ≤ of (val x ^ n) := by
+  rw [succ_le_iff, ← val_lt_iff]
+  apply lt_self_pow₀
+  · exact h.one_lt
+  · rw [← WithBot.one_lt_coe, ← WithBot.natCast_eq_coe, ← hn, ← Order.succ_le_iff,
+      ← WithBot.succ_eq_succ, WithBot.succ_one, ← WithBot.natCast_eq_coe,
+      ← Nimber.Lex.X_pow_le_iff, ← WithTop.coe_le_coe, WithTop.coe_untop]
+    exact h.X_sq_lt_leastNoRoots.le
+
+theorem IsField.ringClosure_succ {x : Nimber} (h : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : ringClosure (succ x) = of (val x ^ n) := by
+  apply le_antisymm
+  · rw [(h.toIsRing.pow_degree_leastNoRoots ht hn).ringClosure_le_iff]
+    exact succ_le_pow h ht hn
+  · cases n with
+    | zero => simpa [hn] using degree_leastNoRoots_pos ht
+    | succ n =>
+      replace h : IsNthDegreeClosed n x := .of_degree_leastNoRoots_eq h.toIsRing _ hn
+      refine le_of_forall_lt fun y hy ↦ ?_
+      rw [← mem_subringClosure_Iio, Iio_succ]
+      obtain ⟨p, hp, hp', rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hy
+      rw [← h.eval_eq_of_lt (by simpa using hp) hp', eval_eq_sum]
+      -- TODO: Subring.eval_mem
+      exact Subring.sum_mem _ fun _ _ ↦ mul_mem (Subring.mem_closure_of_mem (hp' _).le)
+        (Subring.pow_mem _ (Subring.mem_closure_of_mem self_mem_Iic) _)
+
+theorem IsField.fieldClosure_succ {x : Nimber} (h : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) : fieldClosure (succ x) = of (val x ^ n) := by
+  apply le_antisymm
+  · rw [(h.pow_degree_leastNoRoots ht hn).fieldClosure_le_iff]
+    exact succ_le_pow h ht hn
+  · apply (ringClosure_le_fieldClosure _).trans'
+    rw [h.ringClosure_succ ht hn]
+
+theorem IsAlgClosed.isRing_pow_omega0 {x : Nimber} (h : IsAlgClosed x) :
+    IsRing (of (val x ^ ω)) := by
+  refine ⟨h.opow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
+  obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+  obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+  rw [← h.eval_eq_of_lt hyd, ← h.eval_eq_of_lt hzd, ← eval_mul, h.eval_eq_of_lt]
+  on_goal 1 => apply oeval_lt_opow_omega0
+  all_goals exact forall_coeff_mul_lt h.toIsRing hyd hzd
+
+theorem IsAlgClosed.ringClosure_succ {x : Nimber} (h : IsAlgClosed x) :
+    ringClosure (succ x) = of (val x ^ ω) := by
+  apply le_antisymm
+  · rw [h.isRing_pow_omega0.ringClosure_le_iff, succ_le_iff, ← val_lt_iff]
+    conv_lhs => rw [← opow_one x.val]
+    exact (opow_lt_opow_iff_right h.one_lt).2 one_lt_omega0
+  · refine le_of_forall_lt fun y hy ↦ ?_
+    rw [← mem_subringClosure_Iio, Iio_succ]
+    obtain ⟨p, hp, hp', rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+    rw [← h.eval_eq_of_lt hp, eval_eq_sum]
+    -- TODO: Subring.eval_mem
+    exact Subring.sum_mem _ fun _ _ ↦ mul_mem (Subring.mem_closure_of_mem (hp _).le)
+      (Subring.pow_mem _ (Subring.mem_closure_of_mem self_mem_Iic) _)
 
 end Nimber
