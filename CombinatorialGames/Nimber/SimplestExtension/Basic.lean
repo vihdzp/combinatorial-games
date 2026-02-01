@@ -380,37 +380,37 @@ theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne :
 
 /-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
-    (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hw : IsGroup (∗w))
-    (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
-    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < ∗x) :
-    x * z = val (∗x * ∗z) := by
+    (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hz : IsGroup (∗z))
+    (hyx : y ≤ x) (hwy : w < y) (hyz : y ≤ z)
+    (H : ∀ a < y, (∗a)⁻¹ < ∗z) (H' : ∀ ⦃a b⦄, a < x → b < z → ∗a * ∗b < ∗x) :
+    x * w = val (∗x * ∗w) := by
   apply le_antisymm
   · apply le_of_forall_lt_imp_ne
     rw [forall_lt_mul]
     intro a ha b hb
     rw [ne_eq, ← of_eq_iff, hx.mul_add_eq_of_lt' hb,
-      hx.mul_eq_of_lt' hy hw hyx (ha.trans hzy) hyw H H', add_comm, CharTwo.add_eq_iff_eq_add,
+      hx.mul_eq_of_lt' hy hz hyx (ha.trans hwy) hyz H H', add_comm, CharTwo.add_eq_iff_eq_add,
       of_val, ← mul_add]
-    obtain hza | hza := eq_or_ne (∗z + ∗a) 0
-    · cases ha.ne' (add_eq_zero.1 hza)
-    · rw [← div_eq_iff hza]
-      exact (H' hb (H _ (hy.add_lt hzy (ha.trans hzy)))).ne
+    obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
+    · cases ha.ne' (add_eq_zero.1 hwa)
+    · rw [← div_eq_iff hwa]
+      exact (H' hb (H _ (hy.add_lt hwy (ha.trans hwy)))).ne
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
     rw [add_comm, ← add_assoc, ← mul_add, add_comm]
     induction b with | mk b
     rw [of.lt_iff_lt] at hb
-    have hzw := hzy.trans_le hyw
-    have hx' : val (a * (∗b + ∗z)) < x := H' ha (hw.add_lt (hb.trans hzw) hzw)
-    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hw hyx (hb.trans hzy) hyw H H',
+    have hwz := hwy.trans_le hyz
+    have hx' : val (a * (∗b + ∗w)) < x := H' ha (hz.add_lt (hb.trans hwz) hwz)
+    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hz hyx (hb.trans hwy) hyz H H',
       ← of_val (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
-termination_by z
+termination_by w
 
-theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hw : IsGroup w)
-    (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
-    (H : ∀ z < y, z⁻¹ < w) (H' : ∀ ⦃a b⦄, a < x → b < w → a * b < x) : x *ₒ z = x * z :=
-  hx.mul_eq_of_lt' hy hw hyx hzy hyw H H'
+theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z)
+    (hyx : y ≤ x) (hwy : w < y) (hyz : y ≤ z)
+    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : x *ₒ w = x * w :=
+  hx.mul_eq_of_lt' hy hz hyx hwy hyz H H'
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
