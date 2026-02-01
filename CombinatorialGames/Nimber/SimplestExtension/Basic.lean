@@ -294,8 +294,16 @@ theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := b
   obtain ⟨b, hb, rfl⟩ := h
   simp [← opow_mul]
 
+/-- A version of `IsGroup.opow` stated in terms of `Ordinal`. -/
+theorem IsGroup.opow' {x : Ordinal} (h : IsGroup (∗x)) (a : Ordinal) : IsGroup (∗x ^ a) :=
+  h.opow a
+
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
+
+/-- A version of `IsGroup.pow` stated in terms of `Ordinal`. -/
+theorem IsGroup.pow' {x : Ordinal} (h : IsGroup (∗x)) (n : ℕ) : IsGroup (∗x ^ n) :=
+  h.pow n
 
 /-! ### Rings -/
 
@@ -374,7 +382,7 @@ theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne :
 theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hw : IsGroup (∗w))
     (hyx : y ≤ x) (hzy : z < y) (hyw : y ≤ w)
-    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < x) :
+    (H : ∀ z < y, (∗z)⁻¹ < ∗w) (H' : ∀ ⦃a b⦄, a < x → b < w → ∗a * ∗b < ∗x) :
     x * z = val (∗x * ∗z) := by
   apply le_antisymm
   · apply le_of_forall_lt_imp_ne
@@ -523,6 +531,35 @@ theorem IsRing.inv_le_of_not_isField (h' : IsRing x) (h : ¬ IsField x)
 written as `y⁻¹` for some `y < x`. In simpler wording, `x⁻¹ < x`. -/
 theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x⁻¹ < x :=
   (inv_lt_of_not_isField_aux h' h).1
+
+/-- A version of `IsField.mul_opow_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.mul_opow_eq_of_lt' {x z : Ordinal}
+    (hx : IsField (∗x)) (y : Ordinal) (hz : z < x) : x ^ y * z = val (∗(x ^ y) * ∗z) := by
+  have hx' := hx.opow' y
+  obtain rfl | hy := eq_zero_or_pos y; · simp
+  apply hx'.mul_eq_of_lt' hx.toIsGroup hx.toIsGroup (left_le_opow _ hy) hz le_rfl @hx.inv_lt
+  intro a b ha hb
+  induction a using WellFoundedLT.induction with | ind a IH
+  obtain rfl | ha' := eq_or_ne a 0; · simpa
+  rw [← div_add_mod a (x ^ log x a), (hx.opow' _).mul_add_eq_of_lt', add_mul]
+  · apply hx'.add_lt
+    · have hax' : a / x ^ log x a < x := div_opow_log_lt a hx.one_lt
+      have hax : val (∗(a / _) * ∗b) < x := hx.mul_lt hax' hb
+      have hay : log x a < y := by
+        rwa [← lt_opow_iff_log_lt _ ha']
+        exact hx.one_lt
+      rw [IsField.mul_opow_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
+        ← of_val (∗_ * ∗_), ← IsField.mul_opow_eq_of_lt' hx _ hax]
+      apply (opow_le_opow_right hx.pos hay.succ_le).trans_lt'
+      rw [opow_succ]
+      exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
+    · exact IH _ (mod_opow_log_lt_self _ ha') ((mod_le ..).trans_lt ha)
+  · exact mod_lt _ (opow_ne_zero _ hz.ne_bot)
+termination_by y
+
+theorem IsField.mul_opow_eq_of_lt (hx : IsField x) (y : Ordinal) (hz : z < x) :
+    ∗(val x ^ y * val z) = ∗(val x ^ y) * z :=
+  hx.mul_opow_eq_of_lt' y hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
