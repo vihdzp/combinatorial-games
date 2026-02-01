@@ -179,9 +179,6 @@ theorem groupClosure_mono : Monotone groupClosure := by
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact h.trans (le_groupClosure y)
 
-theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) : sorry := sorry
-
-#exit
 end AddSubgroup
 
 /-! ### Rings -/
@@ -268,6 +265,10 @@ theorem ringClosure_mono : Monotone ringClosure := by
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact h.trans (le_ringClosure y)
 
+theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
+  rw [(IsRing.ringClosure x).groupClosure_le_iff]
+  exact le_ringClosure x
+
 end Subring
 
 /-! ### Fields -/
@@ -351,6 +352,13 @@ theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y h
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact h.trans (le_fieldClosure y)
+
+theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
+  rw [(IsField.fieldClosure x).ringClosure_le_iff]
+  exact le_fieldClosure x
+
+theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
+  (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
 
 end Subfield
 end Nimber
