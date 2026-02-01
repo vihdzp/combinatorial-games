@@ -137,6 +137,8 @@ theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorde
   rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
   exact _root_.add_pos_of_pos_of_nonneg ha hb
 
+@[simp] theorem WithBot.succ_one' : Order.succ (1 : WithBot ℕ) = 2 := rfl
+
 namespace Nimber
 
 /-! ### Basic results -/
@@ -505,6 +507,8 @@ theorem succ_eq_add_one_of_coeff_zero {p : Nimber[X]} (h : p.coeff 0 = 0) : succ
   aesop
 
 end Lex
+
+/-! ### Evaluating nimber polynomials as ordinals -/
 
 /-- Evaluate a nimber polynomial using ordinal arithmetic.
 
@@ -965,5 +969,16 @@ theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht)
   replace root := root.dvd dvd
   rw [← isRoot_map_iff h.toSubfield.subtype_injective, map_embed] at root
   exact leastNoRoots_not_root_of_lt ht hr root
+
+theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
+    .some (X ^ 2) < leastNoRoots x := by
+  apply (le_of_forall_lt_imp_ne ..).lt_of_ne (leastNoRoots_ne_X_pow x 2).symm
+  intro y hy
+  rw [← Lex.lt_X_pow_iff] at hy
+  simp_rw [WithTop.forall_lt_coe, Lex.lt_X_pow_iff, Nat.cast_ofNat, ← WithBot.succ_one',
+    Order.lt_succ_iff]
+  intro y hy
+  rw [degree_le_one]
+
 
 end Nimber
