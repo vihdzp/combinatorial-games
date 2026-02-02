@@ -15,7 +15,7 @@ develop their theory elsewhere.
 
 ## Dicotic games
 
-A game is dicotic when every non-zero subposition has both left and right moves. The Lawnmower
+A game is dicotic when every non-zero subposition has both left and right moves. The lawnmower
 theorem (proven in `CombinatorialGames.Game.Small`) shows that every dicotic game is small.
 
 ## Impartial games
