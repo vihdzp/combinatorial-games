@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios, Django Peeters
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import Mathlib.Data.Nat.Prime.Nth
 import Mathlib.NumberTheory.PrimeCounting
+import Mathlib.Tactic.DepRewrite
 
 /-!
 # Nimbers below $\omega^{\omega^\omega}$
@@ -125,19 +126,107 @@ proof_wanted alpha_two : alpha 2 = ∗4
 proof_wanted alpha_three : alpha 3 = ∗(ω + 1)
 -- ...
 
-/-! ### Main induction -/
-
-theorem degree_leastNoRoots_kappa (k n : ℕ) :
-    ∃ ht, ((leastNoRoots (kappa k n)).untop ht).degree = p_ k := by
-  sorry
-
 theorem kappa_zero_right_pow (k : ℕ) : kappa k 0 ^ p_ k = alpha k := by
   simp [kappa, alpha]
 
-theorem kappa_succ_right_pow (k n : ℕ) : kappa k (n + 1) ^ p_ k = kappa k n := by
+/-! ### Main induction -/
+
+open Polynomial
+
+/-- We know this already. -/
+theorem leastNoRoots_kappa_zero_left (n : ℕ) : leastNoRoots (kappa 0 n) =
+    .some (X ^ 2 + X + C (∗(2 ^ (2 ^ n - 1)))) := by
+  rw [kappa_zero_left]
   sorry
 
-theorem IsField.kappa (k n : ℕ) : IsField (kappa k n) :=
+/-- Let `y` be the field after `x`. Since `x < algClosure 0` we know `y/x` is a cyclic extension. If
+`leastNoRoots` has composite degree, then we can find a nontrivial subgroup of `Gal(y/x)`, which
+corresponds to an extension of smaller degree, a contradiction. -/
+theorem prime_natDegree_leastNoRoots {x : Nimber} (h : IsField x) (hx : x < algClosure 0) :
+    ∃ ht, (x.leastNoRoots.untop ht).natDegree.Prime := by
+  sorry
+
+/-- Every extension below `τ` (excluding the quadratic extensions) is by an `n`-th root. This is
+a consequence of Kummer theory I think? -/
+theorem leastNoRoots_kummer {x : Nimber} (h : IsField x) (hx' : ω ≤ x) (hx : x < algClosure 0) :
+    ∃ n : ℕ, n.Prime ∧ ∃ a < x, leastNoRoots x = .some (X ^ n + C a) := by
+  sorry
+
+/-- If `x` is algebraic over its prime field without extensions of degree `≤ n`, and `y/x` is
+algebraic, then `y` has no extensions of degree `≤ n` either. I'm pretty sure this was easy to prove
+via the Galois group. -/
+theorem monotoneOn_leastNoRoots : MonotoneOn leastNoRoots {x < algClosure 0 | IsField x} := by
+  sorry
+
+-- I think these are the things we prove simultaneously:
+section Induction
+
+/--
+There are two parts to this:
+
+- Prove that polynomials below `X ^ p_ k` are all already covered.
+- Prove that not all polynomials `X ^ p_ k + C a` have roots. Then `a = alpha k` by the simplest
+  extension theorem. I don't know how to prove this.
+-/
+theorem leastNoRoots_kappa_zero_right {k : ℕ} (hk : k ≠ 0) :
+    leastNoRoots (kappa k 0) = .some (X ^ p_ k + C (alpha k)) := by
+  sorry
+
+/--
+There are two parts to this:
+
+- Prove that polynomials between `X ^ p_ k` and `X ^ p_ k + C (kappa k n)` are covered. This is
+  probably just Kummer theory again, adjoining one n-th root gives you all of them at once.
+- Prove that `X ^ p_ k + C (kappa k n)` doesn't have a root. I think I had an argument for this
+  using primitive roots but there's gotta be something nicer.
+-/
+theorem leastNoRoots_kappa_succ_right {k : ℕ} (n : ℕ) (hk : k ≠ 0) :
+    leastNoRoots (kappa k (n + 1)) = .some (X ^ p_ k + C (kappa k n)) := by
+  sorry
+
+/-- This should follow from everything else we're doing. -/
+theorem IsField.kappa (k n : ℕ) : IsField (kappa k n) := by
+  sorry
+
+end Induction
+
+theorem degree_leastNoRoots_kappa (k n : ℕ) :
+    ∃ ht, ((kappa k n).leastNoRoots.untop ht).degree = p_ k := by
+  cases k with
+  | zero =>
+    rw [leastNoRoots_kappa_zero_left]
+    use WithTop.coe_ne_top
+    rw [WithTop.untop_coe, Nat.nth_prime_zero_eq_two]
+    compute_degree!
+  | succ k =>
+    cases n with
+    | zero =>
+      rw [leastNoRoots_kappa_zero_right k.succ_ne_zero]
+      use WithTop.coe_ne_top
+      rw [WithTop.untop_coe, degree_X_pow_add_C (Nat.nth_prime_pos _)]
+    | succ n =>
+      rw [leastNoRoots_kappa_succ_right n k.succ_ne_zero]
+      use WithTop.coe_ne_top
+      rw [WithTop.untop_coe, degree_X_pow_add_C (Nat.nth_prime_pos _)]
+
+theorem leastNoRoots_kappa_ne_top (k n : ℕ) : (kappa k n).leastNoRoots ≠ ⊤ := by
+  obtain ⟨ht, -⟩ := degree_leastNoRoots_kappa k n
+  exact ht
+
+theorem kappa_succ_right_pow {k : ℕ} (n : ℕ) (hk : k ≠ 0) : kappa k (n + 1) ^ p_ k = kappa k n := by
+  have := (IsField.kappa k (n + 1)).isRoot_leastNoRoots (leastNoRoots_kappa_ne_top _ _)
+  rw! [leastNoRoots_kappa_succ_right n hk, WithTop.untop_coe] at this
+  simpa [CharTwo.add_eq_zero] using this
+
+/-- This follows from `leastNoRoots (kappa k n)` being cofinal. -/
+theorem IsAlgClosed.tau : IsAlgClosed τ := by
+  sorry
+
+/-- With some extra diligence, we can show `kappa k (n + 1)` is the next field after `kappa k n`, so
+that these are the only fields before the first algebraic. None of the `kappa k n` are algebraically
+closed, but `τ` is, so the equality follows. -/
+@[simp]
+theorem algClosure_zero : algClosure 0 = τ := by
   sorry
 
 end Nimber
