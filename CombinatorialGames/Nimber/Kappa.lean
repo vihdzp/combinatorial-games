@@ -148,7 +148,7 @@ theorem prime_natDegree_leastNoRoots {x : Nimber} (h : IsField x) (hx : x < algC
 
 /-- Every extension below `τ` (excluding the quadratic extensions) is by an `n`-th root. This is
 a consequence of Kummer theory I think? -/
-theorem leastNoRoots_kummer {x : Nimber} (h : IsField x) (hx' : ω ≤ x) (hx : x < algClosure 0) :
+theorem leastNoRoots_kummer {x : Nimber} (h : IsField x) (hx' : ∗ω ≤ x) (hx : x < algClosure 0) :
     ∃ n : ℕ, n.Prime ∧ ∃ a < x, leastNoRoots x = .some (X ^ n + C a) := by
   sorry
 
