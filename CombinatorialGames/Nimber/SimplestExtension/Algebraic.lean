@@ -450,7 +450,7 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
       ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
       Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
       h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt _ (by simp)]
-    on_goal 1 => apply oeval_lt_opow (by simp)
+    on_goal 1 => apply oeval_lt_pow (by simp)
     on_goal 2 => rw [← WithBot.lt_add_one]
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
