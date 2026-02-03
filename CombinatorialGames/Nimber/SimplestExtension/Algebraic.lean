@@ -184,11 +184,6 @@ theorem isNthDegreeClosed_iff_X_pow_le_leastNoRoots {n : ℕ} {x : Nimber} (h : 
   mpr hx := (isNthDegreeClosed_iff_X_pow_lt_leastNoRoots h).2
     (hx.lt_of_ne' (leastNoRoots_ne_X_pow x _))
 
-theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
-    .some (X ^ 2) < leastNoRoots x := by
-  rw [← isNthDegreeClosed_one_iff_isField] at h
-  exact h.X_pow_lt_leastNoRoots
-
 theorem IsNthDegreeClosed.root_lt {n : ℕ} {x r : Nimber} (h : IsNthDegreeClosed n x) {p : Nimber[X]}
     (hpn : p.degree ≤ n) (hpk : ∀ k, p.coeff k < x) (hr : r ∈ p.roots) : r < x := by
   cases n with

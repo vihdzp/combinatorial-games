@@ -137,6 +137,18 @@ theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorde
   rw [← WithBot.coe_add,← WithBot.coe_zero, WithBot.coe_lt_coe, WithBot.coe_le_coe] at *
   exact _root_.add_pos_of_pos_of_nonneg ha hb
 
+@[simp] theorem WithBot.succ_one' : Order.succ (1 : WithBot ℕ) = 2 := rfl
+
+theorem WithTop.untop_eq {α} {x : WithTop α} {y : α} (h : x = y) :
+    x.untop (h ▸ coe_ne_top) = y := by
+  subst h
+  rfl
+
+theorem WithTop.eq_untop {α} {x : WithTop α} {y : α} (h : y = x) :
+    y = x.untop (h ▸ coe_ne_top) := by
+  subst h
+  rfl
+
 namespace Nimber
 
 /-! ### Basic results -/
@@ -779,6 +791,16 @@ theorem natDegree_leastNoRoots_pos {x : Nimber} (ht) :
     0 < (x.leastNoRoots.untop ht).natDegree :=
   natDegree_pos_iff_degree_pos.2 (degree_leastNoRoots_pos ht)
 
+theorem one_le_degree_leastNoRoots {x : Nimber} (ht) :
+    1 ≤ (x.leastNoRoots.untop ht).degree := by
+  rw [WithBot.one_le_iff_pos]
+  exact degree_leastNoRoots_pos ht
+
+theorem one_le_natDegree_leastNoRoots {x : Nimber} (ht) :
+    1 ≤ (x.leastNoRoots.untop ht).natDegree := by
+  rw [one_le_iff_pos]
+  exact natDegree_leastNoRoots_pos ht
+
 theorem coeff_leastNoRoots_lt {x : Nimber} (ht) :
     ∀ k, (x.leastNoRoots.untop ht).coeff k < x :=
   (leastNoRoots_mem ht).2.1
@@ -876,6 +898,23 @@ theorem IsField.root_lt {x r : Nimber} (h : IsField x) {p : Nimber[X]}
   have := h.roots_eq_map hpn hpk ▸ hr
   aesop
 
+theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
+    .some (X ^ 2) < leastNoRoots x := by
+  apply (le_of_forall_lt_imp_ne ..).lt_of_ne (leastNoRoots_ne_X_pow x 2).symm
+  simp_rw [WithTop.forall_lt_coe, Lex.lt_X_pow_iff, Nat.cast_ofNat, ← WithBot.succ_one',
+    Order.lt_succ_iff]
+  intro y hy hy'
+  rw [WithTop.eq_untop hy'] at hy
+  generalize_proofs ht at hy
+  obtain ⟨a, ha, b, hp⟩ := natDegree_eq_one.1 <| natDegree_eq_of_degree_eq_some <|
+    hy.eq_of_not_lt (by simp [one_le_degree_leastNoRoots])
+  apply hp ▸ leastNoRoots_not_root_of_lt ht (r := b / a) (h.div_lt ..)
+  · simp [mul_div_cancel₀, ha]
+  · convert hp ▸ coeff_leastNoRoots_lt ht 0
+    simp
+  · convert hp ▸ coeff_leastNoRoots_lt ht 1
+    simp
+
 theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
     {p : Nimber[X]} (hpn : p < leastNoRoots x) (hpk : ∀ k, p.coeff k < x) :
     p = C p.leadingCoeff * (p.roots.map fun a ↦ X - C a).prod := by
@@ -953,5 +992,11 @@ theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht)
   replace root := root.dvd dvd
   rw [← isRoot_map_iff h.toSubfield.subtype_injective, map_embed] at root
   exact leastNoRoots_not_root_of_lt ht hr root
+
+theorem IsField.leastNoRoots_eq_of_exists_sq {x a : Nimber} (h : IsField x) (ha : a < x)
+    (Hsq : ∀ y < x, ∃ z < x, z ^ 2 = y) (Hlt : ∀ b < a, ∃ y < x, IsRoot (X ^ 2 + X + C b) y)
+    (Hne : ¬ ∃ y < x, IsRoot (X ^ 2 + X + C a) y) :
+    leastNoRoots x = .some (X ^ 2 + X + C a) := by
+  sorry
 
 end Nimber

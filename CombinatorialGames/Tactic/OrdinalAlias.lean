@@ -110,6 +110,8 @@ theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($
 
 @[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+@[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
+@[simp] theorem $(mkIdent `val_pos) {a} : 0 < $(mkVal Alias) a ↔ 0 < a := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
