@@ -71,4 +71,8 @@ theorem exists_sub_of_trace_eq_zero {g : Gal(L/K)} (hg : ∀ x, x ∈ Subgroup.z
     ← ((ZMod.finEquiv n).toEquiv.trans Multiplicative.ofAdd).sum_comp]
   simp [ZMod.finEquiv_apply]
 
+theorem range_sub_eq_preimage_trace {g : Gal(L/K)} (hg : ∀ x, x ∈ Subgroup.zpowers g) :
+    (Set.range fun y : L ↦ y - g y) = Algebra.trace K L ⁻¹' {0} :=
+  sorry
+
 end groupCohomology

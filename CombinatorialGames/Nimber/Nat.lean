@@ -22,6 +22,10 @@ theorem Subfield.coe_pow {F : Type*} [DivisionRing F] {K : Subfield F} (x : K) (
 
 /-! ### Finite fields -/
 
+open Set
+
+attribute [local simp] pow_lt_pow_iff_right₀ pow_le_pow_iff_right₀ le_self_pow
+
 namespace Ordinal
 
 -- Provisionally needed until #34662
@@ -36,10 +40,47 @@ theorem two_two_pow (n : ℕ) : (2 : Ordinal) ^ (2 : Ordinal) ^ n = 2 ^ 2 ^ n :=
 theorem two_two_pow_lt_omega0 (n : ℕ) : 2 ^ 2 ^ n < ω :=
   mod_cast nat_lt_omega0 (2 ^ 2 ^ n)
 
+theorem two_two_pow_strictMono : StrictMono fun n ↦ (2 : Ordinal) ^ 2 ^ n :=
+  fun _ ↦ by simp
+
+@[simp]
+theorem two_two_pow_le_two_two_pow {m n : ℕ} : (2 : Ordinal) ^ 2 ^ m ≤ 2 ^ 2 ^ n ↔ m ≤ n :=
+  two_two_pow_strictMono.le_iff_le
+
+@[simp]
+theorem two_two_pow_lt_two_two_pow {m n : ℕ} : (2 : Ordinal) ^ 2 ^ m < 2 ^ 2 ^ n ↔ m < n :=
+  two_two_pow_strictMono.lt_iff_lt
+
+@[simp]
+theorem natCast_image_Iio (n : ℕ) : ((↑) : ℕ → Ordinal) '' Iio n = Iio (n : Ordinal) := by
+  ext
+  refine ⟨?_, fun hn ↦ ?_⟩
+  · rintro ⟨m, hm, rfl⟩
+    simpa
+  · obtain ⟨m, hm, rfl⟩ := eq_natCast_of_le_natCast hn.le
+    simpa using hn
+
+theorem finite_Iio_natCast (n : ℕ) : (Iio (n : Ordinal)).Finite := by
+  rw [← natCast_image_Iio]
+  apply (finite_Iio n).image _
+
+@[simp]
+theorem ncard_Iio (n : ℕ) : (Iio (n : Ordinal)).ncard = n := by
+  rw [← natCast_image_Iio, ncard_image_of_injective _ CharZero.cast_injective, ncard_Iio_nat]
+
+theorem div_eq_zero_iff {x y : Ordinal} : x / y = 0 ↔ y = 0 ∨ x < y := by
+  constructor
+  · intro h
+    by_contra!
+    exact ((Ordinal.div_pos this.1).2 this.2).ne' h
+  · rintro (rfl | h)
+    · simp
+    · exact div_eq_zero_of_lt h
+
 end Ordinal
 
 namespace Nimber
-attribute [local simp] pow_lt_pow_iff_right₀
+open Ordinal
 
 theorem one_lt_two_two_pow (n : ℕ) : 1 < ∗(2 ^ 2 ^ n) := by
   simp
@@ -47,29 +88,22 @@ theorem one_lt_two_two_pow (n : ℕ) : 1 < ∗(2 ^ 2 ^ n) := by
 theorem two_two_pow_strictMono : StrictMono fun n ↦ ∗(2 ^ 2 ^ n) :=
   fun _ ↦ by simp
 
-theorem ncard_Iio_natCast (n : ℕ) : Set.ncard (Set.Iio (∗n)) = n := by
-  suffices h : IsLowerSet (Set.range (Nat.castOrderEmbedding.trans of.toOrderEmbedding)) by
-    rw [← Nat.castOrderEmbedding_apply, ← OrderIso.coe_toOrderEmbedding,
-      ← RelEmbedding.trans_apply, ← OrderEmbedding.image_Iio _ h,
-      Set.ncard_image_of_injective _ (RelEmbedding.injective _), Set.ncard_Iio_nat]
-  intro a b hba ha
-  obtain ⟨a, rfl⟩ := ha
-  induction b with | mk b -- this case should be called `of`
-  obtain ⟨b, rfl⟩ := Ordinal.lt_omega0.1 ((of.le_iff_le.1 hba).trans_lt (Ordinal.nat_lt_omega0 _))
-  exact Set.mem_range_self b
+private theorem IsField.sqrt_lt' {x : Nimber} (h : IsField x) (hx : x < ∗ω) :
+    ∀ y < x, ∃ z < x, z ^ 2 = y := by
+  intro y hy
+  induction x with | mk x
+  obtain ⟨n, rfl⟩ := lt_omega0.1 hx
+  obtain ⟨m, hm, rfl⟩ := eq_natCast_of_le_natCast hy.le
+  have : Finite h.toSubfield := finite_Iio_natCast n
+  obtain ⟨z, hz⟩ := surjective_frobenius h.toSubfield 2 ⟨∗m, hy⟩
+  rw [← Subtype.val_inj] at hz
+  exact ⟨z.1, z.2, hz⟩
 
-theorem finite_Iio_natCast (n : ℕ) : (Set.Iio (∗n)).Finite := by
-  cases n with
-  | zero => simp
-  | succ => exact Set.finite_of_ncard_ne_zero ((ncard_Iio_natCast _).trans_ne (by simp))
+@[simp]
+theorem toSubfield_le_toSubfield {x y : Nimber} (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield ≤ hy.toSubfield ↔ x ≤ y :=
+  Iio_subset_Iio_iff
 
-private theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (h' : x < ∗Ordinal.omega0) :
-    ∃ z < x, z ^ 2 = y := by
-  have : (h.toSubfield : Set Nimber).Finite
-  have : PerfectRing h.toSubfield 2 := sorry
-
-
-#exit
 open Polynomial
 
 mutual
@@ -84,15 +118,62 @@ theorem IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n)) := by
     · simp [← pow_mul, pow_add]
     · rw [hl]
       compute_degree!
+termination_by (n, 0)
+
+private theorem algebraTrace_two_two_pow' {m n a : ℕ} (h : m ≤ n) (ha : 2 ^ 2 ^ m = a) :
+  ∀ (hm : IsField (∗a)) (hn : IsField (∗(2 ^ 2 ^ n))),
+    let algebra : Algebra hm.toSubfield hn.toSubfield :=
+      Subfield.inclusion (by simpa [← ha]) |>.toAlgebra
+    ∀ x hx, Algebra.trace hm.toSubfield hn.toSubfield ⟨x, hx⟩ = ∗(x.val / 2 ^ (2 ^ n - 2 ^ m)) := by
+  sorry
 
 theorem leastNoRoots_two_two_pow (n : ℕ) :
     leastNoRoots (∗(2 ^ 2 ^ n)) = .some (X ^ 2 + X + C (∗(2 ^ (2 ^ n - 1)))) := by
-  apply (leastNoRoots_le_of_not_isRoot ..).antisymm (le_of_forall_lt_imp_ne ..)
-  · apply two_pos.trans_eq (.symm _)
-    compute_degree!
-  · aesop
-  · sorry -- trace shenanigans
-  ·
+  have hf := IsField.two_two_pow n
+  let algebra : Algebra IsField.two.toSubfield hf.toSubfield :=
+    Subfield.inclusion (by simp) |>.toAlgebra
+  apply hf.leastNoRoots_eq_of_exists_sq (by simp)
+    (hf.sqrt_lt' (mod_cast nat_lt_omega0 (2 ^ 2 ^ n))) <;> intro a ha
+  · exists_sub_of_trace_eq_zero
+
+    obtain ⟨b, hb, rfl⟩ := (Set.ext_iff.1 this.symm _).1 ha
+    use b, hb
+    simp
+  · intro H
+    have ha' : a ^ 2 + a < _ := (Set.ext_iff.1 this _).1 (mem_image_of_mem _ ha)
+    apply ha'.ne
+    rw [← CharTwo.add_eq_zero]
+    simpa using H
+  suffices (fun x ↦ x ^ 2 + x) '' Iio (∗(2 ^ 2 ^ n)) = Iio (∗(2 ^ (2 ^ n - 1))) by
+    apply hf.leastNoRoots_eq_of_exists_sq (by simp)
+      (hf.sqrt_lt' (mod_cast nat_lt_omega0 (2 ^ 2 ^ n))) <;> intro a ha
+    · obtain ⟨b, hb, rfl⟩ := (Set.ext_iff.1 this.symm _).1 ha
+      use b, hb
+      simp
+    · intro H
+      have ha' : a ^ 2 + a < _ := (Set.ext_iff.1 this _).1 (mem_image_of_mem _ ha)
+      apply ha'.ne
+      rw [← CharTwo.add_eq_zero]
+      simpa using H
+  have H : (range fun x : hf.toSubfield ↦ x ^ 2 + x) =
+      Algebra.trace IsField.two.toSubfield hf.toSubfield ⁻¹' {0} := by
+    sorry
+  apply_fun (((↑) : _ → Nimber) '' ·) at H
+  convert H
+  · rw [image_eq_range, ← range_comp]
+    rfl
+  · replace H := algebraTrace_two_two_pow' bot_le (by simp) .two hf
+    ext x
+    refine ⟨fun hx ↦ ?_, ?_⟩
+    · have hx' : x < ∗(2 ^ 2 ^ n) := hx.trans_le <| by simp
+      refine ⟨⟨x, hx'⟩, ?_, rfl⟩
+      rw [mem_preimage, mem_singleton_iff, ← Subtype.val_inj]
+      apply (H x _).trans
+      simpa using Ordinal.div_eq_zero_of_lt hx
+    · rintro ⟨⟨x, _⟩, hx, rfl⟩
+      rw [mem_preimage, mem_singleton_iff, ← Subtype.val_inj, H] at hx
+      simpa [Ordinal.div_eq_zero_iff] using hx
+termination_by (n, 1)
 
 end
 

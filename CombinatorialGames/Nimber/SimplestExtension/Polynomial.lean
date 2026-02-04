@@ -995,8 +995,32 @@ theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht)
 
 theorem IsField.leastNoRoots_eq_of_exists_sq {x a : Nimber} (h : IsField x) (ha : a < x)
     (Hsq : ∀ y < x, ∃ z < x, z ^ 2 = y) (Hlt : ∀ b < a, ∃ y < x, IsRoot (X ^ 2 + X + C b) y)
-    (Hne : ¬ ∃ y < x, IsRoot (X ^ 2 + X + C a) y) :
+    (Hne : ∀ y < x, ¬ IsRoot (X ^ 2 + X + C a) y) :
     leastNoRoots x = .some (X ^ 2 + X + C a) := by
-  sorry
+  apply (leastNoRoots_le_of_not_isRoot _ _ Hne).antisymm (le_of_forall_lt_imp_ne ..)
+  · apply two_pos.trans_eq (.symm _)
+    compute_degree!
+  · have := h.one_lt
+    have := h.pos
+    aesop
+  · rw [WithTop.forall_lt_coe]
+    suffices ∀ y : Nimber[X], y < C 1 * X ^ 2 + C 1 * X + C a → y ≠ x.leastNoRoots by simpa
+    rw [Lex.forall_lt_quadratic]
+    simp only [lt_one_iff_zero, map_one, one_mul, ne_eq, forall_eq, map_zero, zero_mul, add_zero]
+    refine ⟨fun c hc H ↦ ?_, fun c H ↦ ?_, ?_⟩
+    · obtain ⟨b, hb, hb'⟩ := WithTop.eq_untop H ▸ Hlt c hc
+      exact leastNoRoots_not_root_of_lt _ hb hb'
+    · have H := WithTop.eq_untop H
+      generalize_proofs ht at H
+      have hc : c < x := by
+        have := H ▸ coeff_leastNoRoots_lt ht 0
+        simpa using this
+      obtain ⟨b, hb, rfl⟩ := Hsq _ hc
+      apply H ▸ leastNoRoots_not_root_of_lt ht hb
+      simp
+    · refine fun b c ↦ (h.X_sq_lt_leastNoRoots.trans' ?_).ne
+      rw [WithTop.coe_lt_coe]
+      use 2
+      aesop
 
 end Nimber
