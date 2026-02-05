@@ -544,7 +544,7 @@ proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 noncomputable def sqrt : Nimber ≃+* Nimber :=
   (frobeniusEquiv _ 2).symm
 
-@[inherit_doc] prefix:max "√" => sqrt
+@[inherit_doc] scoped prefix:max "√" => sqrt
 recommended_spelling "sqrt" for "√" in [sqrt, «term√_»]
 
 theorem sqrt_zero : √0 = 0 := map_zero _
