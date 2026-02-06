@@ -579,4 +579,46 @@ instance : _root_.IsAlgClosed Nimber := by
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
+/-! ### Square roots -/
+
+/-- The square root of a nimber `x` is the unique value with `(√x)^2 = x`. -/
+noncomputable def sqrt : Nimber ≃+* Nimber :=
+  (frobeniusEquiv _ 2).symm
+
+@[inherit_doc] scoped prefix:max "√" => sqrt
+recommended_spelling "sqrt" for "√" in [sqrt, «term√_»]
+
+theorem sqrt_zero : √0 = 0 := map_zero _
+theorem sqrt_one : √1 = 1 := map_one _
+theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
+theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
+theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
+
+@[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
+@[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
+@[simp] theorem sqrt_self_mul_self (x : Nimber) : √(x * x) = x := by rw [← pow_two, sqrt_sq]
+@[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
+
+theorem sqrt_eq_iff {x y : Nimber} : √y = x ↔ x ^ 2 = y := by
+  conv_rhs => rw [← sq_sqrt y, CharTwo.CommRing.sq_inj, eq_comm]
+
+alias ⟨_, sqrt_eq⟩ := sqrt_eq_iff
+
+theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + C y) < leastNoRoots x) : √y < x := by
+  apply h.root_lt hx
+  · have := h.pos
+    have := h.one_lt
+    aesop
+  · rw [mem_roots]
+    · simp
+    · apply_fun (coeff · 2)
+      simp
+
+theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
+  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
+  use 1
+  aesop
+
 end Nimber
