@@ -365,7 +365,6 @@ attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
-  have hx₀ : 0 < x := h.zero_lt
   generalize_proofs ht
   let n := (x.leastNoRoots.untop ht).natDegree
   have hn : 1 ≤ n := natDegree_leastNoRoots_pos _
