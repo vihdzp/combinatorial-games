@@ -296,6 +296,8 @@ For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
 structure IsAlgClosed (x : Nimber) extends IsRing x where
   exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
 
+attribute [aesop forward safe] IsAlgClosed.toIsRing
+
 theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : ℕ) :
     IsNthDegreeClosed n x where
   exists_root' _p hp₀ _ := h.exists_root' hp₀
@@ -607,9 +609,7 @@ alias ⟨_, sqrt_eq⟩ := sqrt_eq_iff
 theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
     (hx : .some (X ^ 2 + C y) < leastNoRoots x) : √y < x := by
   apply h.root_lt hx
-  · have := h.pos
-    have := h.one_lt
-    aesop
+  · aesop
   · rw [mem_roots]
     · simp
     · apply_fun (coeff · 2)
