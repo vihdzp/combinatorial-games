@@ -119,6 +119,7 @@ structure IsGroup (x : Nimber) where
 theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
   out := h.ne_zero
 
+@[aesop forward safe]
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
 alias IsGroup.pos := IsGroup.zero_lt
 
@@ -316,6 +317,9 @@ structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z : Nimber⦄ (hy : y < x) (hz : z < x) : y * z < x
   ne_one : x ≠ 1
 
+attribute [aesop forward safe] IsRing.toIsGroup
+
+@[aesop forward safe]
 theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
@@ -434,6 +438,8 @@ proves that this theorem applies when `y = 0` as well. -/
 @[mk_iff]
 structure IsField (x : Nimber) extends IsRing x where
   inv_lt' ⦃y : Nimber⦄ (hy₀ : y ≠ 0) (hy : y < x) : y⁻¹ < x
+
+attribute [aesop forward safe] IsField.toIsRing
 
 theorem IsField.inv_lt (h : IsField x) (hy : y < x) : y⁻¹ < x := by
   obtain rfl | hy₀ := eq_or_ne y 0
