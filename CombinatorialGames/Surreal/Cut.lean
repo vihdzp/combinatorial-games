@@ -3,9 +3,9 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+import CombinatorialGames.Surreal.Birthday.Basic
 import Mathlib.Order.Concept
 import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Surreal.Birthday.Basic
 
 /-!
 # Surreal cuts
@@ -131,6 +131,9 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem right_iSup {ι} (f : ι → Cut) : (⨆ i, f i).right = ⋂ i, (f i).right := by simp [iSup]
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
+instance : Nontrivial Cut :=
+  ⟨⊥, ⊤, by apply_fun left; simpa using empty_ne_univ⟩
+
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
   rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
 
@@ -232,15 +235,19 @@ def rightSurreal : Surreal ↪o Cut where
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
-@[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
-@[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
+@[simp, grind =]
+theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
+@[simp, grind =]
+theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
+@[simp, grind =]
+theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp, grind =]
+theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
-@[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
-@[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
-@[simp] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
-@[simp] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
+@[simp, grind =] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
+@[simp, grind =] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
+@[simp, grind =] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
+@[simp, grind =] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
 
 theorem mem_left_leftGame {x y} : y ∈ (leftGame x).left ↔ y.toGame ⧏ x := .rfl
 theorem mem_right_leftGame {x y} : y ∈ (leftGame x).right ↔ x ≤ y.toGame := .rfl
@@ -252,17 +259,35 @@ theorem mem_right_leftSurreal {x y} : y ∈ (leftSurreal x).right ↔ x ≤ y :=
 theorem mem_left_rightSurreal {x y} : y ∈ (rightSurreal x).left ↔ y ≤ x := .rfl
 theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y := .rfl
 
-@[simp] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
+@[simp, grind =] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
+@[simp, grind =] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
-  ext; simp [le_neg]
+@[simp, grind =]
+theorem leftGame_mk (x : IGame) [Numeric x] : leftGame (.mk x) = leftSurreal (.mk x) := by
+  rw [← toGame_mk, leftGame_toGame]
 
-@[simp] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
+@[simp, grind =]
+theorem rightGame_mk (x : IGame) [Numeric x] : rightGame (.mk x) = rightSurreal (.mk x) := by
+  rw [← toGame_mk, rightGame_toGame]
+
+@[simp, grind =]
+theorem leftGame_zero : leftGame 0 = leftSurreal 0 := by simpa using leftGame_toGame 0
+@[simp, grind =]
+theorem rightGame_zero : rightGame 0 = rightSurreal 0 := by simpa using rightGame_toGame 0
+
+@[simp, grind =]
+theorem leftGame_one : leftGame 1 = leftSurreal 1 := by simpa using leftGame_toGame 1
+@[simp, grind =]
+theorem rightGame_one : rightGame 1 = rightSurreal 1 := by simpa using rightGame_toGame 1
+
+@[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
+
+@[simp, grind =] theorem rightGame_neg (x : Game) : rightGame (-x) = -leftGame x := by
+  ext; simp [le_neg]
 
 @[simp]
 theorem neg_leftGame_image (s : Set Game) : -leftGame '' s = rightGame '' (-s) := by
@@ -313,8 +338,13 @@ theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x
 theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
   simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
 
+@[simp]
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by
   simp
+
+@[simp]
+theorem leftSurreal_le_rightSurreal (x : Surreal) : leftSurreal x ≤ rightSurreal x :=
+  (leftSurreal_lt_rightSurreal x).le
 
 theorem leftSurreal_lt_rightSurreal_iff {x y : Surreal} :
     leftSurreal x < rightSurreal y ↔ x ≤ y := by
@@ -423,13 +453,13 @@ theorem right_infRight (x : IGame) :
   simp [infRight]
 
 @[simp]
-theorem neg_supLeft (x : IGame) : -supLeft x = infRight (-x) := by
+theorem infRight_neg (x : IGame) : infRight (-x) = -supLeft x := by
   refine eq_of_forall_le_iff fun y ↦ ?_
   simp [supLeft, infRight]
 
 @[simp]
-theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by
-  rw [← neg_neg (supLeft _), neg_supLeft, neg_neg]
+theorem supLeft_neg (x : IGame) : supLeft (-x) = -infRight x := by
+  rw [← neg_neg (supLeft _), ← infRight_neg, neg_neg]
 
 theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
@@ -450,8 +480,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
-  simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
-    @leftGame_eq_supLeft_of_le (-x)
+  simpa using @leftGame_eq_supLeft_of_le (-x)
 
 /-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
 def Fits (x : Surreal) (y z : Cut) : Prop :=
