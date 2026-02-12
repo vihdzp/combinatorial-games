@@ -233,7 +233,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         have H : ∀ k, (X ^ (n + 1) + ∏ i, (X + C (f i).1)).coeff k < x := by
           refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
           have : (f y).1 < x := (f y).2
-          apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
+          apply h.coeff_add_lt <;> aesop
         have IH := IH h' hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
         exact IH ▸ (oeval_lt_pow H (lt_succ_of_le hq')).ne
@@ -252,7 +252,7 @@ theorem IsNthDegreeClosed.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsNthDegreeC
         exact left_le_opow _ (mod_cast n.succ_pos)
       rw [add_comm]
       congr
-      refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn ?_ le_rfl
+      refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn le_rfl ?_
         @(h.toIsField n.succ_pos).inv_lt fun a b ha hb ↦ ?_
       · convert hpk (n + 1)
         simpa using q.coeff_eq_zero_of_degree_lt hqn
@@ -295,6 +295,8 @@ For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
 @[mk_iff]
 structure IsAlgClosed (x : Nimber) extends IsRing x where
   exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
+
+attribute [aesop forward safe] IsAlgClosed.toIsRing
 
 theorem IsAlgClosed.toIsNthDegreeClosed {x : Nimber} (h : IsAlgClosed x) (n : ℕ) :
     IsNthDegreeClosed n x where
@@ -363,7 +365,6 @@ attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
-  have hx₀ : 0 < x := h.zero_lt
   generalize_proofs ht
   let n := (x.leastNoRoots.untop ht).natDegree
   have hn : 1 ≤ n := natDegree_leastNoRoots_pos _
@@ -607,9 +608,7 @@ alias ⟨_, sqrt_eq⟩ := sqrt_eq_iff
 theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
     (hx : .some (X ^ 2 + C y) < leastNoRoots x) : √y < x := by
   apply h.root_lt hx
-  · have := h.pos
-    have := h.one_lt
-    aesop
+  · aesop
   · rw [mem_roots]
     · simp
     · apply_fun (coeff · 2)
