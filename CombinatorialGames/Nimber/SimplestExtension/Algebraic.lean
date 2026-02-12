@@ -601,7 +601,7 @@ theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
 @[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
 
 theorem sqrt_eq_iff {x y : Nimber} : √y = x ↔ x ^ 2 = y := by
-  conv_rhs => rw [← sq_sqrt y, CharTwo.CommRing.sq_inj, eq_comm]
+  conv_rhs => rw [← sq_sqrt y, CharTwo.sq_inj, eq_comm]
 
 alias ⟨_, sqrt_eq⟩ := sqrt_eq_iff
 

@@ -113,21 +113,6 @@ theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
 theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
   simp [← not_le]
 
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_self_nonneg {α}
-    [LinearOrderedAddCommGroupWithTop α] {a : α} : 0 ≤ a - a := by
-  obtain rfl | ha := eq_or_ne a ⊤
-  · simp
-  · rw [LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha]
-
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
-    [LinearOrderedAddCommGroupWithTop α] {a b : α} (ha : a ≠ ⊤) : b - a = 0 ↔ b = a := by
-  rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
-    LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
-
 theorem leadingCoeff_monotoneOn (x : Surreal) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
