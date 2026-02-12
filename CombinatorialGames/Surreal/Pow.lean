@@ -508,15 +508,6 @@ theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
 @[simp] theorem vlt_neg {x y : Surreal} : x <ᵥ -y ↔ x <ᵥ y := by simp [vlt_def]
 @[simp] theorem neg_vlt {x y : Surreal} : -x <ᵥ y ↔ x <ᵥ y := by simp [vlt_def]
 
--- #34579
-@[simp]
-theorem not_vlt_zero (x : Surreal) : ¬ x <ᵥ 0 := by
-  simp
-
--- #34579
-theorem _root_.ValuativeRel.vlt.ne_zero (h : x <ᵥ y) : y ≠ 0 := by
-  rintro rfl; exact not_vlt_zero _ h
-
 theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_nonneg _) (wpow_nonneg _)
@@ -764,7 +755,7 @@ theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x < wlog y ↔ x <
   rw [← not_le, wlog_le_wlog_iff hy hx, ValuativeRel.not_vle]
 
 theorem wlog_lt_wlog_of_vlt (hx : x ≠ 0) (h : x <ᵥ y) : wlog x < wlog y := by
-  obtain rfl | hy := eq_or_ne y 0; · simp [vlt_def] at h -- Missing `not_vlt_zero`
+  obtain rfl | hy := eq_or_ne y 0; · simp at h
   rwa [wlog_lt_wlog_iff hx hy]
 
 @[simp]

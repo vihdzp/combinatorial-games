@@ -120,15 +120,6 @@ theorem WithBot.lt_add_one {x : WithBot ℕ} (n : ℕ) : x < WithBot.some n + 1 
   · rw [← WithBot.coe_add_one, WithBot.coe_lt_coe]
     simp
 
--- TODO: PR this along with a `WithBot` version.
-@[simp]
-theorem WithTop.forall_lt_coe {α : Type*} {P : WithTop α → Prop} [Preorder α] {x : α} :
-    (∀ y < WithTop.some x, P y) ↔ ∀ y < x, P (.some y) := by
-  refine ⟨?_, fun h y ↦ ?_⟩
-  · aesop
-  · rw [WithTop.lt_iff_exists_coe]
-    aesop
-
 -- TODO: presumably we should PR this along with all the other versions.
 theorem WithBot.add_pos_of_pos_of_nonneg {α : Type*} [AddZeroClass α] [Preorder α] [AddLeftMono α]
     {a b : WithBot α} (ha : 0 < a) (hb : 0 ≤ b) : 0 < a + b := by

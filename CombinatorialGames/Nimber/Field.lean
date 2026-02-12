@@ -7,6 +7,7 @@ import CombinatorialGames.Nimber.Basic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
+import Mathlib.Tactic.Ring
 
 /-!
 # Nimber multiplication and division
