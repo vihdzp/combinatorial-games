@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbo
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
+import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
@@ -1030,6 +1031,22 @@ theorem mul_eq' (x y : IGame) : x * y =
       (xᴸ ×ˢ y.moves p ∪ xᴿ ×ˢ y.moves (-p))} := by
   rw [mul_eq, ofSets_eq_ofSets_cases (fun _ ↦ _ '' _)]; rfl
 
+theorem mul_eq'' (x y : IGame) : x * y =
+    !{fun p ↦ ⋃ (q : {q : Player × Player // q.1 * q.2 = p}),
+      (fun a ↦ mulOption x y a.1 a.2) '' x.moves q.1.1 ×ˢ y.moves q.1.2} := by
+  rw [mul_eq']
+  -- `aesop` proves this but is many times slower, so we prove it manually
+  ext p a
+  simp_rw [moves_ofSets, mem_iUnion, mem_image]
+  constructor
+  · rintro ⟨a, ha | ha, rfl⟩
+    · exact ⟨⟨(left, p), by simp⟩, a, ha, rfl⟩
+    · exact ⟨⟨(right, -p), by simp⟩, a, ha, rfl⟩
+  · rintro ⟨⟨⟨u, v⟩, rfl⟩, a, ha, rfl⟩
+    cases u with
+    | left => exact ⟨a, .inl (by simpa using ha), rfl⟩
+    | right => exact ⟨a, .inr (by simpa using ha), rfl⟩
+
 theorem ofSets_mul_ofSets (s₁ t₁ s₂ t₂ : Set IGame) [Small s₁] [Small t₁] [Small s₂] [Small t₂] :
     !{s₁ | t₁} * !{s₂ | t₂} =
       !{(fun a ↦ mulOption !{s₁ | t₁} !{s₂ | t₂} a.1 a.2) '' (s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂) |
@@ -1042,6 +1059,11 @@ theorem moves_mul (p : Player) (x y : IGame) :
     (x * y).moves p = (fun a ↦ mulOption x y a.1 a.2) ''
       (xᴸ ×ˢ y.moves p ∪ xᴿ ×ˢ y.moves (-p)) := by
   rw [mul_eq', moves_ofSets]
+
+theorem moves_mul' (p : Player) (x y : IGame) :
+    (x * y).moves p = ⋃ (u) (v) (_ : u * v = p),
+      (fun a ↦ mulOption x y a.1 a.2) '' x.moves u ×ˢ y.moves v := by
+  rw [mul_eq'', moves_ofSets, Set.iUnion_subtype, Set.iUnion_prod']
 
 @[simp]
 theorem moves_mulOption (p : Player) (x y a b : IGame) :
@@ -1072,18 +1094,17 @@ private theorem one_mul' (x : IGame) : 1 * x = x := by
   aesop (add simp [mulOption, and_assoc, zero_mul'])
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
-  ext p
-  simp only [moves_mul, mem_image, mem_prod, mem_union, Prod.exists]
-  cases p; all_goals
-    dsimp
-    simp only [and_comm, or_comm]
-    rw [exists_comm]
-    congr! 4 with b a
-    rw [and_congr_left_iff]
-    rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
-      rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]
-termination_by (x, y)
-decreasing_by igame_wf
+  induction x using moveRecOn generalizing y with | ind x ihx
+  induction y using moveRecOn with | ind y ihy
+  refine IGame.ext fun p => ?_
+  rw [moves_mul', moves_mul', Set.iUnion_comm]
+  refine Set.iUnion_congr fun u => Set.iUnion_congr fun v => ?_
+  rw [mul_comm u v]
+  refine Set.iUnion_congr fun _ => ?_
+  rw [Set.image_prod, Set.image_prod, Set.image2_swap]
+  refine Set.image2_congr fun a ha b hb => ?_
+  rw [mulOption, mulOption, ihx v b hb y, ihy u a ha, ihx v b hb a,
+    add_comm (a * x) (y * b)]
 
 instance : CommMagma IGame where
   mul_comm := mul_comm'
@@ -1100,19 +1121,17 @@ theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a
   simp [mulOption, add_comm, mul_comm]
 
 private theorem neg_mul' (x y : IGame) : -x * y = -(x * y) := by
-  ext
-  simp only [moves_mul, moves_neg, mem_image, mem_union, mem_prod, mem_neg, Prod.exists]
-  rw [← (Equiv.neg _).exists_congr_right]
-  dsimp only [Player.neg_left, Player.neg_right]
-  simp only [Equiv.neg_apply, neg_neg, mulOption, or_comm]
-  congr! 4
-  rw [and_congr_right_iff]
-  rintro (⟨_, _⟩ | ⟨_, _⟩)
-  all_goals
-    rw [← neg_inj, neg_mul', neg_mul', neg_mul']
-    simp [sub_eq_add_neg, add_comm]
-termination_by (x, y)
-decreasing_by igame_wf
+  induction x using moveRecOn generalizing y with | ind x ihx
+  induction y using moveRecOn with | ind y ihy
+  refine IGame.ext fun p => ?_
+  simp_rw [moves_mul', moves_neg, moves_mul',
+    Set.iUnion_neg, ← Set.image_neg_eq_neg, Set.prod_image_left, Set.image_image]
+  rw [← Set.iSup_eq_iUnion, ← Set.iSup_eq_iUnion]
+  refine (Equiv.neg Player).iSup_congr fun u => Set.iUnion_congr fun v => ?_
+  rw [Equiv.neg_apply, neg_mul, neg_inj]
+  refine Set.iUnion_congr fun _ => Set.image_congr fun a ha => ?_
+  rw [mulOption, mulOption, ihx (-u) a.1 ha.1 y, ihy v a.2 ha.2, ihx (-u) a.1 ha.1 a.2,
+    neg_sub, sub_neg_eq_add, ← add_rotate, ← sub_sub, sub_eq_add_neg, sub_eq_add_neg]
 
 instance : HasDistribNeg IGame where
   neg_mul := neg_mul'
