@@ -3,14 +3,18 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+module
+
+public import CombinatorialGames.Game.Player
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Group.Pointwise.Set.Small
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Logic.Small.Set
+public import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
 
 /-!
 # Loopy games
@@ -65,7 +69,7 @@ theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
   rw [hf, hg, ← QPF.comp_map, ← QPF.comp_map]
   exact ⟨rfl, rfl⟩
 
-noncomputable section
+public noncomputable section
 
 /-! ### Game moves -/
 
@@ -410,7 +414,7 @@ theorem neg_corec_apply (mov : Player → α → Set α)
   congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
-  neg_neg _ := (neg_corec_apply ..).trans (corec_moves_apply ..)
+  neg_neg _ := private (neg_corec_apply ..).trans (corec_moves_apply ..)
 
 @[simp]
 theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
@@ -505,10 +509,10 @@ private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   all_goals aesop (add simp [image_union]) (erase Player)
 
 instance : AddCommMonoid LGame where
-  add_zero := add_zero'
-  zero_add _ := add_comm' .. ▸ add_zero' _
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_zero := private add_zero'
+  zero_add _ := private add_comm' .. ▸ add_zero' _
+  add_comm := private add_comm'
+  add_assoc := private add_assoc'
   nsmul := nsmulRec
 
 @[simp]
@@ -633,6 +637,7 @@ theorem neg_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Playe
   Multiset.map_erase _ (fun _ ↦ by simp) ..
 
 /-- Swaps the entries in all pairs. -/
+@[expose]
 def swap (x : MulTy α β) : MulTy β α :=
   x.map (fun a ↦ (a.1, a.2.swap))
 
@@ -669,6 +674,7 @@ theorem swap_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Play
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
 
 If the player argument is left, all signs are flipped. -/
+@[expose]
 def mulOption (p : Player) (x : α × β) (y : α × β) : MulTy α β :=
   {(p, y.1, x.2), (p, x.1, y.2), (-p, y.1, y.2)}
 
@@ -928,7 +934,7 @@ end MulTy
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot]
+@[pp_nodot, expose]
 def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
 
@@ -959,8 +965,8 @@ private theorem one_mul' (x : LGame) : 1 * x = x := by
   aesop
 
 instance : MulOneClass LGame where
-  one_mul := one_mul'
-  mul_one x := mul_comm x _ ▸ one_mul' x
+  one_mul := private one_mul'
+  mul_one x := private mul_comm x _ ▸ one_mul' x
 
 private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   change MulTy.toLGame .. = -MulTy.toLGame ..
@@ -973,7 +979,7 @@ private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   simp [MulTy.moves_neg']
 
 instance : HasDistribNeg LGame where
-  neg_mul := neg_mul'
+  neg_mul := private neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 /-! ### Stoppers -/
@@ -999,6 +1005,7 @@ theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ Stop
   constructor <;> intro h <;> simpa using h.neg
 
 /-- A game is a stopper when it's `StopperFor` for both players. -/
+@[expose]
 def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 

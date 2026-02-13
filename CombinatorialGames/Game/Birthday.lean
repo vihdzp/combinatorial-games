@@ -3,10 +3,14 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Game.Special
+module
+
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.Special
+
 import Mathlib.Algebra.Order.Group.OrderIso
 import Mathlib.Data.Fintype.Order
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Birthdays of games
@@ -34,6 +38,8 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
 
 /-! ### `IGame` birthday -/
 
+public noncomputable section
+
 namespace IGame
 
 -- TODO: upstream
@@ -42,7 +48,7 @@ attribute [-simp] Ordinal.add_one_eq_succ
 
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
-noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
+def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
   ⨆ p, ⨆ y : x.moves p, succ (birthday y)
 termination_by x
 decreasing_by igame_wf
@@ -243,7 +249,7 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
     ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
   simp [birthdayFinset]
 
-@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
+@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
 
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
@@ -424,3 +430,4 @@ instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthd
   small_setOf_birthday_lt o
 
 end Game
+end

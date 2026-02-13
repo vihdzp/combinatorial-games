@@ -3,10 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Closure
-import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Closure
+public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+public import Mathlib.FieldTheory.IsAlgClosed.Basic
+
 import Mathlib.Algebra.Group.Pointwise.Set.Small
-import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 /-!
 # Nimbers are algebraically closed
@@ -19,6 +22,8 @@ are algebraically closed.
 universe u
 
 open Order Ordinal Polynomial Set
+
+public section
 
 /-! ### For Mathlib -/
 
@@ -347,16 +352,6 @@ theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
   mpr hx := ⟨h, fun _p hp₀ hpk ↦
     exists_root_of_lt_leastNoRoots hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
 
-@[simp]
-theorem leastNoRoots_one : leastNoRoots 1 = ⊤ := by
-  rw [leastNoRoots, sInf_eq_top, forall_mem_image]
-  intro x hx
-  obtain rfl : x = 0 := by ext k; simpa using hx.2.1 k
-  simp at hx
-
-theorem leastNoRoots_of_le_one {x : Nimber} (h : x ≤ 1) : leastNoRoots x = ⊤ := by
-  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
-
 theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
@@ -621,3 +616,4 @@ theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
   aesop
 
 end Nimber
+end

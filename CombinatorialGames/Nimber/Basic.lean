@@ -5,10 +5,10 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public meta import CombinatorialGames.Tactic.Register
 public import Mathlib.SetTheory.Ordinal.Family
 
 import CombinatorialGames.Tactic.OrdinalAlias
-import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
 
 /-!
@@ -44,7 +44,7 @@ universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `Nimber` -/
 
@@ -77,6 +77,7 @@ termination_by (a, b)
 
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
 `a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Add Nimber :=
   ⟨Nimber.add⟩
 

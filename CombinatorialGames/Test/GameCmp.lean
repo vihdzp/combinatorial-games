@@ -3,8 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Game.Specific.Nim
+module
+
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.Specific.Nim
+
 import CombinatorialGames.Tactic.GameCmp
 
 /-!

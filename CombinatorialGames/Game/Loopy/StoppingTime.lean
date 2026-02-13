@@ -3,9 +3,12 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.Game.IGame
+public import CombinatorialGames.NatOrdinal.Basic
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -60,7 +63,7 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
   rw [← Order.succ_eq_add_one]
   exact Order.le_succ x
 
-noncomputable section
+public noncomputable section
 namespace LGame
 open Order
 

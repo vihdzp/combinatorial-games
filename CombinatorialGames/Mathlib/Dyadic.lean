@@ -3,12 +3,14 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.Algebra.GCDMonoid.Nat
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Ring.Defs
-import Mathlib.Analysis.Normed.Field.Lemmas
-import Mathlib.Data.Nat.Log
-import Mathlib.Data.Nat.Prime.Int
+module
+
+public import Mathlib.Algebra.GCDMonoid.Nat
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Ring.Defs
+public import Mathlib.Analysis.Normed.Field.Lemmas
+public import Mathlib.Data.Nat.Log
+public import Mathlib.Data.Nat.Prime.Int
 
 /-!
 # Dyadic numbers
@@ -16,6 +18,8 @@ import Mathlib.Data.Nat.Prime.Int
 A dyadic (rational) number is a rational number whose denominator is a power of two. We provide
 the `CommRing` structure, as well as proving some auxiliary theorems on them.
 -/
+
+@[expose] public section
 
 /-! ### For Mathlib -/
 
@@ -373,3 +377,4 @@ def coeRingHom : Dyadic →+* ℚ where
   map_mul' := Dyadic.toRat_mul
 
 end Dyadic
+end
