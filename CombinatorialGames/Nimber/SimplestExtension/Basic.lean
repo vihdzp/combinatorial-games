@@ -9,9 +9,7 @@ public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
-import Mathlib.Algebra.CharP.Algebra
-import Mathlib.Algebra.Field.Subfield.Basic
-import Mathlib.Algebra.Field.ZMod
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 

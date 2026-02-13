@@ -5,12 +5,10 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Algebra.GCDMonoid.Nat
 public import Mathlib.Algebra.Order.Field.Basic
 public import Mathlib.Algebra.Order.Ring.Defs
 public import Mathlib.Analysis.Normed.Field.Lemmas
 public import Mathlib.Data.Nat.Log
-public import Mathlib.Data.Nat.Prime.Int
 
 /-!
 # Dyadic numbers

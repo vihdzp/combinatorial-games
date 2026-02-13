@@ -9,8 +9,6 @@ public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
-import Mathlib.Algebra.Group.Pointwise.Set.Small
-
 /-!
 # Nimbers are algebraically closed
 

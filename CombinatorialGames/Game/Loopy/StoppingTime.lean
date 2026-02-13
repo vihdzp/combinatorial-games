@@ -6,7 +6,6 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Loopy.Basic
-public import CombinatorialGames.Game.IGame
 public import CombinatorialGames.NatOrdinal.Basic
 
 import CombinatorialGames.Mathlib.WithTop

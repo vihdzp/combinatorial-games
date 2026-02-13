@@ -8,7 +8,6 @@ module
 public import CombinatorialGames.Game.Birthday
 
 import CombinatorialGames.Tactic.AddInstances
-import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.Data.Int.Cast.Lemmas
 
 /-!

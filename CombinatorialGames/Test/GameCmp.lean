@@ -5,9 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Ordinal
-public import CombinatorialGames.Game.Specific.Nim
-
+import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Tactic.GameCmp
 
 /-!

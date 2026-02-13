@@ -6,9 +6,9 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Classes
 public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.Algebra.Order.Hom.Monoid
+
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.Data.Set.Finite.Lattice

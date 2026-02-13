@@ -6,15 +6,14 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Player
+public import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
+
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-public import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Logic.Small.Set
-public import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
 
 /-!
 # Loopy games
