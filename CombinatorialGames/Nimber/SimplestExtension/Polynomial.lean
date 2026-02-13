@@ -222,27 +222,22 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
 
 namespace Lex
 
-/-- The colexicographic ordering on nimber polynomials.
-
-TODO: Use `Colex` to define the ordering instead of `Lex` once it's available. -/
+/-- The colexicographic ordering on nimber polynomials. -/
 noncomputable instance : LinearOrder (Nimber[X]) where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
-    (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) <| by
-      intro p q h
-      rw [toLex_inj, Finsupp.ext_iff] at h
-      rwa [← toFinsupp_inj, Finsupp.ext_iff]
+    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp)
+    (toFinsupp_injective.comp toColex.injective)
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Lex (ℕᵒᵈ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf (wellFounded_lt (α := ℕ))
+instance : WellFoundedLT (Colex (ℕ →₀ Nimber)) where
+  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf wellFounded_lt
 
 instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf
-    (fun p : Nimber[X] ↦ toLex <| p.toFinsupp.equivMapDomain OrderDual.toDual) wellFounded_lt
+  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
