@@ -3,10 +3,13 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public import Mathlib.SetTheory.Ordinal.Family
+
 import CombinatorialGames.Tactic.OrdinalAlias
 import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
-import Mathlib.SetTheory.Ordinal.Family
 
 /-!
 # Nimbers
@@ -217,11 +220,10 @@ theorem range_natCast : Set.range ((↑) : ℕ → Nimber) = {0, 1} := by
   · use 0; simp
   · use 1; simp
 
-@[game_cmp]
 theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
   simp [natCast_eq_if, Nat.even_iff]
 
-@[simp, game_cmp]
+@[simp]
 theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
   natCast_eq_mod n
 
@@ -234,14 +236,10 @@ theorem range_intCast : Set.range ((↑) : ℤ → Nimber) = {0, 1} := by
   · use 0; simp
   · use 1; simp
 
-@[game_cmp]
 theorem intCast_eq_mod (n : ℤ) : (n : Nimber) = (n % 2 : ℤ) := by
   simp [intCast_eq_if, Int.even_iff]
 
 end Mathlib
-
--- This lets `game_cmp` reduce any instances of `NatCast`.
-attribute [game_cmp] Nat.reduceMod
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by
