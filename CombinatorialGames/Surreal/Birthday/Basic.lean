@@ -6,6 +6,17 @@ Authors: Aaron Liu
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Surreal.Ordinal
 
+
+/-!
+# Birthdays of surreals
+
+We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
+equivalent to it.
+
+The numeric condition can be removed to yield an equivalent definition, but that is proved in
+`CombinatorialGames.Surreal.Birthday.Cut`.
+-/
+
 universe u
 noncomputable section
 
@@ -18,6 +29,8 @@ among all *numeric* pre-games that define it.
 The numeric condition can be removed, see `Surreal.birthday_toGame`. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
+
+/-! ### Basic properties -/
 
 theorem birthday_eq_iGameBirthday (x : Surreal) :
     ∃ (y : IGame) (_ : Numeric y), mk y = x ∧ y.birthday = birthday x := by
@@ -73,6 +86,38 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
+theorem birthday_eq_iInf_fits (x : IGame) [hx : Numeric x] :
+    birthday (.mk x) = ⨅ y : {y : Subtype Numeric // Fits y x}, birthday (.mk y.1.1) := by
+  let f (y : {y : Subtype Numeric // Fits y x}) := birthday (.mk y.1)
+  let : Inhabited {y : Subtype Numeric // Fits y x} := ⟨⟨x, hx⟩, Fits.refl _⟩
+  apply (ciInf_le' f default).antisymm'
+  obtain ⟨⟨⟨y, _⟩, hy⟩, hy'⟩ := ciInf_mem f
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk y)
+  rw [← hz'.trans hy']
+  apply (birthday_mk_le z).trans'
+  congr! 1
+  rw [eq_comm, mk_eq_mk] at hz ⊢
+  refine (hy.congr hz).equiv_of_forall_birthday_le fun w hw hw' ↦ hz' ▸ ?_
+  exact hy'.trans_le <| (ciInf_le' f ⟨⟨w, hw⟩, hw'⟩).trans (birthday_mk_le _)
+
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [hx : Numeric x] [Numeric y] (h : Fits x y) :
+    birthday (.mk y) ≤ birthday (.mk x) := by
+  let f (x : {x : Subtype Numeric // Fits x y}) := birthday (.mk x.1)
+  rw [birthday_eq_iInf_fits y]
+  exact ciInf_le' f ⟨⟨x, hx⟩, h⟩
+
+-- TODO: can we remove the `Numeric x` assumption?
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] [Numeric y]
+    (h : Fits x y) (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+  apply h.birthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
+
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
     !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
@@ -120,6 +165,8 @@ theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := b
   rw [← h, toGame_mk]
   exact Game.birthday_mk_le c
 
+/-! ### Small instances -/
+
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
   have h₁ : {x | birthday x ≤ o} ⊆ toGame ⁻¹' {x | x.birthday ≤ o} := by
@@ -141,5 +188,42 @@ instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthd
 /-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
 instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
   small_setOf_birthday_lt o
+
+/-- Given two distinct surreals with the same birthday, there exists one in between with a smaller
+birthday. -/
+theorem exists_birthday_lt_between {x y : Surreal} (h : x < y) (h' : x.birthday = y.birthday) :
+    ∃ z ∈ Ioo x y, z.birthday < x.birthday := by
+  obtain ⟨x, _, rfl, hx⟩ := birthday_eq_iGameBirthday x
+  obtain ⟨y, _, rfl, hy⟩ := birthday_eq_iGameBirthday y
+  rw [mk_lt_mk] at h
+  have H : Numeric !{xᴸ | yᴿ} := by
+    apply Numeric.mk <;> simp_rw [moves_ofSets]
+    · exact fun a ha b hb ↦ (Numeric.left_lt ha).trans (h.trans (Numeric.lt_right hb))
+    · rintro (_ | _) a ha <;> exact Numeric.of_mem_moves ha
+  suffices (mk !{xᴸ | yᴿ}).birthday < x.birthday by
+    rw [hx] at this
+    refine ⟨_, ⟨?_, ?_⟩, this⟩ <;> apply lt_of_le_of_ne
+    · rw [mk_le_mk, le_iff_forall_lf]
+      constructor <;> intro a ha
+      · apply (Numeric.left_lt _).not_ge
+        simpa
+      · rw [moves_ofSets] at ha
+        exact (h.trans <| Numeric.lt_right ha).not_ge
+    · exact fun hn ↦ this.ne' <| congrArg _ hn
+    · rw [mk_le_mk, le_iff_forall_lf]
+      constructor <;> intro a ha
+      · rw [moves_ofSets] at ha
+        exact ((Numeric.left_lt ha).trans h).not_ge
+      · apply (Numeric.lt_right _).not_ge
+        simpa
+    · exact fun hn ↦ this.ne <| h' ▸ congrArg birthday hn
+  rw [hx]
+  obtain hn | hn := (mk_lt_mk.2 h).ne.ne_or_ne (mk !{xᴸ | yᴿ}) <;> rw [ne_eq, mk_eq_mk] at hn
+  · refine Fits.birthday_lt ⟨?_, ?_⟩ hn <;> simp_rw [moves_ofSets]
+    · exact fun a ha ↦ (Numeric.left_lt ha).not_ge
+    · exact fun a ha ↦ (h.trans <| Numeric.lt_right ha).not_ge
+  · refine h' ▸ Fits.birthday_lt ⟨?_, ?_⟩ hn  <;> simp_rw [moves_ofSets]
+    · exact fun a ha ↦ ((Numeric.left_lt ha).trans h).not_ge
+    · exact fun a ha ↦ (Numeric.lt_right ha).not_ge
 
 end Surreal

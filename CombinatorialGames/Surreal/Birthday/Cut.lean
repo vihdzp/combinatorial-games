@@ -199,7 +199,7 @@ theorem birthday_sSup_le (s : Set Cut) : (sSup s).birthday ≤ sSup (birthday ''
   exact birthday_iSup_le _
 
 theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
-    (simplestBtwn h).birthday ≤ max x.birthday y.birthday := by
+    (simplestBtwn x y).birthday ≤ max x.birthday y.birthday := by
   obtain ⟨s, rfl | rfl, hx⟩ := birthday_eq_sSup_birthday x
   · simp_rw [sInf_lt_iff, mem_image, exists_exists_and_eq_and, leftSurreal_lt_iff] at h
     obtain ⟨a, ha, hay⟩ := h
