@@ -4,8 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
 import CombinatorialGames.Nimber.Basic
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
+import Mathlib.Tactic.Ring
 
 /-!
 # Nimber multiplication and division
@@ -18,10 +20,6 @@ It's possible to show the existence of the nimber inverse implicitly via the sim
 theorem. Instead, we employ the explicit formula given in [On Numbers And Games][conway2001]
 (p. 56), which uses mutual induction and mimics the definition for the surreal inverse. This
 definition `invAux` "accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
-
-## Todo
-
-- Show the nimbers are algebraically closed.
 -/
 
 universe u v
@@ -47,14 +45,14 @@ private theorem two_zsmul (x : Nimber) : (2 : ℤ) • x = 0 := by
 private theorem add_eq_iff_eq_add : a + b = c ↔ a = c + b :=
   sub_eq_iff_eq_add
 
-/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
-`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def mul (a b : Nimber.{u}) : Nimber.{u} :=
+private def mul (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | ∃ a', ∃ (_ : a' < a), ∃ b', ∃ (_ : b' < b),
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
+`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
@@ -222,7 +220,6 @@ instance : CommRing Nimber where
   __ : AddCommGroupWithOne Nimber := inferInstance
 
 instance : IsDomain Nimber where
-instance : CancelMonoidWithZero Nimber where
 
 theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
     a' * b + a * b' + a' * b' ≠ a * b := by
@@ -230,6 +227,29 @@ theorem mul_ne_of_ne {a' b' : Nimber} (ha : a' ≠ a) (hb : b' ≠ b) :
   rw [ne_eq, ← add_left_inj (a * b), add_self]
   convert mul_ne_zero ha hb using 2
   ring
+
+-- TODO: upstream
+theorem _root_.Fin.comp_cons_apply {α β} {n : ℕ}
+    (g : α → β) (a : α) (f : Fin n → α) (i : Fin (n + 1)) :
+    g (Fin.cons (α := fun _ ↦ α) a f i) = Fin.cons (α := fun _ ↦ β) (g a) (g ∘ f) i :=
+  congrFun (Fin.comp_cons g a f) i
+
+theorem pow_le_of_forall_ne {a b : Nimber} {n : ℕ}
+    (H : ∀ f : Fin n → Set.Iio a, a ^ n + ∏ i, (a + f i) ≠ b) : a ^ n ≤ b := by
+  induction n generalizing b with
+  | zero => simpa [eq_comm] using H nofun
+  | succ n IH =>
+    rw [pow_succ]
+    refine mul_le_of_forall_ne fun c hc d hd ↦ ?_
+    have hc' := mt IH hc.not_ge
+    push_neg at hc'
+    obtain ⟨f, rfl⟩ := hc'
+    convert H <| Fin.cons (α := fun _ ↦ Set.Iio a) ⟨d, hd⟩ f using 1
+    have := Fin.comp_cons (fun x ↦ a + x.1) ⟨d, hd⟩ f
+    dsimp [Function.comp_def] at this
+    rw [this, Fin.prod_cons]
+    ring_nf
+    rw [CharTwo.two_eq_zero, mul_zero, add_zero]
 
 /-! ### Nimber division -/
 
@@ -349,4 +369,26 @@ instance : Field Nimber where
   nnqsmul := _
   qsmul := _
 
+-- #34622
+section Mathlib
+
+@[simp]
+theorem inv_natCast (n : ℕ) : (n : Nimber)⁻¹ = n := by
+  grind [natCast_eq_if]
+
+@[simp]
+theorem inv_intCast (n : ℤ) : (n : Nimber)⁻¹ = n := by
+  grind [intCast_eq_if]
+
+theorem ratCast_eq_if (q : ℚ) : (q : Nimber) = if Odd q.num ∧ Odd q.den then 1 else 0 := by
+  rw [Field.ratCast_def, div_eq_mul_inv, inv_natCast, natCast_eq_if, intCast_eq_if]
+  grind
+
+@[simp]
+theorem range_ratCast : Set.range ((↑) : ℚ → Nimber) = {0, 1} := by
+  rw [funext ratCast_eq_if, Set.range_if, Set.pair_comm]
+  · use 1; simp
+  · use 0; simp
+
+end Mathlib
 end Nimber

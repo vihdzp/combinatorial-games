@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Small
@@ -215,12 +214,91 @@ theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
 theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
   fun hx ↦ Subposition.irrefl x (.of_mem_moves hx)
 
+/-- `WSubposition x y` means that `x` is reachable from `y` by a sequence of moves.
+It is the non-strict version of `Subposition`. -/
+def WSubposition (x y : IGame) : Prop := x = y ∨ Subposition x y
+
+theorem wsubposition_iff_eq_or_subposition {x y : IGame} :
+    WSubposition x y ↔ x = y ∨ Subposition x y := .rfl
+
 theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
-    ∃ p, ∃ z ∈ y.moves p, x = z ∨ Subposition x z := by
-  unfold Subposition
+    ∃ p, ∃ z ∈ y.moves p, WSubposition x z := by
+  unfold WSubposition Subposition
   rw [Relation.transGen_iff_exists]
   simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
   exact exists_comm
+
+@[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
+theorem WSubposition.rfl {x : IGame} : WSubposition x x := .refl x
+theorem wsubposition_of_eq {x y : IGame} (hxy : x = y) : WSubposition x y := hxy ▸ .rfl
+
+theorem wsubposition_of_subposition {x y : IGame} (h : Subposition x y) :
+    WSubposition x y := .inr h
+
+alias Subposition.wsubposition := wsubposition_of_subposition
+
+theorem subposition_of_wsubposition_of_subposition {x y z : IGame}
+    (hxy : WSubposition x y) (hyz : Subposition y z) : Subposition x z := by
+  obtain rfl | hxy := hxy
+  · exact hyz
+  · exact hxy.trans hyz
+
+theorem subposition_of_subposition_of_wsubposition {x y z : IGame}
+    (hxy : Subposition x y) (hyz : WSubposition y z) : Subposition x z := by
+  obtain rfl | hyz := hyz
+  · exact hxy
+  · exact hxy.trans hyz
+
+alias WSubposition.trans_subposition := subposition_of_wsubposition_of_subposition
+alias Subposition.trans_wsubposition' := subposition_of_wsubposition_of_subposition
+alias Subposition.trans_wsubposition := subposition_of_subposition_of_wsubposition
+alias WSubposition.trans_subposition' := subposition_of_subposition_of_wsubposition
+
+@[trans] theorem wsubposition_trans {x y z : IGame}
+    (hxy : WSubposition x y) (hyz : WSubposition y z) : WSubposition x z := by
+  obtain rfl | hyz := hyz
+  · exact hxy
+  · exact (hxy.trans_subposition hyz).wsubposition
+
+alias WSubposition.trans := wsubposition_trans
+
+instance : Trans Subposition Subposition Subposition := ⟨Subposition.trans⟩
+instance : Trans WSubposition Subposition Subposition := ⟨WSubposition.trans_subposition⟩
+instance : Trans Subposition WSubposition Subposition := ⟨Subposition.trans_wsubposition⟩
+instance : Trans WSubposition WSubposition WSubposition := ⟨WSubposition.trans⟩
+
+theorem not_subposition_of_wsubposition {x y : IGame} (hxy : WSubposition x y) :
+    ¬Subposition y x := fun hyx => Subposition.irrefl x (hxy.trans_subposition hyx)
+
+theorem not_wsubposition_of_subposition {x y : IGame} (hxy : Subposition x y) :
+    ¬WSubposition y x := fun hyx => Subposition.irrefl x (hxy.trans_wsubposition hyx)
+
+alias WSubposition.not_subposition := not_subposition_of_wsubposition
+alias Subposition.not_wsubposition := not_wsubposition_of_subposition
+
+theorem wsubposition_antisymm {x y : IGame}
+    (hxy : WSubposition x y) (hyx : WSubposition y x) : x = y :=
+  hxy.resolve_right fun h => Subposition.irrefl x (h.trans_wsubposition hyx)
+
+alias WSubposition.antisymm := wsubposition_antisymm
+
+theorem wsubposition_antisymm_iff {x y : IGame} : x = y ↔ WSubposition x y ∧ WSubposition y x :=
+  ⟨fun h => h ▸ ⟨.rfl, .rfl⟩, fun h => h.1.antisymm h.2⟩
+
+theorem subposition_of_wsubposition_of_ne {x y : IGame} (hw : WSubposition x y) (hne : x ≠ y) :
+    Subposition x y := hw.resolve_left hne
+
+theorem subposition_of_wsubposition_not_wsubposition {x y : IGame}
+    (hxy : WSubposition x y) (hyx : ¬WSubposition y x) : Subposition x y :=
+  hxy.resolve_left fun h => hyx (wsubposition_of_eq h.symm)
+
+theorem subposition_iff_wsubposition_not_wsubposition {x y : IGame} :
+    Subposition x y ↔ WSubposition x y ∧ ¬WSubposition y x :=
+  ⟨fun hxy => ⟨hxy.wsubposition, hxy.not_wsubposition⟩,
+    fun h => subposition_of_wsubposition_not_wsubposition h.1 h.2⟩
+
+theorem WSubposition.of_mem_moves {p : Player} {x y : IGame} (hxy : x ∈ y.moves p) :
+    WSubposition x y := (Subposition.of_mem_moves hxy).wsubposition
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -562,11 +640,17 @@ protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
 theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
 
+theorem neg_equiv {x y : IGame} : -x ≈ y ↔ x ≈ -y := by
+  simpa using @neg_equiv_neg_iff x (-y)
+
 alias ⟨_, neg_congr⟩ := neg_equiv_neg_iff
 
 @[simp]
 theorem neg_fuzzy_neg_iff {x y : IGame} : -x ‖ -y ↔ x ‖ y := by
   simp [IncompRel, and_comm]
+
+theorem neg_fuzzy {x y : IGame} : -x ‖ y ↔ x ‖ -y := by
+  simpa using @neg_fuzzy_neg_iff x (-y)
 
 @[simp] theorem neg_le_zero {x : IGame} : -x ≤ 0 ↔ 0 ≤ x := by simpa using @IGame.neg_le x 0
 @[simp] theorem zero_le_neg {x : IGame} : 0 ≤ -x ↔ x ≤ 0 := by simpa using @IGame.le_neg 0 x

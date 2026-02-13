@@ -51,7 +51,7 @@ alias AntisymmRel.Fits := fits_of_equiv
 theorem Fits.refl (x : IGame) : x.Fits x :=
   fits_of_equiv .rfl
 
-instance : IsRefl _ Fits where
+instance : Std.Refl Fits where
   refl := Fits.refl
 
 theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
@@ -216,6 +216,10 @@ def toGame : Surreal ↪o Game where
 @[simp] theorem toGame_mk (x : IGame) [Numeric x] : toGame (mk x) = .mk x := rfl
 @[simp] theorem toGame_zero : toGame 0 = 0 := rfl
 @[simp] theorem toGame_one : toGame 1 = 1 := rfl
+
+@[simp]
+theorem gameMk_out (x : Surreal) : Game.mk x.out = x.toGame := by
+  conv_rhs => rw [← out_eq x, toGame_mk]
 
 theorem toGame_le_iff {a b : Surreal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp

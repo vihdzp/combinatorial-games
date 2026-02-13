@@ -6,7 +6,8 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Real
 import CombinatorialGames.NatOrdinal.Pow
-import Mathlib.Algebra.Order.Ring.StandardPart
+import Mathlib.Algebra.Order.Ring.Archimedean
+import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
 # Surreal exponentiation
@@ -39,18 +40,15 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-theorem mk_dyadic {r : Dyadic'} (h : r ≠ 0) : mk (r : Surreal) = 0 :=
-  mk_ratCast (mod_cast h)
-
 @[simp]
 theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
-    mk x ≤ mk y ↔ ∃ q : Dyadic', 0 < q ∧ q * |y| ≤ |x| := by
-  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic'.coeRingHom) (x := x) ?_
+    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q.toRat * |y| ≤ |x| := by
+  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
-  · exact Rat.cast_strictMono.comp fun x y ↦ id
+  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.toRat_lt_toRat_iff.mpr
 
 end ArchimedeanClass
 
@@ -65,8 +63,8 @@ namespace IGame
 The standard definition in the literature instead has `r` ranging over positive reals,
 but this makes no difference as to the equivalence class of the games. -/
 private def wpow (x : IGame.{u}) : IGame.{u} :=
-  !{insert 0 (range (fun y : Ioi (0 : Dyadic') × xᴸ ↦ y.1 * wpow y.2)) |
-    range (fun y : Ioi (0 : Dyadic') × xᴿ ↦ y.1 * wpow y.2)}
+  !{insert 0 (range (fun y : Ioi (0 : Dyadic) × xᴸ ↦ y.1 * wpow y.2)) |
+    range (fun y : Ioi (0 : Dyadic) × xᴿ ↦ y.1 * wpow y.2)}
 termination_by x
 decreasing_by igame_wf
 
@@ -74,42 +72,42 @@ instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
-    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴸ) |
-      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic')) xᴿ} := by
+    !{insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) |
+      image2 (fun r y ↦ ↑r * ω^ y) (Ioi (0 : Dyadic)) xᴿ} := by
   change wpow _ = _
   rw [wpow]
   simp_rw [Set.image2_eq_range]
   rfl
 
 theorem leftMoves_wpow (x : IGame) : (ω^ x)ᴸ =
-    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴸ) := by
+    insert 0 (image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴸ) := by
   rw [wpow_def, leftMoves_ofSets, Set.image2_eq_range]
 
 theorem rightMoves_wpow (x : IGame) : (ω^ x)ᴿ =
-    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic')) xᴿ := by
+    image2 (fun r y ↦ ↑r * ω^ (y : IGame)) (Ioi (0 : Dyadic)) xᴿ := by
   rw [wpow_def, rightMoves_ofSets, Set.image2_eq_range]
 
 @[simp]
 theorem forall_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴸ, P y) ↔
-    P 0 ∧ ∀ r : Dyadic', 0 < r → ∀ y ∈ xᴸ, P (r * ω^ y) := by
+    P 0 ∧ ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, forall_mem_insert, forall_mem_image2]
   rfl
 
 @[simp]
 theorem forall_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴿ, P y) ↔
-    ∀ r : Dyadic', 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
+    ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact forall_mem_image2
 
 @[simp]
 theorem exists_leftMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴸ, P y) ↔
-    P 0 ∨ ∃ r : Dyadic', 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
+    P 0 ∨ ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
   rw [leftMoves_wpow, exists_mem_insert, exists_mem_image2]
   rfl
 
 @[simp]
 theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴿ, P y) ↔
-    ∃ r : Dyadic', 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
+    ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
   rw [rightMoves_wpow]
   exact exists_mem_image2
 
@@ -117,7 +115,7 @@ theorem exists_rightMoves_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω
 theorem zero_mem_leftMoves_wpow (x : IGame) : 0 ∈ (ω^ x)ᴸ := by
   simp [leftMoves_wpow]
 
-theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 ≤ r)
+theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 ≤ r)
     (hy : y ∈ xᴸ) : r * ω^ y ∈ (ω^ x)ᴸ := by
   obtain rfl | hr := hr.eq_or_lt
   · simp
@@ -125,7 +123,7 @@ theorem mul_wpow_mem_leftMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 ≤ r)
     apply mem_insert_of_mem
     use r, hr, y
 
-theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic'} (hr : 0 < r)
+theorem mul_wpow_mem_rightMoves_wpow {x y : IGame} {r : Dyadic} (hr : 0 < r)
     (hy : y ∈ xᴿ) : r * ω^ y ∈ (ω^ x)ᴿ := by
   rw [rightMoves_wpow]
   use r, hr, y
@@ -188,7 +186,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       exact (wpow_strictMono_aux.1 ((Numeric.left_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := wpow_mem_rightMoves_wpow hz
       numeric
-      have hr' : 0 < (r : ℝ)⁻¹ := by simpa
+      have hr' : 0 < (r.toRat : ℝ)⁻¹ := by simpa
       rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
       simpa [← Surreal.mk_lt_mk] using
         wpow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_right hz)) hr'
@@ -222,16 +220,16 @@ theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
   · exact wpow_strictMono_aux.1 h hr
 
 /-- A version of `mul_wpow_lt_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_wpow' (r : Dyadic') (h : x < y) : r * ω^ x < ω^ y := by
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r h
+theorem mul_wpow_lt_wpow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r.toRat h
 
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
   simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow (r⁻¹) h
 
 /-- A version of `wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem wpow_lt_mul_wpow' {r : Dyadic'} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  have hr : (0 : ℝ) < r := by simpa
+theorem wpow_lt_mul_wpow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
+  have hr : (0 : ℝ) < r.toRat := by simpa
   simpa [← Surreal.mk_lt_mk] using wpow_lt_mul_wpow hr h
 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
@@ -241,10 +239,10 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
   exact mul_wpow_lt_wpow _ h
 
 /-- A version of `mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_mul_wpow' (r : Dyadic') {s : Dyadic'} (hs : 0 < s) (h : x < y) :
+theorem mul_wpow_lt_mul_wpow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r hs h
+  have hs : (0 : ℝ) < s.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r.toRat hs h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
@@ -253,10 +251,10 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic') {t : Dyadic'} (ht : 0 < t)
+theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic) {t : Dyadic} (ht : 0 < t)
     (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
-  have ht : (0 : ℝ) < t := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r s ht hx hy
+  have ht : (0 : ℝ) < t.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r.toRat s.toRat ht hx hy
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
@@ -264,11 +262,11 @@ theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic') {s t : Dyadic'} (hs : 0 < s) (ht : 0 < t)
+theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic) {s t : Dyadic} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  have hs : (0 : ℝ) < s := by simpa
-  have ht : (0 : ℝ) < t := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r hs ht hx hy
+  have hs : (0 : ℝ) < s.toRat := by simpa
+  have ht : (0 : ℝ) < t.toRat := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r.toRat hs ht hx hy
 
 @[simp]
 theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := by
@@ -285,7 +283,7 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simpa [AntisymmRel] using h
 
-private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) < ω^ (x + y) := by
@@ -295,21 +293,21 @@ private theorem mulOption_lt_wpow {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
 
-private theorem mulOption_lt_wpow' {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem mulOption_lt_wpow' {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : z < x) (h₂ : w < y) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
     (IH₂ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₃ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) < ω^ (x + y) := by
   apply IGame.sub_lt_iff_lt_add.2
-  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic') * ω^ (x + y) + (r * s) * ω^ (z + w) := by
+  have H : r * ω^ (z + y) + s * ω^ (x + w) < (1 : Dyadic) * ω^ (x + y) + (r * s) * ω^ (z + w) := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
   convert H using 1 <;> simp_all <;> ring_nf
 
-private theorem wpow_lt_mulOption {r s : Dyadic'} (hr : 0 < r) (hs : 0 < s)
+private theorem wpow_lt_mulOption {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : w < y) (IH₁ : ω^ (z + y) ≈ ω^ z * ω^ y) (IH₂ : ω^ (z + w) ≈ ω^ z * ω^ w) :
     ω^(x + y) < mulOption (ω^ x) (ω^ y) (r * ω^ z) (s * ω^ w) := by
   apply IGame.lt_sub_iff_add_lt.2
-  have H : (1 : Dyadic') * ω^ (x + y) + ↑(r * s) * ω^ (z + w)
+  have H : (1 : Dyadic) * ω^ (x + y) + ↑(r * s) * ω^ (z + w)
       < r * ω^ (z + y) + s * ω^ x * ω^ w := by
     apply (mul_wpow_add_mul_wpow_lt_mul_wpow' ..).trans (lt_add_of_pos_right ..) <;> simp_all
   rw [← Surreal.mk_lt_mk, ← Surreal.mk_eq_mk] at *
@@ -485,24 +483,49 @@ open ArchimedeanClass
 theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
   mk_map_of_archimedean' Real.toSurrealRingHom hr
 
-theorem mk_wpow_strictAnti :
+/-- We define a `ValuativeRel` instance on `Surreal` which is compatible with
+`ArchimedeanClass.addValuation`. In particular, you can write `x =ᵥ y` to mean that `x` is
+commensurate with `y`. -/
+instance : ValuativeRel Surreal :=
+  .ofValuation (ArchimedeanClass.addValuation _)
+
+instance : (ArchimedeanClass.addValuation Surreal).Compatible where
+  vle_iff_le _ _ := .rfl
+
+theorem vle_def {x y : Surreal} : x ≤ᵥ y ↔ ArchimedeanClass.mk y ≤ .mk x :=
+  .rfl
+
+theorem vlt_def {x y : Surreal} : x <ᵥ y ↔ ArchimedeanClass.mk y < .mk x :=
+  (ArchimedeanClass.addValuation _).vlt_iff_lt
+
+theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
+  (ArchimedeanClass.addValuation _).veq_iff_eq
+
+@[simp] theorem neg_veq {x y : Surreal} : -x =ᵥ y ↔ x =ᵥ y := by simp [veq_def]
+@[simp] theorem veq_neg {x y : Surreal} : x =ᵥ -y ↔ x =ᵥ y := by simp [veq_def]
+@[simp] theorem vle_neg {x y : Surreal} : x ≤ᵥ -y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem neg_vle {x y : Surreal} : -x ≤ᵥ y ↔ x ≤ᵥ y := by simp [vle_def]
+@[simp] theorem vlt_neg {x y : Surreal} : x <ᵥ -y ↔ x <ᵥ y := by simp [vlt_def]
+@[simp] theorem neg_vlt {x y : Surreal} : -x <ᵥ y ↔ x <ᵥ y := by simp [vlt_def]
+
+theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_nonneg _) (wpow_nonneg _)
     (wpow_le_wpow.2 h.le)).lt_of_not_ge fun ⟨n, hn⟩ ↦ hn.not_gt ?_
   simpa using mul_wpow_lt_wpow n h
 
 @[simp]
-theorem mk_wpow_lt_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) < ArchimedeanClass.mk (ω^ y) ↔ y < x :=
-  mk_wpow_strictAnti.lt_iff_gt
+theorem wpow_vlt_wpow_iff : ω^ x <ᵥ ω^ y ↔ x < y :=
+  vlt_def.trans archimedeanClassMk_wpow_strictAnti.lt_iff_gt
 
 @[simp]
-theorem mk_wpow_le_mk_wpow_iff : ArchimedeanClass.mk (ω^ x) ≤ ArchimedeanClass.mk (ω^ y) ↔ y ≤ x :=
-  mk_wpow_strictAnti.le_iff_ge
+theorem wpow_vle_wpow_iff : ω^ x ≤ᵥ ω^ y ↔ x ≤ y :=
+  vle_def.trans archimedeanClassMk_wpow_strictAnti.le_iff_ge
 
 /-- `ω^ x` and `ω^ y` are commensurate iff `x = y`. -/
 @[simp]
-theorem mk_wpow_inj : ArchimedeanClass.mk (ω^ x) = ArchimedeanClass.mk (ω^ y) ↔ x = y :=
-  mk_wpow_strictAnti.injective.eq_iff
+theorem wpow_veq_wpow_iff : ω^ x =ᵥ ω^ y ↔ x = y :=
+  veq_def.trans archimedeanClassMk_wpow_strictAnti.injective.eq_iff
 
 private theorem mk_lt_mk_of_ne {x : IGame} [Numeric x] (h : 0 < x)
     (Hl : ∀ y (h : y ∈ xᴸ), 0 < y → have := Numeric.of_mem_moves h;
@@ -534,7 +557,7 @@ private theorem numeric_of_forall_mk_ne_mk' {x : IGame} [Numeric x] (h : 0 < x)
   apply Numeric.mk
   · simp_rw [leftMoves_ofSets, rightMoves_ofSets]
     rintro _ ⟨a, rfl⟩ _ ⟨b, rfl⟩
-    simp_rw [Function.comp_apply, ← mk_lt_mk, ← mk_wpow_lt_mk_wpow_iff, hf, hg]
+    simp_rw [Function.comp_apply, ← mk_lt_mk, ← wpow_vlt_wpow_iff, vlt_def, hf, hg]
     exact (mk_lt_mk_of_ne' h Hr _ b.2).trans (mk_lt_mk_of_ne h Hl _ a.2.1 a.2.2)
   · aesop (add simp [Subtype.prop])
 
@@ -584,14 +607,14 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
     · simp
     · exact abs_of_pos <| h.trans (Numeric.lt_right hy)
 
-private theorem exists_mk_wpow_eq' {x : IGame.{u}} [Numeric x] (h : 0 < x) :
+private theorem exists_mk_wpow_eq {x : IGame.{u}} [Numeric x] (h : 0 < x) :
     ∃ y : Subtype Numeric, ArchimedeanClass.mk (ω^ mk y) = .mk (mk x) := by
   have IHl (y : (xᴸ ∩ Ioi 0 :)) :
       ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
-    have := y.2.1; exists_mk_wpow_eq' y.2.2
+    have := y.2.1; exists_mk_wpow_eq y.2.2
   have IHr (y : xᴿ) :
       ∃ z : Subtype Numeric, ArchimedeanClass.mk (ω^ mk z) = .mk (mk y) :=
-    exists_mk_wpow_eq' (h.trans (Numeric.lt_right y.2))
+    exists_mk_wpow_eq (h.trans (Numeric.lt_right y.2))
   choose f hf using IHl
   choose g hg using IHr
   by_contra! H
@@ -614,13 +637,13 @@ termination_by x
 decreasing_by igame_wf
 
 /-- Every non-zero surreal is commensurate to some `ω^ x`. -/
-theorem exists_mk_wpow_eq (h : x ≠ 0) :
-    ∃ y, ArchimedeanClass.mk (ω^ y) = .mk x := by
+theorem exists_wpow_veq (h : x ≠ 0) : ∃ y, ω^ y =ᵥ x := by
+  simp_rw [veq_def]
   obtain h | h := h.lt_or_gt <;> cases x
-  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' (IGame.zero_lt_neg.2 h)
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq (IGame.zero_lt_neg.2 h)
     use .mk y
     simpa using hy
-  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq' h
+  · obtain ⟨⟨y, _⟩, hy⟩ := exists_mk_wpow_eq h
     exact ⟨_, hy⟩
 
 /-! ### ω-logarithm -/
@@ -630,7 +653,7 @@ commensurate with `ω^ y`.
 
 As with `Real.log`, we set junk values `wlog 0 = 0` and `wlog (-x) = wlog x`. -/
 def wlog (x : Surreal) : Surreal :=
-  if h : x = 0 then 0 else Classical.choose (exists_mk_wpow_eq h)
+  if h : x = 0 then 0 else Classical.choose (exists_wpow_veq h)
 
 /-- Returns an arbitrary representative for `Surreal.wlog`. -/
 def _root_.IGame.wlog (x : IGame) : IGame := by
@@ -648,25 +671,29 @@ theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
 theorem wlog_zero : wlog 0 = 0 :=
   dif_pos rfl
 
-@[simp]
-theorem mk_wpow_wlog (h : x ≠ 0) : ArchimedeanClass.mk (ω^ wlog x) = ArchimedeanClass.mk x := by
+theorem wpow_wlog_veq (h : x ≠ 0) : ω^ wlog x =ᵥ x := by
   rw [wlog, dif_neg h]
-  exact Classical.choose_spec (exists_mk_wpow_eq h)
+  exact Classical.choose_spec (exists_wpow_veq h)
 
-theorem wlog_eq_of_mk_eq_mk (h : ArchimedeanClass.mk (ω^ y) = ArchimedeanClass.mk x) :
-    wlog x = y := by
+@[simp]
+theorem archimedeanClassMk_wpow_wlog (h : x ≠ 0) : ArchimedeanClass.mk (ω^ x.wlog) = .mk x :=
+  veq_def.1 (wpow_wlog_veq h)
+
+theorem wlog_eq_of_wpow_veq (h : ω^ y =ᵥ x) : wlog x = y := by
   obtain rfl | hx := eq_or_ne x 0
   · simp at h
-  · rwa [← mk_wpow_wlog hx, eq_comm, mk_wpow_inj] at h
+  · grw [← wpow_wlog_veq hx, wpow_veq_wpow_iff] at h
+    rwa [eq_comm] at h
 
 @[simp]
-theorem wlog_eq_iff (h : x ≠ 0) : wlog x = y ↔ ArchimedeanClass.mk (ω^ y) = .mk x :=
-  ⟨fun hy ↦ hy ▸ mk_wpow_wlog h, wlog_eq_of_mk_eq_mk⟩
+theorem wlog_eq_iff (h : x ≠ 0) : wlog x = y ↔ ω^ y =ᵥ x :=
+  ⟨fun hy ↦ hy ▸ wpow_wlog_veq h, wlog_eq_of_wpow_veq⟩
 
-theorem wlog_congr (h : ArchimedeanClass.mk x = .mk y) : wlog x = wlog y := by
+theorem wlog_congr (h : x =ᵥ y) : wlog x = wlog y := by
   obtain rfl | hy := eq_or_ne y 0; · simp_all
-  apply wlog_eq_of_mk_eq_mk
-  rwa [mk_wpow_wlog hy, eq_comm]
+  apply wlog_eq_of_wpow_veq
+  grw [wpow_wlog_veq hy]
+  rwa [ValuativeRel.veq_comm]
 
 @[simp]
 theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
@@ -676,8 +703,8 @@ theorem wlog_wpow (x : Surreal) : wlog (ω^ x) = x := by
 theorem wlog_neg (x : Surreal) : wlog (-x) = wlog x := by
   obtain rfl | hx := eq_or_ne x 0
   · simp
-  · apply wlog_eq_of_mk_eq_mk
-    simpa using mk_wpow_wlog hx
+  · apply wlog_eq_of_wpow_veq
+    simpa using wpow_wlog_veq hx
 
 @[simp]
 theorem wlog_abs (x : Surreal) : wlog |x| = wlog x :=
@@ -688,7 +715,7 @@ theorem wlog_surjective : Function.Surjective wlog :=
 
 theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
   intro a ha b hb h
-  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_wlog ha.ne', mk_wpow_wlog hb.ne']
+  grw [← wpow_vle_wpow_iff, wpow_wlog_veq ha.ne', wpow_wlog_veq hb.ne']
   apply mk_antitoneOn ha.le hb.le h
 
 theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
@@ -696,34 +723,52 @@ theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   rw [← neg_le_neg_iff] at h
   convert wlog_monotoneOn _ _ h using 1 <;> simp_all
 
-theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
-    ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y ↔ wlog y ≤ wlog x := by
-  rw [← mk_wpow_le_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+theorem wlog_add_eq_left {x y : Surreal} (h : y <ᵥ x) : wlog (x + y) = wlog x := by
+  apply wlog_congr
+  rw [veq_def, mk_add_eq_mk_left (vlt_def.1 h)]
 
-theorem wlog_le_wlog_of_mk_le_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x ≤ ArchimedeanClass.mk y) :
-    wlog y ≤ wlog x := by
-  obtain rfl | hx := eq_or_ne x 0; · simp_all
-  rwa [← wlog_le_wlog_iff hx hy]
+theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x := by
+  rw [add_comm, wlog_add_eq_left h]
 
-theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) :
-    ArchimedeanClass.mk x < ArchimedeanClass.mk y ↔ wlog y < wlog x := by
-  rw [← mk_wpow_lt_mk_wpow_iff, mk_wpow_wlog hx, mk_wpow_wlog hy]
+theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
+  simpa using @wlog_add_eq_left x (-y)
 
-theorem wlog_lt_wlog_of_mk_lt_mk (hy : y ≠ 0) (h : ArchimedeanClass.mk x < ArchimedeanClass.mk y) :
-    wlog y < wlog x := by
-  obtain rfl | hx := eq_or_ne x 0; · simp at h
-  rwa [← wlog_lt_wlog_iff hx hy]
+theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
+  simpa using @wlog_add_eq_right (-x) y
+
+theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
+  rw [← wpow_vle_wpow_iff]
+  -- TODO: why does `grw` not work on the iff?
+  constructor
+  · intro h
+    grw [wpow_wlog_veq hx, wpow_wlog_veq hy] at h
+    exact h
+  · intro h
+    grw [wpow_wlog_veq hx, wpow_wlog_veq hy]
+    exact h
+
+theorem wlog_le_wlog_of_vle (hx : x ≠ 0) (h : x ≤ᵥ y) : wlog x ≤ wlog y := by
+  obtain rfl | hy := eq_or_ne y 0; · simp_all
+  rwa [wlog_le_wlog_iff hx hy]
+
+theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x < wlog y ↔ x <ᵥ y := by
+  rw [← not_le, wlog_le_wlog_iff hy hx, ValuativeRel.not_vle]
+
+theorem wlog_lt_wlog_of_vlt (hx : x ≠ 0) (h : x <ᵥ y) : wlog x < wlog y := by
+  obtain rfl | hy := eq_or_ne y 0; · simp at h
+  rwa [wlog_lt_wlog_iff hx hy]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
-  apply wlog_eq_of_mk_eq_mk
-  simp_rw [wpow_add, ArchimedeanClass.mk_mul, mk_wpow_wlog hx, mk_wpow_wlog hy]
+  apply wlog_eq_of_wpow_veq
+  rw [wpow_add]
+  apply ValuativeRel.mul_veq_mul <;> exact wpow_wlog_veq ‹_›
 
 @[simp]
 theorem wlog_realCast (r : ℝ) : wlog r = 0 := by
   obtain rfl | hr := eq_or_ne r 0
   · simp
-  · rw [wlog_eq_iff (mod_cast hr), mk_realCast hr, wpow_zero, ArchimedeanClass.mk_one]
+  · rw [wlog_eq_iff (mod_cast hr), veq_def, mk_realCast hr, wpow_zero, ArchimedeanClass.mk_one]
 
 @[simp] theorem wlog_ratCast (q : ℚ) : wlog q = 0 := by simpa using wlog_realCast q
 @[simp] theorem wlog_intCast (n : ℤ) : wlog n = 0 := by simpa using wlog_realCast n
@@ -748,12 +793,13 @@ theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 @[simp high] -- This should fire before `ArchimedeanClass.mk_div`
-theorem mk_div_wpow_wlog (x : Surreal) : ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
+theorem archimedeanClassMk_div_wpow_wlog (x : Surreal) :
+    ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
   obtain rfl | hx := eq_or_ne x 0 <;> simp_all
 
 theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk (x / ω^ x.wlog) = 0 := by
-  rw [mk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
+  rw [archimedeanClassMk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
 
 private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
@@ -766,13 +812,15 @@ private theorem mk_wpow_wlog_left {x : IGame} [Numeric x] :
     ∀ y : (xᴸ ∩ Ioi 0 :), ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
   intro ⟨y, hy, hy'⟩
   numeric
-  rw [mk_wlog, mk_wpow_wlog hy'.ne']
+  rw [mk_wlog, ← veq_def]
+  exact wpow_wlog_veq hy'.ne'
 
 private theorem mk_wpow_wlog_right {x : IGame} [Numeric x] (h : 0 < x) :
     ∀ y : xᴿ, ArchimedeanClass.mk (ω^ mk y.1.wlog) = .mk (mk y) := by
   intro ⟨y, hy⟩
   numeric
-  rw [mk_wlog, mk_wpow_wlog]
+  rw [mk_wlog, ← veq_def]
+  apply wpow_wlog_veq
   simpa [← mk_eq_mk] using (h.trans (Numeric.lt_right hy)).not_antisymmRel_symm
 
 theorem numeric_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
@@ -806,265 +854,6 @@ theorem mem_range_wpow_of_forall_mk_ne_mk {x : IGame} [Numeric x] (h : 0 < x)
 @[simp]
 theorem toSurreal_wpow (x : NatOrdinal) : (ω^ x).toSurreal = ω^ x.toSurreal :=
   Surreal.mk_eq (toIGame_wpow_equiv x)
-
-/-! ### Leading coefficient -/
-
-/-- The leading coefficient of a surreal's Hahn series. -/
-def leadingCoeff (x : Surreal) : ℝ :=
-  ArchimedeanClass.stdPart (x / ω^ x.wlog)
-
-@[simp]
-theorem leadingCoeff_realCast (r : ℝ) : leadingCoeff r = r := by
-  rw [leadingCoeff, wlog_realCast, wpow_zero, div_one]
-  exact ArchimedeanClass.stdPart_real Real.toSurrealRingHom r
-
-@[simp]
-theorem leadingCoeff_ratCast (q : ℚ) : leadingCoeff q = q :=
-  mod_cast leadingCoeff_realCast q
-
-@[simp]
-theorem leadingCoeff_intCast (n : ℤ) : leadingCoeff n = n :=
-  mod_cast leadingCoeff_realCast n
-
-@[simp]
-theorem leadingCoeff_natCast (n : ℕ) : leadingCoeff n = n :=
-  mod_cast leadingCoeff_realCast n
-
-@[simp]
-theorem leadingCoeff_zero : leadingCoeff 0 = 0 :=
-  mod_cast leadingCoeff_natCast 0
-
-@[simp]
-theorem leadingCoeff_one : leadingCoeff 1 = 1 :=
-  mod_cast leadingCoeff_natCast 1
-
-@[simp]
-theorem leadingCoeff_neg (x : Surreal) : leadingCoeff (-x) = -leadingCoeff x := by
-  simp [leadingCoeff, neg_div]
-
-@[simp]
-theorem leadingCoeff_mul (x y : Surreal) :
-    leadingCoeff (x * y) = leadingCoeff x * leadingCoeff y := by
-  unfold leadingCoeff
-  by_cases hx : x = 0; · simp [hx]
-  by_cases hy : y = 0; · simp [hy]
-  rw [wlog_mul hx hy, wpow_add, ← ArchimedeanClass.stdPart_mul, mul_div_mul_comm]
-  all_goals
-    rw [mk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
-    simpa
-
-@[simp]
-theorem leadingCoeff_inv (x : Surreal) : leadingCoeff x⁻¹ = (leadingCoeff x)⁻¹ := by
-  obtain rfl | hx := eq_or_ne x 0; · simp
-  apply eq_inv_of_mul_eq_one_left
-  rw [← leadingCoeff_mul, inv_mul_cancel₀ hx, leadingCoeff_one]
-
-@[simp]
-theorem leadingCoeff_div (x y : Surreal) :
-    leadingCoeff (x / y) = leadingCoeff x / leadingCoeff y := by
-  simp [div_eq_mul_inv]
-
-@[simp]
-theorem leadingCoeff_wpow (x : Surreal) : leadingCoeff (ω^ x) = 1 := by
-  simp [leadingCoeff]
-
-@[simp]
-theorem leadingCoeff_eq_zero {x : Surreal} : leadingCoeff x = 0 ↔ x = 0 := by
-  simp [leadingCoeff]
-
-private theorem leadingCoeff_nonneg {x : Surreal} (h : 0 ≤ x) : 0 ≤ leadingCoeff x :=
-  stdPart_nonneg <| div_nonneg h (wpow_nonneg _)
-
-private theorem leadingCoeff_nonpos {x : Surreal} (h : x ≤ 0) : leadingCoeff x ≤ 0 :=
-  stdPart_nonpos <| div_nonpos_of_nonpos_of_nonneg h (wpow_nonneg _)
-
-@[simp]
-theorem leadingCoeff_nonneg_iff {x : Surreal} : 0 ≤ leadingCoeff x ↔ 0 ≤ x := by
-  refine ⟨?_, leadingCoeff_nonneg⟩
-  contrapose!
-  refine fun h ↦ (leadingCoeff_nonpos h.le).lt_of_ne ?_
-  rw [ne_eq, leadingCoeff_eq_zero]
-  exact h.ne
-
-@[simp]
-theorem leadingCoeff_nonpos_iff {x : Surreal} : leadingCoeff x ≤ 0 ↔ x ≤ 0 := by
-  simpa using leadingCoeff_nonneg_iff (x := -x)
-
-@[simp]
-theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
-  simp [← not_le]
-
-@[simp]
-theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
-  simp [← not_le]
-
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_self_nonneg {α}
-    [LinearOrderedAddCommGroupWithTop α] {a : α} : 0 ≤ a - a := by
-  obtain rfl | ha := eq_or_ne a ⊤
-  · simp
-  · rw [LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha]
-
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
-    [LinearOrderedAddCommGroupWithTop α] {a b : α} (ha : a ≠ ⊤) : b - a = 0 ↔ b = a := by
-  rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
-    LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
-
-theorem leadingCoeff_monotoneOn (x : Surreal.{u}) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
-  rintro y rfl z (hw : wlog _ = _) h
-  obtain rfl | hy := eq_or_ne y 0; · simpa
-  obtain rfl | hz := eq_or_ne z 0; · simpa
-  · rw [leadingCoeff, leadingCoeff, hw]
-    apply stdPart_monotoneOn
-    · simp
-    · rw [← hw]; simp
-    · simpa [div_eq_mul_inv]
-
-private theorem stdPart_eq' {x y : Surreal} {r : ℝ}
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : stdPart (x / ω^ y) = r := by
-  apply stdPart_eq Real.toSurrealRingHom <;> intro s hs
-  · rw [le_div_iff₀ (wpow_pos _)]
-    exact hL s hs
-  · rw [div_le_iff₀ (wpow_pos _)]
-    exact hR s hs
-
-theorem wlog_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.wlog = y := by
-  apply wlog_eq_of_mk_eq_mk
-  rw [eq_comm, ← LinearOrderedAddCommGroupWithTop.sub_eq_zero (by simp), ← ArchimedeanClass.mk_div,
-    ← stdPart_eq_zero.ne_left]
-  exact (stdPart_eq' hL hR).trans_ne hr
-
-theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
-  rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
-
-/-! ### Leading term -/
-
-/-- The leading term of a surreal's Hahn series. -/
-def leadingTerm (x : Surreal) : Surreal :=
-  x.leadingCoeff * ω^ x.wlog
-
-@[simp]
-theorem leadingTerm_realCast (r : ℝ) : leadingTerm r = r := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_ratCast (q : ℚ) : leadingTerm q = q :=
-  mod_cast leadingTerm_realCast q
-
-@[simp]
-theorem leadingTerm_intCast (n : ℤ) : leadingTerm n = n :=
-  mod_cast leadingTerm_realCast n
-
-@[simp]
-theorem leadingTerm_natCast (n : ℕ) : leadingTerm n = n :=
-  mod_cast leadingTerm_realCast n
-
-@[simp]
-theorem leadingTerm_zero : leadingTerm 0 = 0 :=
-  mod_cast leadingTerm_natCast 0
-
-@[simp]
-theorem leadingTerm_one : leadingTerm 1 = 1 :=
-  mod_cast leadingTerm_natCast 1
-
-@[simp]
-theorem leadingTerm_neg (x : Surreal) : leadingTerm (-x) = -leadingTerm x := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_mul (x y : Surreal) : leadingTerm (x * y) = leadingTerm x * leadingTerm y := by
-  obtain rfl | hx := eq_or_ne x 0; · simp
-  obtain rfl | hy := eq_or_ne y 0; · simp
-  simp [leadingTerm, wlog_mul hx hy, mul_mul_mul_comm]
-
-@[simp]
-theorem leadingTerm_inv (x : Surreal) : leadingTerm x⁻¹ = (leadingTerm x)⁻¹ := by
-  obtain rfl | hx := eq_or_ne x 0; · simp
-  apply eq_inv_of_mul_eq_one_left
-  rw [← leadingTerm_mul, inv_mul_cancel₀ hx, leadingTerm_one]
-
-@[simp]
-theorem leadingTerm_div (x y : Surreal) : leadingTerm (x / y) = leadingTerm x / leadingTerm y := by
-  simp [div_eq_mul_inv]
-
-@[simp]
-theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_eq_zero {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_nonneg_iff {x : Surreal} : 0 ≤ leadingTerm x ↔ 0 ≤ x := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_nonpos_iff {x : Surreal} : leadingTerm x ≤ 0 ↔ x ≤ 0 := by
-  simp [leadingTerm, mul_nonpos_iff]
-
-@[simp]
-theorem leadingTerm_pos_iff {x : Surreal} : 0 < leadingTerm x ↔ 0 < x := by
-  simp [← not_le]
-
-@[simp]
-theorem leadingTerm_neg_iff {x : Surreal} : leadingTerm x < 0 ↔ x < 0 := by
-  simp [← not_le]
-
-theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
-    ArchimedeanClass.mk x < .mk (x - x.leadingTerm) := by
-  rw [← LinearOrderedAddCommGroupWithTop.sub_lt_sub_iff_left_of_ne_top
-    (a := .mk <| ω^ x.wlog) (by simp)]
-  simp_rw [← ArchimedeanClass.mk_div, sub_div, mk_div_wpow_wlog_of_ne_zero hx]
-  convert mk_sub_stdPart_pos Real.toSurrealRingHom _
-  · simp [leadingTerm, leadingCoeff]
-  · rw [mk_div_wpow_wlog_of_ne_zero hx]
-
-@[simp]
-theorem mk_leadingTerm (x : Surreal) : ArchimedeanClass.mk x.leadingTerm = .mk x := by
-  obtain rfl | hx := eq_or_ne x 0; · simp
-  simpa using ArchimedeanClass.mk_sub_eq_mk_left (mk_lt_mk_sub_leadingTerm hx)
-
-@[simp]
-theorem wlog_leadingTerm (x : Surreal) : x.leadingTerm.wlog = x.wlog :=
-  wlog_congr x.mk_leadingTerm
-
-@[simp]
-theorem leadingCoeff_leadingTerm (x : Surreal) : x.leadingTerm.leadingCoeff = x.leadingCoeff := by
-  simp [leadingTerm]
-
-@[simp]
-theorem leadingTerm_leadingTerm (x : Surreal) : x.leadingTerm.leadingTerm = x.leadingTerm := by
-  apply (leadingTerm_mul ..).trans
-  simp [leadingTerm]
-
-private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
-    x.leadingTerm ≤ y.leadingTerm := by
-  have hy := hx.trans h
-  obtain hxy | hxy := (mk_antitoneOn hx hy h).eq_or_lt
-  · have hxy' := wlog_congr hxy
-    unfold leadingTerm
-    rw [hxy', mul_le_mul_iff_left₀ (wpow_pos _), Real.toSurreal_le_iff]
-    exact leadingCoeff_monotoneOn _ rfl hxy' h
-  · apply (lt_of_mk_lt_mk_of_nonneg ..).le <;> simpa
-
-theorem leadingTerm_mono : Monotone leadingTerm := by
-  intro x y h
-  obtain hx | hx := le_total 0 x
-  · exact leadingTerm_mono' hx h
-  · obtain hy | hy := le_total 0 y
-    · exact (leadingTerm_nonpos_iff.2 hx).trans (leadingTerm_nonneg_iff.2 hy)
-    · rw [← neg_le_neg_iff, ← leadingTerm_neg, ← leadingTerm_neg]
-      apply leadingTerm_mono' <;> simpa
-
-theorem leadingTerm_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
-    (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingTerm x = r * ω^ y := by
-  rw [leadingTerm, leadingCoeff_eq hr hL hR, wlog_eq hr hL hR]
 
 end Surreal
 end

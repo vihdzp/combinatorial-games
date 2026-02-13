@@ -99,6 +99,10 @@ protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
+theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
+  ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
 end Dicotic
 
 /-! ### Impartial games -/
@@ -347,7 +351,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -463,7 +467,7 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
     (@ih p y hy (.of_mem_moves hy)).insert y
   ext
   rw [Set.mem_setOf, subposition_iff_exists]
-  simp
+  simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
   (Short.finite_setOf_subposition x).to_subtype
