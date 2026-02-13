@@ -468,6 +468,11 @@ theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x �
   grw [← hr]
   simpa using Numeric.lt_right hx
 
+@[simp]
+theorem mk_half : Surreal.mk ½ = 2⁻¹ := by
+  rw [← mul_left_inj' two_ne_zero, mul_two, inv_mul_cancel₀ two_ne_zero]
+  exact Surreal.mk_eq half_add_half_equiv_one
+
 end IGame
 
 namespace Game
