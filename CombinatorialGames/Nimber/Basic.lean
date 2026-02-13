@@ -69,14 +69,14 @@ theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
 variable {a b c : Nimber.{u}}
 
-/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
-`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def add (a b : Nimber.{u}) : Nimber.{u} :=
+private def add (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
     ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
+`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 instance : Add Nimber :=
   ⟨Nimber.add⟩
 

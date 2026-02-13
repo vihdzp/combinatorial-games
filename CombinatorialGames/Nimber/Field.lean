@@ -20,10 +20,6 @@ It's possible to show the existence of the nimber inverse implicitly via the sim
 theorem. Instead, we employ the explicit formula given in [On Numbers And Games][conway2001]
 (p. 56), which uses mutual induction and mimics the definition for the surreal inverse. This
 definition `invAux` "accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
-
-## Todo
-
-- Show the nimbers are algebraically closed.
 -/
 
 universe u v
@@ -49,14 +45,14 @@ private theorem two_zsmul (x : Nimber) : (2 : ℤ) • x = 0 := by
 private theorem add_eq_iff_eq_add : a + b = c ↔ a = c + b :=
   sub_eq_iff_eq_add
 
-/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
-`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def mul (a b : Nimber.{u}) : Nimber.{u} :=
+private def mul (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | ∃ a', ∃ (_ : a' < a), ∃ b', ∃ (_ : b' < b),
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
+`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
