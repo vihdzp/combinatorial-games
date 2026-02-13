@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 import CombinatorialGames.Game.Classes
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Surreal.Division
+import Mathlib.Data.Finset.DenselyOrdered
 
 /-!
 # Dyadic games

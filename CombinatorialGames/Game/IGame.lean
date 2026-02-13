@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
 -/
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.Group.Pointwise.Set.Small
