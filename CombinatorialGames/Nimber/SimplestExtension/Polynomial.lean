@@ -3,16 +3,20 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Basic
-import Mathlib.Algebra.Polynomial.Degree.Domain
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import Mathlib.Algebra.Polynomial.EraseLead
+public import Mathlib.Algebra.Polynomial.Eval.Defs
+public import Mathlib.Algebra.Polynomial.Splits
+public import Mathlib.Data.Finsupp.WellFounded
+
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Polynomial.EraseLead
 import Mathlib.Algebra.Polynomial.Eval.Coeff
-import Mathlib.Algebra.Polynomial.Eval.Defs
-import Mathlib.Algebra.Polynomial.Splits
-import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.Tactic.ComputeDegree
+import Mathlib.Algebra.Polynomial.Degree.Domain
 
 /-!
 # Nimber polynomials
@@ -26,6 +30,8 @@ This file contains multiple auxiliary results and definitions for working with n
 -/
 
 universe u
+
+public section
 
 open Order Polynomial
 
@@ -177,6 +183,7 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
 
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
 issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
+@[expose]
 def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
   .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
@@ -440,7 +447,6 @@ instance : NoMaxOrder (Nimber[X]) where
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
   refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
-  have (a b) (h : a < b) : b ≠ 0 := h.ne_bot -- Used by `aesop`
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -760,7 +766,6 @@ theorem forall_lt_oeval_iff {x : Nimber} {P : Ordinal → Prop}
 
 /-! ### Least irreducible polynomial -/
 
-attribute [simp] Polynomial.map_multiset_prod
 attribute [-simp] WithTop.coe_add WithTop.coe_mul WithTop.coe_pow
 
 /-- Returns the lexicographically earliest non-constant polynomial, all of whose coefficients are
@@ -800,6 +805,16 @@ theorem leastNoRoots_not_root_of_lt {x r : Nimber} (ht) (hr : r < x) :
 @[simp]
 theorem leastNoRoots_zero : leastNoRoots 0 = ⊤ := by
   simp [leastNoRoots]
+
+@[simp]
+theorem leastNoRoots_one : leastNoRoots 1 = ⊤ := by
+  rw [leastNoRoots, sInf_eq_top, Set.forall_mem_image]
+  intro x hx
+  obtain rfl : x = 0 := by ext k; simpa using hx.2.1 k
+  simp at hx
+
+theorem leastNoRoots_of_le_one {x : Nimber} (h : x ≤ 1) : leastNoRoots x = ⊤ := by
+  obtain rfl | rfl := Nimber.le_one_iff.1 h <;> simp
 
 @[simp]
 theorem coeff_leastNoRoots_zero_ne {x : Nimber} (ht) :
@@ -893,7 +908,7 @@ theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
   have hx₁ := lt_of_not_ge fun h ↦ hp₀ (polynomial_eq_zero_of_le_one h hpk)
   have hs := h.splits_subfield (p := h.embed p hpk) (by simpa)
   conv_lhs => rw [← h.map_embed hpk, hs.eq_prod_roots]
-  simp [h.roots_eq_map hpn hpk]
+  simp [h.roots_eq_map hpn hpk, Polynomial.map_multiset_prod]
 
 theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
     leastNoRoots x = .some (C x⁻¹ * X + 1) := by
@@ -965,3 +980,4 @@ theorem IsField.irreducible_embed_leastNoRoots {x : Nimber} (h : IsField x) (ht)
   exact leastNoRoots_not_root_of_lt ht hr root
 
 end Nimber
+end

@@ -3,9 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 -/
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.Tactic.AddInstances
+module
+
+public import CombinatorialGames.Game.IGame
+public meta import CombinatorialGames.Tactic.AddInstances
+
 import Mathlib.Data.Finite.Prod
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Classes of games
@@ -43,11 +47,14 @@ on combinatorial games. This functionality is now implemented through the `game_
 
 universe u
 
+@[expose] public section
+
 namespace IGame
 
 /-! ### Dicotic games -/
 
-private def DicoticAux (x : IGame) : Prop :=
+@[no_expose]
+def DicoticAux (x : IGame) : Prop :=
   (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
 termination_by x
 decreasing_by igame_wf
@@ -107,7 +114,8 @@ end Dicotic
 
 /-! ### Impartial games -/
 
-private def ImpartialAux (x : IGame) : Prop :=
+@[no_expose]
+def ImpartialAux (x : IGame) : Prop :=
   -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, ImpartialAux y
 termination_by x
 decreasing_by igame_wf
@@ -264,7 +272,8 @@ end Impartial
 
 /-! ### Numeric games -/
 
-private def NumericAux (x : IGame) : Prop :=
+@[no_expose]
+def NumericAux (x : IGame) : Prop :=
   (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, NumericAux y)
 termination_by x
 decreasing_by igame_wf
@@ -423,7 +432,8 @@ end Numeric
 
 /-! ### Short games -/
 
-private def ShortAux (x : IGame) : Prop :=
+@[no_expose]
+def ShortAux (x : IGame) : Prop :=
   ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, ShortAux y
 termination_by x
 decreasing_by igame_wf

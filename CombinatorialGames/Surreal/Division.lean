@@ -3,9 +3,15 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Theodore Hwa
 -/
-import CombinatorialGames.Surreal.Multiplication
+module
+
+public import CombinatorialGames.Surreal.Multiplication
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
+
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
+import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring
 
 /-!
@@ -34,20 +40,18 @@ universe u
 
 open IGame
 
-private instance {x y : IGame} [Numeric x] [Numeric y⁻¹] : Numeric (x / y) := .mul ..
+instance {x y : IGame} [Numeric x] [Numeric y⁻¹] : Numeric (x / y) := .mul ..
 
-private instance {x y a : IGame} [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
+instance {x y a : IGame} [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
     Numeric (invOption x y a) :=
   .mul ..
 
-private theorem inv_pos' {x : IGame} [Numeric x⁻¹] (hx : 0 < x) : 0 < x⁻¹ :=
+theorem inv_pos' {x : IGame} [Numeric x⁻¹] (hx : 0 < x) : 0 < x⁻¹ :=
   Numeric.left_lt (zero_mem_leftMoves_inv hx)
 
-private theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
+theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
     Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
   rfl
-
-namespace Surreal.Division
 
 /-! ### Arithmetic lemmas -/
 
@@ -230,12 +234,11 @@ theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻�
 termination_by x
 decreasing_by igame_wf
 
-end Surreal.Division
-
 /-! ### Instances and corollaries -/
 
+public section
+
 namespace IGame.Numeric
-open Surreal.Division
 
 protected instance inv (x : IGame) [Numeric x] : Numeric x⁻¹ := by
   obtain h | h | h := Numeric.lt_or_equiv_or_gt x 0

@@ -3,8 +3,11 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios, Yuyang Zhao
 -/
-import CombinatorialGames.Game.Player
-import Mathlib.Data.QPF.Univariate.Basic
+module
+
+public import CombinatorialGames.Game.Player
+public import Mathlib.Data.QPF.Univariate.Basic
+
 import Mathlib.Logic.Small.Set
 
 /-!
@@ -37,6 +40,8 @@ functor.
 
 universe u
 
+@[expose] public section
+
 /-! ### Game Functor -/
 
 /-- The functor from a type into the subtype of small pairs of sets in that type.
@@ -66,15 +71,15 @@ namespace GameFunctor
 instance {α : Type (u + 1)} (x : GameFunctor α) (p : Player) : Small.{u} (x.1 p) := x.2 p
 
 instance : Functor GameFunctor where
-  map f s := ⟨(f '' s.1 ·), fun _ => inferInstance⟩
+  map f s := ⟨(f '' s.1 ·), fun _ ↦ by infer_instance⟩
 
 theorem map_def {α β} (f : α → β) (s : GameFunctor α) :
-    f <$> s = ⟨(f '' s.1 ·), fun _ => inferInstance⟩ :=
+    f <$> s = ⟨(f '' s.1 ·), fun _ ↦ by infer_instance⟩ :=
   rfl
 
 noncomputable instance : QPF GameFunctor where
   P := ⟨Player → Type u, fun x ↦ Σ p, PLift (x p)⟩
-  abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ inferInstance⟩
+  abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ by infer_instance⟩
   repr x := ⟨fun p ↦ Shrink (x.1 p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.1).1)⟩
   abs_repr x := by ext; simp [← (equivShrink _).exists_congr_right]
   abs_map f := by intro ⟨x, f⟩; ext; simp [PFunctor.map, map_def]

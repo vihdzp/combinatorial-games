@@ -3,10 +3,12 @@ Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Game.Graph
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Graph
+public import CombinatorialGames.Nimber.Basic
 
 /-!
 # Nim
@@ -22,6 +24,8 @@ We define `nim` in terms of a `Nimber` rather than an `Ordinal`, as this makes t
 -/
 
 universe u
+
+@[expose] public section
 
 open Nimber Set
 
@@ -157,3 +161,4 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
     exact iho _ ho' y ⟨hyx, hxy⟩ (birthday_lt_of_subposition hy)
 
 end IGame
+end

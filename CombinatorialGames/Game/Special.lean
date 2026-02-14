@@ -3,8 +3,12 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.Game.Classes
+module
+
+public import CombinatorialGames.Game.Classes
+
 import CombinatorialGames.Tactic.GameCmp
+import Mathlib.Data.Set.Finite.Basic
 
 /-!
 # Special games
@@ -19,7 +23,7 @@ This file defines some simple yet notable combinatorial games:
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace IGame
 
