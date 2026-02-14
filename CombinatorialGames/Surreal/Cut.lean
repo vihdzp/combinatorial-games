@@ -3,9 +3,10 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
 import CombinatorialGames.Surreal.Birthday.Basic
+import Mathlib.Order.Concept
+import Mathlib.Order.ConditionallyCompleteLattice.Finset
+import Mathlib.Order.UpperLower.CompleteLattice
 
 /-!
 # Surreal cuts
@@ -130,6 +131,9 @@ noncomputable instance : CompleteLinearOrder Cut where
 
 @[simp] theorem right_iSup {ι} (f : ι → Cut) : (⨆ i, f i).right = ⋂ i, (f i).right := by simp [iSup]
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
+
+instance : Nontrivial Cut :=
+  ⟨⊥, ⊤, by apply_fun left; simpa using empty_ne_univ⟩
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
   rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
@@ -258,11 +262,11 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem neg_leftGame (x : Game) : -leftGame x = rightGame (-x) := by
-  ext; simp [le_neg]
-
-@[simp] theorem neg_rightGame (x : Game) : -rightGame x = leftGame (-x) := by
+@[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
+
+@[simp, grind =] theorem rightGame_neg (x : Game) : rightGame (-x) = -leftGame x := by
+  ext; simp [le_neg]
 
 @[simp]
 theorem neg_leftGame_image (s : Set Game) : -leftGame '' s = rightGame '' (-s) := by
@@ -313,8 +317,13 @@ theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x
 theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
   simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
 
+@[simp]
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by
   simp
+
+@[simp]
+theorem leftSurreal_le_rightSurreal (x : Surreal) : leftSurreal x ≤ rightSurreal x :=
+  (leftSurreal_lt_rightSurreal x).le
 
 theorem leftSurreal_lt_rightSurreal_iff {x y : Surreal} :
     leftSurreal x < rightSurreal y ↔ x ≤ y := by
@@ -327,6 +336,26 @@ theorem rightSurreal_lt_leftSurreal_iff {x y : Surreal} :
   constructor <;> intro h
   · exact h.1 (mem_Iic.2 le_rfl)
   · constructor <;> simpa
+
+theorem leftSurreal_strictMono : StrictMono leftSurreal :=
+  fun x y ↦ by simp
+
+theorem rightSurreal_strictMono : StrictMono rightSurreal :=
+  fun x y ↦ by simp
+
+theorem leftSurreal_lt_leftSurreal_iff {x y : Surreal} : leftSurreal x < leftSurreal y ↔ x < y :=
+  leftSurreal_strictMono.lt_iff_lt
+
+theorem rightSurreal_lt_rightSurreal_iff {x y : Surreal} : leftSurreal x < leftSurreal y ↔ x < y :=
+  leftSurreal_strictMono.lt_iff_lt
+
+@[simp]
+theorem leftSurreal_inj {x y : Surreal} : leftSurreal x = leftSurreal y ↔ x = y :=
+  leftSurreal_strictMono.injective.eq_iff
+
+@[simp]
+theorem rightSurreal_inj {x y : Surreal} : rightSurreal x = rightSurreal y ↔ x = y :=
+  rightSurreal_strictMono.injective.eq_iff
 
 theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
   refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
@@ -347,6 +376,45 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
   · rw [lt_iff_nonempty_inter]
     exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
   · aesop
+
+@[simp]
+theorem leftGame_ne_bot (x : Game) : leftGame x ≠ ⊥ := by
+  apply_fun left
+  rw [left_bot, ← Set.nonempty_iff_ne_empty, left_leftGame]
+  refine ⟨-(x.birthday + 1), fun h ↦ ?_⟩
+  simpa [zero_lt_one.not_ge] using (Game.neg_toGame_birthday_le x).trans h
+
+@[simp]
+theorem leftGame_ne_top (x : Game) : leftGame x ≠ ⊤ := by
+  apply_fun right
+  rw [right_top, ← Set.nonempty_iff_ne_empty, right_leftGame]
+  exact ⟨x.birthday, Game.le_toGame_birthday x⟩
+
+@[simp]
+theorem rightGame_ne_bot (x : Game) : rightGame x ≠ ⊥ := by
+  rw [ne_eq, ← neg_inj, ← leftGame_neg, neg_bot]
+  exact leftGame_ne_top _
+
+@[simp]
+theorem rightGame_ne_top (x : Game) : rightGame x ≠ ⊤ := by
+  rw [ne_eq, ← neg_inj, ← leftGame_neg, neg_top]
+  exact leftGame_ne_bot _
+
+@[simp]
+theorem leftSurreal_ne_bot (x : Surreal) : leftSurreal x ≠ ⊥ := by
+  simpa using leftGame_ne_bot x.toGame
+
+@[simp]
+theorem leftSurreal_ne_top (x : Surreal) : leftSurreal x ≠ ⊤ := by
+  simpa using leftGame_ne_top x.toGame
+
+@[simp]
+theorem rightSurreal_ne_bot (x : Surreal) : rightSurreal x ≠ ⊥ := by
+  simpa using rightGame_ne_bot x.toGame
+
+@[simp]
+theorem rightSurreal_ne_top (x : Surreal) : rightSurreal x ≠ ⊤ := by
+  simpa using rightGame_ne_top x.toGame
 
 theorem sInf_leftSurreal_right (x : Cut) : sInf (leftSurreal '' x.right) = x := by
   ext y
@@ -407,6 +475,10 @@ theorem right_supLeft (x : IGame) :
     (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
+theorem supLeft_mem_of_short {x : IGame} [Short x] (hx : xᴸ.Nonempty) :
+    ∃ y ∈ xᴸ, rightGame (.mk y) = supLeft x :=
+  Set.Nonempty.ciSup_mem_image _ hx (Short.finite_moves _ x)
+
 /-- The infimum $R'(x)$ of all left cuts of right options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
@@ -422,14 +494,19 @@ theorem right_infRight (x : IGame) :
     (infRight x).right = ⋃ i ∈ xᴿ, {y | .mk i ≤ y.toGame} := by
   simp [infRight]
 
+theorem infRight_mem_of_short {x : IGame} [Short x] (hx : xᴿ.Nonempty) :
+    ∃ y ∈ xᴿ, leftGame (.mk y) = infRight x :=
+  -- TODO: missing Mathlib lemma
+  Set.Nonempty.ciSup_mem_image (α := Cutᵒᵈ) _ hx (Short.finite_moves _ x)
+
 @[simp]
-theorem neg_supLeft (x : IGame) : -supLeft x = infRight (-x) := by
+theorem infRight_neg (x : IGame) : infRight (-x) = -supLeft x := by
   refine eq_of_forall_le_iff fun y ↦ ?_
   simp [supLeft, infRight]
 
 @[simp]
-theorem neg_infRight (x : IGame) : -infRight x = supLeft (-x) := by
-  rw [← neg_neg (supLeft _), neg_supLeft, neg_neg]
+theorem supLeft_neg (x : IGame) : supLeft (-x) = -infRight x := by
+  rw [← neg_neg (supLeft _), ← infRight_neg, neg_neg]
 
 theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
     leftGame (.mk x) = supLeft x := by
@@ -450,8 +527,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
     rightGame (.mk x) = infRight x := by
-  simpa [← neg_supLeft, ← neg_infRight, ← neg_leftGame, ← neg_rightGame] using
-    @leftGame_eq_supLeft_of_le (-x)
+  simpa using @leftGame_eq_supLeft_of_le (-x)
 
 /-- A surreal `x` fits between two cuts `y` and `z` when `x ∈ y.right ∩ z.left`. -/
 def Fits (x : Surreal) (y z : Cut) : Prop :=
@@ -527,16 +603,122 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
-/-- A characterization of games equivalent to numbers: they're precisely those with
-`supLeft x < infRight x`. -/
-theorem supLeft_lt_infRight_iff {x : IGame} :
-    supLeft x < infRight x ↔ ∃ y : Subtype Numeric, x ≈ y where
-  mp h := by
-    refine ⟨⟨(simplestBtwn h).out, inferInstance⟩, ?_⟩
-    rw [← Game.mk_eq_mk, gameMk_out, simplestBtwn_supLeft_infRight]
-  mpr := by
-    rintro ⟨⟨y, _⟩, h⟩
-    exact supLeft_lt_infRight_of_equiv_numeric h
+/-! ### Numeric cuts -/
+
+/-- We say that a cut is numeric when it's either a left or right cut from a surreal. -/
+@[mk_iff numeric_def']
+protected class inductive Numeric : Cut → Prop where
+  | protected leftSurreal : ∀ y, Cut.Numeric (leftSurreal y)
+  | protected rightSurreal : ∀ y, Cut.Numeric (rightSurreal y)
+
+theorem numeric_def {x : Cut} : x.Numeric ↔ x ∈ Set.range leftSurreal ∪ Set.range rightSurreal := by
+  rw [numeric_def']
+  simp [eq_comm]
+
+namespace Numeric
+
+attribute [instance] Numeric.leftSurreal Numeric.rightSurreal
+
+@[simp low]
+theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
+  cases hx <;> simp
+
+@[simp low]
+theorem ne_top (x : Cut) [hx : x.Numeric] : x ≠ ⊤ := by
+  cases hx <;> simp
+
+open Classical in
+/-- A version of the recursor which eliminates into `Sort`. -/
+@[elab_as_elim]
+noncomputable def recOn' {motive : ∀ x : Cut, [x.Numeric] → Sort*} (x : Cut) [h : x.Numeric]
+    (leftSurreal : ∀ y, motive (Cut.leftSurreal y))
+    (rightSurreal : ∀ y, motive (Cut.rightSurreal y)) : motive x :=
+  if hx : x ∈ Set.range Cut.leftSurreal
+    then
+      cast (by congr; exact Classical.choose_spec hx) (leftSurreal (choose hx))
+    else
+      haveI hx' : x ∈ Set.range Cut.rightSurreal := by simp_all [numeric_def]
+      cast (by congr; exact Classical.choose_spec hx') (rightSurreal (choose hx'))
+
+@[simp]
+theorem recOn'_leftSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : Surreal)
+    (leftSurreal : ∀ y, motive (Cut.leftSurreal y))
+    (rightSurreal : ∀ y, motive (Cut.rightSurreal y)) :
+    recOn' (motive := motive) (Cut.leftSurreal y) leftSurreal rightSurreal = leftSurreal y := by
+  rw [recOn', dif_pos (by simp)]
+  generalize_proofs _ H
+  rw [cast_eq_iff_heq]
+  congr
+  exact leftSurreal_inj.1 <| Classical.choose_spec H
+
+@[simp]
+theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : Surreal)
+    (leftSurreal : ∀ y, motive (Cut.leftSurreal y))
+    (rightSurreal : ∀ y, motive (Cut.rightSurreal y)) :
+    recOn' (motive := motive) (Cut.rightSurreal y) leftSurreal rightSurreal = rightSurreal y := by
+  rw [recOn', dif_neg (by simp)]
+  generalize_proofs _ H
+  rw [cast_eq_iff_heq]
+  congr
+  exact rightSurreal_inj.1 <| Classical.choose_spec H
+
+-- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
+-- are dyadic.
+private theorem short_aux (x : IGame) [Short x] :
+    (leftGame <| .mk x).Numeric ∧ (rightGame <| .mk x).Numeric := by
+  obtain h | h := lt_or_ge (supLeft x) (infRight x)
+  · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
+    exact ⟨Numeric.leftSurreal _, Numeric.rightSurreal _⟩
+  · have h₁ := leftGame_ne_bot (.mk x)
+    have h₂ := rightGame_ne_top (.mk x)
+    rw [leftGame_eq_supLeft_of_le h, rightGame_eq_infRight_of_le h] at *
+    constructor
+    · obtain hx | hx := xᴸ.eq_empty_or_nonempty
+      · simp [supLeft, hx] at h₁
+      · obtain ⟨y, hy, hy'⟩ := supLeft_mem_of_short hx
+        rw [← hy']
+        short
+        exact (short_aux y).2
+    · obtain hx | hx := xᴿ.eq_empty_or_nonempty
+      · simp [infRight, hx] at h₂
+      · obtain ⟨y, hy, hy'⟩ := infRight_mem_of_short hx
+        rw [← hy']
+        short
+        exact (short_aux y).1
+termination_by x
+decreasing_by igame_wf
+
+protected instance leftGame (x : IGame) [Short x] : (leftGame <| .mk x).Numeric :=
+  (short_aux x).1
+
+protected instance rightGame (x : IGame) [Short x] : (rightGame <| .mk x).Numeric :=
+  (short_aux x).2
+
+protected theorem supLeft {x : IGame} [Short x] (hx : xᴸ.Nonempty) : (supLeft x).Numeric := by
+  obtain ⟨y, hy, hy'⟩ := supLeft_mem_of_short hx
+  rw [← hy']
+  short
+  infer_instance
+
+protected theorem infRight {x : IGame} [Short x] (hx : xᴿ.Nonempty) : (infRight x).Numeric := by
+  obtain ⟨y, hy, hy'⟩ := infRight_mem_of_short hx
+  rw [← hy']
+  short
+  infer_instance
+
+end Numeric
+
+/-- Returns the surreal defining the cut. -/
+noncomputable def toSurreal (x : Cut) [x.Numeric] : Surreal :=
+  Numeric.recOn' x (fun y ↦ y) (fun y ↦ y)
+
+@[simp]
+theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
+  Numeric.recOn'_leftSurreal ..
+
+@[simp]
+theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
+  Numeric.recOn'_rightSurreal ..
 
 end Cut
 end Surreal
