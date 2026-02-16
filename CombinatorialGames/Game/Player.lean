@@ -111,6 +111,49 @@ instance : CommGroup Player where
 
 end Player
 
+/-! ### Outcomes -/
+
+/-- The three possible outcomes of a game.
+
+We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
+inductive Outcome : Type
+  /-- A given player wins in perfect play. -/
+  | win
+  /-- A given player draws in perfect play. -/
+  | draw
+  /-- A given player loses in perfect play. -/
+  | loss
+deriving DecidableEq, Fintype, Inhabited
+
+namespace Outcome
+
+private def toNat : Outcome → ℕ
+  | loss => 0
+  | draw => 1
+  | win => 2
+
+private theorem toNat_injective : Function.Injective Outcome.toNat := by decide
+
+instance : LinearOrder Outcome :=
+  LinearOrder.lift' _ Outcome.toNat_injective
+
+@[simp] theorem loss_le : ∀ x, loss ≤ x := by decide
+@[simp] theorem le_win : ∀ x, x ≤ win := by decide
+
+instance : BoundedOrder Outcome where
+  bot := loss
+  top := win
+  bot_le := loss_le
+  le_top := le_win
+
+@[simp] theorem bot_eq_loss : ⊥ = loss := rfl
+@[simp] theorem top_eq_win : ⊤ = win := rfl
+
+@[simp] theorem le_loss_iff : ∀ {x}, x ≤ loss ↔ x = loss := by decide
+@[simp] theorem win_le_iff : ∀ {x}, win ≤ x ↔ x = win := by decide
+
+end Outcome
+
 open Player
 
 /-! ### OfSets -/
