@@ -397,11 +397,12 @@ theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 /-! ### Negation -/
 
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
+@[no_expose]
 instance : Neg LGame where
   neg := corec fun p ↦ moves (-p)
 
-@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := rfl
-theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := rfl
+@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := (rfl)
+theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := (rfl)
 
 theorem neg_corec (mov : Player → α → Set α)
     [∀ x, Small.{u} (mov left x)] [∀ x, Small.{u} (mov right x)] :
@@ -414,7 +415,7 @@ theorem neg_corec_apply (mov : Player → α → Set α)
   congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
-  neg_neg _ := private (neg_corec_apply ..).trans (corec_moves_apply ..)
+  neg_neg _ := by exact (neg_corec_apply ..).trans (corec_moves_apply ..)
 
 @[simp]
 theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
@@ -459,6 +460,7 @@ theorem neg_tisn : -tisn = tis := by
 /-! ### Addition -/
 
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
+@[no_expose]
 instance : Add LGame where
   add x y := corec
     (fun p x ↦ (fun y ↦ (y, x.2)) '' moves p x.1 ∪ (fun y ↦ (x.1, y)) '' moves p x.2)
@@ -919,6 +921,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
+@[no_expose]
 instance _root_.LGame.instMul : Mul LGame where
   mul x y := toLGame moves moves (right, x, y)
 
@@ -952,7 +955,7 @@ theorem moves_mulOption (p : Player) (x y a b : LGame) :
   rfl
 
 instance : CommMagma LGame where
-  mul_comm _ _ := (MulTy.corec_swap ..).symm
+  mul_comm _ _ := by exact (MulTy.corec_swap ..).symm
 
 instance : MulZeroClass LGame where
   zero_mul x := by ext p; cases p <;> simp
