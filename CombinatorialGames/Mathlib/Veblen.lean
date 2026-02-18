@@ -43,12 +43,21 @@ universe u
 attribute [aesop simp] Function.update_apply Finsupp.update_apply
   Finsupp.single_apply Finsupp.erase_apply mem_lowerBounds IsLeast
 attribute [simp] Ordinal.add_eq_zero_iff
+attribute [grind =] Pi.add_apply
 
 namespace Finsupp
 variable {α β : Type*} [AddZeroClass β]
 
-theorem update_add_single {f : α →₀ β} {x : α} (h : x ∉ support f) (y z : β) :
-    update (f + single x y) x z = f + single x z := by
+theorem update_add_of_notMem_left {f g : α →₀ β} {x : α} (h : x ∉ support f) (y : β) :
+    update (f + g) x y = f + update g x y := by
+  classical aesop
+
+theorem update_add_of_notMem_right {f g : α →₀ β} {x : α} (h : x ∉ support g) (y : β) :
+    update (f + g) x y = update f x y + g := by
+  classical aesop
+
+@[simp]
+theorem update_single (x : α) (y z : β) : update (single x y) x z = single x z := by
   classical aesop
 
 end Finsupp
@@ -84,7 +93,7 @@ theorem veblenWith₀_single (x : Ordinal) : veblenWith₀ f (single 0 x) = f x 
 theorem veblenWith₀_zero : veblenWith₀ f 0 = f 0 := by
   simpa using veblenWith₀_single f 0
 
-theorem veblenWith₀_of_isLeast (f : Ordinal.{u} → Ordinal.{u}) {g : Ordinal.{u} →₀ Ordinal.{u}}
+theorem veblenWith₀_of_isLeast (f : Ordinal → Ordinal) {g : Ordinal →₀ Ordinal}
     (e : Ordinal) (he : IsLeast (g.support \ {0}) e) :
     veblenWith₀ f g = derivFamily
       (fun (x : Set.Iio (g e) × Set.Iio e) o ↦
@@ -98,57 +107,99 @@ theorem veblenWith₀_of_isLeast (f : Ordinal.{u} → Ordinal.{u}) {g : Ordinal.
   dsimp
   congr!
 
-theorem veblenWith₀_add_single_zero (f : Ordinal.{u} → Ordinal.{u}) {g : Ordinal.{u} →₀ Ordinal.{u}}
+theorem veblenWith₀_add_single_zero (f : Ordinal → Ordinal) {g : Ordinal →₀ Ordinal}
     {e a : Ordinal} (hg : 0 ∉ g.support) (he : IsLeast g.support e) :
     veblenWith₀ f (g + single 0 a) = derivFamily (fun (x : Set.Iio (g e) × Set.Iio e) o ↦
       veblenWith₀ f (g.update e x.1.1 + single x.2.1 o)) a := by
   rw [veblenWith₀_of_isLeast f e]
   · have : (g + single 0 a :) e = g e := by aesop
-    congr! <;> aesop
+    congr! <;> simp_all
   · aesop
 
-theorem veblenWith₀_add_single (f : Ordinal.{u} → Ordinal.{u}) {g : Ordinal.{u} →₀ Ordinal.{u}}
-    {e a : Ordinal} (he : e ≠ 0) (ha : a ≠ 0) (he' : ∀ i ∈ g.support, e < i) :
-    veblenWith₀ f (g + single e a) = derivFamily (fun (x : Set.Iio a × Set.Iio e) o ↦
-      veblenWith₀ f (g + single e x.1.1 + single x.2.1 o)) 0 := by
+theorem veblenWith₀_add_single_add_single (f : Ordinal → Ordinal) {g : Ordinal →₀ Ordinal}
+    {e a b : Ordinal} (he : e ≠ 0) (ha : a ≠ 0) (hg : ∀ i ∈ g.support, e < i) :
+    veblenWith₀ f (g + single e a + single 0 b) = derivFamily (fun (x : Set.Iio a × Set.Iio e) o ↦
+      veblenWith₀ f (g + single e x.1.1 + single x.2.1 o)) b := by
   have : g 0 = 0 := by
-    contrapose! he'
+    contrapose! hg
     exact ⟨0, by simpa, bot_le⟩
   have : g e = 0 := by
-    contrapose! he'
+    contrapose! hg
     exact ⟨e, by simpa, le_rfl⟩
-  have : (g + single e a) 0 = 0 := by aesop
-  have : (g + single e a) e = a := by aesop
+  have : (g + single e a + single 0 b :) 0 = b := by simp_all
+  have : (g + single e a + single 0 b :) e = a := by simp_all
   rw [veblenWith₀_of_isLeast f e]
   · congr!
-    rw [erase_of_notMem_support, update_add_single]
+    rw [erase_eq_update_zero, update_add_of_notMem_left, update_single, single_zero, add_zero,
+      update_add_of_notMem_left, update_single]
     · congr!
     · grind
-    · grind
+    · simp_all
   · refine ⟨?_, fun x hx ↦ ?_⟩
-    · aesop
-    · contrapose! he'
-      refine ⟨x, ?_, he'.le⟩
-      aesop
+    · simp_all
+    · contrapose! hg
+      refine ⟨x, ?_, hg.le⟩
+      simp only [mem_diff, SetLike.mem_coe, mem_support_iff, coe_add] at hx
+      grind
 
-variable {f} (hf : IsNormal f) (hp : 0 < f 0)
+theorem veblenWith₀_add_single (f : Ordinal.{u} → Ordinal.{u}) {g : Ordinal.{u} →₀ Ordinal.{u}}
+    {e a : Ordinal} (he : e ≠ 0) (ha : a ≠ 0) (hg : ∀ i ∈ g.support, e < i) :
+    veblenWith₀ f (g + single e a) = derivFamily (fun (x : Set.Iio a × Set.Iio e) o ↦
+      veblenWith₀ f (g + single e x.1.1 + single x.2.1 o)) 0 := by
+  simpa using veblenWith₀_add_single_add_single (b := 0) f he ha hg
+
+variable {f}
+
+private theorem isNormal_veblenWith₀' (hf : IsNormal f) (g : Ordinal →₀ Ordinal)
+    (he' : ∀ i ∈ g.support, 0 < i) :
+    IsNormal (fun o : Ordinal ↦ veblenWith₀ f (g + single 0 o)) := by
+  obtain rfl | hg := eq_or_ne g 0
+  · simpa
+  · simp_rw [veblenWith₀_add_single_zero _ (by grind) (Finset.isLeast_min' g.support (by simpa))]
+    exact isNormal_derivFamily ..
 
 mutual
 
-theorem veblenWith₀_pos (g : Ordinal →₀ Ordinal) : 0 < veblenWith₀ f g := by
+theorem veblenWith₀_pos (hf : IsNormal f) (hp : 0 < f 0) (g : Ordinal →₀ Ordinal) :
+    0 < veblenWith₀ f g := by
   sorry
 
-theorem isNormal_veblenWith₀ (g : Ordinal →₀ Ordinal) (e : Ordinal)
+theorem isNormal_veblenWith₀ (hf : IsNormal f) (hp : 0 < f 0) (g : Ordinal →₀ Ordinal) (e : Ordinal)
     (he' : ∀ i ∈ g.support, e < i) :
     IsNormal (fun o : Ordinal ↦ veblenWith₀ f (g + single e o)) := by
+  obtain rfl | he := eq_or_ne e 0
+  · exact isNormal_veblenWith₀' hf g he'
   rw [isNormal_iff]
-  constructor
-  · intro a b hab
-    dsimp
-    sorry
-  · sorry
+  refine ⟨fun a b hab ↦ ?_, fun o ho a IH ↦ ?_⟩
+  · dsimp
+    have H (i) (hi : i ∈ (g + single e a).support) : 0 < i := by
+      specialize he' 0
+      by_contra! hi
+      simp_all
+    let i : Iio b × Iio e := (⟨a, hab⟩, ⟨0, he.bot_lt⟩)
+    rw [veblenWith₀_add_single (a := b) f he hab.ne_bot he',
+      ← derivFamily_fp (i := i) (isNormal_veblenWith₀' hf _ H)]
+    conv_lhs => rw [← add_zero (_ + _), ← single_zero 0]
+    apply (isNormal_veblenWith₀' hf _ H).strictMono
+    rw [← derivFamily_fp (i := i) (isNormal_veblenWith₀' hf _ H)]
+    dsimp [i]
+    exact veblenWith₀_pos hf hp _
+  · rw [veblenWith₀_add_single f he ho.ne_bot he', derivFamily_zero]
+    refine nfpFamily_le fun l ↦ ?_
+    suffices ∃ b < o, List.foldr _ 0 l ≤ veblenWith₀ f (g + single e b) by
+      obtain ⟨b, hb, hb'⟩ := this
+      exact hb'.trans (IH b hb)
+    induction l with
+    | nil => exact ⟨0, ho.bot_lt, by simp⟩
+    | cons i l IH =>
+      obtain ⟨j, hj, hj'⟩ := IH
+      rw [List.foldr_cons]
+      sorry
+termination_by toColex (g.mapRange ((↑) : Ordinal → WithTop Ordinal) rfl + single e ⊤)
 
-theorem veblenWith₀_veblenWith₀ (g : Ordinal →₀ Ordinal) (e e' a : Ordinal)
+
+theorem veblenWith₀_veblenWith₀ (hf : IsNormal f) (hp : 0 < f 0)
+    (g : Ordinal →₀ Ordinal) (e e' a : Ordinal)
     (he : IsLeast g.support e) (he' : e' < e) (ha : a < g e) :
     veblenWith₀ f (g.update e a + single e' (veblenWith₀ f g)) = veblenWith₀ f g := by
   sorry
