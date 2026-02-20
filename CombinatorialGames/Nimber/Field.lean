@@ -3,7 +3,13 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Algebra.CharP.Defs
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.Algebra.Ring.Int.Parity
+
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
@@ -26,7 +32,7 @@ universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 namespace Nimber
 
@@ -53,6 +59,7 @@ termination_by (a, b)
 
 /-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 

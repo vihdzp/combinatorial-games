@@ -3,14 +3,17 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+module
+
+public import CombinatorialGames.Game.Player
+public import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
+
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Logic.Small.Set
 
 /-!
 # Loopy games
@@ -65,7 +68,7 @@ theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
   rw [hf, hg, ← QPF.comp_map, ← QPF.comp_map]
   exact ⟨rfl, rfl⟩
 
-noncomputable section
+public noncomputable section
 
 /-! ### Game moves -/
 
@@ -295,6 +298,7 @@ theorem corec_moves_apply (x : LGame) : corec moves x = x := by simp
 
 It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
+@[no_expose]
 instance : OfSets LGame.{u} fun _ ↦ True where
   ofSets lr _ :=
     have this (p) : ∀ (a : Option LGame),
@@ -403,11 +407,12 @@ theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 /-! ### Negation -/
 
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
+@[no_expose]
 instance : Neg LGame where
   neg := corec fun p ↦ moves (-p)
 
-@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := rfl
-theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := rfl
+@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := (rfl)
+theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := (rfl)
 
 theorem neg_corec (mov : Player → α → Set α)
     [∀ x, Small.{u} (mov left x)] [∀ x, Small.{u} (mov right x)] :
@@ -420,7 +425,7 @@ theorem neg_corec_apply (mov : Player → α → Set α)
   congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
-  neg_neg _ := (neg_corec_apply ..).trans (corec_moves_apply ..)
+  neg_neg _ := by exact (neg_corec_apply ..).trans (corec_moves_apply ..)
 
 @[simp]
 theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
@@ -465,6 +470,7 @@ theorem neg_tisn : -tisn = tis := by
 /-! ### Addition -/
 
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
+@[no_expose]
 instance : Add LGame where
   add x y := corec
     (fun p x ↦ (fun y ↦ (y, x.2)) '' moves p x.1 ∪ (fun y ↦ (x.1, y)) '' moves p x.2)
@@ -515,10 +521,10 @@ private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   all_goals aesop (add simp [image_union]) (erase Player)
 
 instance : AddCommMonoid LGame where
-  add_zero := add_zero'
-  zero_add _ := add_comm' .. ▸ add_zero' _
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_zero := private add_zero'
+  zero_add _ := private add_comm' .. ▸ add_zero' _
+  add_comm := private add_comm'
+  add_assoc := private add_assoc'
   nsmul := nsmulRec
 
 @[simp]
@@ -643,6 +649,7 @@ theorem neg_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Playe
   Multiset.map_erase _ (fun _ ↦ by simp) ..
 
 /-- Swaps the entries in all pairs. -/
+@[expose]
 def swap (x : MulTy α β) : MulTy β α :=
   x.map (fun a ↦ (a.1, a.2.swap))
 
@@ -679,6 +686,7 @@ theorem swap_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Play
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
 
 If the player argument is left, all signs are flipped. -/
+@[expose]
 def mulOption (p : Player) (x : α × β) (y : α × β) : MulTy α β :=
   {(p, y.1, x.2), (p, x.1, y.2), (-p, y.1, y.2)}
 
@@ -923,6 +931,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
+@[no_expose]
 instance _root_.LGame.instMul : Mul LGame where
   mul x y := toLGame moves moves (right, x, y)
 
@@ -938,7 +947,7 @@ end MulTy
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot]
+@[pp_nodot, expose]
 def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
 
@@ -956,7 +965,7 @@ theorem moves_mulOption (p : Player) (x y a b : LGame) :
   rfl
 
 instance : CommMagma LGame where
-  mul_comm _ _ := (MulTy.corec_swap ..).symm
+  mul_comm _ _ := by exact (MulTy.corec_swap ..).symm
 
 instance : MulZeroClass LGame where
   zero_mul x := by ext p; cases p <;> simp
@@ -969,8 +978,8 @@ private theorem one_mul' (x : LGame) : 1 * x = x := by
   aesop
 
 instance : MulOneClass LGame where
-  one_mul := one_mul'
-  mul_one x := mul_comm x _ ▸ one_mul' x
+  one_mul := private one_mul'
+  mul_one x := private mul_comm x _ ▸ one_mul' x
 
 private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   change MulTy.toLGame .. = -MulTy.toLGame ..
@@ -983,7 +992,7 @@ private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   simp [MulTy.moves_neg']
 
 instance : HasDistribNeg LGame where
-  neg_mul := neg_mul'
+  neg_mul := private neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 /-! ### Stoppers -/
@@ -1009,6 +1018,7 @@ theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ Stop
   constructor <;> intro h <;> simpa using h.neg
 
 /-- A game is a stopper when it's `StopperFor` for both players. -/
+@[expose]
 def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 
