@@ -95,6 +95,7 @@ theorem nim_injective : Function.Injective nim := by
 @[simp, game_cmp] theorem nim_zero : nim 0 = 0 := by ext p; cases p <;> simp
 @[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   rw [nim_def, birthday_ofSets_const, image_image, sSup_image']

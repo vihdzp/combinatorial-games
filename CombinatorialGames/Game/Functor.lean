@@ -72,6 +72,7 @@ theorem map_def {α β} (f : α → β) (s : GameFunctor α) :
     f <$> s = ⟨(f '' s.1 ·), fun _ => inferInstance⟩ :=
   rfl
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : QPF GameFunctor where
   P := ⟨Player → Type u, fun x ↦ Σ p, PLift (x p)⟩
   abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ inferInstance⟩

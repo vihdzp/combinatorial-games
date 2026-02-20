@@ -180,6 +180,7 @@ instance : SMul Nat Dyadic where
 instance : SMul Int Dyadic where
   smul x y := x * y
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem val_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (toRat_mul x y).trans (by simp)
 
@@ -238,6 +239,7 @@ theorem mkRat_add_mkRat_self {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.
     Dyadic.mkRat m h₁ + Dyadic.mkRat n h₂ = .mkRat (m + n) h₁ := by
   ext; simp [Rat.mkRat_eq_div, add_div]
 
+set_option backward.isDefEq.respectTransparency false in
 instance : CommRing Dyadic where
   add_assoc := Dyadic.add_assoc
   zero_add := Dyadic.zero_add
@@ -275,6 +277,7 @@ instance : CommRing Dyadic where
   npow_zero x := by ext; simp
   npow_succ n x := by ext; simp [pow_succ]
 
+set_option backward.isDefEq.respectTransparency false in
 instance : IsStrictOrderedRing Dyadic where
   add_le_add_left := by simp [← Dyadic.toRat_le_toRat_iff]
   le_of_add_le_add_left := by simp [← Dyadic.toRat_le_toRat_iff]

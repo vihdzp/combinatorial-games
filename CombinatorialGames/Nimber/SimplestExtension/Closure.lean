@@ -32,28 +32,27 @@ theorem Subfield.coe_eq_univ [Field R] {H : Subfield R} : (H : Set R) = .univ �
 theorem Subfield.toSubring_eq_top [Field R] {H : Subfield R} : H.toSubring = ⊤ ↔ H = ⊤ := by
   rw [← SetLike.coe_set_eq, Subfield.coe_toSubring]; simp
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Subfield.coe_bot [DivisionRing R] :
     (⊥ : Subfield R) = Set.range ((↑) : ℚ → R) := by
+  rw [eq_comm]
   obtain _ | ⟨p, _, _⟩ := CharP.exists' R
-  · change _ = (RingHom.fieldRange (Rat.castHom R) : Set R)
-    refine congrArg SetLike.coe (le_antisymm bot_le ?_)
+  · change (RingHom.fieldRange (Rat.castHom R) : Set R) = _
+    refine congrArg SetLike.coe (eq_bot_iff.2 ?_)
     rw [← Subfield.fieldRange_subtype (⊥ : Subfield R),
       Subsingleton.elim (Rat.castHom R) ((⊥ : Subfield R).subtype.comp
       (Rat.castHom (⊥ : Subfield R))),
       RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
     exact (Subfield.gc_map_comap _).monotone_l le_top
   · trans (RingHom.fieldRange (ZMod.castHom (dvd_refl p) R) : Set R)
-    · -- todo: generalize `Subfield.charP` to division rings
-      -- have := Subfield.charP (⊥ : Subfield R) p
-      have := (⊥ : Subfield R).subtype.charP (⊥ : Subfield R).subtype_injective p
-      refine congrArg SetLike.coe (le_antisymm bot_le ?_)
-      rw [← Subfield.fieldRange_subtype (⊥ : Subfield R),
-        Subsingleton.elim (ZMod.castHom (dvd_refl p) R)
-          ((⊥ : Subfield R).subtype.comp (ZMod.castHom (dvd_refl p) (⊥ : Subfield R))),
-        RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
-      exact (Subfield.gc_map_comap _).monotone_l le_top
     · apply subset_antisymm
+      · rw [Set.range_subset_iff]
+        intro x
+        rw [Rat.cast_def, SetLike.mem_coe]
+        apply div_mem
+        · apply intCast_mem
+        · apply natCast_mem
       · rw [RingHom.coe_fieldRange, Set.range_subset_iff]
         intro x
         refine ⟨x.val, ?_⟩
@@ -61,12 +60,13 @@ theorem Subfield.coe_bot [DivisionRing R] :
         · rw [← Rat.cast_intCast]
           exact congrArg Rat.cast (by simp)
         · simp
-      · rw [Set.range_subset_iff]
-        intro x
-        rw [Rat.cast_def, SetLike.mem_coe]
-        apply div_mem
-        · apply intCast_mem
-        · apply natCast_mem
+    · have := Subfield.charP (⊥ : Subfield R) p
+      refine congrArg SetLike.coe (eq_bot_iff.2 ?_)
+      rw [← Subfield.fieldRange_subtype (⊥ : Subfield R),
+        Subsingleton.elim (ZMod.castHom (dvd_refl p) R)
+          ((⊥ : Subfield R).subtype.comp (ZMod.castHom (dvd_refl p) (⊥ : Subfield R))),
+        RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
+      exact (Subfield.gc_map_comap _).monotone_l le_top
 
 attribute [simp] Cardinal.aleph0_lt_univ
 

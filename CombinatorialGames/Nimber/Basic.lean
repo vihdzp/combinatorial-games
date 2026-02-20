@@ -208,6 +208,7 @@ theorem _root_.Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] 
     Set.range (fun a ↦ if p a then x else y) = {x, y} := by
   grind
 
+set_option backward.isDefEq.respectTransparency false in
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 

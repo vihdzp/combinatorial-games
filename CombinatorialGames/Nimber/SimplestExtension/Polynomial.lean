@@ -222,6 +222,7 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
 
 namespace Lex
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The colexicographic ordering on nimber polynomials.
 
 TODO: Use `Colex` to define the ordering instead of `Lex` once it's available. -/
@@ -376,6 +377,7 @@ theorem lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : p < X ^ n ↔ p.degree < n := b
   simp_rw [lt_def, degree_lt_iff_coeff_zero, le_iff_lt_or_eq]
   refine ⟨?_, fun _ ↦ ⟨n, ?_⟩⟩ <;> aesop
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem coe_lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : WithTop.some p < .some X ^ n ↔ p.degree < n := by
   rw [← WithTop.coe_pow, WithTop.coe_lt_coe, lt_X_pow_iff]
@@ -384,6 +386,7 @@ theorem coe_lt_X_pow_iff {p : Nimber[X]} {n : ℕ} : WithTop.some p < .some X ^ 
 theorem X_pow_le_iff {p : Nimber[X]} {n : ℕ} : X ^ n ≤ p ↔ n ≤ p.degree := by
   rw [← not_lt, lt_X_pow_iff, not_lt]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem X_pow_le_coe_iff {p : Nimber[X]} {n : ℕ} : .some X ^ n ≤ WithTop.some p ↔ n ≤ p.degree := by
   rw [← not_lt, coe_lt_X_pow_iff, not_lt]

@@ -123,6 +123,7 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
 instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
   small_transGen' _ x
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Two loopy games are equal when there exists a bisimulation between them.
 
 A way to think about this is that `r` defines a pairing between nodes of the game trees, which then
@@ -203,12 +204,14 @@ type. As an example, `on = !{on | }` is defined as `corec (Player.cases ⊤ ⊥)
 def corec : LGame.{u} :=
   corec' mov init ⟨_, .refl⟩
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem corec'_trans {x} (hx : Reachable mov init x)
   (y : Subtype (Reachable mov x)) :
     corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x : LGame} :
     (∃ ha : Reachable mov init a, corec' _ init ⟨a, ha⟩ = x) ↔
     corec mov a = x := by
@@ -220,6 +223,7 @@ private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x 
     use .single ha
     simp [corec'_trans _ _ (.single ha)]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
   rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
@@ -232,6 +236,7 @@ theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
   funext (moves_corec p mov)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem hom_unique_apply {mov : Player → α → Set α}
     [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
@@ -336,7 +341,9 @@ theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 /-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
 @[simp] theorem isOption_on_iff {x : LGame} : IsOption x on ↔ x = on := by simp [IsOption]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
@@ -351,7 +358,9 @@ theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
 /-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
 @[simp] theorem isOption_off_iff {x : LGame} : IsOption x off ↔ x = off := by simp [IsOption]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
@@ -366,6 +375,7 @@ theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
 /-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
 @[simp] theorem isOption_dud_iff {x : LGame} : IsOption x dud ↔ x = dud := by simp [IsOption]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp

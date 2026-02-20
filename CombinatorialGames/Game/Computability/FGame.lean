@@ -145,6 +145,7 @@ theorem Identical.moveRight : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight i
 theorem Identical.moveRight_symm : ∀ {x y}, x ≡ y → ∀ i, ∃ j, x.moveRight j ≡ y.moveRight i
   | mk .., mk .., ⟨_, hr⟩ => hr.2
 
+@[instance_reducible]
 instance Identical.instDecidable (a b) : Decidable (a ≡ b) :=
   let : DecidableRel (a.moveLeft · ≡ b.moveLeft ·) := fun c d ↦ Identical.instDecidable ..
   let : DecidableRel (a.moveLeft · ≡ b.moveRight ·) := fun c d ↦ Identical.instDecidable ..
@@ -274,6 +275,7 @@ def ofLists (s t : List FGame.{u}) : FGame.{u} :=
     have := fun i ↦ (hb i).symm
     ext x <;> aesop (add simp [mk_eq_mk])
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem ofLists_moves {s t : List FGame} :
     (ofLists s t).leftMoves = s.toFinset ∧ (ofLists s t).rightMoves = t.toFinset := by
   unfold ofLists leftMoves rightMoves FGame.mk

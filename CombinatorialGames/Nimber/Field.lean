@@ -306,8 +306,7 @@ instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
 
 /-- The complement of `invSet a` is nonempty. -/
 private theorem invSet_nonempty (a : Nimber) : (invSet a)ᶜ.Nonempty :=
-  have := instSmallElemInvSet a -- why is this needed?
-  nonempty_of_not_bddAbove (Ordinal.not_bddAbove_compl_of_small _)
+  nonempty_of_not_bddAbove (not_bddAbove_compl_of_small _)
 
 theorem invAux_ne_zero (a : Nimber) : invAux a ≠ 0 := by
   rw [invAux]
