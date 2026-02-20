@@ -1,10 +1,21 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import Mathlib.Logic.Small.Defs
+
 import Mathlib.Logic.Small.Set
 import Mathlib.Logic.Relation
 import Mathlib.Order.SetNotation
 
-open Set
-
 universe u
+
+public section
+
+open Set
 
 variable {α : Type*} (r : α → α → Prop) [H : ∀ x, Small.{u} {y // r x y}]
 

@@ -3,11 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Tactic.GameCmp
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Fintype.Quotient
-import Mathlib.Data.Multiset.Sort
+module
+
+public import CombinatorialGames.Mathlib.Finlift
+public import CombinatorialGames.Tactic.GameCmp
+public import Mathlib.Data.Fintype.Basic
+public import Mathlib.Data.Fintype.Quotient
+public import Mathlib.Data.Multiset.Sort
 
 /-!
 # Computably short games
@@ -28,6 +30,8 @@ here are intended to check for definitional correctness over theory building.
 -/
 
 /-! ### For Mathlib -/
+
+@[expose] public section
 
 instance {α β : Type*} (r : α → β → Prop) [H : Decidable (∀ a, ∃ b, r a b)] :
     Decidable (Relator.LeftTotal r) := H
@@ -92,11 +96,12 @@ macro "sgame_wf" : tactic =>
     [Prod.Lex.left, Prod.Lex.right, PSigma.Lex.left, PSigma.Lex.right,
     IsOption.moveLeft, IsOption.moveRight] )
 
-instance : DecidableEq SGame
+instance instDecidableEq : DecidableEq SGame
   | mk m n f g, mk m' n' f' g' => if h : m = m' ∧ n = n' then
     let : ∀ a b, Decidable (f a = f' b) := fun a b ↦ instDecidableEq ..
     let : ∀ a b, Decidable (g a = g' b) := fun a b ↦ instDecidableEq ..
-    decidable_of_iff ((m = m' ∧ n = n' ∧ (∀ i, f i = f' ⟨i, _⟩) ∧ ∀ i, g i = g' ⟨i, _⟩)) <| by
+    decidable_of_iff ((m = m' ∧ n = n' ∧
+        (∀ i, f i = f' ⟨i, h.1 ▸ i.2⟩) ∧ ∀ i, g i = g' ⟨i, h.2 ▸ i.2⟩)) <| by
       rw [mk.injEq, Fin.heq_fun_iff h.1, Fin.heq_fun_iff h.2]
   else .isFalse (by simp_all)
 
@@ -368,15 +373,14 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 
 /-! ### Repr -/
 
--- Allows us to recursively represent `FGame`s. This doesn't seem very idiomatic,
--- so we avoid putting it in pub space.
-private instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
+-- Allows us to recursively represent `FGame`s.
+instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
 
-private unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
+unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
   reprPrec g n := if g.card = 0 then "∅" else Multiset.instRepr.reprPrec g n
 
 -- TODO: can we hook into delab?
-private unsafe def instRepr_aux : FGame → Std.Format :=
+unsafe def instRepr_aux : FGame → Std.Format :=
   fun g ↦ "{" ++
     Multiset.repr_or_emptyset.reprPrec (g.leftMoves.val.map instRepr_aux) 0 ++ " | " ++
     Multiset.repr_or_emptyset.reprPrec (g.rightMoves.val.map instRepr_aux) 0 ++ "}"
@@ -387,3 +391,4 @@ and we prefer our notation of games {{a, b, c}|{d, e, f}} over the usual flatten
 unsafe instance : Repr FGame.{0} := ⟨fun g _ ↦ instRepr_aux g⟩
 
 end FGame
+end

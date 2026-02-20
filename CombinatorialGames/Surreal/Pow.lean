@@ -3,11 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Ordinal
-import CombinatorialGames.Surreal.Real
-import CombinatorialGames.NatOrdinal.Pow
-import Mathlib.Algebra.Order.Ring.Archimedean
-import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
+module
+
+public import CombinatorialGames.Surreal.Ordinal
+public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.NatOrdinal.Pow
+public import Mathlib.Algebra.Order.Ring.Archimedean
+public import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
 # Surreal exponentiation
@@ -30,6 +32,8 @@ Among other things, we prove that every non-zero surreal number is commensurate 
 universe u
 
 open Set
+
+public section
 
 /-! ## For Mathlib -/
 
@@ -68,6 +72,7 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
+@[no_expose]
 instance : Wpow IGame where
   wpow := wpow
 

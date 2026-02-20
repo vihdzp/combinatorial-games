@@ -3,10 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
-import CombinatorialGames.Nimber.Field
-import Mathlib.Algebra.CharP.Algebra
-import Mathlib.Algebra.Field.Subfield.Basic
-import Mathlib.Algebra.Field.ZMod
+module
+
+public import CombinatorialGames.Nimber.Field
+public import Mathlib.Algebra.Field.Subfield.Basic
+public import Mathlib.SetTheory.Ordinal.Exponential
+
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -33,11 +36,10 @@ The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 
 open Order Ordinal Set
 
-/-! ### Mathlib lemmas -/
-
 -- TODO: this is a pending Mathlib refactor.
 attribute [-simp] add_one_eq_succ
-attribute [simp] principal_zero
+
+@[expose] public section
 
 /-! ### Order lemmas -/
 
@@ -580,3 +582,4 @@ theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 end Nimber
+end

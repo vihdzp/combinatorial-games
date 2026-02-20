@@ -3,9 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Mathlib.Dyadic
-import CombinatorialGames.Surreal.Division
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Surreal.Division
+
 import Mathlib.Data.Finset.DenselyOrdered
 
 /-!
@@ -31,6 +34,8 @@ the future:
 
 universe u
 open IGame
+
+@[expose] public section
 
 namespace Dyadic
 
@@ -275,7 +280,7 @@ decreasing_by dyadic_wf
 /-- `Dyadic.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
 noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
-  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+  .ofStrictMono toIGame fun _ _ ↦ by exact toIGame_lt_toIGame_aux
 
 @[simp, norm_cast]
 theorem toIGame_le_toIGame {x y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -557,6 +562,7 @@ rational number.
 
 TODO: it should be possible to compute this value explicitly, given the finsets of `Dyadic`
 rationals corresponding to the left and right moves. -/
+@[no_expose]
 noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
 
@@ -641,3 +647,4 @@ theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
   simp
 
 end IGame
+end

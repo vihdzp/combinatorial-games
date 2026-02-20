@@ -3,11 +3,15 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Basic
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Order.Hom.Monoid
+
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Ordinals as games
@@ -30,7 +34,7 @@ universe u
 
 open Set IGame
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-! ### Lemmas to upstream -/
 
@@ -71,6 +75,7 @@ private theorem toIGame'_strictMono : StrictMono toIGame' := by
 termination_by a => a
 
 /-- The canonical map from `NatOrdinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
+@[no_expose]
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
@@ -251,3 +256,4 @@ theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   exact lt_omega0 _
 
 end IGame
+end

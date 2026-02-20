@@ -3,9 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Surreal.Birthday.Basic
+module
+
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import Mathlib.Order.Concept
+public import Mathlib.Order.UpperLower.CompleteLattice
+
+import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
 # Surreal cuts
@@ -29,6 +33,8 @@ concept terminology.
 -/
 
 universe u
+
+@[expose] public section
 
 namespace Surreal
 open Set IGame
@@ -540,3 +546,4 @@ theorem supLeft_lt_infRight_iff {x : IGame} :
 
 end Cut
 end Surreal
+end
