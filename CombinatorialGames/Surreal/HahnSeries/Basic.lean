@@ -69,6 +69,7 @@ open Order Set
 
 /-! ### Basic defs and instances -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The type of `u`-small Hahn series over `Surrealᵒᵈ`, endowed with the lexicographic ordering. We
 will show that this type is isomorphic as an ordered field to the surreals themselves. -/
 def SurrealHahnSeries : Type (u + 1) :=
@@ -85,6 +86,7 @@ instance : Field SurrealHahnSeries := by
 instance : LinearOrder SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
+set_option backward.isDefEq.respectTransparency false in
 instance : IsStrictOrderedRing SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
@@ -415,6 +417,7 @@ theorem coeffIdx_zero : coeffIdx 0 = 0 := by
 theorem coeff_exp (x : SurrealHahnSeries) (i) : x.coeff (x.exp i) = x.coeffIdx i :=
   (coeffIdx_of_lt _).symm
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem coeffIdx_symm_exp (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
   rw [coeffIdx_of_lt] <;> simp
@@ -458,6 +461,7 @@ theorem truncIdx_zero : truncIdx 0 = 0 := by
 theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i :=
   (truncIdx_of_lt _).symm
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by
   rw [truncIdx_of_lt] <;> simp

@@ -44,6 +44,7 @@ def birthday (x : Cut) : WithTop NatOrdinal :=
   sInf <| (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
      {s : Set Surreal | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
 
+set_option backward.isDefEq.respectTransparency false in
 theorem birthday_eq_sSup_birthday (x : Cut) :
     ∃ s : Set Surreal, (sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x) ∧
       sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x :=
@@ -93,6 +94,7 @@ theorem birthday_iSup_rightSurreal_le' {ι : Type*} (f : ι → Surreal.{u}) [Sm
   convert birthday_sSup_rightSurreal_le' (range f) <;>
   simp [iSup, ← range_comp']
 
+set_option backward.isDefEq.respectTransparency false in
 theorem birthday_lt_sSup_birthday {a : Surreal} {s : Set Surreal} (ha : a ∈ s) :
     a.birthday < sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) := by
   rw [lt_sSup_iff]
@@ -100,6 +102,7 @@ theorem birthday_lt_sSup_birthday {a : Surreal} {s : Set Surreal} (ha : a ∈ s)
   · use a
   · exact WithTop.coe_lt_coe.2 <| lt_add_one a.birthday
 
+set_option backward.isDefEq.respectTransparency false in
 theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
     sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) < ⊤ ↔ Small.{u} s := by
   refine ⟨fun hs ↦ ?_, fun _ ↦ NatOrdinal.withTop_sSup_lt_top.2 <| by simp⟩
@@ -108,14 +111,17 @@ theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
   rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
   exact birthday_lt_sSup_birthday hx
 
+set_option backward.isDefEq.respectTransparency false in
 theorem sSup_birthday_eq_top_iff {s : Set Surreal.{u}} :
     sSup ((fun x : Surreal ↦ (x.birthday : WithTop NatOrdinal) + 1) '' s) = ⊤ ↔ ¬ Small.{u} s := by
   simpa using sSup_birthday_lt_top_iff.not
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem birthday_bot : birthday ⊥ = 0 := by
   simpa using birthday_sSup_rightSurreal_le ∅
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem birthday_top : birthday ⊤ = 0 := by
   simpa using birthday_sInf_leftSurreal_le ∅
@@ -172,6 +178,7 @@ theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     apply h.2.le.trans'
     aesop
 
+set_option backward.isDefEq.respectTransparency false in
 theorem birthday_iInf_le {ι : Type*} (f : ι → Cut) : (⨅ i, f i).birthday ≤ ⨆ i, (f i).birthday := by
   obtain ⟨x, hx⟩ | hx := exists_or_forall_not (IsLeast (range f))
   · obtain ⟨i, rfl⟩ := hx.1
@@ -202,6 +209,7 @@ theorem birthday_sSup_le (s : Set Cut) : (sSup s).birthday ≤ sSup (birthday ''
   rw [sSup_eq_iSup', sSup_image']
   exact birthday_iSup_le _
 
+set_option backward.isDefEq.respectTransparency false in
 theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
     (simplestBtwn h).birthday ≤ max x.birthday y.birthday := by
   obtain ⟨s, rfl | rfl, hx⟩ := birthday_eq_sSup_birthday x
@@ -238,6 +246,7 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
   · apply (WithTop.coe_le_coe.2 <| birthday_ofSets_le ..).trans_eq
     simp [Order.succ_eq_add_one, WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _), image_image]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem birthday_game_le (x : IGame) :
     (supLeft x).birthday ≤ x.birthday ∧ (infRight x).birthday ≤ x.birthday ∧
     (leftGame (.mk x)).birthday ≤ x.birthday + 1 ∧

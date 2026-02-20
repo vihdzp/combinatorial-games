@@ -849,12 +849,14 @@ theorem leastNoRoots_ne_X_pow (x : Nimber) (n : ℕ) :
   rw [← WithTop.coe_untop _ ht, WithTop.coe_inj] at hp
   exact leastNoRoots_ne_X_pow' _ _ _ hp
 
+set_option backward.isDefEq.respectTransparency false in
 theorem leastNoRoots_le_of_not_isRoot {x : Nimber} {p : Nimber[X]}
     (hp₀ : 0 < p.degree) (hpk : ∀ k, p.coeff k < x) (hr : ∀ r < x, ¬ p.IsRoot r) :
     leastNoRoots x ≤ p := by
   rw [leastNoRoots, sInf_le_iff]
   aesop
 
+set_option backward.isDefEq.respectTransparency false in
 theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hpk : ∀ k, p.coeff k < x) (hpn : p < leastNoRoots x) :
     ∃ r < x, p.IsRoot r := by
@@ -863,6 +865,7 @@ theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   contrapose! hpn
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
@@ -907,6 +910,7 @@ theorem IsField.eq_prod_roots_of_lt_leastNoRoots {x : Nimber} (h : IsField x)
   conv_lhs => rw [← h.map_embed hpk, hs.eq_prod_roots]
   simp [h.roots_eq_map hpn hpk, Polynomial.map_multiset_prod]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : ¬ IsField x) :
     leastNoRoots x = .some (C x⁻¹ * X + 1) := by
   have hx₁ : 1 < x := h.one_lt
@@ -938,6 +942,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
           simpa [← ht] using degree_leastNoRoots_pos ht'
         simp [← ht, mul_div_cancel₀, hy₀]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     Monic (x.leastNoRoots.untop ht) := by
   by_contra! hm
