@@ -3,8 +3,15 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Basic
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.Field.ZMod
+import Mathlib.Data.Rat.Cast.CharZero
 import Mathlib.SetTheory.Cardinal.Subfield
+import Mathlib.Algebra.CharP.Algebra
 
 /-!
 # Closures
@@ -14,6 +21,8 @@ equal or greater to another, which satisfies `IsGroup`, `IsRing`, or `IsField`.
 -/
 
 universe u
+
+public section
 
 /-! ### For Mathlib -/
 
@@ -32,6 +41,7 @@ theorem Subfield.coe_eq_univ [Field R] {H : Subfield R} : (H : Set R) = .univ �
 theorem Subfield.toSubring_eq_top [Field R] {H : Subfield R} : H.toSubring = ⊤ ↔ H = ⊤ := by
   rw [← SetLike.coe_set_eq, Subfield.coe_toSubring]; simp
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Subfield.coe_bot [DivisionRing R] :
     (⊥ : Subfield R) = Set.range ((↑) : ℚ → R) := by
@@ -44,9 +54,7 @@ theorem Subfield.coe_bot [DivisionRing R] :
       RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
     exact (Subfield.gc_map_comap _).monotone_l le_top
   · trans (RingHom.fieldRange (ZMod.castHom (dvd_refl p) R) : Set R)
-    · -- todo: generalize `Subfield.charP` to division rings
-      -- have := Subfield.charP (⊥ : Subfield R) p
-      have := (⊥ : Subfield R).subtype.charP (⊥ : Subfield R).subtype_injective p
+    · have := Subfield.charP (⊥ : Subfield R) p
       refine congrArg SetLike.coe (le_antisymm bot_le ?_)
       rw [← Subfield.fieldRange_subtype (⊥ : Subfield R),
         Subsingleton.elim (ZMod.castHom (dvd_refl p) R)
@@ -151,7 +159,7 @@ protected theorem IsGroup.groupClosure (x : Nimber) : IsGroup (groupClosure x) w
     exact AddSubgroup.add_mem _
 
 theorem IsGroup.groupClosure_le_iff {x y : Nimber} (h : IsGroup x) :
-    groupClosure y ≤ x ↔ y ≤ x where
+    y.groupClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_groupClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_addSubgroupClosure_Iio]
@@ -160,7 +168,7 @@ theorem IsGroup.groupClosure_le_iff {x y : Nimber} (h : IsGroup x) :
     simpa
 
 theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
-    x < groupClosure y ↔ x < y :=
+    x < y.groupClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
 theorem groupClosure_mono : Monotone groupClosure := by
@@ -239,7 +247,7 @@ protected theorem IsRing.ringClosure (x : Nimber) : IsRing (ringClosure x) where
     exact Subring.mul_mem _
 
 theorem IsRing.ringClosure_le_iff {x y : Nimber} (h : IsRing x) :
-    ringClosure y ≤ x ↔ y ≤ x where
+    y.ringClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_ringClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_subringClosure_Iio]
@@ -248,7 +256,7 @@ theorem IsRing.ringClosure_le_iff {x y : Nimber} (h : IsRing x) :
     simpa
 
 theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
-    x < ringClosure y ↔ x < y :=
+    x < y.ringClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
 theorem ringClosure_mono : Monotone ringClosure := by
@@ -325,7 +333,7 @@ protected theorem IsField.fieldClosure (x : Nimber) : IsField (fieldClosure x) w
     exact Subfield.inv_mem _
 
 theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
-    fieldClosure y ≤ x ↔ y ≤ x where
+    y.fieldClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_fieldClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_subfieldClosure_Iio]
@@ -334,7 +342,7 @@ theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
     simpa
 
 theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
-    x < fieldClosure y ↔ x < y :=
+    x < y.fieldClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
 
 theorem fieldClosure_mono : Monotone fieldClosure := by

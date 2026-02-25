@@ -3,11 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Ordinal
-import CombinatorialGames.Surreal.Real
-import CombinatorialGames.NatOrdinal.Pow
-import Mathlib.Algebra.Order.Ring.Archimedean
-import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
+module
+
+public import CombinatorialGames.Surreal.Ordinal
+public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.NatOrdinal.Pow
+public import Mathlib.Algebra.Order.Ring.Archimedean
+public import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
 # Surreal exponentiation
@@ -31,6 +33,8 @@ universe u
 
 open Set
 
+public section
+
 /-! ## For Mathlib -/
 
 -- TODO: upstream
@@ -45,10 +49,10 @@ theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
   simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
-    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q.toRat * |y| ≤ |x| := by
+    mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
   convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
-  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.toRat_lt_toRat_iff.mpr
+  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.coe_lt_coe.mpr
 
 end ArchimedeanClass
 
@@ -68,6 +72,7 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
+@[no_expose]
 instance : Wpow IGame where
   wpow := wpow
 
@@ -186,7 +191,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       exact (wpow_strictMono_aux.1 ((Numeric.left_lt hz).trans_le hxy) (mod_cast hr)).not_ge
     · have := wpow_mem_rightMoves_wpow hz
       numeric
-      have hr' : 0 < (r.toRat : ℝ)⁻¹ := by simpa
+      have hr' : 0 < (r : ℝ)⁻¹ := by simpa
       rw [← Surreal.mk_le_mk, Surreal.mk_mul, ← le_div_iff₀' (by simpa), div_eq_inv_mul]
       simpa [← Surreal.mk_lt_mk] using
         wpow_strictMono_aux.1 (hxy.trans_lt (Numeric.lt_right hz)) hr'
@@ -221,15 +226,16 @@ theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
 
 /-- A version of `mul_wpow_lt_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_wpow' (r : Dyadic) (h : x < y) : r * ω^ x < ω^ y := by
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r.toRat h
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow r h
 
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hr), IGame.div_eq_mul_inv, mul_comm]
   simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_wpow (r⁻¹) h
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A version of `wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem wpow_lt_mul_wpow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  have hr : (0 : ℝ) < r.toRat := by simpa
+  have hr : (0 : ℝ) < r := by simpa
   simpa [← Surreal.mk_lt_mk] using wpow_lt_mul_wpow hr h
 
 theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
@@ -238,35 +244,39 @@ theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * 
   rw [div_eq_mul_inv, mul_comm, ← mul_assoc, ← Real.toSurreal_inv, ← Real.toSurreal_mul]
   exact mul_wpow_lt_wpow _ h
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A version of `mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r.toRat hs h
+  have hs : (0 : ℝ) < s := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r hs h
 
+set_option backward.isDefEq.respectTransparency false in
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
   have h : 0 < t / 2 := by simpa
   apply (add_lt_add (mul_wpow_lt_mul_wpow r h hx) (mul_wpow_lt_mul_wpow s h hy)).trans_le
   simp [← Surreal.mk_le_mk, ← add_mul]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic) {t : Dyadic} (ht : 0 < t)
     (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
-  have ht : (0 : ℝ) < t.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r.toRat s.toRat ht hx hy
+  have ht : (0 : ℝ) < t := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_add_mul_wpow_lt_mul_wpow r s ht hx hy
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
   apply (add_lt_add (mul_wpow_lt_mul_wpow (r/2) hs hx) (mul_wpow_lt_mul_wpow (r/2) ht hy)).trans_le'
   simp [← Surreal.mk_le_mk, ← add_mul]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow' (r : Dyadic) {s t : Dyadic} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  have hs : (0 : ℝ) < s.toRat := by simpa
-  have ht : (0 : ℝ) < t.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r.toRat hs ht hx hy
+  have hs : (0 : ℝ) < s := by simpa
+  have ht : (0 : ℝ) < t := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_add_mul_wpow r hs ht hx hy
 
 @[simp]
 theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := by
@@ -718,6 +728,7 @@ theorem wlog_monotoneOn : MonotoneOn wlog (Ioi 0) := by
   grw [← wpow_vle_wpow_iff, wpow_wlog_veq ha.ne', wpow_wlog_veq hb.ne']
   apply mk_antitoneOn ha.le hb.le h
 
+set_option backward.isDefEq.respectTransparency false in
 theorem wlog_antitoneOn : AntitoneOn wlog (Iio 0) := by
   intro a ha b hb h
   rw [← neg_le_neg_iff] at h
@@ -747,6 +758,7 @@ theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x
     grw [wpow_wlog_veq hx, wpow_wlog_veq hy]
     exact h
 
+set_option backward.isDefEq.respectTransparency false in
 theorem wlog_le_wlog_of_vle (hx : x ≠ 0) (h : x ≤ᵥ y) : wlog x ≤ wlog y := by
   obtain rfl | hy := eq_or_ne y 0; · simp_all
   rwa [wlog_le_wlog_iff hx hy]
@@ -792,11 +804,13 @@ theorem wlog_pow (x : Surreal) (n : ℕ) : wlog (x ^ n) = n * wlog x := by
 theorem wlog_zpow (x : Surreal) (n : ℤ) : wlog (x ^ n) = n * wlog x := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp high] -- This should fire before `ArchimedeanClass.mk_div`
 theorem archimedeanClassMk_div_wpow_wlog (x : Surreal) :
     ArchimedeanClass.mk (x / ω^ x.wlog) = .mk x - .mk x := by
   obtain rfl | hx := eq_or_ne x 0 <;> simp_all
 
+set_option backward.isDefEq.respectTransparency false in
 theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk (x / ω^ x.wlog) = 0 := by
   rw [archimedeanClassMk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]

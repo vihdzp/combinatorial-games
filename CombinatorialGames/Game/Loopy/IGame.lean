@@ -3,9 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
 
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.Game.IGame
+public import CombinatorialGames.Game.Loopy.Basic
 
 /-!
 # Well-founded games to loopy games
@@ -16,7 +17,7 @@ arithmetic.
 
 open Set
 
-noncomputable section
+public noncomputable section
 
 namespace IGame
 

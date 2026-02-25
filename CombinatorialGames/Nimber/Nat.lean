@@ -3,7 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Data.Nat.Lattice
+
+import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
 # Finite nimber arithmetic
@@ -29,6 +34,7 @@ instance : ToString NatNimber where
 @[simp] theorem one_le_iff_ne_zero {a : NatNimber} : 1 ≤ a ↔ a ≠ 0 := Nat.one_le_iff_ne_zero
 theorem le_one_iff {a : NatNimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Nat.le_one_iff_eq_zero_or_eq_one
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The embedding `NatNimber ↪o Nimber`. -/
 def toNimber : NatNimber ↪o Nimber where
   toFun x := .of x.val

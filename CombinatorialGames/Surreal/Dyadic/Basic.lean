@@ -3,9 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Mathlib.Dyadic
-import CombinatorialGames.Surreal.Division
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Surreal.Division
+
 import Mathlib.Data.Finset.DenselyOrdered
 
 /-!
@@ -32,6 +35,8 @@ the future:
 universe u
 open IGame
 
+@[expose] public section
+
 namespace Dyadic
 
 /-! ### Upper and lower dyadic fractions -/
@@ -45,11 +50,11 @@ def upper (x : Dyadic) : Dyadic :=
   .mkRat (x.num + 1) x.den_mem_powers
 
 theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den := by
-  rw [den, lower, val_mkRat]
+  rw [den, lower, coe_mkRat]
   exact den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
 
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den := by
-  rw [den, upper, val_mkRat]
+  rw [den, upper, coe_mkRat]
   exact den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
 
 /-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
@@ -98,16 +103,16 @@ theorem lt_upper (x : Dyadic) : x < upper x := by
 theorem lower_lt_upper (x : Dyadic) : lower x < upper x :=
   (lower_lt x).trans (lt_upper x)
 
-theorem val_lower (x : Dyadic) : (lower x).toRat = x.toRat - (x.den : ℚ)⁻¹ := by
+theorem coe_lower (x : Dyadic) : lower x = x - (x.den : ℚ)⁻¹ := by
   simp [lower, Rat.mkRat_eq_div, sub_div, Rat.num_div_den]
 
-theorem val_upper (x : Dyadic) : (upper x).toRat = x.toRat + (x.den : ℚ)⁻¹ := by
+theorem coe_upper (x : Dyadic) : upper x = x + (x.den : ℚ)⁻¹ := by
   simp [upper, Rat.mkRat_eq_div, add_div, Rat.num_div_den]
 
 theorem lower_add_le_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
     lower (x + y) ≤ x + lower y := by
-  rw [← Dyadic.toRat_le_toRat_iff]
-  suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [val_lower, Rat.add_assoc, sub_eq_add_neg]
+  rw [← Dyadic.coe_le_coe]
+  suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [coe_lower, Rat.add_assoc, sub_eq_add_neg]
   rw [inv_le_inv₀ (mod_cast y.den_pos) (mod_cast den_pos _)]
   exact_mod_cast den_add_le_den_right h
 
@@ -158,7 +163,7 @@ theorem toIGame_half : half = ½ := by
   rw [toIGame_of_den_ne_one (by decide)]
   suffices uh : upper half = 1 by
     rw [show lower half = 0 from rfl, uh]; ext p; cases p <;> simp
-  rw [← Dyadic.toRat_inj, upper, Dyadic.val_mkRat]
+  rw [← Dyadic.coe_inj, upper, Dyadic.coe_mkRat]
   rfl
 
 @[simp]
@@ -275,7 +280,7 @@ decreasing_by dyadic_wf
 /-- `Dyadic.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
 noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
-  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+  .ofStrictMono toIGame fun _ _ ↦ by exact toIGame_lt_toIGame_aux
 
 @[simp, norm_cast]
 theorem toIGame_le_toIGame {x y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -339,7 +344,7 @@ decreasing_by igame_wf
 theorem toIGame_sub_equiv (x y : Dyadic) : ((x - y : Dyadic) : IGame) ≈ x - y := by
   simpa [sub_eq_add_neg] using toIGame_add_equiv x (-y)
 
-theorem toIGame_equiv (x : Dyadic) : (x : IGame) ≈ x.toRat := by
+theorem toIGame_equiv (x : Dyadic) : (x : IGame) ≈ (x : ℚ) := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
       Rat.coe_int_num_of_den_eq_one h]
@@ -349,11 +354,11 @@ theorem toIGame_equiv (x : Dyadic) : (x : IGame) ≈ x.toRat := by
 termination_by x.den
 
 @[simp]
-theorem _root_.Game.mk_dyadic (x : Dyadic) : Game.mk x = x.toRat :=
+theorem _root_.Game.mk_dyadic (x : Dyadic) : Game.mk x = x :=
   Game.mk_eq x.toIGame_equiv
 
 @[simp]
-theorem _root_.Surreal.mk_dyadic (x : Dyadic) : Surreal.mk x = x.toRat := by
+theorem _root_.Surreal.mk_dyadic (x : Dyadic) : Surreal.mk x = x := by
   simpa using Surreal.mk_eq x.toIGame_equiv
 
 theorem toIGame_mul_equiv (x y : Dyadic) : ((x * y : Dyadic) : IGame) ≈ x * y := by
@@ -364,24 +369,24 @@ theorem toIGame_mul_equiv (x y : Dyadic) : ((x * y : Dyadic) : IGame) ≈ x * y 
 /-! #### ℚ -/
 
 @[simp, norm_cast]
-theorem toIGame_lt_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) < y ↔ x.toRat < y := by
+theorem toIGame_lt_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) < y ↔ x < y := by
   simp [(toIGame_equiv x).lt_congr_left]
 @[simp, norm_cast]
-theorem toIGame_le_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) ≤ y ↔ x.toRat ≤ y := by
+theorem toIGame_le_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) ≤ y ↔ x ≤ y := by
   simp [(toIGame_equiv x).le_congr_left]
 
 @[simp, norm_cast]
-theorem ratCast_lt_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) < y ↔ x < y.toRat := by
+theorem ratCast_lt_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) < y ↔ x < y := by
   simp [(toIGame_equiv y).lt_congr_right]
 @[simp, norm_cast]
-theorem ratCast_le_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y.toRat := by
+theorem ratCast_le_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y := by
   simp [(toIGame_equiv y).le_congr_right]
 
 @[simp, norm_cast]
-theorem toIGame_equiv_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) ≈ y ↔ x.toRat = y := by
+theorem toIGame_equiv_ratCast {x : Dyadic} {y : ℚ} : (x : IGame) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 @[simp, norm_cast]
-theorem ratCast_equiv_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) ≈ y ↔ x = y.toRat := by
+theorem ratCast_equiv_toIGame {x : ℚ} {y : Dyadic} : (x : IGame) ≈ y ↔ x = y := by
   simp [AntisymmRel, le_antisymm_iff]
 
 /-! #### ℤ -/
@@ -557,6 +562,7 @@ rational number.
 
 TODO: it should be possible to compute this value explicitly, given the finsets of `Dyadic`
 rationals corresponding to the left and right moves. -/
+@[no_expose]
 noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
 
@@ -570,12 +576,12 @@ theorem toIGame_toDyadic_equiv (x : IGame) [Short x] [Numeric x] : (x.toDyadic :
 
 @[simp]
 theorem _root_.Game.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
-    x.toDyadic.toRat = Game.mk x := by
+    x.toDyadic = Game.mk x := by
   simpa using Game.mk_eq (toIGame_toDyadic_equiv x)
 
 @[simp]
 theorem _root_.Surreal.ratCast_toDyadic (x : IGame) [Short x] [Numeric x] :
-    x.toDyadic.toRat = Surreal.mk x := by
+    x.toDyadic = Surreal.mk x := by
   simpa using Surreal.mk_eq (toIGame_toDyadic_equiv x)
 
 theorem equiv_toIGame_iff_toDyadic_eq {x : IGame} [Short x] [Numeric x] {y : Dyadic} :
@@ -641,3 +647,4 @@ theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
   simp
 
 end IGame
+end

@@ -3,9 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Dyadic.Basic
-import Mathlib.Algebra.Order.Hom.Ring
-import Mathlib.Data.Real.Archimedean
+module
+
+public import CombinatorialGames.Surreal.Dyadic.Basic
+public import Mathlib.Algebra.Order.Hom.Ring
+public import Mathlib.Data.Real.Archimedean
 
 /-!
 # Real numbers as games
@@ -23,7 +25,7 @@ universe u
 
 open IGame
 
-noncomputable section
+@[expose] public noncomputable section
 
 theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K]
     [Archimedean K] {x y : K} (h : x < y) : ∃ q : Dyadic, x < q.toRat ∧ q.toRat < y := by
@@ -350,7 +352,7 @@ private theorem toSurreal_def_aux {x : ℝ} :
 
 theorem toSurreal_def (x : ℝ) : toSurreal x =
     !{(fun q => q.toRat) '' {q : Dyadic | q.toRat < x} |
-      ((fun q => q.toRat) '' {q : Dyadic | x < q.toRat})}'toSurreal_def_aux := by
+      ((fun q => q.toRat) '' {q : Dyadic | x < q.toRat})}'(by exact toSurreal_def_aux) := by
   rw [← Surreal.toGame_inj, toGame_toSurreal, Surreal.toGame_ofSets, toGame_def]
   congr! <;> aesop
 
@@ -450,10 +452,12 @@ private theorem exists_rat_mul_btwn' {a b x : ℝ} (h : a < b * x) :
   use -q
   simp_all [lt_neg, neg_le]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem toIGame_mul_le_mul {x : ℝ} {q r : ℚ} (h : x * r ≤ q * r) :
     toIGame x * r ≤ q * r := by
   obtain hr | rfl | hr := lt_trichotomy r 0 <;> simp_all
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem toIGame_mul_le_mul' {x : ℝ} {q r : ℚ} (h : q * r ≤ x * r) :
     q * r ≤ toIGame x * r := by
   obtain hr | rfl | hr := lt_trichotomy r 0 <;> simp_all
@@ -480,6 +484,7 @@ private theorem toIGame_lt_mulOption {x : ℝ} {q r s : ℚ} (h : x * q - r * q 
   · have := toIGame_mul_le_mul'.{u} ht'
     simp_all [mulOption, ← Surreal.mk_le_mk]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
     Player.forall, Player.forall]
@@ -532,6 +537,7 @@ theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * 
 theorem toIGame_ratCast_mul_equiv (q : ℚ) (x : ℝ) : (q * x).toIGame ≈ q * x := by
   simpa [mul_comm] using toIGame_mul_ratCast_equiv x q
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic}
     (hx : 0 < x) (hy : 0 < y) (h : q.toRat < x * y) : (q : IGame) < x * y := by
   rw [← div_lt_iff₀ hy] at h
@@ -547,6 +553,7 @@ private theorem dyadic_lt_mul_toIGame' {x y : ℝ} {q : Dyadic}
     apply mul_lt_mul _ (le_of_lt _) _ (le_of_lt _) <;>
       simp_all [← toSurreal_zero, ← toSurreal_ratCast]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
     (hx : 0 < x) (hy : 0 < y) (h : x * y < q.toRat) : x * y < (q : IGame) := by
   rw [← lt_div_iff₀ hy] at h
@@ -562,6 +569,7 @@ private theorem mul_toIGame_lt_dyadic' {x y : ℝ} {q : Dyadic}
   · grw [mul_comm, q.toIGame_equiv,  ← IGame.Numeric.lt_div_iff, ← ratCast_div_equiv] <;>
       simp_all [← Rat.cast_div]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem dyadic_lt_mul_toIGame {x y : ℝ} (q : Dyadic) (h : q.toRat < x * y) :
     (q : IGame.{u}) < x * y := by
   obtain hx | rfl | hx := lt_trichotomy x 0
@@ -594,6 +602,7 @@ private theorem mulOption_toIGame_equiv {x y : ℝ} {q r : Dyadic} :
       toIGame (q.toRat * y + x * r.toRat - q.toRat * r.toRat) := by
   simp [← Surreal.mk_eq_mk, mulOption, mul_comm, toSurreal_mul_ratCast]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x * y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
     Player.forall, Player.forall]

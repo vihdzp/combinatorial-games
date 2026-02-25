@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Pow
-import Mathlib.Algebra.Order.Ring.StandardPart
+module
+
+public import CombinatorialGames.Surreal.Pow
+public import Mathlib.Algebra.Order.Ring.StandardPart
 
 /-!
 # Leading term and coefficient
@@ -16,7 +18,7 @@ We don't yet prove this characterization; rather, these functions are a key ingr
 the map from surreals into Hahn series.
 -/
 
-noncomputable section
+@[expose] public noncomputable section
 namespace Surreal
 
 open ArchimedeanClass
@@ -56,6 +58,7 @@ theorem leadingCoeff_one : leadingCoeff 1 = 1 :=
 theorem leadingCoeff_neg (x : Surreal) : leadingCoeff (-x) = -leadingCoeff x := by
   simp [leadingCoeff, neg_div]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem leadingCoeff_mul (x y : Surreal) :
     leadingCoeff (x * y) = leadingCoeff x * leadingCoeff y := by
@@ -101,6 +104,7 @@ theorem leadingCoeff_nonneg_iff {x : Surreal} : 0 ≤ leadingCoeff x ↔ 0 ≤ x
   rw [ne_eq, leadingCoeff_eq_zero]
   exact h.ne
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem leadingCoeff_nonpos_iff {x : Surreal} : leadingCoeff x ≤ 0 ↔ x ≤ 0 := by
   simpa using leadingCoeff_nonneg_iff (x := -x)
@@ -113,6 +117,7 @@ theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
 theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
   simp [← not_le]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem leadingCoeff_monotoneOn (x : Surreal) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h
   obtain rfl | hy := eq_or_ne y 0; · simpa
@@ -131,6 +136,7 @@ private theorem stdPart_eq' {x y : Surreal} {r : ℝ}
   · rw [div_le_iff₀ (wpow_pos _)]
     exact hR s hs
 
+set_option backward.isDefEq.respectTransparency false in
 theorem wlog_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : x.wlog = y := by
   apply wlog_eq_of_wpow_veq
@@ -142,6 +148,7 @@ theorem leadingCoeff_eq {x y : Surreal} {r : ℝ} (hr : r ≠ 0)
     (hL : ∀ s < r, s * ω^ y ≤ x) (hR : ∀ s > r, x ≤ s * ω^ y) : leadingCoeff x = r := by
   rw [leadingCoeff, wlog_eq hr hL hR, stdPart_eq' hL hR]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem leadingCoeff_add_eq_left {x y : Surreal} (h : y <ᵥ x) :
     leadingCoeff (x + y) = leadingCoeff x := by
   rw [leadingCoeff, leadingCoeff, add_div, wlog_add_eq_left h, stdPart_add_eq_left]
@@ -219,6 +226,7 @@ theorem leadingTerm_wpow (x : Surreal) : leadingTerm (ω^ x) = ω^ x := by
 theorem leadingTerm_eq_zero {x : Surreal} : leadingTerm x = 0 ↔ x = 0 := by
   simp [leadingTerm]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem leadingTerm_nonneg_iff {x : Surreal} : 0 ≤ leadingTerm x ↔ 0 ≤ x := by
   simp [leadingTerm]
@@ -235,6 +243,7 @@ theorem leadingTerm_pos_iff {x : Surreal} : 0 < leadingTerm x ↔ 0 < x := by
 theorem leadingTerm_neg_iff {x : Surreal} : leadingTerm x < 0 ↔ x < 0 := by
   simp [← not_le]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem mk_lt_mk_sub_leadingTerm {x : Surreal} (hx : x ≠ 0) :
     ArchimedeanClass.mk x < .mk (x - x.leadingTerm) := by
   rw [← LinearOrderedAddCommGroupWithTop.sub_lt_sub_iff_left_of_ne_top
@@ -275,6 +284,7 @@ private theorem leadingTerm_mono' {x y : Surreal} (hx : 0 ≤ x) (h : x ≤ y) :
     exact leadingCoeff_monotoneOn _ rfl hxy' h
   · apply (lt_of_mk_lt_mk_of_nonneg ..).le <;> simpa
 
+set_option backward.isDefEq.respectTransparency false in
 theorem leadingTerm_mono : Monotone leadingTerm := by
   intro x y h
   obtain hx | hx := le_total 0 x

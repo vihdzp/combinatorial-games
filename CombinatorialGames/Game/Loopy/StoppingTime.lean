@@ -3,9 +3,11 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.NatOrdinal.Basic
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -60,10 +62,11 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
   rw [← Order.succ_eq_add_one]
   exact Order.le_succ x
 
-noncomputable section
+public noncomputable section
 namespace LGame
 open Order
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Refines the approximations for the stopping times. -/
 private def stoppingTimeApprox (p : Player) : (LGame.{u} → WithTop NatOrdinal.{u}) →o
     (LGame.{u} → WithTop NatOrdinal.{u}) where
@@ -72,6 +75,7 @@ private def stoppingTimeApprox (p : Player) : (LGame.{u} → WithTop NatOrdinal.
     Monotone.iInf' fun _ => Monotone.iInf' fun _ => Monotone.iSup' fun i => Monotone.iSup' fun _ =>
       add_left_mono.comp (Function.monotone_eval i)
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem le_of_finite (p : Player) {x y}
     (hx : stoppingTimeApprox p x = x) (hy : stoppingTimeApprox p y = y)
     {i : LGame.{u}} (hi : y i ≠ ⊤) : x i ≤ y i := by
@@ -104,6 +108,7 @@ def stoppingTime (p q : Player) (x : LGame.{u}) : WithTop NatOrdinal.{u} :=
   if p = q then (stoppingTimeApprox p).lfp x
   else ⨆ i ∈ x.moves q, (stoppingTimeApprox p).lfp i + 1
 
+set_option backward.isDefEq.respectTransparency false in
 theorem stoppingTime_of_eq {p q : Player} (h : p = q) (x : LGame.{u}) :
     stoppingTime p q x = ⨅ y ∈ x.moves q, stoppingTime p (-q) y := by
   unfold stoppingTime
@@ -123,6 +128,7 @@ theorem stoppingTime_of_ne {p q : Player} (h : p ≠ q) (x : LGame.{u}) :
     · enter [1, y, 1, _]
       rw [if_pos (Player.eq_neg.2 h)]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem stoppingTime_induction (p : Player)
     (val : Player → LGame.{u} → WithTop NatOrdinal.{u})
     (hp : ∀ x, ⨅ y ∈ x.moves p, val (-p) y ≤ val p x)
@@ -139,6 +145,7 @@ theorem stoppingTime_induction (p : Player)
   · cases Player.neg_eq.2 hq
     exact fun x => (iSup₂_mono fun y _ => add_left_mono (up y)).trans (hnp x)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem stoppingTime_coinduction (p : Player)
     (val : Player → LGame.{u} → WithTop NatOrdinal.{u})
     (hp : ∀ x, val p x ≤ ⨅ y ∈ x.moves p, val (-p) y)

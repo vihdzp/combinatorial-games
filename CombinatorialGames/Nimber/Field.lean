@@ -3,7 +3,13 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Algebra.CharP.Defs
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.Algebra.Ring.Int.Parity
+
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
@@ -26,7 +32,7 @@ universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 namespace Nimber
 
@@ -53,6 +59,7 @@ termination_by (a, b)
 
 /-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
@@ -306,8 +313,7 @@ instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
 
 /-- The complement of `invSet a` is nonempty. -/
 private theorem invSet_nonempty (a : Nimber) : (invSet a)ᶜ.Nonempty :=
-  have := instSmallElemInvSet a -- why is this needed?
-  nonempty_of_not_bddAbove (Ordinal.not_bddAbove_compl_of_small _)
+  nonempty_of_not_bddAbove (not_bddAbove_compl_of_small _)
 
 theorem invAux_ne_zero (a : Nimber) : invAux a ≠ 0 := by
   rw [invAux]

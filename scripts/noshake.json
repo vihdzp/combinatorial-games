@@ -1,6 +1,7 @@
 {
     "ignoreImport": [
         "Aesop",
+        "CombinatorialGames.Tactic.AddInstances",
         "CombinatorialGames.Tactic.GameCmp",
         "CombinatorialGames.Tactic.OrdinalAlias",
         "CombinatorialGames.Tactic.Register",

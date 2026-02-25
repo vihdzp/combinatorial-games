@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.NatOrdinal.Basic
-import Mathlib.SetTheory.Ordinal.Exponential
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.SetTheory.Ordinal.Exponential
 
 /-!
 # Natural operations on `ω ^ x`
@@ -25,6 +27,8 @@ Surreal exponentiation is not closed on the ordinals. Because of this, we opt ag
 notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGame` and `Surreal` in
 `CombinatorialGames.Surreal.Pow`.
 -/
+
+@[expose] public section
 
 open Ordinal
 
@@ -64,6 +68,7 @@ theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
 @[simp] theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := isNormal_wpow.strictMono.le_iff_le
 @[simp] theorem wpow_inj : ω^ x = ω^ y ↔ x = y := isNormal_wpow.strictMono.injective.eq_iff
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ x) (n : ℕ) :
     (∀ z < ω^ x, z + y < ω^ x) ∧ ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
   obtain rfl | hx := eq_or_ne x.val 0
@@ -195,3 +200,4 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
 termination_by (x, y)
 
 end NatOrdinal
+end
