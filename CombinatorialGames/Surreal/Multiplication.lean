@@ -70,7 +70,7 @@ lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
   rw [forall_moves_mul]
   simp [mulOption_neg_right, mulOption_neg_left]
 
-/-! ### Predicates P1 – P4 -/
+/- ### Predicates P1 – P4 -/
 
 /-- `P1 x y a b c d` means that `mulOption x y a b < mulOption x y c d`. This is the general form
 of the statements needed to prove that `x * y` is numeric. -/
@@ -99,7 +99,7 @@ def P24 (x₁ x₂ y : IGame) : Prop := P2 x₁ x₂ y ∧ P4 x₁ x₂ y
 
 variable {x x₁ x₂ x₃ x' y y₁ y₂ y₃ y' a b c d : IGame.{u}}
 
-/-! #### Symmetry properties of P1 – P4 -/
+/- #### Symmetry properties of P1 – P4 -/
 
 lemma P3_comm : P3 x₁ x₂ y₁ y₂ ↔ P3 y₁ y₂ x₁ x₂ := by
   simp [P3, add_comm, mul_comm]
@@ -128,7 +128,7 @@ lemma P4_neg_right : P4 x₁ x₂ (-y) ↔ P4 x₁ x₂ y := by
 lemma P24_neg_left : P24 (-x₂) (-x₁) y ↔ P24 x₁ x₂ y := by rw [P24, P24, P2_neg_left, P4_neg_left]
 lemma P24_neg_right : P24 x₁ x₂ (-y) ↔ P24 x₁ x₂ y := by rw [P24, P24, P2_neg_right, P4_neg_right]
 
-/-! ### Inductive setup -/
+/- ### Inductive setup -/
 
 /-- The type of lists of arguments for `P1`, `P2`, and `P4`. -/
 inductive Args : Type (u + 1)
@@ -180,7 +180,7 @@ def P124 : Args → Prop
   | (Args.P1 x y) => Numeric (x * y)
   | (Args.P24 x₁ x₂ y) => P24 x₁ x₂ y
 
-/-! ### P1 follows from the inductive hypothesis -/
+/- ### P1 follows from the inductive hypothesis -/
 
 lemma numeric_move_mul_of_IH {p : Player} (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a)
     (h : x' ∈ x.moves p) : (x' * y).Numeric :=
@@ -286,7 +286,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
       have := numeric_move_mul_move_of_IH IH ha hb
       infer_instance
 
-/-! ### P2 follows from the inductive hypothesis -/
+/- ### P2 follows from the inductive hypothesis -/
 
 lemma numeric_of_IH (IH : ∀ a, ArgsRel a (Args.P24 x₁ x₂ y) → P124 a) :
     (x₁ * y).Numeric ∧ (x₂ * y).Numeric := by

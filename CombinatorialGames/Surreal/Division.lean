@@ -53,7 +53,7 @@ theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
     Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
   rfl
 
-/-! ### Arithmetic lemmas -/
+/- ### Arithmetic lemmas -/
 
 lemma one_neg_mul_invOption (x : IGame) {y : IGame} (hy : y * y⁻¹ ≈ 1) (a : IGame)
     [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
@@ -94,7 +94,7 @@ theorem le_mulOption (x y : IGame) {a b : IGame} [Numeric y] [Numeric a] [Numeri
   rw [← add_le_add_iff_left (Game.mk (x * b))] at this
   convert this using 1 <;> abel
 
-/-! ### Inductive proof -/
+/- ### Inductive proof -/
 
 lemma numeric_option_inv {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹) :
