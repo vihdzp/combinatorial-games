@@ -122,7 +122,7 @@ This function is regrettably noncomputable. Among other issues, sets simply do n
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
 @[no_expose]
 instance : OfSets IGame fun _ ↦ True where
-  ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
+  ofSets st _ := QPF.Fix.mk ⟨st, by rintro (_ | _) <;> assumption⟩
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
@@ -1238,6 +1238,7 @@ theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
 theorem inv_nonneg {x : IGame} (hx : 0 < x) : 0 ⧏ x⁻¹ :=
   left_lf (zero_mem_leftMoves_inv hx)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem invOption_mem_moves_inv {x y a : IGame} {p₁ p₂} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.moves (-(p₁ * p₂))) (ha : a ∈ x⁻¹.moves p₁) :
     invOption x y a ∈ x⁻¹.moves p₂ := by

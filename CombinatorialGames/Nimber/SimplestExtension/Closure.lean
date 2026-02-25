@@ -41,6 +41,7 @@ theorem Subfield.coe_eq_univ [Field R] {H : Subfield R} : (H : Set R) = .univ �
 theorem Subfield.toSubring_eq_top [Field R] {H : Subfield R} : H.toSubring = ⊤ ↔ H = ⊤ := by
   rw [← SetLike.coe_set_eq, Subfield.coe_toSubring]; simp
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Subfield.coe_bot [DivisionRing R] :
     (⊥ : Subfield R) = Set.range ((↑) : ℚ → R) := by

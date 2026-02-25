@@ -162,6 +162,7 @@ protected theorem IsField.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i
     IsField (⨆ i, f i) :=
   IsField.sSup (by simpa) (range_nonempty f) bdd
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsNthDegreeClosed.X_pow_lt_leastNoRoots {n : ℕ} {x : Nimber}
     (h : IsNthDegreeClosed n x) : .some (X ^ (n + 1)) < leastNoRoots x := by
   refine (leastNoRoots_ne_X_pow x _).lt_of_le' (le_of_forall_lt_imp_ne fun p hp hp' ↦ ?_)
@@ -172,6 +173,7 @@ theorem IsNthDegreeClosed.X_pow_lt_leastNoRoots {n : ℕ} {x : Nimber}
   · simp_rw [← hp']
     simpa using hp
 
+set_option backward.isDefEq.respectTransparency false in
 theorem isNthDegreeClosed_iff_X_pow_lt_leastNoRoots {n : ℕ} {x : Nimber} (h : IsRing x) :
     IsNthDegreeClosed n x ↔ .some (X ^ (n + 1)) < leastNoRoots x where
   mp := IsNthDegreeClosed.X_pow_lt_leastNoRoots
@@ -336,6 +338,7 @@ theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
   rw [isAlgClosed_iff_forall]
   exact fun n ↦ IsNthDegreeClosed.ofMonic h fun p hm hp₀ _ ↦ hp p hm hp₀
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsAlgClosed.leastNoRoots_eq_top {x : Nimber} (h : IsAlgClosed x) :
     leastNoRoots x = ⊤ := by
   rw [WithTop.eq_top_iff_forall_ge]
@@ -354,6 +357,7 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   (h.toIsNthDegreeClosed _).eval_eq_of_lt degree_le_natDegree hpk
 
+set_option backward.isDefEq.respectTransparency false in
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
@@ -423,6 +427,7 @@ theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
   · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
     simp [h.ne_zero]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -449,6 +454,7 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -521,6 +527,7 @@ private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure 
   · rw [Function.iterate_succ_apply']
     simp
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
     (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
   simp_rw [algClosure, lt_ciSup_iff (bddAbove_of_small _)] at hpk ⊢
@@ -537,6 +544,7 @@ private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠
   refine ⟨⟨p, hn⟩, ?_⟩
   simp_all
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
     (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
     (hr : ∀ r, ¬ p.IsRoot r) : leastNoRoots (algClosure x) = p := by
