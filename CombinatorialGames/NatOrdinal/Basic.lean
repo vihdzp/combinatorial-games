@@ -165,8 +165,6 @@ instance : SuccAddOrder NatOrdinal := ⟨by exact succ_eq_add_one'⟩
 
 @[simp] theorem add_one_ne_zero (a : NatOrdinal) : a + 1 ≠ 0 := by simp [← succ_eq_add_one]
 
--- TODO: someday we'll get rid of this.
-attribute [-simp] Ordinal.add_one_eq_succ
 attribute [simp] Order.succ_eq_add_one
 
 instance : AddMonoidWithOne NatOrdinal where

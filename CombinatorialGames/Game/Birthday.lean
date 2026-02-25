@@ -42,10 +42,6 @@ public noncomputable section
 
 namespace IGame
 
--- TODO: upstream
-attribute [simp] Order.lt_add_one_iff
-attribute [-simp] Ordinal.add_one_eq_succ
-
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
 def birthday (x : IGame.{u}) : NatOrdinal.{u} :=

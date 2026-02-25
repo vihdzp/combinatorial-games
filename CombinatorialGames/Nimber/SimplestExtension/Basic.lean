@@ -36,9 +36,6 @@ The proof follows Aaron Siegel's Combinatorial Games, pp. 440-444.
 
 open Order Ordinal Set
 
--- TODO: this is a pending Mathlib refactor.
-attribute [-simp] add_one_eq_succ
-
 @[expose] public section
 
 /-! ### Order lemmas -/

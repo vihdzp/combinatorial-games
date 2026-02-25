@@ -32,8 +32,6 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 open Ordinal
 
-attribute [-simp] add_one_eq_succ
-
 theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
   obtain rfl | hy := eq_or_ne y 0
   · simp

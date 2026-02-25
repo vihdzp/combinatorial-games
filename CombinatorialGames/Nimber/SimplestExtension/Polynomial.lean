@@ -493,7 +493,7 @@ open Ordinal
 /-- Evaluate a nimber polynomial using ordinal arithmetic.
 
 TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this. -/
-def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
+noncomputable def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
   ∗((List.range (p.natDegree + 1)).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum
 
 @[simp]
