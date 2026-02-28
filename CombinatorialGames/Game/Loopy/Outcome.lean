@@ -80,19 +80,45 @@ theorem isStrategy_setOf_not_isWin (p : Player) : IsStrategy p {x | ¬ IsWin (-p
     simp_rw [Set.mem_setOf, isWin_iff_exists, isLoss_iff_forall] at hx
     simpa using hx
 
-theorem not_isWin_iff_mem_Strategy : ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s where
+theorem not_isWin_iff_mem_isStrategy : ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s where
   mp h := ⟨_, by simpa, isStrategy_setOf_not_isWin _⟩
   mpr ls ll := ll.rec (motive_2 := fun _ _ _ ↦ _) (@fun p x y hyx _ hy ⟨s, hx, hs⟩ ↦
     have hp := (neg_neg p).symm
     have ⟨r, hr⟩ := hs x hx y (hp ▸ hyx); hy r hr.1 ⟨s, hr.2, hp ▸ hs⟩) (fun _ ↦ id) ls
 
+theorem IsStrategy.not_isWin' {s} (h : IsStrategy (-p) s) (hx : x ∈ s) : ¬ IsWin p x := by
+  rw [not_isWin_iff_mem_isStrategy]
+  use s
+
+theorem IsStrategy.not_isWin {s} (h : IsStrategy p s) (hx : x ∈ s) : ¬ IsWin (-p) x := by
+  rw [← neg_neg p] at h
+  exact h.not_isWin' hx
+
 @[simp]
 theorem not_isLoss_of_isWin (h : IsWin p x) : ¬ IsLoss p x :=
-  fun h' ↦ not_isWin_iff_mem_Strategy.mpr ⟨_, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
+  fun h' ↦ not_isWin_iff_mem_isStrategy.mpr ⟨_, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
 
 @[simp]
 theorem not_isWin_of_isLoss (h : IsLoss p x) : ¬ IsWin p x :=
   imp_not_comm.1 not_isLoss_of_isWin h
+
+@[simp]
+theorem isWin_neg : IsWin p (-x) ↔ IsWin (-p) x := by
+  rw [← not_iff_not, not_isWin_iff_mem_isStrategy, not_isWin_iff_mem_isStrategy,
+    (Equiv.neg _).exists_congr_left]
+  simp [← isStrategy_neg]
+
+theorem IsWin.neg (h : IsWin p x) : IsWin (-p) (-x) := by
+  rw [← neg_neg p] at h
+  exact isWin_neg.2 h
+
+@[simp]
+theorem isLoss_neg : IsLoss p (-x) ↔ IsLoss (-p) x := by
+  simp [isLoss_iff_forall]
+
+theorem IsLoss.neg (h : IsLoss p x) : IsLoss (-p) (-x) := by
+  rw [← neg_neg p] at h
+  exact isLoss_neg.2 h
 
 /-- `IsDraw p x` means that `p` draws `x` going first. -/
 def IsDraw (p : Player) (x : LGame) : Prop := ¬ IsWin p x ∧ ¬ IsLoss p x
@@ -101,12 +127,21 @@ def IsDraw (p : Player) (x : LGame) : Prop := ¬ IsWin p x ∧ ¬ IsLoss p x
 @[simp] theorem IsDraw.not_isLoss (h : IsDraw p x) : ¬ IsLoss p x := h.2
 theorem not_isDraw_iff : ¬ IsDraw p x ↔ IsWin p x ∨ IsLoss p x := by rw [IsDraw]; tauto
 
-/-- The three possible outcomes of a game. -/
-inductive Outcome : Type | win | draw | loss
+@[simp]
+theorem isDraw_neg : IsDraw p (-x) ↔ IsDraw (-p) x := by
+  simp [IsDraw]
 
+theorem IsDraw.neg (h : IsDraw p x) : IsDraw (-p) (-x) := by
+  rw [← neg_neg p] at h
+  exact isDraw_neg.2 h
+
+theorem outcome_trichotomy (p : Player) (x : LGame) : IsWin p x ∨ IsDraw p x ∨ IsLoss p x := by
+  rw [IsDraw]; tauto
+
+open Classical in
 /-- `outcomeFor p x` is the outcome of `x` with `p` going first. -/
-noncomputable def outcomeFor (p : Player) (x : LGame) : Outcome := by classical
-  exact if IsWin p x then .win else if IsLoss p x then .loss else .draw
+noncomputable def outcomeFor (p : Player) (x : LGame) : Outcome :=
+  if IsWin p x then .win else if IsLoss p x then .loss else .draw
 
 @[simp]
 theorem outcomeFor_eq_win_iff : outcomeFor p x = .win ↔ IsWin p x := by
@@ -120,6 +155,10 @@ theorem outcomeFor_eq_loss_iff : outcomeFor p x = .loss ↔ IsLoss p x := by
 theorem outcomeFor_eq_draw_iff : outcomeFor p x = .draw ↔ IsDraw p x := by
   aesop (add simp [outcomeFor, IsDraw])
 
+@[simp]
+theorem outcomeFor_neg : outcomeFor p (-x) = outcomeFor (-p) x := by
+  aesop (add simp [outcomeFor])
+
 theorem StopperFor.not_isDraw (h : StopperFor p x) : ¬ IsDraw p x :=
   h.rec fun _h IH ⟨hw, hl⟩ ↦
     have ⟨y, hyx, hy⟩ := not_isLoss_iff_exists.mp hl
@@ -129,7 +168,108 @@ theorem StopperFor.not_isDraw (h : StopperFor p x) : ¬ IsDraw p x :=
 theorem Stopper.not_isDraw (p : Player) (h : Stopper x) : ¬ IsDraw p x :=
   (h p).not_isDraw
 
+/-! ### Outcome calculations -/
+
+/-! #### dud -/
+
+theorem isStrategy_dud (p : Player) : IsStrategy p {dud} := by
+  simp [IsStrategy]
+
+theorem isDraw_dud (p : Player) : IsDraw p dud := by
+  have H (p) : ¬ IsWin p dud := (isStrategy_dud _).not_isWin' (by simp)
+  use H _
+  rw [not_isLoss_iff_exists]
+  use dud
+  simpa using H _
+
+@[simp]
+theorem outcomeFor_dud (p : Player) : outcomeFor p dud = .draw := by
+  simpa using isDraw_dud p
+
+/-! #### on -/
+
+theorem isLoss_right_on : IsLoss right on := by
+  rw [isLoss_iff_forall]
+  simp
+
+theorem isWin_left_on : IsWin left on := by
+  rw [isWin_iff_exists]
+  simpa using isLoss_right_on
+
+@[simp]
+theorem outcomeFor_left_on : outcomeFor left on = .win := by
+  simpa using isWin_left_on
+
+@[simp]
+theorem outcomeFor_right_on : outcomeFor right on = .loss := by
+  simpa using isLoss_right_on
+
+/-! #### off -/
+
+theorem isLoss_left_off : IsLoss left off := by
+  rw [← neg_on, isLoss_neg]
+  exact isLoss_right_on
+
+theorem isWin_right_off : IsWin right off := by
+  rw [← neg_on, isWin_neg]
+  exact isWin_left_on
+
+@[simp]
+theorem outcomeFor_left_off : outcomeFor left off = .loss := by
+  simpa using isLoss_left_off
+
+@[simp]
+theorem outcomeFor_right_off : outcomeFor right off = .win := by
+  simpa using isWin_right_off
+
+/-! #### tis and tisn -/
+
+theorem isStrategy_tis (p : Player) : IsStrategy p {tis} := by
+  cases p <;> simp [IsStrategy]
+
+theorem isStrategy_tisn (p : Player) : IsStrategy p {tisn} := by
+  cases p <;> simp [IsStrategy]
+
+theorem isLoss_right_tis : IsLoss right tis := by
+  rw [isLoss_iff_forall]
+  simp
+
+theorem isLoss_left_tisn : IsLoss left tisn := by
+  rw [isLoss_iff_forall]
+  simp
+
+theorem not_isWin_tis (p : Player) : ¬ IsWin p tis := (isStrategy_tis _).not_isWin' (by simp)
+theorem not_isWin_tisn (p : Player) : ¬ IsWin p tisn := (isStrategy_tisn _).not_isWin' (by simp)
+
+theorem isDraw_left_tis : IsDraw left tis := by
+  use not_isWin_tis _
+  rw [not_isLoss_iff_exists]
+  simpa using not_isWin_tisn _
+
+theorem isDraw_right_tisn : IsDraw right tisn := by
+  use not_isWin_tisn _
+  rw [not_isLoss_iff_exists]
+  simpa using not_isWin_tis _
+
+@[simp]
+theorem outcomeFor_left_tis : outcomeFor left tis = .draw := by
+  simpa using isDraw_left_tis
+
+@[simp]
+theorem outcomeFor_right_tis : outcomeFor right tis = .loss := by
+  simpa using isLoss_right_tis
+
+@[simp]
+theorem outcomeFor_left_tisn : outcomeFor left tisn = .loss := by
+  simpa using isLoss_left_tisn
+
+@[simp]
+theorem outcomeFor_right_tisn : outcomeFor right tisn = .draw := by
+  simpa using isDraw_right_tisn
+
 end LGame
+
+/-! ### Outcomes of well-founded games -/
 
 namespace IGame
 variable {x : IGame}
