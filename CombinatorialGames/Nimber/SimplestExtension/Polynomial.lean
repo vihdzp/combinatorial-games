@@ -727,7 +727,7 @@ theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y <
       split_ifs with h
       · subst h
         rw [p.coeff_eq_zero_of_degree_lt hpn, add_zero, mul_one, val_of]
-        rwa [Ordinal.div_lt (pow_ne_zero k hx₀), ← pow_succ]
+        rwa [← Ordinal.lt_mul_iff_div_lt (pow_ne_zero k hx₀), ← pow_succ]
       · simpa using hpk k
     · rw [oeval_C_mul_X_pow_add hpn, hp]
       exact Ordinal.div_add_mod ..

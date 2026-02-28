@@ -30,7 +30,7 @@ theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c :
 
 theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
 @[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
-  rw [← succ_zero, Order.Iio_succ]; exact Set.Iic_bot
+  rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
 @[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
   rw [← succ_one, Order.Iio_succ]; ext; simp [le_one_iff]
 
@@ -176,7 +176,7 @@ theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ord
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
 
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := Ordinal.succ_zero
+@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
 @[simp] theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
 @[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
