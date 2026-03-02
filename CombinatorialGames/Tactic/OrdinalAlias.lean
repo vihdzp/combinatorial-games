@@ -71,7 +71,6 @@ instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
 instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
 instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
-noncomputable instance : LinearOrder $Alias := inferInstanceAs (LinearOrder $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
   inferInstanceAs (ConditionallyCompleteLinearOrderBot $Source)
 
@@ -167,7 +166,6 @@ alias! $doc $Alias Ordinal
 namespace $Alias
 universe u
 
-noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
 instance : Uncountable $Alias := Ordinal.uncountable
 
 @[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
