@@ -71,6 +71,7 @@ instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
 instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
 instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
+noncomputable instance : LinearOrder $Alias := inferInstanceAs (LinearOrder $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
   inferInstanceAs (ConditionallyCompleteLinearOrderBot $Source)
 

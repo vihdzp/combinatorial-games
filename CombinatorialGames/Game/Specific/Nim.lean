@@ -99,13 +99,14 @@ theorem nim_injective : Function.Injective nim := by
 @[simp, game_cmp] theorem nim_zero : nim 0 = 0 := by ext p; cases p <;> simp
 @[simp, game_cmp] theorem nim_one : nim 1 = ⋆ := by ext p; cases p <;> simp
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
-  convert iSup_succ o with _ x
+  -- TODO: don't abuse def-eq
+  change ⨆ a : Iio (NatOrdinal.of o.val), Order.succ (nim a.1).birthday = _
+  convert iSup_succ _ with _ x
   cases x
-  exact congrArg _ (birthday_nim _)
+  exact birthday_nim _
 termination_by o
 
 @[simp, game_cmp]
