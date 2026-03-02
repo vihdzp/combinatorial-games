@@ -64,7 +64,8 @@ protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
 
 theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
   obtain rfl | hb₀ := eq_or_ne b 0; · simp
-  refine ⟨fun h ↦ ⟨_, (Ordinal.div_lt hb₀).2 h, _, mod_lt a hb₀, (div_add_mod ..).symm⟩, ?_⟩
+  refine ⟨fun h ↦ ⟨_, (Ordinal.lt_mul_iff_div_lt hb₀).1 h, _, mod_lt a hb₀,
+    (div_add_mod ..).symm⟩, ?_⟩
   rintro ⟨q, hq, r, hr, rfl⟩
   apply (add_right_strictMono hr).trans_le
   simp_rw [← mul_succ]
@@ -507,8 +508,8 @@ private theorem inv_lt_of_not_isField_aux (h' : IsRing x) (h : ¬IsField x) :
         simpa [H'] using H
     · rw [← val.le_iff_le]
       apply le_of_forall_lt_imp_ne
-      simp_rw [val_one, add_one_eq_succ, val_of, lt_succ_iff,
-        le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul, ne_eq, ← of_eq_iff]
+      simp_rw [val_one, val_of, lt_add_one_iff, le_iff_eq_or_lt, forall_eq_or_imp, forall_lt_mul,
+        ne_eq, ← of_eq_iff]
       refine ⟨?_, fun a ha b hb ↦ ?_⟩
       · rw [h'.mul_eq_of_lt hy hyx.le hsy Hs', mul_right_inj' hx₀]
         exact hsy.ne

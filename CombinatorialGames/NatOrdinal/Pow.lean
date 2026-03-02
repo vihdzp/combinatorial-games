@@ -147,7 +147,7 @@ theorem wpow_le_iff (hx : x ≠ 0) : ω^ x ≤ y ↔ ∀ z < x, ∀ n : ℕ, ω^
   simp
 
 theorem lt_wpow_add_one_iff : y < ω^ (x + 1) ↔ ∃ n : ℕ, y < ω^ x * n := by
-  rw [wpow_def, ← val_lt_iff, val_add_one, add_one_eq_succ, lt_omega0_opow_succ]
+  rw [wpow_def, ← val_lt_iff, val_add_one, ← Order.succ_eq_add_one, lt_omega0_opow_succ]
   simp_rw [wpow_mul_natCast]
   rfl
 
@@ -158,7 +158,7 @@ theorem wpow_add_one_le_iff : ω^ (x + 1) ≤ y ↔ ∀ n : ℕ, ω^ x * n ≤ y
 theorem wpow_mul_natCast_add_of_lt (hy : y < ω^ (x + 1)) (n : ℕ) :
     ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
   obtain ⟨z, hz, m, rfl⟩ : ∃ z < ω^ x, ∃ m : ℕ, y = ω^ x * m + z := by
-    rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, ← Ordinal.div_lt] at hy
+    rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, Ordinal.lt_mul_iff_div_lt] at hy
     · obtain ⟨m, hm⟩ := Ordinal.lt_omega0.1 hy
       have hx : of (y.val % ω ^ x.val) < ω^ x := mod_lt _ (wpow_ne_zero _)
       use of (y.val % ω ^ x.val), hx, m
