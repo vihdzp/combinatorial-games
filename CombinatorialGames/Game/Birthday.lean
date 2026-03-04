@@ -375,7 +375,7 @@ theorem birthday_one : birthday 1 = 1 := by
 theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
   · simpa using birthday_mk_le ⋆
-  · rw [NatOrdinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
+  · rw [one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :

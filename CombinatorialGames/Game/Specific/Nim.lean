@@ -10,6 +10,8 @@ public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
+import CombinatorialGames.Tactic.OrdinalAlias
+
 /-!
 # Nim
 
@@ -67,12 +69,12 @@ theorem exists_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
 @[game_cmp]
 theorem forall_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (nim (∗n)).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) := by
-  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
+  simp [← of_image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
 theorem exists_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (nim (∗n)).moves p, P x) ↔ (∃ m < n, P (nim (∗m))) := by
-  simp [← of_image_Iio, ← NatOrdinal.natCast_image_Iio']
+  simp [← of_image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
 theorem forall_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
