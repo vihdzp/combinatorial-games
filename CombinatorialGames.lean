@@ -24,6 +24,7 @@ import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Small
+import CombinatorialGames.Mathlib.Veblen
 import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal.Basic
 import CombinatorialGames.NatOrdinal.Pow
