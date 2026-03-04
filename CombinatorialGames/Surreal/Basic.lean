@@ -3,9 +3,12 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
+
 import CombinatorialGames.Tactic.AddInstances
-import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Int.Cast.Lemmas
 
 /-!
 # Surreal numbers
@@ -28,7 +31,7 @@ surreals are a field.
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-! ### Simplicity theorem -/
 
@@ -216,6 +219,10 @@ def toGame : Surreal ↪o Game where
 @[simp] theorem toGame_mk (x : IGame) [Numeric x] : toGame (mk x) = .mk x := rfl
 @[simp] theorem toGame_zero : toGame 0 = 0 := rfl
 @[simp] theorem toGame_one : toGame 1 = 1 := rfl
+
+@[simp]
+theorem gameMk_out (x : Surreal) : Game.mk x.out = x.toGame := by
+  conv_rhs => rw [← out_eq x, toGame_mk]
 
 theorem toGame_le_iff {a b : Surreal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp

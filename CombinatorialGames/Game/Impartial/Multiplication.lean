@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Nimber.Field
+module
+
+public import CombinatorialGames.Game.Impartial.Grundy
+public import CombinatorialGames.Nimber.Field
 
 /-!
 # Multiplication of impartial games
@@ -16,10 +18,9 @@ well-behaved on impartial games, i.e. it respects equivalence, and there are no 
 
 open Nimber
 
-namespace IGame
-namespace Impartial
+public section
 
-open Impartial
+namespace IGame.Impartial
 
 private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
     Impartial (x * y) ∧ grundyAux right (x * y) = grundyAux right x * grundyAux right y := by
@@ -35,6 +36,7 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
         simp_rw [mulOption, grundyAux_sub, grundyAux_add, grundyAux_eq_grundy,
           ← grundyAux_eq_grundy right] at hz'
         repeat rw [(mul' ..).2] at hz'
+        simp_rw [grundyAux_eq_grundy right] at hz'
         apply mul_ne_of_ne _ _ hz' <;> solve_by_elim [grundy_moves_ne]
     · rw [le_grundyAux_iff]
       intro a h
@@ -49,13 +51,14 @@ private theorem mul' (x y : IGame) [Impartial x] [Impartial y] :
         ← grundyAux_eq_grundy right]
       repeat rw [(mul' ..).2]
   simp_rw [grundyAux_eq_grundy] at h
-  refine ⟨of_grundyAux_left_eq_grundyAux_right ?_ ((h left).trans (h right).symm), h right⟩
-  intro p
-  simp only [forall_moves_mul, mulOption]
-  intro p' a ha b hb
-  impartial
-  have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
-  infer_instance
+  refine ⟨of_grundyAux_left_eq_grundyAux_right ?_ ((h left).trans (h right).symm), ?_⟩
+  · intro p
+    simp only [forall_moves_mul, mulOption]
+    intro p' a ha b hb
+    impartial
+    have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
+    infer_instance
+  · simpa [grundyAux_eq_grundy] using h right
 termination_by (x, y)
 decreasing_by igame_wf
 
@@ -71,8 +74,8 @@ variable {x y x₁ x₂ y₁ y₂ : IGame} [Impartial x] [Impartial y]
 
 @[simp]
 theorem grundy_mul (x y : IGame) [Impartial x] [Impartial y] :
-    grundy (x * y) = grundy x * grundy y :=
-  (Impartial.mul' x y).2
+    grundy (x * y) = grundy x * grundy y := by
+  simp_rw [← grundyAux_eq_grundy right]; exact (Impartial.mul' x y).2
 
 theorem _root_.IGame.nim_mul_equiv (a b : Nimber) : nim a * nim b ≈ nim (a * b) := by
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_mul]
@@ -97,5 +100,5 @@ theorem mul_congr_right (he : y₁ ≈ y₂) : x * y₁ ≈ x * y₂ := by
 theorem mul_congr (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-end Impartial
-end IGame
+end IGame.Impartial
+end

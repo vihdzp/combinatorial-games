@@ -3,10 +3,13 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public meta import CombinatorialGames.Tactic.Register
+public import Mathlib.SetTheory.Ordinal.Family
+
 import CombinatorialGames.Tactic.OrdinalAlias
-import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
-import Mathlib.SetTheory.Ordinal.Family
 
 /-!
 # Nimbers
@@ -41,7 +44,7 @@ universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `Nimber` -/
 
@@ -66,14 +69,15 @@ theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
 variable {a b c : Nimber.{u}}
 
-/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
-`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def add (a b : Nimber.{u}) : Nimber.{u} :=
+private def add (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
     ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
+`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Add Nimber :=
   ⟨Nimber.add⟩
 
@@ -208,6 +212,7 @@ theorem _root_.Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] 
     Set.range (fun a ↦ if p a then x else y) = {x, y} := by
   grind
 
+set_option backward.isDefEq.respectTransparency false in
 theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
   induction n <;> aesop
 
@@ -217,11 +222,10 @@ theorem range_natCast : Set.range ((↑) : ℕ → Nimber) = {0, 1} := by
   · use 0; simp
   · use 1; simp
 
-@[game_cmp]
 theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
   simp [natCast_eq_if, Nat.even_iff]
 
-@[simp, game_cmp]
+@[simp]
 theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
   natCast_eq_mod n
 
@@ -234,14 +238,10 @@ theorem range_intCast : Set.range ((↑) : ℤ → Nimber) = {0, 1} := by
   · use 0; simp
   · use 1; simp
 
-@[game_cmp]
 theorem intCast_eq_mod (n : ℤ) : (n : Nimber) = (n % 2 : ℤ) := by
   simp [intCast_eq_if, Int.even_iff]
 
 end Mathlib
-
--- This lets `game_cmp` reduce any instances of `NatCast`.
-attribute [game_cmp] Nat.reduceMod
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by

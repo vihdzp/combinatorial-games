@@ -1,7 +1,16 @@
-import CombinatorialGames.NatOrdinal.Basic
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
 
 universe u
 open Set NatOrdinal WithTop
+
+public section
 
 instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α] [NoMaxOrder α]
     [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where
@@ -27,14 +36,17 @@ theorem small_image_iff {α β} {f : α → β} {s : Set α} (hf : InjOn f s) :
 
 namespace NatOrdinal
 
+set_option backward.isDefEq.respectTransparency false in
 theorem withTop_iSup_coe_lt {ι} [Small.{u} ι] (f : ι → NatOrdinal.{u}) :
     ⨆ i, WithTop.some (f i) < ⊤ := by
   simp_rw [← coe_iSup _ (bddAbove_of_small _), coe_lt_top]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem withTop_sSup_coe_lt (s : Set NatOrdinal.{u}) [Small.{u} s] :
     sSup (WithTop.some '' s) < ⊤ := by
   simp_rw [← coe_sSup' (bddAbove_of_small _), coe_lt_top]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem withTop_iSup_lt_top_iff_of_forall_lt {ι} {f : ι → WithTop NatOrdinal.{u}}
     (h : ∀ i, f i < ⊤) : ⨆ i, f i < ⊤ ↔ Small.{u} (range f) := by
   simp_rw [lt_top_iff_ne_top, ne_top_iff_exists] at h
@@ -70,3 +82,4 @@ theorem withTop_sSup_lt_top {s : Set (WithTop NatOrdinal.{u})} [Small.{u} s] :
   rw [sSup_eq_iSup', withTop_iSup_lt_top, Subtype.forall]
 
 end NatOrdinal
+end

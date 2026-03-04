@@ -3,10 +3,17 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Algebra.CharP.Defs
+public import Mathlib.Algebra.Field.Defs
+public import Mathlib.Algebra.Ring.Int.Parity
+
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
+import Mathlib.Tactic.Ring
 
 /-!
 # Nimber multiplication and division
@@ -19,17 +26,13 @@ It's possible to show the existence of the nimber inverse implicitly via the sim
 theorem. Instead, we employ the explicit formula given in [On Numbers And Games][conway2001]
 (p. 56), which uses mutual induction and mimics the definition for the surreal inverse. This
 definition `invAux` "accidentally" gives the inverse of `0` as `1`, which the real inverse corrects.
-
-## Todo
-
-- Show the nimbers are algebraically closed.
 -/
 
 universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 namespace Nimber
 
@@ -48,14 +51,15 @@ private theorem two_zsmul (x : Nimber) : (2 : ℤ) • x = 0 := by
 private theorem add_eq_iff_eq_add : a + b = c ↔ a = c + b :=
   sub_eq_iff_eq_add
 
-/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
-`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def mul (a b : Nimber.{u}) : Nimber.{u} :=
+private def mul (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | ∃ a', ∃ (_ : a' < a), ∃ b', ∃ (_ : b' < b),
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
+`a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
@@ -309,8 +313,7 @@ instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
 
 /-- The complement of `invSet a` is nonempty. -/
 private theorem invSet_nonempty (a : Nimber) : (invSet a)ᶜ.Nonempty :=
-  have := instSmallElemInvSet a -- why is this needed?
-  nonempty_of_not_bddAbove (Ordinal.not_bddAbove_compl_of_small _)
+  nonempty_of_not_bddAbove (not_bddAbove_compl_of_small _)
 
 theorem invAux_ne_zero (a : Nimber) : invAux a ≠ 0 := by
   rw [invAux]

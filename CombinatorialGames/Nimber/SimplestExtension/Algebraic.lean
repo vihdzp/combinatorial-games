@@ -3,10 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Closure
-import CombinatorialGames.Nimber.SimplestExtension.Polynomial
-import Mathlib.Algebra.Group.Pointwise.Set.Small
-import Mathlib.FieldTheory.IsAlgClosed.Basic
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Closure
+public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 /-!
 # Nimbers are algebraically closed
@@ -19,6 +20,8 @@ are algebraically closed.
 universe u
 
 open Order Ordinal Polynomial Set
+
+public section
 
 /-! ### For Mathlib -/
 
@@ -165,6 +168,7 @@ theorem IsAlgClosed.exists_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
   · apply h.exists_root' _ hp
     cases _ : p.degree <;> simp_all [Nat.pos_iff_ne_zero]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsAlgClosed.leastNoRoots_eq_top {x : Nimber} (h : IsAlgClosed x) :
     leastNoRoots x = ⊤ := by
   rw [WithTop.eq_top_iff_forall_ne]
@@ -210,11 +214,11 @@ theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
       exact h.div_lt (hp' k) (hp' _)
   __ := h
 
+set_option backward.isDefEq.respectTransparency false in
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     (x.leastNoRoots.untop ht).IsRoot x := by
   have hx₁ : 1 < x := h.one_lt
-  have hx₀ : 0 < x := h.zero_lt
   generalize_proofs ht
   let n := (x.leastNoRoots.untop ht).natDegree
   have hn : 1 ≤ n := one_le_natDegree_leastNoRoots _
@@ -275,6 +279,7 @@ theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
   · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
     simp [h.ne_zero]
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -299,6 +304,7 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     all_goals exact (degree_map ..).trans_lt <|
       (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
+set_option backward.isDefEq.respectTransparency false in
 theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -311,8 +317,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     obtain ⟨hc, hm⟩ : ∃ hc, Irreducible (hf.embed _ hc) :=
       ⟨coeff_leastNoRoots_lt ht, irreducible_embed_leastNoRoots hf ht⟩
     have hxn : x < of (val x ^ (n + 1)) := by
-      simpa using (Ordinal.opow_lt_opow_iff_right hf.one_lt).2
-        (Nat.cast_lt.2 (show 1 < n + 1 by lia))
+      simpa using (pow_lt_pow_iff_right₀ (a := x.val) hf.one_lt).2 (show 1 < n + 1 by lia)
     have hcc := Set.Iio_subset_Iio hxn.le
     let r : hf.toSubfield[X] →+* hxr.toSubring := eval₂RingHom (Subring.inclusion hcc) ⟨x, hxn⟩
     have hoc : hxr.toSubring.subtype.comp (Subring.inclusion hcc) = hf.toSubfield.subtype := rfl
@@ -368,6 +373,7 @@ private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure 
   · rw [Function.iterate_succ_apply']
     simp
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
     (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
   simp_rw [algClosure, lt_ciSup_iff (bddAbove_of_small _)] at hpk ⊢
@@ -384,6 +390,7 @@ private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠
   refine ⟨⟨p, hn⟩, ?_⟩
   simp_all
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
     (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
     (hr : ∀ r, ¬ p.IsRoot r) : leastNoRoots (algClosure x) = p := by
@@ -420,4 +427,45 @@ instance : _root_.IsAlgClosed Nimber := by
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 
+/-! ### Square roots -/
+
+/-- The square root of a nimber `x` is the unique value with `(√x)^2 = x`. -/
+noncomputable def sqrt : Nimber ≃+* Nimber :=
+  (frobeniusEquiv _ 2).symm
+
+@[inherit_doc] scoped prefix:max "√" => sqrt
+recommended_spelling "sqrt" for "√" in [sqrt, «term√_»]
+
+theorem sqrt_zero : √0 = 0 := map_zero _
+theorem sqrt_one : √1 = 1 := map_one _
+theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
+theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
+theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
+
+@[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
+@[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
+@[simp] theorem sqrt_self_mul_self (x : Nimber) : √(x * x) = x := by rw [← pow_two, sqrt_sq]
+@[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
+
+theorem sqrt_eq_iff {x y : Nimber} : √y = x ↔ x ^ 2 = y := by
+  conv_rhs => rw [← sq_sqrt y, CharTwo.sq_inj, eq_comm]
+
+alias ⟨_, sqrt_eq⟩ := sqrt_eq_iff
+
+theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + C y) < leastNoRoots x) : √y < x := by
+  apply h.root_lt hx
+  · aesop
+  · rw [mem_roots]
+    · simp
+    · apply_fun (coeff · 2)
+      simp
+
+theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
+    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
+  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
+  use 1
+  aesop
+
 end Nimber
+end
