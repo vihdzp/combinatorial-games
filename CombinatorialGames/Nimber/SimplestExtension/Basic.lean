@@ -585,10 +585,9 @@ theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsField y) (h : x ≤ y
     have H₁ : ∗(val y / val x ^ log x.val y.val) < x := div_opow_log_lt _ hx.one_lt
     have H₂ : ∗(val y % val x ^ log x.val y.val) < y := mod_opow_log_lt_self _ hy.ne_zero
     apply (hy.add_lt (hy.mul_lt hy' (H₁.trans_le h)) H₂).ne
-    rw [← hx.opow_mul_eq_of_lt, ← (hx.opow _).mul_add_eq_of_lt']
+    rw [← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
     · exact div_add_mod ..
     · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
-    · exact H₁
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
