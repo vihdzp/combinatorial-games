@@ -141,7 +141,7 @@ theorem toFinsupp_one : toFinsupp b hb 1 = single 0 1 := by
 
 /-- `toFinsupp` as a `LinearEquiv`. -/
 @[expose, simps!]
-def toFinsuppAddIso : Nimber ≃ₗ[hb.toSubfield] (Ordinal →₀ hb.toSubfield) :=
+def toFinsuppIso : Nimber ≃ₗ[hb.toSubfield] (Ordinal →₀ hb.toSubfield) :=
   .symm {
     toFun := ofFinsupp b hb
     invFun := toFinsupp b hb
@@ -158,16 +158,16 @@ def toFinsuppAddIso : Nimber ≃ₗ[hb.toSubfield] (Ordinal →₀ hb.toSubfield
 
 @[simp]
 theorem toFinsupp_add (x y) : toFinsupp b hb (x + y) = toFinsupp b hb x + toFinsupp b hb y :=
-  (toFinsuppAddIso b hb).map_add x y
+  (toFinsuppIso b hb).map_add x y
 
 @[simp]
 theorem ofFinsupp_add (x y) : ofFinsupp b hb (x + y) = ofFinsupp b hb x + ofFinsupp b hb y :=
-  (toFinsuppAddIso b hb).symm.map_add x y
+  (toFinsuppIso b hb).symm.map_add x y
 
 /-- Ordinal powers of `b` form a basis for `Nimber`. -/
 @[expose, simps!]
 def IsField.opow_basis : Module.Basis Ordinal.{u} hb.toSubfield Nimber where
-  repr := toFinsuppAddIso b hb
+  repr := toFinsuppIso b hb
 
 end Nimber
 end
