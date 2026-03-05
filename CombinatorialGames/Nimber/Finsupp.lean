@@ -109,13 +109,13 @@ theorem ofFinsupp_inj {x y} : ofFinsupp b hb x = ofFinsupp b hb y ↔ x = y :=
 
 set_option backward.isDefEq.respectTransparency false in
 theorem ofFinsupp_def (x) : ofFinsupp b hb x = x.sum fun o y ↦ y * ∗(b.val ^ o) := by
-  induction x using Finsupp.induction_on_max with
+  induction x using induction_on_max with
   | zero => simp
   | single_add o x f hf hx IH =>
-    rw [ofFinsupp, Finsupp.mapRange_single_add (by contrapose! hf; use o),
+    rw [ofFinsupp, mapRange_single_add (by contrapose! hf; use o),
       CNF.eval_single_add', (hb.opow o).mul_add_eq_of_lt', hb.opow_mul_eq_of_lt]
-    · rw [Finsupp.sum_add_index' (by simp) (by simp [add_mul]), ← IH,
-        Finsupp.sum_single_index (by simp), mul_comm, ofFinsupp]
+    · rw [sum_add_index' (by simp) (by simp [add_mul]), ← IH, sum_single_index (by simp), mul_comm]
+      rfl
     · simp
     · apply CNF.eval_lt
       · simp
@@ -149,11 +149,11 @@ def toFinsuppIso : Nimber ≃ₗ[hb.toSubfield] (Ordinal →₀ hb.toSubfield) :
     right_inv := ofFinsupp_toFinsupp b hb
     map_add' x y := by
       simp_rw [ofFinsupp_def]
-      apply Finsupp.sum_add_index'
+      apply sum_add_index'
       · simp
       · simp [add_mul]
     map_smul' := by
-      simp [ofFinsupp_def, Finsupp.sum_smul_index, Finsupp.smul_sum, Subfield.smul_def, mul_assoc]
+      simp [ofFinsupp_def, sum_smul_index, smul_sum, Subfield.smul_def, mul_assoc]
   }
 
 @[simp]
