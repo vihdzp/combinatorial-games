@@ -572,9 +572,23 @@ theorem IsField.pow_mul_eq_of_lt' {x z : Ordinal}
     (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : x ^ n * z = val (∗(x ^ n) * ∗z) :=
   mod_cast hx.opow_mul_eq_of_lt' n hz
 
-theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
+theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
+
+/-- If `x ≤ y` are fields, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsField y) (h : x ≤ y) :
+    ∗(x.val ^ log x.val y.val) = y := by
+  apply le_antisymm
+  · exact opow_log_le_self _ hy.ne_zero
+  · by_contra! hy'
+    have H₁ : ∗(val y / val x ^ log x.val y.val) < x := div_opow_log_lt _ hx.one_lt
+    have H₂ : ∗(val y % val x ^ log x.val y.val) < y := mod_opow_log_lt_self _ hy.ne_zero
+    apply (hy.add_lt (hy.mul_lt hy' (H₁.trans_le h)) H₂).ne
+    rw [← hx.opow_mul_eq_of_lt, ← (hx.opow _).mul_add_eq_of_lt']
+    · exact div_add_mod ..
+    · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
+    · exact H₁
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
