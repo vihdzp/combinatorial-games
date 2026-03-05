@@ -123,7 +123,7 @@ protected theorem ext {x y : SignExpansion} (hxy : ∀ o, x o = y o) : x = y :=
 theorem mk_eq_mk {f g h₁ h₂} : mk f h₁ = mk g h₂ ↔ f = g := by
   simp [DFunLike.ext'_iff]
 
-theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : Ordinal}
+theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : NatOrdinal}
     (hoo' : o ≤ o') (ho : x o = 0) : x o' = 0 :=
   isUpperSet_preimage_singleton_zero x hoo' ho
 
@@ -132,7 +132,6 @@ or `⊤` is no such ordinal exists. -/
 def length (x : SignExpansion) : WithTop NatOrdinal :=
   sInf ((↑) '' (x ⁻¹' {0}))
 
-set_option backward.isDefEq.respectTransparency false in
 theorem apply_of_length_le {x : SignExpansion} {o : NatOrdinal} (h : x.length ≤ o) : x o = 0 := by
   obtain he | he := (WithTop.some '' (x ⁻¹' {0})).eq_empty_or_nonempty
   · simp_all [length]
@@ -144,7 +143,6 @@ theorem apply_eq_zero {x : SignExpansion} {o : NatOrdinal} : x o = 0 ↔ x.lengt
   refine ⟨fun h ↦ csInf_le' ?_, apply_of_length_le⟩
   simpa
 
-set_option backward.isDefEq.respectTransparency false in
 theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
   simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
 
@@ -224,14 +222,12 @@ theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
 theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := if_neg h.not_gt
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
     (x.restrict o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
-set_option backward.isDefEq.respectTransparency false in
 theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     (ho : x.length ≤ o) : x ↾ o = x := by
   ext o'
@@ -241,17 +237,14 @@ theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     apply apply_of_length_le
     simp [ho']
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem restrict_zero_left (o : NatOrdinal) : 0 ↾ o = 0 := by
   ext; simp [apply_eq_zero]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
   apply restrict_of_length_le; simp

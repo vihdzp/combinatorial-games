@@ -28,6 +28,10 @@ namespace Ordinal
 theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
   Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
 
+@[simp]
+theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
+  ext o; have (h : o < n) := eq_natCast_of_le_natCast h.le; aesop
+
 theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
 @[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
@@ -166,7 +170,6 @@ alias! $doc $Alias Ordinal
 namespace $Alias
 universe u
 
-noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
 instance : Uncountable $Alias := Ordinal.uncountable
 
 @[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
