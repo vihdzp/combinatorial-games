@@ -176,6 +176,10 @@ theorem IsAlgClosed.leastNoRoots_eq_top {x : Nimber} (h : IsAlgClosed x) :
   obtain ⟨r, hr, hr'⟩ := h.exists_root (degree_leastNoRoots_pos ht).ne' (coeff_leastNoRoots_lt ht)
   exact not_isRoot_leastNoRoots_of_lt ht hr hr'
 
+theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x := by
+  apply h.toIsField_of_X_sq_lt_leastNoRoots
+  simp [h.leastNoRoots_eq_top]
+
 theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
     IsAlgClosed x ↔ leastNoRoots x = ⊤ where
   mp := IsAlgClosed.leastNoRoots_eq_top
