@@ -291,15 +291,15 @@ theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ
     have hem : (hf.embed _ (coeff_leastNoRoots_lt ht)).Monic := by
       simpa using hf.monic_leastNoRoots _
     refine ⟨h.pow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [h.one_lt])⟩
-    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hy
-    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_opow h.ne_zero hz
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hy
+    obtain ⟨pz, hzd, hzc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hz
     rw [← h.eval_eq_of_lt hd hyd hyc, ← h.eval_eq_of_lt hd hzd hzc, ← hf.map_embed hyc,
-      ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _) hem,
-      Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul, hf.map_embed,
-      h.isRoot_leastNoRoots ht, zero_mul, add_zero, h.eval_eq_of_lt hd _ (by simp)]
-    on_goal 1 => apply oeval_lt_opow (by simp)
-    all_goals exact (degree_map ..).trans_lt <|
-      (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
+      ← hf.map_embed hzc, ← eval_mul, ← Polynomial.map_mul, ← modByMonic_add_div (_ * _),
+      Polynomial.map_add, eval_add, Polynomial.map_mul, eval_mul,
+      hf.map_embed (coeff_leastNoRoots_lt ht), h.isRoot_leastNoRoots ht, zero_mul, add_zero,
+      h.eval_eq_of_lt hd _ (by simp)]
+    on_goal 1 => apply oeval_lt_pow (by simp)
+    all_goals exact (degree_map ..).trans_lt <| (degree_modByMonic_lt _ hem).trans_le (by simp [hn])
 
 theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsField (of (val x ^ n)) := by
@@ -324,7 +324,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
         ← Subtype.val_inj, ← Subring.subtype_apply, Subring.coe_zero,
         coe_eval₂RingHom, Polynomial.hom_eval₂, ← eval_map, hoc, map_embed]
       exact hf.isRoot_leastNoRoots ht
-    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_opow hf.ne_zero hy
+    obtain ⟨py, hyd, hyc, rfl⟩ := eq_oeval_of_lt_pow hf.ne_zero hy
     rw [← hf.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree ht hn.ge).le hyd hyc,
       ← hf.map_embed hyc, ← hoc, eval_map,
       show eval₂ _ x _ = eval₂ _ (hxr.toSubring.subtype ⟨x, hxn⟩) _ from rfl,
