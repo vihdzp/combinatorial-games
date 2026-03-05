@@ -27,10 +27,10 @@ import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal.Basic
 import CombinatorialGames.NatOrdinal.Pow
+import CombinatorialGames.Nimber.AddMonoidAlgebra
 import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Nimber.Nat
-import CombinatorialGames.Nimber.SimplestExtension.AddMonoidAlgebra
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import CombinatorialGames.Nimber.SimplestExtension.Closure
