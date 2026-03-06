@@ -163,7 +163,6 @@ theorem toFinsupp_add (x y) : toFinsupp b hb (x + y) = toFinsupp b hb x + toFins
 @[simp]
 theorem ofFinsupp_add (x y) : ofFinsupp b hb (x + y) = ofFinsupp b hb x + ofFinsupp b hb y :=
   (toFinsuppIso b hb).symm.map_add x y
-
 /-- Ordinal powers of `b` form a basis for `Nimber`. -/
 @[expose, simps!]
 def IsField.opow_basis : Module.Basis Ordinal.{u} hb.toSubfield Nimber where
