@@ -3,9 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Surreal.Birthday.Basic
+module
+
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import Mathlib.Order.Concept
+public import Mathlib.Order.UpperLower.CompleteLattice
+
+import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
 # Surreal cuts
@@ -30,11 +34,13 @@ concept terminology.
 
 universe u
 
+@[expose] public section
+
 namespace Surreal
 open Set IGame
 
-/-- A surreal cut consists of two complementary sets of surreals, where every surreal in the former
-is less than every surreal in the latter. -/
+/-- A surreal cut, sometimes called a section, consists of two complementary sets of surreals,
+where every surreal in the former is less than every surreal in the latter. -/
 abbrev Cut := Concept Surreal Surreal (· < ·)
 
 namespace Cut
@@ -96,7 +102,7 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem left_top : (⊤ : Cut).left = univ := rfl
 @[simp] theorem right_top : (⊤ : Cut).right = ∅ := by simpa using (compl_left ⊤).symm
 
-instance : IsTotal Cut (· ≤ ·) where
+instance : @Std.Total Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
 
 noncomputable instance : LinearOrder Cut :=
@@ -186,7 +192,7 @@ protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
 
 /-! ### Cuts from games -/
 
-/-- The left cut of a game `x` is such that its right set consists of surreals
+/-- The left stop $L(x)$ of a game `x` is such that its right set consists of surreals
 equal or larger to it. -/
 def leftGame : Game →o Cut where
   toFun x := {
@@ -202,7 +208,7 @@ def leftGame : Game →o Cut where
   }
   monotone' x y hy z hz := mt hy.trans hz
 
-/-- The right cut of a game `x` is such that its right set consists of surreals
+/-- The right stop $R(x)$ of a game `x` is such that its left set consists of surreals
 equal or lesser to it. -/
 def rightGame : Game →o Cut where
   toFun x := {
@@ -392,7 +398,7 @@ theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s]
 
 /-! ### Calculating cuts -/
 
-/-- The supremum of all right cuts of left options of `x`.
+/-- The supremum $L'(x)$ of all right cuts of left options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
@@ -407,7 +413,7 @@ theorem right_supLeft (x : IGame) :
     (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
-/-- The infimum of all left cuts of right options of `x`.
+/-- The infimum $R'(x)$ of all left cuts of right options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
@@ -527,5 +533,17 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-- A characterization of games equivalent to numbers: they're precisely those with
+`supLeft x < infRight x`. -/
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ ∃ y : Subtype Numeric, x ≈ y where
+  mp h := by
+    refine ⟨⟨(simplestBtwn h).out, inferInstance⟩, ?_⟩
+    rw [← Game.mk_eq_mk, gameMk_out, simplestBtwn_supLeft_infRight]
+  mpr := by
+    rintro ⟨⟨y, _⟩, h⟩
+    exact supLeft_lt_infRight_of_equiv_numeric h
+
 end Cut
 end Surreal
+end

@@ -2,11 +2,11 @@ import CombinatorialGames.Counterexamples.Multiplication
 import CombinatorialGames.Game.Basic
 import CombinatorialGames.Game.Birthday
 import CombinatorialGames.Game.Canonical
+import CombinatorialGames.Game.Classes
 import CombinatorialGames.Game.Computability.FGame
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Game.Graph
 import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial.Basic
 import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Game.Impartial.Multiplication
 import CombinatorialGames.Game.Loopy.Basic
@@ -16,7 +16,6 @@ import CombinatorialGames.Game.Loopy.StoppingTime
 import CombinatorialGames.Game.Order
 import CombinatorialGames.Game.Ordinal
 import CombinatorialGames.Game.Player
-import CombinatorialGames.Game.Short
 import CombinatorialGames.Game.Small
 import CombinatorialGames.Game.Special
 import CombinatorialGames.Game.Specific.Domineering
@@ -24,7 +23,6 @@ import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal.Basic
@@ -34,6 +32,7 @@ import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Nimber.Nat
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import CombinatorialGames.Nimber.SimplestExtension.Basic
+import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 import CombinatorialGames.SignExpansion.Basic
 import CombinatorialGames.Surreal.Basic
@@ -44,6 +43,7 @@ import CombinatorialGames.Surreal.Division
 import CombinatorialGames.Surreal.Dyadic.Basic
 import CombinatorialGames.Surreal.Dyadic.Birthday
 import CombinatorialGames.Surreal.HahnSeries.Basic
+import CombinatorialGames.Surreal.Leading
 import CombinatorialGames.Surreal.Multiplication
 import CombinatorialGames.Surreal.Ordinal
 import CombinatorialGames.Surreal.Pow
