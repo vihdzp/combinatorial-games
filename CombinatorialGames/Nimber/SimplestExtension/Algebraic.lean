@@ -371,18 +371,18 @@ private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure 
   · exact isAlgebraic_one
   by_cases! hyg : ¬y.IsGroup
   · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := exists_add_of_not_isGroup hyg hy0
-    exact (algebraic_of_lt (hy1.trans_le h)).add (algebraic_of_lt (hy2.trans_le h))
+    exact (isAlgebraic_of_lt (hy1.trans_le h)).add (isAlgebraic_of_lt (hy2.trans_le h))
   by_cases! hyr : ¬y.IsRing
   · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := hyg.exists_mul_of_not_isRing hyr hy1
-    exact (algebraic_of_lt (hy1.trans_le h)).mul (algebraic_of_lt (hy2.trans_le h))
+    exact (isAlgebraic_of_lt (hy1.trans_le h)).mul (isAlgebraic_of_lt (hy2.trans_le h))
   have hy := hyr.inv_lt_self_of_not_isField hyf
-  exact inv_inv y ▸ (algebraic_of_lt (hy.trans_le h)).inv
+  exact inv_inv y ▸ (isAlgebraic_of_lt (hy.trans_le h)).inv
 termination_by (y, 0)
 
 private theorem isAlgebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure)
     (ht : leastNoRoots y ≠ ⊤) : IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   by_cases! hyf : ¬y.IsField
-  · exact algebraic_of_not_isField h hyf
+  · exact isAlgebraic_of_not_isField h hyf
   by_cases! hxy : y < x.fieldClosure
   · exact isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨y, hxy⟩
   have hcf : x.fieldClosure.IsField := IsField.fieldClosure x
@@ -390,7 +390,7 @@ private theorem isAlgebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosu
     (Subfield.inclusion (Iio_subset_Iio hxy)).toAlgebra
   have tower : IsScalarTower hcf.toSubfield hyf.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc ..⟩
   have int : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
-    ⟨fun z => have := z.2; (algebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
+    ⟨fun z => have := z.2; (isAlgebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
       (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
   set_option backward.isDefEq.respectTransparency false in
   refine IsAlgebraic.restrictScalars _
@@ -403,7 +403,7 @@ termination_by (y, 1)
 private theorem isAlgebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
     IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   by_cases! hyf : ¬y.IsField
-  · exact algebraic_of_not_isField h.le hyf
+  · exact isAlgebraic_of_not_isField h.le hyf
   by_cases! hxy : y < x.fieldClosure
   · exact isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨y, hxy⟩
   obtain ⟨c, hc, hyc⟩ : ∃ c ∈ x.fieldClosure.rootSet, y < succ c :=
@@ -422,7 +422,7 @@ private theorem isAlgebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
       apply (minpoly.irreducible int).not_isRoot_of_natDegree_ne_one
       simp [minpoly.natDegree_eq_one_iff, Subfield.algebraMap_ofSubfield,
         mt succ_le_of_lt hyc.not_ge]
-  exact algebraic_of_leastNoRoots h.le (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))
+  exact isAlgebraic_of_leastNoRoots h.le (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))
 termination_by (y, 2)
 
 end
@@ -430,7 +430,7 @@ end
 theorem lt_algClosure_iff_isAlgebraic {x y : Nimber} :
     y < algClosure x ↔ IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   induction y using WellFoundedLT.induction with | ind y ih =>
-  refine ⟨algebraic_of_lt, fun h => ?_⟩
+  refine ⟨isAlgebraic_of_lt, fun h => ?_⟩
   obtain ⟨p, hp0, hpr⟩ := h
   refine lt_csSup_of_lt (bddAbove_of_small _) (mem_image_of_mem _ ?_) (lt_succ y)
   apply mem_iUnion_of_mem ⟨p.map (Subfield.subtype _), by simp⟩
@@ -443,12 +443,12 @@ theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
 
 theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
   __ := Classical.byContradiction fun h => lt_irrefl x.algClosure
-    (lt_algClosure_iff_isAlgebraic.2 (algebraic_of_not_isField le_rfl h))
+    (lt_algClosure_iff_isAlgebraic.2 (isAlgebraic_of_not_isField le_rfl h))
   exists_root' p hd hp := by
     by_contra! hpr
     have ht : leastNoRoots x.algClosure ≤ p := leastNoRoots_le_of_not_isRoot hd hp hpr
     exact lt_irrefl x.algClosure (lt_algClosure_iff_isAlgebraic.2
-      (algebraic_of_leastNoRoots le_rfl (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))))
+      (isAlgebraic_of_leastNoRoots le_rfl (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))))
 
 theorem algClosure_mono : Monotone algClosure := by
   refine fun x y hxy => le_of_forall_lt fun z hz => ?_
