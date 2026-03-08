@@ -365,13 +365,13 @@ mutual
 
 private theorem algebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x) (hyf : ¬IsField y) :
     IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
-  by_cases! hy0 : y = 0
-  · exact ⟨X, X_ne_zero, by simp [hy0]⟩
+  obtain rfl | hy0 := eq_or_ne y 0
+  · exact isAlgebraic_zero
+  obtain rfl | hy1 := eq_or_ne y 1
+  · exact isAlgebraic_one
   by_cases! hyg : ¬y.IsGroup
   · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := exists_add_of_not_isGroup hyg hy0
     exact (algebraic_of_lt (hy1.trans_le h)).add (algebraic_of_lt (hy2.trans_le h))
-  by_cases! hy1 : y = 1
-  · exact ⟨X - C 1, X_sub_C_ne_zero 1, by simp [hy1]⟩
   by_cases! hyr : ¬y.IsRing
   · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := hyg.exists_mul_of_not_isRing hyr hy1
     exact (algebraic_of_lt (hy1.trans_le h)).mul (algebraic_of_lt (hy2.trans_le h))
@@ -384,11 +384,11 @@ private theorem algebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure
   by_cases! hyf : ¬y.IsField
   · exact algebraic_of_not_isField h hyf
   by_cases! hxy : y < x.fieldClosure
-  · exact ⟨X - C ⟨y, hxy⟩, X_sub_C_ne_zero _, by simp [Subfield.algebraMap_ofSubfield]⟩
+  · exact isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨y, hxy⟩
   have hcf : x.fieldClosure.IsField := IsField.fieldClosure x
   let alg : Algebra hcf.toSubfield hyf.toSubfield :=
-    (Subfield.inclusion (Set.Iio_subset_Iio hxy)).toAlgebra
-  have tower : IsScalarTower hcf.toSubfield hyf.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc _ _ _⟩
+    (Subfield.inclusion (Iio_subset_Iio hxy)).toAlgebra
+  have tower : IsScalarTower hcf.toSubfield hyf.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc ..⟩
   have int : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
     ⟨fun z => have := z.2; (algebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
       (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
@@ -405,7 +405,7 @@ private theorem algebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
   by_cases! hyf : ¬y.IsField
   · exact algebraic_of_not_isField h.le hyf
   by_cases! hxy : y < x.fieldClosure
-  · exact ⟨X - C ⟨y, hxy⟩, X_sub_C_ne_zero _, by simp [Subfield.algebraMap_ofSubfield]⟩
+  · exact isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨y, hxy⟩
   obtain ⟨c, hc, hyc⟩ : ∃ c ∈ x.fieldClosure.rootSet, y < succ c :=
     ((lt_csSup_iff' (bddAbove_of_small _)).trans exists_mem_image).1 h
   rw [rootSet, mem_iUnion] at hc
@@ -438,9 +438,8 @@ theorem lt_algClosure_iff_isAlgebraic {x y : Nimber} :
 
 @[simp]
 theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
-  le_of_forall_lt fun c hc => lt_algClosure_iff_isAlgebraic.2
-    ⟨X - C ⟨c, hc.trans_le (le_fieldClosure x)⟩, X_sub_C_ne_zero _,
-      by simp [Subfield.algebraMap_ofSubfield]⟩
+  le_of_forall_lt fun c hc => lt_algClosure_iff_isAlgebraic.2 <|
+    isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨c, hc.trans_le (le_fieldClosure x)⟩
 
 theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
   __ := Classical.byContradiction fun h => lt_irrefl x.algClosure
