@@ -450,11 +450,6 @@ theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
     exact lt_irrefl x.algClosure (lt_algClosure_iff_isAlgebraic.2
       (isAlgebraic_of_leastNoRoots le_rfl (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))))
 
-theorem algClosure_mono : Monotone algClosure := by
-  intro x y
-  rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
-  exact (le_algClosure y).trans'
-
 theorem IsAlgClosed.algClosure_le_iff {x y : Nimber} (h : IsAlgClosed x) :
     y.algClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_algClosure y)
@@ -468,6 +463,11 @@ theorem IsAlgClosed.algClosure_le_iff {x y : Nimber} (h : IsAlgClosed x) :
 theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
     x < y.algClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
+
+theorem algClosure_mono : Monotone algClosure := by
+  intro x y
+  rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
+  exact (le_algClosure y).trans'
 
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
