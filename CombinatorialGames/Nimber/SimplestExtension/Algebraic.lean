@@ -363,7 +363,7 @@ noncomputable def algClosure (x : Nimber) : Nimber :=
 
 mutual
 
-private theorem algebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x) (hyf : ¬IsField y) :
+private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x) (hyf : ¬IsField y) :
     IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   obtain rfl | hy0 := eq_or_ne y 0
   · exact isAlgebraic_zero
@@ -379,7 +379,7 @@ private theorem algebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x)
   exact inv_inv y ▸ (algebraic_of_lt (hy.trans_le h)).inv
 termination_by (y, 0)
 
-private theorem algebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure)
+private theorem isAlgebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure)
     (ht : leastNoRoots y ≠ ⊤) : IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   by_cases! hyf : ¬y.IsField
   · exact algebraic_of_not_isField h hyf
@@ -400,7 +400,7 @@ private theorem algebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure
     exact hyf.isRoot_leastNoRoots ht
 termination_by (y, 1)
 
-private theorem algebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
+private theorem isAlgebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
     IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   by_cases! hyf : ¬y.IsField
   · exact algebraic_of_not_isField h.le hyf
