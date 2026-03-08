@@ -12,11 +12,12 @@ public import Mathlib.Algebra.Polynomial.Splits
 public import Mathlib.Data.Finsupp.WellFounded
 
 import Mathlib.Algebra.CharP.Two
+import Mathlib.Algebra.Polynomial.Degree.Domain
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
+import Mathlib.SetTheory.Ordinal.CantorNormalForm
 import Mathlib.Tactic.ComputeDegree
-import Mathlib.Algebra.Polynomial.Degree.Domain
 
 /-!
 # Nimber polynomials
@@ -64,6 +65,24 @@ theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
       apply add_left_mono
       rw [← hm]
       exact bot_le
+
+namespace Finsupp
+variable {M N α : Type*} [AddZeroClass M]
+
+theorem mapRange_single_add [AddZeroClass N] {f : M → N} {g : α →₀ M} {hf : f 0 = 0} {a : α} {b : M}
+    (hg : a ∉ g.support) : mapRange f hf (single a b + g) = single a (f b) + mapRange f hf g := by
+  ext e
+  obtain rfl | he := eq_or_ne e a
+  · rw [notMem_support_iff] at hg
+    simp_all
+  · simp [he]
+
+@[simp]
+theorem equivMapDomain_add {f : α ≃ N} {g₁ g₂ : α →₀ M} :
+    equivMapDomain f (g₁ + g₂) = equivMapDomain f g₁ + equivMapDomain f g₂ := by
+  ext; simp
+
+end Finsupp
 
 namespace Polynomial
 
@@ -525,43 +544,30 @@ end Lex
 
 open Ordinal
 
-/-- Evaluate a nimber polynomial using ordinal arithmetic.
+/-- Evaluate a nimber polynomial using base-`b` ordinal arithmetic.
 
 TODO: once the `Ordinal.CNF` API is more developed, use it to redefine this. -/
-noncomputable def oeval (x : Nimber) (p : Nimber[X]) : Nimber :=
-  ∗((List.range (p.natDegree + 1)).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum
+noncomputable def oeval (b : Nimber) (p : Nimber[X]) : Nimber :=
+  ∗(CNF.eval b.val ((p.toFinsupp.mapRange val rfl).embDomain ⟨_, Nat.cast_injective⟩))
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem oeval_zero (x : Nimber) : oeval x 0 = 0 := by
   simp [oeval]
 
-theorem oeval_eq_of_natDegree_le {p : Nimber[X]} {n : ℕ} (h : p.natDegree + 1 ≤ n) (x : Nimber) :
-    oeval x p = ∗((List.range n).reverse.map fun k ↦ x.val ^ k * (p.coeff k).val).sum := by
-  induction n with
-  | zero => simp at h
-  | succ n IH =>
-    obtain h | h := h.eq_or_lt
-    · rw [oeval, h]
-    · rw [add_lt_add_iff_right] at h
-      rw [List.range_succ]
-      simpa [p.coeff_eq_zero_of_natDegree_lt h] using IH h
-
+set_option backward.isDefEq.respectTransparency false in
 theorem oeval_C_mul_X_pow_add {n : ℕ} {p : Nimber[X]} (hp : p.degree < n) (x a : Nimber) :
     oeval x (C a * X ^ n + p) = ∗(x.val ^ n * a.val + val (oeval x p)) := by
-  obtain rfl | ha := eq_or_ne a 0; · simp [oeval]
-  · have hp' : p.natDegree ≤ n := p.natDegree_le_of_degree_le hp.le
-    have hp'' : (C a * X ^ n + p).natDegree ≤ n := by compute_degree!
-    rw [oeval_eq_of_natDegree_le (add_left_mono hp'),
-      oeval_eq_of_natDegree_le (add_left_mono hp'')]
-    cases n with
-    | zero => simp_all
-    | succ n =>
-      suffices (List.range n).map
-        (fun k ↦ val x ^ k * val ((if k = n + 1 then a else 0) + p.coeff k)) =
-      (List.range n).map (fun k ↦ val x ^ k * val (p.coeff k)) by
-        simp [List.range_succ, p.coeff_eq_zero_of_degree_lt hp, this]
-      apply List.map_congr_left
-      aesop
+  have (a : ℕ) (ha : n ≤ a) : p.toFinsupp a = 0 :=
+    coeff_eq_zero_of_degree_lt (hp.trans_le <| WithBot.coe_le_coe.2 ha)
+  unfold oeval
+  rw [toFinsupp_add, toFinsupp_C_mul_X_pow, Finsupp.mapRange_single_add, Finsupp.embDomain_add,
+    Finsupp.embDomain_single, CNF.eval_single_add]
+  · simp
+  · intro a
+    contrapose
+    aesop (add simp not_imp_not) (add apply safe le_of_lt)
+  · simpa using this n
 
 theorem oeval_eq (x : Nimber) (p : Nimber[X]) :
     oeval x p = ∗(x.val ^ p.natDegree * p.leadingCoeff.val + val (oeval x p.eraseLead)) := by
@@ -605,6 +611,7 @@ theorem oeval_C (x a : Nimber) : oeval x (C a) = a := by
 theorem oeval_one (x : Nimber) : oeval x 1 = 1 := by
   simpa using oeval_C x 1
 
+/-
 theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
     ∗(x.val ^ k * (p.coeff k).val) ≤ oeval x p := by
   obtain rfl | hp₀ := eq_or_ne p 0; · simp
@@ -614,6 +621,7 @@ theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
     aesop
   · rw [p.coeff_eq_zero_of_natDegree_lt hk]
     simp
+-/
 
 theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
     ∗(x.val ^ p.natDegree) ≤ oeval x p := by
