@@ -24,8 +24,18 @@ theorem Ordinal.exists_omega0_mul_add_natCast (o : Ordinal) :
   rw [← hb, div_add_mod]
 
 theorem Ordinal.one_le_of_lt {a b : Ordinal} (hab : a < b) : 1 ≤ b := by
-  rw [← succ_zero, Order.succ_le_iff]
+  rw [← zero_add 1, ← Order.succ_eq_add_one, Order.succ_le_iff]
   exact (zero_le a).trans_lt hab
+
+theorem Order.IsNormal.isBot_or_exists_le_succ_of_lt {α β : Type*} [LinearOrder α] [SuccOrder α]
+    [LinearOrder β] {f : α → β} (hf : IsNormal f) {a : α} {b : β} (h : b < f a) :
+    IsBot a ∨ ∃ c < a, b < f (succ c) := by
+  cases a using Order.isSuccLimitRecOn with
+  | isMin a ha => exact .inl ha.isBot
+  | succ a ha => exact .inr ⟨a, lt_succ_of_not_isMax ha, h⟩
+  | isSuccLimit a ha =>
+    obtain ⟨c, hca, hc⟩ := (hf.lt_iff_exists_lt ha).1 h
+    exact .inr ⟨c, hca, hc.trans_le (hf.monotone (le_succ c))⟩
 
 noncomputable section
 
@@ -104,59 +114,45 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
         IsLocalization (Submonoid.comap ht.ringEquivPolynomial.toMonoidHom
           (Submonoid.closure ((fun u => Polynomial.X - Polynomial.C u) '' Set.Iio ⟨x, hx⟩)))
           rx.toSubring := by
+  have normal : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val x))) :=
+    of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp
+      ((isNormal_mul_right omega0_pos).comp (isNormal_add_right 1)))
   induction x using WellFoundedLT.induction generalizing n with | ind x ihx
+  have surj (y : Nimber) (hy : y < ∗(val t ^ (ω * (1 + val x)))) :
+      ∃ m : Multiset Nimber, (∀ i ∈ m, i < x) ∧
+      ∃ p : Nimber, p < ∗(val t ^ ω) ∧ p / (m.map fun c => t - c).prod = y := by
+    obtain hx | ⟨c, hcx, hyc⟩ := normal.isBot_or_exists_le_succ_of_lt hy
+    · rw [isBot_iff_eq_bot] at hx
+      exact ⟨0, by simp, y, by simpa [hx] using hy, by simp⟩
+    · rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
+      obtain ⟨f, hs, hf⟩ := ht.toIsField.exists_linearCombination_of_lt hyc
+      rw [Finsupp.linearCombination_apply] at hf
+      sorry
   induction n with
   | zero =>
     rw [← inv_eq_iff_eq_inv]
     have hr : IsRing (∗(val t ^ (ω * (1 + val x)))) := by
-      refine ht.toIsField.isRing_opow_of_mul_lt
-        (mul_ne_zero Ordinal.omega0_ne_zero
-          (add_pos_of_pos_of_nonneg zero_lt_one (_root_.zero_le (val x))).ne')
-        fun u v hu hv => ?_
+      refine
+        { toIsGroup := ht.toIsField.toIsGroup.opow _, mul_lt u v hu hv := ?_
+          ne_one := by simp [Ordinal.opow_eq_one_iff, ht.ne_one],}
+      rw [← val_lt_iff] at hu hv
       obtain ⟨ua, ub, rfl⟩ := exists_omega0_mul_add_natCast u
       obtain ⟨va, vb, rfl⟩ := exists_omega0_mul_add_natCast v
-      wlog! haa : va < ua generalizing ua ub va vb with ih
-      · obtain haa | rfl := haa.lt_or_eq
-        · rw [mul_comm]
-          exact ih va vb hv ua ub hu haa
-        obtain ha1 | h1a := lt_or_ge ua 1
-        · cases Ordinal.lt_one_iff_zero.1 ha1
-          simp only [mul_zero, zero_add]
-          refine lt_of_lt_of_le (ht.isRing_pow_omega0.mul_lt ?_ ?_) ?_
-          · rw [of.lt_iff_lt, opow_lt_opow_iff_right (by simp [ht.one_lt])]
-            exact nat_lt_omega0 _
-          · rw [of.lt_iff_lt, opow_lt_opow_iff_right (by simp [ht.one_lt])]
-            exact nat_lt_omega0 _
-          · rw [of.le_iff_le, opow_le_opow_iff_right (by simp [ht.one_lt])]
-            simp
-        · obtain ⟨ua, rfl⟩ := exists_add_of_le h1a
-          have hux : ∗ua < x := by simpa using lt_of_add_lt_of_nonneg_left hu
-          specialize ihx (∗ua) hux (hux.trans hx)
-          simp_rw [val_of] at ihx
-          rw [(ihx ub).left, (ihx vb).left, ← mul_inv, ← pow_add, ← add_assoc, ← (ihx _).left,
-            of.lt_iff_lt, opow_lt_opow_iff_right (by simp [ht.one_lt])]
-          refine lt_of_lt_of_le (add_lt_add_right (nat_lt_omega0 _) _) ?_
-          rw [← mul_add_one, add_assoc]
-          exact mul_le_mul_right (add_le_add_right (Order.add_one_le_of_lt (of_lt_iff.1 hux)) 1) ω
-      obtain ⟨ua, rfl⟩ := exists_add_of_le (one_le_of_lt haa)
-      obtain ha1 | h1a := lt_or_ge va 1
-      · cases Ordinal.lt_one_iff_zero.1 ha1
-        clear hv haa ha1
-        rw [mul_zero, zero_add, opow_natCast, ← ht.pow_eq/-, ← one_mul (_ * t ^ vb)-/]
-        -- doesn't respect transparency, generalizes (1 : Ordinal) too
-        -- have hc : 1 < t := ht.one_lt
-        -- generalize (1 : Nimber) = c at hc ⊢
-        -- obtain ⟨c, hc⟩ : ∃ c : Nimber, c = 1 := ⟨1, rfl⟩
-        -- rw [← hc]
-        -- replace hc : c < t := hc ▸ ht.one_lt
-        induction vb with
-        | zero =>
-          rw [pow_zero, mul_one, of.lt_iff_lt, opow_lt_opow_iff_right (by simpa using ht.one_lt)]
-          exact hu
-        | succ vb ih =>
-          rw [pow_succ', ← mul_assoc]
-          sorry
-      · sorry
+      by_cases! ha : max ua va = 0
+      · rw [(max_eq_zero.1 ha).1, (max_eq_zero.1 ha).2, mul_zero, zero_add, opow_natCast, zero_add,
+          opow_natCast, ← ht.pow_eq, ← ht.pow_eq, ← pow_add, ht.pow_eq, ← val_lt_iff, val_of,
+          ← opow_natCast, opow_lt_opow_iff_right (one_lt_val.2 ht.one_lt), mul_one_add]
+        exact lt_add_of_lt_of_nonneg (nat_lt_omega0 (ub + vb)) (zero_le _)
+      obtain ⟨m, hm⟩ : ∃ m, 1 + m = max ua va :=
+        ⟨_, Ordinal.add_sub_cancel_of_le (Ordinal.one_le_iff_ne_zero.2 ha)⟩
+      have hua : ua < 1 + val x := lt_of_mul_lt_mul_left' (lt_of_le_of_lt (by simp) hu)
+      have hva : va < 1 + val x := lt_of_mul_lt_mul_left' (lt_of_le_of_lt (by simp) hv)
+      have hmx : m < val x := lt_of_add_lt_add_left (hm.trans_lt (max_lt hua hva))
+      have hux : of ua < x := sorry
+      have hvx : of va < x := sorry
+      obtain ⟨ru, lu⟩ := (ihx (of ua) hux (hux.trans hx) 0).2
+      obtain ⟨rv, lv⟩ := (ihx (of va) hvx (hvx.trans hx) 0).2
+      sorry
     have hy {y : Nimber} (hy : y < ∗(val t ^ (ω * (1 + val x)))) : (t - x) * y ≠ 1 := by
       -- `y` is a `t`-linear combination of [powers] of `t`
       -- which must be either powers of `t` or negative powers of `t - z` for `z < x`

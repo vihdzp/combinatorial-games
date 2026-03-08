@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
+public import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 public import Mathlib.SetTheory.Ordinal.Exponential
 
 import Mathlib.Algebra.CharP.Two
@@ -597,14 +598,15 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 --     Module.Basis Ordinal h.toSubfield Nimber :=
 --   .mk (v := fun o ↦ ∗(x.val ^ o)) sorry sorry
 
-theorem IsField.isRing_opow_of_mul_lt {x : Nimber} (h : IsField x)
-    {o : Ordinal} (ho : o ≠ 0) (h : ∀ u v, u < o → v < o →
-      ∗(val x ^ u) * ∗(val x ^ v) < ∗(val x ^ o)) : IsRing (∗(val x ^ o)) :=
-  sorry
-
 theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
     {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
     y * z < ∗(val x ^ o) :=
+  sorry
+
+theorem IsField.exists_linearCombination_of_lt {x : Nimber} (h : IsField x)
+    {o : Ordinal} {y : Nimber} (hy : y < ∗(val x ^ o)) :
+    ∃ f : Ordinal →₀ h.toSubfield, (SetLike.coe f.support ⊆ Iio o) ∧
+    f.linearCombination h.toSubfield (fun o => ∗(val x ^ o)) = y := by
   sorry
 
 end Nimber
