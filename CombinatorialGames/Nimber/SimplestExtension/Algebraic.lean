@@ -451,6 +451,28 @@ theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
     exact lt_irrefl x.algClosure (lt_algClosure_iff_isAlgebraic.2
       (algebraic_of_leastNoRoots le_rfl (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))))
 
+theorem algClosure_mono : Monotone algClosure := by
+  refine fun x y hxy => le_of_forall_lt fun z hz => ?_
+  rw [algClosure, lt_csSup_iff' (bddAbove_of_small _), exists_mem_image] at hz ⊢
+  refine hz.imp fun c hc => hc.imp_left fun h => ?_
+  rw [rootSet, mem_iUnion] at h ⊢
+  obtain ⟨p, hp⟩ := h
+  exact ⟨⟨p.1, fun k => (p.2 k).trans_le (fieldClosure_mono hxy)⟩, hp⟩
+
+theorem IsAlgClosed.algClosure_le_iff {x y : Nimber} (h : IsAlgClosed x) :
+    y.algClosure ≤ x ↔ y ≤ x where
+  mp := le_trans (le_algClosure y)
+  mpr hyx := le_of_forall_lt fun c hc => by
+    obtain ⟨p, hp0, hp⟩ := lt_algClosure_iff_isAlgebraic.1 hc
+    rw [aeval_def, eval₂_eq_eval_map] at hp
+    exact h.toIsField.root_lt ((WithTop.coe_lt_top _).trans_eq h.leastNoRoots_eq_top.symm)
+      (fun k => lt_of_lt_of_le (by simp [Subfield.algebraMap_ofSubfield])
+        (h.toIsField.fieldClosure_le_iff.2 hyx)) ((mem_roots (by simp [hp0])).2 hp)
+
+theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
+    x < y.algClosure ↔ x < y :=
+  le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
+
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
   refine .of_exists_root Nimber fun p _ hp ↦ ?_
