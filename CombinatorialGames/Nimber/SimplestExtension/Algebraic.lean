@@ -361,6 +361,7 @@ private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
 noncomputable def algClosure (x : Nimber) : Nimber :=
   sSup (succ '' rootSet x.fieldClosure)
 
+set_option backward.isDefEq.respectTransparency false in
 mutual
 
 private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x)
@@ -392,7 +393,6 @@ private theorem isAlgebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosu
   have int : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
     ⟨fun z => have := z.2; (isAlgebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
       (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
-  set_option backward.isDefEq.respectTransparency false in
   refine IsAlgebraic.restrictScalars _
     ⟨hyf.embed (y.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht), ?_, ?_⟩
   · exact ne_of_apply_ne (Polynomial.map (Subfield.subtype _)) (by simp)
