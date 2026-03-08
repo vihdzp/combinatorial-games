@@ -363,8 +363,8 @@ noncomputable def algClosure (x : Nimber) : Nimber :=
 
 mutual
 
-private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x) (hyf : ¬IsField y) :
-    IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
+private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x)
+    (hyf : ¬IsField y) : IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
   obtain rfl | hy0 := eq_or_ne y 0
   · exact isAlgebraic_zero
   obtain rfl | hy1 := eq_or_ne y 1
