@@ -359,66 +359,117 @@ private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
 
 /-- Returns the smallest `IsAlgClosed` that's at least `x`. -/
 noncomputable def algClosure (x : Nimber) : Nimber :=
-  ⨆ n : ℕ, (fun y ↦ fieldClosure (sSup <| (succ '' rootSet y)))^[n] x.fieldClosure
+  sSup (succ '' rootSet x.fieldClosure)
+
+theorem lt_algClosure_iff_isAlgebraic {x y : Nimber} :
+    y < algClosure x ↔ IsAlgebraic (IsField.fieldClosure x).toSubfield y := by
+  induction y using WellFoundedLT.induction with | ind y ih =>
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · by_cases! hy0 : y = 0
+    · exact ⟨X, X_ne_zero, by simp [hy0]⟩
+    by_cases! hyg : ¬y.IsGroup
+    · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := exists_add_of_not_isGroup hyg hy0
+      exact ((ih y1 hy1).1 (hy1.trans h)).add ((ih y2 hy2).1 (hy2.trans h))
+    by_cases! hy1 : y = 1
+    · exact ⟨X - C 1, X_sub_C_ne_zero 1, by simp [hy1]⟩
+    by_cases! hyr : ¬y.IsRing
+    · obtain ⟨y1, hy1, y2, hy2, rfl⟩ := hyg.exists_mul_of_not_isRing hyr hy1
+      exact ((ih y1 hy1).1 (hy1.trans h)).mul ((ih y2 hy2).1 (hy2.trans h))
+    by_cases! hyf : ¬y.IsField
+    · have hy := hyr.inv_lt_self_of_not_isField hyf
+      exact inv_inv y ▸ ((ih y⁻¹ hy).1 (hy.trans h)).inv
+    by_cases! hxy : y < x.fieldClosure
+    · exact ⟨X - C ⟨y, hxy⟩, X_sub_C_ne_zero _, by simp [Subfield.algebraMap_ofSubfield]⟩
+    obtain ⟨c, hc, hyc⟩ : ∃ c ∈ x.fieldClosure.rootSet, y < succ c := by
+      rwa [algClosure, lt_csSup_iff' (bddAbove_of_small _), exists_mem_image] at h
+    rw [rootSet, mem_iUnion] at hc
+    obtain ⟨⟨p, hp⟩, hc⟩ := hc
+    rw [SetLike.mem_coe, Multiset.mem_toFinset, mem_roots', IsRoot.def] at hc
+    have int : IsIntegral hyf.toSubfield c := by
+      refine IsAlgebraic.isIntegral ⟨hyf.embed p fun k => (hp k).trans_le hxy, ?_, ?_⟩
+      · exact ne_of_apply_ne (Polynomial.map (Subfield.subtype _)) (by simp [hc.1])
+      · simp [aeval_def, Subfield.algebraMap_ofSubfield, eval₂_eq_eval_map, hc.2]
+    have ht : leastNoRoots y ≤ (minpoly hyf.toSubfield c).map (Subfield.subtype _) :=
+      leastNoRoots_le_of_not_isRoot (by simp [minpoly.degree_pos int]) (by simp) fun r hr => by
+        change ¬Polynomial.IsRoot _ (hyf.toSubfield.subtype ⟨r, hr⟩)
+        rw [isRoot_map_iff (RingHom.injective _)]
+        apply (minpoly.irreducible int).not_isRoot_of_natDegree_ne_one
+        rw [ne_eq, minpoly.natDegree_eq_one_iff]
+        simp [Subfield.algebraMap_ofSubfield, mt succ_le_of_lt hyc.not_ge]
+    replace ht : y.leastNoRoots ≠ ⊤ := ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _))
+    let alg : Algebra (IsField.fieldClosure x).toSubfield hyf.toSubfield :=
+      (Subfield.inclusion (Set.Iio_subset_Iio hxy)).toAlgebra
+    have tower : IsScalarTower (IsField.fieldClosure x).toSubfield hyf.toSubfield Nimber :=
+      ⟨fun _ _ _ => mul_assoc _ _ _⟩
+    have : Algebra.IsAlgebraic (IsField.fieldClosure x).toSubfield hyf.toSubfield :=
+      ⟨fun z => ((ih z.1 z.2).1 (z.2.trans h)).of_ringHom_of_comp_eq
+        (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
+    set_option backward.isDefEq.respectTransparency false in
+    refine IsAlgebraic.restrictScalars _
+      ⟨hyf.embed (y.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht), ?_, ?_⟩
+    · exact ne_of_apply_ne (Polynomial.map (Subfield.subtype _)) (by simp)
+    · rw [aeval_def, Subfield.algebraMap_ofSubfield, eval₂_eq_eval_map, hyf.map_embed]
+      exact hyf.isRoot_leastNoRoots ht
+  · obtain ⟨p, hp0, hpr⟩ := h
+    refine lt_csSup_of_lt (bddAbove_of_small _) (mem_image_of_mem _ ?_) (lt_succ y)
+    apply mem_iUnion_of_mem ⟨p.map (Subfield.subtype _), by simp⟩
+    simp [hp0, ← Subfield.algebraMap_ofSubfield, hpr]
 
 @[simp]
 theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
-  le_ciSup_of_le (bddAbove_of_small _) 0 (by simp)
+  le_of_forall_lt fun c hc => lt_algClosure_iff_isAlgebraic.2
+    ⟨X - C ⟨c, hc.trans_le (le_fieldClosure x)⟩, X_sub_C_ne_zero _,
+      by simp [Subfield.algebraMap_ofSubfield]⟩
 
-private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) := by
-  refine IsField.iSup fun n ↦ ?_
-  cases n
-  · simp
-  · rw [Function.iterate_succ_apply']
-    simp
+private protected theorem IsField.algClosure (x : Nimber) : IsField (algClosure x) where
+  ne_zero := ne_of_gt (lt_algClosure_iff_isAlgebraic.2 ⟨X, X_ne_zero, by simp⟩)
+  ne_one := ne_of_gt (lt_algClosure_iff_isAlgebraic.2 ⟨X - C 1, X_sub_C_ne_zero 1, by simp⟩)
+  inv_lt' y _  hy := by
+    rw [lt_algClosure_iff_isAlgebraic] at hy ⊢
+    exact hy.inv
+  add_lt y z hy hz := by
+    rw [lt_algClosure_iff_isAlgebraic] at hy hz ⊢
+    exact hy.add hz
+  mul_lt y z hy hz := by
+    rw [lt_algClosure_iff_isAlgebraic] at hy hz ⊢
+    exact hy.mul hz
 
-private theorem algClosure.root_lt {x r : Nimber} {p : Nimber[X]} (hp₀ : p ≠ 0)
-    (hpk : ∀ k, p.coeff k < algClosure x) (hr : p.IsRoot r) : r < algClosure x := by
-  simp_rw [algClosure, lt_ciSup_iff (bddAbove_of_small _)] at hpk ⊢
-  have hpk' : ∀ k, ∃ a ∈ (range fun n ↦
-      (fun y ↦ fieldClosure (sSup <| succ '' rootSet y))^[n] x.fieldClosure), p.coeff k < a :=
-    by simpa
-  obtain ⟨_, ⟨n, rfl⟩, hn⟩ := exists_gt_of_forall_coeff_gt hpk'
-  use n + 1
-  rw [Function.iterate_succ_apply', ← mem_subfieldClosure_Iio]
-  apply Subfield.mem_closure_of_mem
-  rw [mem_Iio, ← succ_le_iff]
-  apply le_csSup (bddAbove_of_small _) (mem_image_of_mem ..)
-  rw [rootSet, mem_iUnion]
-  refine ⟨⟨p, hn⟩, ?_⟩
-  simp_all
-
-private theorem leastNoRoots_algClosure' {x : Nimber} {p : Nimber[X]} (hp : 0 < p.degree)
-    (hpk : ∀ k, p.coeff k < x) (IH : ∀ q < p, 0 < q.degree → ∃ r, q.IsRoot r)
-    (hr : ∀ r, ¬ p.IsRoot r) : leastNoRoots (algClosure x) = p := by
-  apply le_antisymm
-  · exact leastNoRoots_le_of_not_isRoot hp
-      (fun k ↦ (hpk k).trans_le (le_algClosure x)) fun r _ ↦ hr r
-  · apply le_of_forall_lt_imp_ne
-    rw [WithTop.forall_lt_coe]
-    intro q hq hq'
-    have ht := hq' ▸ WithTop.coe_ne_top
-    have hq' : q = x.algClosure.leastNoRoots.untop ht := by simp_rw [← hq', WithTop.untop_coe]
-    obtain ⟨r, hr⟩ := IH q hq (hq' ▸ degree_leastNoRoots_pos ht)
-    exact not_isRoot_leastNoRoots_of_lt ht
-      (algClosure.root_lt (by aesop) (hq' ▸ coeff_leastNoRoots_lt ht) hr) (hq' ▸ hr)
+theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
+  __ := IsField.algClosure x
+  exists_root' p hd hp := by
+    have hc : (fieldClosure x).IsField := IsField.fieldClosure x
+    have ha : x.algClosure.IsField := IsField.algClosure x
+    let alg : Algebra hc.toSubfield ha.toSubfield := (Subfield.inclusion
+      (Set.Iio_subset_Iio (ha.fieldClosure_le_iff.2 (le_algClosure x)))).toAlgebra
+    have tower : IsScalarTower hc.toSubfield ha.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc _ _ _⟩
+    have : Algebra.IsAlgebraic hc.toSubfield ha.toSubfield :=
+      ⟨fun z => (lt_algClosure_iff_isAlgebraic.1 z.2).of_ringHom_of_comp_eq
+        (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
+    by_contra! hpr
+    apply lt_irrefl x.algClosure
+    rw [lt_algClosure_iff_isAlgebraic]
+    have ht : leastNoRoots x.algClosure ≤ p := leastNoRoots_le_of_not_isRoot hd hp hpr
+    replace ht : x.algClosure.leastNoRoots ≠ ⊤ := ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _))
+    set_option backward.isDefEq.respectTransparency false in
+    refine IsAlgebraic.restrictScalars _
+      ⟨ha.embed (x.algClosure.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht), ?_, ?_⟩
+    · exact ne_of_apply_ne (Polynomial.map (Subfield.subtype _)) (by simp)
+    · rw [aeval_def, Subfield.algebraMap_ofSubfield, eval₂_eq_eval_map, ha.map_embed]
+      exact ha.isRoot_leastNoRoots ht
 
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
   suffices H : ∀ p : Nimber[X], 0 < p.degree → ∃ r, p.IsRoot r from
     .of_exists_root _ fun p _ hp ↦ H _ hp.degree_pos
-  intro p
-  induction p using WellFoundedLT.induction with | ind p IH
-  intro hp
-  by_contra! hr
-  obtain ⟨x, hpk⟩ : ∃ x, ∀ k, p.coeff k < x := by
-    refine ⟨⨆ k, succ (p.coeff k), fun k ↦ ?_⟩
-    rw [lt_ciSup_iff' (bddAbove_of_small _)]
-    exact ⟨k, lt_succ _⟩
-  have ht := leastNoRoots_algClosure' hp hpk IH hr
-  have hp' := (IsField.algClosure x).isRoot_leastNoRoots (ht ▸ WithTop.coe_ne_top)
-  simp_rw [ht, WithTop.untop_coe] at hp'
-  exact hr _ hp'
+  intro p hp
+  let x := succ (p.support.sup p.coeff)
+  have hk (k : ℕ) : p.coeff k < algClosure x := by
+    by_cases hk : k ∈ p.support
+    · exact (lt_succ_iff.2 (Finset.le_sup hk)).trans_le (le_algClosure x)
+    · rw [notMem_support_iff.1 hk]
+      exact (IsAlgClosed.algClosure x).pos
+  obtain ⟨r, -, hr⟩ := (IsAlgClosed.algClosure x).exists_root hp.ne' hk
+  exact ⟨r, hr⟩
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
