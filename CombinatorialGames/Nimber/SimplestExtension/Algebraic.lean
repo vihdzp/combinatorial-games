@@ -389,7 +389,7 @@ private theorem algebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosure
   let alg : Algebra hcf.toSubfield hyf.toSubfield :=
     (Subfield.inclusion (Set.Iio_subset_Iio hxy)).toAlgebra
   have tower : IsScalarTower hcf.toSubfield hyf.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc _ _ _⟩
-  have : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
+  have int : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
     ⟨fun z => have := z.2; (algebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
       (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
   set_option backward.isDefEq.respectTransparency false in
@@ -406,8 +406,8 @@ private theorem algebraic_of_lt {x y : Nimber} (h : y < algClosure x) :
   · exact algebraic_of_not_isField h.le hyf
   by_cases! hxy : y < x.fieldClosure
   · exact ⟨X - C ⟨y, hxy⟩, X_sub_C_ne_zero _, by simp [Subfield.algebraMap_ofSubfield]⟩
-  obtain ⟨c, hc, hyc⟩ : ∃ c ∈ x.fieldClosure.rootSet, y < succ c := by
-    rwa [algClosure, lt_csSup_iff' (bddAbove_of_small _), exists_mem_image] at h
+  obtain ⟨c, hc, hyc⟩ : ∃ c ∈ x.fieldClosure.rootSet, y < succ c :=
+    ((lt_csSup_iff' (bddAbove_of_small _)).trans exists_mem_image).1 h
   rw [rootSet, mem_iUnion] at hc
   obtain ⟨⟨p, hp⟩, hc⟩ := hc
   rw [SetLike.mem_coe, Multiset.mem_toFinset, mem_roots', IsRoot.def] at hc
@@ -454,13 +454,10 @@ theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
   refine .of_exists_root Nimber fun p _ hp ↦ ?_
-  let x := succ (p.support.sup p.coeff)
-  have hk (k : ℕ) : p.coeff k < algClosure x := by
-    by_cases hk : k ∈ p.support
-    · exact (lt_succ_iff.2 (Finset.le_sup hk)).trans_le (le_algClosure x)
-    · rw [notMem_support_iff.1 hk]
-      exact (IsAlgClosed.algClosure x).pos
-  obtain ⟨r, -, hr⟩ := (IsAlgClosed.algClosure x).exists_root hp.degree_pos.ne' hk
+  have hk (k : ℕ) : p.coeff k < algClosure (succ (p.support.sup p.coeff)) := Classical.byCases
+    (fun hk => (lt_succ_iff.2 (Finset.le_sup hk)).trans_le (le_algClosure _))
+    (fun hk => (notMem_support_iff.1 hk).trans_lt (IsAlgClosed.algClosure _).pos)
+  obtain ⟨r, -, hr⟩ := (IsAlgClosed.algClosure _).exists_root hp.degree_pos.ne' hk
   exact ⟨r, hr⟩
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
