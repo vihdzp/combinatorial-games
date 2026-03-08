@@ -451,12 +451,9 @@ theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
       (isAlgebraic_of_leastNoRoots le_rfl (ne_of_lt (ht.trans_lt (WithTop.coe_lt_top _)))))
 
 theorem algClosure_mono : Monotone algClosure := by
-  refine fun x y hxy => le_of_forall_lt fun z hz => ?_
-  rw [algClosure, lt_csSup_iff' (bddAbove_of_small _), exists_mem_image] at hz ⊢
-  refine hz.imp fun c hc => hc.imp_left fun h => ?_
-  rw [rootSet, mem_iUnion] at h ⊢
-  obtain ⟨p, hp⟩ := h
-  exact ⟨⟨p.1, fun k => (p.2 k).trans_le (fieldClosure_mono hxy)⟩, hp⟩
+  intro x y
+  rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
+  exact (le_algClosure y).trans'
 
 theorem IsAlgClosed.algClosure_le_iff {x y : Nimber} (h : IsAlgClosed x) :
     y.algClosure ≤ x ↔ y ≤ x where
