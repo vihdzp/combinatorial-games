@@ -23,7 +23,6 @@ import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Game.Specific.Poset
 import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
 import CombinatorialGames.NatOrdinal.Basic

@@ -3,11 +3,14 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Pow
+module
+
+public import CombinatorialGames.Surreal.Pow
+public import Mathlib.Order.Shrink
+public import Mathlib.RingTheory.HahnSeries.Lex
+
 import Mathlib.Algebra.Ring.Subring.Order
-import Mathlib.Order.Shrink
 import Mathlib.RingTheory.HahnSeries.Cardinal
-import Mathlib.RingTheory.HahnSeries.Lex
 
 /-!
 # Surreal Hahn series
@@ -31,7 +34,7 @@ latter.
 
 universe u
 
-noncomputable section
+public noncomputable section
 
 /-! ### For Mathlib -/
 
@@ -66,6 +69,7 @@ open Order Set
 
 /-! ### Basic defs and instances -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The type of `u`-small Hahn series over `Surrealᵒᵈ`, endowed with the lexicographic ordering. We
 will show that this type is isomorphic as an ordered field to the surreals themselves. -/
 def SurrealHahnSeries : Type (u + 1) :=
@@ -74,12 +78,15 @@ def SurrealHahnSeries : Type (u + 1) :=
 
 namespace SurrealHahnSeries
 
+@[no_expose]
 instance : Field SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
+@[no_expose]
 instance : LinearOrder SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
+set_option backward.isDefEq.respectTransparency false in
 instance : IsStrictOrderedRing SurrealHahnSeries := by
   unfold SurrealHahnSeries; infer_instance
 
@@ -93,26 +100,27 @@ def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
 /-! #### `coeff` -/
 
 /-- Returns the coefficient for `X ^ i`. -/
+@[no_expose]
 def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
   x.1.coeff <| OrderDual.toDual i
 
-@[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := rfl
-@[simp, grind =] theorem coeff_zero : coeff 0 = 0 := rfl
+@[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := (rfl)
+@[simp, grind =] theorem coeff_zero : coeff 0 = 0 := (rfl)
 
 @[simp, grind =]
-theorem coeff_neg (x : SurrealHahnSeries) : (-x).coeff = -x.coeff := rfl
+theorem coeff_neg (x : SurrealHahnSeries) : (-x).coeff = -x.coeff := (rfl)
 
 @[simp, grind =]
-theorem coeff_add (x y : SurrealHahnSeries) : (x + y).coeff = x.coeff + y.coeff := rfl
+theorem coeff_add (x y : SurrealHahnSeries) : (x + y).coeff = x.coeff + y.coeff := (rfl)
 
 @[simp, grind =]
-theorem coeff_sub (x y : SurrealHahnSeries) : (x - y).coeff = x.coeff - y.coeff := rfl
+theorem coeff_sub (x y : SurrealHahnSeries) : (x - y).coeff = x.coeff - y.coeff := (rfl)
 
 theorem coeff_add_apply (x y : SurrealHahnSeries) (i : Surreal) :
-    (x + y).coeff i = x.coeff i + y.coeff i := rfl
+    (x + y).coeff i = x.coeff i + y.coeff i := (rfl)
 
 theorem coeff_sub_apply (x y : SurrealHahnSeries) (i : Surreal) :
-    (x - y).coeff i = x.coeff i - y.coeff i := rfl
+    (x - y).coeff i = x.coeff i - y.coeff i := (rfl)
 
 @[ext]
 theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
@@ -121,11 +129,15 @@ theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
 /-! #### `support` -/
 
 /-- The support of the Hahn series. -/
+@[expose]
 def support (x : SurrealHahnSeries) : Set Surreal :=
   Function.support x.coeff
 
-@[simp] theorem support_coeff (x : SurrealHahnSeries) : Function.support x.coeff = x.support := rfl
-@[simp] theorem support_mk (f small wf) : support (mk f small wf) = Function.support f := rfl
+@[simp]
+theorem support_coeff (x : SurrealHahnSeries) : Function.support x.coeff = x.support := (rfl)
+
+@[simp]
+theorem support_mk (f small wf) : support (mk f small wf) = Function.support f := (rfl)
 
 @[simp, grind =]
 theorem mem_support_iff {x : SurrealHahnSeries} {i : Surreal} : i ∈ x.support ↔ x.coeff i ≠ 0 :=
@@ -158,7 +170,7 @@ instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
 
 @[simp]
 theorem mk_coeff (x : SurrealHahnSeries) : mk x.coeff x.small_support x.wellFoundedOn_support = x :=
-  rfl
+  (rfl)
 
 theorem lt_def {x y : SurrealHahnSeries} : x < y ↔ toColex x.coeff < toColex y.coeff := .rfl
 theorem le_def {x y : SurrealHahnSeries} : x ≤ y ↔ toColex x.coeff ≤ toColex y.coeff := .rfl
@@ -171,7 +183,7 @@ def single (x : Surreal) (r : ℝ) : SurrealHahnSeries :=
     (WellFoundedOn.subset wellFoundedOn_singleton Pi.support_single_subset)
 
 @[aesop simp]
-theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r := rfl
+theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r := (rfl)
 
 @[simp, grind =]
 theorem coeff_single_self (x : Surreal) (r : ℝ) : (single x r).coeff x = r := by
@@ -199,7 +211,7 @@ def trunc (x : SurrealHahnSeries) (i : Surreal) : SurrealHahnSeries :=
 @[aesop simp]
 theorem coeff_trunc (x : SurrealHahnSeries) (i : Surreal) :
     (x.trunc i).coeff = fun j ↦ if i < j then x.coeff j else 0 :=
-  rfl
+  (rfl)
 
 @[simp, grind =]
 theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
@@ -405,6 +417,7 @@ theorem coeffIdx_zero : coeffIdx 0 = 0 := by
 theorem coeff_exp (x : SurrealHahnSeries) (i) : x.coeff (x.exp i) = x.coeffIdx i :=
   (coeffIdx_of_lt _).symm
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem coeffIdx_symm_exp (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
   rw [coeffIdx_of_lt] <;> simp
@@ -448,6 +461,7 @@ theorem truncIdx_zero : truncIdx 0 = 0 := by
 theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i :=
   (truncIdx_of_lt _).symm
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by
   rw [truncIdx_of_lt] <;> simp

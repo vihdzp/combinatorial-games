@@ -3,9 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 -/
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.Tactic.AddInstances
+module
+
+public import CombinatorialGames.Game.IGame
+public meta import CombinatorialGames.Tactic.AddInstances
+
 import Mathlib.Data.Finite.Prod
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Classes of games
@@ -43,11 +47,14 @@ on combinatorial games. This functionality is now implemented through the `game_
 
 universe u
 
+@[expose] public section
+
 namespace IGame
 
 /-! ### Dicotic games -/
 
-private def DicoticAux (x : IGame) : Prop :=
+@[no_expose]
+def DicoticAux (x : IGame) : Prop :=
   (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
 termination_by x
 decreasing_by igame_wf
@@ -99,11 +106,16 @@ protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
+theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
+  ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
 end Dicotic
 
 /-! ### Impartial games -/
 
-private def ImpartialAux (x : IGame) : Prop :=
+@[no_expose]
+def ImpartialAux (x : IGame) : Prop :=
   -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, ImpartialAux y
 termination_by x
 decreasing_by igame_wf
@@ -260,7 +272,8 @@ end Impartial
 
 /-! ### Numeric games -/
 
-private def NumericAux (x : IGame) : Prop :=
+@[no_expose]
+def NumericAux (x : IGame) : Prop :=
   (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, NumericAux y)
 termination_by x
 decreasing_by igame_wf
@@ -347,7 +360,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -419,7 +432,8 @@ end Numeric
 
 /-! ### Short games -/
 
-private def ShortAux (x : IGame) : Prop :=
+@[no_expose]
+def ShortAux (x : IGame) : Prop :=
   ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, ShortAux y
 termination_by x
 decreasing_by igame_wf

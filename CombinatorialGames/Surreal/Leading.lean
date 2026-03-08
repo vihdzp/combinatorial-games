@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Pow
-import Mathlib.Algebra.Order.Ring.StandardPart
+module
+
+public import CombinatorialGames.Surreal.Pow
+public import Mathlib.Algebra.Order.Ring.StandardPart
 
 /-!
 # Leading term and coefficient
@@ -16,7 +18,7 @@ We don't yet prove this characterization; rather, these functions are a key ingr
 the map from surreals into Hahn series.
 -/
 
-noncomputable section
+@[expose] public noncomputable section
 namespace Surreal
 
 open ArchimedeanClass
@@ -112,21 +114,6 @@ theorem leadingCoeff_pos_iff {x : Surreal} : 0 < leadingCoeff x ↔ 0 < x := by
 @[simp]
 theorem leadingCoeff_neg_iff {x : Surreal} : leadingCoeff x < 0 ↔ x < 0 := by
   simp [← not_le]
-
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_self_nonneg {α}
-    [LinearOrderedAddCommGroupWithTop α] {a : α} : 0 ≤ a - a := by
-  obtain rfl | ha := eq_or_ne a ⊤
-  · simp
-  · rw [LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha]
-
--- TODO: upstream
-@[simp]
-lemma _root_.LinearOrderedAddCommGroupWithTop.sub_eq_zero {α}
-    [LinearOrderedAddCommGroupWithTop α] {a b : α} (ha : a ≠ ⊤) : b - a = 0 ↔ b = a := by
-  rw [← LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top ha,
-    LinearOrderedAddCommGroupWithTop.sub_left_inj_of_ne_top ha]
 
 theorem leadingCoeff_monotoneOn (x : Surreal) : MonotoneOn leadingCoeff (wlog ⁻¹' {x}) := by
   rintro y rfl z (hw : wlog _ = _) h

@@ -1,6 +1,15 @@
-import Mathlib.Data.Fintype.Quotient
+/-
+Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Tristan Figueroa-Reid
+-/
+module
+
+public import Mathlib.Data.Fintype.Quotient
 
 -- https://github.com/leanprover-community/mathlib4/pull/27302/files
+
+public section
 
 namespace Quotient
 
@@ -20,3 +29,4 @@ lemma finLiftOn₂_mk (a : ∀ i, α i) (b : ∀ i, β i) : finLiftOn₂ (⟦a �
   simp_rw [finLiftOn₂, finChoice_eq, lift_mk]
 
 end Quotient
+end
