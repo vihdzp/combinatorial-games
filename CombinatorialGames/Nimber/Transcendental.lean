@@ -3,6 +3,7 @@ Copyright (c) 2026 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
+import Mathlib.Algebra.Polynomial.PartialFractions
 import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 universe u
@@ -123,110 +124,152 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
     of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp
       ((isNormal_mul_right omega0_pos).comp (isNormal_add_right 1)))
   induction x using WellFoundedLT.induction generalizing n with | ind x ihx
-  have surj (y : Nimber) (hy : y < ∗(val t ^ (ω * (1 + val x)))) :
+  -- have to generalize to lex(c, o) < lex(x, n)
+  have surj (c : Nimber) (hcx : c < x) (o : Nat) (y : Nimber)
+      (hyc : y < ∗(val t ^ (ω * (1 + val c) + o))) :
+      ∃ m : Multiset Nimber, (∀ i ∈ m, i < c) ∧
+      ∃ p : Nimber, p < ∗(val t ^ ω) ∧ p / ((m.map fun c => t - c).prod * (t - c) ^ o) = y := by
+    obtain ⟨f, hs, hf⟩ := ht.toIsField.exists_linearCombination_of_lt hyc
+    obtain ⟨e, hes, he⟩ : ∃ s : Nat →₀ ht.toIsField.toSubfield, s.support ⊆ Finset.Iio o ∧
+        (f.filter (¬· < ω * (1 + val c))).sum (fun i a => a • of (val t ^ i)) =
+        s.sum (fun i a => a • of (val t ^ (ω * (1 + val c) + i))) := by
+      have hl (i : Ordinal) : ∃ l : ℕ,
+          i ∈ (f.filter (¬· < ω * (1 + val c))).support → ω * (1 + val c) + l = i := by
+        by_cases hi : i ∈ f.support
+        · obtain ⟨l, hl⟩ := Ordinal.lt_omega0.1 (Ordinal.sub_lt_of_lt_add ((hs hi).trans
+            (add_lt_add_right (nat_lt_omega0 o) _)) (by simp))
+          refine ⟨l, fun h => ?_⟩
+          rw [Finsupp.support_filter, Finset.mem_filter] at h
+          rw [← hl, Ordinal.add_sub_cancel_of_le (le_of_not_gt h.2)]
+        · simp [hi]
+      choose l hl using hl
+      refine ⟨(f.filter (¬· < ω * (1 + val c))).mapDomain l, ?_⟩
+      rw [Finsupp.sum_filter_index, Finsupp.sum_mapDomain_index (by simp) (by simp [← add_smul]),
+        Finsupp.sum_filter_index]
+      refine ⟨Finsupp.mapDomain_support.trans fun i hi => Finset.mem_Iio.2 ?_,
+        Finset.sum_congr rfl fun i hi => by rw [hl i hi]⟩
+      rw [Finset.mem_image] at hi
+      obtain ⟨i, hi, rfl⟩ := hi
+      rw [Finsupp.support_filter] at hl hi
+      specialize hs (Finset.mem_of_mem_filter i hi)
+      rwa [← hl i hi, Set.mem_Iio, add_lt_add_iff_left, Nat.cast_lt] at hs
+    rw [Finsupp.linearCombination_apply,
+      ← Finsupp.sum_filter_add_sum_filter_not (· < ω * (1 + val c)),
+      ← Finsupp.linearCombination_apply, he] at hf
+    obtain ⟨-, hrc, hll⟩ := ihx c hcx (hcx.trans hx) 0
+    let alg : Algebra ht.isRing_pow_omega0.toSubring hrc.toSubring :=
+      (Subring.inclusion (subring_aux ht hrc)).toAlgebra
+    have algmap (x : ht.isRing_pow_omega0.toSubring) :
+        algebraMap ht.isRing_pow_omega0.toSubring hrc.toSubring x = ⟨x, _⟩ := rfl
+    have hss : SetLike.coe (f.filter (· < ω * (1 + val c))).support ⊆
+        Set.Iio (ω * (1 + val c)) := by
+      rw [Finsupp.support_filter, Finset.coe_filter]
+      intro i hi
+      exact hi.2
+    obtain ⟨⟨u, ⟨d, hd⟩⟩, ndeq⟩ := hll.surj _ ⟨_, ht.toIsField.linearCombination_lt hss⟩
+    obtain ⟨m, hm, hmd⟩ : ∃ m : Multiset ht.toIsField.toSubfield,
+        (∀ i ∈ m, i < c) ∧ (m.map fun x => t - x.1).prod = d := by
+      obtain ⟨m, hm, hmd⟩ := Submonoid.exists_multiset_of_mem_closure hd
+      simp_rw [Set.mem_image, Set.mem_Iio, ← Subtype.coe_lt_coe] at hm
+      choose p hpc hpy using hm
+      refine ⟨m.pmap p fun _ h => h, fun i hi => ?_, ?_⟩
+      · rw [Multiset.mem_pmap] at hi
+        obtain ⟨i, hi, rfl⟩ := hi
+        exact hpc i hi
+      · -- TODO: remove `RingEquiv.toMonoidHom` and friends
+        change m.prod = ht.ringEquivPolynomial d at hmd
+        rw [← RingEquiv.symm_apply_eq, map_multiset_prod] at hmd
+        rw [Multiset.map_pmap, ← ht.isRing_pow_omega0.toSubring.subtype_apply, ← hmd,
+          map_multiset_prod, Multiset.map_map, ← Multiset.pmap_eq_map (· ∈ m) _ m fun _ h => h]
+        refine congr((m.pmap (fun x h => $(?_)) fun _ h => h).prod)
+        rw [Subring.coe_subtype, Function.comp_apply, coe_ringEquivPolynomial_symm_apply]
+        rw (occs := [1]) [← eval₂_X ht.toIsField.toSubfield.subtype t]
+        rw [← Subfield.coe_subtype, ← eval₂_C ht.toIsField.toSubfield.subtype t,
+          ← eval₂_sub, hpy x h]
+    have hd0 : (d : Nimber) ≠ 0 := by
+      refine hmd.symm.trans_ne (Multiset.prod_ne_zero fun h => ?_)
+      rw [Multiset.mem_map] at h
+      obtain ⟨k, hkm, hk⟩ := h
+      exact ne_of_gt ((hm k hkm).trans (hcx.trans hx)) (sub_eq_zero.1 hk)
+    simp_rw [algmap, Subtype.ext_iff, Subring.coe_mul, ← eq_div_iff_mul_eq hd0] at ndeq
+    let algf := ht.algebraPowOmega0
+    have towerf := ht.algebraPowOmega0ScalarTower
+    let tt : ht.isRing_pow_omega0.toSubring :=
+      ⟨t, val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)⟩
+    have htc : t - c ≠ 0 := sub_ne_zero.2 (ne_of_gt (hcx.trans hx))
+    refine ⟨m.map ht.toIsField.toSubfield.subtype, fun i hi => ?_, _,
+      (u * (tt - ⟨c, ((hcx.trans hx).trans tt.2)⟩) ^ o +
+        (m.map (fun i => tt - ⟨i.1, Set.Iio_subset_Iio tt.2.le i.2⟩)).prod *
+        (e.linearCombination ht.toIsField.toSubfield fun i =>
+          (tt - ⟨c, (hcx.trans hx).trans tt.2⟩) ^ (o - 1 - i))).2, ?_⟩
+    · rw [Multiset.mem_map] at hi
+      obtain ⟨i, hi, rfl⟩ := hi
+      exact hm i hi
+    rw [← Algebra.algebraMap_ofSubsemiring_apply]
+    simp_rw [map_add, map_mul, map_pow, map_multiset_prod, tt, Multiset.map_map,
+      Function.comp_def, map_sub, Algebra.algebraMap_ofSubsemiring_apply,
+      Subfield.subtype_apply]
+    rw [hmd, ← div_add_div _ _ hd0 (pow_ne_zero _ htc),
+      ← ndeq, ← Algebra.algebraMap_ofSubsemiring_apply,
+      ← towerf.toAlgHom_apply ht.toIsField.toSubfield,
+      ← AlgHom.toLinearMap_apply, Finsupp.apply_linearCombination,
+      div_eq_mul_inv, ← LinearMap.mulRight_apply ht.toIsField.toSubfield _⁻¹]
+    set_option backward.isDefEq.respectTransparency false in rw [Finsupp.apply_linearCombination]
+    rw [← hf, add_right_inj, Finsupp.linearCombination_apply]
+    refine Finsupp.sum_congr fun i hi => congrArg (e i • ·) ?_
+    have hoi : i < o := Finset.mem_Iio.1 (hes hi)
+    rw [(ihx c hcx (hcx.trans hx) i).1]
+    simp_rw [Function.comp_apply, AlgHom.toLinearMap_apply, IsScalarTower.toAlgHom_apply,
+      map_pow, map_sub, Algebra.algebraMap_ofSubsemiring_apply, LinearMap.mulRight_apply]
+    rw [mul_inv_eq_iff_eq_mul₀ (pow_ne_zero _ htc), eq_inv_mul_iff_mul_eq₀ (pow_ne_zero _ htc),
+      ← pow_add, add_right_comm, Nat.add_sub_of_le (Nat.le_sub_one_of_lt hoi),
+      Nat.sub_add_cancel (Nat.one_le_of_lt hoi)]
+  have surj' (y : Nimber) (hy : y < ∗(val t ^ (ω * (1 + val x)))) :
       ∃ m : Multiset Nimber, (∀ i ∈ m, i < x) ∧
       ∃ p : Nimber, p < ∗(val t ^ ω) ∧ p / (m.map fun c => t - c).prod = y := by
     obtain hx | ⟨c, hcx, hyc⟩ := normal.isBot_or_exists_le_succ_of_lt hy
     · rw [isBot_iff_eq_bot] at hx
       exact ⟨0, by simp, y, by simpa [hx] using hy, by simp⟩
     · rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
-      obtain ⟨f, hs, hf⟩ := ht.toIsField.exists_linearCombination_of_lt hyc
-      obtain ⟨e, he⟩ : ∃ s : Nat →₀ ht.toIsField.toSubfield,
-          (f.filter (¬· < ω * (1 + val c))).sum (fun i a => a • of (val t ^ i)) =
-          s.sum (fun i a => a • of (val t ^ (ω * (1 + val c) + i))) := by
-        have hl (i : Ordinal) : ∃ l : ℕ,
-            i ∈ (f.filter (¬· < ω * (1 + val c))).support → ω * (1 + val c) + l = i := by
-          by_cases hi : i ∈ f.support
-          · obtain ⟨l, hl⟩ := Ordinal.lt_omega0.1 (Ordinal.sub_lt_of_lt_add (hs hi) (by simp))
-            refine ⟨l, fun h => ?_⟩
-            rw [Finsupp.support_filter, Finset.mem_filter] at h
-            rw [← hl, Ordinal.add_sub_cancel_of_le (le_of_not_gt h.2)]
-          · simp [hi]
-        choose l hl using hl
-        refine ⟨(f.filter (¬· < ω * (1 + val c))).mapDomain l, ?_⟩
-        rw [Finsupp.sum_filter_index, Finsupp.sum_mapDomain_index (by simp) (by simp [← add_smul]),
-          Finsupp.sum_filter_index]
-        exact Finset.sum_congr rfl fun i hi => by rw [hl i hi]
-      rw [Finsupp.linearCombination_apply,
-        ← Finsupp.sum_filter_add_sum_filter_not (· < ω * (1 + val c)),
-        ← Finsupp.linearCombination_apply, he] at hf
-      obtain ⟨-, hrc, hll⟩ := ihx c hcx (hcx.trans hx) 0
-      let alg : Algebra ht.isRing_pow_omega0.toSubring hrc.toSubring :=
-        (Subring.inclusion (subring_aux ht hrc)).toAlgebra
-      have algmap (x : ht.isRing_pow_omega0.toSubring) :
-          algebraMap ht.isRing_pow_omega0.toSubring hrc.toSubring x = ⟨x, _⟩ := rfl
-      have hss : SetLike.coe (f.filter (· < ω * (1 + val c))).support ⊆
-          Set.Iio (ω * (1 + val c)) := by
-        rw [Finsupp.support_filter, Finset.coe_filter]
-        intro i hi
-        exact hi.2
-      obtain ⟨⟨u, ⟨d, hd⟩⟩, ndeq⟩ := hll.surj _ ⟨_, ht.toIsField.linearCombination_lt hss⟩
-      obtain ⟨m, hm, hmd⟩ : ∃ m : Multiset ht.toIsField.toSubfield,
-          (∀ i ∈ m, i < c) ∧ (m.map fun x => t - x.1).prod = d := by
-        obtain ⟨m, hm, hmd⟩ := Submonoid.exists_multiset_of_mem_closure hd
-        simp_rw [Set.mem_image, Set.mem_Iio, ← Subtype.coe_lt_coe] at hm
-        choose p hpc hpy using hm
-        refine ⟨m.pmap p fun _ h => h, fun i hi => ?_, ?_⟩
-        · rw [Multiset.mem_pmap] at hi
-          obtain ⟨i, hi, rfl⟩ := hi
-          exact hpc i hi
-        · -- TODO: remove `RingEquiv.toMonoidHom` and friends
-          change m.prod = ht.ringEquivPolynomial d at hmd
-          rw [← RingEquiv.symm_apply_eq, map_multiset_prod] at hmd
-          rw [Multiset.map_pmap, ← ht.isRing_pow_omega0.toSubring.subtype_apply, ← hmd,
-            map_multiset_prod, Multiset.map_map, ← Multiset.pmap_eq_map (· ∈ m) _ m fun _ h => h]
-          refine congr((m.pmap (fun x h => $(?_)) fun _ h => h).prod)
-          rw [Subring.coe_subtype, Function.comp_apply, coe_ringEquivPolynomial_symm_apply]
-          rw (occs := [1]) [← eval₂_X ht.toIsField.toSubfield.subtype t]
-          rw [← Subfield.coe_subtype, ← eval₂_C ht.toIsField.toSubfield.subtype t,
-            ← eval₂_sub, hpy x h]
-      have hd0 : (d : Nimber) ≠ 0 := by
-        refine hmd.symm.trans_ne (Multiset.prod_ne_zero fun h => ?_)
-        rw [Multiset.mem_map] at h
-        obtain ⟨k, hkm, hk⟩ := h
-        exact ne_of_gt ((hm k hkm).trans (hcx.trans hx)) (sub_eq_zero.1 hk)
-      simp_rw [algmap, Subtype.ext_iff, Subring.coe_mul, ← eq_div_iff_mul_eq hd0] at ndeq
-      let o := e.support.sup id
-      let algf := ht.algebraPowOmega0
-      have towerf := ht.algebraPowOmega0ScalarTower
-      let tt : ht.isRing_pow_omega0.toSubring :=
-        ⟨t, val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)⟩
-      have htc : t - c ≠ 0 := sub_ne_zero.2 (ne_of_gt (hcx.trans hx))
-      refine ⟨m.map ht.toIsField.toSubfield.subtype + .replicate (o + 1) c,
-        fun i hi => lt_of_le_of_lt ?_ hcx, _,
-        (u * (tt - ⟨c, ((hcx.trans hx).trans tt.2)⟩) ^ (o + 1) +
-          (m.map (fun i => tt - ⟨i.1, Set.Iio_subset_Iio tt.2.le i.2⟩)).prod *
-          (e.linearCombination ht.toIsField.toSubfield fun i =>
-            (tt - ⟨c, (hcx.trans hx).trans tt.2⟩) ^ (o - i))).2,
-        ?_⟩
-      · rw [Multiset.mem_add, Multiset.mem_map, Multiset.mem_replicate] at hi
-        obtain ⟨i, hi, rfl⟩ | ⟨-, hi⟩ := hi
-        · exact (hm i hi).le
-        · exact hi.le
-      rw [Multiset.map_add, Multiset.prod_add, Multiset.map_replicate,
-        Multiset.prod_replicate, ← Algebra.algebraMap_ofSubsemiring_apply]
-      simp_rw [map_add, map_mul, map_pow, map_multiset_prod, tt, Multiset.map_map,
-        Function.comp_def, map_sub, Algebra.algebraMap_ofSubsemiring_apply,
-        Subfield.subtype_apply]
-      rw [hmd, ← div_add_div _ _ hd0 (pow_ne_zero _ htc),
-        ← ndeq, ← Algebra.algebraMap_ofSubsemiring_apply,
-        ← towerf.toAlgHom_apply ht.toIsField.toSubfield,
-        ← AlgHom.toLinearMap_apply, Finsupp.apply_linearCombination,
-        div_eq_mul_inv, ← LinearMap.mulRight_apply ht.toIsField.toSubfield _⁻¹]
-      set_option backward.isDefEq.respectTransparency false in rw [Finsupp.apply_linearCombination]
-      rw [← hf, add_right_inj, Finsupp.linearCombination_apply]
-      refine Finsupp.sum_congr fun i hi => congrArg (e i • ·) ?_
-      rw [(ihx c hcx (hcx.trans hx) i).1]
-      simp_rw [Function.comp_apply, AlgHom.toLinearMap_apply, IsScalarTower.toAlgHom_apply,
-        map_pow, map_sub, Algebra.algebraMap_ofSubsemiring_apply, LinearMap.mulRight_apply]
-      rw [mul_inv_eq_iff_eq_mul₀ (pow_ne_zero _ htc), eq_inv_mul_iff_mul_eq₀ (pow_ne_zero _ htc),
-        ← pow_add, add_right_comm, ← id_def i, Nat.add_sub_of_le (e.support.le_sup hi)]
-  have hr : IsRing (∗(val t ^ (ω * (1 + val x)))) := by
-    refine
-      { toIsGroup := ht.toIsField.toIsGroup.opow _, mul_lt u v hu hv := ?_
-        ne_one := by simp [Ordinal.opow_eq_one_iff, ht.ne_one] }
+      have normal2 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val c) + x)) :=
+        of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp (isNormal_add_right _))
+      obtain ⟨n1, hn1, hyn⟩ := (normal2.isBot_or_exists_le_succ_of_lt hyc).resolve_left (by simp)
+      obtain ⟨n1, rfl⟩ := lt_omega0.1 hn1
+      rw [← natCast_succ] at hyn
+      obtain ⟨m, hm, p, hp, he⟩ := surj c hcx n1.succ y hyn
+      refine ⟨m + .replicate n1.succ c, fun i hi => ?_, p, hp, Eq.trans ?_ he⟩
+      · rw [Multiset.mem_add, Multiset.mem_replicate] at hi
+        obtain hi | ⟨-, hi⟩ := hi
+        · exact (hm i hi).trans hcx
+        · exact hi.trans_lt hcx
+      · rw [Multiset.map_add, Multiset.prod_add, Multiset.map_replicate, Multiset.prod_replicate]
+    -- refine
+    --   { toIsGroup := ht.toIsField.toIsGroup.opow _, mul_lt u v hu hv := ?_
+    --     ne_one := by simp [Ordinal.opow_eq_one_iff, ht.ne_one] }
+  have hr (n1 n2 : Nat) (c : Nimber) (hc : c < x) (u v : Nimber)
+      (hu : u < ∗(val t ^ (ω * (1 + val c) + n1)))
+      (hv : v < ∗(val t ^ (ω * (1 + val c) + n2))) :
+      u * v < ∗(val t ^ (ω * (1 + val x) + n1 + n2)) := by
+    stop
     obtain ⟨mu, hmu, pu, hpu, heu⟩ := surj u hu
     obtain ⟨mv, hmv, pv, hpv, hev⟩ := surj v hv
+    let := Algebra.compHom Nimber ht.ringEquivPolynomial.symm.toRingHom
+    let f := ht.ringEquivPolynomial (⟨pu, hpu⟩ * ⟨pv, hpv⟩)
+    let s := (mu + mv).toFinset
+    let g c : ht.toIsField.toSubfield[X] := if h : c < t then X - C ⟨c, h⟩ else 1
+    have hg c : (g c).Monic := by unfold g; split <;> monicity
+    have hgg a b (hab : a ≠ b) : IsCoprime (g a) (g b) := by
+      unfold g
+      split
+      · split
+        · apply Polynomial.isCoprime_X_sub_C_of_isUnit_sub
+          simp [sub_ne_zero, hab]
+        · apply isCoprime_one_right
+      · apply isCoprime_one_left
+    let n c := (mu + mv).count c
+    let gi c := of (val t ^ (ω * (1 + val c)))
+    -- have hgi i (hi : i ∈ s) : gi i *
+    #check mul_prod_pow_inverse_eq_quo_add_sum_rem_mul_pow_inverse
     stop
     rw [← val_lt_iff] at hu hv
     obtain ⟨ua, ub, rfl⟩ := exists_omega0_mul_add_natCast u
