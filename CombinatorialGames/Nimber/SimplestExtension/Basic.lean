@@ -598,15 +598,20 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 --     Module.Basis Ordinal h.toSubfield Nimber :=
 --   .mk (v := fun o ↦ ∗(x.val ^ o)) sorry sorry
 
-theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
-    {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
-    y * z < ∗(val x ^ o) :=
-  sorry
+-- theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
+--     {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
+--     y * z < ∗(val x ^ o) :=
+--   sorry
 
 theorem IsField.exists_linearCombination_of_lt {x : Nimber} (h : IsField x)
     {o : Ordinal} {y : Nimber} (hy : y < ∗(val x ^ o)) :
     ∃ f : Ordinal →₀ h.toSubfield, (SetLike.coe f.support ⊆ Iio o) ∧
     f.linearCombination h.toSubfield (fun o => ∗(val x ^ o)) = y := by
+  sorry
+
+theorem IsField.linearCombination_lt {x : Nimber} (h : IsField x)
+    {o : Ordinal} {f : Ordinal →₀ h.toSubfield} (hf : SetLike.coe f.support ⊆ Iio o) :
+    f.linearCombination h.toSubfield (fun o => ∗(val x ^ o)) < ∗(val x ^ o) := by
   sorry
 
 end Nimber
