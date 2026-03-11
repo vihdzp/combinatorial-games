@@ -60,7 +60,7 @@ namespace Nimber.IsAlgClosed
 variable {t : Nimber.{u}} (ht : IsAlgClosed t)
 include ht
 
-theorem isRing_pow_omega0 : IsRing (of (val t ^ ω)) := by
+theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) := by
   refine ⟨ht.opow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [ht.one_lt])⟩
   obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
   obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
@@ -69,26 +69,26 @@ theorem isRing_pow_omega0 : IsRing (of (val t ^ ω)) := by
   all_goals exact forall_coeff_mul_lt ht.toIsRing hyd hzd
 
 -- not an instance because `ht` is not inferrable
-abbrev algebraPowOmega0 : Algebra ht.toIsField.toSubfield ht.isRing_pow_omega0.toSubring :=
+abbrev algebraOpowOmega0 : Algebra ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring :=
   (Subring.inclusion (Set.Iio_subset_Iio (val_le_iff.1 (left_le_opow _ omega0_pos)))).toAlgebra
 
-theorem algebraPowOmega0ScalarTower :
-    letI := ht.algebraPowOmega0
-    IsScalarTower ht.toIsField.toSubfield ht.isRing_pow_omega0.toSubring Nimber :=
+theorem algebraOpowOmega0ScalarTower :
+    letI := ht.algebraOpowOmega0
+    IsScalarTower ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring Nimber :=
   @IsScalarTower.mk _ _ _ (_) _ _ fun _ _ _ => mul_assoc _ _ _
 
 def algEquivPolynomial :
-    letI := ht.algebraPowOmega0
-    ht.isRing_pow_omega0.toSubring ≃ₐ[ht.toIsField.toSubfield]
+    letI := ht.algebraOpowOmega0
+    ht.isRing_opow_omega0.toSubring ≃ₐ[ht.toIsField.toSubfield]
     ht.toIsField.toSubfield[X] :=
-  letI := ht.algebraPowOmega0
+  letI := ht.algebraOpowOmega0
   .symm <| .ofBijective (aeval
       ⟨t, val_lt_iff.1 (left_lt_opow ht.one_lt one_lt_omega0)⟩) <| by
     have algMap (x : ht.toIsField.toSubfield) :
-        algebraMap ht.toIsField.toSubfield ht.isRing_pow_omega0.toSubring x = ⟨x, _⟩ := rfl
+        algebraMap ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring x = ⟨x, _⟩ := rfl
     refine ⟨fun p q hpq => ?_, ?_⟩
     · rw [aeval_def, aeval_def, eval₂_eq_eval_map, eval₂_eq_eval_map,
-        ← ht.isRing_pow_omega0.toSubring.subtype_injective.eq_iff,
+        ← ht.isRing_opow_omega0.toSubring.subtype_injective.eq_iff,
         ← eval_map_apply, ← eval_map_apply, Subring.subtype_apply,
         ht.eval_eq_of_lt (by simp [algMap]), ht.eval_eq_of_lt (by simp [algMap]),
         oeval_eq_oeval_iff (by simp [algMap]) (by simp [algMap]),
@@ -99,22 +99,22 @@ def algEquivPolynomial :
       obtain ⟨y, hy⟩ := y
       obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
       refine ⟨ht.toIsField.embed py hyd, ?_⟩
-      rw [aeval_def, eval₂_eq_eval_map, ← ht.isRing_pow_omega0.toSubring.subtype_injective.eq_iff,
+      rw [aeval_def, eval₂_eq_eval_map, ← ht.isRing_opow_omega0.toSubring.subtype_injective.eq_iff,
         ← eval_map_apply, map_map]
       change eval t (map ht.toIsField.toSubfield.subtype (ht.toIsField.embed py hyd)) = oeval t py
       rw [ht.toIsField.map_embed, ht.eval_eq_of_lt hyd]
 
 theorem coe_algEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
-    letI := ht.algebraPowOmega0
+    letI := ht.algebraOpowOmega0
     (ht.algEquivPolynomial.symm p : Nimber) = p.eval₂ ht.toIsField.toSubfield.subtype t := by
   unfold algEquivPolynomial
-  rw [← ht.isRing_pow_omega0.toSubring.subtype_apply,
+  rw [← ht.isRing_opow_omega0.toSubring.subtype_apply,
     @AlgEquiv.symm_symm, @AlgEquiv.ofBijective_apply,
     @aeval_def, ← eval_map, ← eval_map_apply, map_map, eval_map]
   rfl
 
-def ringEquivPolynomial : ht.isRing_pow_omega0.toSubring ≃+* ht.toIsField.toSubfield[X] :=
-  letI := ht.algebraPowOmega0
+def ringEquivPolynomial : ht.isRing_opow_omega0.toSubring ≃+* ht.toIsField.toSubfield[X] :=
+  letI := ht.algebraOpowOmega0
   ht.algEquivPolynomial.toRingEquiv
 
 theorem coe_ringEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
@@ -122,14 +122,14 @@ theorem coe_ringEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
   ht.coe_algEquivPolynomial_symm_apply p
 
 private theorem subring_aux {x : Nimber} (hx : IsRing (∗(val t ^ (ω * (1 + val x))))) :
-    ht.isRing_pow_omega0.toSubring ≤ hx.toSubring :=
+    ht.isRing_opow_omega0.toSubring ≤ hx.toSubring :=
   Set.Iio_subset_Iio (of.monotone (Ordinal.opow_le_opow_right
     (val_zero.symm.trans_lt (val.strictMono ht.zero_lt)) (by simp)))
 
 private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
     ∗(val t ^ (ω * (1 + val x) + n)) = ((t - x) ^ (n + 1))⁻¹ ∧
       ∃ rx : IsRing (∗(val t ^ (ω * (1 + val x)))),
-        letI : Algebra ht.isRing_pow_omega0.toSubring rx.toSubring :=
+        letI : Algebra ht.isRing_opow_omega0.toSubring rx.toSubring :=
           (Subring.inclusion (ht.subring_aux rx)).toAlgebra
         IsLocalization (Submonoid.comap ht.ringEquivPolynomial.toMonoidHom
           (Submonoid.closure ((fun u => X - C u) '' Set.Iio ⟨x, hx⟩)))
@@ -174,10 +174,10 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
     obtain ⟨-, hrc, hll⟩ := ih c 0 (lt_of_le_of_ne
       (hco.trans' (Prod.Lex.toLex_le_toLex.2 (.inr ⟨rfl, Nat.zero_le o⟩)))
       (fun h => hq congr((ofLex $h).1) congr((ofLex $(h.symm)).2))) (hcx.trans_lt hx)
-    let alg : Algebra ht.isRing_pow_omega0.toSubring hrc.toSubring :=
+    let alg : Algebra ht.isRing_opow_omega0.toSubring hrc.toSubring :=
       (Subring.inclusion (ht.subring_aux hrc)).toAlgebra
-    have algmap (x : ht.isRing_pow_omega0.toSubring) :
-        algebraMap ht.isRing_pow_omega0.toSubring hrc.toSubring x = ⟨x, _⟩ := rfl
+    have algmap (x : ht.isRing_opow_omega0.toSubring) :
+        algebraMap ht.isRing_opow_omega0.toSubring hrc.toSubring x = ⟨x, _⟩ := rfl
     have hss : SetLike.coe (f.filter (· < ω * (1 + val c))).support ⊆
         Set.Iio (ω * (1 + val c)) := by
       rw [Finsupp.support_filter, Finset.coe_filter]
@@ -197,7 +197,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
       · -- TODO: remove `RingEquiv.toMonoidHom` and friends
         change m.prod = ht.ringEquivPolynomial d at hmd
         rw [← RingEquiv.symm_apply_eq, map_multiset_prod] at hmd
-        rw [Multiset.map_pmap, ← ht.isRing_pow_omega0.toSubring.subtype_apply, ← hmd,
+        rw [Multiset.map_pmap, ← ht.isRing_opow_omega0.toSubring.subtype_apply, ← hmd,
           map_multiset_prod, Multiset.map_map, ← Multiset.pmap_eq_map (· ∈ m) _ m fun _ h => h]
         refine congr((m.pmap (fun x h => $(?_)) fun _ h => h).prod)
         rw [Subring.coe_subtype, Function.comp_apply, coe_ringEquivPolynomial_symm_apply]
@@ -211,9 +211,9 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
       exact ne_of_gt ((hm k hkm).trans (hcx.trans_lt hx)) (sub_eq_zero.1 hk)
     set_option backward.isDefEq.respectTransparency false in
       simp_rw [algmap, Subtype.ext_iff, Subring.coe_mul, ← eq_div_iff_mul_eq hd0] at ndeq
-    let algf := ht.algebraPowOmega0
-    have towerf := ht.algebraPowOmega0ScalarTower
-    let tt : ht.isRing_pow_omega0.toSubring :=
+    let algf := ht.algebraOpowOmega0
+    have towerf := ht.algebraOpowOmega0ScalarTower
+    let tt : ht.isRing_opow_omega0.toSubring :=
       ⟨t, val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)⟩
     have htc : t - c ≠ 0 := sub_ne_zero.2 (ne_of_gt (hcx.trans_lt hx))
     refine ⟨m.map ht.toIsField.toSubfield.subtype, fun i hi => ?_, _,
@@ -372,7 +372,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
       obtain hx | ⟨c, hcx, hyc⟩ := normal1.isBot_or_exists_le_succ_of_lt hy
       · rw [isBot_iff_eq_bot, bot_eq_zero] at hx
         rw [hx, val_zero, add_zero, mul_one] at hy hz ⊢
-        exact ht.isRing_pow_omega0.mul_lt hy hz
+        exact ht.isRing_opow_omega0.mul_lt hy hz
       have normal2 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val c) + x)) :=
         of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp (isNormal_add_right _))
       rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
@@ -388,10 +388,10 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
       refine le_trans ?_ (mul_le_mul_right hcx ω)
       rw [mul_add_one, add_le_add_iff_left]
       exact (nat_lt_omega0 (d.succ + d.succ)).le
-    let alg : Algebra ht.isRing_pow_omega0.toSubring hrr.toSubring :=
+    let alg : Algebra ht.isRing_opow_omega0.toSubring hrr.toSubring :=
       (Subring.inclusion (ht.subring_aux hrr)).toAlgebra
-    have algMap (x : ht.isRing_pow_omega0.toSubring) :
-        algebraMap ht.isRing_pow_omega0.toSubring hrr.toSubring x = ⟨x, _⟩ := rfl
+    have algMap (x : ht.isRing_opow_omega0.toSubring) :
+        algebraMap ht.isRing_opow_omega0.toSubring hrr.toSubring x = ⟨x, _⟩ := rfl
     have hll : IsLocalization ((Submonoid.closure ((fun u ↦ X - C u) '' Set.Iio ⟨x, hx⟩)).comap
         ht.ringEquivPolynomial.toMonoidHom) hrr.toSubring := by
       refine { map_units := ?_, surj y := ?_, exists_of_eq h := ⟨1, by simpa [algMap] using h⟩ }
@@ -433,7 +433,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
         rw [← natCast_succ] at hyd
         obtain ⟨m, hmc, p, hp, hpm⟩ := surj c d.succ
           (Prod.Lex.toLex_le_toLex.2 (.inl hcx)) y hyd (Not.elim hcx.ne)
-        have hti i (hi : i ≤ c) : t - i ∈ ht.isRing_pow_omega0.toSubring := by
+        have hti i (hi : i ≤ c) : t - i ∈ ht.isRing_opow_omega0.toSubring := by
           apply sub_mem
           · rw [mem_toSubring_iff]
             exact val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)
@@ -450,7 +450,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
             exact hti i (hmc i hi).le
           · apply pow_mem
             exact hti c le_rfl
-        · rw [← Submonoid.mem_map_iff_mem ht.isRing_pow_omega0.toSubring.subtype_injective]
+        · rw [← Submonoid.mem_map_iff_mem ht.isRing_opow_omega0.toSubring.subtype_injective]
           simp only [Subring.subtype_apply]
           refine letI rhs := _; (?_ : _ ∈ zeta% rhs)
           suffices h : ∀ i ≤ c, t - i ∈ zeta% rhs by
@@ -462,7 +462,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
               exact h i (hmc i hi).le
             · exact pow_mem (h c le_rfl) d.succ
           intro i hi
-          change ht.isRing_pow_omega0.toSubring.subtype ⟨t - i, hti i hi⟩ ∈ _
+          change ht.isRing_opow_omega0.toSubring.subtype ⟨t - i, hti i hi⟩ ∈ _
           apply Submonoid.mem_map_of_mem
           rw [Submonoid.mem_comap]
           apply Submonoid.mem_closure_of_mem
@@ -484,7 +484,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
             exact sub_ne_zero.2 (ne_of_gt (hcx.trans hx))
     refine ⟨?_, hrr, hll⟩
     have hy {y : Nimber} (hy : y < ∗(val t ^ (ω * (1 + val x)))) : (t - x) * y ≠ 1 := by
-      let m : ht.isRing_pow_omega0.toSubring →+* ht.toIsField.toSubfield :=
+      let m : ht.isRing_opow_omega0.toSubring →+* ht.toIsField.toSubfield :=
         RingHom.comp (evalRingHom ⟨x, hx⟩) ht.ringEquivPolynomial.toRingHom
       let ml := hll.lift (g := m) <| by
         rw [Subtype.forall]
@@ -507,7 +507,7 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
           ht.ringEquivPolynomial.apply_symm_apply, coe_evalRingHom, eval_sub, eval_X, eval_C,
           sub_ne_zero]
         exact ne_of_gt hy
-      let tt : ht.isRing_pow_omega0.toSubring :=
+      let tt : ht.isRing_opow_omega0.toSubring :=
         ⟨t, val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)⟩
       change ((algebraMap _ _ (tt - ⟨x, hx.trans tt.2⟩) * ⟨y, hy⟩ : hrr.toSubring) : Nimber) ≠ 1
       rw [← Subring.coe_subtype, map_ne_one_iff _ hrr.toSubring.subtype_injective]
