@@ -34,6 +34,7 @@ import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 import CombinatorialGames.Nimber.SimplestExtension.Basic
 import CombinatorialGames.Nimber.SimplestExtension.Closure
 import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+import CombinatorialGames.Nimber.SmallDegree.Transcendental
 import CombinatorialGames.SignExpansion.Basic
 import CombinatorialGames.Surreal.Basic
 import CombinatorialGames.Surreal.Birthday.Basic
