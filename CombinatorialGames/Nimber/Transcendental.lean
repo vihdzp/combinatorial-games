@@ -230,28 +230,6 @@ private theorem next_field_aux {x : Nimber} (hx : x < t) (n : ℕ) :
     rw [hinv, mul_inv_eq_iff_eq_mul₀ (pow_ne_zero _ htc),
       eq_inv_mul_iff_mul_eq₀ (pow_ne_zero _ htc), ← pow_add, add_right_comm,
       Nat.add_sub_of_le (Nat.le_sub_one_of_lt hoi), Nat.sub_add_cancel (Nat.one_le_of_lt hoi)]
-  -- have surj' (y : Nimber) (hy : y < ∗(val t ^ (ω * (1 + val x)))) :
-  --     ∃ m : Multiset Nimber, (∀ i ∈ m, i < x) ∧
-  --     ∃ p : Nimber, p < ∗(val t ^ ω) ∧ p / (m.map fun c => t - c).prod = y := by
-  --   obtain hx | ⟨c, hcx, hyc⟩ := normal.isBot_or_exists_le_succ_of_lt hy
-  --   · rw [isBot_iff_eq_bot] at hx
-  --     exact ⟨0, by simp, y, by simpa [hx] using hy, by simp⟩
-  --   · rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
-  --     have normal2 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val c) + x)) :=
-  --       of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp (isNormal_add_right _))
-  --     obtain ⟨n1, hn1, hyn⟩ := (normal2.isBot_or_exists_le_succ_of_lt hyc).resolve_left (by simp)
-  --     obtain ⟨n1, rfl⟩ := lt_omega0.1 hn1
-  --     rw [← natCast_succ] at hyn
-  --     obtain ⟨m, hm, p, hp, he⟩ := surj c hcx n1.succ y hyn
-  --     refine ⟨m + .replicate n1.succ c, fun i hi => ?_, p, hp, Eq.trans ?_ he⟩
-  --     · rw [Multiset.mem_add, Multiset.mem_replicate] at hi
-  --       obtain hi | ⟨-, hi⟩ := hi
-  --       · exact (hm i hi).trans hcx
-  --       · exact hi.trans_lt hcx
-  --     · rw [Multiset.map_add, Multiset.prod_add, Multiset.map_replicate, Multiset.prod_replicate]
-    -- refine
-    --   { toIsGroup := ht.toIsField.toIsGroup.opow _, mul_lt u v hu hv := ?_
-    --     ne_one := by simp [Ordinal.opow_eq_one_iff, ht.ne_one] }
   have hr (n1 n2 : Nat) (c : Nimber) (hcn : toLex (c, n1 + n2) ≤ toLex (x, n)) (u v : Nimber)
       (hu : u < ∗(val t ^ (ω * (1 + val c) + n1)))
       (hv : v < ∗(val t ^ (ω * (1 + val c) + n2))) (hq : c = x → n ≠ 0) :

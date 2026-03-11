@@ -595,14 +595,6 @@ theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
--- theorem IsField.span_opow {x : Nimber} (h : IsField x) {o : Ordinal} :
---     Submodule.span h.toSubfield ((fun o => ∗(x.val ^ o)) '' Iio o) = Iio (∗x.val ^ o) :=
---   sorry
-
--- noncomputable def IsField.opow_basis {x : Nimber} (h : IsField x) :
---     Module.Basis Ordinal h.toSubfield Nimber :=
---   .mk (v := fun o ↦ ∗(x.val ^ o)) sorry sorry
-
 theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
     {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
     y * z < ∗(val x ^ o) :=
