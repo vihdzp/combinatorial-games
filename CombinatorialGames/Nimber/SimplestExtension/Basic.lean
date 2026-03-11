@@ -367,19 +367,24 @@ protected theorem IsRing.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i,
     (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) : IsRing (⨆ i, f i) :=
   .sSup (by simpa) (range_nonempty f) bdd
 
+theorem IsGroup.mul_le_of_forall_lt (h : IsGroup x) {y z : Nimber}
+    (hyl : ∀ l < z, y * l < x) (hrz : ∀ r < y, r * z < x)
+    (hrl : ∀ r < y, ∀ l < z, r * l < x) : y * z ≤ x :=
+  mul_le_of_forall_ne fun a ha b hb hx =>
+    hx.not_lt (h.add_lt (h.add_lt (hrz a ha) (hyl b hb)) (hrl a ha b hb))
+
 /-- The second **simplest extension theorem**: if `x ≠ 1` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
 theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne : x ≠ 1) :
     ∃ y < x, ∃ z < x, y * z = x := by
-  simp_rw [isRing_iff, and_iff_right h', and_iff_left ne, not_forall, not_lt] at h
-  obtain ⟨y, z, hy, hz, hx⟩ := h
-  obtain ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, H⟩ := exists_minimal_of_wellFoundedLT
-    (fun p : Iio x × Iio x ↦ x ≤ p.1 * p.2) ⟨⟨⟨y, hy⟩, ⟨z, hz⟩⟩, hx⟩
-  refine ⟨y, hy, z, hz, H.1.antisymm' (mul_le_of_forall_ne ?_)⟩
-  refine fun a ha b hb hx ↦ hx.not_lt (h'.add_lt (h'.add_lt ?_ ?_) ?_) <;> by_contra! hx
-  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨z, hz⟩)) hx (Prod.lt_of_lt_of_le ha le_rfl)
-  · exact H.not_lt (y := (⟨y, hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_le_of_lt le_rfl hb)
-  · exact H.not_lt (y := (⟨a, ha.trans hy⟩, ⟨b, hb.trans hz⟩)) hx (Prod.lt_of_lt_of_le ha hb.le)
+  contrapose! h
+  refine { toIsGroup := h', ne_one := ne, mul_lt a b ha hb := ?_ }
+  induction a using WellFoundedLT.induction generalizing b with | ind a iha
+  induction b using WellFoundedLT.induction with | ind b ihb
+  refine lt_of_le_of_ne (h'.mul_le_of_forall_lt ?_ ?_ ?_) (h a ha b hb)
+  · exact fun l hl => ihb l hl (hl.trans hb)
+  · exact fun r hr => iha r hr b (hr.trans ha) hb
+  · exact fun r hr l hl => iha r hr l (hr.trans ha) (hl.trans hb)
 
 /-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
@@ -598,10 +603,10 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 --     Module.Basis Ordinal h.toSubfield Nimber :=
 --   .mk (v := fun o ↦ ∗(x.val ^ o)) sorry sorry
 
--- theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
---     {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
---     y * z < ∗(val x ^ o) :=
---   sorry
+theorem IsField.mul_lt_opow_of_left_lt {x : Nimber} (h : IsField x)
+    {o : Ordinal} {y z : Nimber} (hy : y < x) (hz : z < ∗(val x ^ o)) :
+    y * z < ∗(val x ^ o) :=
+  sorry
 
 theorem IsField.exists_linearCombination_of_lt {x : Nimber} (h : IsField x)
     {o : Ordinal} {y : Nimber} (hy : y < ∗(val x ^ o)) :
