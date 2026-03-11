@@ -12,7 +12,6 @@ public import Mathlib.SetTheory.Ordinal.Exponential
 
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
-import Mathlib.LinearAlgebra.Basis.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
