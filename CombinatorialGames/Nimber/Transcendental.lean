@@ -3,12 +3,25 @@ Copyright (c) 2026 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+
+import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.Algebra.Polynomial.PartialFractions
-import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+
+/-!
+The first subfield coming after an algebraically closed nimber field `t` is
+`∗(val t ^ (ω * (1 + val t)))`. It is a transcendental extension of `t` of transcendence degree one,
+and is isomorphic to the rational functions over `t` in one variable.
+The intermediate rings are of the form `∗(val t ^ (ω * (1 + val c)))` for `c < t`,
+and the representation of a rational function over `t` as a nimber in `∗(val t ^ (ω * (1 + val t)))`
+reflects its partial fraction decomposition.
+-/
 
 universe u
 
-theorem Ordinal.opow_eq_one_iff {a b : Ordinal} : a ^ b = 1 ↔ a = 1 ∨ b = 0 := by
+public theorem Ordinal.opow_eq_one_iff {a b : Ordinal} : a ^ b = 1 ↔ a = 1 ∨ b = 0 := by
   refine ⟨fun h => ?_, by simp +contextual [or_imp]⟩
   contrapose! h
   by_cases ha : a = 0
@@ -18,17 +31,18 @@ theorem Ordinal.opow_eq_one_iff {a b : Ordinal} : a ^ b = 1 ↔ a = 1 ∨ b = 0 
   rw [← opow_zero a, opow_lt_opow_iff_right h1a]
   exact pos_of_ne_zero h.2
 
-theorem Ordinal.exists_omega0_mul_add_natCast (o : Ordinal) :
+public theorem Ordinal.exists_omega0_mul_add_natCast (o : Ordinal) :
     ∃ a b, omega0 * a + Nat.cast b = o := by
   obtain ⟨b, hb⟩ := lt_omega0.1 (mod_lt o omega0_ne_zero)
   refine ⟨o / omega0, b, ?_⟩
   rw [← hb, div_add_mod]
 
-theorem Ordinal.one_le_of_lt {a b : Ordinal} (hab : a < b) : 1 ≤ b := by
+public theorem Ordinal.one_le_of_lt {a b : Ordinal} (hab : a < b) : 1 ≤ b := by
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.succ_le_iff]
   exact (zero_le a).trans_lt hab
 
-theorem Order.IsNormal.isBot_or_exists_le_succ_of_lt {α β : Type*} [LinearOrder α] [SuccOrder α]
+public theorem Order.IsNormal.isBot_or_exists_le_succ_of_lt
+    {α β : Type*} [LinearOrder α] [SuccOrder α]
     [LinearOrder β] {f : α → β} (hf : IsNormal f) {a : α} {b : β} (h : b < f a) :
     IsBot a ∨ ∃ c < a, b < f (succ c) := by
   cases a using Order.isSuccLimitRecOn with
@@ -38,7 +52,7 @@ theorem Order.IsNormal.isBot_or_exists_le_succ_of_lt {α β : Type*} [LinearOrde
     obtain ⟨c, hca, hc⟩ := (hf.lt_iff_exists_lt ha).1 h
     exact .inr ⟨c, hca, hc.trans_le (hf.monotone (le_succ c))⟩
 
-noncomputable section
+public noncomputable section
 
 open Ordinal Polynomial
 namespace Nimber.IsAlgClosed
