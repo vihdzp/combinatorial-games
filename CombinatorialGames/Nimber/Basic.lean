@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.NatOrdinal.Basic
 public meta import CombinatorialGames.Tactic.Register
 public import Mathlib.SetTheory.Ordinal.Family
 
@@ -65,6 +66,9 @@ theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 
 
 theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
+theorem eq_natCast_of_le_natCast {a : Nimber} {b : ℕ} (h : a ≤ of b) : ∃ c : ℕ, a = of c :=
+  Ordinal.eq_natCast_of_le_natCast h
+
 /-! ### Nimber addition -/
 
 variable {a b c : Nimber.{u}}
@@ -111,7 +115,7 @@ private theorem add_ne_of_lt (a b : Nimber) :
   rw [← add_def] at H
   simpa using H
 
-protected theorem add_comm (a b : Nimber) : a + b = b + a := by
+private theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
   congr! 7 <;>
@@ -156,7 +160,7 @@ theorem add_ne_zero_iff : a + b ≠ 0 ↔ a ≠ b :=
 theorem add_self (a : Nimber) : a + a = 0 :=
   add_eq_zero.2 rfl
 
-protected theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
+private theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
   apply le_antisymm <;>
     apply add_le_of_forall_ne <;>
     intro x hx <;>
@@ -170,7 +174,7 @@ protected theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
   all_goals apply ne_of_lt; assumption
 termination_by (a, b, c)
 
-protected theorem add_zero (a : Nimber) : a + 0 = a := by
+private theorem add_zero (a : Nimber) : a + 0 = a := by
   apply le_antisymm
   · apply add_le_of_forall_ne
     · intro a' ha
@@ -185,9 +189,6 @@ protected theorem add_zero (a : Nimber) : a + 0 = a := by
     exact this.not_lt h
 termination_by a
 
-protected theorem zero_add (a : Nimber) : 0 + a = a := by
-  rw [Nimber.add_comm, Nimber.add_zero]
-
 instance : Neg Nimber :=
   ⟨id⟩
 
@@ -196,13 +197,13 @@ protected theorem neg_eq (a : Nimber) : -a = a :=
   rfl
 
 instance : AddCommGroupWithOne Nimber where
-  add_assoc := Nimber.add_assoc
-  add_zero := Nimber.add_zero
-  zero_add := Nimber.zero_add
+  add_assoc := private add_assoc
+  add_zero := private add_zero
+  zero_add _ := by rw [add_comm, add_zero]
   nsmul := nsmulRec
   zsmul := zsmulRec
   neg_add_cancel := add_self
-  add_comm := Nimber.add_comm
+  add_comm := private add_comm
 
 -- #34622
 section Mathlib

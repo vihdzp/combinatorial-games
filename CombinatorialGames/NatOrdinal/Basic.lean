@@ -172,6 +172,20 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
+@[simp, norm_cast] theorem natCast_le_of_iff {a : ℕ} {b : Ordinal} : a ≤ of b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_of_iff {a : ℕ} {b : Ordinal} : a < of b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_of_iff {a : ℕ} {b : Ordinal} : a = of b ↔ a = b := .rfl
+@[simp, norm_cast] theorem natCast_le_val_iff {a : ℕ} {b : NatOrdinal} : a ≤ val b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_val_iff {a : ℕ} {b : NatOrdinal} : a < val b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_val_iff {a : ℕ} {b : NatOrdinal} : a = val b ↔ a = b := .rfl
+
+@[simp, norm_cast] theorem of_le_natCast_iff {a : Ordinal} {b : ℕ} : of a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem of_lt_natCast_iff {a : Ordinal} {b : ℕ} : of a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem of_eq_natCast_iff {a : Ordinal} {b : ℕ} : of a = b ↔ a = b := .rfl
+@[simp, norm_cast] theorem val_le_natCast_iff {a : NatOrdinal} {b : ℕ} : val a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem val_lt_natCast_iff {a : NatOrdinal} {b : ℕ} : val a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem val_eq_natCast_iff {a : NatOrdinal} {b : ℕ} : val a = b ↔ a = b := .rfl
+
 @[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
 
 @[simp]
@@ -193,6 +207,9 @@ theorem lt_omega0 {o : NatOrdinal} : o < of .omega0 ↔ ∃ n : ℕ, o = n :=
 
 theorem natCast_lt_omega0 (n : ℕ) : n < of .omega0 :=
   Ordinal.natCast_lt_omega0 n
+
+theorem eq_natCast_of_le_natCast {a : NatOrdinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
+  Ordinal.eq_natCast_of_le_natCast h
 
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
