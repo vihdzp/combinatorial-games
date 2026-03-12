@@ -576,8 +576,8 @@ theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
 
-/-- If `x ≤ y` are fields, then `y` is an ordinal power of `x`. -/
-theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsField y) (h : x ≤ y) :
+/-- If `x` is a field and `y` is a ring with `x ≤ y`, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsRing y) (h : x ≤ y) :
     ∗(x.val ^ log x.val y.val) = y := by
   apply le_antisymm
   · exact opow_log_le_self _ hy.ne_zero
