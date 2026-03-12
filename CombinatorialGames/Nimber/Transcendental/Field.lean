@@ -70,23 +70,23 @@ theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) := by
 
 -- not an instance because `ht` is not inferrable
 @[expose]
-abbrev algebraOpowOmega0 : Algebra ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring :=
+abbrev algebraOpowOmega0 : Algebra ht.toSubfield ht.isRing_opow_omega0.toSubring :=
   (Subring.inclusion (Set.Iio_subset_Iio (val_le_iff.1 (left_le_opow _ omega0_pos)))).toAlgebra
 
 theorem algebraOpowOmega0ScalarTower :
     letI := ht.algebraOpowOmega0
-    IsScalarTower ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring Nimber :=
+    IsScalarTower ht.toSubfield ht.isRing_opow_omega0.toSubring Nimber :=
   @IsScalarTower.mk _ _ _ (_) _ _ fun _ _ _ => mul_assoc _ _ _
 
 def algEquivPolynomial :
     letI := ht.algebraOpowOmega0
-    ht.isRing_opow_omega0.toSubring ≃ₐ[ht.toIsField.toSubfield]
-    ht.toIsField.toSubfield[X] :=
+    ht.isRing_opow_omega0.toSubring ≃ₐ[ht.toSubfield]
+    ht.toSubfield[X] :=
   letI := ht.algebraOpowOmega0
   .symm <| .ofBijective (aeval
       ⟨t, val_lt_iff.1 (left_lt_opow ht.one_lt one_lt_omega0)⟩) <| by
-    have algMap (x : ht.toIsField.toSubfield) :
-        algebraMap ht.toIsField.toSubfield ht.isRing_opow_omega0.toSubring x = ⟨x, _⟩ := rfl
+    have algMap (x : ht.toSubfield) :
+        algebraMap ht.toSubfield ht.isRing_opow_omega0.toSubring x = ⟨x, _⟩ := rfl
     refine ⟨fun p q hpq => ?_, ?_⟩
     · rw [aeval_def, aeval_def, eval₂_eq_eval_map, eval₂_eq_eval_map,
         ← ht.isRing_opow_omega0.toSubring.subtype_injective.eq_iff,
@@ -99,15 +99,15 @@ def algEquivPolynomial :
     · intro y
       obtain ⟨y, hy⟩ := y
       obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
-      refine ⟨ht.toIsField.embed py hyd, ?_⟩
+      refine ⟨ht.embed py hyd, ?_⟩
       rw [aeval_def, eval₂_eq_eval_map, ← ht.isRing_opow_omega0.toSubring.subtype_injective.eq_iff,
         ← eval_map_apply, map_map]
-      change eval t (map ht.toIsField.toSubfield.subtype (ht.toIsField.embed py hyd)) = oeval t py
-      rw [ht.toIsField.map_embed, ht.eval_eq_of_lt hyd]
+      change eval t (map ht.toSubfield.subtype (ht.embed py hyd)) = oeval t py
+      rw [ht.map_embed, ht.eval_eq_of_lt hyd]
 
-theorem coe_algEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
+theorem coe_algEquivPolynomial_symm_apply (p : ht.toSubfield[X]) :
     letI := ht.algebraOpowOmega0
-    (ht.algEquivPolynomial.symm p : Nimber) = p.eval₂ ht.toIsField.toSubfield.subtype t := by
+    (ht.algEquivPolynomial.symm p : Nimber) = p.eval₂ ht.toSubfield.subtype t := by
   unfold algEquivPolynomial
   rw [← ht.isRing_opow_omega0.toSubring.subtype_apply,
     @AlgEquiv.symm_symm, @AlgEquiv.ofBijective_apply,
@@ -115,12 +115,12 @@ theorem coe_algEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
   rfl
 
 @[expose]
-def ringEquivPolynomial : ht.isRing_opow_omega0.toSubring ≃+* ht.toIsField.toSubfield[X] :=
+def ringEquivPolynomial : ht.isRing_opow_omega0.toSubring ≃+* ht.toSubfield[X] :=
   letI := ht.algebraOpowOmega0
   ht.algEquivPolynomial.toRingEquiv
 
-theorem coe_ringEquivPolynomial_symm_apply (p : ht.toIsField.toSubfield[X]) :
-    (ht.ringEquivPolynomial.symm p : Nimber) = p.eval₂ ht.toIsField.toSubfield.subtype t :=
+theorem coe_ringEquivPolynomial_symm_apply (p : ht.toSubfield[X]) :
+    (ht.ringEquivPolynomial.symm p : Nimber) = p.eval₂ ht.toSubfield.subtype t :=
   ht.coe_algEquivPolynomial_symm_apply p
 
 private theorem subring_aux {x : Nimber} (hx : IsRing (∗(val t ^ (ω * (1 + val x))))) :
@@ -146,8 +146,8 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       ∃ m : Multiset Nimber, (∀ i ∈ m, i < c) ∧
       ∃ p : Nimber, p < ∗(val t ^ ω) ∧ p / ((m.map fun c => t - c).prod * (t - c) ^ o) = y := by
     have hcx : c ≤ x := (Prod.Lex.toLex_le_toLex'.1 hco).1
-    obtain ⟨f, hs, hf⟩ := ht.toIsField.exists_linearCombination_of_lt hyc
-    obtain ⟨e, hes, he⟩ : ∃ s : Nat →₀ ht.toIsField.toSubfield, s.support ⊆ Finset.Iio o ∧
+    obtain ⟨f, hs, hf⟩ := ht.exists_linearCombination_of_lt hyc
+    obtain ⟨e, hes, he⟩ : ∃ s : Nat →₀ ht.toSubfield, s.support ⊆ Finset.Iio o ∧
         (f.filter (¬· < ω * (1 + val c))).sum (fun i a => a • of (val t ^ i)) =
         s.sum (fun i a => a • of (val t ^ (ω * (1 + val c) + i))) := by
       have hl (i : Ordinal) : ∃ l : ℕ,
@@ -186,8 +186,8 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       intro i hi
       exact hi.2
     set_option backward.isDefEq.respectTransparency false in
-      obtain ⟨⟨u, ⟨d, hd⟩⟩, ndeq⟩ := hll.surj _ ⟨_, ht.toIsField.linearCombination_lt hss⟩
-    obtain ⟨m, hm, hmd⟩ : ∃ m : Multiset ht.toIsField.toSubfield,
+      obtain ⟨⟨u, ⟨d, hd⟩⟩, ndeq⟩ := hll.surj _ ⟨_, ht.linearCombination_lt hss⟩
+    obtain ⟨m, hm, hmd⟩ : ∃ m : Multiset ht.toSubfield,
         (∀ i ∈ m, i < c) ∧ (m.map fun x => t - x.1).prod = d := by
       obtain ⟨m, hm, hmd⟩ := Submonoid.exists_multiset_of_mem_closure hd
       simp_rw [Set.mem_image, Set.mem_setOf] at hm
@@ -203,8 +203,8 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
           map_multiset_prod, Multiset.map_map, ← Multiset.pmap_eq_map (· ∈ m) _ m fun _ h => h]
         refine congr((m.pmap (fun x h => $(?_)) fun _ h => h).prod)
         rw [Subring.coe_subtype, Function.comp_apply, coe_ringEquivPolynomial_symm_apply]
-        rw (occs := [1]) [← eval₂_X ht.toIsField.toSubfield.subtype t]
-        rw [← Subfield.coe_subtype, ← eval₂_C ht.toIsField.toSubfield.subtype t,
+        rw (occs := [1]) [← eval₂_X ht.toSubfield.subtype t]
+        rw [← Subfield.coe_subtype, ← eval₂_C ht.toSubfield.subtype t,
           ← eval₂_sub, hpy x h]
     have hd0 : (d : Nimber) ≠ 0 := by
       refine hmd.symm.trans_ne (Multiset.prod_ne_zero fun h => ?_)
@@ -218,10 +218,10 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     have htt : t < of (val t ^ ω) :=
       val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)
     let tt : ht.isRing_opow_omega0.toSubring := ⟨t, htt⟩
-    refine ⟨m.map ht.toIsField.toSubfield.subtype, fun i hi => ?_, _,
+    refine ⟨m.map ht.toSubfield.subtype, fun i hi => ?_, _,
       (u * (tt - ⟨c, ((hcx.trans hx).trans_lt htt)⟩) ^ o +
         (m.map (fun i => tt - ⟨i.1, Set.Iio_subset_Iio tt.2.le i.2⟩)).prod *
-        (e.linearCombination ht.toIsField.toSubfield fun i =>
+        (e.linearCombination ht.toSubfield fun i =>
           (tt - ⟨c, (hcx.trans hx).trans_lt htt⟩) ^ (o - 1 - i))).2, ?_⟩
     · rw [Multiset.mem_map] at hi
       obtain ⟨i, hi, rfl⟩ := hi
@@ -237,9 +237,9 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
         apply pow_ne_zero
         exact sub_ne_zero.2 fun h => Nat.add_one_ne_zero _ (hqq h.symm)
     rw [hmd, ← div_add_div _ _ hd0 htco, ← ndeq, ← Algebra.algebraMap_ofSubsemiring_apply,
-      ← towerf.toAlgHom_apply ht.toIsField.toSubfield, ← AlgHom.toLinearMap_apply,
+      ← towerf.toAlgHom_apply ht.toSubfield, ← AlgHom.toLinearMap_apply,
       Finsupp.apply_linearCombination, div_eq_mul_inv,
-      ← LinearMap.mulRight_apply ht.toIsField.toSubfield _⁻¹]
+      ← LinearMap.mulRight_apply ht.toSubfield _⁻¹]
     set_option backward.isDefEq.respectTransparency false in rw [Finsupp.apply_linearCombination]
     rw [← hf, add_right_inj, Finsupp.linearCombination_apply]
     refine Finsupp.sum_congr fun i hi => congrArg (e i • ·) ?_
@@ -269,8 +269,8 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     obtain ⟨mu, hmu, pu, hpu, heu⟩ := surj c n1 hcn1 u hu hq fun h => (hqq h).1
     obtain ⟨mv, hmv, pv, hpv, hev⟩ := surj c n2 hcn2 v hv hq fun h => (hqq h).2
     let alg := Algebra.compHom Nimber ht.ringEquivPolynomial.symm.toRingHom
-    have algMap : algebraMap ht.toIsField.toSubfield[X] Nimber =
-        eval₂RingHom ht.toIsField.toSubfield.subtype t := by
+    have algMap : algebraMap ht.toSubfield[X] Nimber =
+        eval₂RingHom ht.toSubfield.subtype t := by
       refine DFunLike.ext _ _ fun i => ?_
       rw [coe_eval₂RingHom, ← ht.coe_ringEquivPolynomial_symm_apply]
       rfl
@@ -292,7 +292,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       · refine hi.trans_lt (lt_of_le_of_ne (hcx.trans hx) fun hct => ?_)
         exact hn (Nat.add_eq_zero_iff.mpr (hqq hct))
       · exact (hmi i hi).trans_le (hcx.trans hx)
-    let g i : ht.toIsField.toSubfield[X] := X - C (if h : i < t then ⟨i, h⟩ else 0)
+    let g i : ht.toSubfield[X] := X - C (if h : i < t then ⟨i, h⟩ else 0)
     have hg i : (g i).Monic := by unfold g; split <;> monicity
     have hgg : (SetLike.coe s).Pairwise fun a b => IsCoprime (g a) (g b) := by
       unfold g
@@ -358,7 +358,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       rw [← add_zero (ω * (1 + val i)), ← Nat.cast_zero,
         (ih i 0 (hi0 i (hsc i hi)) (hst i hi).le).1 (hst i hi), zero_add, pow_one, inv_pow,
         ← (ih i j (hlx.trans_le hcn) (hst i hi).le).1 (hst i hi)]
-      apply ht.toIsField.mul_lt_opow_of_left_lt
+      apply ht.mul_lt_opow_of_left_lt
       · exact b.2
       refine of.strictMono ((opow_lt_opow_iff_right (one_lt_val.2 ht.one_lt)).2 ?_)
       rw [mul_one_add, mul_one_add, add_assoc, add_assoc, add_lt_add_iff_left]
@@ -505,7 +505,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
             exact sub_ne_zero.2 (ne_of_gt (hcx.trans_le hx))
     refine ⟨fun hx => ?_, hrr, hll⟩
     have hy {y : Nimber} (hy : y < ∗(val t ^ (ω * (1 + val x)))) : (t - x) * y ≠ 1 := by
-      let m : ht.isRing_opow_omega0.toSubring →+* ht.toIsField.toSubfield :=
+      let m : ht.isRing_opow_omega0.toSubring →+* ht.toSubfield :=
         RingHom.comp (evalRingHom ⟨x, hx⟩) ht.ringEquivPolynomial.toRingHom
       let ml := hll.lift (g := m) <| by
         rw [Subtype.forall]
@@ -561,7 +561,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     rw [CharTwo.sub_eq_add, ← ht.add_eq_of_lt hx, ← val_lt_iff] at h
     obtain hi | ⟨d, hd, hi⟩ := lt_add_iff_lt_left_or_exists_lt.1 h
     · rw [val.lt_iff_lt] at hi
-      apply ht.toIsField.inv_lt at hi
+      apply ht.inv_lt at hi
       apply hi.not_ge
       rw [inv_inv, ← val_le_iff]
       exact left_le_opow (val t) (by simp [pos_iff_ne_zero])
@@ -651,7 +651,7 @@ theorem isField_opow_omega0_mul_one_add_self :
       rw [← u2eq] at hu2 ⊢
       clear u2eq
       replace hu2 : u2 ∈ Submonoid.closure
-        ((fun u : ht.toIsField.toSubfield => X - C u) '' {u | u.1 < t}) := by simpa using hu2
+        ((fun u : ht.toSubfield => X - C u) '' {u | u.1 < t}) := by simpa using hu2
       induction hu2 using Submonoid.closure_induction with
       | one => simp
       | mem x h =>
@@ -675,26 +675,26 @@ theorem isField_opow_omega0_mul_one_add_self :
       obtain ⟨x, rfl⟩ := hn
       rw [ht.coe_ringEquivPolynomial_symm_apply, eval₂_C]
       trans t
-      · exact ht.toIsField.inv_lt x.2
+      · exact ht.inv_lt x.2
       · exact val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt)
           (one_lt_omega0.trans_le (by simp)))
     | succ n ih =>
-      have hd : (p.map ht.toIsField.toSubfield.subtype).degree ≠ 0 := by
+      have hd : (p.map ht.toSubfield.subtype).degree ≠ 0 := by
         rw [Polynomial.degree_map]
         exact p.degree_ne_of_natDegree_ne (hn.trans_ne (Nat.add_one_ne_zero n))
-      have hc k : (p.map ht.toIsField.toSubfield.subtype).coeff k < t := by
+      have hc k : (p.map ht.toSubfield.subtype).coeff k < t := by
         rw [Polynomial.coeff_map]
         exact (p.coeff k).2
       obtain ⟨rt, hrl, htr⟩ := ht.exists_root hd hc
-      change (p.map ht.toIsField.toSubfield.subtype).IsRoot
-        (ht.toIsField.toSubfield.subtype ⟨rt, hrl⟩) at htr
-      rw [Polynomial.isRoot_map_iff ht.toIsField.toSubfield.subtype_injective,
+      change (p.map ht.toSubfield.subtype).IsRoot
+        (ht.toSubfield.subtype ⟨rt, hrl⟩) at htr
+      rw [Polynomial.isRoot_map_iff ht.toSubfield.subtype_injective,
         ← Polynomial.dvd_iff_isRoot] at htr
       obtain ⟨p, rfl⟩ := htr
       rw [map_mul, Subring.coe_mul, mul_inv]
       apply (ht.isRing_opow_omega0_mul_one_add le_rfl).mul_lt
       · rw [ht.coe_ringEquivPolynomial_symm_apply, eval₂_sub, eval₂_X, eval₂_C,
-          ht.toIsField.toSubfield.subtype_apply, ht.inv_sub_eq_of_lt hrl]
+          ht.toSubfield.subtype_apply, ht.inv_sub_eq_of_lt hrl]
         exact of.strictMono ((opow_lt_opow_iff_right (one_lt_val.2 ht.one_lt)).2 (by simp [hrl]))
       · apply ih
         have hp0 : p ≠ 0 := fun hp0 => by simp [hp0] at hn
