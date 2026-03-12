@@ -154,7 +154,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
           i ∈ (f.filter (¬· < ω * (1 + val c))).support → ω * (1 + val c) + l = i := by
         by_cases hi : i ∈ f.support
         · obtain ⟨l, hl⟩ := Ordinal.lt_omega0.1 (Ordinal.sub_lt_of_lt_add ((hs hi).trans
-            (add_lt_add_right (nat_lt_omega0 o) _)) (by simp))
+            (add_lt_add_right (natCast_lt_omega0 o) _)) (by simp))
           refine ⟨l, fun h => ?_⟩
           rw [Finsupp.support_filter, Finset.mem_filter] at h
           rw [← hl, Ordinal.add_sub_cancel_of_le (le_of_not_gt h.2)]
@@ -366,7 +366,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       · rw [← val.lt_iff_lt, ← Order.add_one_le_iff] at hij
         refine lt_add_of_lt_of_nonneg (lt_of_lt_of_le ?_ (mul_le_mul_right hij ω)) (by simp)
         rw [mul_add_one, add_lt_add_iff_left]
-        exact nat_lt_omega0 j
+        exact natCast_lt_omega0 j
       · exact add_lt_add_of_le_of_lt ((mul_le_mul_iff_right₀ omega0_pos).2
           (val.monotone hij.1.le)) (Nat.cast_lt.2 hij.2)
   have normal1 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val x))) :=
@@ -407,7 +407,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       rw [← val.lt_iff_lt, ← Order.add_one_le_iff] at hcx
       refine le_trans ?_ (mul_le_mul_right hcx ω)
       rw [mul_add_one, add_le_add_iff_left]
-      exact (nat_lt_omega0 (d.succ + d.succ)).le
+      exact (natCast_lt_omega0 (d.succ + d.succ)).le
     let alg : Algebra ht.isRing_opow_omega0.toSubring hrr.toSubring :=
       (Subring.inclusion (ht.subring_aux hrr)).toAlgebra
     have algMap (x : ht.isRing_opow_omega0.toSubring) :
