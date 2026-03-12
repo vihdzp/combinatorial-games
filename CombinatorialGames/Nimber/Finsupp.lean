@@ -32,6 +32,16 @@ theorem coeff_lt {b : Ordinal} (hb : 1 < b) (o e : Ordinal) : coeff b o e < b :=
   · rw [coeff_of_notMem_CNF he]
     exact hb.pos
 
+theorem support_coeff_subset {b o x : Ordinal} (hx : x < b ^ o) :
+    SetLike.coe (coeff b x).support ⊆ Set.Iio o := by
+  obtain rfl | hb := eq_zero_or_pos b
+  · have := hx.trans_le (zero_opow_le _)
+    simp_all
+  intro e
+  rw [SetLike.mem_coe, Finsupp.mem_support_iff, Set.mem_Iio]
+  contrapose!
+  exact fun he ↦ coeff_eq_zero_of_lt (hx.trans_le (opow_le_opow_right hb he))
+
 end Ordinal.CNF
 
 namespace Finsupp
@@ -52,7 +62,7 @@ public noncomputable section
 namespace Nimber
 variable (b : Nimber) (hb : IsField b)
 
-open Finsupp Ordinal
+open Finsupp Ordinal Set
 
 /-- `toFinsupp b hb x e` returns the coefficient of `b ^ e` in `x`. This is a specialization of
 `Ordinal.CNF.coeff`. -/
@@ -70,6 +80,10 @@ private theorem toFinsupp_apply (x : Nimber) (e : Ordinal) :
 theorem toFinsupp_zero : toFinsupp b hb 0 = 0 := by
   ext; simp
 
+theorem support_toFinsupp_subset {o : Ordinal} {x : Nimber} (hx : x < ∗(b.val ^ o)) :
+    SetLike.coe (toFinsupp b hb x).support ⊆ Iio o :=
+  (SetLike.coe_subset_coe.2 (support_mapRange ..)).trans (CNF.support_coeff_subset hx)
+
 /-- Add a linear combination of ordinal powers of `b` to create a nimber. This is a specialization
 of `Ordinal.CNF.eval`. -/
 @[pp_nodot]
@@ -79,6 +93,12 @@ def ofFinsupp (x : Ordinal →₀ hb.toSubfield) : Nimber :=
 @[simp]
 theorem ofFinsupp_zero : ofFinsupp b hb 0 = 0 := by
   simp [ofFinsupp]
+
+theorem ofFinsupp_lt {o : Ordinal} {x : Ordinal →₀ hb.toSubfield}
+    (hf : SetLike.coe x.support ⊆ Iio o) : ofFinsupp b hb x < ∗(b.val ^ o) := by
+  apply CNF.eval_lt
+  · simp
+  · aesop
 
 @[simp]
 theorem toFinsupp_ofFinsupp (x) : toFinsupp b hb (ofFinsupp b hb x) = x := by
@@ -107,14 +127,15 @@ theorem toFinsupp_inj {x y} : toFinsupp b hb x = toFinsupp b hb y ↔ x = y :=
 theorem ofFinsupp_inj {x y} : ofFinsupp b hb x = ofFinsupp b hb y ↔ x = y :=
   (ofFinsupp_injective b hb).eq_iff
 
-set_option backward.isDefEq.respectTransparency false in
-theorem ofFinsupp_def (x) : ofFinsupp b hb x = x.sum fun o y ↦ y * ∗(b.val ^ o) := by
+theorem ofFinsupp_def (x) :
+    ofFinsupp b hb x = x.linearCombination hb.toSubfield fun o ↦ ∗(val b ^ o) := by
   induction x using induction_on_max with
   | zero => simp
   | single_add o x f hf hx IH =>
     rw [ofFinsupp, mapRange_single_add (by contrapose! hf; use o),
       CNF.eval_single_add', (hb.opow o).mul_add_eq_of_lt', hb.opow_mul_eq_of_lt]
-    · rw [sum_add_index' (by simp) (by simp [add_mul]), ← IH, sum_single_index (by simp), mul_comm]
+    · dsimp [linearCombination, lsum, Subfield.smul_def] at IH ⊢
+      rw [sum_add_index' (by simp) (by simp [add_mul]), ← IH, sum_single_index (by simp), mul_comm]
       rfl
     · simp
     · apply CNF.eval_lt
@@ -124,7 +145,7 @@ theorem ofFinsupp_def (x) : ofFinsupp b hb x = x.sum fun o y ↦ y * ∗(b.val ^
 
 @[simp]
 theorem ofFinsupp_single (x y) : ofFinsupp b hb (single x y) = y * ∗(b.val ^ x) := by
-  simp [ofFinsupp_def]
+  simp [ofFinsupp_def, Subfield.smul_def]
 
 @[simp]
 theorem toFinsupp_opow_mul (o : Ordinal) {x : Nimber} (hx : x < b) :
@@ -151,9 +172,8 @@ def toFinsuppIso : Nimber ≃ₗ[hb.toSubfield] (Ordinal →₀ hb.toSubfield) :
       simp_rw [ofFinsupp_def]
       apply sum_add_index'
       · simp
-      · simp [add_mul]
-    map_smul' := by
-      simp [ofFinsupp_def, sum_smul_index, smul_sum, Subfield.smul_def, mul_assoc]
+      · simp [add_mul, Subfield.smul_def]
+    map_smul' := by simp [ofFinsupp_def]
   }
 
 @[simp]
