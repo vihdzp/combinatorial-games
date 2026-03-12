@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.NatOrdinal.Basic
 public meta import CombinatorialGames.Tactic.Register
 public import Mathlib.SetTheory.Ordinal.Family
 
