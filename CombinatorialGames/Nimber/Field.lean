@@ -90,6 +90,27 @@ theorem mul_le_of_forall_ne (h : ∀ a' < a, ∀ b' < b, a' * b + a * b' + a' * 
   have := exists_of_lt_mul h'
   tauto
 
+theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * NatOrdinal.of b).val := by
+  rw [val_le_iff]
+  apply mul_le_of_forall_ne
+  intro c hc d hd
+  induction c with | mk c
+  induction d with | mk d
+  have : NatOrdinal.of (of c * of b + of a * of d).val ≤
+      (NatOrdinal.of (of c * of b).val + NatOrdinal.of (of a * of d).val) :=
+    add_le_nadd ..
+  apply ne_of_lt
+  apply (add_le_nadd _ _).trans_lt
+  apply (add_le_add_left this _).trans_lt
+  apply (add_le_add (add_le_add
+    (NatOrdinal.of.le_iff_le.2 <| mul_le_nmul' _ _)
+    (NatOrdinal.of.le_iff_le.2 <| mul_le_nmul' _ _))
+    (NatOrdinal.of.le_iff_le.2 <| mul_le_nmul' _ _)).trans_lt
+  simp
+termination_by (a, b)
+
+#exit
+
 instance : MulZeroClass Nimber where
   mul_zero a := by
     rw [← Nimber.le_zero]
