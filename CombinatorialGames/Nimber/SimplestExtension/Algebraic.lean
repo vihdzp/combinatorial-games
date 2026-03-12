@@ -156,9 +156,19 @@ algebraically closed under this definition.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
 `IsAlgClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
-@[mk_iff]
-structure IsAlgClosed (x : Nimber) extends IsRing x where
+structure IsAlgClosed (x : Nimber) extends IsField x where
   exists_root' ⦃p : Nimber[X]⦄ (hp₀ : 0 < p.degree) (hp : ∀ k, p.coeff k < x) : ∃ r < x, p.IsRoot r
+  inv_lt' := (by
+    intro y hy0 hyx
+    let p : toIsRing.toSubring[X] := C ⟨y, hyx⟩ * X - 1
+    have hpd : 0 < (p.map toIsRing.toSubring.subtype).degree :=
+      degree_pos_of_root (ne_of_apply_ne (·.coeff 0) (by simp [p]))
+        (show IsRoot _ y⁻¹ by simp [hy0, p])
+    have hpp (k : ℕ) : (p.map toIsRing.toSubring.subtype).coeff k < x :=
+      (coeff_map toIsRing.toSubring.subtype k).trans_lt (p.coeff k).2
+    obtain ⟨r, hrx, hr⟩ := exists_root' hpd hpp
+    refine Eq.trans_lt ?_ hrx
+    simpa [sub_eq_zero, mul_eq_one_iff_inv_eq₀ hy0, p] using hr)
 
 theorem IsAlgClosed.exists_root {x : Nimber} (h : IsAlgClosed x) {p : Nimber[X]}
     (hp₀ : p.degree ≠ 0) (hp : ∀ n, p.coeff n < x) : ∃ r < x, p.IsRoot r := by
@@ -176,15 +186,11 @@ theorem IsAlgClosed.leastNoRoots_eq_top {x : Nimber} (h : IsAlgClosed x) :
   obtain ⟨r, hr, hr'⟩ := h.exists_root (degree_leastNoRoots_pos ht).ne' (coeff_leastNoRoots_lt ht)
   exact not_isRoot_leastNoRoots_of_lt ht hr hr'
 
-theorem IsAlgClosed.toIsField {x : Nimber} (h : IsAlgClosed x) : IsField x := by
-  apply h.toIsField_of_X_sq_lt_leastNoRoots
-  simp [h.leastNoRoots_eq_top]
-
 theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
     IsAlgClosed x ↔ leastNoRoots x = ⊤ where
   mp := IsAlgClosed.leastNoRoots_eq_top
-  mpr hx := ⟨h, fun _p hp₀ hpk ↦
-    exists_root_of_lt_leastNoRoots hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _)⟩
+  mpr hx := { toIsRing := h, exists_root' _p hp₀ hpk :=
+    exists_root_of_lt_leastNoRoots hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _) }
 
 protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsAlgClosed (sSup s) := by

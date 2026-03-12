@@ -191,8 +191,8 @@ theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P
 theorem lt_omega0 {o : NatOrdinal} : o < of .omega0 ↔ ∃ n : ℕ, o = n :=
   Ordinal.lt_omega0
 
-theorem nat_lt_omega0 (n : ℕ) : n < of .omega0 :=
-  Ordinal.nat_lt_omega0 n
+theorem natCast_lt_omega0 (n : ℕ) : n < of .omega0 :=
+  Ordinal.natCast_lt_omega0 n
 
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
