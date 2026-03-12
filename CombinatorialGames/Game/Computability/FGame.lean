@@ -378,6 +378,7 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 -- Allows us to recursively represent `FGame`s.
 instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
 
+@[reducible]
 unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
   reprPrec g n := if g.card = 0 then "∅" else Multiset.instRepr.reprPrec g n
 

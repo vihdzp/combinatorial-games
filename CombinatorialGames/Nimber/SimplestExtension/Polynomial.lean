@@ -653,7 +653,7 @@ theorem oeval_lt_opow_omega0 {x : Nimber} {p : Nimber[X]}
   apply (oeval_lt_pow hpk (n := p.natDegree + 1) _).trans_le
   · rw [of.le_iff_le, ← opow_natCast]
     apply opow_le_opow_right (hpk 0).bot_lt
-    simp [nat_lt_omega0]
+    simp [natCast_lt_omega0]
   · simpa using degree_le_natDegree
 
 theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)

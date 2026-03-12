@@ -289,7 +289,7 @@ theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .ome
       exact .of_mem_moves y.2
     choose f hf using this
     obtain ⟨n, hn⟩ := (finite_iUnion fun p => finite_range (f p)).exists_le
-    apply lt_of_le_of_lt _ (NatOrdinal.nat_lt_omega0 (n + 1))
+    apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))
     rw [birthday_le_iff, Nat.cast_add_one, ← succ_eq_add_one]
     aesop
   · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
