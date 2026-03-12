@@ -3,8 +3,10 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, František Silváši
 -/
-import Lean.Elab.Tactic.Meta
-import Lean.Meta.Tactic.Assert
+module
+
+public meta import Lean.Elab.Tactic.Basic
+public meta import Lean.Meta.Tactic.Assert
 
 /-!
 # Eagerly add instances
@@ -19,20 +21,21 @@ apply `Numeric.of_mem_moves` to all hypotheses, and thus build all possible `Num
 
 open Lean Meta Elab Tactic
 
-private def instances (constants : Array Name) (goal : MVarId) : MetaM (Option MVarId) := goal.withContext do
-  let mut goal := goal
-  for h in ← getLCtx do
-    if h.isImplementationDetail then continue
-    ⟨_, goal⟩ ← goal.assertHypotheses =<< constants.filterMapM fun c => do
-      let hc ← try mkAppM c #[h.toExpr] catch _ => return none
-      return some {
-        userName := ← mkFreshUserName `inst
-        type := ← inferType hc
-        value := hc
-      }
-  return goal
+meta def instances (constants : Array Name) (goal : MVarId) : MetaM (Option MVarId) :=
+  goal.withContext do
+    let mut goal := goal
+    for h in ← getLCtx do
+      if h.isImplementationDetail then continue
+      ⟨_, goal⟩ ← goal.assertHypotheses =<< constants.filterMapM fun c => do
+        let hc ← try mkAppM c #[h.toExpr] catch _ => return none
+        return some {
+          userName := ← mkFreshUserName `inst
+          type := ← inferType hc
+          value := hc
+        }
+    return goal
 
 /-- A tactic that eagerly adds instances by applying the functions in `constants` to every
 hypothesis. -/
-def addInstances (constants : Array Name) : TacticM Unit :=
+public meta def addInstances (constants : Array Name) : TacticM Unit :=
   liftMetaTactic1 (instances constants)

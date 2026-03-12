@@ -3,11 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import CombinatorialGames.NatOrdinal.Basic
-import Mathlib.Algebra.Group.Pointwise.Set.Basic
-import Mathlib.Data.Fintype.Order
-import Mathlib.Data.Sign.Defs
-import Mathlib.Order.CompleteLattice.PiLex
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Group.Pointwise.Set.Basic
+public import Mathlib.Data.Fintype.Order
+public import Mathlib.Data.Sign.Defs
+public import Mathlib.Order.CompleteLattice.PiLex
 
 /-!
 # Sign expansions
@@ -21,6 +23,8 @@ to the development of surreal numbers.
 -/
 
 universe u
+
+@[expose] public section
 
 /-! ### For Mathlib -/
 
@@ -52,6 +56,7 @@ theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
   mp := by simpa using @Pi.Lex.neg_lt_neg _ _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
     {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by
@@ -118,7 +123,7 @@ protected theorem ext {x y : SignExpansion} (hxy : ∀ o, x o = y o) : x = y :=
 theorem mk_eq_mk {f g h₁ h₂} : mk f h₁ = mk g h₂ ↔ f = g := by
   simp [DFunLike.ext'_iff]
 
-theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : Ordinal}
+theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : NatOrdinal}
     (hoo' : o ≤ o') (ho : x o = 0) : x o' = 0 :=
   isUpperSet_preimage_singleton_zero x hoo' ho
 
@@ -143,7 +148,7 @@ theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 
 
 /-! ### Basic sign expansions -/
 
-private def const (s : SignType) : SignExpansion where
+def const (s : SignType) : SignExpansion where
   sign _ := s
   isUpperSet_preimage_singleton_zero' := by aesop
 
@@ -190,6 +195,10 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 
 instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
+
+-- TODO: why is this needed all of a sudden?
+instance : DecidableLT (WithTop NatOrdinal) :=
+  Classical.decRel _
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
@@ -407,6 +416,7 @@ theorem floor_lt {f : NatOrdinal → SignType} {x : SignExpansion} :
       · apply (mt (x.isUpperSet_preimage_singleton_zero ha'.le) ha.2.ne' _).elim
         simpa using (ha.1 _ ha').symm
 
+set_option backward.isDefEq.respectTransparency false in
 theorem le_floor {f : NatOrdinal → SignType} {x : SignExpansion} :
     x ≤ floor f ↔ toLex ⇑x ≤ toLex f := by
   simpa using floor_lt.not
@@ -457,6 +467,7 @@ theorem lt_ceil {f : NatOrdinal → SignType} {x : SignExpansion} :
   rw [ceil, SignExpansion.lt_neg, floor_lt]
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 theorem ceil_le {f : NatOrdinal → SignType} {x : SignExpansion} :
     ceil f ≤ x ↔ toLex f ≤ toLex ⇑x := by
   simpa using lt_ceil.not
@@ -530,3 +541,4 @@ theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
   aesop
 
 end SignExpansion
+end
