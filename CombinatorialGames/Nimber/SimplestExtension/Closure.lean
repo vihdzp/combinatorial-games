@@ -198,7 +198,7 @@ theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 
 
 theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x ≠ 0) :
     groupClosure x = ∗(2 ^ (Ordinal.log 2 x.val + 1)) := by
-  change x.val ≠ 0 at hx₀
+  rw [← val_ne_zero] at hx₀
   apply le_antisymm
   · rw [(IsGroup.two_opow _).groupClosure_le_iff, ← val_le_iff]
     simpa using (Ordinal.lt_opow_succ_log_self one_lt_two x.val).le
