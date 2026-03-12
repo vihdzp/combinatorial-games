@@ -589,9 +589,6 @@ theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
 
--- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
-proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
-
 theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
   induction o using WellFoundedLT.induction generalizing z with | ind o IH
@@ -612,6 +609,9 @@ theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
 theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : z * y < ∗(val x ^ o) :=
   mul_comm y z ▸ h.mul_lt_opow_of_left_lt hy hz
+
+-- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
+proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 end Nimber
 end
