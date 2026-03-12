@@ -112,14 +112,14 @@ instance : NoZeroDivisors Nimber where
     apply (mul_ne_of_lt hab.1 hab.2).symm
     simpa only [zero_add, mul_zero, zero_mul]
 
-protected theorem mul_comm (a b : Nimber) : a * b = b * a := by
+private theorem mul_comm (a b : Nimber) : a * b = b * a := by
   apply le_antisymm <;> refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
   on_goal 1 => rw [add_comm (x * _), Nimber.mul_comm a, Nimber.mul_comm x, Nimber.mul_comm x]
   on_goal 2 => rw [add_comm (x * _), ← Nimber.mul_comm y, ← Nimber.mul_comm a, ← Nimber.mul_comm y]
   all_goals exact mul_ne_of_lt hy hx
 termination_by (a, b)
 
-protected theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
+private theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
   apply le_antisymm
   · refine mul_le_of_forall_ne fun a' ha x hx ↦ ?_
     obtain (⟨b', h, rfl⟩ | ⟨c', h, rfl⟩) := exists_of_lt_add hx <;>
@@ -164,14 +164,14 @@ protected theorem mul_add (a b c : Nimber) : a * (b + c) = a * b + a * c := by
         · exact ((hz.trans hy).ne <| add_right_injective _ hz').elim
 termination_by (a, b, c)
 
-protected theorem add_mul (a b c : Nimber) : (a + b) * c = a * c + b * c := by
+private theorem add_mul (a b c : Nimber) : (a + b) * c = a * c + b * c := by
   rw [Nimber.mul_comm, Nimber.mul_add, Nimber.mul_comm, Nimber.mul_comm b]
 
 private theorem add_ne_zero_of_lt {a b : Nimber} (h : b < a) : a + b ≠ 0 := by
   rw [add_ne_zero_iff]
   exact h.ne'
 
-protected theorem mul_assoc (a b c : Nimber) : a * b * c = a * (b * c) := by
+private theorem mul_assoc (a b c : Nimber) : a * b * c = a * (b * c) := by
   apply le_antisymm <;> refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
   · obtain ⟨a', ha, b', hb, rfl⟩ := exists_of_lt_mul hx
     have H : (a + a') * ((b + b') * (c + y)) ≠ 0 := by
@@ -201,7 +201,7 @@ instance : IsCancelMulZero Nimber where
     rw [← add_eq_zero, ← Nimber.add_mul, mul_eq_zero] at h
     exact add_eq_zero.1 (h.resolve_right ha)
 
-protected theorem one_mul (a : Nimber) : 1 * a = a := by
+private theorem one_mul (a : Nimber) : 1 * a = a := by
   apply le_antisymm
   · refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
     rw [Nimber.lt_one_iff_zero] at hx
@@ -212,18 +212,15 @@ protected theorem one_mul (a : Nimber) : 1 * a = a := by
     exact (mul_left_cancel₀ one_ne_zero <| Nimber.one_mul _).not_lt h
 termination_by a
 
-protected theorem mul_one (a : Nimber) : a * 1 = a := by
-  rw [Nimber.mul_comm, Nimber.one_mul]
-
 instance : CommRing Nimber where
-  left_distrib := Nimber.mul_add
-  right_distrib := Nimber.add_mul
+  left_distrib := private mul_add
+  right_distrib := private add_mul
   zero_mul := zero_mul
   mul_zero := mul_zero
-  mul_assoc := Nimber.mul_assoc
-  mul_comm := Nimber.mul_comm
-  one_mul := Nimber.one_mul
-  mul_one := Nimber.mul_one
+  mul_assoc := private mul_assoc
+  mul_comm := private mul_comm
+  one_mul := private one_mul
+  mul_one _ := by rw [Nimber.mul_comm, Nimber.one_mul]
   __ : AddCommGroupWithOne Nimber := inferInstance
 
 instance : IsDomain Nimber where
@@ -268,30 +265,30 @@ mutual
 
 This preliminary definition "accidentally" satisfies `invAux 0 = 1`, which the real inverse
 corrects. The lemma `inv_eq_invAux` can be used to transfer between the two. -/
-def invAux (a : Nimber) : Nimber :=
+private def invAux (a : Nimber) : Nimber :=
   sInf (invSet a)ᶜ
 termination_by (a, 1)
 
 /-- The set in the definition of `invAux a`. -/
-def invSet (a : Nimber) : Set Nimber :=
+private def invSet (a : Nimber) : Set Nimber :=
   ⋂₀ {s | 0 ∈ s ∧ ∀ a' < a, a' ≠ 0 → ∀ b ∈ s, invAux a' * (1 + (a + a') * b) ∈ s}
 termination_by (a, 0)
 
 end
 
-theorem zero_mem_invSet (a : Nimber) : 0 ∈ invSet a := by
+private theorem zero_mem_invSet (a : Nimber) : 0 ∈ invSet a := by
   rw [invSet]
   exact Set.mem_sInter.2 fun _ hs ↦ hs.1
 
 /-- "cons" is our operation `(1 + (a + a') * b) / a'` in the definition of the inverse. -/
-theorem cons_mem_invSet {a' : Nimber} (ha₀ : a' ≠ 0) (ha : a' < a) (hb : b ∈ invSet a) :
+private theorem cons_mem_invSet {a' : Nimber} (ha₀ : a' ≠ 0) (ha : a' < a) (hb : b ∈ invSet a) :
     invAux a' * (1 + (a + a') * b) ∈ invSet a := by
   rw [invSet] at hb ⊢
   exact Set.mem_sInter.2 fun _ hs ↦ hs.2 _ ha ha₀ _ (Set.mem_sInter.1 hb _ hs)
 
 /-- A recursion principle for `invSet`. -/
 @[elab_as_elim]
-theorem invSet_recOn {p : Nimber → Prop} (a : Nimber) (h0 : p 0)
+private theorem invSet_recOn {p : Nimber → Prop} (a : Nimber) (h0 : p 0)
     (hi : ∀ a' < a, a' ≠ 0 → ∀ b, p b → p (invAux a' * (1 + (a + a') * b))) (x : Nimber)
     (hx : x ∈ invSet a) : p x := by
   revert x
@@ -303,7 +300,7 @@ private def List.toNimber {a : Nimber} : List a.val.ToType → Nimber
   | [] => 0
   | x :: l => invAux (∗x) * (1 + (a + ∗x) * toNimber l)
 
-instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
+private instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
   refine @small_subset.{u, u + 1} _ _ _ ?_ (small_range (@List.toNimber a))
   refine fun x hx ↦ invSet_recOn a ⟨[], rfl⟩ ?_ x hx
   rintro a' ha _ _ ⟨l, rfl⟩
@@ -315,22 +312,18 @@ instance (a : Nimber.{u}) : Small.{u} (invSet a) := by
 private theorem invSet_nonempty (a : Nimber) : (invSet a)ᶜ.Nonempty :=
   nonempty_of_not_bddAbove (not_bddAbove_compl_of_small _)
 
-theorem invAux_ne_zero (a : Nimber) : invAux a ≠ 0 := by
+private theorem invAux_ne_zero (a : Nimber) : invAux a ≠ 0 := by
   rw [invAux]
   exact fun h ↦ h ▸ csInf_mem (invSet_nonempty a) <| zero_mem_invSet a
 
-theorem mem_invSet_of_lt_invAux (h : b < invAux a) : b ∈ invSet a := by
+private theorem mem_invSet_of_lt_invAux (h : b < invAux a) : b ∈ invSet a := by
   rw [invAux] at h
   have := notMem_of_lt_csInf h ⟨_, bot_mem_lowerBounds _⟩
   rwa [Set.notMem_compl_iff] at this
 
-theorem invAux_notMem_invSet (a : Nimber) : invAux a ∉ invSet a := by
+private theorem invAux_notMem_invSet (a : Nimber) : invAux a ∉ invSet a := by
   rw [invAux]
   exact csInf_mem (invSet_nonempty a)
-
-theorem invAux_mem_invSet_of_lt (ha : a ≠ 0) (hb : a < b) : invAux a ∈ invSet b := by
-  have H := cons_mem_invSet ha hb (zero_mem_invSet b)
-  rwa [mul_zero, add_zero, mul_one] at H
 
 /-- We set up a simultaneous induction to prove that `invAux a` is the inverse of `a`, and no
 element in its defining set `invSet a` is. -/
@@ -360,18 +353,16 @@ private theorem mul_inv_cancel_aux (a : Nimber) :
     exact ⟨ha₀, invAux_ne_zero a⟩
 termination_by a
 
-theorem mul_invAux_cancel (h : a ≠ 0) : a * invAux a = 1 :=
-  (mul_inv_cancel_aux a).2 h
-
+@[no_expose]
 instance : Inv Nimber where
   inv a := if a = 0 then 0 else invAux a
 
-theorem inv_eq_invAux (ha : a ≠ 0) : a⁻¹ = invAux a :=
+private theorem inv_eq_invAux (ha : a ≠ 0) : a⁻¹ = invAux a :=
   dif_neg ha
 
 instance : Field Nimber where
-  mul_inv_cancel a ha := by rw [inv_eq_invAux ha, mul_invAux_cancel ha]
-  inv_zero := dif_pos rfl
+  mul_inv_cancel a ha := by rw [inv_eq_invAux ha, (mul_inv_cancel_aux a).2 ha]
+  inv_zero := by exact dif_pos rfl
   nnqsmul := _
   qsmul := _
 
