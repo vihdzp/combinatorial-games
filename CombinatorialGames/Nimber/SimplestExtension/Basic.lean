@@ -100,6 +100,10 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
     · exact log_eq_zero' hb
     · exact log_eq_zero hb
 
+theorem opow_mul_lt_opow {b u v x : Ordinal} (hv : v < b) (hu : u < x) :
+    b ^ u * v < b ^ x := by
+  simpa using opow_mul_add_lt_opow hv (opow_pos _ hv.pos) hu
+
 end Ordinal
 
 namespace Nimber
@@ -587,6 +591,27 @@ theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
+theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
+  induction o using WellFoundedLT.induction generalizing z with | ind o IH
+  obtain rfl | ho := eq_or_ne o 0
+  · simp_all
+  have H₁ : of (val z / val x ^ log (val x) (val z)) < x := div_opow_log_lt _ h.one_lt
+  have H₂ := h.mul_lt H₁ hy
+  have H₃ : log (val x) (val z) < o := (lt_opow_iff_log_lt' h.one_lt ho).1 hz
+  have H₄ : val z % val x ^ log (val x) (val z) < _ := mod_lt _ (opow_ne_zero _ h.ne_zero)
+  rw [← of_val z, ← div_add_mod z.val (x.val ^ log x.val z.val), (h.opow _).mul_add_eq_of_lt' H₄,
+    mul_add, ← val_of (_ / _), h.opow_mul_eq_of_lt _ H₁]
+  apply (h.opow _).add_lt
+  · rw [mul_comm, mul_assoc, ← val_lt_iff, ← of_val (of _ * y), ← h.opow_mul_eq_of_lt]
+    · exact opow_mul_lt_opow H₂ H₃
+    · exact H₂
+  · exact (IH _ H₃ H₄).trans_le (opow_le_opow_right h.pos H₃.le)
+
+theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : z * y < ∗(val x ^ o) :=
+  mul_comm y z ▸ h.mul_lt_opow_of_left_lt hy hz
 
 end Nimber
 end
