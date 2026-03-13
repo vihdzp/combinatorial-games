@@ -50,15 +50,6 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
-theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
-  apply le_antisymm
-  · simpa [← one_add_one_eq_two] using div_opow_log_lt o one_lt_two
-  · simpa [one_le_iff_ne_zero, pos_iff_ne_zero] using div_opow_log_pos 2 ho
-
-theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : 2 ^ log 2 o + o % 2 ^ log 2 o = o := by
-  convert div_add_mod .. using 2
-  rw [div_two_opow_log ho, mul_one]
-
 protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
   rw [← one_add_one_eq_two, mul_add, mul_one]
 
@@ -99,10 +90,6 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
   · rintro (hb | hb)
     · exact log_eq_zero' hb
     · exact log_eq_zero hb
-
-theorem opow_mul_lt_opow {b u v x : Ordinal} (hv : v < b) (hu : u < x) :
-    b ^ u * v < b ^ x := by
-  simpa using opow_mul_add_lt_opow hv (opow_pos _ hv.pos) hu
 
 end Ordinal
 
