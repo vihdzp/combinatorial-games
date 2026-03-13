@@ -8,8 +8,6 @@ module
 public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
-import CombinatorialGames.Tactic.OrdinalAlias
-
 /-!
 # Natural operations on `ω ^ x`
 
