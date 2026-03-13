@@ -134,7 +134,7 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp] theorem zero_le_coe {x : Dyadic} : 0 ≤ x.toRat ↔ 0 ≤ x := by norm_cast
 @[simp] theorem coe_lt_zero {x : Dyadic} : x.toRat < 0 ↔ x < 0 := by norm_cast
 @[simp] theorem coe_le_zero {x : Dyadic} : x.toRat ≤ 0 ↔ x ≤ 0 := by norm_cast
-@[simp] theorem coe_eq_zero {x : Dyadic} : x.toRat = 0 ↔ x = 0 := by norm_cast
+alias coe_eq_zero := toRat_eq_zero_iff
 @[simp] theorem zero_eq_coe {x : Dyadic} : 0 = x.toRat ↔ 0 = x := by norm_cast
 
 @[simp, norm_cast] theorem coe_one : (1 : Dyadic).toRat = 1 := rfl
@@ -163,13 +163,13 @@ instance : Nontrivial Dyadic where
 instance : SMul Nat Dyadic where
   smul x y := x * y
 
-@[simp, norm_cast] theorem coe_nsmul (x : ℕ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
+@[norm_cast] theorem coe_nsmul (x : ℕ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (coe_mul x y).trans (by simp)
 
 instance : SMul Int Dyadic where
   smul x y := x * y
 
-@[simp, norm_cast] theorem coe_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
+@[norm_cast] theorem coe_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (coe_mul x y).trans (by simp)
 
 /-- The dyadic number ½. -/
@@ -225,6 +225,7 @@ theorem mkRat_add_mkRat_self {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.
     Dyadic.mkRat m h₁ + Dyadic.mkRat n h₂ = .mkRat (m + n) h₁ := by
   ext; simp [Rat.mkRat_eq_div, add_div]
 
+attribute [local simp] coe_nsmul coe_zsmul in
 instance : CommRing Dyadic where
   add_assoc := add_assoc
   zero_add := Dyadic.zero_add
