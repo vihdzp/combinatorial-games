@@ -189,7 +189,7 @@ theorem ind {motive : FGame → Prop} (H : ∀ y, motive (mk y)) (x : FGame) : m
 instance : DecidableEq FGame := Quotient.decidableEq (d := SGame.Identical.instDecidable)
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-noncomputable def out (x : FGame) : SGame := Quotient.out x
+@[no_expose] noncomputable def out (x : FGame) : SGame := Quotient.out x
 @[simp] theorem out_eq (x : FGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The finset of left moves of the game. -/
