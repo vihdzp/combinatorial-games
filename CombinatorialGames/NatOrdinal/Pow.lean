@@ -32,26 +32,11 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 open Ordinal
 
-theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
+theorem Ordinal.lt_mul_add_one_iff {x y z : Ordinal} :
+    x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
   obtain rfl | hy := eq_or_ne y 0
   · simp
   · rw [mul_add_one, lt_add_iff hy]
-
-theorem Ordinal.opow_mul_lt_opow {b u v x : Ordinal} (hv : v < b) (hu : u < x) :
-    b ^ u * v < b ^ x := by
-  simpa using Ordinal.opow_mul_add_lt_opow hv (opow_pos _ hv.pos) hu
-
-theorem Ordinal.lt_omega0_omega0_opow {x y : Ordinal} (hy : y ≠ 0) :
-    x < ω ^ ω ^ y ↔ ∃ z < y, ∃ n : ℕ, x < ω ^ (ω ^ z * n) := by
-  simp_rw [lt_omega0_opow (opow_ne_zero _ omega0_ne_zero), lt_omega0_opow hy]
-  constructor
-  · intro ⟨a, ⟨b, hb, ⟨m, hm⟩⟩, ⟨n, hn⟩⟩
-    exact ⟨_, hb, _, hn.trans <| opow_mul_lt_opow (natCast_lt_omega0 _) <|
-      hm.trans_le (mul_le_mul_right (Nat.cast_le.2 m.le_succ) _)⟩
-  · intro ⟨a, ha, ⟨n, hn⟩⟩
-    refine ⟨ω ^ a * n, ⟨a, ha, n + 1, ?_⟩, 1, ?_⟩
-    · simp [mul_lt_mul_iff_right₀, opow_pos]
-    · simpa
 
 /-- A typeclass for the the `ω^` notation. -/
 class Wpow (α : Type*) where
@@ -116,7 +101,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
           obtain (⟨a, ha, hz⟩ | h) := lt_add_iff.1 hz
           · have hxn := (wpow_mul_natCast_add_of_lt_aux (wpow_pos x) (n + 1)).2
             simp_rw [val_zero, add_zero] at hxn
-            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one] at ha
+            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one_iff] at ha
             obtain ⟨b, (hb : of b < ω^ x), hbw⟩ := ha
             rw [val_le_iff, ← val_of b, ← (wpow_mul_natCast_add_of_lt_aux hb n).2] at hbw
             refine ⟨_, hb, hz.trans <| (add_le_add_left hbw _).trans ?_⟩
