@@ -92,7 +92,7 @@ def algEquivPolynomial :
         ← ht.isRing_opow_omega0.toSubring.subtype_injective.eq_iff,
         ← eval_map_apply, ← eval_map_apply, Subring.subtype_apply,
         ht.eval_eq_of_lt (by simp [algMap]), ht.eval_eq_of_lt (by simp [algMap]),
-        oeval_eq_oeval_iff (by simp [algMap]) (by simp [algMap]),
+        oeval_inj (by simp [algMap]) (by simp [algMap]),
         (map_injective _ (Subring.subtype_injective _)).eq_iff] at hpq
       refine map_injective _ ?_ hpq
       exact fun _ _ h => by simpa [algMap] using h
