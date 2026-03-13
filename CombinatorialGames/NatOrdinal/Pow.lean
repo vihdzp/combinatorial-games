@@ -8,6 +8,8 @@ module
 public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
+import CombinatorialGames.Tactic.OrdinalAlias
+
 /-!
 # Natural operations on `ω ^ x`
 
@@ -37,6 +39,22 @@ theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y
   · simp
   · rw [mul_add_one, lt_add_iff hy]
 
+theorem Ordinal.opow_mul_lt_opow {b u v x : Ordinal} (hv : v < b) (hu : u < x) :
+    b ^ u * v < b ^ x := by
+  simpa using Ordinal.opow_mul_add_lt_opow hv (opow_pos _ hv.pos) hu
+
+theorem Ordinal.lt_omega0_omega0_opow {x y : Ordinal} (hy : y ≠ 0) :
+    x < ω ^ ω ^ y ↔ ∃ z < y, ∃ n : ℕ, x < ω ^ (ω ^ z * n) := by
+  simp_rw [lt_omega0_opow (opow_ne_zero _ omega0_ne_zero), lt_omega0_opow hy]
+  constructor
+  · intro ⟨a, ⟨b, hb, ⟨m, hm⟩⟩, ⟨n, hn⟩⟩
+    exact ⟨_, hb, _, hn.trans <| opow_mul_lt_opow (natCast_lt_omega0 _) <|
+      hm.trans_le (mul_le_mul_right (Nat.cast_le.2 m.le_succ) _)⟩
+  · intro ⟨a, ha, ⟨n, hn⟩⟩
+    refine ⟨ω ^ a * n, ⟨a, ha, n + 1, ?_⟩, 1, ?_⟩
+    · simp [mul_lt_mul_iff_right₀, opow_pos]
+    · simpa
+
 /-- A typeclass for the the `ω^` notation. -/
 class Wpow (α : Type*) where
   /-- The `ω`-map, i.e. base `ω` exponentiation. -/
@@ -58,6 +76,7 @@ theorem wpow_def (x : NatOrdinal) : ω^ x = of (ω ^ x.val) := rfl
 @[simp] theorem wpow_zero : ω^ (0 : NatOrdinal) = 1 := by simp [wpow_def]
 @[simp] theorem wpow_pos (x : NatOrdinal) : 0 < ω^ x := opow_pos _ omega0_pos
 @[simp] theorem wpow_ne_zero (x : NatOrdinal) : ω^ x ≠ 0 := (wpow_pos x).ne'
+@[simp] theorem wpow_one : ω^ (1 : NatOrdinal) = of ω := by simp [wpow_def]
 
 theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
   Ordinal.isNormal_opow one_lt_omega0
@@ -135,6 +154,10 @@ theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   rw [wpow_mul_natCast]
   exact omega0_opow_mul_nat_lt h n
 
+@[simp]
+theorem of_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by
+  simpa using (wpow_mul_natCast (of x) n).symm
+
 theorem lt_wpow_iff (hx : x ≠ 0) : y < ω^ x ↔ ∃ z < x, ∃ n : ℕ, y < ω^ z * n := by
   rw [wpow_def, ← val_lt_iff, lt_omega0_opow]
   · simp_rw [wpow_mul_natCast]
@@ -195,6 +218,22 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
       rw [← mul_assoc, ← wpow_add]
       exact wpow_mul_natCast_lt (add_lt_add_right hb x) m
 termination_by (x, y)
+
+theorem mul_lt_wpow_wpow (hx : x < ω^ ω^ z) (hy : y < ω^ ω^ z) : x * y < ω^ ω^ z := by
+  induction x with | mk x
+  induction y with | mk y
+  obtain rfl | hz := eq_or_ne z 0
+  · simp_rw [wpow_zero, wpow_one, of.lt_iff_lt, Ordinal.lt_omega0] at hx hy
+    obtain ⟨m, rfl⟩ := hx
+    obtain ⟨n, rfl⟩ := hy
+    simpa [← Nat.cast_mul] using Ordinal.natCast_lt_omega0 (m * n)
+  · rw [← val_ne_zero] at hz
+    rw [wpow_def, of.lt_iff_lt, val_wpow, lt_omega0_omega0_opow hz] at hx hy
+    obtain ⟨a, ha, m, hm⟩ := hx
+    obtain ⟨b, hb, n, hn⟩ := hy
+    rw [← of.lt_iff_lt] at hm hn
+    apply (mul_le_mul' hm.le hn.le).trans_lt
+    simpa [← wpow_add] using add_lt_wpow (wpow_mul_natCast_lt ha m) (wpow_mul_natCast_lt hb n)
 
 end NatOrdinal
 end
