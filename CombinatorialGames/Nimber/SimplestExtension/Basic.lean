@@ -607,8 +607,8 @@ theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
   · exact (IH _ H₃ H₄).trans_le (opow_le_opow_right h.pos H₃.le)
 
 theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
-    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : z * y < ∗(val x ^ o) :=
-  mul_comm y z ▸ h.mul_lt_opow_of_left_lt hy hz
+    (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
+  mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
