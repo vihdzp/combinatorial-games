@@ -26,7 +26,7 @@ public section
 namespace Ordinal
 
 theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.natCast_lt_omega0 b))
 
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by

@@ -66,15 +66,14 @@ theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
 @[simp] theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := isNormal_wpow.strictMono.le_iff_le
 @[simp] theorem wpow_inj : ω^ x = ω^ y ↔ x = y := isNormal_wpow.strictMono.injective.eq_iff
 
-set_option backward.isDefEq.respectTransparency false in
 private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ x) (n : ℕ) :
     (∀ z < ω^ x, z + y < ω^ x) ∧ ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
-  obtain rfl | hx := eq_or_ne x.val 0
+  obtain rfl | hx := eq_or_ne x 0
   · simp_all
   have H : ∀ z < ω^ x, z + y < ω^ x := by
     intro z hz
     have hm := max_lt hy hz
-    rw [wpow_def, ← val_lt_iff, lt_omega0_opow hx] at hm
+    rw [wpow_def, ← val_lt_iff, lt_omega0_opow (b := x.val) hx] at hm
     obtain ⟨a, ha, n, hn⟩ := hm
     have hyz (n) := (wpow_mul_natCast_add_of_lt_aux (wpow_pos (of a)) n).2
     simp_rw [val_zero, add_zero, ← val_eq_iff, val_of] at hyz
