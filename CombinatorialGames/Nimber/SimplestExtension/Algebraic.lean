@@ -352,6 +352,17 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       rw [map_add, map_mul, hs] at hi
       simpa using congrArg hxr.toSubring.subtype hi
 
+theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
+    IsRing (of (val t ^ ω)) where
+  toIsGroup := ht.toIsGroup.opow _
+  ne_one := ne_of_gt (by simp [ht.one_lt])
+  mul_lt y z hy hz := by
+    obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+    obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+    rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd,
+      ← eval_mul, ht.eval_eq_of_lt (ht.coeff_mul_lt hyd hzd)]
+    exact oeval_lt_opow_omega0 (ht.coeff_mul_lt hyd hzd)
+
 /-! ### Nimbers are algebraically closed -/
 
 open Pointwise

@@ -60,14 +60,6 @@ namespace Nimber.IsAlgClosed
 variable {t : Nimber.{u}} (ht : IsAlgClosed t)
 include ht
 
-theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) := by
-  refine ⟨ht.opow _, fun y z hy hz ↦ ?_, ne_of_gt (by simp [ht.one_lt])⟩
-  obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
-  obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
-  rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd, ← eval_mul, ht.eval_eq_of_lt]
-  on_goal 1 => apply oeval_lt_opow_omega0
-  all_goals exact ht.coeff_mul_lt hyd hzd
-
 -- not an instance because `ht` is not inferrable
 @[expose]
 abbrev algebraOpowOmega0 : Algebra ht.toSubfield ht.isRing_opow_omega0.toSubring :=
