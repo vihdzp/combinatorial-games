@@ -589,7 +589,7 @@ theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
 
-/-- If `x` is a field and `y` is an `x`-submonoid, then `y` is an ordinal power of `x`. -/
+/-- If `x` is a field and `y` is an `x`-subspace, then `y` is an ordinal power of `x`. -/
 theorem IsField.opow_log_eq_of_isGroup (hx : IsField x) (hy : IsGroup y)
     (hxy : ∀ z w, z < x → w < y → z * w < y) : ∗(x.val ^ log x.val y.val) = y := by
   apply le_antisymm
