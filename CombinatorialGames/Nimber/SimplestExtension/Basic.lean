@@ -100,6 +100,10 @@ theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := b
     · exact log_eq_zero' hb
     · exact log_eq_zero hb
 
+theorem opow_mul_lt_opow {b u v x : Ordinal} (hv : v < b) (hu : u < x) :
+    b ^ u * v < b ^ x := by
+  simpa using opow_mul_add_lt_opow hv (opow_pos _ hv.pos) hu
+
 end Ordinal
 
 namespace Nimber
@@ -151,8 +155,7 @@ theorem IsGroup.one : IsGroup 1 where
   ne_zero := one_ne_zero
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
-    (ne : s.Nonempty) (bdd : BddAbove s) :
-    IsGroup (sSup s) where
+    (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
   add_lt := Principal.sSup (fun x hx ↦ (H x hx).add_lt)
   ne_zero h := by
     have lub := isLUB_csSup ne bdd
@@ -162,9 +165,8 @@ protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     exact lub.left hx
 
 protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
-    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
-    IsGroup (⨆ i, f i) :=
-  IsGroup.sSup (by simpa) (range_nonempty f) bdd
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) : IsGroup (⨆ i, f i) :=
+  .sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsGroup.le_add_self (h : IsGroup x) (hy : y < x) : x ≤ x + y := by
   by_contra!
@@ -354,7 +356,7 @@ theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubrin
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
-  toIsGroup := IsGroup.sSup (fun x hx => (H x hx).toIsGroup) ne bdd
+  toIsGroup := .sSup (fun x hx => (H x hx).toIsGroup) ne bdd
   mul_lt := Principal.sSup fun x hx ↦ (H x hx).mul_lt
   ne_one h := by
     have lub := isLUB_csSup ne bdd
@@ -364,9 +366,8 @@ protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     exact lub.left hx
 
 protected theorem IsRing.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsRing (f i))
-    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) :
-    IsRing (⨆ i, f i) :=
-  IsRing.sSup (by simpa) (range_nonempty f) bdd
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) : IsRing (⨆ i, f i) :=
+  .sSup (by simpa) (range_nonempty f) bdd
 
 /-- The second **simplest extension theorem**: if `x ≠ 1` is a group but not a ring, then `x` can be
 written as `y * z` for some `y, z < x`. -/
@@ -464,6 +465,18 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
+
+protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
+    (ne : s.Nonempty) (bdd : BddAbove s) : IsField (sSup s) where
+  toIsRing := .sSup (fun x hx => (H x hx).toIsRing) ne bdd
+  inv_lt' y _ hy := by
+    rw [lt_csSup_iff bdd ne] at hy ⊢
+    obtain ⟨x, hx, hx'⟩ := hy
+    exact ⟨x, hx, (H x hx).inv_lt hx'⟩
+
+protected theorem IsField.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsField (f i))
+    (bdd : BddAbove (range f) := by apply Nimber.bddAbove_of_small) : IsField (⨆ i, f i) :=
+  .sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
     x *ₒ z = x * z :=
@@ -588,6 +601,27 @@ theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsRing y) (h : x ≤ y)
     rw [← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
     · exact div_add_mod ..
     · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
+
+theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
+  induction o using WellFoundedLT.induction generalizing z with | ind o IH
+  obtain rfl | ho := eq_or_ne o 0
+  · simp_all
+  have H₁ : of (val z / val x ^ log (val x) (val z)) < x := div_opow_log_lt _ h.one_lt
+  have H₂ := h.mul_lt H₁ hy
+  have H₃ : log (val x) (val z) < o := (lt_opow_iff_log_lt' h.one_lt ho).1 hz
+  have H₄ : val z % val x ^ log (val x) (val z) < _ := mod_lt _ (opow_ne_zero _ h.ne_zero)
+  rw [← of_val z, ← div_add_mod z.val (x.val ^ log x.val z.val), (h.opow _).mul_add_eq_of_lt' H₄,
+    mul_add, ← val_of (_ / _), h.opow_mul_eq_of_lt _ H₁]
+  apply (h.opow _).add_lt
+  · rw [mul_comm, mul_assoc, ← val_lt_iff, ← of_val (of _ * y), ← h.opow_mul_eq_of_lt]
+    · exact opow_mul_lt_opow H₂ H₃
+    · exact H₂
+  · exact (IH _ H₃ H₄).trans_le (opow_le_opow_right h.pos H₃.le)
+
+theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
+  mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))

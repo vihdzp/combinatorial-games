@@ -189,7 +189,7 @@ theorem ind {motive : FGame → Prop} (H : ∀ y, motive (mk y)) (x : FGame) : m
 instance : DecidableEq FGame := Quotient.decidableEq (d := SGame.Identical.instDecidable)
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-noncomputable def out (x : FGame) : SGame := Quotient.out x
+@[no_expose] noncomputable def out (x : FGame) : SGame := Quotient.out x
 @[simp] theorem out_eq (x : FGame) : mk x.out = x := Quotient.out_eq x
 
 /-- The finset of left moves of the game. -/
@@ -378,6 +378,7 @@ theorem one_def : 1 = {{0} | ∅}ꟳ := rfl
 -- Allows us to recursively represent `FGame`s.
 instance _root_.Std.Format.instRepr : Repr Std.Format := ⟨fun x _ => x⟩
 
+@[reducible]
 unsafe def Multiset.repr_or_emptyset {α : Type*} [Repr α] : Repr (Multiset α) where
   reprPrec g n := if g.card = 0 then "∅" else Multiset.instRepr.reprPrec g n
 
