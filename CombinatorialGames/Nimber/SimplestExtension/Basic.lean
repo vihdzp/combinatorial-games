@@ -589,18 +589,23 @@ theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
 
-/-- If `x` is a field and `y` is a ring with `x ≤ y`, then `y` is an ordinal power of `x`. -/
-theorem IsField.opow_log_eq_of_le (hx : IsField x) (hy : IsRing y) (h : x ≤ y) :
-    ∗(x.val ^ log x.val y.val) = y := by
+/-- If `x` is a field and `y` is an `x`-submonoid, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_isGroup (hx : IsField x) (hy : IsGroup y)
+    (hxy : ∀ z w, z < x → w < y → z * w < y) : ∗(x.val ^ log x.val y.val) = y := by
   apply le_antisymm
   · exact opow_log_le_self _ hy.ne_zero
   · by_contra! hy'
     have H₁ : ∗(val y / val x ^ log x.val y.val) < x := div_opow_log_lt _ hx.one_lt
     have H₂ : ∗(val y % val x ^ log x.val y.val) < y := mod_opow_log_lt_self _ hy.ne_zero
-    apply (hy.add_lt (hy.mul_lt hy' (H₁.trans_le h)) H₂).ne
-    rw [← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
+    apply (hy.add_lt (hxy _ _ H₁ hy') H₂).ne
+    rw [mul_comm, ← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
     · exact div_add_mod ..
     · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
+
+/-- If `x` is a field and `y` is a ring with `x ≤ y`, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_isRing (hx : IsField x) (hy : IsRing y) (hxy : x ≤ y) :
+    ∗(x.val ^ log x.val y.val) = y :=
+  hx.opow_log_eq_of_isGroup hy.toIsGroup fun _z _w hz hw ↦ hy.mul_lt (hz.trans_le hxy) hw
 
 theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
