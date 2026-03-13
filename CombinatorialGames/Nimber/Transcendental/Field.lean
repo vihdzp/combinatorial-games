@@ -701,4 +701,7 @@ theorem isField_opow_omega0_mul_one_add_self :
         rwa [(Polynomial.monic_X_sub_C ⟨rt, hrl⟩).natDegree_mul' hp0,
           Polynomial.natDegree_X_sub_C, Nat.add_comm, Nat.add_one_inj] at hn
 
+set_option linter.unusedSectionVars false in
+proof_wanted omega0_mul_one_add_val_eq_val : ω * (1 + val t) = val t
+
 end Nimber.IsAlgClosed
