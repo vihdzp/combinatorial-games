@@ -211,8 +211,8 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
 @[simp]
 theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   refine ⟨fun y z hy hz ↦ ?_, by simp⟩
-  induction y with | mk y
-  induction z with | mk z
+  induction y with | of y
+  induction z with | of z
   obtain rfl | hy₀ := eq_or_ne y 0; · simpa
   obtain rfl | hz₀ := eq_or_ne z 0; · simpa
   have hy' : log 2 y < x := by rwa [← lt_opow_iff_log_lt one_lt_two hy₀]
@@ -257,7 +257,7 @@ theorem add_lt_of_log_eq {a b : Ordinal} (ha₀ : a ≠ 0) (hb₀ : b ≠ 0) (h 
   apply (IsGroup.two_opow _).add_lt <;> exact mod_lt _ (opow_ne_zero _ two_ne_zero)
 
 theorem exists_isGroup_add_lt (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y < y := by
-  induction x with | mk x
+  induction x with | of x
   refine ⟨_, opow_log_le_self _ hx, .two_opow _, ?_⟩
   exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
 
@@ -390,7 +390,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
     rw [add_comm, ← add_assoc, ← mul_add, add_comm]
-    induction b with | mk b
+    induction b with | of b
     rw [of.lt_iff_lt] at hb
     have hwz := hwy.trans_le hyz
     have hx' : val (a * (∗b + ∗w)) < x := H' ha (hz.add_lt (hb.trans hwz) hwz)
