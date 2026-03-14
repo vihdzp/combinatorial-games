@@ -195,6 +195,14 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   h.toIsRing.eval_eq_of_lt (n := p.natDegree + 1) (by simp [h.leastNoRoots_eq_top])
     (by simpa using degree_le_natDegree) hpk
 
+theorem IsAlgClosed.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) :
+    x ^ n * y = ∗(x.val ^ n * y.val) :=
+  h.toIsRing.pow_mul_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm) hy
+
+theorem IsAlgClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsAlgClosed x) :
+    x ^ n = ∗(x.val ^ n) :=
+  h.toIsRing.pow_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm)
+
 /-- If `x` is a field, to prove it algebraically closed, it suffices to check
 *monic* polynomials. -/
 theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
