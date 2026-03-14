@@ -23,18 +23,6 @@ open Order Ordinal Polynomial Set
 
 public section
 
-/-! ### For Mathlib -/
-
-@[simp]
-theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
-  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
-  · simp
-  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
-
-@[simp]
-theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
-  mod_cast one_lt_opow (y := n) h
-
 namespace Nimber
 
 /-! ### Lemmas relating rings to `leastNoRoots` -/
