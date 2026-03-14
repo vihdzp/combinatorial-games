@@ -127,8 +127,8 @@ theorem IsRing.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
   · have := zero_lt_one.trans hx₁
     aesop
 
-theorem IsRing.pow_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
-    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) (hy : y < x) :
+theorem IsRing.pow_eq {n : ℕ} {x : Nimber} (h : IsRing x)
+    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) :
     x ^ n = ∗(x.val ^ n) := by
   obtain hx₁ | hx₁ := le_or_gt x 1
   · have := le_one_iff.1 hx₁; aesop
