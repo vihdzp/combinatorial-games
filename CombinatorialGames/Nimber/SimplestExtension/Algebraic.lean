@@ -195,6 +195,14 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   h.toIsRing.eval_eq_of_lt (n := p.natDegree + 1) (by simp [h.leastNoRoots_eq_top])
     (by simpa using degree_le_natDegree) hpk
 
+theorem IsAlgClosed.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) :
+    x ^ n * y = ∗(x.val ^ n * y.val) :=
+  h.toIsRing.pow_mul_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm) hy
+
+theorem IsAlgClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsAlgClosed x) :
+    x ^ n = ∗(x.val ^ n) :=
+  h.toIsRing.pow_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm)
+
 /-- If `x` is a field, to prove it algebraically closed, it suffices to check
 *monic* polynomials. -/
 theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
@@ -209,11 +217,6 @@ theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
     · rw [coeff_C_mul, inv_mul_eq_div]
       exact h.div_lt (hp' k) (hp' _)
   __ := h
-
-theorem IsAlgClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsAlgClosed x) :
-    x ^ n = ∗(x.val ^ n) := by
-  have hp (k : Nat) : (X ^ n).coeff k < x := by simp [apply_ite, ite_apply, h.zero_lt, h.one_lt]
-  simpa using h.eval_eq_of_lt hp
 
 attribute [simp] eval_prod eval_multiset_prod leadingCoeff_prod in
 private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
