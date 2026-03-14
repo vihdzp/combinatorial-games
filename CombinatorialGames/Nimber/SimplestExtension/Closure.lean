@@ -175,6 +175,15 @@ theorem groupClosure_mono : Monotone groupClosure := by
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
 
+theorem exists_isGroup_btwn {x : Nimber} (ne : x ≠ 0) : ∃ l u,
+    IsGroup l ∧ IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsGroup z :=
+  ⟨sSup {i | IsGroup i ∧ i ≤ x}, groupClosure (Order.succ x),
+    IsGroup.sSup (fun _ h => h.1) ⟨1, IsGroup.one, one_le_iff_ne_zero.2 ne⟩ ⟨x, fun _ h => h.2⟩,
+    IsGroup.groupClosure _, csSup_le' fun _ h => h.2,
+    (Order.lt_succ x).trans_le (le_groupClosure _), fun _ hzl hzu hz =>
+      hzl.not_ge (le_csSup ⟨x, fun _ h => h.2⟩
+        ⟨hz, Order.le_of_lt_succ (hz.lt_groupClosure_iff.1 hzu)⟩)⟩
+
 end AddSubgroup
 
 /-! ### Rings -/
@@ -263,6 +272,16 @@ theorem ringClosure_mono : Monotone ringClosure := by
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
 
+theorem exists_isRing_btwn {x : Nimber} (gt : 1 < x) : ∃ l u,
+    IsRing l ∧ IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsRing z :=
+  ⟨sSup {i | IsRing i ∧ i ≤ x}, ringClosure (Order.succ x),
+    IsRing.sSup (fun _ h => h.1)
+      ⟨of 2, IsRing.two, succ_one.symm ▸ (Order.succ_le_of_lt gt)⟩ ⟨x, fun _ h => h.2⟩,
+    IsRing.ringClosure _, csSup_le' fun _ h => h.2,
+    (Order.lt_succ x).trans_le (le_ringClosure _), fun _ hzl hzu hz =>
+      hzl.not_ge (le_csSup ⟨x, fun _ h => h.2⟩
+        ⟨hz, Order.le_of_lt_succ (hz.lt_ringClosure_iff.1 hzu)⟩)⟩
+
 end Subring
 
 /-! ### Fields -/
@@ -348,6 +367,16 @@ theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
+
+theorem exists_isField_btwn {x : Nimber} (gt : 1 < x) : ∃ l u,
+    IsField l ∧ IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsField z :=
+  ⟨sSup {i | IsField i ∧ i ≤ x}, fieldClosure (Order.succ x),
+    IsField.sSup (fun _ h => h.1)
+      ⟨of 2, IsField.two, succ_one.symm ▸ (Order.succ_le_of_lt gt)⟩ ⟨x, fun _ h => h.2⟩,
+    IsField.fieldClosure _, csSup_le' fun _ h => h.2,
+    (Order.lt_succ x).trans_le (le_fieldClosure _), fun _ hzl hzu hz =>
+      hzl.not_ge (le_csSup ⟨x, fun _ h => h.2⟩
+        ⟨hz, Order.le_of_lt_succ (hz.lt_fieldClosure_iff.1 hzu)⟩)⟩
 
 end Subfield
 end Nimber
