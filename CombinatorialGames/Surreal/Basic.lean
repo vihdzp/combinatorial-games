@@ -3,9 +3,12 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
+
 import CombinatorialGames.Tactic.AddInstances
-import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Int.Cast.Lemmas
 
 /-!
 # Surreal numbers
@@ -28,7 +31,7 @@ surreals are a field.
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-! ### Simplicity theorem -/
 
@@ -51,7 +54,7 @@ alias AntisymmRel.Fits := fits_of_equiv
 theorem Fits.refl (x : IGame) : x.Fits x :=
   fits_of_equiv .rfl
 
-instance : IsRefl _ Fits where
+instance : Std.Refl Fits where
   refl := Fits.refl
 
 theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
@@ -136,7 +139,7 @@ theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) 
     motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Surreal) : IGame := (Quotient.out x).1
+@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).1
 @[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
@@ -216,6 +219,10 @@ def toGame : Surreal ↪o Game where
 @[simp] theorem toGame_mk (x : IGame) [Numeric x] : toGame (mk x) = .mk x := rfl
 @[simp] theorem toGame_zero : toGame 0 = 0 := rfl
 @[simp] theorem toGame_one : toGame 1 = 1 := rfl
+
+@[simp]
+theorem gameMk_out (x : Surreal) : Game.mk x.out = x.toGame := by
+  conv_rhs => rw [← out_eq x, toGame_mk]
 
 theorem toGame_le_iff {a b : Surreal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp

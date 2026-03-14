@@ -3,8 +3,11 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public import Mathlib.SetTheory.Ordinal.Family
+
 import CombinatorialGames.Tactic.OrdinalAlias
-import Mathlib.SetTheory.Ordinal.Family
 import Mathlib.Tactic.Abel
 
 /-!
@@ -37,7 +40,7 @@ universe u v
 
 open Order Set
 
-noncomputable section
+public noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `NatOrdinal` -/
 
@@ -50,18 +53,18 @@ variable {a b c d a' b' c' : NatOrdinal.{u}}
 
 /-! ### Natural addition -/
 
+private def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
+  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
+termination_by (a, b)
+decreasing_by all_goals cases x; decreasing_tactic
+
 /-- Natural addition on ordinals `a + b`, also known as the Hessenberg sum, is recursively defined
 as the least ordinal greater than `a' + b` and `a + b'` for all `a' < a` and `b' < b`. In contrast
 to normal ordinal addition, it is commutative.
 
 Natural addition can equivalently be characterized as the ordinal resulting from adding up
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
-noncomputable def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
-termination_by (a, b)
-decreasing_by all_goals cases x; decreasing_tactic
-
-instance : Add NatOrdinal := ⟨add⟩
+@[no_expose] instance : Add NatOrdinal := ⟨add⟩
 
 /-- Add two `NatOrdinal`s as ordinal numbers. -/
 scoped notation:65 x:65 "+ₒ" y:66 => of (val x + val y)
@@ -124,10 +127,10 @@ private theorem add_assoc' (a b c : NatOrdinal) : a + b + c = a + (b + c) := by
 termination_by (a, b, c)
 
 instance : AddCommMonoid NatOrdinal where
-  add_zero := add_zero'
+  add_zero := private add_zero'
   zero_add x := by rw [add_comm', add_zero']
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_comm := private add_comm'
+  add_assoc := private add_assoc'
   nsmul := nsmulRec
 
 instance : IsOrderedCancelAddMonoid NatOrdinal where
@@ -153,15 +156,13 @@ private theorem succ_eq_add_one' (a : NatOrdinal) : succ a = a + 1 := by
   rwa [← succ_eq_add_one', succ_le_succ_iff, succ_le_iff]
 termination_by a
 
-instance : SuccAddOrder NatOrdinal := ⟨succ_eq_add_one'⟩
+instance : SuccAddOrder NatOrdinal := ⟨by exact succ_eq_add_one'⟩
 
 @[simp] theorem of_add_one (a : Ordinal) : of (a + 1) = of a + 1 := succ_eq_add_one _
 @[simp] theorem val_add_one (a : NatOrdinal) : val (a + 1) = val a + 1 := (succ_eq_add_one a).symm
 
 @[simp] theorem add_one_ne_zero (a : NatOrdinal) : a + 1 ≠ 0 := by simp [← succ_eq_add_one]
 
--- TODO: someday we'll get rid of this.
-attribute [-simp] Ordinal.add_one_eq_succ
 attribute [simp] Order.succ_eq_add_one
 
 instance : AddMonoidWithOne NatOrdinal where
@@ -174,12 +175,8 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
 
 @[simp]
-theorem natCast_image_Iio' (n : ℕ) : Nat.cast '' Iio n = Iio (n : Ordinal) := by
-  ext o; have (h : o < n) := NatOrdinal.eq_natCast_of_le_natCast h.le; aesop
-
-@[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
-  natCast_image_Iio' n
+  Ordinal.natCast_image_Iio n
 
 @[simp]
 theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∀ a < ↑n, P a) ↔ ∀ a < n, P a := by
@@ -190,6 +187,12 @@ theorem forall_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∀ a < ↑n, P
 theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P a) ↔ ∃ a < n, P a := by
   change (∃ a ∈ Iio _, _) ↔ ∃ a ∈ Iio _, _
   simp [← natCast_image_Iio]
+
+theorem lt_omega0 {o : NatOrdinal} : o < of .omega0 ↔ ∃ n : ℕ, o = n :=
+  Ordinal.lt_omega0
+
+theorem natCast_lt_omega0 (n : ℕ) : n < of .omega0 :=
+  Ordinal.natCast_lt_omega0 n
 
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
@@ -221,6 +224,10 @@ theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
 
 /-! ### Natural multiplication -/
 
+private def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
+  sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
+termination_by (a, b)
+
 /-- Natural multiplication on ordinals `a * b`, also known as the Hessenberg product, is recursively
 defined as the least ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for all
 `a' < a` and `b < b'`. In contrast to normal ordinal multiplication, it is commutative and
@@ -229,11 +236,7 @@ distributive (over natural addition).
 Natural multiplication can equivalently be characterized as the ordinal resulting from multiplying
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
-noncomputable def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
-termination_by (a, b)
-
-instance : Mul NatOrdinal := ⟨mul⟩
+@[no_expose] instance : Mul NatOrdinal := ⟨mul⟩
 
 /-- Multiply two `NatOrdinal`s as ordinal numbers. -/
 scoped notation:70 x:70 "*ₒ" y:71 => of (val x * val y)
@@ -281,14 +284,14 @@ private theorem mul_comm' (a b : NatOrdinal) : a * b = b * a := by
 termination_by (a, b)
 
 instance : CommMagma NatOrdinal where
-  mul_comm := mul_comm'
+  mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
   rw [← NatOrdinal.le_zero, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where
-  mul_zero := mul_zero'
+  mul_zero := private mul_zero'
   zero_mul a := by rw [mul_comm', mul_zero']
 
 private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
@@ -301,7 +304,7 @@ private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
 termination_by a
 
 instance : MulZeroOneClass NatOrdinal where
-  mul_one := mul_one'
+  mul_one := private mul_one'
   one_mul a := by rw [mul_comm', mul_one']
 
 instance : PosMulStrictMono NatOrdinal where
@@ -341,7 +344,7 @@ private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
 termination_by (a, b, c)
 
 instance : Distrib NatOrdinal where
-  left_distrib := mul_add
+  left_distrib := private mul_add
   right_distrib a b c := by rw [mul_comm, mul_add, mul_comm, mul_comm c]
 
 theorem mul_add_lt₃ (ha : a' < a) (hb : b' < b) (hc : c' < c) :
@@ -403,7 +406,7 @@ private theorem mul_assoc (a b c : NatOrdinal) : a * b * c = a * (b * c) := by
 termination_by (a, b, c)
 
 instance : CommSemiring NatOrdinal where
-  mul_assoc := mul_assoc
+  mul_assoc := private mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
 
@@ -415,7 +418,7 @@ theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp
-    · rw [(Ordinal.isNormal_mul_right ha).apply_of_isSuccLimit hc, iSup_le_iff]
+    · rw [(Ordinal.isNormal_mul_right ha).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
       rintro ⟨i, hi⟩
       exact (IH i hi).trans (mul_le_mul_right hi.le (of a))
 

@@ -3,7 +3,9 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
 
 /-!
 # Canonical games
@@ -20,11 +22,12 @@ games through undominating and unreversing games.
 
 universe u
 
+public noncomputable section
 
 namespace IGame
 
 /-- Undominating a game. This returns garbage values on non-short games -/
-noncomputable def undominate (x : IGame) : IGame :=
+def undominate (x : IGame) : IGame :=
   !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
     {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
 termination_by x
@@ -87,3 +90,4 @@ theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
   ⟨by simpa using le_undominate (-x), le_undominate x⟩
 
 end IGame
+end

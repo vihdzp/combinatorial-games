@@ -3,7 +3,12 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
 -/
-import CombinatorialGames.Game.Classes
+module
+
+public import CombinatorialGames.Game.Classes
+public import Mathlib.Algebra.CharZero.Defs
+public import Mathlib.Algebra.Order.Monoid.Defs
+
 import Mathlib.Algebra.Order.Ring.Cast
 import Mathlib.Tactic.Abel
 
@@ -21,7 +26,7 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 open IGame Set Pointwise
 
@@ -51,7 +56,7 @@ theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : mo
   Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Game) : IGame := Quotient.out x
+@[no_expose] def out (x : Game) : IGame := Quotient.out x
 @[simp] theorem out_eq (x : Game) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) : (mk x).out ≈ x := Quotient.mk_out (s := AntisymmRel.setoid ..) x
