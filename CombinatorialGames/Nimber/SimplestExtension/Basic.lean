@@ -615,6 +615,14 @@ theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
     (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
   mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
 
+theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {o : Nat}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) :=
+  (opow_natCast (val x) o ▸ h.mul_lt_opow_of_left_lt) hy hz
+
+theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {o : Nat}
+    (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
+  (opow_natCast (val x) o ▸ h.mul_lt_opow_of_right_lt) hy hz
+
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
