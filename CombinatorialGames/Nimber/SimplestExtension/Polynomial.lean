@@ -895,6 +895,15 @@ theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   contrapose! hpn
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
 
+theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
+    (hp : ∀ c < p, 0 < c.degree → (∀ k, c.coeff k < x) → ∃ r < x, c.IsRoot r) :
+    p ≤ leastNoRoots x := by
+  refine le_of_not_gt fun h => ?_
+  have ht : x.leastNoRoots ≠ ⊤ := ne_top_of_lt h
+  obtain ⟨r, hr, hrr⟩ := hp (WithTop.untop _ ht) ((WithTop.untop_lt_iff ht).2 h)
+    (degree_leastNoRoots_pos ht) (coeff_leastNoRoots_lt ht)
+  exact not_isRoot_leastNoRoots_of_lt ht hr hrr
+
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
