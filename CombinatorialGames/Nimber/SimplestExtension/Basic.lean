@@ -621,7 +621,7 @@ theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {n : ℕ}
 
 theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
     (h : IsField x) (hy : y < ∗(val x ^ n)) (hz : z < x) : y * z < ∗(val x ^ n) :=
-  (opow_natCast (val x) n ▸ h.mul_lt_opow_of_right_lt) hy hz
+  (opow_natCast x.val n ▸ h.mul_lt_opow_of_right_lt) hy hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
