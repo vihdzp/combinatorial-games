@@ -271,11 +271,10 @@ theorem enumGroup_zero : enumGroup 0 = 1 := by
   simp [enumGroup_eq_two_opow]
 
 theorem exists_isGroup_btwn {x : Nimber} (ne : x ≠ 0) : ∃ l u,
-    IsGroup l ∧ IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsGroup z := by
+    IsGroup l ∧ IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z := by
   have ⟨a, hl, hu⟩ := isNormal_enumGroup.exists_btwn' (x := x) (by simpa)
-  refine ⟨_, _, .enumGroup _, .enumGroup _, hl, hu, fun b hab hba h ↦ ?_⟩
-  obtain ⟨b, rfl⟩ := mem_range_enumGroup_iff.2 h
-  apply hba.not_ge
+  refine ⟨_, _, .enumGroup _, .enumGroup _, hl, hu, fun b hb hab ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumGroup_iff.2 hb
   simpa using hab
 
 end AddSubgroup
@@ -437,11 +436,10 @@ theorem enumRing_zero : enumRing 0 = ∗2 := by
     · exact ⟨_, IsRing.two⟩
 
 theorem exists_isRing_btwn {x : Nimber} (ne : 1 < x) : ∃ l u,
-    IsRing l ∧ IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsRing z := by
+    IsRing l ∧ IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z := by
   have ⟨a, hl, hu⟩ := isNormal_enumRing.exists_btwn' (x := x) (by simpa [← succ_one])
-  refine ⟨_, _, .enumRing _, .enumRing _, hl, hu, fun b hab hba h ↦ ?_⟩
-  obtain ⟨b, rfl⟩ := mem_range_enumRing_iff.2 h
-  apply hba.not_ge
+  refine ⟨_, _, .enumRing _, .enumRing _, hl, hu, fun b hb hab ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumRing_iff.2 hb
   simpa using hab
 
 end Subring
@@ -604,11 +602,10 @@ theorem enumField_zero : enumField 0 = ∗2 := by
     · exact ⟨_, IsField.two⟩
 
 theorem exists_isField_btwn {x : Nimber} (ne : 1 < x) : ∃ l u,
-    IsField l ∧ IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsField z := by
+    IsField l ∧ IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z := by
   obtain ⟨a, hl, hu⟩ := isNormal_enumField.exists_btwn' (x := x) (by simpa [← succ_one])
-  refine ⟨_, _, .enumField _, .enumField _, hl, hu, fun b hab hba h ↦ ?_⟩
-  obtain ⟨b, rfl⟩ := mem_range_enumField_iff.2 h
-  apply hba.not_ge
+  refine ⟨_, _, .enumField _, .enumField _, hl, hu, fun b hb hab ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumField_iff.2 hb
   simpa using hab
 
 end Subfield
