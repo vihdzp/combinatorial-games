@@ -138,9 +138,8 @@ theorem IsRing.eval_lt {x y : Nimber} (h : IsRing x) {p : Nimber[X]} (hp : ∀ k
   exact h.sum_lt fun n hn ↦ h.mul_lt (hp _) (h.pow_lt hy)
 
 theorem coeff_X_pow_lt {x : Nimber} (n : ℕ) (h : 1 < x) : ∀ k, (X ^ n).coeff k < x := by
-  intro k
-  rw [coeff_X_pow]
-  split <;> simp [h, (Nimber.zero_le 1).trans_lt h]
+  have : 0 < x := h.bot_lt
+  aesop
 
 theorem coeff_X_lt {x : Nimber} (h : 1 < x) : ∀ k, X.coeff k < x := by
   simpa using coeff_X_pow_lt 1 h
