@@ -159,7 +159,7 @@ theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
 
 theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :
     ∀ k, (0 : Nimber[X]).coeff k < x := by
-  simp [Nimber.pos_iff_ne_zero, h]
+  simpa [Nimber.pos_iff_ne_zero]
 
 theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
