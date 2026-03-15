@@ -141,6 +141,9 @@ theorem coeff_X_pow_lt {x : Nimber} (n : ℕ) (h : 1 < x) : ∀ k, (X ^ n).coeff
   have : 0 < x := h.bot_lt
   aesop
 
+theorem coeff_X_lt {x : Nimber} (h : 1 < x) : ∀ k, X.coeff k < x := by
+  simpa using coeff_X_pow_lt 1 h
+
 theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p + q).coeff k < x := by
   intro k
@@ -152,6 +155,10 @@ theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   intro k
   rw [finset_sum_coeff]
   exact h.sum_lt fun y hy ↦ (hs y hy k)
+
+theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :
+    ∀ k, (0 : Nimber[X]).coeff k < x := by
+  simpa [Nimber.pos_iff_ne_zero]
 
 theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
@@ -166,6 +173,10 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   | cons y s hy IH =>
     rw [Finset.prod_cons]
     apply h.coeff_mul_lt <;> simp_all
+
+theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
+    ∀ k, (1 : Nimber[X]).coeff k < x := by
+  simpa using coeff_X_pow_lt 0 h
 
 /-! ### Embedding in a subfield -/
 
