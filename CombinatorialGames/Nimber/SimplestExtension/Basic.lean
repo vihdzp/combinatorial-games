@@ -617,7 +617,7 @@ theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
 
 theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {n : ℕ}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) :=
-  (opow_natCast (val x) o ▸ h.mul_lt_opow_of_left_lt) hy hz
+  (opow_natCast x.val o ▸ h.mul_lt_opow_of_left_lt) hy hz
 
 theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {o : Nat}
     (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
