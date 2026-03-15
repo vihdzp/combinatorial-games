@@ -87,6 +87,19 @@ instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
 
+theorem Order.IsNormal.exists_btwn {α : Type*} {f : α → α} {x : α}
+    [LinearOrder α] [WellFoundedLT α] [SuccOrder α] [NoMaxOrder α] [OrderBot α]
+    (hf : Order.IsNormal f) (hx : f ⊥ ≤ x) : ∃ a, f a ≤ x ∧ x < f (Order.succ a) := by
+  let := WellFoundedLT.conditionallyCompleteLinearOrderBot α
+  refine ⟨sSup (f ⁻¹' Set.Iic x), ?_, ?_⟩
+  · rw [hf.le_iff_le_sSup' ⟨⊥, hx⟩]
+  · rw [← not_le, hf.le_iff_le_sSup' ⟨⊥, hx⟩, not_le, Order.lt_succ_iff]
+
+-- A version of `IsNormal.exists_btwn` which hides some def-eq abuse.
+private theorem Order.IsNormal.exists_btwn' {f : Ordinal.{u} → Nimber.{u}} {x : Nimber}
+    (hf : Order.IsNormal f) (hx : f 0 ≤ x) : ∃ a, f a ≤ x ∧ x < f (Order.succ a) :=
+  hf.exists_btwn hx
+
 end
 
 noncomputable section
@@ -192,6 +205,10 @@ theorem groupClosure_one : groupClosure 1 = 1 :=
 theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
   IsGroup.two.groupClosure_eq
 
+theorem IsGroup.one_le {x : Nimber} (h : IsGroup x) : 1 ≤ x := by
+  rw [← groupClosure_zero, h.groupClosure_le_iff]
+  exact zero_le _
+
 @[simp]
 theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
   (IsGroup.two_opow x).groupClosure_eq
@@ -211,6 +228,55 @@ theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x �
     apply (le_groupClosure x).lt_of_ne
     contrapose! h
     exact h ▸ IsGroup.groupClosure x
+
+theorem not_bddAbove_setOf_isGroup : ¬ BddAbove (setOf IsGroup) :=
+  fun ⟨a, ha⟩ ↦ (ha (.groupClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_groupClosure _)
+
+/-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
+def enumGroup (x : Ordinal) : Nimber :=
+  ∗(Ordinal.enumOrd {y | IsGroup (∗y)} x)
+
+@[simp]
+theorem range_enumGroup : Set.range enumGroup = setOf IsGroup :=
+  Ordinal.range_enumOrd not_bddAbove_setOf_isGroup
+
+theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ Set.range enumGroup ↔ IsGroup x :=
+  Set.ext_iff.1 range_enumGroup _
+
+theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
+  mem_range_enumGroup_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
+  Ordinal.isNormal_enumOrd (fun _ ↦ IsGroup.sSup) not_bddAbove_setOf_isGroup
+
+@[simp]
+theorem enumGroup_le_enumGroup_iff {x y} : enumGroup x ≤ enumGroup y ↔ x ≤ y :=
+  isNormal_enumGroup.strictMono.le_iff_le
+
+@[simp]
+theorem enumGroup_lt_enumGroup_iff {x y} : enumGroup x < enumGroup y ↔ x < y :=
+  isNormal_enumGroup.strictMono.lt_iff_lt
+
+@[simp]
+theorem enumGroup_inj {x y} : enumGroup x = enumGroup y ↔ x = y :=
+  isNormal_enumGroup.strictMono.injective.eq_iff
+
+theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
+  simp_rw [enumGroup, of.eq_iff_eq, isGroup_iff_mem_range_two_opow]
+  apply congrFun (Ordinal.enumOrd_range (f := fun y ↦ 2 ^ y) fun a b h ↦ ?_)
+  rwa [Ordinal.opow_lt_opow_iff_right one_lt_two]
+
+@[simp]
+theorem enumGroup_zero : enumGroup 0 = 1 := by
+  simp [enumGroup_eq_two_opow]
+
+theorem exists_isGroup_btwn {x : Nimber} (ne : x ≠ 0) : ∃ l u,
+    IsGroup l ∧ IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsGroup z := by
+  have ⟨a, hl, hu⟩ := isNormal_enumGroup.exists_btwn' (x := x) (by simpa)
+  refine ⟨_, _, .enumGroup _, .enumGroup _, hl, hu, fun b hab hba h ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumGroup_iff.2 h
+  apply hba.not_ge
+  simpa using hab
 
 end AddSubgroup
 
@@ -321,9 +387,62 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
   IsRing.two.ringClosure_eq
 
+theorem IsRing.two_le {x : Nimber} (h : IsRing x) : ∗2 ≤ x := by
+  rw [← ringClosure_zero, h.ringClosure_le_iff]
+  exact zero_le _
+
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
+
+theorem not_bddAbove_setOf_isRing : ¬ BddAbove (setOf IsRing) :=
+  fun ⟨a, ha⟩ ↦ (ha (.ringClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_ringClosure _)
+
+/-- The normal enumerator function for rings. -/
+def enumRing (x : Ordinal) : Nimber :=
+  ∗(Ordinal.enumOrd {y | IsRing (∗y)} x)
+
+@[simp]
+theorem range_enumRing : Set.range enumRing = setOf IsRing :=
+  Ordinal.range_enumOrd not_bddAbove_setOf_isRing
+
+theorem mem_range_enumRing_iff {x : Nimber} : x ∈ Set.range enumRing ↔ IsRing x :=
+  Set.ext_iff.1 range_enumRing _
+
+theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
+  mem_range_enumRing_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumRing : Order.IsNormal enumRing :=
+  Ordinal.isNormal_enumOrd (fun _ ↦ IsRing.sSup) not_bddAbove_setOf_isRing
+
+@[simp]
+theorem enumRing_le_enumRing_iff {x y} : enumRing x ≤ enumRing y ↔ x ≤ y :=
+  isNormal_enumRing.strictMono.le_iff_le
+
+@[simp]
+theorem enumRing_lt_enumRing_iff {x y} : enumRing x < enumRing y ↔ x < y :=
+  isNormal_enumRing.strictMono.lt_iff_lt
+
+@[simp]
+theorem enumRing_inj {x y} : enumRing x = enumRing y ↔ x = y :=
+  isNormal_enumRing.strictMono.injective.eq_iff
+
+@[simp]
+theorem enumRing_zero : enumRing 0 = ∗2 := by
+  rw [enumRing, of.eq_iff_eq, Ordinal.enumOrd_zero]
+  apply le_antisymm
+  · exact csInf_le' IsRing.two
+  · rw [le_csInf_iff'']
+    · exact fun _ ↦ IsRing.two_le
+    · exact ⟨_, IsRing.two⟩
+
+theorem exists_isRing_btwn {x : Nimber} (ne : 1 < x) : ∃ l u,
+    IsRing l ∧ IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsRing z := by
+  have ⟨a, hl, hu⟩ := isNormal_enumRing.exists_btwn' (x := x) (by simpa [← succ_one])
+  refine ⟨_, _, .enumRing _, .enumRing _, hl, hu, fun b hab hba h ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumRing_iff.2 h
+  apply hba.not_ge
+  simpa using hab
 
 end Subring
 
@@ -432,12 +551,65 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
   IsField.two.fieldClosure_eq
 
+theorem IsField.two_le {x : Nimber} (h : IsField x) : ∗2 ≤ x := by
+  rw [← fieldClosure_zero, h.fieldClosure_le_iff]
+  exact zero_le _
+
 theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
   rw [(IsField.fieldClosure x).ringClosure_le_iff]
   exact le_fieldClosure x
 
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
+
+theorem not_bddAbove_setOf_isField : ¬ BddAbove (setOf IsField) :=
+  fun ⟨a, ha⟩ ↦ (ha (.fieldClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_fieldClosure _)
+
+/-- The normal enumerator function for fields. -/
+def enumField (x : Ordinal) : Nimber :=
+  ∗(Ordinal.enumOrd {y | IsField (∗y)} x)
+
+@[simp]
+theorem range_enumField : Set.range enumField = setOf IsField :=
+  Ordinal.range_enumOrd not_bddAbove_setOf_isField
+
+theorem mem_range_enumField_iff {x : Nimber} : x ∈ Set.range enumField ↔ IsField x :=
+  Set.ext_iff.1 range_enumField _
+
+theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
+  mem_range_enumField_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumField : Order.IsNormal enumField :=
+  Ordinal.isNormal_enumOrd (fun _ ↦ IsField.sSup) not_bddAbove_setOf_isField
+
+@[simp]
+theorem enumField_le_enumField_iff {x y} : enumField x ≤ enumField y ↔ x ≤ y :=
+  isNormal_enumField.strictMono.le_iff_le
+
+@[simp]
+theorem enumField_lt_enumField_iff {x y} : enumField x < enumField y ↔ x < y :=
+  isNormal_enumField.strictMono.lt_iff_lt
+
+@[simp]
+theorem enumField_inj {x y} : enumField x = enumField y ↔ x = y :=
+  isNormal_enumField.strictMono.injective.eq_iff
+
+@[simp]
+theorem enumField_zero : enumField 0 = ∗2 := by
+  rw [enumField, of.eq_iff_eq, Ordinal.enumOrd_zero]
+  apply le_antisymm
+  · exact csInf_le' IsField.two
+  · rw [le_csInf_iff'']
+    · exact fun _ ↦ IsField.two_le
+    · exact ⟨_, IsField.two⟩
+
+theorem exists_isField_btwn {x : Nimber} (ne : 1 < x) : ∃ l u,
+    IsField l ∧ IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, l < z → z < u → ¬IsField z := by
+  obtain ⟨a, hl, hu⟩ := isNormal_enumField.exists_btwn' (x := x) (by simpa [← succ_one])
+  refine ⟨_, _, .enumField _, .enumField _, hl, hu, fun b hab hba h ↦ ?_⟩
+  obtain ⟨b, rfl⟩ := mem_range_enumField_iff.2 h
+  apply hba.not_ge
+  simpa using hab
 
 end Subfield
 end Nimber
