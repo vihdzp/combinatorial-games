@@ -23,18 +23,6 @@ open Order Ordinal Polynomial Set
 
 public section
 
-/-! ### For Mathlib -/
-
-@[simp]
-theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
-  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
-  · simp
-  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
-
-@[simp]
-theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
-  mod_cast one_lt_opow (y := n) h
-
 namespace Nimber
 
 /-! ### Lemmas relating rings to `leastNoRoots` -/
@@ -346,6 +334,17 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
       simpa using congrArg hxr.toSubring.subtype hi
+
+theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
+    IsRing (of (val t ^ ω)) where
+  toIsGroup := ht.toIsGroup.opow _
+  ne_one := ne_of_gt (by simp [ht.one_lt])
+  mul_lt y z hy hz := by
+    obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+    obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+    rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd,
+      ← eval_mul, ht.eval_eq_of_lt (ht.coeff_mul_lt hyd hzd)]
+    exact oeval_lt_opow_omega0 (ht.coeff_mul_lt hyd hzd)
 
 /-! ### Nimbers are algebraically closed -/
 

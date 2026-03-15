@@ -43,28 +43,6 @@ attribute [local aesop simp] Function.update
 -- TODO: upstream attr.
 attribute [simp] mem_lowerBounds
 
--- TODO: after #29084, we can remove the commutativity hypothesis from `List.le_sum_of_mem`, and
--- this lemma will no longer be needed.
-theorem List.le_sum_of_mem' {M} [AddMonoid M] [PartialOrder M] [OrderBot M]
-    [AddLeftMono M] [AddRightMono M]
-    (hm : (⊥ : M) = 0) {xs : List M} {x : M} (h₁ : x ∈ xs) : x ≤ xs.sum := by
-  induction xs with
-  | nil => simp at h₁
-  | cons y ys ih =>
-    rw [List.mem_cons] at h₁
-    rw [List.sum_cons]
-    rcases h₁ with rfl | h₁
-    · conv_lhs => rw [← add_zero x]
-      apply add_right_mono
-      rw [← hm]
-      exact bot_le
-    · specialize ih h₁
-      apply ih.trans
-      conv_lhs => rw [← zero_add ys.sum]
-      apply add_left_mono
-      rw [← hm]
-      exact bot_le
-
 namespace Polynomial
 
 variable {R : Type*} [Semiring R] {p : R[X]}
@@ -610,7 +588,7 @@ theorem mul_coeff_le_oeval (x : Nimber) (p : Nimber[X]) (k : ℕ) :
   obtain rfl | hp₀ := eq_or_ne p 0; · simp
   obtain hk | hk := le_or_gt k p.natDegree
   · rw [oeval, of.le_iff_le]
-    apply List.le_sum_of_mem' rfl
+    apply List.le_sum_of_mem
     aesop
   · rw [p.coeff_eq_zero_of_natDegree_lt hk]
     simp
@@ -747,6 +725,10 @@ theorem oeval_lt_oeval_iff {x : Nimber} {p q : Nimber[X]}
 theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q ↔ p ≤ q :=
   le_iff_le_iff_lt_iff_lt.2 (oeval_lt_oeval_iff hqk hpk)
+
+theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
+  simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
 
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
