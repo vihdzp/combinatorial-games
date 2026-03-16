@@ -42,18 +42,7 @@ attribute [aesop simp] Pi.single_apply
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
-@[simp]
-theorem equivShrink_le_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
-    equivShrink α x ≤ equivShrink α y ↔ x ≤ y :=
-  (orderIsoShrink α).map_rel_iff
-
-@[simp]
-theorem equivShrink_lt_equivShrink_iff {α : Type*} [Preorder α] [Small.{u} α] {x y : α} :
-    equivShrink α x < equivShrink α y ↔ x < y :=
-  (orderIsoShrink α).toRelIsoLT.map_rel_iff
-
 open Ordinal in
-@[simp]
 theorem Ordinal.type_lt_Iio (o : Ordinal.{u}) : typeLT (Set.Iio o) = lift.{u + 1} o := by
   convert ToType.mk.toRelIsoLT.ordinal_lift_type_eq
   · rw [lift_id'.{u, u+1}]

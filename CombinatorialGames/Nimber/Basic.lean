@@ -54,6 +54,7 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
+attribute [simp] succ_zero succ_ne_zero
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
@@ -61,7 +62,7 @@ recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 @[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
 theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
 
-@[simp] theorem succ_one : Order.succ 1 = ∗2 := Ordinal.succ_one
+@[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
 
 theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
