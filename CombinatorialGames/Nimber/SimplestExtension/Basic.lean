@@ -51,6 +51,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
+@[simp]
+theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -611,6 +615,22 @@ proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
 
 theorem IsField.omega : IsField (∗ω) := sorry
 
+theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
+    ∗(ω ^ x * n + y) = ∗ω ^ x * ∗n + ∗y := by
+  rw [(IsField.omega.opow' _).mul_add_eq_of_lt' hy,
+    IsField.omega.opow_mul_eq_of_lt' _ (natCast_lt_omega0 _), of_val]
+
+theorem of_omega0_opow_add {x y : Ordinal} (hy : y < ω ^ x) : ∗(ω ^ x + y) = ∗ω ^ x + ∗y := by
+  simpa using of_omega0_opow_mul_natCast_add hy 1
+
+@[simp]
+theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : ∗(ω ^ x * n) = ∗ω ^ x * ∗n := by
+  simpa using of_omega0_opow_mul_natCast_add (opow_pos x omega0_pos) n
+
+private theorem mul_le_nmul_nat (x : Ordinal) (n : ℕ) :
+    (∗x * ∗n).val ≤ (NatOrdinal.of x * n).val := by
+  sorry
+
 /-- A version of `mul_le_nmul` stated in terms of `Ordinal`. -/
 theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * NatOrdinal.of b).val := by
   obtain rfl | ha := eq_or_ne a 0; · simp
@@ -638,13 +658,74 @@ theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * 
   rw [← two_opow_log_add ha, ← NatOrdinal.two_opow_log_add ha,
     ← two_opow_log_add hb, ← NatOrdinal.two_opow_log_add hb]
   simp_rw [ha', hb', of_zero, NatOrdinal.of_zero, add_zero]
-  sorry
+  obtain ⟨m, hm⟩ := Ordinal.lt_omega0.1 (mod_lt (log 2 a) omega0_ne_zero)
+  obtain ⟨n, hn⟩ := Ordinal.lt_omega0.1 (mod_lt (log 2 b) omega0_ne_zero)
+  have IHa : 2 ^ log 2 a ≤ a := opow_log_le_self _ ha
+  have IHb : 2 ^ log 2 b ≤ b := opow_log_le_self _ hb
+  rw [← div_add_mod (log 2 a) ω, hm] at IHa ⊢
+  rw [← div_add_mod (log 2 b) ω, hn] at IHb ⊢
+  simp_rw [opow_add, opow_mul, ofNat_opow_omega0, opow_natCast] at IHa IHb ⊢
+  replace IHa := (Ordinal.le_mul_left _ (pow_pos two_pos m)).trans IHa
+  replace IHb := (Ordinal.le_mul_left _ (pow_pos two_pos n)).trans IHb
+  rw [← Nat.cast_ofNat]
+  simp_rw [← natCast_pow, of_omega0_opow_mul_natCast, NatOrdinal.of_omega0_opow_mul_natCast]
+  obtain ⟨k, hk⟩ : ∃ k : ℕ, ∗(2 ^ m :) * ∗(2 ^ n :) = ∗k := by
+    apply Nimber.lt_omega0.1 (IsField.omega.mul_lt _ _) <;>
+      exact Ordinal.natCast_lt_omega0 _
+  rw [mul_mul_mul_comm, mul_mul_mul_comm (G := NatOrdinal), ← of_val (of _ * _), hk]
+  apply (mul_le_nmul_nat ..).trans
+  rw [NatOrdinal.val.le_iff_le]
+  apply mul_le_mul'
+  · rw [NatOrdinal.of_le_iff, val_le_iff]
+    apply mul_le_of_forall_ne
+    intro c hc d hd
+    induction c with | mk c
+    induction d with | mk d
+    rw [of.lt_iff_lt] at hc hd
+    have H₁ := hc.trans_le IHa
+    have H₂ := hd.trans_le IHb
+    have : toLex (ω ^ (log 2 a / ω), d) < toLex (a, b) := by
+      rw [Prod.Lex.toLex_lt_toLex']
+      exact ⟨IHa, fun _ ↦ H₂⟩
+    apply ne_of_lt
+    apply (add_le_nadd ..).trans_lt
+    rw [← NatOrdinal.wpow_add]
+    apply NatOrdinal.add_lt_wpow
+    · rw [NatOrdinal.of_lt_iff, val_lt_iff]
+      apply (add_le_nadd ..).trans_lt
+      rw [NatOrdinal.val_wpow, of.lt_iff_lt, NatOrdinal.val_lt_iff]
+      apply NatOrdinal.add_lt_wpow
+      -- TODO: merge?
+      · rw [NatOrdinal.of_lt_iff]
+        apply (mul_le_nmul' ..).trans_lt
+        rwa [NatOrdinal.val.lt_iff_lt, NatOrdinal.wpow_add, NatOrdinal.of_omega0_opow,
+          mul_lt_mul_iff_left₀ (NatOrdinal.wpow_pos _), ← NatOrdinal.of_omega0_opow,
+          NatOrdinal.of.lt_iff_lt]
+      · rw [NatOrdinal.of_lt_iff]
+        apply (mul_le_nmul' ..).trans_lt
+        rwa [NatOrdinal.val.lt_iff_lt, NatOrdinal.wpow_add, NatOrdinal.of_omega0_opow,
+          mul_lt_mul_iff_right₀ (NatOrdinal.wpow_pos _), ← NatOrdinal.of_omega0_opow,
+          NatOrdinal.of.lt_iff_lt]
+    · rw [NatOrdinal.of_lt_iff]
+      apply (mul_le_nmul' ..).trans_lt
+      rw [NatOrdinal.val.lt_iff_lt, NatOrdinal.wpow_add]
+      exact NatOrdinal.mul_lt_mul hc hd
+  · rw [← val_eq_iff, ← NatOrdinal.of.eq_iff_eq, NatOrdinal.of_natCast] at hk
+    rw [← hk, NatOrdinal.of_le_iff]
+    exact mul_le_nmul_nat ..
 termination_by (a, b)
+decreasing_by
+  on_goal 6 => assumption
+  all_goals decreasing_tactic
 
 theorem mul_le_nmul (a b : Nimber) : a * b ≤ ∗(NatOrdinal.of a.val * NatOrdinal.of b.val).val :=
   mul_le_nmul' ..
 
 theorem IsRing.omega0_omega0_opow (x : Ordinal) : IsRing (∗(ω ^ ω ^ x)) where
+  ne_one := by
+    rw [of_ne_one, ← opow_zero omega0, ne_eq, opow_right_inj one_lt_omega0]
+    exact opow_ne_zero _ omega0_ne_zero
+  mul_lt x y hx hy := (mul_le_nmul ..).trans_lt (NatOrdinal.mul_lt_wpow_wpow hx hy)
   __ := IsGroup.omega0_opow _
 
 end Nimber

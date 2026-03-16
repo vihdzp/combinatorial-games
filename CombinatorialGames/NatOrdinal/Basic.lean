@@ -332,6 +332,9 @@ instance : MulLeftMono NatOrdinal where
 instance : MulRightMono NatOrdinal where
   elim a b c h := by convert mul_le_mul_right h a using 1 <;> exact mul_comm ..
 
+protected theorem mul_lt_mul {a b c d : NatOrdinal} (h₁ : a < c) (h₂ : b < d) : a * b < c * d :=
+  mul_lt_mul'' h₁ h₂ (zero_le _) (zero_le _)
+
 private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
   refine le_antisymm (mul_le_iff.2 fun a' ha d hd => ?_)
     (add_le_iff.2 ⟨fun d hd => ?_, fun d hd => ?_⟩)
