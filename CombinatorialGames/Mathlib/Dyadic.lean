@@ -225,7 +225,6 @@ theorem mkRat_add_mkRat_self {m n : ℤ} {k : ℕ} (h₁ h₂ : k ∈ Submonoid.
     Dyadic.mkRat m h₁ + Dyadic.mkRat n h₂ = .mkRat (m + n) h₁ := by
   ext; simp [Rat.mkRat_eq_div, add_div]
 
-attribute [local simp] coe_nsmul coe_zsmul in
 instance : CommRing Dyadic where
   add_assoc := add_assoc
   zero_add := Dyadic.zero_add
@@ -248,11 +247,11 @@ instance : CommRing Dyadic where
     rw [← coe_inj, coe_intCast, coe_neg, coe_natCast, ← Int.cast_natCast,
       ← Rat.intCast_neg, Int.neg_ofNat_succ]
   nsmul n x := n • x
-  nsmul_zero x := by ext; simp
-  nsmul_succ n x := by ext; simp [add_one_mul]
+  nsmul_zero x := by ext; simp [coe_nsmul]
+  nsmul_succ n x := by ext; simp [add_one_mul, coe_nsmul]
   zsmul n x := n • x
-  zsmul_zero' x := by ext; simp
-  zsmul_succ' n x := by ext; simp [add_one_mul]
+  zsmul_zero' x := by ext; simp [coe_zsmul]
+  zsmul_succ' n x := by ext; simp [add_one_mul, coe_zsmul]
   zsmul_neg' n x := by
     change _ * _ = -(_ * _)
     rw [← neg_mul, ← coe_inj, coe_mul, coe_mul, coe_intCast, coe_neg, coe_intCast,
