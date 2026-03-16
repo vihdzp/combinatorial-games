@@ -382,7 +382,7 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 @[no_expose]
 instance : LE IGame where
-  le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
+  le := Sym2.GameAdd.recursion subposition_wf fun x y le ↦
     (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
     (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
@@ -395,7 +395,7 @@ recommended_spelling "lf" for "⧏" in [«term_⧏_»]
 /-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
     x ≤ y ↔ (∀ z ∈ xᴸ, z ⧏ y) ∧ (∀ z ∈ yᴿ, x ⧏ z) :=
-  propext_iff.1 <| Sym2.GameAdd.fix_eq ..
+  propext_iff.1 <| Sym2.GameAdd.recursion_eq ..
 
 /-- Definition of `x ⧏ y` on games, in terms of `≤`. -/
 theorem lf_iff_exists_le {x y : IGame} :
@@ -625,7 +625,7 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
+  induction x, y using Sym2.GameAdd.recursion subposition_wf with | _ x y IH
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
   dsimp
   congr! 3 with z hz z hz
