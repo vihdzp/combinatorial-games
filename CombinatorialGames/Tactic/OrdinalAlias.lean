@@ -36,7 +36,7 @@ theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
 @[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
 @[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
-  rw [← succ_one, Order.Iio_succ]; ext; simp [le_one_iff]
+  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [le_one_iff]
 
 end Ordinal
 end
@@ -102,14 +102,6 @@ theorem $(mkIdent `of_le_iff) {a b} : $(mkOf Alias) a ≤ b ↔ a ≤ $(mkVal Al
 theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias) b := .rfl
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
-@[simp]
-theorem $(mkIdent `of_image_Iio) (a) : $(mkOf Alias) '' Set.Iio a = Set.Iio ($(mkOf Alias) a) :=
-  Set.image_id _
-
-@[simp]
-theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($(mkVal Alias) a) :=
-  Set.image_id _
-
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
@@ -125,12 +117,14 @@ theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+theorem $(mkIdent `of_ne_one) {a} : $(mkOf Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
+theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 @[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
 @[simp] theorem $(mkIdent `val_le_one) {a} : $(mkVal Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
-@[simp] theorem $(mkIdent `one_le_of) {a} : 1 ≤ $(mkOf Alias) a ↔ 1 ≤ a := .rfl
+theorem $(mkIdent `one_le_of) {a} : 1 ≤ $(mkOf Alias) a ↔ 1 ≤ a := .rfl
 @[simp] theorem $(mkIdent `one_le_val) {a} : 1 ≤ $(mkVal Alias) a ↔ 1 ≤ a := .rfl
-@[simp] theorem $(mkIdent `of_lt_one) {a} : $(mkOf Alias) a < 1 ↔ a < 1 := .rfl
-@[simp] theorem $(mkIdent `val_lt_one) {a} : $(mkVal Alias) a < 1 ↔ a < 1 := .rfl
+theorem $(mkIdent `of_lt_one) {a} : $(mkOf Alias) a < 1 ↔ a < 1 := .rfl
+theorem $(mkIdent `val_lt_one) {a} : $(mkVal Alias) a < 1 ↔ a < 1 := .rfl
 @[simp] theorem $(mkIdent `one_lt_of) {a} : 1 < $(mkOf Alias) a ↔ 1 < a := .rfl
 @[simp] theorem $(mkIdent `one_lt_val) {a} : 1 < $(mkVal Alias) a ↔ 1 < a := .rfl
 
@@ -141,7 +135,7 @@ theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVa
 theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
   rfl
 
-@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
+theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
@@ -181,9 +175,9 @@ theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ord
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
   Ordinal.one_le_iff_ne_zero
 
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
+theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
-@[simp] theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
+theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
 @[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
 
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :

@@ -50,28 +50,6 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
-protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
-  rw [← one_add_one_eq_two, mul_add, mul_one]
-
-theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
-  obtain rfl | hb₀ := eq_or_ne b 0; · simp
-  refine ⟨fun h ↦ ⟨_, (Ordinal.lt_mul_iff_div_lt hb₀).1 h, _, mod_lt a hb₀,
-    (div_add_mod ..).symm⟩, ?_⟩
-  rintro ⟨q, hq, r, hr, rfl⟩
-  apply (add_right_strictMono hr).trans_le
-  simp_rw [← mul_succ]
-  exact mul_le_mul_right (Order.succ_le_iff.mpr hq) _
-
-theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
-    (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
-  simp_rw [lt_mul_iff]
-  aesop
-
-theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
-    (∃ a < b * c, P a) ↔ ∃ q < c, ∃ r < b, P (b * q + r) := by
-  simp_rw [lt_mul_iff]
-  aesop
-
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -614,6 +592,14 @@ theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
 theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
     (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
   mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
+
+theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {n : ℕ}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ n)) : y * z < ∗(val x ^ n) :=
+  (opow_natCast x.val n ▸ h.mul_lt_opow_of_left_lt) hy hz
+
+theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
+    (h : IsField x) (hy : y < ∗(val x ^ n)) (hz : z < x) : y * z < ∗(val x ^ n) :=
+  (opow_natCast x.val n ▸ h.mul_lt_opow_of_right_lt) hy hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
