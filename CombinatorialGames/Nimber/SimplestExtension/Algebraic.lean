@@ -23,18 +23,6 @@ open Order Ordinal Polynomial Set
 
 public section
 
-/-! ### For Mathlib -/
-
-@[simp]
-theorem Ordinal.one_lt_opow {x y : Ordinal} (h : 1 < x) : 1 < x ^ y ↔ y ≠ 0 := by
-  obtain ⟨rfl, hy⟩ := eq_zero_or_pos y
-  · simp
-  · rw [← Ordinal.opow_zero x, Ordinal.opow_lt_opow_iff_right h, pos_iff_ne_zero]
-
-@[simp]
-theorem Ordinal.one_lt_pow {x : Ordinal} {n : ℕ} (h : 1 < x) : 1 < x ^ n ↔ n ≠ 0 :=
-  mod_cast one_lt_opow (y := n) h
-
 namespace Nimber
 
 /-! ### Lemmas relating rings to `leastNoRoots` -/
@@ -139,9 +127,8 @@ theorem IsRing.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
   · have := zero_lt_one.trans hx₁
     aesop
 
-theorem IsRing.pow_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
-    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) (hy : y < x) :
-    x ^ n = ∗(x.val ^ n) := by
+theorem IsRing.pow_eq {n : ℕ} {x : Nimber} (h : IsRing x)
+    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) : x ^ n = ∗(x.val ^ n) := by
   obtain hx₁ | hx₁ := le_or_gt x 1
   · have := le_one_iff.1 hx₁; aesop
   · simpa using h.pow_mul_eq h' hx₁
@@ -206,6 +193,14 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) : p.eval x = oeval x p :=
   h.toIsRing.eval_eq_of_lt (n := p.natDegree + 1) (by simp [h.leastNoRoots_eq_top])
     (by simpa using degree_le_natDegree) hpk
+
+theorem IsAlgClosed.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) :
+    x ^ n * y = ∗(x.val ^ n * y.val) :=
+  h.toIsRing.pow_mul_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm) hy
+
+theorem IsAlgClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsAlgClosed x) :
+    x ^ n = ∗(x.val ^ n) :=
+  h.toIsRing.pow_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm)
 
 /-- If `x` is a field, to prove it algebraically closed, it suffices to check
 *monic* polynomials. -/
@@ -346,6 +341,17 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
       simpa using congrArg hxr.toSubring.subtype hi
+
+theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
+    IsRing (of (val t ^ ω)) where
+  toIsGroup := ht.toIsGroup.opow _
+  ne_one := ne_of_gt (by simp [ht.one_lt])
+  mul_lt y z hy hz := by
+    obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+    obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+    rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd,
+      ← eval_mul, ht.eval_eq_of_lt (ht.coeff_mul_lt hyd hzd)]
+    exact oeval_lt_opow_omega0 (ht.coeff_mul_lt hyd hzd)
 
 /-! ### Nimbers are algebraically closed -/
 

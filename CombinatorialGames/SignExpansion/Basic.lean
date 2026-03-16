@@ -119,9 +119,8 @@ theorem copy_eq (x : SignExpansion) (sign : NatOrdinal → SignType)
 protected theorem ext {x y : SignExpansion} (hxy : ∀ o, x o = y o) : x = y :=
   DFunLike.coe_injective (funext hxy)
 
-@[simp]
 theorem mk_eq_mk {f g h₁ h₂} : mk f h₁ = mk g h₂ ↔ f = g := by
-  simp [DFunLike.ext'_iff]
+  simp
 
 theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : NatOrdinal}
     (hoo' : o ≤ o') (ho : x o = 0) : x o' = 0 :=
