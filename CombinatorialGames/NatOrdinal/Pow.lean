@@ -34,21 +34,6 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 open Ordinal
 
-theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
-  obtain rfl | hy := eq_or_ne y 0
-  · simp
-  · rw [mul_add_one, lt_add_iff hy]
-
-private theorem Ordinal.lt_mul_iff {a b c : Ordinal} :
-    a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
-  obtain rfl | hb₀ := eq_or_ne b 0; · simp
-  refine ⟨fun h ↦ ⟨_, (Ordinal.lt_mul_iff_div_lt hb₀).1 h, _, mod_lt a hb₀,
-    (div_add_mod ..).symm⟩, ?_⟩
-  rintro ⟨q, hq, r, hr, rfl⟩
-  apply (add_right_strictMono hr).trans_le
-  simp_rw [← mul_succ]
-  exact mul_le_mul_right (Order.succ_le_iff.mpr hq) _
-
 /-- A typeclass for the the `ω^` notation. -/
 class Wpow (α : Type*) where
   /-- The `ω`-map, i.e. base `ω` exponentiation. -/
@@ -113,7 +98,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
           obtain (⟨a, ha, hz⟩ | h) := lt_add_iff.1 hz
           · have hxn := (wpow_mul_natCast_add_of_lt_aux (wpow_pos x) (n + 1)).2
             simp_rw [val_zero, add_zero] at hxn
-            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one] at ha
+            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one_iff] at ha
             obtain ⟨b, (hb : of b < ω^ x), hbw⟩ := ha
             rw [val_le_iff, ← val_of b, ← (wpow_mul_natCast_add_of_lt_aux hb n).2] at hbw
             refine ⟨_, hb, hz.trans <| (add_le_add_left hbw _).trans ?_⟩
