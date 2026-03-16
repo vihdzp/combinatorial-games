@@ -59,8 +59,6 @@ theorem wpow_def (x : NatOrdinal) : ω^ x = of (ω ^ x.val) := rfl
 theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
   Ordinal.isNormal_opow one_lt_omega0
 
---local notation3:80 n:81 " ^ₙ " x:81 => of ((n : ℕ) ^ (val x))
-
 @[simp] theorem wpow_lt_wpow : ω^ x < ω^ y ↔ x < y := isNormal_wpow.strictMono.lt_iff_lt
 @[simp] theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := isNormal_wpow.strictMono.le_iff_le
 @[simp] theorem wpow_inj : ω^ x = ω^ y ↔ x = y := isNormal_wpow.strictMono.injective.eq_iff
