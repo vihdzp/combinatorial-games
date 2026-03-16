@@ -9,6 +9,7 @@ public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
+import CombinatorialGames.NatOrdinal.Pow
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
@@ -603,6 +604,44 @@ theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
+theorem IsField.omega : IsField (∗ω) := sorry
+
+/-- A version of `mul_le_nmul` stated in terms of `Ordinal`. -/
+theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * NatOrdinal.of b).val := by
+  obtain rfl | ha := eq_or_ne a 0; · simp
+  obtain rfl | hb := eq_or_ne b 0; · simp
+  by_cases! ha' : a % 2 ^ log 2 a ≠ 0
+  · rw [← two_opow_log_add ha, ← NatOrdinal.two_opow_log_add ha]
+    simp_rw [add_mul, val_le_iff]
+    apply (add_le_nadd ..).trans
+    rw [of.le_iff_le, NatOrdinal.val.le_iff_le]
+    have : 2 ^ log 2 a < a := by
+      conv_rhs => rw [← Ordinal.two_opow_log_add ha]
+      rwa [lt_add_iff_pos_right, pos_iff_ne_zero]
+    have := mod_opow_log_lt_self 2 ha
+    apply add_le_add <;> exact mul_le_nmul' ..
+  by_cases! hb' : b % 2 ^ log 2 b ≠ 0
+  · rw [← two_opow_log_add hb, ← NatOrdinal.two_opow_log_add hb]
+    simp_rw [mul_add, val_le_iff]
+    apply (add_le_nadd ..).trans
+    rw [of.le_iff_le, NatOrdinal.val.le_iff_le]
+    have : 2 ^ log 2 b < b := by
+      conv_rhs => rw [← Ordinal.two_opow_log_add hb]
+      rwa [lt_add_iff_pos_right, pos_iff_ne_zero]
+    have := mod_opow_log_lt_self 2 hb
+    apply add_le_add <;> exact mul_le_nmul' ..
+  rw [← two_opow_log_add ha, ← NatOrdinal.two_opow_log_add ha,
+    ← two_opow_log_add hb, ← NatOrdinal.two_opow_log_add hb]
+  simp_rw [ha', hb', of_zero, NatOrdinal.of_zero, add_zero]
+  sorry
+termination_by (a, b)
+
+theorem mul_le_nmul (a b : Nimber) : a * b ≤ ∗(NatOrdinal.of a.val * NatOrdinal.of b.val).val :=
+  mul_le_nmul' ..
+
+theorem IsRing.omega0_omega0_opow (x : Ordinal) : IsRing (∗(ω ^ ω ^ x)) where
+  __ := IsGroup.omega0_opow _
 
 end Nimber
 end

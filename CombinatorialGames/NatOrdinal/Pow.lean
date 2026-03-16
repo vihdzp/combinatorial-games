@@ -217,6 +217,11 @@ theorem of_natCast_opow_mul_natCast {x : Ordinal} (m n : ℕ) : of (m ^ x * n) =
   | succ m => simpa using
       of_natCast_opow_mul_natCast_add_of_lt' (opow_pos x m.cast_add_one_pos) n (m := m + 1)
 
+theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) :
+    of (2 ^ log 2 o) + of (o % 2 ^ log 2 o) = of o := by
+  conv_rhs => rw [← Ordinal.two_opow_log_add ho]
+  exact (of_natCast_opow_add_of_lt' (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm
+
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
   obtain rfl | hx := eq_or_ne x 0; · simp
   obtain rfl | hy := eq_or_ne y 0; · simp
