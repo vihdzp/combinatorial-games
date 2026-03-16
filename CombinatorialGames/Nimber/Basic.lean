@@ -72,8 +72,7 @@ variable {a b c : Nimber.{u}}
 
 -- We write the binders like this so that the termination checker works.
 private def add (a b : Nimber.{u}) : Nimber.{u} :=
-  sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
-    ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
+  sInf {x | (∃ a', ∃ (_ : a' < a), add a' b = x) ∨ ∃ b', ∃ (_ : b' < b), add a b' = x}ᶜ
 termination_by (a, b)
 
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
@@ -84,12 +83,12 @@ instance : Add Nimber :=
 
 theorem add_def (a b : Nimber) :
     a + b = sInf {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ := by
-  change Nimber.add a b = _
-  rw [Nimber.add]
+  change add a b = _
+  rw [add]
   simp_rw [exists_prop]
   rfl
 
-/-- The set in the definition of `Nimber.add` is nonempty. -/
+/-- The set in the definition of `add` is nonempty. -/
 private theorem add_nonempty (a b : Nimber.{u}) :
     {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ.Nonempty :=
   nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
@@ -112,11 +111,11 @@ private theorem add_ne_of_lt (a b : Nimber) :
   rw [← add_def] at H
   simpa using H
 
-protected theorem add_comm (a b : Nimber) : a + b = b + a := by
+private theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
   congr! 7 <;>
-    (rw [and_congr_right_iff]; intro; rw [Nimber.add_comm])
+    (rw [and_congr_right_iff]; intro; rw [add_comm])
 termination_by (a, b)
 
 instance : IsLeftCancelAdd Nimber where
@@ -128,7 +127,7 @@ instance : IsLeftCancelAdd Nimber where
 
 instance : IsRightCancelAdd Nimber where
   add_right_cancel a b c h := by
-    simp_rw [Nimber.add_comm] at h
+    simp_rw [add_comm] at h
     exact add_left_cancel h
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
@@ -140,7 +139,7 @@ theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
     · rfl
     · have hb : b + b = 0 := add_eq_zero.2 rfl
       rwa [← hb, add_left_inj] at hab
-  · rw [← Nimber.le_zero]
+  · rw [← le_zero]
     apply add_le_of_forall_ne <;>
     simp_rw [ne_eq] <;>
     intro x hx
@@ -157,37 +156,34 @@ theorem add_ne_zero_iff : a + b ≠ 0 ↔ a ≠ b :=
 theorem add_self (a : Nimber) : a + a = 0 :=
   add_eq_zero.2 rfl
 
-protected theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
+private theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
   apply le_antisymm <;>
     apply add_le_of_forall_ne <;>
     intro x hx <;>
     try obtain ⟨y, hy, rfl⟩ | ⟨y, hy, rfl⟩ := exists_of_lt_add hx
-  on_goal 1 => rw [Nimber.add_assoc y, add_ne_add_left]
-  on_goal 2 => rw [Nimber.add_assoc _ y, add_ne_add_right, add_ne_add_left]
-  on_goal 3 => rw [Nimber.add_assoc _ _ x, add_ne_add_right, add_ne_add_right]
-  on_goal 4 => rw [← Nimber.add_assoc x, add_ne_add_left, add_ne_add_left]
-  on_goal 5 => rw [← Nimber.add_assoc _ y, add_ne_add_left, add_ne_add_right]
-  on_goal 6 => rw [← Nimber.add_assoc _ _ y, add_ne_add_right]
+  on_goal 1 => rw [add_assoc y, add_ne_add_left]
+  on_goal 2 => rw [add_assoc _ y, add_ne_add_right, add_ne_add_left]
+  on_goal 3 => rw [add_assoc _ _ x, add_ne_add_right, add_ne_add_right]
+  on_goal 4 => rw [← add_assoc x, add_ne_add_left, add_ne_add_left]
+  on_goal 5 => rw [← add_assoc _ y, add_ne_add_left, add_ne_add_right]
+  on_goal 6 => rw [← add_assoc _ _ y, add_ne_add_right]
   all_goals apply ne_of_lt; assumption
 termination_by (a, b, c)
 
-protected theorem add_zero (a : Nimber) : a + 0 = a := by
+private theorem add_zero (a : Nimber) : a + 0 = a := by
   apply le_antisymm
   · apply add_le_of_forall_ne
     · intro a' ha
-      rw [Nimber.add_zero]
+      rw [add_zero]
       exact ha.ne
     · intro _ h
-      exact (Nimber.not_neg _ h).elim
+      exact (not_neg _ h).elim
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
-    have := Nimber.add_zero (a + 0)
+    have := add_zero (a + 0)
     rw [add_left_inj] at this
     exact this.not_lt h
 termination_by a
-
-protected theorem zero_add (a : Nimber) : 0 + a = a := by
-  rw [Nimber.add_comm, Nimber.add_zero]
 
 instance : Neg Nimber :=
   ⟨id⟩
@@ -197,13 +193,13 @@ protected theorem neg_eq (a : Nimber) : -a = a :=
   rfl
 
 instance : AddCommGroupWithOne Nimber where
-  add_assoc := Nimber.add_assoc
-  add_zero := Nimber.add_zero
-  zero_add := Nimber.zero_add
+  add_assoc := private add_assoc
+  add_zero := private add_zero
+  zero_add _ := by rw [add_comm, add_zero]
   nsmul := nsmulRec
   zsmul := zsmulRec
   neg_add_cancel := add_self
-  add_comm := Nimber.add_comm
+  add_comm := private add_comm
 
 -- #34622
 section Mathlib
