@@ -188,7 +188,7 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
   h.add_eq_of_lt hy
 
 @[simp]
-theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
+theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
   refine ⟨fun y z hy hz ↦ ?_, by simp⟩
   induction y with | mk y
   induction z with | mk z
@@ -222,6 +222,11 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · exact H hyz hy'
 termination_by x
 
+@[simp]
+theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
+  rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
+  exact .two_opow _
+
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
@@ -229,7 +234,7 @@ theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o
     (o.two_opow_log_add ho)
 
 theorem add_lt_of_log_eq {a b : Ordinal} (ha₀ : a ≠ 0) (hb₀ : b ≠ 0) (h : log 2 a = log 2 b) :
-    ∗a + ∗b < ∗(2 ^ log 2 a) := by
+    ∗a + ∗b < ∗2 ^ log 2 a := by
   rw [← two_opow_log_add ha₀, ← two_opow_log_add hb₀, h]
   abel_nf
   rw [CharTwo.two_zsmul, zero_add]
@@ -241,8 +246,7 @@ theorem exists_isGroup_add_lt (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y 
   exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
 
 /-- The nimbers that are groups are exactly the powers of `2`. -/
-theorem isGroup_iff_mem_range_two_opow :
-    IsGroup x ↔ x ∈ range fun y : Ordinal ↦ ∗(2 ^ y) := by
+theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordinal ↦ ∗2 ^ y := by
   refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
   by_contra! H
   obtain ⟨h, hx⟩ := H
