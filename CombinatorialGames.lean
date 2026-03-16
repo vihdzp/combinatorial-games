@@ -24,6 +24,7 @@ import CombinatorialGames.Mathlib.Dyadic
 import CombinatorialGames.Mathlib.Finlift
 import CombinatorialGames.Mathlib.Small
 import CombinatorialGames.Mathlib.WithTop
+import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 import CombinatorialGames.NatOrdinal.Basic
 import CombinatorialGames.NatOrdinal.Pow
 import CombinatorialGames.Nimber.Basic
