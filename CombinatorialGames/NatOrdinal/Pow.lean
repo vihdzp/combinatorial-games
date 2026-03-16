@@ -32,12 +32,6 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 open Ordinal
 
-theorem Ordinal.lt_mul_add_one_iff {x y z : Ordinal} :
-    x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
-  obtain rfl | hy := eq_or_ne y 0
-  · simp
-  · rw [mul_add_one, lt_add_iff hy]
-
 /-- A typeclass for the the `ω^` notation. -/
 class Wpow (α : Type*) where
   /-- The `ω`-map, i.e. base `ω` exponentiation. -/
