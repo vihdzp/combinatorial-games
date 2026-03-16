@@ -124,7 +124,7 @@ theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + 
     simpa
 termination_by (a, b)
 
-theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a + NatOrdinal.of b).val :=
+theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
   add_le_nadd' ..
 
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
