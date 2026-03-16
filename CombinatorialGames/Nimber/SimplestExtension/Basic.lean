@@ -76,9 +76,6 @@ variable {x y z w : Nimber}
 
 /-! ### Groups -/
 
-/-- Add two nimbers as ordinal numbers. -/
-scoped notation:65 x:65 "+ₒ" y:66 => ∗(val x + val y)
-
 /-- A nonzero nimber `x` is a group when `Iio x` is closed under addition. -/
 @[mk_iff]
 structure IsGroup (x : Nimber) where
@@ -175,10 +172,10 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
 termination_by (z, y)
 
 theorem IsGroup.mul_add_eq_of_lt (h : IsGroup x) (hy : y < x) (z : Ordinal) :
-    ∗(val x * z + val y) = ∗(val x * z) + y :=
+    ∗(x.val * z + y.val) = ∗(x.val * z) + y :=
   h.mul_add_eq_of_lt' hy z
 
-theorem IsGroup.add_eq_of_lt (h : IsGroup x) (hy : y < x) : x +ₒ y = x + y := by
+theorem IsGroup.add_eq_of_lt (h : IsGroup x) (hy : y < x) : ∗(x.val + y.val) = x + y := by
   simpa using h.mul_add_eq_of_lt hy 1
 
 /-- A version of `IsGroup.add_eq_of_lt` stated in terms of `Ordinal`. -/
@@ -274,9 +271,6 @@ theorem IsGroup.pow' {x : Ordinal} (h : IsGroup (∗x)) (n : ℕ) : IsGroup (∗
   h.pow n
 
 /-! ### Rings -/
-
-/-- Multiply two nimbers as ordinal numbers. -/
-scoped notation:70 x:70 "*ₒ" y:71 => ∗(val x * val y)
 
 /-- A nimber `x` is a ring when `1 < x` and `Iio x` is closed under addition and multiplication. -/
 @[mk_iff]
@@ -379,7 +373,7 @@ termination_by w
 
 theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z)
     (hyx : y ≤ x) (hyz : y ≤ z) (hwy : w < y)
-    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : x *ₒ w = x * w :=
+    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : ∗(x.val * w.val) = x * w :=
   hx.mul_eq_of_lt' hy hz hyx hyz hwy H H'
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
@@ -388,7 +382,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
   hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hyx hyx hzy H hx.mul_lt
 
 theorem IsRing.mul_eq_of_lt (hx : IsRing x) (hy : IsGroup y)
-    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : ∗(x.val * z.val) = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
 
 -- TODO: characterize nim arithmetic on the naturals.
@@ -444,7 +438,7 @@ protected theorem IsField.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i
   .sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
-    x *ₒ z = x * z :=
+    ∗(x.val * z.val) = x * z :=
   hx.mul_eq_of_lt hy.toIsGroup hyx hzy fun _ hw ↦ (hy.inv_lt hw).trans_le hyx
 
 /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
