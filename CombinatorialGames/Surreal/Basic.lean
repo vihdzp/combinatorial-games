@@ -251,12 +251,6 @@ theorem toGame_sub (x y : Surreal) : toGame (x - y) = toGame x - toGame y :=
 @[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := map_natCast' toGameAddHom rfl n
 @[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := map_intCast' toGameAddHom rfl n
 
-@[simp]
-theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
-  cases x
-  rw [toGame_mk, Game.mk_eq_mk]
-  exact mk_out_equiv _
-
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
@@ -275,7 +269,7 @@ theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
     toGame !{st} = !{fun p ↦ toGame '' st p} := by
   change toGame (@mk _ (_)) = _
-  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, game_out_eq]
+  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, gameMk_out]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]

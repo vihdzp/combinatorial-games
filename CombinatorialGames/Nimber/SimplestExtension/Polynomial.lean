@@ -178,6 +178,9 @@ theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
     ∀ k, (1 : Nimber[X]).coeff k < x := by
   simpa using coeff_X_pow_lt 0 h
 
+theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
+  aesop (add simp [Nimber.pos_iff_ne_zero])
+
 /-! ### Embedding in a subfield -/
 
 /-- Reinterpret a polynomial in the nimbers as a polynomial in the subfield `x`.
