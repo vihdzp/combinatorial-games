@@ -44,16 +44,16 @@ theorem Pi.Lex.neg_apply {α β : Type*} [Neg β] (x : Lex (α → β)) (i : α)
 
 -- TODO: we're missing an `AntitoneNeg` typeclass to express the following theorems generally.
 
-theorem Pi.Lex.neg_lt_neg {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} (h : x < y) : -y < -x := by
+theorem Pi.Lex.neg_lt_neg {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} (h : x < y) :
+    -y < -x := by
   obtain ⟨i, hi⟩ := h
   use i
   simp_all
 
 @[simp]
-theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x < -y ↔ y < x where
-  mp := by simpa using @Pi.Lex.neg_lt_neg _ _ _ (-x) (-y)
+theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x < -y ↔ y < x where
+  mp := by simpa using @Pi.Lex.neg_lt_neg _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
 set_option backward.isDefEq.respectTransparency false in
@@ -62,12 +62,12 @@ theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
     {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by
   simp [← not_lt]
 
-theorem Pi.Lex.neg_lt_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x < y ↔ -y < x := by
+theorem Pi.Lex.neg_lt_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x < y ↔ -y < x := by
   simpa using Pi.Lex.neg_lt_neg_iff (y := -y)
 
-theorem Pi.Lex.lt_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : x < -y ↔ y < -x := by
+theorem Pi.Lex.lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    x < -y ↔ y < -x := by
   simpa using Pi.Lex.neg_lt_neg_iff (x := -x)
 
 theorem Pi.Lex.neg_le_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
@@ -147,6 +147,7 @@ theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 
 
 /-! ### Basic sign expansions -/
 
+/-- The constant sign expansion `sss...` -/
 def const (s : SignType) : SignExpansion where
   sign _ := s
   isUpperSet_preimage_singleton_zero' := by aesop
