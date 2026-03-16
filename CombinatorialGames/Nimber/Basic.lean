@@ -54,6 +54,7 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
+attribute [simp] succ_zero succ_ne_zero
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]

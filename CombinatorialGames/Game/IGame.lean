@@ -1006,7 +1006,7 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
 -- TODO: upstream
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
-def mul' (x y : IGame) : IGame :=
+private def mul' (x y : IGame) : IGame :=
   !{(range fun a : (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ :) ↦
