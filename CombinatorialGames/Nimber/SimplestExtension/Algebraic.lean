@@ -364,7 +364,7 @@ theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
     obtain ⟨p, hpc, hpr⟩ := eq_oeval_of_lt_opow_omega0 hc
     have htr := (lt_succ t).trans_le (le_ringClosure (succ t))
     rw [← hpr, ← ht.eval_eq_of_lt hpc]
-    exact (IsRing.ringClosure (succ t)).eval_lt (fun k => (hpc k).trans htr) htr
+    exact (IsRing.ringClosure _).eval_lt (fun k => (hpc k).trans htr) htr
 
 protected theorem transcendental : Transcendental ht.toSubfield t := by
   rw [transcendental_iff]
