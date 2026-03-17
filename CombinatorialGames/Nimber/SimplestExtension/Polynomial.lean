@@ -744,6 +744,21 @@ theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
   simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
 
+theorem oeval_eq_zero_iff {x : Nimber} {p : Nimber[X]} (hx : x ≠ 0) : oeval x p = 0 ↔ p = 0 := by
+  refine ⟨fun h => ?_, fun hp => by simp [hp]⟩
+  obtain ⟨n, hn⟩ : ∃ n, p.natDegree + 1 ≤ n := ⟨_, le_rfl⟩
+  rw [oeval_eq_of_natDegree_le hn, of_eq_zero] at h
+  by_contra hp
+  induction n generalizing p with
+  | zero => simp at hn
+  | succ n ih =>
+    rw [List.range_succ, List.reverse_append, List.reverse_singleton,
+      List.map_append, List.map_singleton, List.sum_append, List.sum_singleton,
+      add_eq_zero_iff, mul_eq_zero_iff_left (pow_ne_zero n (val_ne_zero.2 hx)), val_eq_zero] at h
+    refine ih h.2 (Nat.add_one_le_of_lt (Nat.lt_of_le_of_ne
+      (Nat.le_of_add_le_add_right hn) fun hpd => coeff_ne_zero_of_eq_degree ?_ h.1)) hp
+    rw [degree_eq_natDegree hp, hpd]
+
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
