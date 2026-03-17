@@ -366,7 +366,7 @@ theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
     rw [← hpr, ← ht.eval_eq_of_lt hpc]
     exact (IsRing.ringClosure (succ t)).eval_lt (fun k => (hpc k).trans htr) htr
 
-theorem transcendental : Transcendental ht.toSubfield t := by
+protected theorem transcendental : Transcendental ht.toSubfield t := by
   rw [transcendental_iff]
   intro p hp
   rw [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
