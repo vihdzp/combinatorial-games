@@ -158,6 +158,7 @@ recommended_spelling "ofSets" for "!{st}" in [ofSets, «term!{_}»]
 recommended_spelling "ofSets" for "!{s | t}" in [ofSets, «term!{_|_}»]
 
 open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborates `ofSets (Player.cases s t)` to `!{s | t}` and `ofSets st` to `!{st}`. -/
 @[app_delab OfSets.ofSets]
 meta def delabOfSets : Delab := do
   let e ← getExpr

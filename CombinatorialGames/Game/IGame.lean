@@ -500,6 +500,7 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `AntisymmRel (· ≤ ·) x y` into `x ≈ y`. -/
 @[delab app.AntisymmRel]
 meta def delabEquiv : Delab := do
   try
@@ -520,6 +521,7 @@ meta def delabEquiv : Delab := do
   catch _ => failure -- fail over to the default delaborator
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `IncompRel (· ≤ ·) x y` into `x ‖ y`. -/
 @[delab app.IncompRel]
 meta def delabFuzzy : Delab := do
   try
