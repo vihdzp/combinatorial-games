@@ -178,6 +178,9 @@ theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
     ∀ k, (1 : Nimber[X]).coeff k < x := by
   simpa using coeff_X_pow_lt 0 h
 
+theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
+  aesop (add simp [Nimber.pos_iff_ne_zero])
+
 /-! ### Embedding in a subfield -/
 
 /-- Reinterpret a polynomial in the nimbers as a polynomial in the subfield `x`.
@@ -740,6 +743,12 @@ theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
 theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
   simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
+
+theorem oeval_eq_zero_iff {x : Nimber} {p : Nimber[X]} (hx : x ≠ 0) : oeval x p = 0 ↔ p = 0 := by
+  refine ⟨?_, by simp +contextual⟩
+  contrapose
+  rw [← val_ne_zero] at hx
+  exact fun hp ↦ ((pow_pos hx.pos _).trans_le <| opow_natDegree_le_oeval x hp).ne'
 
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
