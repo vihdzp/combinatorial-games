@@ -165,6 +165,22 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
 
+@[simp, norm_cast] theorem natCast_le_of_iff {a : ℕ} {b : Ordinal} : a ≤ of b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_of_iff {a : ℕ} {b : Ordinal} : a < of b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_of_iff {a : ℕ} {b : Ordinal} : a = of b ↔ a = b := .rfl
+@[simp, norm_cast] theorem natCast_le_val_iff {a : ℕ} {b : NatOrdinal} : a ≤ val b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_val_iff {a : ℕ} {b : NatOrdinal} : a < val b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_val_iff {a : ℕ} {b : NatOrdinal} : a = val b ↔ a = b := .rfl
+
+@[simp, norm_cast] theorem of_le_natCast_iff {a : Ordinal} {b : ℕ} : of a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem of_lt_natCast_iff {a : Ordinal} {b : ℕ} : of a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem of_eq_natCast_iff {a : Ordinal} {b : ℕ} : of a = b ↔ a = b := .rfl
+@[simp, norm_cast] theorem val_le_natCast_iff {a : NatOrdinal} {b : ℕ} : val a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem val_lt_natCast_iff {a : NatOrdinal} {b : ℕ} : val a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem val_eq_natCast_iff {a : NatOrdinal} {b : ℕ} : val a = b ↔ a = b := .rfl
+
+@[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
+
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
   Ordinal.natCast_image_Iio n
@@ -309,6 +325,9 @@ instance : MulLeftMono NatOrdinal where
 
 instance : MulRightMono NatOrdinal where
   elim a b c h := by convert mul_le_mul_right h a using 1 <;> exact mul_comm ..
+
+protected theorem mul_lt_mul {a b c d : NatOrdinal} (h₁ : a < c) (h₂ : b < d) : a * b < c * d :=
+  mul_lt_mul'' h₁ h₂ (zero_le _) (zero_le _)
 
 private theorem mul_add (a b c : NatOrdinal) : a * (b + c) = a * b + a * c := by
   refine le_antisymm (mul_le_iff.2 fun a' ha d hd => ?_)
