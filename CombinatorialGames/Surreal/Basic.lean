@@ -175,7 +175,7 @@ instance : AddCommGroup Surreal where
   nsmul := nsmulRec
   zsmul := zsmulRec
 
-instance : AddGroupWithOne Surreal where
+instance : AddCommGroupWithOne Surreal where
 
 instance : IsOrderedAddMonoid Surreal where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _

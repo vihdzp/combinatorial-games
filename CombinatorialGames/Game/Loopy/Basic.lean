@@ -299,7 +299,7 @@ theorem corec_moves_apply (x : LGame) : corec moves x = x := by simp
 It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
 @[no_expose]
-instance : OfSets LGame.{u} fun _ ↦ True where
+instance instOfSets : OfSets LGame.{u} fun _ ↦ True where
   ofSets lr _ :=
     have this (p) : ∀ (a : Option LGame),
         Small.{u} ((a.elim (some '' lr p) (some '' moves p ·)) : Set _) := by
