@@ -163,5 +163,5 @@ recall SignExpansion : Type _
 
 recall Nimber.exists_add_of_not_isGroup
 
-/- As a consequence of the fourth simplest extension theorem, the nimbers are real-closed. -/
+/- As a consequence of the fourth simplest extension theorem, the nimbers are algebraically closed. -/
 recall Nimber.instIsAlgClosed
