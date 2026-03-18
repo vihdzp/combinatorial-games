@@ -371,8 +371,8 @@ protected theorem transcendental : Transcendental ht.toSubfield t := by
   rw [transcendental_iff]
   intro p hp
   rw [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
-    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2, ← oeval_zero t,
-    oeval_inj (fun k => (coeff_map _ k).trans_lt (p.coeff k).2) (by simp [ht.zero_lt])] at hp
+    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2,
+    oeval_eq_zero_iff ht.ne_zero] at hp
   simpa using hp
 
 theorem algebraAdjoin_simple_self :
