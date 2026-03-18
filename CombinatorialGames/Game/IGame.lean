@@ -143,6 +143,10 @@ theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Smal
 @[simp]
 theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
 
+@[simp]
+theorem ofSets_moves' (x : IGame) : !{xᴸ | xᴿ} = x := by
+  rw [← ofSets_eq_ofSets_cases x.moves ⟨⟩, ofSets_moves]
+
 @[game_cmp]
 theorem moves_left_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴸ = s :=
   moves_ofSets ..
@@ -150,11 +154,6 @@ theorem moves_left_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | 
 @[game_cmp]
 theorem moves_right_ofSets (s t : Set IGame) [Small.{u} s] [Small.{u} t] : !{s | t}ᴿ = t :=
   moves_ofSets ..
-
-@[simp]
-theorem ofSets_moves_left_moves_right (x : IGame) : !{xᴸ | xᴿ} = x := by
-  convert x.ofSets_moves with p
-  cases p <;> rfl
 
 /-- Two `IGame`s are equal when their move sets are.
 
@@ -605,7 +604,7 @@ instance : NegZeroClass IGame where
   neg_zero := by simp [zero_def]
 
 theorem neg_eq (x : IGame) : -x = !{-xᴿ | -xᴸ} := by
-  rw [← neg_ofSets, ofSets_moves_left_moves_right]
+  rw [← neg_ofSets, ofSets_moves']
 
 theorem neg_eq' (x : IGame) : -x = !{fun p ↦ -x.moves (-p)} := by
   rw [neg_eq, ofSets_eq_ofSets_cases (fun _ ↦ -_)]; rfl
