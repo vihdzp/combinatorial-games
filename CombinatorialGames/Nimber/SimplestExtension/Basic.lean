@@ -50,37 +50,6 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
-theorem div_two_opow_log {o : Ordinal} (ho : o ≠ 0) : o / 2 ^ log 2 o = 1 := by
-  apply le_antisymm
-  · simpa [← one_add_one_eq_two] using div_opow_log_lt o one_lt_two
-  · simpa [one_le_iff_ne_zero, pos_iff_ne_zero] using div_opow_log_pos 2 ho
-
-theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : 2 ^ log 2 o + o % 2 ^ log 2 o = o := by
-  convert div_add_mod .. using 2
-  rw [div_two_opow_log ho, mul_one]
-
-protected theorem mul_two (o : Ordinal) : o * 2 = o + o := by
-  rw [← one_add_one_eq_two, mul_add, mul_one]
-
-theorem lt_mul_iff {a b c : Ordinal} : a < b * c ↔ ∃ q < c, ∃ r < b, a = b * q + r := by
-  obtain rfl | hb₀ := eq_or_ne b 0; · simp
-  refine ⟨fun h ↦ ⟨_, (Ordinal.lt_mul_iff_div_lt hb₀).1 h, _, mod_lt a hb₀,
-    (div_add_mod ..).symm⟩, ?_⟩
-  rintro ⟨q, hq, r, hr, rfl⟩
-  apply (add_right_strictMono hr).trans_le
-  simp_rw [← mul_succ]
-  exact mul_le_mul_right (Order.succ_le_iff.mpr hq) _
-
-theorem forall_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
-    (∀ a < b * c, P a) ↔ ∀ q < c, ∀ r < b, P (b * q + r) := by
-  simp_rw [lt_mul_iff]
-  aesop
-
-theorem exists_lt_mul {b c : Ordinal} {P : Ordinal → Prop} :
-    (∃ a < b * c, P a) ↔ ∃ q < c, ∃ r < b, P (b * q + r) := by
-  simp_rw [lt_mul_iff]
-  aesop
-
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -106,9 +75,6 @@ namespace Nimber
 variable {x y z w : Nimber}
 
 /-! ### Groups -/
-
-/-- Add two nimbers as ordinal numbers. -/
-scoped notation:65 x:65 "+ₒ" y:66 => ∗(val x + val y)
 
 /-- A nonzero nimber `x` is a group when `Iio x` is closed under addition. -/
 @[mk_iff]
@@ -206,10 +172,10 @@ theorem IsGroup.mul_add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y <
 termination_by (z, y)
 
 theorem IsGroup.mul_add_eq_of_lt (h : IsGroup x) (hy : y < x) (z : Ordinal) :
-    ∗(val x * z + val y) = ∗(val x * z) + y :=
+    ∗(x.val * z + y.val) = ∗(x.val * z) + y :=
   h.mul_add_eq_of_lt' hy z
 
-theorem IsGroup.add_eq_of_lt (h : IsGroup x) (hy : y < x) : x +ₒ y = x + y := by
+theorem IsGroup.add_eq_of_lt (h : IsGroup x) (hy : y < x) : ∗(x.val + y.val) = x + y := by
   simpa using h.mul_add_eq_of_lt hy 1
 
 /-- A version of `IsGroup.add_eq_of_lt` stated in terms of `Ordinal`. -/
@@ -218,7 +184,7 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
   h.add_eq_of_lt hy
 
 @[simp]
-theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
+theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
   refine ⟨fun y z hy hz ↦ ?_, by simp⟩
   induction y with | of y
   induction z with | of z
@@ -252,6 +218,11 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗(2 ^ x)) := by
   · exact H hyz hy'
 termination_by x
 
+@[simp]
+theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
+  rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
+  exact .two_opow _
+
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
@@ -259,7 +230,7 @@ theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o
     (o.two_opow_log_add ho)
 
 theorem add_lt_of_log_eq {a b : Ordinal} (ha₀ : a ≠ 0) (hb₀ : b ≠ 0) (h : log 2 a = log 2 b) :
-    ∗a + ∗b < ∗(2 ^ log 2 a) := by
+    ∗a + ∗b < ∗2 ^ log 2 a := by
   rw [← two_opow_log_add ha₀, ← two_opow_log_add hb₀, h]
   abel_nf
   rw [CharTwo.two_zsmul, zero_add]
@@ -271,8 +242,7 @@ theorem exists_isGroup_add_lt (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y 
   exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
 
 /-- The nimbers that are groups are exactly the powers of `2`. -/
-theorem isGroup_iff_mem_range_two_opow :
-    IsGroup x ↔ x ∈ range fun y : Ordinal ↦ ∗(2 ^ y) := by
+theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordinal ↦ ∗2 ^ y := by
   refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
   by_contra! H
   obtain ⟨h, hx⟩ := H
@@ -305,9 +275,6 @@ theorem IsGroup.pow' {x : Ordinal} (h : IsGroup (∗x)) (n : ℕ) : IsGroup (∗
   h.pow n
 
 /-! ### Rings -/
-
-/-- Multiply two nimbers as ordinal numbers. -/
-scoped notation:70 x:70 "*ₒ" y:71 => ∗(val x * val y)
 
 /-- A nimber `x` is a ring when `1 < x` and `Iio x` is closed under addition and multiplication. -/
 @[mk_iff]
@@ -410,7 +377,7 @@ termination_by w
 
 theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z)
     (hyx : y ≤ x) (hyz : y ≤ z) (hwy : w < y)
-    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : x *ₒ w = x * w :=
+    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : ∗(x.val * w.val) = x * w :=
   hx.mul_eq_of_lt' hy hz hyx hyz hwy H H'
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
@@ -419,7 +386,7 @@ theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGrou
   hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hyx hyx hzy H hx.mul_lt
 
 theorem IsRing.mul_eq_of_lt (hx : IsRing x) (hy : IsGroup y)
-    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : x *ₒ z = x * z :=
+    (hyx : y ≤ x) (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : ∗(x.val * z.val) = x * z :=
   hx.mul_eq_of_lt' hy hyx hzy H
 
 -- TODO: characterize nim arithmetic on the naturals.
@@ -475,7 +442,7 @@ protected theorem IsField.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i
   .sSup (by simpa) (range_nonempty f) bdd
 
 theorem IsField.mul_eq_of_lt (hx : IsRing x) (hy : IsField y) (hyx : y ≤ x) (hzy : z < y) :
-    x *ₒ z = x * z :=
+    ∗(x.val * z.val) = x * z :=
   hx.mul_eq_of_lt hy.toIsGroup hyx hzy fun _ hw ↦ (hy.inv_lt hw).trans_le hyx
 
 /-- A version of `IsField.mul_eq_of_lt` stated in terms of `Ordinal`. -/
@@ -581,9 +548,56 @@ theorem IsField.pow_mul_eq_of_lt' {x z : Ordinal}
     (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : x ^ n * z = val (∗(x ^ n) * ∗z) :=
   mod_cast hx.opow_mul_eq_of_lt' n hz
 
-theorem IsField.pow_mul_eq_of_lt {x z : Nimber}
+theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
+
+/-- If `x` is a field and `y` is an `x`-subspace, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_isGroup (hx : IsField x) (hy : IsGroup y)
+    (hxy : ∀ z w, z < x → w < y → z * w < y) : ∗(x.val ^ log x.val y.val) = y := by
+  apply le_antisymm
+  · exact opow_log_le_self _ hy.ne_zero
+  · by_contra! hy'
+    have H₁ : ∗(val y / val x ^ log x.val y.val) < x := div_opow_log_lt _ hx.one_lt
+    have H₂ : ∗(val y % val x ^ log x.val y.val) < y := mod_opow_log_lt_self _ hy.ne_zero
+    apply (hy.add_lt (hxy _ _ H₁ hy') H₂).ne
+    rw [mul_comm, ← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
+    · exact div_add_mod ..
+    · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
+
+/-- If `x` is a field and `y` is a ring with `x ≤ y`, then `y` is an ordinal power of `x`. -/
+theorem IsField.opow_log_eq_of_isRing (hx : IsField x) (hy : IsRing y) (hxy : x ≤ y) :
+    ∗(x.val ^ log x.val y.val) = y :=
+  hx.opow_log_eq_of_isGroup hy.toIsGroup fun _z _w hz hw ↦ hy.mul_lt (hz.trans_le hxy) hw
+
+theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
+  induction o using WellFoundedLT.induction generalizing z with | ind o IH
+  obtain rfl | ho := eq_or_ne o 0
+  · simp_all
+  have H₁ : of (val z / val x ^ log (val x) (val z)) < x := div_opow_log_lt _ h.one_lt
+  have H₂ := h.mul_lt H₁ hy
+  have H₃ : log (val x) (val z) < o := (lt_opow_iff_log_lt' h.one_lt ho).1 hz
+  have H₄ : val z % val x ^ log (val x) (val z) < _ := mod_lt _ (opow_ne_zero _ h.ne_zero)
+  rw [← of_val z, ← div_add_mod z.val (x.val ^ log x.val z.val), (h.opow _).mul_add_eq_of_lt' H₄,
+    mul_add, ← val_of (_ / _), h.opow_mul_eq_of_lt _ H₁]
+  apply (h.opow _).add_lt
+  · rw [mul_comm, mul_assoc, ← val_lt_iff, ← of_val (of _ * y), ← h.opow_mul_eq_of_lt]
+    · exact opow_mul_lt_opow H₂ H₃
+    · exact H₂
+  · exact (IH _ H₃ H₄).trans_le (opow_le_opow_right h.pos H₃.le)
+
+theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
+    (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
+  mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
+
+theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {n : ℕ}
+    (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ n)) : y * z < ∗(val x ^ n) :=
+  (opow_natCast x.val n ▸ h.mul_lt_opow_of_left_lt) hy hz
+
+theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
+    (h : IsField x) (hy : y < ∗(val x ^ n)) (hz : z < x) : y * z < ∗(val x ^ n) :=
+  (opow_natCast x.val n ▸ h.mul_lt_opow_of_right_lt) hy hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
