@@ -141,6 +141,9 @@ theorem coeff_X_pow_lt {x : Nimber} (n : ℕ) (h : 1 < x) : ∀ k, (X ^ n).coeff
   have : 0 < x := h.bot_lt
   aesop
 
+theorem coeff_X_lt {x : Nimber} (h : 1 < x) : ∀ k, X.coeff k < x := by
+  simpa using coeff_X_pow_lt 1 h
+
 theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p + q).coeff k < x := by
   intro k
@@ -152,6 +155,10 @@ theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   intro k
   rw [finset_sum_coeff]
   exact h.sum_lt fun y hy ↦ (hs y hy k)
+
+theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :
+    ∀ k, (0 : Nimber[X]).coeff k < x := by
+  simpa [Nimber.pos_iff_ne_zero]
 
 theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
@@ -166,6 +173,13 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
   | cons y s hy IH =>
     rw [Finset.prod_cons]
     apply h.coeff_mul_lt <;> simp_all
+
+theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
+    ∀ k, (1 : Nimber[X]).coeff k < x := by
+  simpa using coeff_X_pow_lt 0 h
+
+theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
+  aesop (add simp [Nimber.pos_iff_ne_zero])
 
 /-! ### Embedding in a subfield -/
 
@@ -730,6 +744,12 @@ theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
   simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
 
+theorem oeval_eq_zero_iff {x : Nimber} {p : Nimber[X]} (hx : x ≠ 0) : oeval x p = 0 ↔ p = 0 := by
+  refine ⟨?_, by simp +contextual⟩
+  contrapose
+  rw [← val_ne_zero] at hx
+  exact fun hp ↦ ((pow_pos hx.pos _).trans_le <| opow_natDegree_le_oeval x hp).ne'
+
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
@@ -894,6 +914,15 @@ theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   · have := WithBot.le_zero_iff.1 hp; aesop
   contrapose! hpn
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
+
+theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
+    (hp : ∀ c < p, 0 < c.degree → (∀ k, c.coeff k < x) → ∃ r < x, c.IsRoot r) :
+    p ≤ leastNoRoots x := by
+  refine le_of_not_gt fun h => ?_
+  have ht : x.leastNoRoots ≠ ⊤ := ne_top_of_lt h
+  obtain ⟨r, hr, hrr⟩ := hp (WithTop.untop _ ht) ((WithTop.untop_lt_iff ht).2 h)
+    (degree_leastNoRoots_pos ht) (coeff_leastNoRoots_lt ht)
+  exact not_isRoot_leastNoRoots_of_lt ht hr hrr
 
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
