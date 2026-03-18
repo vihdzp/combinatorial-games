@@ -205,10 +205,6 @@ theorem groupClosure_one : groupClosure 1 = 1 :=
 theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
   IsGroup.two.groupClosure_eq
 
-theorem IsGroup.one_le {x : Nimber} (h : IsGroup x) : 1 ≤ x := by
-  rw [← groupClosure_zero, h.groupClosure_le_iff]
-  exact zero_le _
-
 @[simp]
 theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
   (IsGroup.two_opow x).groupClosure_eq
@@ -233,8 +229,9 @@ theorem not_bddAbove_setOf_isGroup : ¬ BddAbove (setOf IsGroup) :=
   fun ⟨a, ha⟩ ↦ (ha (.groupClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_groupClosure _)
 
 /-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
-def enumGroup (x : Ordinal) : Nimber :=
-  ∗(Ordinal.enumOrd {y | IsGroup (∗y)} x)
+def enumGroup : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ ∗(Ordinal.enumOrd {y | IsGroup (∗y)} x)) <|
+    Ordinal.enumOrd_strictMono not_bddAbove_setOf_isGroup
 
 @[simp]
 theorem range_enumGroup : Set.range enumGroup = setOf IsGroup :=
@@ -249,20 +246,9 @@ theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
 theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
   Ordinal.isNormal_enumOrd (fun _ ↦ IsGroup.sSup) not_bddAbove_setOf_isGroup
 
-@[simp]
-theorem enumGroup_le_enumGroup_iff {x y} : enumGroup x ≤ enumGroup y ↔ x ≤ y :=
-  isNormal_enumGroup.strictMono.le_iff_le
-
-@[simp]
-theorem enumGroup_lt_enumGroup_iff {x y} : enumGroup x < enumGroup y ↔ x < y :=
-  isNormal_enumGroup.strictMono.lt_iff_lt
-
-@[simp]
-theorem enumGroup_inj {x y} : enumGroup x = enumGroup y ↔ x = y :=
-  isNormal_enumGroup.strictMono.injective.eq_iff
-
 theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
-  simp_rw [enumGroup, of.eq_iff_eq, isGroup_iff_mem_range_two_opow]
+  rw [enumGroup, OrderEmbedding.coe_ofStrictMono, of.eq_iff_eq]
+  simp_rw [isGroup_iff_mem_range_two_opow]
   apply congrFun (Ordinal.enumOrd_range (f := fun y ↦ 2 ^ y) fun a b h ↦ ?_)
   rwa [Ordinal.opow_lt_opow_iff_right one_lt_two]
 
@@ -386,10 +372,6 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
   IsRing.two.ringClosure_eq
 
-theorem IsRing.two_le {x : Nimber} (h : IsRing x) : ∗2 ≤ x := by
-  rw [← ringClosure_zero, h.ringClosure_le_iff]
-  exact zero_le _
-
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
@@ -398,8 +380,9 @@ theorem not_bddAbove_setOf_isRing : ¬ BddAbove (setOf IsRing) :=
   fun ⟨a, ha⟩ ↦ (ha (.ringClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_ringClosure _)
 
 /-- The normal enumerator function for rings. -/
-def enumRing (x : Ordinal) : Nimber :=
-  ∗(Ordinal.enumOrd {y | IsRing (∗y)} x)
+def enumRing : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ ∗(Ordinal.enumOrd {y | IsRing (∗y)} x)) <|
+    Ordinal.enumOrd_strictMono not_bddAbove_setOf_isRing
 
 @[simp]
 theorem range_enumRing : Set.range enumRing = setOf IsRing :=
@@ -415,20 +398,8 @@ theorem isNormal_enumRing : Order.IsNormal enumRing :=
   Ordinal.isNormal_enumOrd (fun _ ↦ IsRing.sSup) not_bddAbove_setOf_isRing
 
 @[simp]
-theorem enumRing_le_enumRing_iff {x y} : enumRing x ≤ enumRing y ↔ x ≤ y :=
-  isNormal_enumRing.strictMono.le_iff_le
-
-@[simp]
-theorem enumRing_lt_enumRing_iff {x y} : enumRing x < enumRing y ↔ x < y :=
-  isNormal_enumRing.strictMono.lt_iff_lt
-
-@[simp]
-theorem enumRing_inj {x y} : enumRing x = enumRing y ↔ x = y :=
-  isNormal_enumRing.strictMono.injective.eq_iff
-
-@[simp]
 theorem enumRing_zero : enumRing 0 = ∗2 := by
-  rw [enumRing, of.eq_iff_eq, Ordinal.enumOrd_zero]
+  rw [enumRing, OrderEmbedding.coe_ofStrictMono, of.eq_iff_eq, Ordinal.enumOrd_zero]
   apply le_antisymm
   · exact csInf_le' IsRing.two
   · rw [le_csInf_iff'']
@@ -549,10 +520,6 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
   IsField.two.fieldClosure_eq
 
-theorem IsField.two_le {x : Nimber} (h : IsField x) : ∗2 ≤ x := by
-  rw [← fieldClosure_zero, h.fieldClosure_le_iff]
-  exact zero_le _
-
 theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
   rw [(IsField.fieldClosure x).ringClosure_le_iff]
   exact le_fieldClosure x
@@ -564,8 +531,9 @@ theorem not_bddAbove_setOf_isField : ¬ BddAbove (setOf IsField) :=
   fun ⟨a, ha⟩ ↦ (ha (.fieldClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_fieldClosure _)
 
 /-- The normal enumerator function for fields. -/
-def enumField (x : Ordinal) : Nimber :=
-  ∗(Ordinal.enumOrd {y | IsField (∗y)} x)
+def enumField : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ ∗(Ordinal.enumOrd {y | IsField (∗y)} x)) <|
+    Ordinal.enumOrd_strictMono not_bddAbove_setOf_isField
 
 @[simp]
 theorem range_enumField : Set.range enumField = setOf IsField :=
@@ -581,24 +549,12 @@ theorem isNormal_enumField : Order.IsNormal enumField :=
   Ordinal.isNormal_enumOrd (fun _ ↦ IsField.sSup) not_bddAbove_setOf_isField
 
 @[simp]
-theorem enumField_le_enumField_iff {x y} : enumField x ≤ enumField y ↔ x ≤ y :=
-  isNormal_enumField.strictMono.le_iff_le
-
-@[simp]
-theorem enumField_lt_enumField_iff {x y} : enumField x < enumField y ↔ x < y :=
-  isNormal_enumField.strictMono.lt_iff_lt
-
-@[simp]
-theorem enumField_inj {x y} : enumField x = enumField y ↔ x = y :=
-  isNormal_enumField.strictMono.injective.eq_iff
-
-@[simp]
 theorem enumField_zero : enumField 0 = ∗2 := by
-  rw [enumField, of.eq_iff_eq, Ordinal.enumOrd_zero]
+  rw [enumField, OrderEmbedding.coe_ofStrictMono, of.eq_iff_eq, Ordinal.enumOrd_zero]
   apply le_antisymm
   · exact csInf_le' IsField.two
   · rw [le_csInf_iff'']
-    · exact fun _ ↦ IsField.two_le
+    · exact fun _ h ↦ h.two_le
     · exact ⟨_, IsField.two⟩
 
 theorem exists_isField_btwn {x : Nimber} (ne : 1 < x) : ∃ l u,
