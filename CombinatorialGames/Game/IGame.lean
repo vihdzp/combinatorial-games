@@ -382,7 +382,7 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 @[no_expose]
 instance : LE IGame where
-  le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
+  le := Sym2.GameAdd.recursion subposition_wf fun x y le ↦
     (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
     (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
@@ -395,7 +395,7 @@ recommended_spelling "lf" for "⧏" in [«term_⧏_»]
 /-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
     x ≤ y ↔ (∀ z ∈ xᴸ, z ⧏ y) ∧ (∀ z ∈ yᴿ, x ⧏ z) :=
-  propext_iff.1 <| Sym2.GameAdd.fix_eq ..
+  propext_iff.1 <| Sym2.GameAdd.recursion_eq ..
 
 /-- Definition of `x ⧏ y` on games, in terms of `≤`. -/
 theorem lf_iff_exists_le {x y : IGame} :
@@ -500,6 +500,7 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `AntisymmRel (· ≤ ·) x y` into `x ≈ y`. -/
 @[delab app.AntisymmRel]
 meta def delabEquiv : Delab := do
   try
@@ -520,6 +521,7 @@ meta def delabEquiv : Delab := do
   catch _ => failure -- fail over to the default delaborator
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `IncompRel (· ≤ ·) x y` into `x ‖ y`. -/
 @[delab app.IncompRel]
 meta def delabFuzzy : Delab := do
   try
@@ -625,7 +627,7 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
+  induction x, y using Sym2.GameAdd.recursion subposition_wf with | _ x y IH
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
   dsimp
   congr! 3 with z hz z hz
@@ -1006,7 +1008,7 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
 -- TODO: upstream
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
-def mul' (x y : IGame) : IGame :=
+private def mul' (x y : IGame) : IGame :=
   !{(range fun a : (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ :) ↦

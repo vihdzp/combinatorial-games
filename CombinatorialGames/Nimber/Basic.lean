@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public meta import CombinatorialGames.Tactic.Register
-public import Mathlib.SetTheory.Ordinal.Family
+public import CombinatorialGames.NatOrdinal.Basic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Data.Nat.Bitwise
@@ -54,6 +54,7 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
+attribute [simp] succ_zero succ_ne_zero
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
@@ -61,7 +62,7 @@ recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 @[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
 theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
 
-@[simp] theorem succ_one : Order.succ 1 = ∗2 := Ordinal.succ_one
+@[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
 
 theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
@@ -110,6 +111,21 @@ private theorem add_ne_of_lt (a b : Nimber) :
   have H := csInf_mem (add_nonempty a b)
   rw [← add_def] at H
   simpa using H
+
+/-- A version of `add_le_nadd` stated in terms of `Ordinal`. -/
+theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + NatOrdinal.of b).val := by
+  rw [val_le_iff]
+  apply add_le_of_forall_ne
+  all_goals
+    intro c hc
+    induction c with | mk c
+    rw [← val_eq_iff.ne]
+    apply ((add_le_nadd' ..).trans_lt _).ne
+    simpa
+termination_by (a, b)
+
+theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
+  add_le_nadd' ..
 
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
