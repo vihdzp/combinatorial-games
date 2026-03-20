@@ -121,7 +121,7 @@ export Player (left right)
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
 @[no_expose]
-instance : OfSets IGame fun _ ↦ True where
+instance instOfSets : OfSets IGame fun _ ↦ True where
   ofSets st _ := QPF.Fix.mk ⟨st, by rintro (_ | _) <;> assumption⟩
 
 /-- The set of moves of the game. -/

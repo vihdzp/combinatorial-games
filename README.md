@@ -17,6 +17,8 @@ There are broadly four things this repository aims to formalize:
 - The theory of [nimbers](https://github.com/users/vihdzp/projects/8) (prove them algebraically closed, prove the simplest extension theorems)
 - The theory of [surreal numbers](https://github.com/users/vihdzp/projects/9) (set up their field structure, prove their representations as Hahn series)
 
+See the file `Overview.lean` for more information.
+
 ## References
 
 Our development of combinatorial game theory is based largely on Conway (2001), supplemented by various other more modern resources.
