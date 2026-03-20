@@ -60,7 +60,8 @@ namespace Nimber.IsAlgClosed
 variable {t : Nimber.{u}} (ht : IsAlgClosed t)
 include ht
 
--- not an instance because `ht` is not inferrable
+/-- If `t` is algebraically closed, then `t ^ ω` is an algebra over `t`.
+This is not an instance because the hypothesis `ht` is not inferrable. -/
 @[expose]
 abbrev algebraOpowOmega0 : Algebra ht.toSubfield ht.isRing_opow_omega0.toSubring :=
   (Subring.inclusion (Set.Iio_subset_Iio (val_le_iff.1 (left_le_opow _ omega0_pos)))).toAlgebra
@@ -70,6 +71,9 @@ theorem algebraOpowOmega0ScalarTower :
     IsScalarTower ht.toSubfield ht.isRing_opow_omega0.toSubring Nimber :=
   @IsScalarTower.mk _ _ _ (_) _ _ fun _ _ _ => mul_assoc _ _ _
 
+/-- If `t` is algebraically closed, then `t ^ ω` is isomorphic to `t[t]` as a `t`-algebra.
+See also `IsAlgClosed.ringEquivPolynomial`, which is
+well-typed without having `ht.algebraOpowOmega0` in context. -/
 def algEquivPolynomial :
     letI := ht.algebraOpowOmega0
     ht.isRing_opow_omega0.toSubring ≃ₐ[ht.toSubfield]
@@ -106,6 +110,8 @@ theorem coe_algEquivPolynomial_symm_apply (p : ht.toSubfield[X]) :
     @aeval_def, ← eval_map, ← eval_map_apply, map_map, eval_map]
   rfl
 
+/-- If `t` is algebraically closed, then `t ^ ω` is isomorphic to `t[t]` as a ring.
+See also `IsAlgClosed.algEquivPolynomial`, which gives a stronger isomorphism. -/
 @[expose]
 def ringEquivPolynomial : ht.isRing_opow_omega0.toSubring ≃+* ht.toSubfield[X] :=
   letI := ht.algebraOpowOmega0
