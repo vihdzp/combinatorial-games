@@ -107,6 +107,7 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
 
 @[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
 @[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
+@[simp] theorem coe_toAddSubgroup (h : IsGroup x) : SetLike.coe h.toAddSubgroup = Set.Iio x := rfl
 
 theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.toAddSubgroup :=
   h.toAddSubgroup.closure_eq
@@ -313,6 +314,7 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 
 @[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
 @[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
+@[simp] theorem coe_toSubring (h : IsRing x) : SetLike.coe h.toSubring = Set.Iio x := rfl
 
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
@@ -430,6 +432,7 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 
 @[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
 @[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
+@[simp] theorem coe_toSubfield (h : IsField x) : SetLike.coe h.toSubfield = Set.Iio x := rfl
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
