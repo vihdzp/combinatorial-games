@@ -140,8 +140,8 @@ theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ
 $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
-    ($(mkIdent `mk) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
-  $(mkIdent `mk) ($(mkVal Alias) a)
+    ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
+  $(mkIdent `of) ($(mkVal Alias) a)
 
 $(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
