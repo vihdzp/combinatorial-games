@@ -37,9 +37,9 @@ public theorem Ordinal.exists_omega0_mul_add_natCast (o : Ordinal) :
   refine ⟨o / omega0, b, ?_⟩
   rw [← hb, div_add_mod]
 
-public theorem Ordinal.one_le_of_lt {a b : Ordinal} (hab : a < b) : 1 ≤ b := by
-  rw [← zero_add 1, ← Order.succ_eq_add_one, Order.succ_le_iff]
-  exact (zero_le a).trans_lt hab
+public theorem Order.one_le_of_lt {α : Type*} [Preorder α] [Add α] [One α]
+    [CanonicallyOrderedAdd α] [SuccAddOrder α] {a b : α} (hab : a < b) : 1 ≤ b :=
+  le_of_add_le_right (Order.add_one_le_of_lt hab)
 
 public theorem Order.IsNormal.isBot_or_exists_lt_succ_of_lt
     {α β : Type*} [LinearOrder α] [SuccOrder α]
