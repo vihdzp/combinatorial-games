@@ -370,10 +370,9 @@ theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
 protected theorem transcendental : Transcendental ht.toSubfield t := by
   rw [transcendental_iff]
   intro p hp
-  rw [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
+  rwa [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
     ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2,
-    oeval_eq_zero_iff ht.ne_zero] at hp
-  simpa using hp
+    oeval_eq_zero_iff ht.ne_zero, Polynomial.map_eq_zero] at hp
 
 theorem algebraAdjoin_simple_self :
     (Algebra.adjoin ht.toSubfield {t}).toSubring = ht.isRing_opow_omega0.toSubring := by
