@@ -118,7 +118,7 @@ theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + 
   apply add_le_of_forall_ne
   all_goals
     intro c hc
-    induction c with | mk c
+    induction c with | of c
     rw [← val_eq_iff.ne]
     apply ((add_le_nadd' ..).trans_lt _).ne
     simpa
