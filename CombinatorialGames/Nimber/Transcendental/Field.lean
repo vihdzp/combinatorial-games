@@ -41,7 +41,7 @@ public theorem Ordinal.one_le_of_lt {a b : Ordinal} (hab : a < b) : 1 ≤ b := b
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.succ_le_iff]
   exact (zero_le a).trans_lt hab
 
-public theorem Order.IsNormal.isBot_or_exists_le_succ_of_lt
+public theorem Order.IsNormal.isBot_or_exists_lt_succ_of_lt
     {α β : Type*} [LinearOrder α] [SuccOrder α]
     [LinearOrder β] {f : α → β} (hf : IsNormal f) {a : α} {b : β} (h : b < f a) :
     IsBot a ∨ ∃ c < a, b < f (succ c) := by
@@ -381,14 +381,14 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       wlog hzy : z ≤ y generalizing y z with hyz
       · rw [mul_comm]
         exact hyz z y hz hy (le_of_not_ge hzy)
-      obtain hx | ⟨c, hcx, hyc⟩ := normal1.isBot_or_exists_le_succ_of_lt hy
+      obtain hx | ⟨c, hcx, hyc⟩ := normal1.isBot_or_exists_lt_succ_of_lt hy
       · rw [isBot_iff_eq_bot, bot_eq_zero] at hx
         rw [hx, val_zero, add_zero, mul_one] at hy hz ⊢
         exact ht.isRing_opow_omega0.mul_lt hy hz
       have normal2 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val c) + x)) :=
         of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp (isNormal_add_right _))
       rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
-      obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_le_succ_of_lt hyc).resolve_left (by simp)
+      obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_lt_succ_of_lt hyc).resolve_left (by simp)
       obtain ⟨d, rfl⟩ := lt_omega0.1 hd
       rw [← natCast_succ] at hyd
       have hrr := (ih c d.succ (Prod.Lex.toLex_lt_toLex.2 (.inl hcx)) (hcx.le.trans hx)).2.1
@@ -430,10 +430,9 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
           Subfield.coe_subtype, ← inv_eq_iff_eq_inv.2 hui]
         refine IsUnit.of_mul_eq_one ⟨∗(val t ^ (ω * (1 + val y))), Set.mem_Iio.2 ?_⟩
           (Subtype.ext (inv_mul_cancel₀ hz))
-        apply normal1.strictMono
-        exact hy
+        exact normal1.strictMono hy
       · obtain ⟨y, hy⟩ := y
-        obtain hx | ⟨c, hcx, hyc⟩ := normal1.isBot_or_exists_le_succ_of_lt hy
+        obtain hx | ⟨c, hcx, hyc⟩ := normal1.isBot_or_exists_lt_succ_of_lt hy
         · rw [isBot_iff_eq_bot, bot_eq_zero] at hx
           subst x
           exact ⟨(⟨y, by simpa using hy⟩, 1),
@@ -441,7 +440,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
         have normal2 : Order.IsNormal fun x => ∗(val t ^ (ω * (1 + val c) + x)) :=
           of.isNormal.comp ((isNormal_opow (one_lt_val.2 ht.one_lt)).comp (isNormal_add_right _))
         rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
-        obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_le_succ_of_lt hyc).resolve_left (by simp)
+        obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_lt_succ_of_lt hyc).resolve_left (by simp)
         obtain ⟨d, rfl⟩ := lt_omega0.1 hd
         rw [← natCast_succ] at hyd
         obtain ⟨m, hmc, p, hp, hpm⟩ := surj c d.succ (Prod.Lex.toLex_le_toLex.2 (.inl hcx))
