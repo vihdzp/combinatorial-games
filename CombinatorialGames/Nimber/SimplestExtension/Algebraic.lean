@@ -378,23 +378,19 @@ protected theorem transcendental : Transcendental ht.toSubfield t := by
 theorem algebraAdjoin_simple_self :
     (Algebra.adjoin ht.toSubfield {t}).toSubring = ht.isRing_opow_omega0.toSubring := by
   apply SetLike.ext'
-  have hta : ht.toSubfield = Set.Iio t := by ext; simp
   rw [Algebra.adjoin_eq_ring_closure, union_singleton,
     Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, hta, Set.Iio_insert, ← Iio_succ,
-    coe_subringClosure_Iio, ht.ringClosure_eq]
-  ext; simp
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
 
 theorem fieldAdjoin_simple_self :
     (IntermediateField.adjoin ht.toSubfield {t}).toSubfield =
       (IsField.fieldClosure (succ t)).toSubfield := by
   apply SetLike.ext'
-  have htf : ht.toSubfield = Set.Iio t := by ext; simp
   rw [IntermediateField.adjoin_toSubfield, union_singleton,
     Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, htf, Set.Iio_insert, ← Iio_succ,
-    coe_subfieldClosure_Iio]
-  ext; simp
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subfieldClosure_Iio, coe_toSubfield]
 
 end IsAlgClosed
 
