@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
+public import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 public import Mathlib.SetTheory.Ordinal.Exponential
 
 import Mathlib.Algebra.CharP.Two
@@ -606,6 +607,17 @@ theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
+theorem IsField.exists_linearCombination_of_lt {x : Nimber} (h : IsField x)
+    {o : Ordinal} {y : Nimber} (hy : y < ∗(val x ^ o)) :
+    ∃ f : Ordinal →₀ h.toSubfield, (SetLike.coe f.support ⊆ Iio o) ∧
+    f.linearCombination h.toSubfield (fun o => ∗(val x ^ o)) = y := by
+  sorry
+
+theorem IsField.linearCombination_lt {x : Nimber} (h : IsField x)
+    {o : Ordinal} {f : Ordinal →₀ h.toSubfield} (hf : SetLike.coe f.support ⊆ Iio o) :
+    f.linearCombination h.toSubfield (fun o => ∗(val x ^ o)) < ∗(val x ^ o) := by
+  sorry
 
 end Nimber
 end
