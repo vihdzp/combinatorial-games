@@ -137,7 +137,7 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
 
 theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
+$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
     ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
