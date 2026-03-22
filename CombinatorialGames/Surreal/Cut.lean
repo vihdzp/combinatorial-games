@@ -3,9 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Surreal.Birthday.Basic
+module
+
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import Mathlib.Order.Concept
+public import Mathlib.Order.UpperLower.CompleteLattice
+
+import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
 # Surreal cuts
@@ -29,6 +33,8 @@ concept terminology.
 -/
 
 universe u
+
+@[expose] public section
 
 namespace Surreal
 open Set IGame
@@ -96,7 +102,7 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem left_top : (⊤ : Cut).left = univ := rfl
 @[simp] theorem right_top : (⊤ : Cut).right = ∅ := by simpa using (compl_left ⊤).symm
 
-instance : IsTotal Cut (· ≤ ·) where
+instance : @Std.Total Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
 
 noncomputable instance : LinearOrder Cut :=
@@ -527,5 +533,17 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-- A characterization of games equivalent to numbers: they're precisely those with
+`supLeft x < infRight x`. -/
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ ∃ y : Subtype Numeric, x ≈ y where
+  mp h := by
+    refine ⟨⟨(simplestBtwn h).out, inferInstance⟩, ?_⟩
+    rw [← Game.mk_eq_mk, gameMk_out, simplestBtwn_supLeft_infRight]
+  mpr := by
+    rintro ⟨⟨y, _⟩, h⟩
+    exact supLeft_lt_infRight_of_equiv_numeric h
+
 end Cut
 end Surreal
+end

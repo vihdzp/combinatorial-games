@@ -3,9 +3,12 @@ Copyright (c) 2019 Mario Carneiro. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Birthday
+module
+
+public import CombinatorialGames.Game.Birthday
+
 import CombinatorialGames.Tactic.AddInstances
-import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Int.Cast.Lemmas
 
 /-!
 # Surreal numbers
@@ -28,7 +31,7 @@ surreals are a field.
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-! ### Simplicity theorem -/
 
@@ -51,7 +54,7 @@ alias AntisymmRel.Fits := fits_of_equiv
 theorem Fits.refl (x : IGame) : x.Fits x :=
   fits_of_equiv .rfl
 
-instance : IsRefl _ Fits where
+instance : Std.Refl Fits where
   refl := Fits.refl
 
 theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
@@ -136,7 +139,7 @@ theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) 
     motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Surreal) : IGame := (Quotient.out x).1
+@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).1
 @[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
@@ -217,6 +220,10 @@ def toGame : Surreal ↪o Game where
 @[simp] theorem toGame_zero : toGame 0 = 0 := rfl
 @[simp] theorem toGame_one : toGame 1 = 1 := rfl
 
+@[simp]
+theorem gameMk_out (x : Surreal) : Game.mk x.out = x.toGame := by
+  conv_rhs => rw [← out_eq x, toGame_mk]
+
 theorem toGame_le_iff {a b : Surreal} : toGame a ≤ toGame b ↔ a ≤ b := by simp
 theorem toGame_lt_iff {a b : Surreal} : toGame a < toGame b ↔ a < b := by simp
 theorem toGame_inj {a b : Surreal} : toGame a = toGame b ↔ a = b := by simp
@@ -244,12 +251,6 @@ theorem toGame_sub (x y : Surreal) : toGame (x - y) = toGame x - toGame y :=
 @[simp] theorem toGame_natCast (n : ℕ) : toGame n = n := map_natCast' toGameAddHom rfl n
 @[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := map_intCast' toGameAddHom rfl n
 
-@[simp]
-theorem game_out_eq (x : Surreal) : Game.mk x.out = x.toGame := by
-  cases x
-  rw [toGame_mk, Game.mk_eq_mk]
-  exact mk_out_equiv _
-
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
 set are less than all the elements of the right set.
 
@@ -268,7 +269,7 @@ theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
     toGame !{st} = !{fun p ↦ toGame '' st p} := by
   change toGame (@mk _ (_)) = _
-  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, game_out_eq]
+  simp_rw [toGame_mk, Game.mk_ofSets', Set.image_image, gameMk_out]
 
 @[simp]
 theorem toGame_ofSets (s t : Set Surreal.{u}) [Small.{u} s] [Small.{u} t]

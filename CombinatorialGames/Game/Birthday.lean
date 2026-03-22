@@ -3,10 +3,14 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Game.Special
+module
+
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.Special
+
 import Mathlib.Algebra.Order.Group.OrderIso
 import Mathlib.Data.Fintype.Order
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Birthdays of games
@@ -28,51 +32,30 @@ open NatOrdinal Order Set
 
 /-! ### Stuff for Mathlib -/
 
-theorem IncompRel.ne {α : Type*} {r : α → α → Prop} [IsRefl α r] {a b : α}
-    (h : IncompRel r a b) : a ≠ b := by
-  rintro rfl
-  exact h.1 <| refl_of r a
-
 theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrderBot α] {f : ι → α}
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
-theorem NatOrdinal.lt_omega0 {o : NatOrdinal} : o < of Ordinal.omega0 ↔ ∃ n : ℕ, o = n :=
-  Ordinal.lt_omega0
-
-theorem NatOrdinal.nat_lt_omega0 (n : ℕ) : n < of Ordinal.omega0 :=
-  Ordinal.nat_lt_omega0 n
-
 /-! ### `IGame` birthday -/
+
+public noncomputable section
 
 namespace IGame
 
--- TODO: upstream
-attribute [simp] Order.lt_add_one_iff
-attribute [-simp] Ordinal.add_one_eq_succ
-
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
-noncomputable def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
+def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
   ⨆ p, ⨆ y : x.moves p, succ (birthday y)
 termination_by x
 decreasing_by igame_wf
 
-theorem lt_birthday_iff' {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
+theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
     ∃ p y, y ∈ x.moves p ∧ o ≤ y.birthday := by
   rw [birthday]
   simp [NatOrdinal.lt_iSup_iff]
 
-theorem birthday_le_iff' {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
-    ∀ p, ∀ y ∈ x.moves p, y.birthday < o := by
-  simpa using lt_birthday_iff'.not
-
-theorem lt_birthday_iff {x : IGame} {o : NatOrdinal} : o < x.birthday ↔
-    (∃ y ∈ xᴸ, o ≤ y.birthday) ∨ (∃ y ∈ xᴿ, o ≤ y.birthday) := by
-  simp [lt_birthday_iff']
-
 theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
-    (∀ y ∈ xᴸ, y.birthday < o) ∧ (∀ y ∈ xᴿ, y.birthday < o) := by
+    ∀ p, ∀ y ∈ x.moves p, y.birthday < o := by
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
@@ -83,7 +66,7 @@ theorem birthday_eq_max (x : IGame) : birthday x =
 @[aesop apply unsafe]
 theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
     y.birthday < x.birthday :=
-  lt_birthday_iff'.2 ⟨p, y, hy, le_rfl⟩
+  lt_birthday_iff.2 ⟨p, y, hy, le_rfl⟩
 
 theorem birthday_lt_of_subposition {x y : IGame} (hy : Subposition y x) :
     y.birthday < x.birthday := by
@@ -129,7 +112,8 @@ theorem birthday_down : birthday ↓ = 2 := by
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   refine eq_of_forall_lt_iff fun y ↦ ?_
-  rw [lt_birthday_iff, lt_birthday_iff, exists_moves_neg, exists_moves_neg, or_comm]
+  simp_rw [lt_birthday_iff, exists_moves_neg, Player.exists]
+  rw [or_comm]
   congr! 3
   all_goals
     dsimp; rw [and_congr_right]
@@ -158,10 +142,28 @@ decreasing_by igame_wf
 theorem neg_toIGame_birthday_le (x : IGame) : -x.birthday.toIGame ≤ x := by
   simpa [IGame.neg_le] using le_toIGame_birthday (-x)
 
+/-- A game without right options is equivalent to an ordinal. -/
+theorem equiv_ordinal_of_right_eq_empty {x : IGame} (hx : xᴿ = ∅) :
+    ∃ o : NatOrdinal, x ≈ o := by
+  obtain ⟨o, ho, ho'⟩ := wellFounded_lt.has_min {o : NatOrdinal | x ≤ o} ⟨_, x.le_toIGame_birthday⟩
+  use o
+  apply equiv_of_forall_lf
+  · exact fun a ha ha' ↦ left_lf ha <| ho.trans ha'
+  · simp [hx]
+  · rw [forall_leftMoves_toIGame]
+    exact fun a ha ha' ↦ ho' _ ha' ha
+  · simp
+
+/-- A game without left options is equivalent to the negative of an ordinal. -/
+theorem equiv_neg_ordinal_of_left_eq_empty {x : IGame} (hx : xᴸ = ∅) :
+    ∃ o : NatOrdinal, x ≈ -o := by
+  simpa [hx, ← IGame.neg_equiv] using equiv_ordinal_of_right_eq_empty (x := -x)
+
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
   refine eq_of_forall_lt_iff fun o ↦ ?_
-  simp_rw [lt_add_iff, lt_birthday_iff, exists_moves_add, or_and_right, exists_or, or_or_or_comm]
+  simp_rw [lt_add_iff, lt_birthday_iff, Player.exists, exists_moves_add,
+    or_and_right, exists_or, or_or_or_comm]
   congr! 2
   all_goals
     constructor
@@ -237,7 +239,7 @@ theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n 
     ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
   simp [birthdayFinset]
 
-@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := rfl
+@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
 
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
@@ -265,12 +267,9 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
       ← succ_eq_add_one, lt_succ_iff, IH]
     constructor
     · aesop
-    · rintro ⟨hl, hr⟩
-      have hxl : xᴸ ⊆ birthdayFinset n := by intro y; simp_all
-      have hxr : xᴿ ⊆ birthdayFinset n := by intro y; simp_all
-      classical
-      have := Set.fintypeSubset _ hxl
-      have := Set.fintypeSubset _ hxr
+    · intro p
+      have hx (p) : x.moves p ⊆ birthdayFinset n := by cases p <;> simp_all [subset_def]
+      classical have (p : Player) := Set.fintypeSubset _ (hx p)
       use xᴸ.toFinset, xᴿ.toFinset
       aesop
 
@@ -283,16 +282,15 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
-theorem short_iff_birthday_finite {x : IGame} :
-    x.Short ↔ x.birthday < of Ordinal.omega0 := by
+theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .omega0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (p : Player) (y : x.moves p) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
       exact .of_mem_moves y.2
     choose f hf using this
     obtain ⟨n, hn⟩ := (finite_iUnion fun p => finite_range (f p)).exists_le
-    apply lt_of_le_of_lt _ (NatOrdinal.nat_lt_omega0 (n + 1))
-    rw [birthday_le_iff', Nat.cast_add_one, ← succ_eq_add_one]
+    apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))
+    rw [birthday_le_iff, Nat.cast_add_one, ← succ_eq_add_one]
     aesop
   · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
     intro ⟨n, hn⟩
@@ -301,7 +299,7 @@ theorem short_iff_birthday_finite {x : IGame} :
 termination_by x
 decreasing_by igame_wf
 
-theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of Ordinal.omega0 :=
+theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of .omega0 :=
   short_iff_birthday_finite.1 ‹_›
 
 end IGame
@@ -377,8 +375,8 @@ theorem birthday_one : birthday 1 = 1 := by
 theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
   · simpa using birthday_mk_le ⋆
-  · rw [Ordinal.one_le_iff_ne_zero, birthday_eq_zero.ne]
-    exact IncompRel.ne (r := (· ≤ ·)) (IGame.star_fuzzy_zero)
+  · rw [one_le_iff_ne_zero, birthday_eq_zero.ne]
+    exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
@@ -418,3 +416,4 @@ instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthd
   small_setOf_birthday_lt o
 
 end Game
+end

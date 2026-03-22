@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.NatOrdinal.Basic
-import Mathlib.SetTheory.Ordinal.Exponential
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.SetTheory.Ordinal.Exponential
 
 /-!
 # Natural operations on `ω ^ x`
@@ -26,9 +28,9 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 `CombinatorialGames.Surreal.Pow`.
 -/
 
-open Ordinal
+@[expose] public section
 
-attribute [-simp] add_one_eq_succ
+open Ordinal
 
 theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
   obtain rfl | hy := eq_or_ne y 0
@@ -66,12 +68,12 @@ theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
 
 private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ x) (n : ℕ) :
     (∀ z < ω^ x, z + y < ω^ x) ∧ ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
-  obtain rfl | hx := eq_or_ne x.val 0
+  obtain rfl | hx := eq_or_ne x 0
   · simp_all
   have H : ∀ z < ω^ x, z + y < ω^ x := by
     intro z hz
     have hm := max_lt hy hz
-    rw [wpow_def, ← val_lt_iff, lt_omega0_opow hx] at hm
+    rw [wpow_def, ← val_lt_iff, lt_omega0_opow (b := x.val) hx] at hm
     obtain ⟨a, ha, n, hn⟩ := hm
     have hyz (n) := (wpow_mul_natCast_add_of_lt_aux (wpow_pos (of a)) n).2
     simp_rw [val_zero, add_zero, ← val_eq_iff, val_of] at hyz
@@ -144,7 +146,7 @@ theorem wpow_le_iff (hx : x ≠ 0) : ω^ x ≤ y ↔ ∀ z < x, ∀ n : ℕ, ω^
   simp
 
 theorem lt_wpow_add_one_iff : y < ω^ (x + 1) ↔ ∃ n : ℕ, y < ω^ x * n := by
-  rw [wpow_def, ← val_lt_iff, val_add_one, add_one_eq_succ, lt_omega0_opow_succ]
+  rw [wpow_def, ← val_lt_iff, val_add_one, ← Order.succ_eq_add_one, lt_omega0_opow_succ]
   simp_rw [wpow_mul_natCast]
   rfl
 
@@ -155,7 +157,7 @@ theorem wpow_add_one_le_iff : ω^ (x + 1) ≤ y ↔ ∀ n : ℕ, ω^ x * n ≤ y
 theorem wpow_mul_natCast_add_of_lt (hy : y < ω^ (x + 1)) (n : ℕ) :
     ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
   obtain ⟨z, hz, m, rfl⟩ : ∃ z < ω^ x, ∃ m : ℕ, y = ω^ x * m + z := by
-    rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, ← Ordinal.div_lt] at hy
+    rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, Ordinal.lt_mul_iff_div_lt] at hy
     · obtain ⟨m, hm⟩ := Ordinal.lt_omega0.1 hy
       have hx : of (y.val % ω ^ x.val) < ω^ x := mod_lt _ (wpow_ne_zero _)
       use of (y.val % ω ^ x.val), hx, m
@@ -195,3 +197,4 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
 termination_by (x, y)
 
 end NatOrdinal
+end
