@@ -3,11 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.SignExpansion.Basic
-import CombinatorialGames.Surreal.Birthday.Basic
-import Mathlib.Tactic.Order
+module
+
+public import CombinatorialGames.SignExpansion.Basic
+public import CombinatorialGames.Surreal.Birthday.Basic
 
 import CombinatorialGames.Surreal.Cut
+import Mathlib.Tactic.Order
 
 /-!
 # Sign Expansions
@@ -30,7 +32,7 @@ public theorem le_ite_iff {α : Type*} [LE α] {P : Prop} [Decidable P] {a b c :
 
 universe u
 
-noncomputable section
+public noncomputable section
 
 namespace Surreal
 open IGame SignExpansion
@@ -274,7 +276,7 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
       casesm* _ ∨ _ <;> order
 
 theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    ofSurreal x o = .sign (x - x.truncate o) := rfl
+    ofSurreal x o = .sign (x - x.truncate o) := (rfl)
 
 @[simp]
 theorem length_ofSurreal (x : Surreal.{u}) :
