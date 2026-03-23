@@ -37,6 +37,8 @@ public noncomputable section
 namespace Surreal
 open IGame SignExpansion
 
+/-- The truncation of a surreal to an ordinal `o` is the unique surreal `truncate o x`
+with `birthday (truncate o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
 def truncate (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
   toFun x := @mk !{fun p => {s : IGame.{u} | s.birthday < o} ∩
     {s | ∃ _ : s.Numeric, p.cases (.mk s < x) (x < .mk s)}} <| by
@@ -211,6 +213,10 @@ theorem truncate_truncate {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
     rw [lt_truncate_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
       lt_truncate_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
 
+/-- To every surreal is associated a unique sign expansion, which can be seen as
+a sequence of directions along an ordinal-depth complete binary tree.
+The `o`'th term of this sign sequence is `+` if `truncate o x < x`,
+`-` if `x < truncate o x`, and `0` if `truncate o x = x`. -/
 def ofSurreal : Surreal.{u} ↪o SignExpansion :=
   .ofStrictMono (fun x =>
     { sign i := .sign (x - x.truncate i)
