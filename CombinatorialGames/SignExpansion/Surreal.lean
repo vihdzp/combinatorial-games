@@ -259,6 +259,8 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
         one_ne_zero, and_false, zero_ne_one, or_self, imp_false, not_le, SignType.self_eq_neg_iff,
         reduceCtorEq, false_or, SignType.neg_eq_zero_iff, and_or_left, not_or,
         not_and, imp_iff_not_or, or_and_right, and_self] at h
+      -- this proof is very slow (unsurprisingly, since it splits into 80 cases)
+      -- TODO: find a faster proof
       casesm* _ ∨ _ <;> order
     · simp only [Set.mem_Icc] at hc
       by_contra! h
@@ -273,6 +275,8 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
         not_lt, SignType.le_one, zero_le_one, and_or_left, SignType.le_neg_one_iff,
         SignType.self_eq_neg_iff, one_ne_zero, and_false, reduceCtorEq, or_false, false_or,
         SignType.one_le_iff, zero_ne_one, SignType.neg_one_le] at h
+      -- this proof is not as slow as the other one, it only has 6 cases
+      -- TODO: find a better proof
       casesm* _ ∨ _ <;> order
 
 theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
