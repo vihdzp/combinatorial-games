@@ -3,9 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.Impartial.Basic
-import Mathlib.Order.WellQuasiOrder
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Graph
+public import Mathlib.Order.WellQuasiOrder
 
 /-!
 # Poset games
@@ -29,6 +31,8 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 -/
 
 variable {α : Type*} [Preorder α]
+
+public section
 
 open Set
 
@@ -57,7 +61,7 @@ theorem not_rel_empty (s : Set α) : ¬ s ≺ ∅ := by
 theorem rel_irrefl (s : Set α) : ¬ s ≺ s :=
   fun h ↦ ssubset_irrefl s <| subrelation_rel h
 
-instance : IsIrrefl (Set α) (· ≺ ·) where
+instance : @Std.Irrefl (Set α) (· ≺ ·) where
   irrefl := rel_irrefl
 
 theorem top_compl_rel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
@@ -136,3 +140,4 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
 
 end IGame
 end GameGraph.Poset
+end

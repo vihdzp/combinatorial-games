@@ -3,8 +3,9 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Special
+module
+
+public import CombinatorialGames.Game.Birthday
 
 /-!
 # Games are densely ordered
@@ -14,7 +15,7 @@ We provide instances of `DenselyOrdered` for `IGame` and `Game`.
 
 universe u
 
-noncomputable section
+public noncomputable section
 namespace IGame
 
 theorem tiny_lf_of_not_nonpos_of_forall_neg_le {x a : IGame} (hx : 0 ⧏ x)
@@ -64,8 +65,8 @@ instance : DenselyOrdered IGame where
 
 instance : DenselyOrdered Game where
   dense a b hab := by
-    induction a using Game.ind with | mk a =>
-    induction b using Game.ind with | mk b =>
+    induction a using Game.ind with | mk a
+    induction b using Game.ind with | mk b
     rw [Game.mk_lt_mk] at hab
     obtain ⟨c, hac, hcb⟩ := exists_between hab
     exact ⟨.mk c, hac, hcb⟩

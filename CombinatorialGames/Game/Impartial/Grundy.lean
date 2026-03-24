@@ -3,8 +3,10 @@ Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Specific.Nim
-import CombinatorialGames.Nimber.Basic
+module
+
+public import CombinatorialGames.Game.Specific.Nim
+public import CombinatorialGames.Nimber.Basic
 
 /-!
 # Grundy value
@@ -25,7 +27,7 @@ universe u
 
 open Nimber Set
 
-noncomputable section
+public noncomputable section
 
 namespace IGame
 
@@ -187,16 +189,6 @@ theorem grundy_moves_ne {p : Player} {x y : IGame} [Impartial x] (hy : y ∈ x.m
     exact grundyAux_ne hy
   | right =>
     exact grundyAux_ne hy
-
-/-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_pos (x) [Impartial x] {y} [Numeric y] (hy : 0 < y) : x < y := by
-  grw [← nim_grundy_equiv x]
-  exact Dicotic.lt_of_numeric_of_pos _ hy
-
-/-- One half of the **lawnmower theorem** for impartial games. -/
-protected theorem lt_of_numeric_of_neg (x) [Impartial x] {y} [Numeric y] (hy : y < 0) : y < x := by
-  grw [← nim_grundy_equiv x]
-  exact Dicotic.lt_of_numeric_of_neg _ hy
 
 private theorem of_grundyAux_left_eq_grundyAux_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, Impartial y)
