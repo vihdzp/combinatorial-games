@@ -251,9 +251,8 @@ theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
 theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
-@[simp]
-theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x :=
-  rfl
+theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
+  simp
 
 /-! ### Subset relation -/
 
@@ -287,13 +286,13 @@ theorem eq_or_length_lt_of_subset {x y : SignExpansion} (h : x ⊆ y) :
   have := lt_or_ge x.length y.length
   aesop
 
-instance : IsRefl SignExpansion (· ⊆ ·) where
-  refl x := restrict_subset x ⊤
+instance : @Std.Refl SignExpansion (· ⊆ ·) where
+  refl _ := restrict_of_length_le le_rfl
 
 instance : IsTrans SignExpansion (· ⊆ ·) where
   trans := by grind [subset_def]
 
-instance : IsAntisymm SignExpansion (· ⊆ ·) where
+instance : @Std.Antisymm SignExpansion (· ⊆ ·) where
   antisymm x y h₁ h₂ := by
     have := eq_or_length_lt_of_subset h₁
     have := eq_or_length_lt_of_subset h₂
