@@ -53,8 +53,8 @@ def truncate (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
     simp_rw [Surreal.mk_le_mk]
     rw [le_iff_forall_lf]
     refine ⟨fun z hz => left_lf ?_, fun z hz => lf_right ?_⟩ <;> rw [moves_ofSets] at hz ⊢
-    · exact ⟨hz.1, hz.2.1, lt_of_lt_of_le hz.2.2 hxy⟩
-    · exact ⟨hz.1, hz.2.1, lt_of_le_of_lt hxy hz.2.2⟩
+    · exact ⟨hz.1, hz.2.1, hz.2.2.trans_le hxy⟩
+    · exact ⟨hz.1, hz.2.1, hxy.trans_lt hz.2.2⟩
 
 private theorem truncate_apply (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     ∃ h : Numeric _, truncate o x = @mk !{fun p => {s : IGame.{u} | s.birthday < o} ∩
@@ -98,8 +98,7 @@ theorem truncate_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
 theorem truncate_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     x.truncate o = x ↔ x.birthday ≤ o := by
   refine ⟨fun h => ?_, truncate_of_birthday_le⟩
-  refine le_of_not_gt fun ho => ?_
-  refine ne_of_lt ?_ (congrArg birthday h)
+  refine le_of_not_gt fun ho => ne_of_lt ?_ (congrArg birthday h)
   exact (x.birthday_truncate_le o).trans_lt ho
 
 @[simp]
