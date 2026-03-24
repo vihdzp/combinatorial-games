@@ -298,6 +298,20 @@ theorem ofSurreal_truncate_apply_of_ge {x : Surreal.{u}} {o₁ o₂ : NatOrdinal
   apply_eq_zero.2 ((length_ofSurreal _).trans_le (WithTop.coe_le_coe.2
     ((birthday_truncate_le o₁ x).trans h)))
 
+@[simp]
+theorem ofSurreal_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    ofSurreal (x.truncate o) = (ofSurreal x).restrict o := by
+  ext o'
+  obtain h | h := lt_or_ge o' o
+  · rw [ofSurreal_apply, truncate_truncate, min_eq_right_of_lt h,
+      restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), ofSurreal_apply]
+    simp_rw [sign_apply, sub_pos, sub_neg,
+      lt_truncate_iff_lt ((birthday_truncate_le o' x).trans_lt h),
+      truncate_lt_iff_lt ((birthday_truncate_le o' x).trans_lt h)]
+  · rw [restrict_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
+      length_ofSurreal, WithTop.coe_le_coe]
+    exact (birthday_truncate_le o x).trans h
+
 theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := by
   apply subset_antisymm
   · rw [Set.range_subset_iff]
@@ -346,8 +360,8 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
             decide
           · rw [hkg]
             refine ⟨o, fun j hj => ?_, ?_⟩
-            · simp [← ih j hj, ofSurreal_truncate_apply_of_lt hj]
-            · simp [hfo, ofSurreal_truncate_apply_of_ge le_rfl]
+            · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+            · simp [hfo, restrict_apply_of_le_coe le_rfl]
         | pos =>
           rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
           apply Numeric.left_lt
@@ -357,7 +371,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
             decide
           · rw [hkg]
             refine ⟨o, fun j hj => ?_, ?_⟩
-            · simp [← ih j hj, ofSurreal_truncate_apply_of_lt hj]
-            · simp [hfo, ofSurreal_truncate_apply_of_ge le_rfl]
+            · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+            · simp [hfo, restrict_apply_of_le_coe le_rfl]
 
 end Surreal
