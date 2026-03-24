@@ -286,18 +286,6 @@ theorem length_ofSurreal (x : Surreal.{u}) :
     rw [← apply_eq_zero, WithTop.coe_le_coe, ofSurreal_apply,
       sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
 
-theorem ofSurreal_truncate_apply_of_lt {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}}
-    (h : o₂ < o₁) : ofSurreal (x.truncate o₁) o₂ = ofSurreal x o₂ := by
-  rw [ofSurreal_apply, truncate_truncate, min_eq_right_of_lt h, ofSurreal_apply]
-  simp_rw [sign_apply, sub_pos, sub_neg,
-    lt_truncate_iff_lt ((birthday_truncate_le o₂ x).trans_lt h),
-    truncate_lt_iff_lt ((birthday_truncate_le o₂ x).trans_lt h)]
-
-theorem ofSurreal_truncate_apply_of_ge {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}}
-    (h : o₁ ≤ o₂) : ofSurreal (x.truncate o₁) o₂ = 0 :=
-  apply_eq_zero.2 ((length_ofSurreal _).trans_le (WithTop.coe_le_coe.2
-    ((birthday_truncate_le o₁ x).trans h)))
-
 @[simp]
 theorem ofSurreal_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     ofSurreal (x.truncate o) = (ofSurreal x).restrict o := by
