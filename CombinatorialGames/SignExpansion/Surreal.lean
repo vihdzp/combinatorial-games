@@ -236,21 +236,7 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
       exact hd
     have hcxy (j : NatOrdinal) (hj : j ≤ c.birthday)
         (z : Surreal) (hz : z ∈ Set.Icc x y) : z.truncate j = c.truncate j := by
-      apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c)
-      · intro k hk
-        rw [truncate_lt_iff_lt hk]
-        specialize hdcc k (hk.trans_le hj)
-        by_contra h
-        rw [Set.mem_Icc] at hc hz hdcc
-        push +distrib Not at hdcc h
-        cases h <;> cases hdcc <;> order
-      · intro k hk
-        rw [lt_truncate_iff_lt hk]
-        specialize hdcc k (hk.trans_le hj)
-        by_contra h
-        rw [Set.mem_Icc] at hc hz hdcc
-        push +distrib Not at hdcc h
-        cases h <;> cases hdcc <;> order
+      apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c) <;> grind
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩
     · have htj : c.truncate j ∉ Set.Icc x y := hdcc _ ((birthday_truncate_le j c).trans_lt hj)
       simp only [Set.mem_Icc, Classical.not_and_iff_not_or_not] at htj
