@@ -335,6 +335,8 @@ theorem eq_of_forall_subset_iff {x y : SignExpansion} (h : ∀ z, z ⊆ x ↔ z 
   · rw [← h]
   · rw [h]
 
+/-- We write `x ∩ y` for the largest common prefix of `x` and `y`, i.e. the infimum under the
+subset order. -/
 @[no_expose]
 instance : Inter SignExpansion where
   inter x y := x ↾ sInf ((↑) '' {a : NatOrdinal | x a ≠ y a})
