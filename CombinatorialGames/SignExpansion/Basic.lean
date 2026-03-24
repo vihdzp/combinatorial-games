@@ -352,9 +352,11 @@ theorem inter_comm (x y : SignExpansion) : x ∩ y = y ∩ x := by
     simpa
   · rw [restrict_apply_of_le_coe ho, restrict_apply_of_le_coe ho]
 
+@[simp]
 theorem inter_subset_left {x y : SignExpansion} : x ∩ y ⊆ x :=
   restrict_subset ..
 
+@[simp]
 theorem inter_subset_right {x y : SignExpansion} : x ∩ y ⊆ y :=
   inter_comm .. ▸ inter_subset_left
 
