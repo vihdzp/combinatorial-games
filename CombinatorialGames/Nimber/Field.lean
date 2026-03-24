@@ -375,24 +375,25 @@ instance : Field Nimber where
   nnqsmul := _
   qsmul := _
 
--- #34622
+-- TODO: PR this
 section Mathlib
 
 @[simp]
 theorem inv_natCast (n : ℕ) : (n : Nimber)⁻¹ = n := by
-  grind [natCast_eq_if]
+  grind [CharTwo.natCast_eq_ite]
 
 @[simp]
 theorem inv_intCast (n : ℤ) : (n : Nimber)⁻¹ = n := by
-  grind [intCast_eq_if]
+  grind [CharTwo.intCast_eq_ite]
 
 theorem ratCast_eq_if (q : ℚ) : (q : Nimber) = if Odd q.num ∧ Odd q.den then 1 else 0 := by
-  rw [Field.ratCast_def, div_eq_mul_inv, inv_natCast, natCast_eq_if, intCast_eq_if]
+  rw [Field.ratCast_def, div_eq_mul_inv, inv_natCast,
+    CharTwo.natCast_eq_ite, CharTwo.intCast_eq_ite]
   grind
 
 @[simp]
 theorem range_ratCast : Set.range ((↑) : ℚ → Nimber) = {0, 1} := by
-  rw [funext ratCast_eq_if, Set.range_if, Set.pair_comm]
+  rw [funext ratCast_eq_if, Set.range_ite_const, Set.pair_comm]
   · use 1; simp
   · use 0; simp
 

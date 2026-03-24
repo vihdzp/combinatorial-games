@@ -216,6 +216,10 @@ theorem coe_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
     ⇑(x ↾ o) = fun i : NatOrdinal ↦ if i < o then x i else 0 :=
   rfl
 
+@[simp]
+theorem neg_restrict (x : SignExpansion) (o : WithTop NatOrdinal) : -x ↾ o = (-x) ↾ o := by
+  aesop
+
 theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₂ < o₁) : (x ↾ o₁) o₂ = x o₂ := if_pos h
 
@@ -621,17 +625,18 @@ def toSignExpansion : NatOrdinal ↪o SignExpansion :=
 instance : Coe NatOrdinal SignExpansion where
   coe x := x.toSignExpansion
 
-theorem toSignExpansion_def (o : NatOrdinal) : o = ⊤ ↾ o := rfl
-
 @[aesop simp]
 theorem coe_toSignExpansion (o : NatOrdinal) :
     ⇑(o : SignExpansion) = fun i : NatOrdinal ↦ if i < o then 1 else 0 := by
   unfold toSignExpansion
   aesop
 
+@[simp] theorem top_restrict (o : NatOrdinal) : ⊤ ↾ o = o := rfl
+@[simp] theorem bot_restrict (o : NatOrdinal) : ⊥ ↾ o = -o := by aesop
+
 @[simp]
 theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
-  simp [toSignExpansion]
+  simp [← top_restrict]
 
 theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o₂ = 1 := by
   aesop
