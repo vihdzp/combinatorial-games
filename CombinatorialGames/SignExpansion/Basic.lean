@@ -182,6 +182,19 @@ theorem top_apply (o : NatOrdinal) : (⊤ : SignExpansion) o = 1 := rfl
 theorem length_top : length ⊤ = ⊤ := by
   simp [length]
 
+/-- We say a sign expansion is "small" when it has length < ⊤. Equivalently, it contains at least
+one (and thus infinitely many) zeros. -/
+def Small (x : SignExpansion) : Prop :=
+  x.length ≠ ⊤
+
+theorem Small.length_lt_top {x : SignExpansion} (hx : x.Small) : x.length < ⊤ :=
+  lt_top_iff_ne_top.2 hx
+
+theorem Small.zero : Small 0 := by simp [Small]
+
+theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 0 := by
+  rw [Small, ne_eq, length_eq_top, not_forall_not]
+
 instance : Neg SignExpansion where
   neg e := ⟨-e, by simpa using e.2⟩
 
@@ -193,12 +206,13 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 @[simp] theorem neg_bot : -(⊥ : SignExpansion) = ⊤ := rfl
 @[simp] theorem neg_top : -(⊤ : SignExpansion) = ⊥ := rfl
 
+@[simp] theorem length_neg (x : SignExpansion) : length (-x) = length x := by simp [length]
+
+theorem small_neg_iff {x : SignExpansion} : Small (-x) ↔ Small x := by simp [Small]
+alias ⟨_, Small.neg⟩ := small_neg_iff
+
 instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
-
--- TODO: why is this needed all of a sudden?
-instance : DecidableLT (WithTop NatOrdinal) :=
-  Classical.decRel _
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
@@ -227,6 +241,11 @@ theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
     (x ↾ o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
+
+@[simp]
+theorem small_restrict (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
+  rw [Small, length_restrict]
+  exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
 @[simp]
 theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
