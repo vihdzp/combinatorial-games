@@ -123,6 +123,7 @@ private theorem lt_truncate_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
   rw [moves_ofSets]
   exact ⟨hk.trans_lt hy, nk, hxy⟩
 
+@[grind =]
 theorem truncate_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) : x.truncate o < y ↔ x < y := by
   obtain h | rfl | h := lt_trichotomy x y
@@ -130,6 +131,7 @@ theorem truncate_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
   · exact iff_of_false (truncate_eq_self_iff.2 hy.le).not_lt (lt_irrefl _)
   · exact iff_of_false (lt_truncate_of_lt hy h).not_gt h.not_gt
 
+@[grind =]
 theorem lt_truncate_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) : y < x.truncate o ↔ y < x := by
   obtain h | rfl | h := lt_trichotomy x y
