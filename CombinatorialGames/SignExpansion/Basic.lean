@@ -142,6 +142,9 @@ theorem apply_eq_zero {x : SignExpansion} {o : NatOrdinal} : x o = 0 ↔ x.lengt
   refine ⟨fun h ↦ csInf_le' ?_, apply_of_length_le⟩
   simpa
 
+theorem apply_ne_zero {x : SignExpansion} {o : NatOrdinal} : x o ≠ 0 ↔ o < x.length := by
+  simpa using apply_eq_zero.not
+
 theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
   simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
 
@@ -271,6 +274,21 @@ theorem ssubset_def {x y : SignExpansion} : x ⊂ y ↔ x ⊆ y ∧ ¬ y ⊆ x :
 
 alias ⟨eq_of_subset, _⟩ := subset_def
 
+theorem subset_iff_forall {x y : SignExpansion} : x ⊆ y ↔ ∀ o, x o ≠ 0 → x o = y o := by
+  refine ⟨fun h o ho ↦ ?_, fun H ↦ ?_⟩
+  · rw [← eq_of_subset h, restrict_apply_of_coe_lt (apply_ne_zero.1 ho)]
+  · ext o
+    rw [eq_comm]
+    obtain ho | ho := lt_or_ge (↑o) x.length
+    · rw [restrict_apply_of_coe_lt ho]
+      exact H _ (apply_ne_zero.2 ho)
+    · rwa [restrict_apply_of_le_coe ho, apply_eq_zero]
+
+theorem apply_eq_of_subset_of_lt {x y : SignExpansion} {o : NatOrdinal}
+    (h : x ⊆ y) (ho : o < x.length) : x o = y o := by
+  apply subset_iff_forall.1 h
+  rwa [apply_ne_zero]
+
 @[simp]
 theorem restrict_subset (x : SignExpansion) (o : WithTop NatOrdinal) : x ↾ o ⊆ x := by
   rw [subset_def, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
@@ -311,6 +329,56 @@ theorem length_lt_of_ssubset {x y : SignExpansion} (h : x ⊂ y) : x.length < y.
   have := eq_or_length_lt_of_subset (subset_of_ssubset h)
   have := ssubset_irrefl x
   aesop
+
+theorem eq_of_forall_subset_iff {x y : SignExpansion} (h : ∀ z, z ⊆ x ↔ z ⊆ y) : x = y := by
+  apply subset_antisymm
+  · rw [← h]
+  · rw [h]
+
+@[no_expose]
+instance : Inter SignExpansion where
+  inter x y := x ↾ sInf ((↑) '' {a : NatOrdinal | x a ≠ y a})
+
+theorem inter_comm (x y : SignExpansion) : x ∩ y = y ∩ x := by
+  dsimp [Inter.inter]
+  ext o
+  simp_rw [eq_comm]
+  obtain ho | ho := lt_or_ge (↑o) (sInf (WithTop.some '' {a | ¬x a = y a}))
+  · rw [restrict_apply_of_coe_lt ho, restrict_apply_of_coe_lt ho]
+    contrapose! ho
+    apply sInf_le
+    simpa
+  · rw [restrict_apply_of_le_coe ho, restrict_apply_of_le_coe ho]
+
+theorem inter_subset_left {x y : SignExpansion} : x ∩ y ⊆ x :=
+  restrict_subset ..
+
+theorem inter_subset_right {x y : SignExpansion} : x ∩ y ⊆ y :=
+  inter_comm .. ▸ inter_subset_left
+
+@[simp]
+theorem subset_inter_iff {x y z : SignExpansion} : z ⊆ x ∩ y ↔ z ⊆ x ∧ z ⊆ y := by
+  refine ⟨fun h ↦ ⟨h.trans inter_subset_left, h.trans inter_subset_right⟩, fun ⟨hx, hy⟩ ↦ ?_⟩
+  dsimp [Inter.inter]
+  rw [subset_def, restrict_restrict_eq]
+  conv_rhs => rw [← eq_of_subset hx]
+  congr
+  apply min_eq_right
+  apply le_sInf
+  simp only [Set.mem_image, Set.mem_setOf_eq, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂]
+  intro o ho
+  contrapose! ho
+  rw [← apply_eq_of_subset_of_lt hx ho, apply_eq_of_subset_of_lt hy ho]
+
+@[simp]
+theorem inter_self (x : SignExpansion) : x ∩ x = x := by
+  apply eq_of_forall_subset_iff
+  simp
+
+theorem inter_assoc (x y z : SignExpansion) : x ∩ y ∩ z = x ∩ (y ∩ z) := by
+  apply eq_of_forall_subset_iff
+  simp [and_assoc]
 
 /-! ### Order structure -/
 
