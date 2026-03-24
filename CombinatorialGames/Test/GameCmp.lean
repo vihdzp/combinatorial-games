@@ -8,7 +8,6 @@ module
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Tactic.GameCmp
-import Mathlib.Algebra.CharP.Two
 
 /-!
 Tests for the `game_cmp` tactic.
