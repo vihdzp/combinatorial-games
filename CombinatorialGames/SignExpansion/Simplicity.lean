@@ -313,3 +313,26 @@ instance : CompleteLattice (WithTop Simplicity) where
   __ := completeLatticeOfCompleteSemilatticeSup _
 
 end Simplicity
+
+/-! ### Ordinals -/
+
+namespace NatOrdinal
+variable {a b : NatOrdinal}
+
+theorem of_toSignExpansion_strictMono : StrictMono fun o : NatOrdinal ↦ Simplicity.of o := by
+  intro a b h
+  apply lt_of_le_of_ne
+  · rw [Simplicity.le_iff_forall]
+    aesop (add unsafe apply [lt_trans])
+  · apply_fun (fun x ↦ x.val.length)
+    simpa using h.ne
+
+@[simp]
+theorem of_toSignExpansion_le_iff : Simplicity.of a ≤ Simplicity.of b ↔ a ≤ b :=
+  of_toSignExpansion_strictMono.le_iff_le
+
+@[simp]
+theorem of_toSignExpansion_lt_iff : Simplicity.of a < Simplicity.of b ↔ a < b :=
+  of_toSignExpansion_strictMono.lt_iff_lt
+
+end NatOrdinal
