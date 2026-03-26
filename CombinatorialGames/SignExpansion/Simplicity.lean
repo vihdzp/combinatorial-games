@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.SignExpansion.Basic
+public import Mathlib.Order.CompletePartialOrder
 
 /-!
 # Simplicity relation
@@ -318,6 +319,9 @@ theorem directedOn_iff_bddAbove {s : Set Simplicity} : DirectedOn (· ≤ ·) s 
       exact ⟨hb, h, le_rfl⟩
     · rw [Simplicity.sup_of_le_left h]
       exact ⟨ha, le_rfl, h⟩
+
+instance : CompletePartialOrder Simplicity where
+  lubOfDirected _ hs := (isLUB_sSup_of_bddAbove (directedOn_iff_bddAbove.1 hs))
 
 open Classical in
 instance : CompleteSemilatticeSup (WithTop Simplicity) where

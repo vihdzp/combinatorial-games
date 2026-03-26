@@ -15,8 +15,7 @@ We give sign expansions the Scott-Hausdorff topology.
 -/
 
 theorem Topology.IsScottHausdorff.isOpen_iff_dirSupInacc {α : Type*} [TopologicalSpace α]
-    [PartialOrder α] [Topology.IsScottHausdorff α .univ] {s : Set α}
-    (hdir : ∀ s t : Set α, s ⊆ t → DirectedOn (· ≤ ·) t → DirectedOn (· ≤ ·) s) :
+    [PartialOrder α] [Topology.IsScottHausdorff α .univ] {s : Set α} :
     IsOpen s ↔ DirSupInacc s where
   mp h := dirSupInaccOn_univ.1 <| Topology.IsScottHausdorff.dirSupInaccOn_of_isOpen h
   mpr h := by
@@ -32,12 +31,19 @@ theorem Topology.IsScottHausdorff.isOpen_iff_dirSupInacc {α : Type*} [Topologic
       choose f hf using H
       have := ht₀.to_subtype
       have hft : Set.range f ⊆ t := by grind
-      apply (h (Set.range_nonempty f) (hdir _ _ hft ht₁) _ has).ne_empty
+      apply (h (Set.range_nonempty f) _ _ has).ne_empty
       · aesop
-      · constructor
-        · exact upperBounds_mono_set hft ha.1
-        · refine fun b hb ↦ ha.2 fun c hc ↦ (hf ⟨c, hc⟩).1.trans (hb ?_)
-          simp
+      · intro a ha b hb
+        obtain ⟨c, hc, _, _⟩ := ht₁ _ (hft ha) _ (hft hb)
+        have := hf ⟨c, hc⟩
+        grind
+      · exact ⟨upperBounds_mono_set hft ha.1,
+          fun b hb ↦ ha.2 fun c hc ↦ (hf ⟨c, hc⟩).1.trans (hb <| by simp)⟩
+
+theorem Topology.IsScottHausdorff.isClosed_iff_dirSupClosed {α : Type*} [TopologicalSpace α]
+    [PartialOrder α] [Topology.IsScottHausdorff α .univ] {s : Set α} :
+    IsClosed s ↔ DirSupClosed s := by
+  rw [← isOpen_compl_iff, Topology.IsScottHausdorff.isOpen_iff_dirSupInacc, dirSupInacc_compl]
 
 namespace Simplicity
 
@@ -47,13 +53,11 @@ instance : TopologicalSpace Simplicity :=
 instance : Topology.IsScottHausdorff Simplicity .univ :=
   ⟨rfl⟩
 
-theorem isOpen_iff_dirSupInacc {s : Set Simplicity} : IsOpen s ↔ DirSupInacc s := by
-  refine Topology.IsScottHausdorff.isOpen_iff_dirSupInacc fun s t ↦ ?_
-  simp_rw [directedOn_iff_bddAbove]
-  apply BddAbove.mono
+theorem isOpen_iff_dirSupInacc {s : Set Simplicity} : IsOpen s ↔ DirSupInacc s :=
+  Topology.IsScottHausdorff.isOpen_iff_dirSupInacc
 
-theorem isClosed_iff_dirSupClosed {s : Set Simplicity} : IsClosed s ↔ DirSupClosed s := by
-  rw [← isOpen_compl_iff, isOpen_iff_dirSupInacc, dirSupInacc_compl]
+theorem isClosed_iff_dirSupClosed {s : Set Simplicity} : IsClosed s ↔ DirSupClosed s :=
+  Topology.IsScottHausdorff.isClosed_iff_dirSupClosed
 
 theorem isClosed_iff_sSup {s : Set Simplicity} :
     IsClosed s ↔ ∀ t ⊆ s, t.Nonempty → BddAbove t → sSup t ∈ s := by
