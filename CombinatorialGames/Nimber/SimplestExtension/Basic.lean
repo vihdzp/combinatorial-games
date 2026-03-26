@@ -118,7 +118,7 @@ theorem IsGroup.one : IsGroup 1 where
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
-  add_lt := Principal.sSup (fun x hx ↦ (H x hx).add_lt)
+  add_lt := IsPrincipal.sSup (fun x hx ↦ (H x hx).add_lt)
   ne_zero h := by
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
@@ -320,7 +320,7 @@ theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubrin
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
   toIsGroup := .sSup (fun x hx => (H x hx).toIsGroup) ne bdd
-  mul_lt := Principal.sSup fun x hx ↦ (H x hx).mul_lt
+  mul_lt := IsPrincipal.sSup fun x hx ↦ (H x hx).mul_lt
   ne_one h := by
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
