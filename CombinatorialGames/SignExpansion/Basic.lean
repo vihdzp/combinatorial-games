@@ -210,8 +210,8 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 @[simp] theorem neg_top : -(⊤ : SignExpansion) = ⊥ := rfl
 
 @[simp] theorem length_neg (x : SignExpansion) : length (-x) = length x := by simp [length]
+@[simp] theorem small_neg_iff {x : SignExpansion} : Small (-x) ↔ Small x := by simp [Small]
 
-theorem small_neg_iff {x : SignExpansion} : Small (-x) ↔ Small x := by simp [Small]
 alias ⟨_, Small.neg⟩ := small_neg_iff
 
 instance : InvolutiveNeg SignExpansion where
