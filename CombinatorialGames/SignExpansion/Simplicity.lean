@@ -11,7 +11,7 @@ public import CombinatorialGames.SignExpansion.Basic
 # Simplicity relation
 
 We define the simplicity relation on sign sequences, i.e. the relation where `x ≤ y` iff `x` is an
-initial segment of `y`. In the literature, this is variously denoted as `x ≤ₛ y` or `x ⊏ y`. We also
+initial segment of `y`. In the literature, this is variously denoted as `x ≤ₛ y` or `x ⊑ y`. We also
 define supremum and infimum operators.
 
 ## Implementation notes
@@ -36,19 +36,17 @@ public def SemilatticeSup.ofIsLUB {α} [PartialOrder α] (sup : α → α → α
   le_sup_right a b := (isLUB_pair a b).1 (mem_insert_of_mem _ (mem_singleton _))
   sup_le a b _ hac hbc := (isLUB_pair a b).2 (forall_insert_of_forall (forall_eq.mpr hbc) hac)
 
-@[no_expose, to_dual (attr := implicit_reducible)]
+@[no_expose, implicit_reducible]
 noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
     OrderBot α := by
   choose a ha using h
   refine { bot := a, bot_le := ?_ }
   simpa [lowerBounds] using ha
 
-@[to_dual]
 theorem WithTop.isGLB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
     (hs' : ∃ y : α, ↑y ∈ s) (hs : IsGLB ((↑) ⁻¹' s) x) : IsGLB s x := by
   simpa [isGLB_iff_le_iff, lowerBounds, WithTop.forall, hs'] using hs
 
-@[to_dual]
 theorem WithTop.isLUB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
     (hs' : ⊤ ∉ s) (hs : IsLUB ((↑) ⁻¹' s) x) : IsLUB s x := by
   simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, hs'] using hs
