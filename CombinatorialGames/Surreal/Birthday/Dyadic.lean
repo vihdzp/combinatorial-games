@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
-public import CombinatorialGames.Surreal.Dyadic.Basic
+public import CombinatorialGames.Surreal.Dyadic
 
 import CombinatorialGames.Surreal.Birthday.Cut
 
