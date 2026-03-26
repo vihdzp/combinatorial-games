@@ -287,25 +287,6 @@ theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s 
 theorem sSup_mono {s t : Set Simplicity} (hst : s ⊆ t) (ht : BddAbove t) : sSup s ≤ sSup t :=
   sSup_le <| upperBounds_mono_set hst (isLUB_sSup_of_bddAbove ht).1
 
-theorem sSup_union_cases {s t : Set Simplicity} (h : BddAbove (s ∪ t)) :
-    sSup (s ∪ t) = sSup s ∨ sSup (s ∪ t) = sSup t := by
-  have hs := h.mono Set.subset_union_left
-  have ht := h.mono Set.subset_union_right
-  obtain ⟨x, hx⟩ := id h
-  have hsx := upperBounds_mono_set Set.subset_union_left hx
-  have htx := upperBounds_mono_set Set.subset_union_right hx
-  obtain H | H := le_or_ge_of_le (sSup_le hsx) (sSup_le htx)
-  · refine .inr <| le_antisymm (sSup_le ?_) ?_
-    · rintro x (hxs | hxt)
-      · exact (le_sSup hxs hs).trans H
-      · exact le_sSup hxt ht
-    · exact sSup_mono Set.subset_union_right h
-  · refine .inl <| le_antisymm (sSup_le ?_) ?_
-    · rintro x (hxs | hxt)
-      · exact le_sSup hxs hs
-      · exact (le_sSup hxt ht).trans H
-    · exact sSup_mono Set.subset_union_left h
-
 instance : Max Simplicity where
   max x y := sSup {x, y}
 
