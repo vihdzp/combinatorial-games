@@ -274,9 +274,37 @@ theorem isLUB_sSup_iff_bddAbove {s : Set Simplicity} : IsLUB s (sSup s) ↔ BddA
 
 alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
 
+theorem le_sSup {s : Set Simplicity} {x : Simplicity} (hx : x ∈ s) (hs : BddAbove s) : x ≤ sSup s :=
+  (isLUB_sSup_of_bddAbove hs).1 hx
+
+theorem sSup_le {s : Set Simplicity} {x : Simplicity} (hx : x ∈ upperBounds s) : sSup s ≤ x :=
+  (isLUB_sSup_of_bddAbove ⟨x, hx⟩).2 hx
+
 theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s = ⊥ := by
   apply dif_neg
   rwa [isChain_iff_bddAbove]
+
+theorem sSup_mono {s t : Set Simplicity} (hst : s ⊆ t) (ht : BddAbove t) : sSup s ≤ sSup t :=
+  sSup_le <| upperBounds_mono_set hst (isLUB_sSup_of_bddAbove ht).1
+
+theorem sSup_union_cases {s t : Set Simplicity} (h : BddAbove (s ∪ t)) :
+    sSup (s ∪ t) = sSup s ∨ sSup (s ∪ t) = sSup t := by
+  have hs := h.mono Set.subset_union_left
+  have ht := h.mono Set.subset_union_right
+  obtain ⟨x, hx⟩ := id h
+  have hsx := upperBounds_mono_set Set.subset_union_left hx
+  have htx := upperBounds_mono_set Set.subset_union_right hx
+  obtain H | H := le_or_ge_of_le (sSup_le hsx) (sSup_le htx)
+  · refine .inr <| le_antisymm (sSup_le ?_) ?_
+    · rintro x (hxs | hxt)
+      · exact (le_sSup hxs hs).trans H
+      · exact le_sSup hxt ht
+    · exact sSup_mono Set.subset_union_right h
+  · refine .inl <| le_antisymm (sSup_le ?_) ?_
+    · rintro x (hxs | hxt)
+      · exact le_sSup hxs hs
+      · exact (le_sSup hxt ht).trans H
+    · exact sSup_mono Set.subset_union_left h
 
 instance : Max Simplicity where
   max x y := sSup {x, y}
@@ -295,6 +323,20 @@ protected theorem sup_of_le_right {x y : Simplicity} (h : x ≤ y) : x ⊔ y = y
 protected theorem sup_of_le_left {x y : Simplicity} (h : y ≤ x) : x ⊔ y = x := by
   rw [Simplicity.sup_comm]
   exact Simplicity.sup_of_le_right h
+
+theorem directedOn_iff_bddAbove {s : Set Simplicity} : DirectedOn (· ≤ ·) s ↔ BddAbove s := by
+  rw [← isChain_iff_bddAbove]
+  constructor
+  · intro hs a ha b hb _
+    obtain ⟨c, hc, hc₁, hc₂⟩ := hs a ha b hb
+    exact le_or_ge_of_le hc₁ hc₂
+  · intro hs a ha b hb
+    use a ⊔ b
+    obtain h | h := hs.total ha hb
+    · rw [Simplicity.sup_of_le_right h]
+      exact ⟨hb, h, le_rfl⟩
+    · rw [Simplicity.sup_of_le_left h]
+      exact ⟨ha, le_rfl, h⟩
 
 open Classical in
 instance : CompleteSemilatticeSup (WithTop Simplicity) where
