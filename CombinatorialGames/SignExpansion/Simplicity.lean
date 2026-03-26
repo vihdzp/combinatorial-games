@@ -276,6 +276,8 @@ theorem isLUB_sSup_iff_bddAbove {s : Set Simplicity} : IsLUB s (sSup s) ↔ BddA
     rw [← isChain_iff_bddAbove] at hs
     exact isLUB_sSup_of_isChain hs
 
+alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
+
 theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s = ⊥ := by
   apply dif_neg
   rwa [isChain_iff_bddAbove]
@@ -289,7 +291,7 @@ protected theorem sup_comm (x y : Simplicity) : x ⊔ y = y ⊔ x :=
   congrArg sSup <| Set.pair_comm x y
 
 protected theorem sup_of_le_right {x y : Simplicity} (h : x ≤ y) : x ⊔ y = y := by
-  apply (isLUB_sSup_iff_bddAbove.2 ?_).unique
+  apply (isLUB_sSup_of_bddAbove ?_).unique
   · simpa [IsLUB, IsLeast, lowerBounds]
   · rw [← isChain_iff_bddAbove]
     exact .pair h
@@ -304,7 +306,7 @@ instance : CompleteSemilatticeSup (WithTop Simplicity) where
     change IsLUB s (dite ..)
     split_ifs with h hs
     · simp [isLUB_iff_le_iff, upperBounds, WithTop.forall, h]
-    · exact WithTop.isLUB_of_coe_preimage h (isLUB_sSup_iff_bddAbove.2 hs)
+    · exact WithTop.isLUB_of_coe_preimage h (isLUB_sSup_of_bddAbove hs)
     · simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, h, bddAbove_def] using hs
 
 instance : CompleteLattice (WithTop Simplicity) where
@@ -320,11 +322,10 @@ namespace NatOrdinal
 variable {a b : NatOrdinal}
 
 theorem of_toSignExpansion_strictMono : StrictMono fun o : NatOrdinal ↦ Simplicity.of o := by
-  intro a b h
-  apply lt_of_le_of_ne
+  refine fun a b h ↦ lt_of_le_of_ne ?_ ?_
   · rw [Simplicity.le_iff_forall]
     aesop (add unsafe apply [lt_trans])
-  · apply_fun (fun x ↦ x.val.length)
+  · apply_fun fun x ↦ x.val.length
     simpa using h.ne
 
 @[simp]
