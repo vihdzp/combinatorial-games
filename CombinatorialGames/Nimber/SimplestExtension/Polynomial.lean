@@ -927,7 +927,7 @@ theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
-  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simp
   have ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
