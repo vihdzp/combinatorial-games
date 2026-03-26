@@ -122,21 +122,19 @@ theorem le_restrict_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdina
     (h : x ≤ y) (h' : x.val.length ≤ o) : x ≤ of (val y ↾ o) := by
   simp_all [le_def]
 
-theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o = y o := by
-  refine ⟨fun h o ho ↦ ?_, fun H ↦ ?_⟩
-  · rw [← val_apply, ← le_def.1 h, restrict_apply_of_coe_lt, val_apply]
-    rwa [← apply_ne_zero]
-  · ext o
-    rw [eq_comm]
-    obtain ho | ho := lt_or_ge (↑o) x.val.length
-    · rw [restrict_apply_of_coe_lt ho]
-      exact H _ (apply_ne_zero.2 ho)
-    · rwa [restrict_apply_of_le_coe ho, apply_eq_zero]
-
 theorem apply_eq_of_le {x y : Simplicity} {o : NatOrdinal} (h : x ≤ y) (hx : x o ≠ 0) :
     x o = y o := by
   rw [← val_apply, ← le_def.1 h, restrict_apply_of_coe_lt, val_apply]
   rwa [← apply_ne_zero]
+
+theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o = y o := by
+  refine ⟨fun h o ↦ apply_eq_of_le h, fun H ↦ ?_⟩
+  ext o
+  rw [eq_comm]
+  obtain ho | ho := lt_or_ge (↑o) x.val.length
+  · rw [restrict_apply_of_coe_lt ho]
+    exact H _ (apply_ne_zero.2 ho)
+  · rwa [restrict_apply_of_le_coe ho, apply_eq_zero]
 
 theorem le_of_le_of_length_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z)
     (h : x.val.length ≤ y.val.length) : x ≤ y := by
@@ -229,7 +227,7 @@ instance : SupSet Simplicity where
     of ⟨fun i ↦ if h : ∃ x ∈ s, x i ≠ 0 then h.choose i else 0, ?_⟩ else ⊥
 where finally
   intro a b h
-  simp only [ne_eq, Set.mem_preimage, Set.mem_singleton_iff, dite_eq_right_iff,
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, dite_eq_right_iff,
     forall_exists_index, forall_and_index]
   refine fun H x hx hb ↦ isUpperSet_preimage_singleton_zero _ h ?_
   have := H x hx ?_
