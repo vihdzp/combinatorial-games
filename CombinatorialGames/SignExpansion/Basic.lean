@@ -86,10 +86,8 @@ noncomputable section
 structure SignExpansion : Type (u + 1) where
   /-- The sequence defining the sign expansion. -/
   sign : NatOrdinal.{u} → SignType
-  /-- Every sign after the first `0` is also `0`.
-
-  Do not use directly, use `isUpperSet_preimage_singleton_zero` instead. -/
-  isUpperSet_preimage_singleton_zero' : IsUpperSet (sign ⁻¹' {0})
+  /-- Every sign after the first `0` is also `0`. -/
+  isUpperSet_preimage_singleton_zero : IsUpperSet (sign ⁻¹' {0})
 
 namespace SignExpansion
 open Order
@@ -98,14 +96,11 @@ instance : FunLike SignExpansion NatOrdinal SignType where
   coe := sign
   coe_injective' a b hab := by cases a; cases b; cases hab; rfl
 
-/-- Every sign after the first `0` is also `0`. -/
-theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
-
 /-- Adjust definitional equalities of a sign expansion. -/
 def copy (x : SignExpansion) (sign : NatOrdinal → SignType)
     (h : sign = x) : SignExpansion where
   sign
-  isUpperSet_preimage_singleton_zero' := h ▸ isUpperSet_preimage_singleton_zero x
+  isUpperSet_preimage_singleton_zero := h ▸ isUpperSet_preimage_singleton_zero x
 
 @[simp]
 theorem copy_eq (x : SignExpansion) (sign : NatOrdinal → SignType)
@@ -150,7 +145,7 @@ theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 
 /-- The constant sign expansion `sss...` -/
 def const (s : SignType) : SignExpansion where
   sign _ := s
-  isUpperSet_preimage_singleton_zero' := by aesop
+  isUpperSet_preimage_singleton_zero := by aesop
 
 instance : Zero SignExpansion where
   zero := const 0
@@ -203,7 +198,7 @@ instance : DecidableLT (WithTop NatOrdinal) :=
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x i else 0
-  isUpperSet_preimage_singleton_zero' a b hab ha := by
+  isUpperSet_preimage_singleton_zero a b hab ha := by
     rw [← WithTop.coe_le_coe] at hab
     simp only [Set.mem_preimage, Set.mem_singleton_iff, ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
@@ -367,7 +362,7 @@ def floor (f : NatOrdinal → SignType) : SignExpansion :=
         if f (sInf {b | a < b ∧ f b ≠ 0}) = -1 then
           if c = a then -1 else 1
         else 0
-      isUpperSet_preimage_singleton_zero' := by
+      isUpperSet_preimage_singleton_zero := by
         by_cases h : f (sInf {b | a < b ∧ f b ≠ 0}) = -1
         · convert isUpperSet_empty
           aesop
