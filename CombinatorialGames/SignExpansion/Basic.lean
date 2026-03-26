@@ -187,6 +187,9 @@ one (and thus infinitely many) zeros. -/
 def Small (x : SignExpansion) : Prop :=
   x.length ≠ ⊤
 
+theorem Small.length_ne_top {x : SignExpansion} (hx : x.Small) : x.length ≠ ⊤ :=
+  hx
+
 theorem Small.length_lt_top {x : SignExpansion} (hx : x.Small) : x.length < ⊤ :=
   lt_top_iff_ne_top.2 hx
 
