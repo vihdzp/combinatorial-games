@@ -203,7 +203,7 @@ instance : IsCancelMulZero Nimber where
 protected theorem one_mul (a : Nimber) : 1 * a = a := by
   apply le_antisymm
   · refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
-    rw [Nimber.lt_one_iff_zero] at hx
+    rw [Nimber.lt_one_iff] at hx
     rw [hx, Nimber.one_mul, zero_mul, zero_mul, add_zero, zero_add]
     exact hy.ne
   · by_contra! h

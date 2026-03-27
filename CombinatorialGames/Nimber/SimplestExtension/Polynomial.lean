@@ -986,7 +986,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
   · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
-    · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]
+    · simp_rw [lt_one_iff, forall_eq, map_zero, add_zero]
       intro ht
       have ht' := ht ▸ WithTop.coe_ne_top
       simpa [← ht] using coeff_leastNoRoots_zero_ne ht'
