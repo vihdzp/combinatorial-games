@@ -24,19 +24,6 @@ define two separate `PartialOrder` instances on the same type, we instead create
 
 /-! ### For Mathlib -/
 
--- #37079
-open Set in
-/-- An alternative constructor for `SemilatticeSup` using `IsLUB`. -/
-@[to_dual (attr := implicit_reducible)
-/-- An alternative constructor for `SemilatticeInf` using `IsGLB`. -/]
-public def SemilatticeSup.ofIsLUB {α} [PartialOrder α] (sup : α → α → α)
-    (isLUB_pair : ∀ a b, IsLUB {a, b} (sup a b)) :
-    SemilatticeSup α where
-  sup := sup
-  le_sup_left a b := (isLUB_pair a b).1 (mem_insert _ _)
-  le_sup_right a b := (isLUB_pair a b).1 (mem_insert_of_mem _ (mem_singleton _))
-  sup_le a b _ hac hbc := (isLUB_pair a b).2 (forall_insert_of_forall (forall_eq.mpr hbc) hac)
-
 @[no_expose, implicit_reducible]
 noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
     OrderBot α := by
@@ -75,6 +62,7 @@ def Simplicity : Type _ := SignExpansion
 deriving Inhabited
 
 namespace Simplicity
+open Set
 
 /-- The identity function between `SignExpansion` and `Simplicity`. -/
 def of : SignExpansion ≃ Simplicity := Equiv.refl _
@@ -168,6 +156,21 @@ instance : PartialOrder Simplicity where
     have := eq_or_length_lt_of_le h₂
     grind
 
+theorem lt_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x < y ∨ y ≤ x := by
+  obtain rfl | hxy := eq_or_ne x y
+  · simp
+  · obtain h | h := le_or_ge_of_le hx hy
+    · exact .inl <| h.lt_of_ne hxy
+    · exact .inr h
+
+theorem le_or_gt_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x ≤ y ∨ y < x :=
+  (lt_or_ge_of_le hy hx).symm
+
+theorem Iic_diff_Iic {x y : Simplicity} (h : x ≤ y) : Iic y \ Iic x = Ioc x y := by
+  apply subset_antisymm
+  · exact fun z ⟨hzy, hzx⟩ ↦ ⟨(lt_or_ge_of_le h hzy).resolve_right hzx, hzy⟩
+  · grind
+
 instance : OrderBot Simplicity where
   bot_le := by simp [le_def]
 
@@ -228,7 +231,7 @@ instance : SupSet Simplicity where
     of ⟨fun i ↦ if h : ∃ x ∈ s, x i ≠ 0 then h.choose i else 0, ?_⟩ else ⊥
 where finally
   intro a b h
-  simp only [Set.mem_preimage, Set.mem_singleton_iff, dite_eq_right_iff,
+  simp only [mem_preimage, mem_singleton_iff, dite_eq_right_iff,
     forall_exists_index, forall_and_index]
   refine fun H x hx hb ↦ isUpperSet_preimage_singleton_zero _ h ?_
   have := H x hx ?_
@@ -288,13 +291,17 @@ theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s 
 theorem sSup_mono {s t : Set Simplicity} (hst : s ⊆ t) (ht : BddAbove t) : sSup s ≤ sSup t :=
   sSup_le <| upperBounds_mono_set hst (isLUB_sSup_of_bddAbove ht).1
 
+@[simp]
+theorem sSup_Iic (x : Simplicity) : sSup (Iic x) = x :=
+  (isLUB_sSup_of_bddAbove bddAbove_Iic).unique isLUB_Iic
+
 instance : Max Simplicity where
   max x y := sSup {x, y}
 
 theorem sSup_pair (x y : Simplicity) : sSup {x, y} = x ⊔ y := rfl
 
 protected theorem sup_comm (x y : Simplicity) : x ⊔ y = y ⊔ x :=
-  congrArg sSup <| Set.pair_comm x y
+  congrArg sSup <| pair_comm x y
 
 protected theorem sup_of_le_right {x y : Simplicity} (h : x ≤ y) : x ⊔ y = y := by
   apply (isLUB_sSup_of_bddAbove ?_).unique

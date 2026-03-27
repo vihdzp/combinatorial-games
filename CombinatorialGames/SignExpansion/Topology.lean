@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.SignExpansion.Simplicity
+public import Mathlib.Topology.Clopen
 public import Mathlib.Topology.Order.ScottTopology
 
 /-!
@@ -14,38 +15,8 @@ public import Mathlib.Topology.Order.ScottTopology
 We give sign expansions the Scott-Hausdorff topology.
 -/
 
-theorem Topology.IsScottHausdorff.isOpen_iff_dirSupInacc {α : Type*} [TopologicalSpace α]
-    [PartialOrder α] [Topology.IsScottHausdorff α .univ] {s : Set α} :
-    IsOpen s ↔ DirSupInacc s where
-  mp h := dirSupInaccOn_univ.1 <| Topology.IsScottHausdorff.dirSupInaccOn_of_isOpen h
-  mpr h := by
-    rw [Topology.IsScottHausdorff.isOpen_iff (D := .univ)]
-    intro t _ ht₀ ht₁ a ha has
-    have := h ht₀ ht₁ ha has
-    by_cases ht : a ∈ t
-    · refine ⟨a, ht, fun b ⟨hba, hbt⟩ ↦ ?_⟩
-      obtain rfl := (ha.1 hbt).antisymm hba
-      exact has
-    · by_contra! H
-      have H : ∀ b : t, ∃ c, b.1 ≤ c ∧ c ∈ t ∧ c ∉ s := by simpa [Set.not_subset, and_assoc] using H
-      choose f hf using H
-      have := ht₀.to_subtype
-      have hft : Set.range f ⊆ t := by grind
-      apply (h (Set.range_nonempty f) _ _ has).ne_empty
-      · aesop
-      · intro a ha b hb
-        obtain ⟨c, hc, _, _⟩ := ht₁ _ (hft ha) _ (hft hb)
-        have := hf ⟨c, hc⟩
-        grind
-      · exact ⟨upperBounds_mono_set hft ha.1,
-          fun b hb ↦ ha.2 fun c hc ↦ (hf ⟨c, hc⟩).1.trans (hb <| by simp)⟩
-
-theorem Topology.IsScottHausdorff.isClosed_iff_dirSupClosed {α : Type*} [TopologicalSpace α]
-    [PartialOrder α] [Topology.IsScottHausdorff α .univ] {s : Set α} :
-    IsClosed s ↔ DirSupClosed s := by
-  rw [← isOpen_compl_iff, Topology.IsScottHausdorff.isOpen_iff_dirSupInacc, dirSupInacc_compl]
-
 namespace Simplicity
+open Set SignExpansion
 
 instance : TopologicalSpace Simplicity :=
   Topology.scottHausdorff _ .univ
@@ -67,8 +38,31 @@ theorem isClosed_iff_sSup {s : Set Simplicity} :
   · rw [hx.unique (isLUB_sSup_of_bddAbove hx.bddAbove)]
     exact hs t ht ht₀ hx.bddAbove
 
-/-- For any `x` and `o < x.length`, the set of restrictions `x ↾ a` with `a < o` form a neighborhood
-basis for `x`. -/
-def restrictSet (x : Simplicity) (o : NatOrdinal) : Set Simplicity
+theorem isClopen_Iic (x : Simplicity) : IsClopen (Iic x) := by
+  constructor
+  · rw [isClosed_iff_sSup]
+    intro t ht ht₀ ht₁
+    simpa using sSup_mono ht bddAbove_Iic
+  · rw [← isClosed_compl_iff, isClosed_iff_sSup]
+    intro t ht ht₀ ht₁ hx
+    obtain ⟨y, hy⟩ := ht₀
+    exact ht hy <| (le_sSup hy ht₁).trans hx
+
+theorem isClopen_Ioc (x y : Simplicity) : IsClopen (Ioc x y) := by
+  by_cases h : x < y
+  · rw [← Iic_diff_Iic h.le]
+    exact (isClopen_Iic y).diff (isClopen_Iic x)
+  · rw [Ioc_eq_empty h]
+    exact isClopen_empty
+
+theorem isClopen_Ioi (x : Simplicity) : IsClopen (Ioi x) := by
+  constructor
+  · rw [isClosed_iff_sSup]
+    intro t ht ht₀ ht₁
+    obtain ⟨y, hy⟩ := ht₀
+    exact (ht hy).trans_le (le_sSup hy ht₁)
+  · have : Ioi x = ⋃ y : Ioi x, Ioc x y := by aesop
+    rw [this]
+    exact isOpen_iUnion fun i ↦ (isClopen_Ioc ..).isOpen
 
 end Simplicity
