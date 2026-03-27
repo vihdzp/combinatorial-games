@@ -67,4 +67,8 @@ theorem isClosed_iff_sSup {s : Set Simplicity} :
   · rw [hx.unique (isLUB_sSup_of_bddAbove hx.bddAbove)]
     exact hs t ht ht₀ hx.bddAbove
 
+/-- For any `x` and `o < x.length`, the set of restrictions `x ↾ a` with `a < o` form a neighborhood
+basis for `x`. -/
+def restrictSet (x : Simplicity) (o : NatOrdinal) : Set Simplicity
+
 end Simplicity

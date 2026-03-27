@@ -36,7 +36,7 @@ theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
 @[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
 @[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
-  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [le_one_iff]
+  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [Order.le_one_iff]
 
 end Ordinal
 end
