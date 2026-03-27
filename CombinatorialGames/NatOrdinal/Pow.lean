@@ -32,11 +32,6 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 open Ordinal
 
-theorem Ordinal.lt_mul_add_one {x y z : Ordinal} : x < y * (z + 1) ↔ ∃ w < y, x ≤ y * z + w := by
-  obtain rfl | hy := eq_or_ne y 0
-  · simp
-  · rw [mul_add_one, lt_add_iff hy]
-
 /-- A typeclass for the the `ω^` notation. -/
 class Wpow (α : Type*) where
   /-- The `ω`-map, i.e. base `ω` exponentiation. -/
@@ -58,6 +53,7 @@ theorem wpow_def (x : NatOrdinal) : ω^ x = of (ω ^ x.val) := rfl
 @[simp] theorem wpow_zero : ω^ (0 : NatOrdinal) = 1 := by simp [wpow_def]
 @[simp] theorem wpow_pos (x : NatOrdinal) : 0 < ω^ x := opow_pos _ omega0_pos
 @[simp] theorem wpow_ne_zero (x : NatOrdinal) : ω^ x ≠ 0 := (wpow_pos x).ne'
+@[simp] theorem wpow_one : ω^ (1 : NatOrdinal) = of ω := by simp [wpow_def]
 
 theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
   Ordinal.isNormal_opow one_lt_omega0
@@ -99,7 +95,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
           obtain (⟨a, ha, hz⟩ | h) := lt_add_iff.1 hz
           · have hxn := (wpow_mul_natCast_add_of_lt_aux (wpow_pos x) (n + 1)).2
             simp_rw [val_zero, add_zero] at hxn
-            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one] at ha
+            rw [hxn, ← val_lt_iff, Nat.cast_add_one, lt_mul_add_one_iff] at ha
             obtain ⟨b, (hb : of b < ω^ x), hbw⟩ := ha
             rw [val_le_iff, ← val_of b, ← (wpow_mul_natCast_add_of_lt_aux hb n).2] at hbw
             refine ⟨_, hb, hz.trans <| (add_le_add_left hbw _).trans ?_⟩
@@ -134,6 +130,10 @@ theorem wpow_mul_natCast (x : NatOrdinal) (n : ℕ) : ω^ x * n = of (ω ^ x.val
 theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   rw [wpow_mul_natCast]
   exact omega0_opow_mul_nat_lt h n
+
+@[simp]
+theorem of_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by
+  simpa using (wpow_mul_natCast (of x) n).symm
 
 theorem lt_wpow_iff (hx : x ≠ 0) : y < ω^ x ↔ ∃ z < x, ∃ n : ℕ, y < ω^ z * n := by
   rw [wpow_def, ← val_lt_iff, lt_omega0_opow]
@@ -195,6 +195,22 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
       rw [← mul_assoc, ← wpow_add]
       exact wpow_mul_natCast_lt (add_lt_add_right hb x) m
 termination_by (x, y)
+
+theorem mul_lt_wpow_wpow (hx : x < ω^ ω^ z) (hy : y < ω^ ω^ z) : x * y < ω^ ω^ z := by
+  induction x with | mk x
+  induction y with | mk y
+  obtain rfl | hz := eq_or_ne z 0
+  · simp_rw [wpow_zero, wpow_one, of.lt_iff_lt, Ordinal.lt_omega0] at hx hy
+    obtain ⟨m, rfl⟩ := hx
+    obtain ⟨n, rfl⟩ := hy
+    simpa [← Nat.cast_mul] using Ordinal.natCast_lt_omega0 (m * n)
+  · rw [← val_ne_zero] at hz
+    rw [wpow_def, of.lt_iff_lt, val_wpow, lt_omega0_omega0_opow hz] at hx hy
+    obtain ⟨a, ha, m, hm⟩ := hx
+    obtain ⟨b, hb, n, hn⟩ := hy
+    rw [← of.lt_iff_lt] at hm hn
+    apply (mul_le_mul' hm.le hn.le).trans_lt
+    simpa [← wpow_add] using add_lt_wpow (wpow_mul_natCast_lt ha m) (wpow_mul_natCast_lt hb n)
 
 end NatOrdinal
 end
