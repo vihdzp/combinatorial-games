@@ -300,58 +300,56 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
     rw [Set.mem_setOf, WithTop.ne_top_iff_exists] at hf
     obtain ⟨l, hl⟩ := hf
     rw [Set.mem_range]
-    induction l using WellFoundedLT.induction generalizing f with
-    | ind l ih =>
-      replace ih (f : SignExpansion) (hl : f.length < l) :=
-        ih (f.length.untop (ne_top_of_lt hl))
-          ((WithTop.untop_lt_iff _).2 hl) (WithTop.coe_untop _ _)
-      choose u hu using ih
-      let g : IGame := !{fun p => {s : IGame.{u} | s.birthday < l} ∩
-        {s | ∃ _ : s.Numeric, p.cases (ofSurreal (.mk s) < f) (f < ofSurreal (.mk s))}}
-      have hgn : g.Numeric := by
-        rw [numeric_def]
-        refine ⟨fun y hy z hz => ?_, fun p y hy => ?_⟩
-        · rw [moves_ofSets] at hy hz
-          exact (@mk_lt_mk y z hy.2.1 hz.2.1).mp (ofSurreal.lt_iff_lt.1 (hy.2.2.trans hz.2.2))
-        · rw [moves_ofSets] at hy
-          exact hy.2.1
-      have hgo : g.birthday ≤ l := by
-        rw [birthday_le_iff]
-        intro p m hm
-        rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf] at hm
-        exact hm.left
-      refine ⟨mk g, ?_⟩
-      ext o
-      induction o using WellFoundedLT.induction with
-      | ind o ih =>
-        rw [ofSurreal_apply]
-        obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((mk g).truncate o)
-        cases hfo : f o with
-        | zero =>
-          rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
-          apply ((birthday_mk_le g).trans hgo).trans
-          rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo, SignType.zero_eq_zero]
-        | neg =>
-          rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
-          apply Numeric.lt_right
-          rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
-          refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
-          · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
-            decide
-          · rw [hkg]
-            refine ⟨o, fun j hj => ?_, ?_⟩
-            · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
-            · simp [hfo, restrict_apply_of_le_coe le_rfl]
-        | pos =>
-          rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
-          apply Numeric.left_lt
-          rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
-          refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
-          · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
-            decide
-          · rw [hkg]
-            refine ⟨o, fun j hj => ?_, ?_⟩
-            · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
-            · simp [hfo, restrict_apply_of_le_coe le_rfl]
+    induction l using WellFoundedLT.induction generalizing f with | ind l ih
+    replace ih (f : SignExpansion) (hl : f.length < l) :=
+      ih (f.length.untop (ne_top_of_lt hl))
+        ((WithTop.untop_lt_iff _).2 hl) (WithTop.coe_untop _ _)
+    choose u hu using ih
+    let g : IGame := !{fun p => {s : IGame.{u} | s.birthday < l} ∩
+      {s | ∃ _ : s.Numeric, p.cases (ofSurreal (.mk s) < f) (f < ofSurreal (.mk s))}}
+    have hgn : g.Numeric := by
+      rw [numeric_def]
+      refine ⟨fun y hy z hz => ?_, fun p y hy => ?_⟩
+      · rw [moves_ofSets] at hy hz
+        exact (@mk_lt_mk y z hy.2.1 hz.2.1).mp (ofSurreal.lt_iff_lt.1 (hy.2.2.trans hz.2.2))
+      · rw [moves_ofSets] at hy
+        exact hy.2.1
+    have hgo : g.birthday ≤ l := by
+      rw [birthday_le_iff]
+      intro p m hm
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf] at hm
+      exact hm.left
+    refine ⟨mk g, ?_⟩
+    ext o
+    induction o using WellFoundedLT.induction with | ind o ih
+    rw [ofSurreal_apply]
+    obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((mk g).truncate o)
+    cases hfo : f o with
+    | zero =>
+      rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
+      apply ((birthday_mk_le g).trans hgo).trans
+      rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo, SignType.zero_eq_zero]
+    | neg =>
+      rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
+      apply Numeric.lt_right
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
+      · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
+        decide
+      · rw [hkg]
+        refine ⟨o, fun j hj => ?_, ?_⟩
+        · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+        · simp [hfo, restrict_apply_of_le_coe le_rfl]
+    | pos =>
+      rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
+      apply Numeric.left_lt
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
+      · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
+        decide
+      · rw [hkg]
+        refine ⟨o, fun j hj => ?_, ?_⟩
+        · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+        · simp [hfo, restrict_apply_of_le_coe le_rfl]
 
 end Surreal
