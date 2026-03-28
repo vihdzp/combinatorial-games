@@ -103,6 +103,7 @@ theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias)
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
+@[simp] theorem $(mkIdent `bot_eq_zero_withTop) : (⊥ : WithTop $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
 @[simp] theorem $(mkIdent `val_zero) : $(mkVal Alias) 0 = 0 := rfl

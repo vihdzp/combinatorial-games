@@ -77,6 +77,8 @@ instance : Bot Simplicity := ⟨of 0⟩
 
 @[simp, grind =] theorem of_zero : of 0 = ⊥ := rfl
 @[simp, grind =] theorem val_zero : val ⊥ = 0 := rfl
+@[simp] theorem val_eq_zero {x} : val x = 0 ↔ x = ⊥ := .rfl
+@[simp] theorem of_eq_bot {x} : of x = ⊥ ↔ x = 0 := .rfl
 
 instance : FunLike Simplicity NatOrdinal SignType where
   coe x := x.val
@@ -105,7 +107,24 @@ instance : Preorder Simplicity where
   le_trans x y z := by grind
 
 theorem le_def {x y : Simplicity} : x ≤ y ↔ y.val ↾ x.val.length = x.val := .rfl
-theorem of_le_of {x y} : of x ≤ of y ↔ y ↾ x.length = x := .rfl
+
+instance : OrderBot Simplicity where
+  bot_le := by simp [le_def]
+
+theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
+    x = y ∨ x.val.length < y.val.length := by
+  rw [le_def] at h
+  have := lt_or_ge x.val.length y.val.length
+  aesop
+
+theorem length_strictMono : StrictMono fun x : Simplicity ↦ x.val.length :=
+  fun _ _ h ↦ (eq_or_length_lt_of_le h.le).resolve_left h.ne
+
+instance : PartialOrder Simplicity where
+  le_antisymm x y h₁ h₂ := by
+    have := eq_or_length_lt_of_le h₁
+    have := eq_or_length_lt_of_le h₂
+    grind
 
 theorem le_restrict_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdinal}
     (h : x ≤ y) (h' : x.val.length ≤ o) : x ≤ of (val y ↾ o) := by
@@ -133,28 +152,25 @@ theorem le_of_le_of_length_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z)
   rw [← val_apply, apply_ne_zero] at ho ⊢
   exact ho.trans_le h
 
+theorem lt_of_le_of_length_lt {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z)
+    (h : x.val.length < y.val.length) : x < y := by
+  apply (le_of_le_of_length_le hx hy h.le).lt_of_ne
+  apply_fun fun a ↦ a.val.length
+  exact h.ne
+
+theorem of_restrict_le (x : Simplicity) (o : WithTop NatOrdinal) : of (x.val ↾ o) ≤ x := by
+  rw [le_def, val_of, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
+
+theorem of_restrict_lt {x : Simplicity} {o : WithTop NatOrdinal} (hx : o < x.val.length) :
+    of (x.val ↾ o) < x := by
+  apply (of_restrict_le x o).lt_of_ne
+  apply_fun fun y ↦ y.val.length
+  simpa
+
 theorem le_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x ≤ y ∨ y ≤ x := by
   obtain h | h := le_total x.val.length y.val.length
   · exact .inl <| le_of_le_of_length_le hx hy h
   · exact .inr <| le_of_le_of_length_le hy hx h
-
-theorem of_restrict_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
-  rw [of_le_of, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
-
-theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
-    x = y ∨ x.val.length < y.val.length := by
-  rw [le_def] at h
-  have := lt_or_ge x.val.length y.val.length
-  aesop
-
-theorem length_strictMono : StrictMono fun x : Simplicity ↦ x.val.length :=
-  fun _ _ h ↦ (eq_or_length_lt_of_le h.le).resolve_left h.ne
-
-instance : PartialOrder Simplicity where
-  le_antisymm x y h₁ h₂ := by
-    have := eq_or_length_lt_of_le h₁
-    have := eq_or_length_lt_of_le h₂
-    grind
 
 theorem lt_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x < y ∨ y ≤ x := by
   obtain rfl | hxy := eq_or_ne x y
@@ -171,8 +187,24 @@ theorem Iic_diff_Iic {x y : Simplicity} (h : x ≤ y) : Iic y \ Iic x = Ioc x y 
   · exact fun z ⟨hzy, hzx⟩ ↦ ⟨(lt_or_ge_of_le h hzy).resolve_right hzx, hzy⟩
   · grind
 
-instance : OrderBot Simplicity where
-  bot_le := by simp [le_def]
+theorem isSuccPrelimit_iff {x : Simplicity} :
+    Order.IsSuccPrelimit x ↔ Order.IsSuccPrelimit x.val.length := by
+  constructor <;> intro hx y hy
+  · refine hx (of <| val x ↾ y) ⟨of_restrict_lt hy.lt, fun z hz hz' ↦ ?_⟩
+    apply @hy.2 z.val.length
+    · convert length_strictMono hz
+      simpa using hy.le
+    · exact length_strictMono hz'
+  · refine hx y.val.length ⟨length_strictMono hy.lt, fun i hi hi' ↦ ?_⟩
+    apply @hy.2 (of <| val x ↾ i)
+    · apply lt_of_le_of_length_lt hy.le (of_restrict_le ..)
+      convert hi
+      simpa using hi'.le
+    · exact of_restrict_lt hi'
+
+theorem isSuccLimit_iff {x : Simplicity} :
+    Order.IsSuccLimit x ↔ Order.IsSuccLimit x.val.length := by
+  simp [Order.IsSuccLimit, isSuccPrelimit_iff]
 
 /-! ### Infimum -/
 
@@ -204,7 +236,7 @@ private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈
 theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s (sInf s) := by
   constructor <;> intro x hx
   · rw [sInf_eq_of_mem hx]
-    exact of_restrict_le_of ..
+    exact of_restrict_le ..
   · obtain ⟨y, hy⟩ := hs
     rw [sInf_eq_of_mem hy]
     apply le_restrict_of_le_of_length_le (hx hy)
@@ -278,10 +310,12 @@ theorem isLUB_sSup_iff_bddAbove {s : Set Simplicity} : IsLUB s (sSup s) ↔ BddA
 
 alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
 
-theorem le_sSup {s : Set Simplicity} {x : Simplicity} (hx : x ∈ s) (hs : BddAbove s) : x ≤ sSup s :=
+protected theorem le_sSup {s : Set Simplicity} {x : Simplicity} (hx : x ∈ s) (hs : BddAbove s) :
+    x ≤ sSup s :=
   (isLUB_sSup_of_bddAbove hs).1 hx
 
-theorem sSup_le {s : Set Simplicity} {x : Simplicity} (hx : x ∈ upperBounds s) : sSup s ≤ x :=
+protected theorem sSup_le {s : Set Simplicity} {x : Simplicity} (hx : x ∈ upperBounds s) :
+    sSup s ≤ x :=
   (isLUB_sSup_of_bddAbove ⟨x, hx⟩).2 hx
 
 theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s = ⊥ := by
@@ -289,11 +323,38 @@ theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s 
   rwa [isChain_iff_bddAbove]
 
 theorem sSup_mono {s t : Set Simplicity} (hst : s ⊆ t) (ht : BddAbove t) : sSup s ≤ sSup t :=
-  sSup_le <| upperBounds_mono_set hst (isLUB_sSup_of_bddAbove ht).1
+  Simplicity.sSup_le <| upperBounds_mono_set hst (isLUB_sSup_of_bddAbove ht).1
+
+theorem length_sSup {s : Set Simplicity} (hs : BddAbove s) :
+    (sSup s).val.length = sSup ((·.val.length) '' s) := by
+  apply le_antisymm
+  · apply le_of_forall_lt
+    simp only [WithTop.forall, not_top_lt, imp_self, true_and]
+    intro y hy
+    obtain ⟨z, hz, hz'⟩ :=
+      exists_of_sSup_apply_ne_zero (isChain_iff_bddAbove.2 hs) (apply_ne_zero.2 hy)
+    rw [← val_apply, apply_ne_zero] at hz'
+    apply hz'.trans_le (le_sSup _)
+    exact ⟨z, hz, rfl⟩
+  · rw [sSup_le_iff]
+    rintro _ ⟨x, hx, rfl⟩
+    exact length_strictMono.monotone (Simplicity.le_sSup hx hs)
 
 @[simp]
 theorem sSup_Iic (x : Simplicity) : sSup (Iic x) = x :=
   (isLUB_sSup_of_bddAbove bddAbove_Iic).unique isLUB_Iic
+
+theorem sSup_Iio_of_isSuccLimit {x : Simplicity} (hx : Order.IsSuccLimit x) :
+    sSup (Iio x) = x := by
+  have hx' := (sSup_mono Iio_subset_Iic_self bddAbove_Iic).trans_eq <| sSup_Iic x
+  apply hx'.antisymm (le_of_le_of_length_le le_rfl hx' _)
+  rw [length_sSup bddAbove_Iio]
+  refine le_of_forall_lt fun i hi ↦ ?_
+  rw [(isSuccLimit_iff.1 hx).lt_iff_exists_lt] at hi
+  obtain ⟨j, hj, hij⟩ := hi
+  apply hij.trans_le (le_sSup _)
+  refine ⟨_, of_restrict_lt hj, ?_⟩
+  simpa using hj.le
 
 instance : Max Simplicity where
   max x y := sSup {x, y}
