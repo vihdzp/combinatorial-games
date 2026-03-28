@@ -302,8 +302,7 @@ theorem ofSurreal_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
 
 theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := by
   apply subset_antisymm
-  · rw [Set.range_subset_iff]
-    exact fun _ => (length_ofSurreal _).trans_ne WithTop.coe_ne_top
+  · simp [Set.range_subset_iff]
   · intro f hf
     rw [Set.mem_setOf, WithTop.ne_top_iff_exists] at hf
     obtain ⟨l, hl⟩ := hf
