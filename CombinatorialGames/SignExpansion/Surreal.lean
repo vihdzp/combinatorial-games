@@ -55,8 +55,8 @@ universe u
 
 public noncomputable section
 
+open Surreal IGame SignExpansion
 namespace Surreal
-open IGame SignExpansion
 
 /-- The truncation of a surreal to an ordinal `o` is the unique surreal `truncate o x`
 with `birthday (truncate o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
@@ -235,6 +235,10 @@ theorem truncate_truncate {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
     rw [lt_truncate_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
       lt_truncate_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
 
+end Surreal
+
+namespace SignExpansion
+
 /-- To every surreal is associated a unique sign expansion, which can be seen as
 a sequence of directions along an ordinal-depth complete binary tree.
 The `o`'th term of this sign sequence is `+` if `truncate o x < x`,
@@ -319,11 +323,11 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
       intro p m hm
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf] at hm
       exact hm.left
-    refine ⟨mk g, ?_⟩
+    refine ⟨Surreal.mk g, ?_⟩
     ext o
     induction o using WellFoundedLT.induction with | ind o ih
     rw [ofSurreal_apply]
-    obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((mk g).truncate o)
+    obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).truncate o)
     cases hfo : f o with
     | zero =>
       rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
@@ -333,7 +337,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
       rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
-      refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
+      refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
       · rw [hkg]
@@ -344,7 +348,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
       rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
-      refine ⟨(hkb.trans_le (birthday_truncate_le o (mk g))).trans_lt ?_, nk, ?_⟩
+      refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
       · rw [hkg]
@@ -352,4 +356,4 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
         · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
         · simp [hfo, restrict_apply_of_le_coe le_rfl]
 
-end Surreal
+end SignExpansion
