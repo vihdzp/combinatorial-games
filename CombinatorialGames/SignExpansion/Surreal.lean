@@ -31,7 +31,7 @@ public theorem le_ite_iff {α : Type*} [LE α] {P : Prop} [Decidable P] {a b c :
     a ≤ (if P then b else c) ↔ P ∧ a ≤ b ∨ ¬P ∧ a ≤ c := by split <;> simp_all
 
 theorem sign_sub_eq_of_not_mem_Icc {α : Type*} [LinearOrder α]
-    [AddCommGroup α] [IsOrderedAddMonoid α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
+    [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
     SignType.sign (x - z) = SignType.sign (y - z) := by
   obtain hzx | hyz : z < x ∨ y < z := by grind
   · have := hzx.trans_le hxy
@@ -40,7 +40,7 @@ theorem sign_sub_eq_of_not_mem_Icc {α : Type*} [LinearOrder α]
     rw [sign_eq_neg_one_iff.2, sign_eq_neg_one_iff.2] <;> simpa
 
 theorem sign_sub_lt_of_mem_Icc {α : Type*} [LinearOrder α]
-    [AddCommGroup α] [IsOrderedAddMonoid α] {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
+    [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
     SignType.sign (x - z) < SignType.sign (y - z) := by
   obtain rfl | hxz := hz.1.eq_or_lt
   · simpa [sign_eq_one_iff]
