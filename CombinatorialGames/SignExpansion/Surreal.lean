@@ -237,40 +237,12 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
     have hcxy (j : NatOrdinal) (hj : j ≤ c.birthday)
         (z : Surreal) (hz : z ∈ Set.Icc x y) : z.truncate j = c.truncate j := by
       apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c) <;> grind
-    refine ⟨c.birthday, fun j hj => ?_, ?_⟩
-    · have htj : c.truncate j ∉ Set.Icc x y := hdcc _ ((birthday_truncate_le j c).trans_lt hj)
-      simp only [Set.mem_Icc, Classical.not_and_iff_not_or_not] at htj
-      by_contra! h
-      /-
-      simp? [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le),
-        hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le),
-        sign_apply, ite_eq_iff, eq_ite_iff, imp_iff_not_or, and_or_left, or_and_right] at h
-      -/
-      simp only [sign_apply, sub_pos, sub_neg, coe_mk, Pi.toLex_apply,
-        hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le),
-        ne_eq, eq_ite_iff, ite_eq_left_iff, not_lt, ite_eq_iff, SignType.neg_eq_self_iff,
-        one_ne_zero, and_false, zero_ne_one, or_self, imp_false, not_le, SignType.self_eq_neg_iff,
-        reduceCtorEq, false_or, SignType.neg_eq_zero_iff, and_or_left, not_or,
-        not_and, imp_iff_not_or, or_and_right, and_self] at h
-      -- this proof is very slow (unsurprisingly, since it splits into 80 cases)
-      -- TODO: find a faster proof
-      casesm* _ ∨ _ <;> order
-    · simp only [Set.mem_Icc] at hc
-      by_contra! h
-      /-
-      simp? [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le),
-        hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le),
-        sign_apply, ite_le_iff, le_ite_iff, and_or_left] at h
-      -/
-      simp only [sign_apply, sub_pos, sub_neg, coe_mk, Pi.toLex_apply,
-        hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le), truncate_birthday_self,
-        hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), le_ite_iff, ite_le_iff, Std.le_refl, and_true,
-        not_lt, SignType.le_one, zero_le_one, and_or_left, SignType.le_neg_one_iff,
-        SignType.self_eq_neg_iff, one_ne_zero, and_false, reduceCtorEq, or_false, false_or,
-        SignType.one_le_iff, zero_ne_one, SignType.neg_one_le] at h
-      -- this proof is not as slow as the other one, it only has 6 cases
-      -- TODO: find a better proof
-      casesm* _ ∨ _ <;> order
+    refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
+    · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
+      exact sign_sub_eq_of_not_mem_Icc hxy.le (hdcc _ ((birthday_truncate_le j c).trans_lt hj))
+    · rw [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le)]
+      apply sign_sub_lt_of_mem_Icc hxy
+      simpa 
 
 theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
     ofSurreal x o = .sign (x - x.truncate o) := (rfl)
