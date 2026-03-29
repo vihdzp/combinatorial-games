@@ -11,12 +11,25 @@ public import Mathlib.Topology.Order.ScottTopology
 public import Mathlib.Topology.Separation.CompletelyRegular
 
 import Mathlib.Topology.Algebra.Indicator
+import Mathlib.Topology.Separation.Connected
 
 /-!
 # Topology on sign expansions
 
 We give sign expansions the Scott-Hausdorff topology.
 -/
+
+private theorem CompletelyRegularSpace.of_isTopologicalBasis_clopens {X} [TopologicalSpace X]
+    (h : TopologicalSpace.IsTopologicalBasis {s : Set X | IsClopen s}) :
+    CompletelyRegularSpace X where
+  completely_regular x K hK hx := by
+    obtain ⟨s, hs, hx, hsK⟩ := h.exists_subset_of_mem_open hx hK.isOpen_compl
+    refine ⟨(sᶜ).indicator 1, ?_, ?_, fun x hx ↦ Set.indicator_of_mem ?_ _⟩
+    · exact hs.compl.continuous_indicator continuous_const
+    · simpa
+    · exact fun hs ↦ hsK hs hx
+
+public section
 
 namespace Simplicity
 open Order Set SignExpansion Topology
@@ -68,14 +81,14 @@ theorem isClopen_Ioi (x : Simplicity) : IsClopen (Ioi x) := by
     rw [this]
     exact isOpen_iUnion fun i ↦ (isClopen_Ioc ..).isOpen
 
--- This is true of Scott-Hausdorff for any partial order
-instance : T2Space Simplicity where
-  t2 x y h := by
-    by_cases x ≤ y
-    · refine ⟨_, _, (isClopen_Iic x).isOpen, (isClopen_Iic x).compl.isOpen, ?_⟩
-      grind
-    · refine ⟨_, _, (isClopen_Iic y).compl.isOpen, (isClopen_Iic y).isOpen, ?_⟩
-      grind
+instance : TotallySeparatedSpace Simplicity := by
+  rw [totallySeparatedSpace_iff_exists_isClopen]
+  intro x y _
+  by_cases x ≤ y
+  · refine ⟨_, (isClopen_Iic x), ?_⟩
+    grind
+  · refine ⟨_, (isClopen_Iic y).compl, ?_⟩
+    simpa
 
 theorem isOpen_Iio (x : Simplicity) : IsOpen (Iio x) := by
   rw [← Iic_diff_right]
@@ -157,15 +170,10 @@ theorem isTopologicalBasis_setOf_isClopen :
       simpa
     · exact fun s hs ↦ hs.1.isOpen.mem_nhds hs.2
 
-instance : CompletelyRegularSpace Simplicity where
-  completely_regular x K hK hx := by
-    obtain ⟨s, hs, hx, hsK⟩ :=
-      isTopologicalBasis_setOf_isClopen.exists_subset_of_mem_open hx hK.isOpen_compl
-    refine ⟨(sᶜ).indicator 1, ?_, ?_, ?_⟩
-    · exact hs.compl.continuous_indicator continuous_const
-    · simpa
-    · intro x hx
-      rw [indicator_of_mem]
-      exact fun hs ↦ hsK hs hx
+instance : CompletelyRegularSpace Simplicity :=
+  .of_isTopologicalBasis_clopens isTopologicalBasis_setOf_isClopen
+
+instance : T35Space Simplicity where
 
 end Simplicity
+end
