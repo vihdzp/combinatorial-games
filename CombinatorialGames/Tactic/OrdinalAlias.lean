@@ -36,7 +36,7 @@ theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
 @[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
   rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
 @[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
-  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [le_one_iff]
+  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [Order.le_one_iff]
 
 end Ordinal
 end
@@ -168,12 +168,14 @@ universe u
 
 instance : Uncountable $Alias := Ordinal.uncountable
 
-@[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
-theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
+@[simp] theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
+  Order.lt_one_iff (α := Ordinal)
+theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Order.le_one_iff (α := Ordinal)
 
 @[simp]
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
-  Ordinal.one_le_iff_ne_zero
+  Order.one_le_iff_ne_zero (α := Ordinal)
 
 theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
