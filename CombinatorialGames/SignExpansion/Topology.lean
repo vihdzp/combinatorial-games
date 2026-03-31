@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.SignExpansion.Simplicity
+public import Mathlib.Order.Comparable
 public import Mathlib.Topology.Clopen
 public import Mathlib.Topology.Order.ScottTopology
 public import Mathlib.Topology.Separation.CompletelyRegular
@@ -104,6 +105,18 @@ theorem isClosed_Icc (x y : Simplicity) : IsClosed (Icc x y) := by
 theorem isClosed_Ici (x : Simplicity) : IsClosed (Ici x) := by
   rw [← Ioi_insert]
   simpa using (isClopen_Ioi x).isClosed.union (isClosed_singleton (x := x))
+
+theorem isClosed_of_pairwise_incompRel {s : Set Simplicity} (hs : s.Pairwise (IncompRel (· ≤ ·))) :
+    IsClosed s := by
+  rw [isClosed_iff_sSup]
+  intro t ht ⟨x, hx⟩ ht₁
+  rw [← isChain_iff_bddAbove] at ht₁
+  have ht' : t.Subsingleton := by
+    intro x hx y hy
+    by_contra h
+    exact not_symmGen_iff.2 (hs (ht hx) (ht hy) h) (ht₁.total hx hy)
+  obtain rfl := ht'.eq_singleton_of_mem hx
+  simpa using ht
 
 theorem isClopen_singleton_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x) :
     IsClopen {x} := by
