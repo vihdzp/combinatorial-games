@@ -619,7 +619,7 @@ instance : Coe TermSeq SurrealHahnSeries where
   coe := toSurrealHahnSeries
 
 /-- Build a `TermSeq` from a `SurrealHahnSeries`. -/
-@[simps]
+@[simps, expose]
 def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
   length := x.length
   exp := (↑) ∘ x.exp
@@ -693,7 +693,7 @@ theorem term_coe (s : TermSeq) (i) :
   · exact term_coe_of_le (le_of_not_gt h)
 
 /-- `TermSeq` and `SurrealHahnSeries` are alternate representations for the same structure. -/
-@[simps!]
+@[simps!, expose]
 def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
   toFun := toSurrealHahnSeries
   invFun := ofSurrealHahnSeries
