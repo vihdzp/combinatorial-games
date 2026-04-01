@@ -3,11 +3,15 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Basic
+public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Order.Hom.Monoid
+
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.Order.Hom.Monoid
+import Mathlib.Data.Set.Finite.Lattice
 
 /-!
 # Ordinals as games
@@ -30,7 +34,7 @@ universe u
 
 open Set IGame
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-! ### Lemmas to upstream -/
 
@@ -71,6 +75,7 @@ private theorem toIGame'_strictMono : StrictMono toIGame' := by
 termination_by a => a
 
 /-- The canonical map from `NatOrdinal` to `IGame`, sending `o` to `{Iio o | ∅}`. -/
+@[no_expose]
 def toIGame : NatOrdinal.{u} ↪o IGame.{u} :=
   .ofStrictMono NatOrdinal.toIGame' toIGame'_strictMono
 
@@ -121,7 +126,7 @@ theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
   simpa
 
 @[simp, game_cmp] theorem toIGame_zero : toIGame 0 = 0 := by ext p; cases p <;> simp
-@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp [eq_comm]
+@[simp, game_cmp] theorem toIGame_one : toIGame 1 = 1 := by ext p; cases p <;> simp
 
 @[simp]
 theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
@@ -244,10 +249,11 @@ theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   apply hn.trans
   grw [← toIGame_natCast_equiv n]
   rw [toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
-  exact Ordinal.nat_lt_omega0 n
+  exact Ordinal.natCast_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   rw [IGame.neg_lt]
   exact lt_omega0 _
 
 end IGame
+end

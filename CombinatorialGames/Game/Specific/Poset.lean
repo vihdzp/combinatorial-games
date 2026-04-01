@@ -3,9 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Game.Graph
-import Mathlib.Order.WellQuasiOrder
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Graph
+public import Mathlib.Order.WellQuasiOrder
 
 /-!
 # Poset games
@@ -29,6 +31,8 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 -/
 
 variable {α : Type*} [Preorder α]
+
+public section
 
 open Set
 
@@ -136,3 +140,4 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
 
 end IGame
 end GameGraph.Poset
+end

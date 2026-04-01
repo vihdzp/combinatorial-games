@@ -3,9 +3,12 @@ Copyright (c) 2025 Yuyang Zhao. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Yuyang Zhao
 -/
-import Mathlib.Algebra.Ring.Defs
-import Mathlib.Data.Fintype.Defs
-import Mathlib.Logic.Small.Defs
+module
+
+public import Mathlib.Algebra.Ring.Defs
+public import Mathlib.Data.Fintype.Defs
+public import Mathlib.Logic.Small.Defs
+
 import Mathlib.Tactic.DeriveFintype
 
 /-!
@@ -14,6 +17,8 @@ import Mathlib.Tactic.DeriveFintype
 This file implements the two-element type of players (`Left`, `Right`), alongside other basic
 notational machinery to be used within game theory.
 -/
+
+@[expose] public section
 
 universe u
 
@@ -130,6 +135,7 @@ macro "!{" st:term "}'" h:term:max : term => `(OfSets.ofSets $st $h)
 @[inherit_doc OfSets.ofSets]
 macro "!{" s:term " | " t:term "}'" h:term:max : term => `(!{Player.cases $s $t}'$h)
 
+/-- A tactic which attempts to automatically solve goals which appear on `OfSets`. -/
 macro "of_sets_tactic" : tactic =>
   `(tactic| first
     | done
@@ -152,8 +158,9 @@ recommended_spelling "ofSets" for "!{st}" in [ofSets, «term!{_}»]
 recommended_spelling "ofSets" for "!{s | t}" in [ofSets, «term!{_|_}»]
 
 open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborates `ofSets (Player.cases s t)` to `!{s | t}` and `ofSets st` to `!{st}`. -/
 @[app_delab OfSets.ofSets]
-def delabOfSets : Delab := do
+meta def delabOfSets : Delab := do
   let e ← getExpr
   guard <| e.isAppOfArity' ``OfSets.ofSets 7
   withNaryArg 3 do
@@ -170,3 +177,5 @@ theorem ofSets_eq_ofSets_cases {α} {Valid : (Player → Set α) → Prop} [OfSe
     (st : Player → Set α) (h : Valid st) [Small (st left)] [Small (st right)] :
     !{st} = !{st left | st right}'(by convert h; aesop) := by
   congr; ext1 p; cases p <;> rfl
+
+end
