@@ -51,6 +51,10 @@ variable {α : Type v} {β : Type w}
 
 /-! ### For Mathlib -/
 
+theorem Set.forall_mem_union {P : α → Prop} {s t : Set α} :
+    (∀ x ∈ s ∪ t, P x) ↔ (∀ x ∈ s, P x) ∧ (∀ x ∈ t, P x) := by
+  simp_rw [mem_union, or_imp, forall_and]
+
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
   small_lift.{u, v + 1, v} α
@@ -451,12 +455,9 @@ instance : NegZeroClass LGame where
 @[simp]
 theorem neg_tis : -tis = tisn := by
   refine eq_of_bisim (fun a b ↦ a = -tis ∧ b = tisn ∨ a = -tisn ∧ b = tis) ?_ (.inl ⟨rfl, rfl⟩)
-  rintro x y (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) (_ | _)
-  on_goal 1 => use ∅
-  on_goal 2 => use {(-tisn, tis)}
-  on_goal 3 => use {(-tis, tisn)}
-  on_goal 4 => use ∅
-  all_goals simp
+  intro x y hxy p
+  use x.moves p ×ˢ y.moves p
+  rcases hxy with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> cases p <;> simp
 
 @[simp]
 theorem neg_tisn : -tisn = tis := by
@@ -487,7 +488,8 @@ theorem corec_add_corec
 theorem moves_add (p : Player) (x y : LGame) :
     (x + y).moves p = (· + y) '' x.moves p ∪ (x + ·) '' y.moves p := by
   apply (moves_corec ..).trans
-  aesop (erase Player)
+  rw [image_union, image_image, image_image]
+  rfl
 
 @[simp]
 theorem add_eq_zero_iff {x y : LGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
@@ -497,14 +499,18 @@ private theorem add_zero' (x : LGame) : x + 0 = x := by
   refine eq_of_bisim (fun x y ↦ x = y + 0) ?_ rfl
   rintro a b rfl
   refine fun p ↦ ⟨(fun x ↦ (x + 0, x)) '' b.moves p, ?_⟩
-  cases p <;> simp [image_image]
+  simp [image_image]
 
 private theorem add_comm' (x y : LGame) : x + y = y + x := by
   apply eq_of_bisim (fun x y ↦ ∃ a b, x = a + b ∧ y = b + a) ?_ ⟨x, y, rfl, rfl⟩
   rintro _ _ ⟨a, b, rfl, rfl⟩
   refine fun p ↦
-    ⟨(fun x ↦ (x + b, b + x)) '' a.moves p ∪ (fun x ↦ (a + x, x + a)) '' b.moves p, ?_, ?_⟩
-  all_goals aesop (erase Player)
+    ⟨(fun x ↦ (x + b, b + x)) '' a.moves p ∪
+    (fun x ↦ (a + x, x + a)) '' b.moves p, ?_, ?_, ?_⟩
+  · simp_rw [moves_add, image_union, image_image]
+  · simp_rw [moves_add, image_union, image_image, union_comm]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, rfl, rfl⟩
 
 private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   apply eq_of_bisim (fun x y ↦ ∃ a b c, x = a + b + c ∧ y = a + (b + c)) ?_ ⟨x, y, z, rfl, rfl⟩
@@ -512,14 +518,17 @@ private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   refine fun p ↦
     ⟨(fun x ↦ (x + b + c, x + (b + c))) '' a.moves p ∪
     (fun x ↦ (a + x + c, a + (x + c))) '' b.moves p ∪
-    (fun x ↦ (a + b + x, a + (b + x))) '' c.moves p, ?_, ?_⟩
-  all_goals aesop (add simp [image_union]) (erase Player)
+    (fun x ↦ (a + b + x, a + (b + x))) '' c.moves p, ?_, ?_, ?_⟩
+  · simp_rw [moves_add, image_union, image_image]
+  · simp_rw [moves_add, image_union, image_image, union_assoc]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, _, rfl, rfl⟩
 
 instance : AddCommMonoid LGame where
-  add_zero := private add_zero'
-  zero_add _ := private add_comm' .. ▸ add_zero' _
-  add_comm := private add_comm'
-  add_assoc := private add_assoc'
+  add_zero := by exact add_zero'
+  zero_add _ := by exact add_comm' .. ▸ add_zero' _
+  add_comm := by exact add_comm'
+  add_assoc := by exact add_assoc'
   nsmul := nsmulRec
 
 @[simp]
@@ -536,8 +545,12 @@ theorem add_dud (x : LGame) : x + dud = dud := by
   refine eq_of_bisim (fun x y ↦ (∃ b, x = b + dud) ∧ y = dud) ?_ ⟨⟨x, rfl⟩, rfl⟩
   rintro _ _ ⟨⟨x, rfl⟩, rfl⟩
   refine fun p ↦
-    ⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.moves p), ?_, ?_⟩
-  all_goals aesop
+    ⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.moves p), ?_, ?_, ?_⟩
+  · simp_rw [moves_add, moves_dud, image_singleton, image_insert_eq, image_image, union_singleton]
+  · simp_rw [moves_dud, image_insert_eq, image_image, ← @image_insert_eq _ _ (fun _ => dud) dud _,
+      (Set.insert_nonempty _ _).image_const /- TODO: `Set.insert_nonempty` is misnamed -/]
+  · simp_rw [Set.forall_mem_insert, Set.forall_mem_image, and_true]
+    exact ⟨⟨_, rfl⟩, fun _ _ => ⟨_, rfl⟩⟩
 
 @[simp]
 theorem dud_add (x : LGame) : dud + x = dud := by
@@ -578,8 +591,11 @@ private theorem neg_add' (x y : LGame) : -(x + y) = -x + -y := by
   rintro _ _ ⟨a, b, rfl, rfl⟩
   refine fun p ↦
     ⟨(fun x ↦ (-(x + b), -x + -b)) '' a.moves (-p) ∪
-    (fun x ↦ (-(a + x), -a + -x)) '' b.moves (-p), ?_, ?_⟩
-  all_goals aesop (add simp [image_union]) (erase Player)
+    (fun x ↦ (-(a + x), -a + -x)) '' b.moves (-p), ?_, ?_, ?_⟩
+  · simp_rw [moves_neg, moves_add, ← Set.image_neg_eq_neg, Set.image_union, Set.image_image]
+  · simp_rw [moves_add, moves_neg, ← Set.image_neg_eq_neg, Set.image_union, Set.image_image]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, rfl, rfl⟩
 
 instance : SubtractionCommMonoid LGame where
   neg_neg := neg_neg

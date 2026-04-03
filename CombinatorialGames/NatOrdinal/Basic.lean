@@ -66,9 +66,6 @@ Natural addition can equivalently be characterized as the ordinal resulting from
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
 @[no_expose] instance : Add NatOrdinal := ⟨add⟩
 
-/-- Add two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:65 x:65 "+ₒ" y:66 => of (val x + val y)
-
 theorem add_def (a b : NatOrdinal) :
     a + b = max (⨆ x : Iio a, succ (x.1 + b)) (⨆ x : Iio b, succ (a + x.1)) := by
   change add .. = _
@@ -213,7 +210,7 @@ theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
     rintro ⟨i, hi⟩
     exact (IH i hi).trans (add_le_add_right hi.le (of a))
 
-theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
+theorem oadd_le_add (a b : NatOrdinal) : of (a.val + b.val) ≤ a + b :=
   oadd_le_add' ..
 
 /-! ### Natural multiplication -/
@@ -231,9 +228,6 @@ Natural multiplication can equivalently be characterized as the ordinal resultin
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
 @[no_expose] instance : Mul NatOrdinal := ⟨mul⟩
-
-/-- Multiply two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:70 x:70 "*ₒ" y:71 => of (val x * val y)
 
 theorem mul_def (a b : NatOrdinal) :
     a * b = sInf {c | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'} := by
@@ -416,7 +410,7 @@ theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
       rintro ⟨i, hi⟩
       exact (IH i hi).trans (mul_le_mul_right hi.le (of a))
 
-theorem omul_le_mul (a b : NatOrdinal) : a *ₒ b ≤ a * b :=
+theorem omul_le_mul (a b : NatOrdinal) : of (a.val * b.val) ≤ a * b :=
   omul_le_mul' ..
 
 end NatOrdinal

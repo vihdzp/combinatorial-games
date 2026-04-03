@@ -6,12 +6,11 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.Basic
-public import Mathlib.Algebra.CharP.Defs
+public import Mathlib.Algebra.CharP.Two
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
 
 import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring
 
@@ -204,7 +203,7 @@ instance : IsCancelMulZero Nimber where
 private theorem one_mul (a : Nimber) : 1 * a = a := by
   apply le_antisymm
   · refine mul_le_of_forall_ne fun x hx y hy ↦ ?_
-    rw [Nimber.lt_one_iff_zero] at hx
+    rw [Nimber.lt_one_iff] at hx
     rw [hx, Nimber.one_mul, zero_mul, zero_mul, add_zero, zero_add]
     exact hy.ne
   · by_contra! h
@@ -246,7 +245,7 @@ theorem pow_le_of_forall_ne {a b : Nimber} {n : ℕ}
     rw [pow_succ]
     refine mul_le_of_forall_ne fun c hc d hd ↦ ?_
     have hc' := mt IH hc.not_ge
-    push_neg at hc'
+    push Not at hc'
     obtain ⟨f, rfl⟩ := hc'
     convert H <| Fin.cons (α := fun _ ↦ Set.Iio a) ⟨d, hd⟩ f using 1
     have := Fin.comp_cons (fun x ↦ a + x.1) ⟨d, hd⟩ f
@@ -366,24 +365,25 @@ instance : Field Nimber where
   nnqsmul := _
   qsmul := _
 
--- #34622
+-- TODO: PR this
 section Mathlib
 
 @[simp]
 theorem inv_natCast (n : ℕ) : (n : Nimber)⁻¹ = n := by
-  grind [natCast_eq_if]
+  grind [CharTwo.natCast_eq_ite]
 
 @[simp]
 theorem inv_intCast (n : ℤ) : (n : Nimber)⁻¹ = n := by
-  grind [intCast_eq_if]
+  grind [CharTwo.intCast_eq_ite]
 
 theorem ratCast_eq_if (q : ℚ) : (q : Nimber) = if Odd q.num ∧ Odd q.den then 1 else 0 := by
-  rw [Field.ratCast_def, div_eq_mul_inv, inv_natCast, natCast_eq_if, intCast_eq_if]
+  rw [Field.ratCast_def, div_eq_mul_inv, inv_natCast,
+    CharTwo.natCast_eq_ite, CharTwo.intCast_eq_ite]
   grind
 
 @[simp]
 theorem range_ratCast : Set.range ((↑) : ℚ → Nimber) = {0, 1} := by
-  rw [funext ratCast_eq_if, Set.range_if, Set.pair_comm]
+  rw [funext ratCast_eq_if, Set.range_ite_const, Set.pair_comm]
   · use 1; simp
   · use 0; simp
 

@@ -11,7 +11,6 @@ public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
 public import Mathlib.Data.Finsupp.WellFounded
 
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
@@ -177,6 +176,9 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
 theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
     ∀ k, (1 : Nimber[X]).coeff k < x := by
   simpa using coeff_X_pow_lt 0 h
+
+theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
+  aesop (add simp [Nimber.pos_iff_ne_zero])
 
 /-! ### Embedding in a subfield -/
 
@@ -465,7 +467,7 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0))).coeff) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -741,6 +743,12 @@ theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
   simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
 
+theorem oeval_eq_zero_iff {x : Nimber} {p : Nimber[X]} (hx : x ≠ 0) : oeval x p = 0 ↔ p = 0 := by
+  refine ⟨?_, by simp +contextual⟩
+  contrapose
+  rw [← val_ne_zero] at hx
+  exact fun hp ↦ ((pow_pos hx.pos _).trans_le <| opow_natDegree_le_oeval x hp).ne'
+
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
     ∃ p : Nimber[X], p.degree < n ∧ (∀ k, val (p.coeff k) < x) ∧ val (oeval (∗x) p) = y := by
@@ -918,7 +926,7 @@ theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
-  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simp
   have ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
@@ -977,7 +985,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
   · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
-    · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]
+    · simp_rw [lt_one_iff, forall_eq, map_zero, add_zero]
       intro ht
       have ht' := ht ▸ WithTop.coe_ne_top
       simpa [← ht] using coeff_leastNoRoots_zero_ne ht'

@@ -53,26 +53,16 @@ namespace IGame
 
 /-! ### Dicotic games -/
 
-@[no_expose]
-def DicoticAux (x : IGame) : Prop :=
-  (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, DicoticAux l)
-termination_by x
-decreasing_by igame_wf
-
 /-- A game `x` is dicotic if both players can move from every nonempty subposition of `x`. -/
-@[mk_iff dicotic_iff_aux]
-class Dicotic (x : IGame) : Prop where of_DicoticAux ::
-  out : DicoticAux x
+@[mk_iff dicotic_def']
+class inductive Dicotic : IGame → Prop where
+  | mk {x : IGame} : (xᴸ = ∅ ↔ xᴿ = ∅) → (∀ p, ∀ y ∈ x.moves p, Dicotic y) → Dicotic x
 
-theorem dicotic_def {x : IGame} : Dicotic x ↔
-    (xᴸ = ∅ ↔ xᴿ = ∅) ∧ (∀ p, ∀ l ∈ x.moves p, Dicotic l) := by
-  simp_rw [dicotic_iff_aux]; rw [DicoticAux]
+theorem dicotic_def {x : IGame} : Dicotic x ↔ (xᴸ = ∅ ↔ xᴿ = ∅) ∧ ∀ p, ∀ l ∈ x.moves p, Dicotic l :=
+  dicotic_def' x
 
 namespace Dicotic
 variable {x y z : IGame}
-
-theorem mk (h₁ : xᴸ = ∅ ↔ xᴿ = ∅) (h₂ : ∀ p, ∀ y ∈ x.moves p, Dicotic y) : Dicotic x :=
-  dicotic_def.2 ⟨h₁, h₂⟩
 
 theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
   rw [dicotic_def] at hx
@@ -114,12 +104,6 @@ end Dicotic
 
 /-! ### Impartial games -/
 
-@[no_expose]
-def ImpartialAux (x : IGame) : Prop :=
-  -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, ImpartialAux y
-termination_by x
-decreasing_by igame_wf
-
 /-- An impartial game is one that's equivalent to its negative, such that each left and right move
 is also impartial.
 
@@ -128,20 +112,15 @@ as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still hol
 `IGame.equiv_nim_grundyValue`.
 
 In such a game, both players have the same payoffs at any subposition. -/
-@[mk_iff impartial_iff_aux]
-class Impartial (x : IGame) : Prop where of_ImpartialAux ::
-  out : ImpartialAux x
+@[mk_iff impartial_def']
+class inductive Impartial : IGame → Prop where
+  | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, Impartial y) → Impartial x
 
-theorem impartial_def {x : IGame} :
-    x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y := by
-  simp_rw [impartial_iff_aux]
-  rw [ImpartialAux]
+theorem impartial_def {x : IGame} : x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y :=
+  impartial_def' x
 
 namespace Impartial
 variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
-
-theorem mk {x : IGame} (h₁ : -x ≈ x) (h₂ : ∀ p, ∀ y ∈ x.moves p, Impartial y) : Impartial x :=
-  impartial_def.2 ⟨h₁, h₂⟩
 
 @[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
 @[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
@@ -225,7 +204,7 @@ theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
 theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
   have := hx.of_mem_moves hy
-  induction p with
+  cases p with
   | left => symm; simpa using left_lf hy
   | right => simpa using lf_right hy
 
@@ -237,7 +216,7 @@ private theorem equiv_iff_forall_fuzzy' :
 
 theorem equiv_iff_forall_fuzzy (p : Player) :
     x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
-  induction p with
+  cases p with
   | left => exact equiv_iff_forall_fuzzy'
   | right =>
     rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
@@ -272,29 +251,20 @@ end Impartial
 
 /-! ### Numeric games -/
 
-@[no_expose]
-def NumericAux (x : IGame) : Prop :=
-  (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, NumericAux y)
-termination_by x
-decreasing_by igame_wf
-
 /-- A game `!{s | t}` is numeric if everything in `s` is less than everything in `t`, and all the
 elements of these sets are also numeric.
 
 The `Surreal` numbers are built as the quotient of numeric games under equivalence. -/
-@[mk_iff numeric_iff_aux]
-class Numeric (x : IGame) : Prop where of_NumericAux ::
-  out : NumericAux x
+@[mk_iff numeric_def']
+class inductive Numeric : IGame → Prop where
+  | mk {x : IGame} : (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) → (∀ p, ∀ y ∈ x.moves p, Numeric y) → Numeric x
 
 theorem numeric_def {x : IGame} : Numeric x ↔
-    (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, Numeric y) := by
-  simp_rw [numeric_iff_aux]; rw [NumericAux]
+    (∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) ∧ (∀ p, ∀ y ∈ x.moves p, Numeric y) :=
+  numeric_def' x
 
 namespace Numeric
 variable {x y z : IGame}
-
-theorem mk (h₁ : ∀ y ∈ xᴸ, ∀ z ∈ xᴿ, y < z) (h₂ : ∀ p, ∀ y ∈ x.moves p, Numeric y) : Numeric x :=
-  numeric_def.2 ⟨h₁, h₂⟩
 
 theorem left_lt_right [h : Numeric x] (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < z :=
   (numeric_def.1 h).1 y hy z hz
@@ -432,20 +402,14 @@ end Numeric
 
 /-! ### Short games -/
 
-@[no_expose]
-def ShortAux (x : IGame) : Prop :=
-  ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, ShortAux y
-termination_by x
-decreasing_by igame_wf
-
 /-- A short game is one with finitely many subpositions. That is, the left and right sets are
 finite, and all of the games in them are short as well. -/
-@[mk_iff short_iff_aux]
-class Short (x : IGame) : Prop where of_shortAux ::
-  out : ShortAux x
+@[mk_iff short_def']
+class inductive Short : IGame → Prop where
+  | mk' (x : IGame) : (∀ p, (x.moves p).Finite) → (∀ p, ∀ y ∈ x.moves p, Short y) → Short x
 
 theorem short_def {x : IGame} : Short x ↔ ∀ p, (x.moves p).Finite ∧ ∀ y ∈ x.moves p, Short y := by
-  simp_rw [short_iff_aux]; rw [ShortAux]
+  rw [short_def', ← forall_and]
 
 alias ⟨_, Short.mk⟩ := short_def
 
