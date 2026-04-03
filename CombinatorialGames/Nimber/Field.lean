@@ -213,13 +213,13 @@ private theorem one_mul (a : Nimber) : 1 * a = a := by
 termination_by a
 
 instance : CommRing Nimber where
-  left_distrib := private mul_add
-  right_distrib := private add_mul
+  left_distrib := by exact mul_add
+  right_distrib := by exact add_mul
   zero_mul := zero_mul
   mul_zero := mul_zero
-  mul_assoc := private mul_assoc
-  mul_comm := private mul_comm
-  one_mul := private one_mul
+  mul_assoc := by exact mul_assoc
+  mul_comm := by exact mul_comm
+  one_mul := by exact one_mul
   mul_one _ := by rw [Nimber.mul_comm, Nimber.one_mul]
   __ : AddCommGroupWithOne Nimber := inferInstance
 

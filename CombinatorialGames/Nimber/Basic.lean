@@ -193,13 +193,13 @@ protected theorem neg_eq (a : Nimber) : -a = a :=
   rfl
 
 instance : AddCommGroupWithOne Nimber where
-  add_assoc := private add_assoc
-  add_zero := private add_zero
+  add_assoc := by exact add_assoc
+  add_zero := by exact add_zero
   zero_add _ := by rw [add_comm, add_zero]
   nsmul := nsmulRec
   zsmul := zsmulRec
   neg_add_cancel := add_self
-  add_comm := private add_comm
+  add_comm := by exact add_comm
 
 -- #34622
 section Mathlib
