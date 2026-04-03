@@ -130,6 +130,34 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
 instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
   small_transGen' _ x
 
+@[elab_as_elim]
+theorem Subposition.head_induction {y : LGame} {motive : (x : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p x hx, motive x (@Subposition.of_mem_moves p x y hx))
+    (trans : ∀ p x z hx hz, motive z hz →
+      motive x (.trans (@Subposition.of_mem_moves p x z hx) hz))
+    (x : LGame) (hx : Subposition x y) : motive x hx :=
+  Relation.TransGen.head_induction_on hx
+    (fun h => (Set.mem_iUnion.1 h).elim fun p h => of_mem_moves p _ h)
+    (fun h₁ h₂ ih => (Set.mem_iUnion.1 h₁).elim fun p h₁ => trans p _ _ h₁ h₂ ih)
+
+@[elab_as_elim]
+theorem Subposition.tail_induction {x : LGame} {motive : (y : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p y hy, motive y (@Subposition.of_mem_moves p x y hy))
+    (trans : ∀ p y z hy hz, motive z hz →
+      motive y (.trans hz (@Subposition.of_mem_moves p z y hy)))
+    (y : LGame) (hy : Subposition x y) : motive y hy :=
+  Relation.TransGen.rec
+    (fun h => (Set.mem_iUnion.1 h).elim fun p h => of_mem_moves p _ h)
+    (fun h₁ h₂ ih => (Set.mem_iUnion.1 h₂).elim fun p h₂ => trans p _ _ h₂ h₁ ih) hy
+
+@[elab_as_elim]
+theorem Subposition.trans_induction {motive : (x y : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p x y hxy, motive x y (@Subposition.of_mem_moves p x y hxy))
+    (trans : ∀ x y z hx hy, motive x z hx → motive z y hy → motive x y (.trans hx hy))
+    (x y : LGame) (hxy : Subposition x y) : motive x y hxy :=
+  Subposition.tail_induction (fun p => of_mem_moves p x)
+    (fun p y z hy hz ih => trans x y z hz (.of_mem_moves hy) ih (of_mem_moves p z y hy)) y hxy
+
 set_option backward.isDefEq.respectTransparency false in
 /-- Two loopy games are equal when there exists a bisimulation between them.
 
