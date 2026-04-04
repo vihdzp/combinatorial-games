@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Dyadic.Basic
+public import CombinatorialGames.Surreal.Dyadic
 public import Mathlib.Algebra.Order.Hom.Ring
 public import Mathlib.Data.Real.Archimedean
 

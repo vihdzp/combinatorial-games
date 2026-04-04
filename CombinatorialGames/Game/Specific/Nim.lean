@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
+Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 -/
 module
 
@@ -38,8 +38,8 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : IsWellFounded _ nim.IsOption :=
-  isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
+instance : nim.IsWellFounded where
+  wf := by convert (inferInstance : WellFoundedLT Nimber); simp
 
 end GameGraph
 

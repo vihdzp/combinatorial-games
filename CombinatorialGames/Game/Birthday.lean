@@ -70,11 +70,11 @@ theorem birthday_lt_of_mem_moves {p : Player} {x y : IGame} (hy : y ∈ x.moves 
 
 theorem birthday_lt_of_subposition {x y : IGame} (hy : Subposition y x) :
     y.birthday < x.birthday := by
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 hy
+  induction x using moveRecOn with | ind x ih
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 hy
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact birthday_lt_of_mem_moves hz
-  · exact (birthday_lt_of_subposition hy).trans (birthday_lt_of_mem_moves hz)
-termination_by x
-decreasing_by igame_wf
+  · exact (ih p z hz hy).trans (birthday_lt_of_mem_moves hz)
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by

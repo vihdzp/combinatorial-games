@@ -58,16 +58,6 @@ attribute [game_cmp] Set.forall_mem_empty
 @[game_cmp] theorem Set.forall_singleton {x : α} : (∀ y ∈ ({x} : Set α), P y) ↔ P x := by simp
 @[game_cmp] theorem Set.exists_singleton {x : α} : (∃ y ∈ ({x} : Set α), P y) ↔ P x := by simp
 
-@[game_cmp]
-theorem Set.forall_insert {x : α} {y : Set α} :
-    (∀ z ∈ insert x y, P z) ↔ P x ∧ (∀ z ∈ y, P z) := by
-  simp
-
-@[game_cmp]
-theorem Set.exists_insert {x : α} {y : Set α} :
-    (∃ z ∈ insert x y, P z) ↔ P x ∨ (∃ z ∈ y, P z) := by
-  simp
-
 @[game_cmp] theorem forall_lt_zero {P : ℕ → Prop} : (∀ n < 0, P n) ↔ True := by simp
 @[game_cmp] theorem exists_lt_zero {P : ℕ → Prop} : (∃ n < 0, P n) ↔ False := by simp
 @[game_cmp] theorem forall_lt_one {P : ℕ → Prop} : (∀ n < 1, P n) ↔ P 0 := by simp
@@ -75,10 +65,10 @@ theorem Set.exists_insert {x : α} {y : Set α} :
 
 attribute [game_cmp] le_rfl
   zero_add add_zero zero_mul mul_zero one_mul mul_one neg_zero sub_eq_add_neg
-  Nat.cast_zero Nat.cast_one Nat.forall_lt_succ Nat.exists_lt_succ_left
+  Nat.cast_zero Nat.cast_one Nat.forall_lt_succ_left Nat.exists_lt_succ_left
   not_not not_true not_false_eq_true not_forall true_and and_true false_and and_false
   false_implies implies_true forall_const and_imp forall_exists_index
   Player.neg_left Player.neg_right Player.left_mul Player.right_mul Player.forall Player.exists
-  Set.forall_mem_image Set.exists_mem_image Set.mem_Iio
+  Set.forall_mem_image Set.exists_mem_image Set.forall_mem_insert Set.exists_mem_insert Set.mem_Iio
 
 end

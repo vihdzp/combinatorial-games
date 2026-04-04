@@ -11,7 +11,6 @@ public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
 public import Mathlib.Data.Finsupp.WellFounded
 
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
@@ -468,7 +467,7 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0))).coeff) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -927,7 +926,7 @@ theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
-  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simp
   have ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
@@ -986,7 +985,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
   · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
-    · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]
+    · simp_rw [lt_one_iff, forall_eq, map_zero, add_zero]
       intro ht
       have ht' := ht ▸ WithTop.coe_ne_top
       simpa [← ht] using coeff_leastNoRoots_zero_ne ht'
