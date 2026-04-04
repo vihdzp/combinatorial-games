@@ -223,7 +223,6 @@ theorem self_notMem_moves (p : Player) (x : IGame) : x ∉ x.moves p :=
 
 /-- `WSubposition x y` means that `x` is reachable from `y` by a sequence of moves.
 It is the non-strict version of `Subposition`. -/
-@[expose]
 def WSubposition (x y : IGame) : Prop := x = y ∨ Subposition x y
 
 theorem wsubposition_iff_eq_or_subposition {x y : IGame} :

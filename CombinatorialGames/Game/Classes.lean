@@ -278,7 +278,8 @@ elab "numeric" : tactic =>
 
 protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
@@ -431,7 +432,8 @@ elab "short" : tactic =>
 
 protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
