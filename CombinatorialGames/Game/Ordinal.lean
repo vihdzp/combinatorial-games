@@ -59,18 +59,18 @@ termination_by o
 private theorem toIGame'_def (o : NatOrdinal) : o.toIGame' = !{toIGame' '' Iio o | ∅} := by
   rw [toIGame']; simp [image_eq_range]
 
-private theorem leftMoves_toIGame' (o : NatOrdinal) : o.toIGame'ᴸ = toIGame' '' Iio o := by
-  rw [toIGame'_def]; exact leftMoves_ofSets ..
+private theorem moves_left_toIGame' (o : NatOrdinal) : o.toIGame'ᴸ = toIGame' '' Iio o := by
+  rw [toIGame'_def]; exact moves_left_ofSets ..
 
-private theorem rightMoves_toIGame' (o : NatOrdinal) : o.toIGame'ᴿ = ∅ := by
-  rw [toIGame'_def]; exact rightMoves_ofSets ..
+private theorem moves_right_toIGame' (o : NatOrdinal) : o.toIGame'ᴿ = ∅ := by
+  rw [toIGame'_def]; exact moves_right_ofSets ..
 
 private theorem toIGame'_strictMono : StrictMono toIGame' := by
   refine fun a b h ↦ lt_of_le_not_ge ?_ (left_lf ?_)
   · rw [le_iff_forall_lf]
-    simpa [leftMoves_toIGame', rightMoves_toIGame'] using
+    simpa [moves_left_toIGame', moves_right_toIGame'] using
       fun c hc ↦ (toIGame'_strictMono (hc.trans h)).not_ge
-  · rw [leftMoves_toIGame']
+  · rw [moves_left_toIGame']
     exact ⟨a, h, rfl⟩
 termination_by a => a
 
@@ -86,42 +86,42 @@ theorem toIGame_def (o : NatOrdinal) : o.toIGame = !{toIGame '' Iio o | ∅} :=
   toIGame'_def o
 
 @[simp]
-theorem leftMoves_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
-  leftMoves_toIGame' o
+theorem moves_left_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
+  moves_left_toIGame' o
 
 @[simp, game_cmp]
-theorem rightMoves_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
-  rightMoves_toIGame' o
+theorem moves_right_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
+  moves_right_toIGame' o
 
-theorem forall_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+theorem forall_mem_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
     (∀ x ∈ (toIGame o)ᴸ, P x) ↔ ∀ a < o, P (toIGame a) := by
   simp
 
-theorem exists_leftMoves_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+theorem exists_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
     (∃ x ∈ (toIGame o)ᴸ, P x) ↔ ∃ a < o, P (toIGame a) := by
   simp
 
 @[game_cmp]
-theorem forall_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+theorem forall_mem_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (toIGame n)ᴸ, P x) ↔ ∀ m < n, P (toIGame m) := by
   simp
 
 @[game_cmp]
-theorem exists_leftMoves_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+theorem exists_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (toIGame n)ᴸ, P x) ↔ (∃ m < n, P (toIGame m)) := by
   simp
 
 @[game_cmp]
-theorem forall_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem forall_mem_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∀ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∀ m < n, P (toIGame m) :=
-  forall_leftMoves_toIGame_natCast
+  forall_mem_moves_left_toIGame_natCast
 
 @[game_cmp]
-theorem exists_leftMoves_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem exists_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∃ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∃ m < n, P (toIGame m) :=
-  exists_leftMoves_toIGame_natCast
+  exists_moves_left_toIGame_natCast
 
-theorem mem_leftMoves_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
+theorem mem_moves_left_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGameᴸ := by
   simpa
 
@@ -165,7 +165,7 @@ theorem toGame_nonneg (a : NatOrdinal) : 0 ≤ a.toGame :=
 /-- The natural addition of ordinals corresponds to their sum as games. -/
 theorem toIGame_add (a b : NatOrdinal) : (a + b).toIGame ≈ a.toIGame + b.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp only [game_cmp, leftMoves_toIGame, lt_add_iff]
+  simp only [game_cmp, moves_left_toIGame, lt_add_iff]
   refine ⟨?_, ⟨fun _ ↦ ?_, fun _ ↦ ?_⟩⟩
   · rintro c (⟨d, _, hd⟩ | ⟨d, _, hd⟩)
     all_goals
@@ -185,14 +185,14 @@ theorem toGame_add (a b : NatOrdinal) : (a + b).toGame = a.toGame + b.toGame :=
 /-- The natural multiplication of ordinals corresponds to their product as games. -/
 theorem toIGame_mul (a b : NatOrdinal) : (a * b).toIGame ≈ a.toIGame * b.toIGame := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp only [game_cmp, leftMoves_toIGame, lt_mul_iff, mulOption]
+  simp only [game_cmp, moves_left_toIGame, lt_mul_iff, mulOption]
   refine ⟨fun e c hc d hd he ↦ ?_, fun c hc d hd ↦ ?_⟩
   · grw [← toIGame.le_iff_le, toIGame_add, toIGame_add] at he
     rw [← add_le_add_iff_right (toIGame (c * d))]
     apply mt he.trans'
     grw [toIGame_mul, toIGame_mul, toIGame_mul, ← IGame.le_sub_iff_add_le]
     exact left_lf <| mulOption_mem_moves_mul
-      (mem_leftMoves_toIGame_of_lt hc) (mem_leftMoves_toIGame_of_lt hd)
+      (mem_moves_left_toIGame_of_lt hc) (mem_moves_left_toIGame_of_lt hd)
   · grw [← sub_eq_add_neg, IGame.le_sub_iff_add_le, ← toIGame_mul, ← toIGame_mul, ← toIGame_mul,
       ← toIGame_add, ← toIGame_add, toIGame.le_iff_le, not_le]
     exact mul_add_lt hc hd
