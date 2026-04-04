@@ -78,6 +78,8 @@ theorem neg_toLGame (h : c.moves left = c.moves right) (a : α) : -c.toLGame a =
 
 /-! ### Well-founded games -/
 
+/-- A game graph is well-founded if from every position
+there is no infinite sequence of (not necessarily alternating) left and right moves. -/
 protected class IsWellFounded (c : GameGraph α) where
   wf (c) : IsWellFounded α fun a b => ∃ p, a ∈ c.moves p b
 
