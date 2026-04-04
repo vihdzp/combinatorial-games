@@ -150,7 +150,7 @@ theorem equiv_ordinal_of_right_eq_empty {x : IGame} (hx : xᴿ = ∅) :
   apply equiv_of_forall_lf
   · exact fun a ha ha' ↦ left_lf ha <| ho.trans ha'
   · simp [hx]
-  · rw [forall_moves_left_toIGame]
+  · rw [forall_mem_moves_left_toIGame]
     exact fun a ha ha' ↦ ho' _ ha' ha
   · simp
 

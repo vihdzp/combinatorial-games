@@ -93,7 +93,7 @@ theorem moves_left_toIGame (o : NatOrdinal) : o.toIGameᴸ = toIGame '' Iio o :=
 theorem moves_right_toIGame (o : NatOrdinal) : o.toIGameᴿ = ∅ :=
   moves_right_toIGame' o
 
-theorem forall_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+theorem forall_mem_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
     (∀ x ∈ (toIGame o)ᴸ, P x) ↔ ∀ a < o, P (toIGame a) := by
   simp
 
@@ -102,7 +102,7 @@ theorem exists_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
   simp
 
 @[game_cmp]
-theorem forall_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+theorem forall_mem_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (toIGame n)ᴸ, P x) ↔ ∀ m < n, P (toIGame m) := by
   simp
 
@@ -112,9 +112,9 @@ theorem exists_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
   simp
 
 @[game_cmp]
-theorem forall_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem forall_mem_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∀ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∀ m < n, P (toIGame m) :=
-  forall_moves_left_toIGame_natCast
+  forall_mem_moves_left_toIGame_natCast
 
 @[game_cmp]
 theorem exists_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :

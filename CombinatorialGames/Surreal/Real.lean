@@ -62,7 +62,7 @@ theorem moves_left_toIGame (x : ℝ) : xᴸ = (↑) '' {q : Dyadic | q.toRat < x
 theorem moves_right_toIGame (x : ℝ) : xᴿ = (↑) '' {q : Dyadic | x < q.toRat} :=
   moves_right_ofSets ..
 
-theorem forall_moves_left_toIGame {P : IGame → Prop} {x : ℝ} :
+theorem forall_mem_moves_left_toIGame {P : IGame → Prop} {x : ℝ} :
     (∀ y ∈ xᴸ, P y) ↔ ∀ q : Dyadic, q.toRat < x → P q := by
   aesop
 
@@ -181,7 +181,7 @@ theorem toIGame_equiv_ratCast {q : ℚ} {x : ℝ} : (x : IGame) ≈ q ↔ x = q 
 
 theorem toIGame_add_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x + q) ≈ x + q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_add, forall_moves_add]
-  simp_rw [forall_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
+  simp_rw [forall_mem_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
   refine ⟨⟨fun r hr ↦ ?_, ⟨fun r hr ↦ ?_, ?_⟩⟩, ⟨⟨fun r hr ↦ ?_, ?_⟩, fun r hr ↦ ?_⟩⟩
   · grw [r.toIGame_equiv]
     rw [← IGame.sub_lt_iff_lt_add]
@@ -227,7 +227,7 @@ theorem toIGame_dyadic_add_equiv (q : Dyadic) (x : ℝ) : toIGame (q.toRat + x) 
 
 theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_add, forall_moves_add]
-  simp_rw [forall_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
+  simp_rw [forall_mem_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
   refine ⟨⟨?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, ?_⟩⟩ <;> intro q hq
   · rw [← sub_lt_iff_lt_add] at hq
     obtain ⟨r, hr, hr'⟩ := exists_rat_btwn hq
@@ -485,7 +485,7 @@ private theorem toIGame_lt_mulOption {x : ℝ} {q r s : ℚ} (h : x * q - r * q 
 theorem toIGame_mul_ratCast_equiv (x : ℝ) (q : ℚ) : (x * q).toIGame ≈ x * q := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
     Player.forall, Player.forall]
-  simp_rw [forall_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
+  simp_rw [forall_mem_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
   refine ⟨⟨fun r h ↦ ?_, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, fun r h ↦ ?_⟩⟩
   any_goals intro r hr y hy; numeric
   · grw [r.toIGame_equiv]
@@ -600,7 +600,7 @@ theorem toIGame_mul_equiv (x y : ℝ) : (x * y).toIGame ≈ x * y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf, forall_moves_mul, forall_moves_mul,
     Player.forall, Player.forall]
   dsimp
-  simp_rw [forall_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
+  simp_rw [forall_mem_moves_left_toIGame, forall_moves_right_toIGame, Numeric.not_le]
   refine ⟨⟨dyadic_lt_mul_toIGame, ⟨?_, ?_⟩⟩, ⟨⟨?_, ?_⟩, mul_toIGame_lt_dyadic⟩⟩ <;>
     (intro q hq r hr; grw [mulOption_toIGame_equiv]; rw [toIGame_lt_iff])
   · have : 0 < (x - q.toRat) * (r.toRat - y) := by apply mul_pos <;> simpa [sub_pos]
