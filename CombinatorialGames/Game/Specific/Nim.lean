@@ -39,7 +39,7 @@ abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
 instance : nim.IsWellFounded :=
-  .of_subrelation (· < ·) <| by simp [Subrelation]
+  .of_subrelation (· < ·) <| by simp
 
 end GameGraph
 

@@ -104,7 +104,7 @@ abbrev _root_.GameGraph.poset : GameGraph (Set α) where
   moves _ x := {y | Poset.Rel y x}
 
 instance : (poset α).IsWellFounded :=
-  .of_subrelation Poset.Rel <| by simp [Subrelation]
+  .of_subrelation Poset.Rel <| by simp
 
 /-- A state of the poset game on `α`. -/
 noncomputable def toIGame (s : Set α) : IGame :=

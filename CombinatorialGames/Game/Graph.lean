@@ -85,8 +85,9 @@ protected class IsWellFounded (c : GameGraph α) where
 
 omit Hl Hr in
 theorem IsWellFounded.of_subrelation (r : α → α → Prop) [IsWellFounded α r]
-    (hr : Subrelation (fun a b => ∃ p, a ∈ c.moves p b) r) : c.IsWellFounded :=
-  ⟨hr.isWellFounded⟩
+    (hr : ∀ a b p, a ∈ c.moves p b → r a b) : c.IsWellFounded := by
+  refine ⟨Subrelation.isWellFounded (r := r) ?_⟩
+  simpa only [Subrelation, forall_exists_index]
 
 variable [c.IsWellFounded]
 
