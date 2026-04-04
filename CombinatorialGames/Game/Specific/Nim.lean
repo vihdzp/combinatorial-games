@@ -38,8 +38,8 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : nim.IsWellFounded where
-  wf := by convert (inferInstance : WellFoundedLT Nimber); simp
+instance : nim.IsWellFounded :=
+  .of_subrelation (· < ·) <| by simp [Subrelation]
 
 end GameGraph
 
