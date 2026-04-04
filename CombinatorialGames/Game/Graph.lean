@@ -46,29 +46,7 @@ structure GameGraph (α : Type v) : Type v where
 namespace GameGraph
 variable {c : GameGraph.{v} α} {p : Player}
 
-/-- `IsOption a b` means that `a` is either a left or a right move for `b`. -/
-def IsOption (c : GameGraph α) (a b : α) : Prop :=
-  a ∈ ⋃ p, c.moves p b
-
-@[aesop simp]
-theorem isOption_iff_mem_union {a b : α} :
-    c.IsOption a b ↔ a ∈ c.moves left b ∪ c.moves right b := by
-  simp [IsOption, Player.exists]
-
-theorem IsOption.of_mem_moves {p} {a b : α} (h : a ∈ c.moves p b) : c.IsOption a b :=
-  ⟨_, ⟨p, rfl⟩, h⟩
-
-theorem isWellFounded_isOption_of_eq (r : α → α → Prop) [Hr : IsWellFounded α r]
-    (hr : ∀ p x, c.moves p x = {y | r y x}) : IsWellFounded _ c.IsOption := by
-  convert Hr
-  ext
-  simp [isOption_iff_mem_union, hr]
-
 variable [Hl : ∀ a, Small.{u} (c.moves left a)] [Hr : ∀ a, Small.{u} (c.moves right a)]
-
-instance (b : α) : Small.{u} {a // c.IsOption a b} := by
-  simp_rw [isOption_iff_mem_union]
-  infer_instance
 
 /-! ### Loopy games -/
 
@@ -100,7 +78,12 @@ theorem neg_toLGame (h : c.moves left = c.moves right) (a : α) : -c.toLGame a =
 
 /-! ### Well-founded games -/
 
-variable [H : IsWellFounded α c.IsOption]
+/-- A game graph is well-founded if from every position
+there is no infinite sequence of (not necessarily alternating) left and right moves. -/
+protected class IsWellFounded (c : GameGraph α) where
+  wf (c) : IsWellFounded α fun a b => ∃ p, a ∈ c.moves p b
+
+variable [c.IsWellFounded]
 
 variable (c) in
 /-- **Conway recursion**: build data for a game by recursively building it on its
@@ -109,13 +92,13 @@ left and right sets. -/
 def moveRecOn {motive : α → Sort*} (x)
     (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     motive x :=
-  H.fix _ (fun x IH ↦ ind x fun _ _ h ↦ IH _ (.of_mem_moves h)) x
+  (IsWellFounded.wf c).fix _ (fun x IH ↦ ind x fun _ _ h ↦ IH _ ⟨_, h⟩) x
 
 omit Hl Hr in
 theorem moveRecOn_eq {motive : α → Sort*} (x)
     (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     c.moveRecOn x ind = ind x fun _ y _ ↦ c.moveRecOn y ind := by
-  rw [moveRecOn, H.fix_eq]
+  rw [moveRecOn, IsWellFounded.fix_eq]
   rfl
 
 variable (c) in

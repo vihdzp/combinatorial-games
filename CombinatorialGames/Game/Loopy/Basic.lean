@@ -101,27 +101,14 @@ scoped notation:max x:max "ᴿ" => moves right x
 
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
-/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-def IsOption (x y : LGame) : Prop :=
-  x ∈ ⋃ p, y.moves p
-
-@[aesop simp]
-lemma isOption_iff_mem_union {x y : LGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
-  simp [IsOption, Player.exists]
-
-theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
-  ⟨_, ⟨p, rfl⟩, h⟩
-
-instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (⋃ p, x.moves p))
-
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+/-- A (proper) subposition is any game reachable a nonempty sequence of
+(not necessarily alternating) left and right moves. -/
 def Subposition : LGame → LGame → Prop :=
-  Relation.TransGen IsOption
+  Relation.TransGen fun a b => a ∈ ⋃ p, b.moves p
 
 @[aesop unsafe apply 50%]
 theorem Subposition.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves h)
+  Relation.TransGen.single (mem_iUnion_of_mem p h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -379,7 +366,6 @@ def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
 @[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
 @[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
-@[simp] theorem isOption_on_iff {x : LGame} : IsOption x on ↔ x = on := by simp [IsOption]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
@@ -394,7 +380,6 @@ def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
 @[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
 @[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
-@[simp] theorem isOption_off_iff {x : LGame} : IsOption x off ↔ x = off := by simp [IsOption]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
@@ -408,7 +393,6 @@ theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
 @[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
-@[simp] theorem isOption_dud_iff {x : LGame} : IsOption x dud ↔ x = dud := by simp [IsOption]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
 theorem eq_dud {x : LGame} : x = dud ↔ xᴸ = {x} ∧ xᴿ = {x} := by
