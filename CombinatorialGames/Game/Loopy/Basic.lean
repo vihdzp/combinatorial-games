@@ -27,7 +27,7 @@ In the literature, loopy games are defined as rooted directed graphs up to isomo
 it's simpler to define `LGame` as the coinductive type for the single constructor:
 
 ```
-  | ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : LGame.{u}
+  | ofSets (st : Player → Set LGame.{u}) [∀ p, Small.{u} (st p)] : LGame.{u}
 ```
 
 (The inductive type for this same constructor would be `IGame`.) This gives us a powerful
