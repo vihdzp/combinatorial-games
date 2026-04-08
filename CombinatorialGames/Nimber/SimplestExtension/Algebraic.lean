@@ -342,8 +342,12 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       rw [map_add, map_mul, hs] at hi
       simpa using congrArg hxr.toSubring.subtype hi
 
-theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
-    IsRing (of (val t ^ ω)) where
+namespace IsAlgClosed
+variable {t : Nimber} (ht : IsAlgClosed t)
+include ht
+
+-- todo: generalize to `IsField x`, and prove `IsField (of (val t ^ ω))` when `¬IsAlgClosed x`
+theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
   toIsGroup := ht.toIsGroup.opow _
   ne_one := ne_of_gt (by simp [ht.one_lt])
   mul_lt y z hy hz := by
@@ -352,6 +356,42 @@ theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
     rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd,
       ← eval_mul, ht.eval_eq_of_lt (ht.coeff_mul_lt hyd hzd)]
     exact oeval_lt_opow_omega0 (ht.coeff_mul_lt hyd hzd)
+
+theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
+  apply le_antisymm
+  · rw [ht.isRing_opow_omega0.ringClosure_le_iff, succ_le_iff]
+    exact val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)
+  · refine le_of_forall_lt fun c hc => ?_
+    obtain ⟨p, hpc, hpr⟩ := eq_oeval_of_lt_opow_omega0 hc
+    have htr := (lt_succ t).trans_le (le_ringClosure (succ t))
+    rw [← hpr, ← ht.eval_eq_of_lt hpc]
+    exact (IsRing.ringClosure _).eval_lt (fun k => (hpc k).trans htr) htr
+
+protected theorem transcendental : Transcendental ht.toSubfield t := by
+  rw [transcendental_iff]
+  intro p hp
+  rwa [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
+    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2,
+    oeval_eq_zero_iff ht.ne_zero, Polynomial.map_eq_zero] at hp
+
+theorem algebraAdjoin_simple_self :
+    (Algebra.adjoin ht.toSubfield {t}).toSubring = ht.isRing_opow_omega0.toSubring := by
+  apply SetLike.ext'
+  rw [Algebra.adjoin_eq_ring_closure, union_singleton,
+    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
+
+theorem fieldAdjoin_simple_self :
+    (IntermediateField.adjoin ht.toSubfield {t}).toSubfield =
+      (IsField.fieldClosure (succ t)).toSubfield := by
+  apply SetLike.ext'
+  rw [IntermediateField.adjoin_toSubfield, union_singleton,
+    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subfieldClosure_Iio, coe_toSubfield]
+
+end IsAlgClosed
 
 /-! ### Nimbers are algebraically closed -/
 
