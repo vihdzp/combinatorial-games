@@ -146,7 +146,7 @@ lemma Rat.isEta_aleph0 : IsEta ℚ aleph0 := IsEta.isEta_aleph0
 
 variable {α β : Type u} [LinearOrder α] [LinearOrder β]
 
-/-- Given `IsEta β (#α)` amd a countable `α` , `α` embeds into `β` with an order embedding. -/
+/-- Given `IsEta β (#α)` and a countable `α` , `α` embeds into `β` with an order embedding. -/
 theorem OrderType.type_le_type_of_isEta_of_countable [Countable α] (h : IsEta β (#α)) :
     type α ≤ type β := by
   rcases isEmpty_or_nonempty α with hαe | hαn
@@ -189,7 +189,7 @@ lemma hhi_card {α β : Type u} {r : α → α → Prop} [LT α] [IsWellOrder α
     (fun _ hx ↦ hx.1)).trans_lt (card_subtype_le (h:=h) a))
 
 open Classical in
-/-- The map whoch will be an order embedding between `α` and `β`. -/
+/-- The map which will be an order embedding between `α` and `β`. -/
 @[reducible]
 noncomputable def f {α β : Type u} {r : α → α → Prop} [Nonempty α] [LinearOrder α]
     [LinearOrder β] [hr : IsWellOrder α r] (h : IsEta β (#α))
