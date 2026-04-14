@@ -11,8 +11,8 @@ open Cardinal
 
 universe u v
 
-
 @[expose] public section
+
 /--
 If α is an ordinal, and c is some cardinal, then an
 η_α (c) set is a totally ordered set in which for any two subsets
@@ -22,11 +22,9 @@ greater than all elements of X and less than all elements of
 Y.
 In the literature, η_α := η_α (ℵ_α), but this definition is more general.
 -/
-
 def IsEta (α : Type u) (c : Cardinal.{u}) [LinearOrder α] : Prop :=
   ∀ s t : Set α, #s < c → #t < c →
     (∀ x ∈ s, ∀ y ∈ t, x < y) → ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y)
-
 
 namespace IsEta
 
@@ -38,8 +36,8 @@ theorem exists_between (h : IsEta α c) {s t : Set α} (hs : #s < c) (ht : #t < 
     (hB : ∀ x ∈ s, ∀ y ∈ t, x < y) : ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y) :=
   h s t hs ht hB
 
-theorem card_zero : IsEta α 0 := fun _ _ hs _ _ ↦
-  (hs.trans_le (Cardinal.zero_le _)).false.elim
+protected theorem zero : IsEta α 0 := fun _ _ hs ↦
+  (not_lt_bot hs).elim
 
 theorem le_card (h : IsEta α c) (hc : c' ≤ c) : IsEta α c' :=
   fun s t hs ht hB ↦ h s t (hs.trans_le hc) (ht.trans_le hc) hB
@@ -76,8 +74,6 @@ theorem noMaxOrder_of_isEta (hc : 1 < c) (h : IsEta α c) [Nonempty α] : NoMaxO
     have ⟨z, hz₁, hz₂⟩ : ∃z, (∀ _x ∈ ({x} : Set α), _x < z) ∧ ∀ y ∈ (∅ : Set α), z < y := by
       refine exists_between h  ?_ ?_ ?_ <;> simp [lt_trans zero_lt_one hc,hc]
     ⟨z, hz₁ x (Set.mem_singleton x)⟩⟩
-
-example [IsEmpty α] : NoMaxOrder α := inferInstance
 
 theorem noBotOrder_of_isEta (hc : 1 < c) (h : IsEta α c) [Nonempty α] : NoBotOrder α :=
   (noBotOrder_iff_noMinOrder α).2 (noMinOrder_of_isEta hc h)
