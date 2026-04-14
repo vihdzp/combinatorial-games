@@ -9,6 +9,7 @@ public import CombinatorialGames.Surreal.Pow
 public import Mathlib.Order.Shrink
 public import Mathlib.RingTheory.HahnSeries.Lex
 
+import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Ring.Subring.Order
 import Mathlib.RingTheory.HahnSeries.Cardinal
 
@@ -42,42 +43,44 @@ attribute [aesop simp] Pi.single_apply
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
-open Ordinal in
-theorem Ordinal.type_lt_Iio (o : Ordinal.{u}) : typeLT (Set.Iio o) = lift.{u + 1} o := by
-  convert ToType.mk.toRelIsoLT.ordinal_lift_type_eq
-  · rw [lift_id'.{u, u+1}]
-  · rw [type_toType]
-
 /-- This is like `RelIso.cast` with better def-eqs. -/
 def RelIso.subrel {α : Type*} (r : α → α → Prop) {p q : α → Prop} (H : ∀ x, p x ↔ q x) :
     Subrel r p ≃r Subrel r q where
   map_rel_iff' := .rfl
   __ := Equiv.subtypeEquiv (Equiv.refl _) H
 
+private def toLexRingEquiv {R : Type*} [Ring R] : R ≃+* Lex R where
+  toFun := toLex
+  invFun := ofLex
+  map_add' _ _ := rfl
+  map_mul' _ _ := rfl
+
 open Order Set
 
 /-! ### Basic defs and instances -/
 
-set_option backward.isDefEq.respectTransparency false in
+/-- `SurrealHahnSeries` as a subfield. -/
+private def surrealHahnSeriesSubfield : Subfield (Lex <| HahnSeries Surrealᵒᵈ ℝ) :=
+  have : Fact (_ < _) := ⟨Cardinal.aleph0_lt_univ.{u, u}⟩
+  (HahnSeries.cardSuppLTSubfield Surrealᵒᵈ ℝ .univ).comap toLexRingEquiv.toRingHom
+
 /-- The type of `u`-small Hahn series over `Surrealᵒᵈ`, endowed with the lexicographic ordering. We
 will show that this type is isomorphic as an ordered field to the surreals themselves. -/
 def SurrealHahnSeries : Type (u + 1) :=
-  have : Fact (_ < _) := ⟨Cardinal.aleph0_lt_univ.{u, u}⟩
-  show Subfield (Lex _) from HahnSeries.cardSuppLTSubfield Surrealᵒᵈ ℝ .univ
+  surrealHahnSeriesSubfield
 
 namespace SurrealHahnSeries
 
 @[no_expose]
-instance : Field SurrealHahnSeries := by
-  unfold SurrealHahnSeries; infer_instance
+instance : Field SurrealHahnSeries :=
+  inferInstanceAs (Field surrealHahnSeriesSubfield)
 
 @[no_expose]
-instance : LinearOrder SurrealHahnSeries := by
-  unfold SurrealHahnSeries; infer_instance
+instance : LinearOrder SurrealHahnSeries :=
+  inferInstanceAs (LinearOrder surrealHahnSeriesSubfield)
 
-set_option backward.isDefEq.respectTransparency false in
-instance : IsStrictOrderedRing SurrealHahnSeries := by
-  unfold SurrealHahnSeries; infer_instance
+instance : IsStrictOrderedRing SurrealHahnSeries :=
+  inferInstanceAs (IsStrictOrderedRing surrealHahnSeriesSubfield)
 
 open Cardinal in
 /-- A constructor for `SurrealHahnSeries` which hides various implementation details. -/
@@ -406,10 +409,10 @@ theorem coeffIdx_zero : coeffIdx 0 = 0 := by
 theorem coeff_exp (x : SurrealHahnSeries) (i) : x.coeff (x.exp i) = x.coeffIdx i :=
   (coeffIdx_of_lt _).symm
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem coeffIdx_symm_exp (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
-  rw [coeffIdx_of_lt] <;> simp
+  rw [coeffIdx_of_lt (by simp)]
+  simp
 
 @[simp]
 theorem coeffIdx_eq_zero_iff {x : SurrealHahnSeries} {i : Ordinal} :
@@ -450,10 +453,10 @@ theorem truncIdx_zero : truncIdx 0 = 0 := by
 theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i :=
   (truncIdx_of_lt _).symm
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by
-  rw [truncIdx_of_lt] <;> simp
+  rw [truncIdx_of_lt (by simp)]
+  simp
 
 theorem support_truncIdx_ssubset {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
     support (truncIdx x i) ⊂ support x := by
