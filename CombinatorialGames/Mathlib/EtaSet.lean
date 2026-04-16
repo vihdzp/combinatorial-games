@@ -50,7 +50,7 @@ protected alias ⟨_,dual⟩ := isEta_dual
 
 to_dual_insert_cast IsEta := propext <| by
   rw [(by rfl : (∀ ⦃s t : Set α⦄, #↑s < c → #↑t < c → (∀ x ∈ s, ∀ y ∈ t, x < y) →
-    ∃ z, (∀ x ∈ s, x < z) ∧ ∀ y ∈ t, z < y) = IsEta c α),isEta_dual]
+    ∃ z, (∀ x ∈ s, x < z) ∧ ∀ y ∈ t, z < y) = IsEta c α), isEta_dual]
   rfl
 
 @[to_dual reorder]
