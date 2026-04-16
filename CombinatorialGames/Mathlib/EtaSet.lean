@@ -39,18 +39,22 @@ open Order OrderType
 
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
+@[simp]
+theorem isEta_def (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : (∀ ⦃s t : Set α⦄, #s < c →
+#t < c → (∀ x ∈ s, ∀ y ∈ t, x < y) → ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y)) ↔ IsEta c α :=
+  Iff.of_eq rfl
+
 /-- `IsEta` is unchanged under the order dual. -/
 theorem isEta_dual (c : Cardinal.{u}) :  ∀ (α : Type u) [LinearOrder α], IsEta c α ↔ IsEta c αᵒᵈ :=
-  fun _ ↦ ⟨fun hη s t hs ht hst ↦
-    let ⟨z,hz⟩ := hη (t := s) (s := t) ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z,hz.symm⟩,
-  fun hη s t hs ht hst ↦
-    let ⟨z,hz⟩ := hη (t := s) (s := t) ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z,hz.symm⟩⟩
+  fun _ ↦ ⟨fun hη _ _ hs ht hst ↦
+    let ⟨z,hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩,
+  fun hη _ _ hs ht hst ↦
+    let ⟨z,hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩⟩
 
 protected alias ⟨_,dual⟩ := isEta_dual
 
 to_dual_insert_cast IsEta := propext <| by
-  rw [(by rfl : (∀ ⦃s t : Set α⦄, #↑s < c → #↑t < c → (∀ x ∈ s, ∀ y ∈ t, x < y) →
-    ∃ z, (∀ x ∈ s, x < z) ∧ ∀ y ∈ t, z < y) = IsEta c α), isEta_dual]
+  rw [isEta_def,isEta_dual]
   rfl
 
 @[to_dual reorder]
