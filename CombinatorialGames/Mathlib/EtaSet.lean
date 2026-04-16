@@ -106,11 +106,11 @@ private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun
   · simpa [e.apply_symm_apply] using (e.lt_iff_lt).mpr (hz₂ (e.symm y) ⟨y, hy, rfl⟩)
 
 /-- Order-isomorphic linear orders satisfy `IsEta` for the same cardinal. -/
-protected theorem congr (e : α ≃o β) : IsEta c α = IsEta c β :=
-  propext <| ⟨of_isEta_iso e, of_isEta_iso e.symm⟩
+protected theorem congr (e : α ≃o β) : IsEta c α ↔ IsEta c β :=
+  ⟨of_isEta_iso e, of_isEta_iso e.symm⟩
 
 theorem orderType_eq (h : type α = type β) : IsEta c α = IsEta c β :=
-  IsEta.congr (type_eq_type.mp h).some
+  propext <| IsEta.congr (type_eq_type.mp h).some
 
 protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMinOrder α] :
     IsEta aleph0 α := fun s t hs ht hB ↦ by
