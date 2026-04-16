@@ -26,7 +26,7 @@ If `α` is a type with a `LinearOrder` , and `c` is some `Cardinal` in the same 
 greater than all elements of `X` and less than all elements of
 `Y`.
 
-In the literature, η_α would be an `α` such that `IsEta ℵ_α α` holds,
+In the literature, η_α would be `IsEta ℵ_α` ordered,
 but this definition is more general.
 -/
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=
@@ -39,6 +39,21 @@ open Order OrderType
 
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
+/-- `IsEta` is unchanged under the order dual. -/
+theorem isEta_dual (c : Cardinal.{u}) :  ∀ (α : Type u) [LinearOrder α], IsEta c α ↔ IsEta c αᵒᵈ :=
+  fun _ ↦ ⟨fun hη s t hs ht hst ↦
+    let ⟨z,hz⟩ := hη (t := s) (s := t) ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z,hz.symm⟩,
+  fun hη s t hs ht hst ↦
+    let ⟨z,hz⟩ := hη (t := s) (s := t) ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z,hz.symm⟩⟩
+
+protected alias ⟨_,dual⟩ := isEta_dual
+
+to_dual_insert_cast IsEta := propext <| by
+  rw [(by rfl : (∀ ⦃s t : Set α⦄, #↑s < c → #↑t < c → (∀ x ∈ s, ∀ y ∈ t, x < y) →
+    ∃ z, (∀ x ∈ s, x < z) ∧ ∀ y ∈ t, z < y) = IsEta c α),isEta_dual]
+  rfl
+
+@[to_dual reorder]
 theorem exists_between (h : IsEta c α) {s t : Set α} (hs : #s < c) (ht : #t < c)
     (hB : ∀ x ∈ s, ∀ y ∈ t, x < y) : ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y) :=
   h hs ht hB
@@ -64,17 +79,12 @@ protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered 
       refine exists_between h ?_ ?_ ?_ <;> simpa
     exact ⟨z, hz.1 x rfl, hz.2 y rfl⟩ ⟩
 
+@[to_dual]
 protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α :=
-  ⟨fun x ↦
-    have ⟨z, hz, hz₂⟩ : ∃ z, (∀ x ∈ (∅ :  Set α), x < z) ∧ (∀ y ∈ ({x} : Set α), z < y) := by
+  ⟨fun x ↦ by
+    obtain ⟨z, hz, hz₂⟩ : ∃ z, (∀ x ∈ (∅ :  Set α), x < z) ∧ (∀ y ∈ ({x} : Set α), z < y) := by
       refine exists_between h ?_ ?_ ?_ <;> simp [hc,lt_trans zero_lt_one hc]
-    ⟨z, hz₂ x (Set.mem_singleton x)⟩⟩
-
-protected theorem noMaxOrder (hc : 1 < c) (h : IsEta c α) : NoMaxOrder α :=
-  ⟨fun x ↦
-    have ⟨z, hz₁, hz₂⟩ : ∃z, (∀ _x ∈ ({x} : Set α), _x < z) ∧ ∀ y ∈ (∅ : Set α), z < y := by
-      refine exists_between h  ?_ ?_ ?_ <;> simp [lt_trans zero_lt_one hc,hc]
-    ⟨z, hz₁ x (Set.mem_singleton x)⟩⟩
+    exact ⟨z, hz₂ x (Set.mem_singleton x)⟩⟩
 
 open Classical in
 /-- When `1 < c`, an `IsEta c α` linear order is nontrivial. -/
@@ -85,36 +95,22 @@ protected theorem nontrivial (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Nontr
     (by rw [mk_eq_zero]; exact bot_lt_iff_ne_bot.2 (ne_of_gt (lt_trans zero_lt_one hc))) (by simp)
   exact nontrivial_of_lt b z (hbz b (Set.mem_singleton b))
 
+private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun H s t hs ht hsep ↦ by
+  obtain ⟨z, hz₁, hz₂⟩ := by
+    refine @H (e.symm '' s) (e.symm '' t) ?_ ?_ (fun a ⟨x, hx, ((hex: e.symm x = a))⟩ b
+    ⟨y, hy, (hey : e.symm y = b)⟩ ↦ by
+      simpa [e.lt_iff_lt,←hex,←hey] using hsep x hx y hy) <;>
+    simpa [mk_image_eq e.symm.injective]
+  refine ⟨e z, fun x hx ↦ ?_, fun y hy ↦ ?_⟩
+  · grind [e.apply_symm_apply,(e.lt_iff_lt).mpr,(e.lt_iff_lt).mpr (hz₁ (e.symm x) ⟨x, hx, rfl⟩)]
+  · simpa [e.apply_symm_apply] using (e.lt_iff_lt).mpr (hz₂ (e.symm y) ⟨y, hy, rfl⟩)
+
 /-- Order-isomorphic linear orders satisfy `IsEta` for the same cardinal. -/
 protected theorem congr (e : α ≃o β) : IsEta c α = IsEta c β :=
-  propext <| by
-    refine ⟨fun H s t hs ht hsep ↦ ?_, fun H s t hs ht hsep ↦ ?_⟩
-    · obtain ⟨z, hz₁, hz₂⟩ := by
-        refine @H (e.symm '' s) (e.symm '' t) ?_ ?_ (fun a ⟨x, hx, ((hex: e.symm x = a))⟩ b
-        ⟨y, hy, (hey : e.symm y = b)⟩ ↦ by
-          simpa [e.lt_iff_lt,←hex,←hey] using hsep x hx y hy) <;>
-        simpa [mk_image_eq e.symm.injective]
-      refine ⟨e z, fun x hx ↦ ?_, fun y hy ↦ ?_⟩
-      · grind [e.apply_symm_apply,(e.lt_iff_lt).mpr,(e.lt_iff_lt).mpr (hz₁ (e.symm x) ⟨x, hx, rfl⟩)]
-      · simpa [e.apply_symm_apply] using (e.lt_iff_lt).mpr (hz₂ (e.symm y) ⟨y, hy, rfl⟩)
-    · obtain ⟨z : β, hz₁ : ∀ x ∈ ⇑e '' s, x < z, hz₂ : ∀ y ∈ ⇑e '' t, z < y⟩ :=
-        by refine @H (e '' s) (e '' t) ?_ ?_ ?_ <;> simpa [mk_image_eq e.injective]
-      refine ⟨e.symm z, fun x hx ↦ ?_, fun y hy ↦ ?_⟩
-      <;> rw [← e.lt_iff_lt, e.apply_symm_apply]
-      · exact hz₁ (e x) ⟨x, hx, rfl⟩
-      · exact hz₂ (e y) ⟨y, hy, rfl⟩
+  propext <| ⟨of_isEta_iso e, of_isEta_iso e.symm⟩
 
 theorem orderType_eq (h : type α = type β) : IsEta c α = IsEta c β :=
   IsEta.congr (type_eq_type.mp h).some
-
-/-- `IsEta` is unchanged under the order dual. -/
-theorem isEta_dual : IsEta c αᵒᵈ ↔ IsEta c α := by
-  refine ⟨fun H s t hs ht hB ↦ ?_, fun H s t hs ht hB ↦ ?_⟩
-  <;> obtain ⟨z, hz₁, hz₂⟩ := @H t s ht hs fun x hx y hy ↦ hB y hy x hx
-  · exact ⟨z, fun x hx ↦ hz₂ x hx, fun y hy ↦ hz₁ y hy⟩
-  · exact ⟨z, fun x hx ↦ hz₂ x hx, fun y hy ↦ hz₁ y hy⟩
-
-protected alias ⟨_,dual⟩ := isEta_dual
 
 protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMinOrder α] :
     IsEta aleph0 α := fun s t hs ht hB ↦ by
@@ -122,26 +118,6 @@ protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMi
   exact Set.Finite.exists_between' hs ht hB
 
 theorem Rat.isEta_aleph0 : IsEta aleph0 ℚ := .aleph0
-
-variable {α β : Type u} [LinearOrder α] [LinearOrder β]
-
-/-- Given `IsEta #α β` and a countable `α` , `α` embeds into `β` with an order embedding. -/
-theorem OrderType.type_le_type_of_isEta_of_countable [Countable α] (h : IsEta (#α) β) :
-    type α ≤ type β := by
-  rcases isEmpty_or_nonempty α with hαe | hαn
-  · rw [type_eq_zero.2 hαe]
-    exact OrderType.zero_le _
-  rcases lt_or_ge (1 : Cardinal) (#α) with h1α | hα1
-  · have hβ := h.nonempty <| mk_ne_zero α
-    have _ := h.denselyOrdered h1α
-    haveI _ := h.nontrivial h1α
-    exact type_le_type (Order.embedding_from_countable_to_dense (α := α) (β := β)).some
-  · classical
-    have hβ := h.nonempty <| mk_ne_zero α
-    have hu : Subsingleton α := le_one_iff_subsingleton.1 hα1
-    let b : β := Classical.choice hβ
-    refine type_le_type (OrderEmbedding.ofStrictMono (fun _ : α => b) fun x y hxy ↦ ?_)
-    exact False.elim (lt_irrefl x (hxy.trans_eq (hu.elim y x)))
 
 section
 
