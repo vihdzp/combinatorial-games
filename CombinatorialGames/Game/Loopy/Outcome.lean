@@ -7,6 +7,8 @@ module
 
 public import CombinatorialGames.Game.Loopy.IGame
 
+import CombinatorialGames.Game.Basic
+
 /-!
 # Outcomes of loopy games
 
