@@ -88,6 +88,10 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
 alias IsGroup.pos := IsGroup.zero_lt
 
+theorem IsGroup.one_le (h : IsGroup x) : 1 ≤ x := by
+  rw [Nimber.one_le_iff_ne_zero]
+  exact h.ne_zero
+
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
@@ -287,6 +291,10 @@ attribute [aesop forward safe] IsRing.toIsGroup
 theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
+
+theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
+  rw [← one_add_one_eq_two, ← succ_of, Order.succ_le_iff]
+  exact h.one_lt
 
 theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
     y ^ n < x := by
