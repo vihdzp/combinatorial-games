@@ -11,6 +11,7 @@ public import Mathlib.Algebra.Group.Pointwise.Set.Small
 
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
+import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
@@ -443,6 +444,16 @@ theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
   rw [← Set.image_neg_eq_neg]
   exact moves_corec ..
 
+@[game_cmp]
+theorem forall_moves_neg {P : LGame → Prop} {p : Player} {x : LGame} :
+    (∀ y ∈ (-x).moves p, P y) ↔ (∀ y ∈ x.moves (-p), P (-y)) := by
+  simp
+
+@[game_cmp]
+theorem exists_moves_neg {P : LGame → Prop} {p : Player} {x : LGame} :
+    (∃ y ∈ (-x).moves p, P y) ↔ (∃ y ∈ x.moves (-p), P (-y)) := by
+  simp
+
 @[simp]
 theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -!{s | t} = !{-t | -s} := by
   ext p; cases p <;> simp
@@ -502,6 +513,26 @@ theorem moves_add (p : Player) (x y : LGame) :
   apply (moves_corec ..).trans
   rw [image_union, image_image, image_image]
   rfl
+
+theorem add_left_mem_moves_add {p : Player} {x y : LGame} (h : x ∈ y.moves p) (z : LGame) :
+    z + x ∈ (z + y).moves p := by
+  rw [moves_add]; right; use x
+
+theorem add_right_mem_moves_add {p : Player} {x y : LGame} (h : x ∈ y.moves p) (z : LGame) :
+    x + z ∈ (y + z).moves p := by
+  rw [moves_add]; left; use x
+
+@[game_cmp]
+theorem forall_moves_add {p : Player} {P : LGame → Prop} {x y : LGame} :
+    (∀ a ∈ (x + y).moves p, P a) ↔
+      (∀ a ∈ x.moves p, P (a + y)) ∧ (∀ b ∈ y.moves p, P (x + b)) := by
+  aesop
+
+@[game_cmp]
+theorem exists_moves_add {p : Player} {P : LGame → Prop} {x y : LGame} :
+    (∃ a ∈ (x + y).moves p, P a) ↔
+      (∃ a ∈ x.moves p, P (a + y)) ∨ (∃ b ∈ y.moves p, P (x + b)) := by
+  aesop
 
 @[simp]
 theorem add_eq_zero_iff {x y : LGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
