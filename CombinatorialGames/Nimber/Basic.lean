@@ -3,10 +3,13 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public meta import CombinatorialGames.Tactic.Register
+public import CombinatorialGames.NatOrdinal.Basic
+
 import CombinatorialGames.Tactic.OrdinalAlias
-import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
-import Mathlib.SetTheory.Ordinal.Family
 
 /-!
 # Nimbers
@@ -41,7 +44,7 @@ universe u v
 
 open Function Order
 
-noncomputable section
+public noncomputable section
 
 /-! ### Basic casts between `Ordinal` and `Nimber` -/
 
@@ -51,22 +54,31 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
+attribute [simp] succ_zero succ_ne_zero
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
+
+@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
+theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
+
+@[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
+
+theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
 /-! ### Nimber addition -/
 
 variable {a b c : Nimber.{u}}
 
-/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
-`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 -- We write the binders like this so that the termination checker works.
-protected def add (a b : Nimber.{u}) : Nimber.{u} :=
+private def add (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
     ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
 termination_by (a, b)
 
+/-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
+`a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
+@[no_expose]
 instance : Add Nimber :=
   ⟨Nimber.add⟩
 
@@ -99,6 +111,21 @@ private theorem add_ne_of_lt (a b : Nimber) :
   have H := csInf_mem (add_nonempty a b)
   rw [← add_def] at H
   simpa using H
+
+/-- A version of `add_le_nadd` stated in terms of `Ordinal`. -/
+theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + NatOrdinal.of b).val := by
+  rw [val_le_iff]
+  apply add_le_of_forall_ne
+  all_goals
+    intro c hc
+    cases c with | of c
+    rw [← val_eq_iff.ne]
+    apply ((add_le_nadd' ..).trans_lt _).ne
+    simpa
+termination_by (a, b)
+
+theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
+  add_le_nadd' ..
 
 protected theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
@@ -192,20 +219,6 @@ instance : AddCommGroupWithOne Nimber where
   zsmul := zsmulRec
   neg_add_cancel := add_self
   add_comm := Nimber.add_comm
-
-theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
-  induction n <;> aesop
-
-@[game_cmp]
-theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
-  simp [natCast_eq_if, Nat.even_iff]
-
-@[simp, game_cmp]
-theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
-  natCast_eq_mod n
-
--- This lets `game_cmp` reduce any instances of `NatCast`.
-attribute [game_cmp] Nat.reduceMod
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by

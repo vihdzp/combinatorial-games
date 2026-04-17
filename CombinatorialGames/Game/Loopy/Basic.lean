@@ -3,14 +3,17 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
+module
+
+public import CombinatorialGames.Game.Player
+public import Mathlib.Algebra.BigOperators.Group.Multiset.Defs
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
+
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Algebra.Ring.Defs
 import Mathlib.Data.Countable.Small
-import Mathlib.Data.Set.Finite.Basic
-import Mathlib.Logic.Small.Set
 
 /-!
 # Loopy games
@@ -48,6 +51,10 @@ variable {α : Type v} {β : Type w}
 
 /-! ### For Mathlib -/
 
+theorem Set.forall_mem_union {P : α → Prop} {s t : Set α} :
+    (∀ x ∈ s ∪ t, P x) ↔ (∀ x ∈ s, P x) ∧ (∀ x ∈ t, P x) := by
+  simp_rw [mem_union, or_imp, forall_and]
+
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
   small_lift.{u, v + 1, v} α
@@ -65,7 +72,7 @@ theorem QPF.Cofix.unique {F : Type u → Type u} [QPF F] {α : Type u}
   rw [hf, hg, ← QPF.comp_map, ← QPF.comp_map]
   exact ⟨rfl, rfl⟩
 
-noncomputable section
+public noncomputable section
 
 /-! ### Game moves -/
 
@@ -94,27 +101,14 @@ scoped notation:max x:max "ᴿ" => moves right x
 
 instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 
-/-- `IsOption x y` means that `x` is either a left or a right move for `y`. -/
-def IsOption (x y : LGame) : Prop :=
-  x ∈ ⋃ p, y.moves p
-
-@[aesop simp]
-lemma isOption_iff_mem_union {x y : LGame} : IsOption x y ↔ x ∈ yᴸ ∪ yᴿ := by
-  simp [IsOption, Player.exists]
-
-theorem IsOption.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : IsOption x y :=
-  ⟨_, ⟨p, rfl⟩, h⟩
-
-instance (x : LGame.{u}) : Small.{u} {y // IsOption y x} :=
-  inferInstanceAs (Small (⋃ p, x.moves p))
-
-/-- A (proper) subposition is any game in the transitive closure of `IsOption`. -/
+/-- A (proper) subposition is any game reachable a nonempty sequence of
+(not necessarily alternating) left and right moves. -/
 def Subposition : LGame → LGame → Prop :=
-  Relation.TransGen IsOption
+  Relation.TransGen fun a b => a ∈ ⋃ p, b.moves p
 
 @[aesop unsafe apply 50%]
 theorem Subposition.of_mem_moves {p} {x y : LGame} (h : x ∈ y.moves p) : Subposition x y :=
-  Relation.TransGen.single (.of_mem_moves h)
+  Relation.TransGen.single (mem_iUnion_of_mem p h)
 
 theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subposition y z) :
     Subposition x z :=
@@ -123,6 +117,35 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
 instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
   small_transGen' _ x
 
+@[elab_as_elim]
+theorem Subposition.head_induction {y : LGame} {motive : (x : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p x hx, motive x (@Subposition.of_mem_moves p x y hx))
+    (trans : ∀ p x z hx hz, motive z hz →
+      motive x (.trans (@Subposition.of_mem_moves p x z hx) hz))
+    (x : LGame) (hx : Subposition x y) : motive x hx :=
+  Relation.TransGen.head_induction_on hx
+    (fun h => (Set.mem_iUnion.1 h).elim fun p h => of_mem_moves p _ h)
+    (fun h₁ h₂ ih => (Set.mem_iUnion.1 h₁).elim fun p h₁ => trans p _ _ h₁ h₂ ih)
+
+@[elab_as_elim]
+theorem Subposition.tail_induction {x : LGame} {motive : (y : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p y hy, motive y (@Subposition.of_mem_moves p x y hy))
+    (trans : ∀ p y z hy hz, motive z hz →
+      motive y (.trans hz (@Subposition.of_mem_moves p z y hy)))
+    (y : LGame) (hy : Subposition x y) : motive y hy :=
+  Relation.TransGen.rec
+    (fun h => (Set.mem_iUnion.1 h).elim fun p h => of_mem_moves p _ h)
+    (fun h₁ h₂ ih => (Set.mem_iUnion.1 h₂).elim fun p h₂ => trans p _ _ h₂ h₁ ih) hy
+
+@[elab_as_elim]
+theorem Subposition.trans_induction {motive : (x y : LGame) → Subposition x y → Prop}
+    (of_mem_moves : ∀ p x y hxy, motive x y (@Subposition.of_mem_moves p x y hxy))
+    (trans : ∀ x y z hx hy, motive x z hx → motive z y hy → motive x y (.trans hx hy))
+    (x y : LGame) (hxy : Subposition x y) : motive x y hxy :=
+  Subposition.tail_induction (fun p => of_mem_moves p x)
+    (fun p y z hy hz ih => trans x y z hz (.of_mem_moves hy) ih (of_mem_moves p z y hy)) y hxy
+
+set_option backward.isDefEq.respectTransparency false in
 /-- Two loopy games are equal when there exists a bisimulation between them.
 
 A way to think about this is that `r` defines a pairing between nodes of the game trees, which then
@@ -203,12 +226,14 @@ type. As an example, `on = !{on | }` is defined as `corec (Player.cases ⊤ ⊥)
 def corec : LGame.{u} :=
   corec' mov init ⟨_, .refl⟩
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem corec'_trans {x} (hx : Reachable mov init x)
   (y : Subtype (Reachable mov x)) :
     corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
+set_option backward.isDefEq.respectTransparency false in
 private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x : LGame} :
     (∃ ha : Reachable mov init a, corec' _ init ⟨a, ha⟩ = x) ↔
     corec mov a = x := by
@@ -220,6 +245,7 @@ private theorem corec'_aux {a} (ha : a ∈ mov left init ∪ mov right init) {x 
     use .single ha
     simp [corec'_trans _ _ (.single ha)]
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
   rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
@@ -232,6 +258,7 @@ theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
   funext (moves_corec p mov)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem hom_unique_apply {mov : Player → α → Set α}
     [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
@@ -290,6 +317,7 @@ theorem corec_moves_apply (x : LGame) : corec moves x = x := by simp
 
 It's not possible to create a non-well-founded game through this constructor alone. For that,
 see `LGame.corec`. -/
+@[no_expose]
 instance : OfSets LGame.{u} fun _ ↦ True where
   ofSets lr _ :=
     have this (p) : ∀ (a : Option LGame),
@@ -338,7 +366,6 @@ def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
 @[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
 @[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
-@[simp] theorem isOption_on_iff {x : LGame} : IsOption x on ↔ x = on := by simp [IsOption]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
@@ -353,7 +380,6 @@ def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
 @[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
 @[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
-@[simp] theorem isOption_off_iff {x : LGame} : IsOption x off ↔ x = off := by simp [IsOption]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
@@ -367,7 +393,6 @@ theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
 @[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
-@[simp] theorem isOption_dud_iff {x : LGame} : IsOption x dud ↔ x = dud := by simp [IsOption]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 
 theorem eq_dud {x : LGame} : x = dud ↔ xᴸ = {x} ∧ xᴿ = {x} := by
@@ -393,11 +418,12 @@ theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 /-! ### Negation -/
 
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
+@[no_expose]
 instance : Neg LGame where
   neg := corec fun p ↦ moves (-p)
 
-@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := rfl
-theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := rfl
+@[simp] theorem corec_moves_neg : corec (fun p ↦ moves (-p)) = (- ·) := (rfl)
+theorem corec_moves_neg_apply (x : LGame) : corec (fun p ↦ moves (-p)) x = -x := (rfl)
 
 theorem neg_corec (mov : Player → α → Set α)
     [∀ x, Small.{u} (mov left x)] [∀ x, Small.{u} (mov right x)] :
@@ -410,7 +436,7 @@ theorem neg_corec_apply (mov : Player → α → Set α)
   congrFun (neg_corec ..) _
 
 instance : InvolutiveNeg LGame where
-  neg_neg _ := (neg_corec_apply ..).trans (corec_moves_apply ..)
+  neg_neg _ := by exact (neg_corec_apply ..).trans (corec_moves_apply ..)
 
 @[simp]
 theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
@@ -441,12 +467,9 @@ instance : NegZeroClass LGame where
 @[simp]
 theorem neg_tis : -tis = tisn := by
   refine eq_of_bisim (fun a b ↦ a = -tis ∧ b = tisn ∨ a = -tisn ∧ b = tis) ?_ (.inl ⟨rfl, rfl⟩)
-  rintro x y (⟨rfl, rfl⟩ | ⟨rfl, rfl⟩) (_ | _)
-  on_goal 1 => use ∅
-  on_goal 2 => use {(-tisn, tis)}
-  on_goal 3 => use {(-tis, tisn)}
-  on_goal 4 => use ∅
-  all_goals simp
+  intro x y hxy p
+  use x.moves p ×ˢ y.moves p
+  rcases hxy with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ <;> cases p <;> simp
 
 @[simp]
 theorem neg_tisn : -tisn = tis := by
@@ -455,6 +478,7 @@ theorem neg_tisn : -tisn = tis := by
 /-! ### Addition -/
 
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
+@[no_expose]
 instance : Add LGame where
   add x y := corec
     (fun p x ↦ (fun y ↦ (y, x.2)) '' moves p x.1 ∪ (fun y ↦ (x.1, y)) '' moves p x.2)
@@ -476,7 +500,8 @@ theorem corec_add_corec
 theorem moves_add (p : Player) (x y : LGame) :
     (x + y).moves p = (· + y) '' x.moves p ∪ (x + ·) '' y.moves p := by
   apply (moves_corec ..).trans
-  aesop (erase Player)
+  rw [image_union, image_image, image_image]
+  rfl
 
 @[simp]
 theorem add_eq_zero_iff {x y : LGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
@@ -486,14 +511,18 @@ private theorem add_zero' (x : LGame) : x + 0 = x := by
   refine eq_of_bisim (fun x y ↦ x = y + 0) ?_ rfl
   rintro a b rfl
   refine fun p ↦ ⟨(fun x ↦ (x + 0, x)) '' b.moves p, ?_⟩
-  cases p <;> simp [image_image]
+  simp [image_image]
 
 private theorem add_comm' (x y : LGame) : x + y = y + x := by
   apply eq_of_bisim (fun x y ↦ ∃ a b, x = a + b ∧ y = b + a) ?_ ⟨x, y, rfl, rfl⟩
   rintro _ _ ⟨a, b, rfl, rfl⟩
   refine fun p ↦
-    ⟨(fun x ↦ (x + b, b + x)) '' a.moves p ∪ (fun x ↦ (a + x, x + a)) '' b.moves p, ?_, ?_⟩
-  all_goals aesop (erase Player)
+    ⟨(fun x ↦ (x + b, b + x)) '' a.moves p ∪
+    (fun x ↦ (a + x, x + a)) '' b.moves p, ?_, ?_, ?_⟩
+  · simp_rw [moves_add, image_union, image_image]
+  · simp_rw [moves_add, image_union, image_image, union_comm]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, rfl, rfl⟩
 
 private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   apply eq_of_bisim (fun x y ↦ ∃ a b c, x = a + b + c ∧ y = a + (b + c)) ?_ ⟨x, y, z, rfl, rfl⟩
@@ -501,14 +530,17 @@ private theorem add_assoc' (x y z : LGame) : x + y + z = x + (y + z) := by
   refine fun p ↦
     ⟨(fun x ↦ (x + b + c, x + (b + c))) '' a.moves p ∪
     (fun x ↦ (a + x + c, a + (x + c))) '' b.moves p ∪
-    (fun x ↦ (a + b + x, a + (b + x))) '' c.moves p, ?_, ?_⟩
-  all_goals aesop (add simp [image_union]) (erase Player)
+    (fun x ↦ (a + b + x, a + (b + x))) '' c.moves p, ?_, ?_, ?_⟩
+  · simp_rw [moves_add, image_union, image_image]
+  · simp_rw [moves_add, image_union, image_image, union_assoc]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, _, rfl, rfl⟩
 
 instance : AddCommMonoid LGame where
-  add_zero := add_zero'
-  zero_add _ := add_comm' .. ▸ add_zero' _
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_zero := by exact add_zero'
+  zero_add _ := by exact add_comm' .. ▸ add_zero' _
+  add_comm := by exact add_comm'
+  add_assoc := by exact add_assoc'
   nsmul := nsmulRec
 
 @[simp]
@@ -525,8 +557,12 @@ theorem add_dud (x : LGame) : x + dud = dud := by
   refine eq_of_bisim (fun x y ↦ (∃ b, x = b + dud) ∧ y = dud) ?_ ⟨⟨x, rfl⟩, rfl⟩
   rintro _ _ ⟨⟨x, rfl⟩, rfl⟩
   refine fun p ↦
-    ⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.moves p), ?_, ?_⟩
-  all_goals aesop
+    ⟨insert (x + dud, dud) ((fun y ↦ (y + dud, dud)) '' x.moves p), ?_, ?_, ?_⟩
+  · simp_rw [moves_add, moves_dud, image_singleton, image_insert_eq, image_image, union_singleton]
+  · simp_rw [moves_dud, image_insert_eq, image_image, ← @image_insert_eq _ _ (fun _ => dud) dud _,
+      (Set.insert_nonempty _ _).image_const /- TODO: `Set.insert_nonempty` is misnamed -/]
+  · simp_rw [Set.forall_mem_insert, Set.forall_mem_image, and_true]
+    exact ⟨⟨_, rfl⟩, fun _ _ => ⟨_, rfl⟩⟩
 
 @[simp]
 theorem dud_add (x : LGame) : dud + x = dud := by
@@ -567,8 +603,11 @@ private theorem neg_add' (x y : LGame) : -(x + y) = -x + -y := by
   rintro _ _ ⟨a, b, rfl, rfl⟩
   refine fun p ↦
     ⟨(fun x ↦ (-(x + b), -x + -b)) '' a.moves (-p) ∪
-    (fun x ↦ (-(a + x), -a + -x)) '' b.moves (-p), ?_, ?_⟩
-  all_goals aesop (add simp [image_union]) (erase Player)
+    (fun x ↦ (-(a + x), -a + -x)) '' b.moves (-p), ?_, ?_, ?_⟩
+  · simp_rw [moves_neg, moves_add, ← Set.image_neg_eq_neg, Set.image_union, Set.image_image]
+  · simp_rw [moves_add, moves_neg, ← Set.image_neg_eq_neg, Set.image_union, Set.image_image]
+  · simp_rw [forall_mem_union, forall_mem_image]
+    constructorm* _ ∧ _ <;> intro _ _ <;> exact ⟨_, _, rfl, rfl⟩
 
 instance : SubtractionCommMonoid LGame where
   neg_neg := neg_neg
@@ -633,6 +672,7 @@ theorem neg_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Playe
   Multiset.map_erase _ (fun _ ↦ by simp) ..
 
 /-- Swaps the entries in all pairs. -/
+@[expose]
 def swap (x : MulTy α β) : MulTy β α :=
   x.map (fun a ↦ (a.1, a.2.swap))
 
@@ -669,6 +709,7 @@ theorem swap_erase [DecidableEq α] [DecidableEq β] (x : MulTy α β) (a : Play
 /-- The general form of an option of `x * y` is `a * y + x * b - a * b`.
 
 If the player argument is left, all signs are flipped. -/
+@[expose]
 def mulOption (p : Player) (x : α × β) (y : α × β) : MulTy α β :=
   {(p, y.1, x.2), (p, x.1, y.2), (-p, y.1, y.2)}
 
@@ -913,6 +954,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `LGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
+@[no_expose]
 instance _root_.LGame.instMul : Mul LGame where
   mul x y := toLGame moves moves (right, x, y)
 
@@ -928,7 +970,7 @@ end MulTy
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot]
+@[pp_nodot, expose]
 def mulOption (x y a b : LGame) : LGame :=
   a * y + x * b - a * b
 
@@ -946,7 +988,7 @@ theorem moves_mulOption (p : Player) (x y a b : LGame) :
   rfl
 
 instance : CommMagma LGame where
-  mul_comm _ _ := (MulTy.corec_swap ..).symm
+  mul_comm _ _ := by exact (MulTy.corec_swap ..).symm
 
 instance : MulZeroClass LGame where
   zero_mul x := by ext p; cases p <;> simp
@@ -959,8 +1001,8 @@ private theorem one_mul' (x : LGame) : 1 * x = x := by
   aesop
 
 instance : MulOneClass LGame where
-  one_mul := one_mul'
-  mul_one x := mul_comm x _ ▸ one_mul' x
+  one_mul := private one_mul'
+  mul_one x := private mul_comm x _ ▸ one_mul' x
 
 private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   change MulTy.toLGame .. = -MulTy.toLGame ..
@@ -973,7 +1015,7 @@ private theorem neg_mul' (x y : LGame) : -x * y = -(x * y) := by
   simp [MulTy.moves_neg']
 
 instance : HasDistribNeg LGame where
-  neg_mul := neg_mul'
+  neg_mul := private neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 /-! ### Stoppers -/
@@ -999,6 +1041,7 @@ theorem stopperFor_neg_iff {p : Player} {x : LGame} : StopperFor p (-x) ↔ Stop
   constructor <;> intro h <;> simpa using h.neg
 
 /-- A game is a stopper when it's `StopperFor` for both players. -/
+@[expose]
 def Stopper (x : LGame) : Prop :=
   ∀ p, StopperFor p x
 

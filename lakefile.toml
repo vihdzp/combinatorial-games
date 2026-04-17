@@ -2,6 +2,7 @@ name = "CombinatorialGames"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["CombinatorialGames"]
+lintDriver = "batteries/runLinter"
 
 [leanOptions]
 pp.unicode.fun = true

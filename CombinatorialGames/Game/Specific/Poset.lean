@@ -3,9 +3,11 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Game.Graph
-import Mathlib.Order.WellQuasiOrder
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Graph
+public import Mathlib.Order.WellQuasiOrder
 
 /-!
 # Poset games
@@ -29,6 +31,8 @@ poset game on `(Fin m × Fin n) \ {⊥}`.
 -/
 
 variable {α : Type*} [Preorder α]
+
+public section
 
 open Set
 
@@ -99,8 +103,8 @@ variable (α) in
 abbrev _root_.GameGraph.poset : GameGraph (Set α) where
   moves _ x := {y | Poset.Rel y x}
 
-instance : IsWellFounded _ (poset α).IsOption :=
-  isWellFounded_isOption_of_eq Poset.Rel fun _ _ ↦ rfl
+instance : (poset α).IsWellFounded where
+  wf := by convert (inferInstance : IsWellFounded (Set α) Poset.Rel); simp
 
 /-- A state of the poset game on `α`. -/
 noncomputable def toIGame (s : Set α) : IGame :=
@@ -136,3 +140,4 @@ theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [
 
 end IGame
 end GameGraph.Poset
+end
