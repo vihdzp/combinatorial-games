@@ -3,8 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios, Aaron Liu, and Junyan Xu. All ri
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu, Junyan Xu
 -/
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Loopy.IGame
+module
+
+public import CombinatorialGames.Game.Loopy.IGame
 
 /-!
 # Outcomes of loopy games
@@ -12,6 +13,8 @@ import CombinatorialGames.Game.Loopy.IGame
 We define when a loopy game is a win, a draw, or a loss with each player going first
 (under the normal play convention).
 -/
+
+public section
 
 namespace LGame
 variable {p : Player} {x y : LGame}
@@ -384,3 +387,4 @@ theorem toLGame_fuzzy_toLGame_iff : x.toLGame ‖ y.toLGame ↔ x ‖ y := by
   simp [IncompRel]
 
 end IGame
+end

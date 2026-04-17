@@ -3,9 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
 
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.Game.IGame
+public import CombinatorialGames.Game.Loopy.Basic
 
 /-!
 # Well-founded games to loopy games
@@ -16,7 +17,7 @@ arithmetic.
 
 open Set
 
-noncomputable section
+public noncomputable section
 
 namespace IGame
 
@@ -61,13 +62,18 @@ theorem toLGame_def (x : IGame) :
 theorem moves_toLGame (p : Player) (x : IGame) : x.toLGame.moves p = toLGame '' x.moves p := by
   rw [toLGame_def, LGame.moves_ofSets]; cases p <;> rfl
 
-theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
-  refine x.moveRecOn fun x h ↦ .intro _ fun y ↦ ?_
-  rw [LGame.isOption_iff_mem_union]
-  rintro (hy | hy) <;> simp only [moves_toLGame] at hy <;> obtain ⟨y, hy, rfl⟩ := hy
-  exacts [h _ y hy, h _ y hy]
+theorem acc_toLGame (x : IGame) : Acc LGame.Subposition x.toLGame := by
+  induction x using moveRecOn with | ind x ihx
+  refine Acc.intro x.toLGame fun y hy => ?_
+  induction y, hy using LGame.Subposition.head_induction with
+  | of_mem_moves p y hy =>
+    rw [moves_toLGame, mem_image] at hy
+    obtain ⟨y, hy, rfl⟩ := hy
+    exact ihx p y hy
+  | trans p y z hy hz ihy => exact ihy.inv (.of_mem_moves hy)
 
-theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGame.IsOption x where
+theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔
+    Acc LGame.Subposition x where
   mp := by rintro ⟨x, rfl⟩; exact x.acc_toLGame
   mpr h := h.rec fun x _ ih ↦ by
     choose f hf using ih
