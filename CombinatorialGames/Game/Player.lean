@@ -122,25 +122,24 @@ end Player
 
 We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
 inductive Outcome : Type
-  /-- A given player wins in perfect play. -/
-  | win
-  /-- A given player draws in perfect play. -/
-  | draw
   /-- A given player loses in perfect play. -/
   | loss
+  /-- A given player draws in perfect play. -/
+  | draw
+  /-- A given player wins in perfect play. -/
+  | win
 deriving DecidableEq, Fintype, Inhabited
 
 namespace Outcome
 
-private def toNat : Outcome → ℕ
+/-- An auxiliary definition for the `LinearOrder` instance on `Outcome`. -/
+def toNat : Outcome → ℕ
   | loss => 0
   | draw => 1
   | win => 2
 
-private theorem toNat_injective : Function.Injective Outcome.toNat := by decide
-
 instance : LinearOrder Outcome :=
-  LinearOrder.lift' _ Outcome.toNat_injective
+  LinearOrder.lift' toNat (by decide)
 
 @[simp] theorem loss_le : ∀ x, loss ≤ x := by decide
 @[simp] theorem le_win : ∀ x, x ≤ win := by decide
