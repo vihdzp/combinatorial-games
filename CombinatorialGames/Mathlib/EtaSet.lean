@@ -49,7 +49,6 @@ theorem isEta_dual (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : IsEta c �
 protected alias ⟨_, dual⟩ := isEta_dual
 
 to_dual_insert_cast IsEta := propext (isEta_dual c α)
-  rfl
 
 @[to_dual none]
 theorem exists_between (h : IsEta c α) {s t : Set α} (hs : #s < c) (ht : #t < c)
