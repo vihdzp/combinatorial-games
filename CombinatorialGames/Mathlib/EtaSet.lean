@@ -39,31 +39,25 @@ open Order OrderType
 
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
-@[simp]
-theorem isEta_def (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : (∀ ⦃s t : Set α⦄, #s < c →
-#t < c → (∀ x ∈ s, ∀ y ∈ t, x < y) → ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y)) ↔ IsEta c α :=
-  Iff.of_eq rfl
-
 /-- `IsEta` is unchanged under the order dual. -/
-theorem isEta_dual (c : Cardinal.{u}) :  ∀ (α : Type u) [LinearOrder α], IsEta c α ↔ IsEta c αᵒᵈ :=
-  fun _ ↦ ⟨fun hη _ _ hs ht hst ↦
-    let ⟨z,hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩,
+theorem isEta_dual (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ :=
+  ⟨fun hη _ _ hs ht hst ↦
+    let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩,
   fun hη _ _ hs ht hst ↦
-    let ⟨z,hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩⟩
+    let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩⟩
 
-protected alias ⟨_,dual⟩ := isEta_dual
+protected alias ⟨_, dual⟩ := isEta_dual
 
-to_dual_insert_cast IsEta := propext <| by
-  rw [isEta_def,isEta_dual]
+to_dual_insert_cast IsEta := propext (isEta_dual c α)
   rfl
 
-@[to_dual reorder]
+@[to_dual none]
 theorem exists_between (h : IsEta c α) {s t : Set α} (hs : #s < c) (ht : #t < c)
     (hB : ∀ x ∈ s, ∀ y ∈ t, x < y) : ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y) :=
   h hs ht hB
 
-protected theorem zero : IsEta 0 α := fun _ _ hs ↦
-  (not_lt_bot hs).elim
+protected theorem zero : IsEta 0 α :=
+  fun _ _ hs ↦ (not_lt_bot hs).elim
 
 protected theorem mono (h : IsEta c α) (hc : c' ≤ c) : IsEta c' α :=
   fun _ _ hs ht hB ↦ h (hs.trans_le hc) (ht.trans_le hc) hB
@@ -72,26 +66,19 @@ protected theorem one [Nonempty α] : IsEta 1 α :=
   fun s ↦ by simp +contextual [mk_eq_zero_iff]
 
 /-- If `α` is nonempty and `β` satisfies `IsEta #α β`, then `β` is nonempty. -/
-protected theorem nonempty (hc : c ≠ 0) (h : IsEta c α) :
-    Nonempty α := by
+protected theorem nonempty (hc : c ≠ 0) (h : IsEta c α) : Nonempty α := by
   simpa [hc.pos] using @h ∅ ∅
 
 /-- The η property implies density when the cardinal is larger than 1. -/
-protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered α :=
-  ⟨fun x y hxy ↦ by
-    obtain ⟨z, hz⟩ :  ∃ z, (∀ _x ∈ ({x} :  Set α), _x < z) ∧ (∀ _y ∈ ({y} : Set α), z < _y) := by
-      refine exists_between h ?_ ?_ ?_ <;> simpa
-    exact ⟨z, hz.1 x rfl, hz.2 y rfl⟩ ⟩
+protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered α where
+  dense x y hxy := by simpa [hc, hxy] using @h {x} {y}
 
 @[to_dual]
-protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α :=
-  ⟨fun x ↦ by
-    obtain ⟨z, hz, hz₂⟩ : ∃ z, (∀ x ∈ (∅ :  Set α), x < z) ∧ (∀ y ∈ ({x} : Set α), z < y) := by
-      refine exists_between h ?_ ?_ ?_ <;> simp [hc,lt_trans zero_lt_one hc]
-    exact ⟨z, hz₂ x (Set.mem_singleton x)⟩⟩
+protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α where
+  exists_lt x := by simpa [hc, hc.pos] using @h ∅ {x}
 
 open Classical in
-/-- When `1 < c`, an `IsEta c α` linear order is nontrivial. -/
+/-- When `1 < c`, an `IsEta c` linear order is nontrivial. -/
 protected theorem nontrivial (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Nontrivial α := by
   obtain ⟨b⟩ := ‹Nonempty α›
   obtain ⟨z, hbz, _⟩ :=
@@ -102,8 +89,8 @@ protected theorem nontrivial (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Nontr
 private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun H s t hs ht hsep ↦ by
   obtain ⟨z, hz₁, hz₂⟩ := by
     refine @H (e.symm '' s) (e.symm '' t) ?_ ?_ (fun a ⟨x, hx, ((hex: e.symm x = a))⟩ b
-    ⟨y, hy, (hey : e.symm y = b)⟩ ↦ by
-      simpa [e.lt_iff_lt,←hex,←hey] using hsep x hx y hy) <;>
+      ⟨y, hy, (hey : e.symm y = b)⟩ ↦ by
+        simpa [e.lt_iff_lt,←hex,←hey] using hsep x hx y hy) <;>
     simpa [mk_image_eq e.symm.injective]
   refine ⟨e z, fun x hx ↦ ?_, fun y hy ↦ ?_⟩
   · grind [e.apply_symm_apply,(e.lt_iff_lt).mpr,(e.lt_iff_lt).mpr (hz₁ (e.symm x) ⟨x, hx, rfl⟩)]
