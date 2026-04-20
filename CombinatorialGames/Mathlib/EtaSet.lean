@@ -8,15 +8,16 @@ module
 public import Mathlib.Analysis.Normed.Field.Lemmas
 public import Mathlib.Data.Finset.DenselyOrdered
 public import Mathlib.Order.CountableDenseLinearOrder
+public import Mathlib.Order.Interval.Set.Infinite
 public import Mathlib.Order.Types.Defs
 public import Mathlib.SetTheory.Ordinal.Basic
+
+@[expose] public section
 
 namespace Order
 open Cardinal
 
 universe u v
-
-@[expose] public section
 
 /--
 If `α` is a type with a `LinearOrder` , and `c` is some `Cardinal` in the same universe, then
@@ -26,7 +27,7 @@ If `α` is a type with a `LinearOrder` , and `c` is some `Cardinal` in the same 
 greater than all elements of `X` and less than all elements of
 `Y`.
 
-In the literature, an η_α ordered set would be a `IsEta ℵ_α` order,
+In the literature, an η_γ ordered set would be a `IsEta ℵ_γ` order,
 but this definition is more general.
 -/
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=
@@ -40,15 +41,14 @@ open Order OrderType
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
 /-- `IsEta` is unchanged under the order dual. -/
-theorem isEta_dual (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ :=
-  ⟨fun hη _ _ hs ht hst ↦
-    let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩,
-  fun hη _ _ hs ht hst ↦
-    let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩⟩
+theorem isEta_dual {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ :=
+  by refine ⟨?_, ?_⟩ <;>
+  exact fun hη _ _ hs ht hst ↦
+    let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩
 
 protected alias ⟨_, dual⟩ := isEta_dual
 
-to_dual_insert_cast IsEta := propext (isEta_dual c α)
+to_dual_insert_cast IsEta := propext isEta_dual
 
 @[to_dual none]
 theorem exists_between (h : IsEta c α) {s t : Set α} (hs : #s < c) (ht : #t < c)
@@ -76,14 +76,9 @@ protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered 
 protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α where
   exists_lt x := by simpa [hc, hc.pos] using @h ∅ {x}
 
-open Classical in
-/-- When `1 < c`, an `IsEta c` linear order is nontrivial. -/
-protected theorem nontrivial (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Nontrivial α := by
-  obtain ⟨b⟩ := ‹Nonempty α›
-  obtain ⟨z, hbz, _⟩ :=
-    exists_between h (s := {b}) (t := ∅) (by simpa)
-    (by rw [mk_eq_zero]; exact bot_lt_iff_ne_bot.2 (ne_of_gt (lt_trans zero_lt_one hc))) (by simp)
-  exact nontrivial_of_lt b z (hbz b (Set.mem_singleton b))
+/-- When `1 < c`, an `IsEta c` linear order is infinite. -/
+protected theorem infinite (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Infinite α :=
+  h.noMinOrder hc |>.infinite
 
 private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun H s t hs ht hsep ↦ by
   obtain ⟨z, hz₁, hz₂⟩ := by
@@ -110,7 +105,5 @@ protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMi
 theorem Rat.isEta_aleph0 : IsEta aleph0 ℚ := .aleph0
 
 end IsEta
-
-end
 
 end Order
