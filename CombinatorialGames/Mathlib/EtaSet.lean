@@ -41,14 +41,14 @@ open Order OrderType
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
 /-- `IsEta` is unchanged under the order dual. -/
-theorem isEta_dual {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ := by
+theorem dual_iff {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ := by
   refine ⟨?_, ?_⟩ <;>
   exact fun hη _ _ hs ht hst ↦
     let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩
 
-protected alias ⟨_, dual⟩ := isEta_dual
+protected alias ⟨_, dual⟩ := dual_iff
 
-to_dual_insert_cast IsEta := propext isEta_dual
+to_dual_insert_cast IsEta := propext dual_iff
 
 @[to_dual none]
 theorem exists_between (h : IsEta c α) {s t : Set α} (hs : #s < c) (ht : #t < c)
