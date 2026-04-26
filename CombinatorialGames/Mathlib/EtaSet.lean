@@ -20,14 +20,14 @@ open Cardinal
 universe u v
 
 /--
-If `α` is a type with a `LinearOrder` , and `c` is some `Cardinal` in the same universe, then
+If `α` is a type with a `LinearOrder`, and `c` is some `Cardinal` in the same universe, then
 `IsEta c α` states that for any two subsets
 `X Y : Set α` of cardinality less than `c`, if every element of
 `X` is less than every element of `Y`, then there is some `(z : α)`
 greater than all elements of `X` and less than all elements of
 `Y`.
 
-In the literature, an η_γ ordered set would be a `IsEta ℵ_γ` order,
+In the literature, an η_o ordered set would be a `IsEta ℵ_o` order,
 but this definition is more general.
 -/
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=
@@ -41,8 +41,8 @@ open Order OrderType
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
 /-- `IsEta` is unchanged under the order dual. -/
-theorem isEta_dual {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ :=
-  by refine ⟨?_, ?_⟩ <;>
+theorem isEta_dual {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ := by
+  refine ⟨?_, ?_⟩ <;>
   exact fun hη _ _ hs ht hst ↦
     let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩
 
