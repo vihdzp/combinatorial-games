@@ -13,7 +13,7 @@ public import Mathlib.Algebra.Order.Ring.Rat
 public import Mathlib.Data.Finset.DenselyOrdered
 public import Mathlib.Order.Interval.Set.Infinite
 
-@[expose] public section
+public section
 
 namespace Order
 open Cardinal
@@ -29,6 +29,7 @@ elements of `X` and less than all elements of `Y`.
 In the literature, an η_o ordered set would be a `IsEta ℵ_o` order, but this definition is more
 general.
 -/
+@[expose]
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=
   ∀ ⦃s t : Set α⦄, #s < c → #t < c →
     (∀ x ∈ s, ∀ y ∈ t, x < y) → ∃ z, (∀ x ∈ s, x < z) ∧ (∀ y ∈ t, z < y)
