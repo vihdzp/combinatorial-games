@@ -5,12 +5,14 @@ Authors: Yan Yablonovskiy
 -/
 module
 
-public import Mathlib.Analysis.Normed.Field.Lemmas
-public import Mathlib.Data.Finset.DenselyOrdered
-public import Mathlib.Order.CountableDenseLinearOrder
-public import Mathlib.Order.Interval.Set.Infinite
+public import Mathlib.Algebra.Field.Rat
 public import Mathlib.Order.Types.Defs
 public import Mathlib.SetTheory.Ordinal.Basic
+
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Ring.Rat
+import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Order.Interval.Set.Infinite
 
 @[expose] public section
 
@@ -21,14 +23,12 @@ universe u v
 
 /--
 If `α` is a type with a `LinearOrder`, and `c` is some `Cardinal` in the same universe, then
-`IsEta c α` states that for any two subsets
-`X Y : Set α` of cardinality less than `c`, if every element of
-`X` is less than every element of `Y`, then there is some `(z : α)`
-greater than all elements of `X` and less than all elements of
-`Y`.
+`IsEta c α` states that for any two subsets `X Y : Set α` of cardinality less than `c`, if every
+element of `X` is less than every element of `Y`, then there is some `(z : α)` greater than all
+elements of `X` and less than all elements of `Y`.
 
-In the literature, an η_o ordered set would be a `IsEta ℵ_o` order,
-but this definition is more general.
+In the literature, an η_o ordered set would be a `IsEta ℵ_o` order, but this definition is more
+general.
 -/
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=
   ∀ ⦃s t : Set α⦄, #s < c → #t < c →
@@ -41,7 +41,7 @@ open Order OrderType
 variable {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ] {c c' : Cardinal.{u}}
 
 /-- `IsEta` is unchanged under the order dual. -/
-theorem dual_iff {c : Cardinal.{u}} {α : Type u} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ := by
+theorem dual_iff {c : Cardinal} {α : Type*} [LinearOrder α] : IsEta c α ↔ IsEta c αᵒᵈ := by
   refine ⟨?_, ?_⟩ <;>
   exact fun hη _ _ hs ht hst ↦
     let ⟨z, hz⟩ := hη ht hs (fun x hT y hS ↦ hst y hS x hT); ⟨z, hz.symm⟩
@@ -64,11 +64,9 @@ protected theorem mono (h : IsEta c α) (hc : c' ≤ c) : IsEta c' α :=
 protected theorem one [Nonempty α] : IsEta 1 α :=
   fun s ↦ by simp +contextual [mk_eq_zero_iff]
 
-/-- If `α` is nonempty and `β` satisfies `IsEta #α β`, then `β` is nonempty. -/
 protected theorem nonempty (hc : c ≠ 0) (h : IsEta c α) : Nonempty α := by
   simpa [hc.pos] using @h ∅ ∅
 
-/-- The η property implies density when the cardinal is larger than 1. -/
 protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered α where
   dense x y hxy := by simpa [hc, hxy] using @h {x} {y}
 
@@ -76,7 +74,6 @@ protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered 
 protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α where
   exists_lt x := by simpa [hc, hc.pos] using @h ∅ {x}
 
-/-- When `1 < c`, an `IsEta c` linear order is infinite. -/
 protected theorem infinite (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Infinite α :=
   h.noMinOrder hc |>.infinite
 
