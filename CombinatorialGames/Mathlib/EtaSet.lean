@@ -8,11 +8,10 @@ module
 public import Mathlib.Algebra.Field.Rat
 public import Mathlib.Order.Types.Defs
 public import Mathlib.SetTheory.Ordinal.Basic
-
-import Mathlib.Algebra.Order.Field.Basic
-import Mathlib.Algebra.Order.Ring.Rat
-import Mathlib.Data.Finset.DenselyOrdered
-import Mathlib.Order.Interval.Set.Infinite
+public import Mathlib.Algebra.Order.Field.Basic
+public import Mathlib.Algebra.Order.Ring.Rat
+public import Mathlib.Data.Finset.DenselyOrdered
+public import Mathlib.Order.Interval.Set.Infinite
 
 @[expose] public section
 
@@ -78,14 +77,9 @@ protected theorem infinite (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Infinit
   h.noMinOrder hc |>.infinite
 
 private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun H s t hs ht hsep ↦ by
-  obtain ⟨z, hz₁, hz₂⟩ := by
-    refine @H (e.symm '' s) (e.symm '' t) ?_ ?_ (fun a ⟨x, hx, ((hex: e.symm x = a))⟩ b
-      ⟨y, hy, (hey : e.symm y = b)⟩ ↦ by
-        simpa [e.lt_iff_lt,←hex,←hey] using hsep x hx y hy) <;>
-    simpa [mk_image_eq e.symm.injective]
-  refine ⟨e z, fun x hx ↦ ?_, fun y hy ↦ ?_⟩
-  · grind [e.apply_symm_apply,(e.lt_iff_lt).mpr,(e.lt_iff_lt).mpr (hz₁ (e.symm x) ⟨x, hx, rfl⟩)]
-  · simpa [e.apply_symm_apply] using (e.lt_iff_lt).mpr (hz₂ (e.symm y) ⟨y, hy, rfl⟩)
+  rw [← e.exists_congr_right]
+  simpa +contextual [mk_image_eq e.symm.injective, e.symm_apply_lt, e.lt_symm_apply, *] using
+    @H (e.symm '' s) (e.symm '' t)
 
 /-- Order-isomorphic linear orders satisfy `IsEta` for the same cardinal. -/
 protected theorem congr (e : α ≃o β) : IsEta c α ↔ IsEta c β :=
