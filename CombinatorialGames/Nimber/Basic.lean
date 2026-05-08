@@ -59,7 +59,7 @@ attribute [simp] succ_zero succ_ne_zero
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
-@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
+@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Order.Iio_two (α := Ordinal)
 theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
@@ -76,10 +76,11 @@ private def add (a b : Nimber.{u}) : Nimber.{u} :=
     ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
 termination_by (a, b)
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
 `a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-instance : Add Nimber :=
+noncomputable instance : Add Nimber :=
   ⟨Nimber.add⟩
 
 theorem add_def (a b : Nimber) :

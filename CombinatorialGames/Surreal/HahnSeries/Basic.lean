@@ -43,12 +43,6 @@ attribute [aesop simp] Pi.single_apply
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
 
-open Ordinal in
-theorem Ordinal.type_lt_Iio (o : Ordinal.{u}) : typeLT (Set.Iio o) = lift.{u + 1} o := by
-  convert ToType.mk.toRelIsoLT.ordinal_lift_type_eq
-  · rw [lift_id'.{u, u+1}]
-  · rw [type_toType]
-
 /-- This is like `RelIso.cast` with better def-eqs. -/
 def RelIso.subrel {α : Type*} (r : α → α → Prop) {p q : α → Prop} (H : ∀ x, p x ↔ q x) :
     Subrel r p ≃r Subrel r q where

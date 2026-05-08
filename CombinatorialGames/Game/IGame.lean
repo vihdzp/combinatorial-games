@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
+Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison,
+Yuyang Zhao
 -/
 module
 
@@ -578,9 +579,10 @@ private def neg' (x : IGame) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
 @[no_expose]
-instance : Neg IGame where
+noncomputable instance : Neg IGame where
   neg := neg'
 
 private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
@@ -694,9 +696,10 @@ private def add' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
 @[no_expose]
-instance : Add IGame where
+noncomputable instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
@@ -860,7 +863,7 @@ instance : AddLeftMono IGame := ⟨fun x _ _ h ↦ add_le_add_left' h x⟩
 instance : AddRightMono IGame := ⟨fun x _ _ h ↦ add_le_add_right' h x⟩
 
 instance : AddLeftReflectLE IGame where
-  elim x y z h := by
+  le_of_add_le_add_left {x y} z h := by
     rw [← zero_add y, ← zero_add z]
     apply (add_le_add_left (neg_add_equiv x).ge y).trans
     rw [add_assoc]
@@ -1023,6 +1026,7 @@ private def mul' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by all_goals aesop
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
 `!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
@@ -1030,7 +1034,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 Using `IGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 @[no_expose]
-instance : Mul IGame where
+noncomputable instance : Mul IGame where
   mul := mul'
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of

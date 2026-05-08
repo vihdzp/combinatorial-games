@@ -152,7 +152,7 @@ theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
 theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsGroup x)
     (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.sum f).coeff k < x := by
   intro k
-  rw [finset_sum_coeff]
+  rw [finsetSum_coeff]
   exact h.sum_lt fun y hy ↦ (hs y hy k)
 
 theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :

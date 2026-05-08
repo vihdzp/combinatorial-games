@@ -56,10 +56,11 @@ private def mul (a b : Nimber.{u}) : Nimber.{u} :=
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-instance : Mul Nimber :=
+noncomputable instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
 theorem mul_def (a b : Nimber) :
