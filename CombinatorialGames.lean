@@ -23,6 +23,7 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.Basic

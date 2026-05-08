@@ -236,6 +236,14 @@ theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
   simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
   exact exists_comm
 
+/-- The set of games reachable from a given game is small. -/
+instance small_setOf_wsubposition (x : IGame.{u}) : Small.{u} {y | WSubposition y x} :=
+  small_insert x {y | Subposition y x}
+
+/-- A variant of `small_setOf_wsubposition` in simp-normal form -/
+instance small_subtype_wsubposition (x : IGame.{u}) : Small.{u} {y // WSubposition y x} :=
+  small_insert x {y | Subposition y x}
+
 @[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
 theorem WSubposition.rfl {x : IGame} : WSubposition x x := .refl x
 theorem wsubposition_of_eq {x y : IGame} (hxy : x = y) : WSubposition x y := hxy ▸ .rfl
