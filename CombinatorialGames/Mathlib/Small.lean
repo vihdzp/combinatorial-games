@@ -11,6 +11,10 @@ import Mathlib.Logic.Small.Set
 import Mathlib.Logic.Relation
 import Mathlib.Order.SetNotation
 
+/-!
+# Tree with small sets of branches is small
+-/
+
 universe u
 
 public section

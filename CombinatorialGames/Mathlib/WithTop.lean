@@ -7,6 +7,10 @@ module
 
 public import CombinatorialGames.NatOrdinal.Basic
 
+/-!
+# Extra lemmas on WithTop
+-/
+
 universe u
 open Set NatOrdinal WithTop
 

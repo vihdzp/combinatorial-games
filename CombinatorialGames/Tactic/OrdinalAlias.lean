@@ -19,28 +19,6 @@ API between both stays consistent.
 
 open Lean
 
-/-! ### For Mathlib -/
-
-public section
-
-namespace Ordinal
-
-theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.natCast_lt_omega0 b))
-
-@[simp]
-theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
-  ext o; have (h : o < n) := eq_natCast_of_le_natCast h.le; aesop
-
-theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
-@[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
-  rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
-@[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
-  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [Order.le_one_iff]
-
-end Ordinal
-end
-
 /-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
@@ -179,8 +157,8 @@ theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
 
 theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
-theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
-@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
+theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Set.Iio_bot (α := Ordinal)
+@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α := Ordinal)
 
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
@@ -193,7 +171,7 @@ instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
-instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
+instance : IsEmpty (Set.Iio (0 : $Alias)) := Set.isEmpty_Iio_zero (α := Ordinal)
 instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
 
 @[simp]
