@@ -143,6 +143,9 @@ theorem apply_eq_zero {x : SignExpansion} {o : NatOrdinal} : x o = 0 ↔ x.lengt
   refine ⟨fun h ↦ csInf_le' ?_, apply_of_length_le⟩
   simpa
 
+theorem apply_ne_zero {x : SignExpansion} {o : NatOrdinal} : x o ≠ 0 ↔ o < x.length := by
+  simpa using apply_eq_zero.not
+
 theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
   simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
 
@@ -155,6 +158,9 @@ def const (s : SignType) : SignExpansion where
 
 instance : Zero SignExpansion where
   zero := const 0
+
+instance : Inhabited SignExpansion where
+  default := 0
 
 @[simp] theorem coe_zero : ⇑(0 : SignExpansion) = 0 := rfl
 theorem zero_apply (o : NatOrdinal) : (0 : SignExpansion) o = 0 := rfl
@@ -196,10 +202,6 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 
 instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
-
--- TODO: why is this needed all of a sudden?
-instance : DecidableLT (WithTop NatOrdinal) :=
-  Classical.decRel _
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
@@ -258,64 +260,6 @@ theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
 
 theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
   simp
-
-/-! ### Subset relation -/
-
-/-- We write `x ⊆ y` when `x = y ↾ o` for some `o`. In the literature, this is written as
-`x ≤ₛ y` or `x ⊑ y`. -/
-instance : HasSubset SignExpansion where
-  Subset x y := y ↾ x.length = x
-
-/-- We write `x ⊂ y` when `x ⊆ y` and `x ≠ y`. In the literature, this is written as
-`x <ₛ y` or `x ⊏ y`. -/
-instance : HasSSubset SignExpansion where
-  SSubset x y := x ⊆ y ∧ ¬ y ⊆ x
-
-theorem subset_def {x y : SignExpansion} : x ⊆ y ↔ y ↾ x.length = x := .rfl
-theorem ssubset_def {x y : SignExpansion} : x ⊂ y ↔ x ⊆ y ∧ ¬ y ⊆ x := .rfl
-
-alias ⟨eq_of_subset, _⟩ := subset_def
-
-@[simp]
-theorem restrict_subset (x : SignExpansion) (o : WithTop NatOrdinal) : x ↾ o ⊆ x := by
-  rw [subset_def, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
-
-@[simp]
-theorem zero_subset (x : SignExpansion) : 0 ⊆ x := by
-  rw [← restrict_zero_right x]
-  exact restrict_subset ..
-
-theorem eq_or_length_lt_of_subset {x y : SignExpansion} (h : x ⊆ y) :
-    x = y ∨ x.length < y.length := by
-  rw [subset_def] at h
-  have := lt_or_ge x.length y.length
-  aesop
-
-instance : @Std.Refl SignExpansion (· ⊆ ·) where
-  refl _ := restrict_of_length_le le_rfl
-
-instance : IsTrans SignExpansion (· ⊆ ·) where
-  trans := by grind [subset_def]
-
-instance : @Std.Antisymm SignExpansion (· ⊆ ·) where
-  antisymm x y h₁ h₂ := by
-    have := eq_or_length_lt_of_subset h₁
-    have := eq_or_length_lt_of_subset h₂
-    grind
-
-instance : IsNonstrictStrictOrder SignExpansion (· ⊆ ·) (· ⊂ ·) where
-  right_iff_left_not_left _ _ := .rfl
-
-@[gcongr]
-theorem length_le_of_subset {x y : SignExpansion} (h : x ⊆ y) : x.length ≤ y.length := by
-  rw [← eq_of_subset h]
-  simp
-
-@[gcongr]
-theorem length_lt_of_ssubset {x y : SignExpansion} (h : x ⊂ y) : x.length < y.length := by
-  have := eq_or_length_lt_of_subset (subset_of_ssubset h)
-  have := ssubset_irrefl x
-  aesop
 
 /-! ### Order structure -/
 
@@ -646,28 +590,5 @@ theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o�
 
 theorem toSignExpansion_apply_of_le (h : o₁ ≤ o₂) : toSignExpansion o₁ o₂ = 0 := by
   aesop
-
-theorem toSignExpansion_subset_toSignExpansion_of_le (h : o₁ ≤ o₂) :
-    (o₁ : SignExpansion) ⊆ o₂ := by
-  rw [subset_def]
-  aesop (add unsafe apply lt_of_lt_of_le)
-
-theorem toSignExpansion_ssubset_toSignExpansion_of_lt (h : o₁ < o₂) :
-    (o₁ : SignExpansion) ⊂ o₂ := by
-  rw [ssubset_iff_subset_ne]
-  use toSignExpansion_subset_toSignExpansion_of_le h.le
-  aesop
-
-@[simp]
-theorem toSignExpansion_subset_toSignExpansion_iff : (o₁ : SignExpansion) ⊆ o₂ ↔ o₁ ≤ o₂ := by
-  refine ⟨?_, toSignExpansion_subset_toSignExpansion_of_le⟩
-  contrapose!
-  exact fun h ↦ (toSignExpansion_ssubset_toSignExpansion_of_lt h).2
-
-@[simp]
-theorem toSignExpansion_ssubset_toSignExpansion_iff : (o₁ : SignExpansion) ⊂ o₂ ↔ o₁ < o₂ := by
-  refine ⟨?_, toSignExpansion_ssubset_toSignExpansion_of_lt⟩
-  contrapose!
-  exact fun h ↦ not_ssubset_of_subset (toSignExpansion_subset_toSignExpansion_of_le h)
 
 end NatOrdinal
