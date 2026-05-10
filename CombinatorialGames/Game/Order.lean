@@ -20,7 +20,7 @@ namespace IGame
 
 theorem tiny_lf_of_not_nonpos_of_forall_neg_le {x a : IGame} (hx : 0 ⧏ x)
     (ha : ∀ y ∈ xᴿ, -a ≤ y) : ⧾a ⧏ x := by
-  refine lf_of_right_le ?_ (rightMoves_tiny _ ▸ Set.mem_singleton _)
+  refine lf_of_right_le ?_ (moves_right_tiny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   simpa using ⟨hx, fun z hz ↦ lf_of_right_le (ha z hz) (by simp)⟩
 
@@ -42,7 +42,7 @@ theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.to
 
 theorem lf_miny_of_not_nonneg_of_forall_le {x a : IGame} (hx : x ⧏ 0)
     (ha : ∀ y ∈ xᴸ, y ≤ a) : x ⧏ ⧿a := by
-  refine lf_of_le_left ?_ (leftMoves_miny _ ▸ Set.mem_singleton _)
+  refine lf_of_le_left ?_ (moves_left_miny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   simpa using ⟨fun z hz ↦ lf_of_le_left (ha z hz) (by simp), hx⟩
 
