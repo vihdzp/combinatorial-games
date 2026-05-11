@@ -96,26 +96,30 @@ protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMi
 
 theorem Rat.isEta_aleph0 : IsEta aleph0 ℚ := .aleph0
 
+end IsEta
+
 section
+
+open IsEta OrderType
 
 variable {α β : Type u} (a : α) [LT α] {r : α → α → Prop} (g : ∀ y, r y a → β)
 
 @[reducible]
-private def lo : Set β := Set.range fun (x : {x : α // r x a ∧ x < a}) ↦ g x.1 x.2.1
+def lo : Set β := Set.range fun (x : {x : α // r x a ∧ x < a}) ↦ g x.1 x.2.1
 
 @[reducible]
-private def hi : Set β := Set.range fun (x : {x : α // r x a ∧ a < x}) ↦ g x.1 x.2.1
+def hi : Set β := Set.range fun (x : {x : α // r x a ∧ a < x}) ↦ g x.1 x.2.1
 
-private theorem card_subtype_le {α : Type*} {r : α → α → Prop} [IsWellOrder α r]
+theorem card_subtype_le {α : Type*} {r : α → α → Prop} [IsWellOrder α r]
     {h : (#α).ord = Ordinal.type r} : ∀ a, #{ x : α // r x a } < #α :=
   fun a ↦ Cardinal.card_typein_lt a h
 
-private theorem hlo_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).ord = Ordinal.type r) :
+theorem hlo_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).ord = Ordinal.type r) :
     ∀ a (g: ∀ y, r y a → β), #(lo (β := β) a g) < #α :=
   fun a _ ↦ Cardinal.mk_range_le.trans_lt ((Cardinal.mk_subtype_le_of_subset
     (fun _ hx ↦ hx.1)).trans_lt ((card_subtype_le (h:=h)) a))
 
-private theorem hhi_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).ord = Ordinal.type r) :
+theorem hhi_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).ord = Ordinal.type r) :
    ∀ a (g: ∀ y, r y a → β), #(hi (β := β) a g) < #α :=
   fun a _ ↦ Cardinal.mk_range_le.trans_lt ((Cardinal.mk_subtype_le_of_subset
     (fun _ hx ↦ hx.1)).trans_lt (card_subtype_le (h:=h) a))
@@ -123,7 +127,7 @@ private theorem hhi_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).
 open Classical in
 /-- The map which will be an order embedding between `α` and `β`. -/
 @[reducible]
-private noncomputable def f {r : α → α → Prop} [Nonempty α] [LinearOrder α]
+noncomputable def IsEta.f {r : α → α → Prop} [Nonempty α] [LinearOrder α]
     [LinearOrder β] [hr : IsWellOrder α r] (h : IsEta (#α) β)
     (hord : (#α).ord = Ordinal.type r) : α → β :=
   hr.wf.fix fun a g ↦ if hsep : ∀ b ∈ lo a g, ∀ c ∈ hi a g, b < c then
@@ -131,7 +135,7 @@ private noncomputable def f {r : α → α → Prop} [Nonempty α] [LinearOrder 
   else (h.nonempty <| mk_ne_zero α).some
 
 open Classical in
-private theorem f_aux (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
+theorem f_aux (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
    [hr : IsWellOrder α r] {h : IsEta #α β} {hord : (#α).ord = Ordinal.type r} :
    let f := h.f hord
    ∀ (a : α), f a =
@@ -144,7 +148,7 @@ private theorem f_aux (r : α → α → Prop) [Nonempty α] [LinearOrder α] [L
   change hr.wf.fix _ a = _
   conv_lhs => rw [WellFounded.fix_eq]
 
-private theorem le_lo (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
+theorem le_lo (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
     [hr : IsWellOrder α r] {h : IsEta #α β} {hord : (#α).ord = Ordinal.type r} :
     let f := h.f hord
     ∀ (a : α) (hsep : ∀ x ∈ lo a fun y _ ↦ f y, ∀ y ∈ hi a fun y _ ↦ f y, x < y),
@@ -154,7 +158,7 @@ private theorem le_lo (r : α → α → Prop) [Nonempty α] [LinearOrder α] [L
   fun a hsep ↦ (h.exists_between (hlo_card hord a (fun y _ ↦ f y))
   (hhi_card hord a (fun y _ ↦ f y)) hsep).choose_spec.1
 
-private theorem hi_le (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
+theorem hi_le (r : α → α → Prop) [Nonempty α] [LinearOrder α] [LinearOrder β]
     [hr : IsWellOrder α r] {h : IsEta #α β} {hord : (#α).ord = Ordinal.type r} :
     let f := h.f hord
     ∀ (a : α) (hsep : ∀ x ∈ lo (r:=r) a fun y _ ↦ f y, ∀ y ∈ hi a fun y _ ↦ f y, x < y),
@@ -164,7 +168,7 @@ private theorem hi_le (r : α → α → Prop) [Nonempty α] [LinearOrder α] [L
   fun a hsep ↦ (h.exists_between (hlo_card hord a (fun y _ ↦ f y))
   (hhi_card hord a (fun y _ ↦ f y)) hsep).choose_spec.2
 
-private theorem f_aux₁ {α β : Type u} (r : α → α → Prop) [Nonempty α] [LinearOrder α]
+theorem f_aux₁ {α β : Type u} (r : α → α → Prop) [Nonempty α] [LinearOrder α]
     [LinearOrder β] [hr : IsWellOrder α r] {h : IsEta #α β}
     {hord : (#α).ord = Ordinal.type r} (a : α) : let f := h.f hord
     (∀ b ∈ lo a (fun y (_ : r y a) ↦ f y), ∀ c ∈ hi a (fun y (_: r y a) ↦ f y),
@@ -191,7 +195,7 @@ private theorem f_aux₁ {α β : Type u} (r : α → α → Prop) [Nonempty α]
     · rw [hunfold x, dif_pos (IH x hrxa).1]
       exact hi_le r x (IH x hrxa).1 (f y) ⟨⟨y, hryx, hxy⟩, rfl⟩
 
-private theorem strictMono_f {α β : Type u} [Nonempty α] (r : α → α → Prop) [IsWellOrder α r]
+theorem strictMono_f {α β : Type u} [Nonempty α] (r : α → α → Prop) [IsWellOrder α r]
 [LinearOrder α] [LinearOrder β] {hord : (#α).ord = Ordinal.type r} {h : IsEta #α β} :
     StrictMono (@f _ β _ r _ _ _ _ h hord) := fun {x y} hxy ↦ by
   rcases @trichotomous_of α r _ x y with hrxy | rfl | hryx
@@ -207,7 +211,9 @@ private theorem strictMono_f {α β : Type u} [Nonempty α] (r : α → α → P
 
 end
 
-theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
+open OrderType
+
+public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (h : IsEta #α β) : type α ≤ type β := by
   rcases Cardinal.exists_ord_eq α with ⟨r, hr, hord⟩
   rw [type_le_type_iff]
@@ -217,7 +223,5 @@ theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [Linea
   · push Not at hα
     use @OrderEmbedding.ofIsEmpty α β _ _ _ |>.toEmbedding
     simp
-
-end IsEta
 
 end Order
