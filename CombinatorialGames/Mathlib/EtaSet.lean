@@ -104,9 +104,11 @@ open IsEta OrderType
 
 variable {α β : Type u} (a : α) [LT α] {r : α → α → Prop} (g : ∀ y, r y a → β)
 
+/-- The Set β corresponding to the image of g with `x < a` -/
 @[reducible]
 def lo : Set β := Set.range fun (x : {x : α // r x a ∧ x < a}) ↦ g x.1 x.2.1
 
+/-- The Set β corresponding to the image of g with `a < x` -/
 @[reducible]
 def hi : Set β := Set.range fun (x : {x : α // r x a ∧ a < x}) ↦ g x.1 x.2.1
 
@@ -127,9 +129,8 @@ theorem hhi_card {r : α → α → Prop} [IsWellOrder α r] (h : (#α).ord = Or
 open Classical in
 /-- The map which will be an order embedding between `α` and `β`. -/
 @[reducible]
-noncomputable def IsEta.f {r : α → α → Prop} [Nonempty α] [LinearOrder α]
-    [LinearOrder β] [hr : IsWellOrder α r] (h : IsEta (#α) β)
-    (hord : (#α).ord = Ordinal.type r) : α → β :=
+noncomputable def IsEta.f {r : α → α → Prop} [Nonempty α] [LinearOrder β] [hr : IsWellOrder α r]
+    (h : IsEta (#α) β) (hord : (#α).ord = Ordinal.type r) : α → β :=
   hr.wf.fix fun a g ↦ if hsep : ∀ b ∈ lo a g, ∀ c ∈ hi a g, b < c then
     (h.exists_between (hlo_card (h := hord) a g) (hhi_card hord a g) hsep).choose
   else (h.nonempty <| mk_ne_zero α).some
@@ -197,7 +198,7 @@ theorem f_aux₁ {α β : Type u} (r : α → α → Prop) [Nonempty α] [Linear
 
 theorem strictMono_f {α β : Type u} [Nonempty α] (r : α → α → Prop) [IsWellOrder α r]
 [LinearOrder α] [LinearOrder β] {hord : (#α).ord = Ordinal.type r} {h : IsEta #α β} :
-    StrictMono (@f _ β _ r _ _ _ _ h hord) := fun {x y} hxy ↦ by
+    StrictMono (@f _ β _ r _ _ _ h hord) := fun {x y} hxy ↦ by
   rcases @trichotomous_of α r _ x y with hrxy | rfl | hryx
   <;> have hunfold := f_aux (β := β) (hord:=hord) (h := h) r
   <;> set f := f h hord
