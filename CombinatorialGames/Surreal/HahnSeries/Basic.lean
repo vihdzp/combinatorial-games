@@ -335,7 +335,7 @@ theorem length_mono {x y : SurrealHahnSeries} (h : x.support ⊆ y.support) :
 This is registered as a `RelIso` between `Iio x.length` and `x.support`, so that `x.exp.symm` can be
 used to return the index of an element in the support. -/
 def exp (x : SurrealHahnSeries) : (· < · : Iio x.length → _ → _) ≃r (· > · : x.support → _ → _) :=
-  (enum _).trans (orderIsoShrink x.support).dual.toRelIsoLT.symm
+  (Ordinal.enum _).trans (orderIsoShrink x.support).dual.toRelIsoLT.symm
 
 @[simp]
 theorem symm_exp_lt {x : SurrealHahnSeries} (i) : x.exp.symm i < x.length :=

@@ -50,7 +50,7 @@ instance : PartialOrder $Alias := inferInstanceAs (PartialOrder $Source)
 instance : SuccOrder $Alias := inferInstanceAs (SuccOrder $Source)
 instance : OrderBot $Alias := inferInstanceAs (OrderBot $Source)
 instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
-instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
+instance : IsBotZeroClass $Alias := inferInstanceAs (IsBotZeroClass $Source)
 instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
@@ -125,12 +125,6 @@ $(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
 
-@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := bot_le
-@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := le_bot_iff
-@[simp] theorem $(mkIdent `not_neg) (a : $Alias) : ¬ a < 0 := not_lt_bot
-protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
-protected theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
-
 end $Alias
 end
 )
@@ -146,7 +140,7 @@ universe u
 
 instance : Uncountable $Alias := Ordinal.uncountable
 
-@[simp] theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
+theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
   Order.lt_one_iff (α := Ordinal)
 theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
   Order.le_one_iff (α := Ordinal)
@@ -158,7 +152,7 @@ theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
 theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
 theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Set.Iio_bot (α := Ordinal)
-@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α := Ordinal)
+theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α := Ordinal)
 
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=

@@ -23,7 +23,7 @@ open Set
 
 variable {α : Type*} (r : α → α → Prop) [H : ∀ x, Small.{u} {y // r x y}]
 
-private def level [∀ x, Small.{u} {y // r x y}] (x : α) : ℕ → Set α
+private def level (x : α) : ℕ → Set α
   | 0 => {x}
   | n + 1 => ⋃₀ ((fun x ↦ {y | r x y}) '' level x n)
 

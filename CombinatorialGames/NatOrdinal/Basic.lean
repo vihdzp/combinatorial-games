@@ -143,7 +143,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · repeat rw [← NatOrdinal.le_zero]
+  · repeat rw [← le_zero_iff]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
@@ -205,7 +205,7 @@ theorem val_add_natCast (a : NatOrdinal) (n : ℕ) : val (a + n) = val a + n :=
 theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [← add_assoc] using add_le_add_left IH 1
+  | add_one c IH => simpa [← add_assoc] using add_le_add_left IH 1
   | limit c hc IH =>
     rw [(Ordinal.isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
@@ -277,7 +277,7 @@ instance : CommMagma NatOrdinal where
   mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
-  rw [← NatOrdinal.le_zero, mul_le_iff]
+  rw [← le_zero_iff, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where
@@ -306,7 +306,7 @@ instance : MulPosStrictMono NatOrdinal where
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
     obtain rfl | h₁ := h.eq_or_lt; · simp
-    obtain rfl | h₂ := NatOrdinal.eq_zero_or_pos a; · simp
+    obtain rfl | h₂ := eq_zero_or_pos a; · simp
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
 instance : MulRightMono NatOrdinal where
@@ -404,7 +404,7 @@ instance : IsStrictOrderedRing NatOrdinal where
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
+  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp
