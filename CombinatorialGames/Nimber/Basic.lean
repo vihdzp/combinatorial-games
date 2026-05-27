@@ -54,7 +54,7 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
-attribute [simp] succ_zero succ_ne_zero
+attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
@@ -155,7 +155,7 @@ theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
     · rfl
     · have hb : b + b = 0 := add_eq_zero.2 rfl
       rwa [← hb, add_left_inj] at hab
-  · rw [← le_zero]
+  · rw [← le_zero_iff]
     apply add_le_of_forall_ne <;>
     simp_rw [ne_eq] <;>
     intro x hx
@@ -193,7 +193,7 @@ private theorem add_zero (a : Nimber) : a + 0 = a := by
       rw [add_zero]
       exact ha.ne
     · intro _ h
-      exact (not_neg _ h).elim
+      exact (not_lt_zero h).elim
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := add_zero (a + 0)
@@ -227,7 +227,7 @@ theorem add_cancel_left (a b : Nimber) : a + (a + b) = b := by
 
 theorem add_trichotomy {a b c : Nimber} (h : a + b + c ≠ 0) :
     b + c < a ∨ c + a < b ∨ a + b < c := by
-  rw [← Nimber.pos_iff_ne_zero] at h
+  rw [← pos_iff_ne_zero] at h
   obtain ⟨x, hx, hx'⟩ | ⟨x, hx, hx'⟩ := exists_of_lt_add h <;>
   rw [add_eq_zero] at hx'
   · obtain ⟨x, hx, hx'⟩ | ⟨x, hx, hx'⟩ := exists_of_lt_add (hx' ▸ hx)

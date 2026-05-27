@@ -122,7 +122,7 @@ protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
     apply (H x hx).ne_zero
-    rw [← Nimber.le_zero, ← h]
+    rw [← le_zero_iff, ← h]
     exact lub.left hx
 
 protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
@@ -365,7 +365,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
       of_val, ← mul_add]
     obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hwa)
-    · rw [← div_eq_iff hwa]
+    · rw [← _root_.div_eq_iff hwa]
       exact (H' hb (H _ (hy.add_lt hwy (ha.trans hwy)))).ne
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_

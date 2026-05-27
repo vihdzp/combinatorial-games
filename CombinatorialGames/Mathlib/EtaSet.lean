@@ -13,6 +13,22 @@ public import Mathlib.Order.Interval.Set.Infinite
 public import Mathlib.Order.Types.Defs
 public import Mathlib.SetTheory.Ordinal.Basic
 
+/-!
+# Eta sets
+
+If `α` is a type with a `LinearOrder`, and `c` is some `Cardinal` in the same universe, then
+`IsEta c α` states that for any two subsets `X Y : Set α` of cardinality less than `c`, if every
+element of `X` is less than every element of `Y`, then there is some `(z : α)` greater than all
+elements of `X` and less than all elements of `Y`.
+
+Every linear order is vacuously `IsEta 0`. For `1 ≤ c ≤ ℵ₀`, the predicate `IsEta c` is equivalent
+to having a densely ordered linear order. Examples of `IsEta c` orders for uncountable `c` include
+the surreals and the hyperreals.
+
+In the literature, an η_o ordered set would be a `IsEta ℵ_o` order, but this definition is more
+general.
+-/
+
 public section
 
 namespace Order
@@ -25,9 +41,6 @@ If `α` is a type with a `LinearOrder`, and `c` is some `Cardinal` in the same u
 `IsEta c α` states that for any two subsets `X Y : Set α` of cardinality less than `c`, if every
 element of `X` is less than every element of `Y`, then there is some `(z : α)` greater than all
 elements of `X` and less than all elements of `Y`.
-
-In the literature, an η_o ordered set would be a `IsEta ℵ_o` order, but this definition is more
-general.
 -/
 @[expose]
 def IsEta (c : Cardinal.{u}) (α : Type u) [LinearOrder α] : Prop :=

@@ -92,11 +92,11 @@ theorem mul_le_of_forall_ne (h : ∀ a' < a, ∀ b' < b, a' * b + a * b' + a' * 
 
 instance : MulZeroClass Nimber where
   mul_zero a := by
-    rw [← Nimber.le_zero]
-    exact mul_le_of_forall_ne fun _ _ _ h ↦ (Nimber.not_neg _ h).elim
+    rw [← le_zero_iff]
+    exact mul_le_of_forall_ne fun _ _ _ h ↦ (not_lt_zero h).elim
   zero_mul a := by
-    rw [← Nimber.le_zero]
-    exact mul_le_of_forall_ne fun _ h ↦ (Nimber.not_neg _ h).elim
+    rw [← le_zero_iff]
+    exact mul_le_of_forall_ne fun _ h ↦ (not_lt_zero h).elim
 
 private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
     a' * b + a * b' + a' * b' ≠ a * b := by
@@ -108,7 +108,7 @@ private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' 
 instance : NoZeroDivisors Nimber where
   eq_zero_or_eq_zero_of_mul_eq_zero {a b} h := by
     by_contra! hab
-    iterate 2 rw [← Nimber.pos_iff_ne_zero] at hab
+    iterate 2 rw [← pos_iff_ne_zero] at hab
     apply (mul_ne_of_lt hab.1 hab.2).symm
     simpa only [zero_add, mul_zero, zero_mul]
 
