@@ -21,9 +21,9 @@ If `α` is a type with a `LinearOrder`, and `c` is some `Cardinal` in the same u
 element of `X` is less than every element of `Y`, then there is some `(z : α)` greater than all
 elements of `X` and less than all elements of `Y`.
 
-Every linear order is vacuously `IsEta 0`. For `1 ≤ c ≤ ℵ₀`, the predicate `IsEta c` is equivalent
-to having a densely ordered linear order. Examples of `IsEta c` orders for uncountable `c` include
-the surreals and the hyperreals.
+Every linear order is vacuously `IsEta 0`, and the `IsEta 1` predicate is equivalent to `Nonempty`.
+For `1 < c ≤ ℵ₀`, the predicate `IsEta c` is equivalent to `DenselyOrdered`. Examples of `IsEta c`
+orders for uncountable `c` include the surreals and the hyperreals.
 
 In the literature, an η_o ordered set would be a `IsEta ℵ_o` order, but this definition is more
 general.
