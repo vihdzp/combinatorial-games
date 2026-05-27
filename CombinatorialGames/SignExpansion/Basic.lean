@@ -128,6 +128,7 @@ theorem apply_eq_zero_of_le {x : SignExpansion} {o o' : NatOrdinal}
 
 /-- The length of a sign expansion is the smallest ordinal at which it equals zero,
 or `⊤` is no such ordinal exists. -/
+@[no_expose]
 def length (x : SignExpansion) : WithTop NatOrdinal :=
   sInf ((↑) '' (x ⁻¹' {0}))
 
@@ -359,6 +360,7 @@ protected theorem lt_neg {x y : SignExpansion} : x < -y ↔ y < -x :=
 open Classical in
 /-- The floor function on a function `NatOrdinal → SignType` "rounds" it downwards to the nearest
 valid `SignExpansion`. -/
+@[no_expose]
 def floor (f : NatOrdinal → SignType) : SignExpansion :=
   if hf : IsUpperSet (f ⁻¹' {0}) then ⟨f, hf⟩ else
     let a := sInf (f ⁻¹' {0})
@@ -502,6 +504,7 @@ def gciFloor : GaloisCoinsertion (toLex ∘ (⇑·) : SignExpansion → _) (floo
 
 /-- The ceiling function on a function `NatOrdinal → SignType` "rounds" it upwards to the nearest
 valid `SignExpansion`. -/
+@[no_expose]
 def ceil (f : NatOrdinal → SignType) : SignExpansion :=
   -floor (-f)
 
