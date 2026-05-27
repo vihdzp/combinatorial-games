@@ -17,7 +17,9 @@ import Mathlib.Topology.Separation.Connected
 /-!
 # Topology on sign expansions
 
-We give sign expansions the Scott-Hausdorff topology.
+We endow sign expansions with the Scott-Hausdorff topology, i.e. the topology where closed sets are
+closed under directed suprema. This is the topology defined in Surreal Substructures by Vincent
+Bagayoko and Joris van der Hoeven.
 -/
 
 public section
