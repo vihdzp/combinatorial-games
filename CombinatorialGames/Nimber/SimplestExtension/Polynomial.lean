@@ -11,7 +11,6 @@ public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
 public import Mathlib.Data.Finsupp.WellFounded
 
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
@@ -153,12 +152,12 @@ theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
 theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsGroup x)
     (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.sum f).coeff k < x := by
   intro k
-  rw [finset_sum_coeff]
+  rw [finsetSum_coeff]
   exact h.sum_lt fun y hy ↦ (hs y hy k)
 
 theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :
     ∀ k, (0 : Nimber[X]).coeff k < x := by
-  simpa [Nimber.pos_iff_ne_zero]
+  simpa [pos_iff_ne_zero]
 
 theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
@@ -179,7 +178,7 @@ theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
   simpa using coeff_X_pow_lt 0 h
 
 theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
-  aesop (add simp [Nimber.pos_iff_ne_zero])
+  aesop (add simp [pos_iff_ne_zero])
 
 /-! ### Embedding in a subfield -/
 
@@ -243,9 +242,6 @@ noncomputable instance : LinearOrder (Nimber[X]) where
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
-
-instance : WellFoundedLT (Colex (ℕ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf wellFounded_lt
 
 instance : WellFoundedLT (Nimber[X]) where
   wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp) wellFounded_lt
@@ -356,7 +352,7 @@ theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
   · rw [p.coeff_eq_zero_of_natDegree_lt hk, q.coeff_eq_zero_of_natDegree_lt (h'.trans hk)]
   · rw [q.coeff_eq_zero_of_natDegree_lt h']
-    aesop (add simp [Nimber.pos_iff_ne_zero])
+    aesop (add simp [pos_iff_ne_zero])
 
 theorem natDegree_mono : Monotone (α := Nimber[X]) natDegree := by
   apply Monotone.comp (fun a b ↦ ?_) degree_mono
@@ -614,7 +610,7 @@ theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
 
 theorem oeval_lt_pow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : oeval x p < ∗(x.val ^ n) := by
-  obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
+  obtain rfl | hx₀ := eq_zero_or_pos x; · simp at hpk
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
@@ -652,7 +648,7 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
   rw [Nimber.Lex.lt_def] at h
   obtain ⟨n, hnl, hnr⟩ := h
-  have hx : 0 < x := (zero_le (p.coeff 0)).trans_lt (hpk 0)
+  have hx : 0 < x := (hpk 0).pos
   induction hk : p.natDegree - n using Nat.caseStrongRecOn generalizing p q with
   | zero =>
     rw [Nat.sub_eq_zero_iff_le] at hk
@@ -978,7 +974,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
     · convert zero_lt_one' (WithBot ℕ)
       compute_degree!
     · have := h.inv_lt_self_of_not_isField h'
-      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [Nimber.pos_iff_ne_zero])
+      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [pos_iff_ne_zero])
     · replace H : x⁻¹ * r + 1 = 0 := by simpa using H
       rw [Nimber.add_eq_zero] at H
       obtain rfl := eq_of_inv_mul_eq_one H
@@ -1040,7 +1036,7 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     · aesop
   · have H := coeff_leastNoRoots_lt ht
     have : c⁻¹ < x := h.inv_lt (H _)
-    apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
+    apply h.coeff_mul_lt <;> aesop (add simp [pos_iff_ne_zero])
   · have := @not_isRoot_leastNoRoots_of_lt x
     aesop
 

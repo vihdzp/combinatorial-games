@@ -1,6 +1,7 @@
 module  -- shake: keep-all
 
 public import CombinatorialGames.Counterexamples.Multiplication
+public import CombinatorialGames.Counterexamples.NormalTopology
 public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Canonical
@@ -23,7 +24,7 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Mathlib.Dyadic
-public import CombinatorialGames.Mathlib.Finlift
+public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.Basic

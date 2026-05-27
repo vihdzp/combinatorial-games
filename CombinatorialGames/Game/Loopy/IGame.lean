@@ -47,8 +47,9 @@ private theorem toLGame'_inj {x y : IGame} (h : x.toLGame' = y.toLGame') : x = y
 termination_by (x, y)
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The inclusion map from well-founded games into loopy games. -/
-def toLGame : IGame ↪ LGame where
+noncomputable def toLGame : IGame ↪ LGame where
   toFun := toLGame'
   inj' _ _ := toLGame'_inj
 
@@ -62,13 +63,18 @@ theorem toLGame_def (x : IGame) :
 theorem moves_toLGame (p : Player) (x : IGame) : x.toLGame.moves p = toLGame '' x.moves p := by
   rw [toLGame_def, LGame.moves_ofSets]; cases p <;> rfl
 
-theorem _root_.IGame.acc_toLGame (x : IGame) : Acc LGame.IsOption x := by
-  refine x.moveRecOn fun x h ↦ .intro _ fun y ↦ ?_
-  rw [LGame.isOption_iff_mem_union]
-  rintro (hy | hy) <;> simp only [moves_toLGame] at hy <;> obtain ⟨y, hy, rfl⟩ := hy
-  exacts [h _ y hy, h _ y hy]
+theorem acc_toLGame (x : IGame) : Acc LGame.Subposition x.toLGame := by
+  induction x using moveRecOn with | ind x ihx
+  refine Acc.intro x.toLGame fun y hy => ?_
+  induction y, hy using LGame.Subposition.head_induction with
+  | of_mem_moves p y hy =>
+    rw [moves_toLGame, mem_image] at hy
+    obtain ⟨y, hy, rfl⟩ := hy
+    exact ihx p y hy
+  | trans p y z hy hz ihy => exact ihy.inv (.of_mem_moves hy)
 
-theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔ Acc LGame.IsOption x where
+theorem mem_range_toLGame_iff_acc {x : LGame} : x ∈ range toLGame ↔
+    Acc LGame.Subposition x where
   mp := by rintro ⟨x, rfl⟩; exact x.acc_toLGame
   mpr h := h.rec fun x _ ih ↦ by
     choose f hf using ih
