@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 import CombinatorialGames.Game.Specific.Nim
+import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Tactic.GameCmp
 
 /-!
@@ -13,6 +14,7 @@ Tests for the `game_cmp` tactic.
 -/
 
 open IGame Nimber
+open scoped CharTwo
 
 -- Basic order relations
 example : (0 : IGame) < 1 := by game_cmp
