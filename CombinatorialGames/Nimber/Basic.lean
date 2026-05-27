@@ -193,7 +193,7 @@ private theorem add_zero (a : Nimber) : a + 0 = a := by
       rw [add_zero]
       exact ha.ne
     · intro _ h
-      exact (not_lt_zero h).elim
+      cases not_lt_zero h
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
     have := add_zero (a + 0)
