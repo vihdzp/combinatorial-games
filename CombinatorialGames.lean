@@ -1,7 +1,6 @@
 module  -- shake: keep-all
 
 public import CombinatorialGames.Counterexamples.Multiplication
-public import CombinatorialGames.Counterexamples.NormalTopology
 public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Canonical
