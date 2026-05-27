@@ -23,19 +23,6 @@ define two separate `PartialOrder` instances on the same type, we instead create
 
 /-! ### For Mathlib -/
 
--- #37079
-open Set in
-/-- An alternative constructor for `SemilatticeSup` using `IsLUB`. -/
-@[to_dual (attr := implicit_reducible)
-/-- An alternative constructor for `SemilatticeInf` using `IsGLB`. -/]
-public def SemilatticeSup.ofIsLUB {α} [PartialOrder α] (sup : α → α → α)
-    (isLUB_pair : ∀ a b, IsLUB {a, b} (sup a b)) :
-    SemilatticeSup α where
-  sup := sup
-  le_sup_left a b := (isLUB_pair a b).1 (mem_insert _ _)
-  le_sup_right a b := (isLUB_pair a b).1 (mem_insert_of_mem _ (mem_singleton _))
-  sup_le a b _ hac hbc := (isLUB_pair a b).2 (forall_insert_of_forall (forall_eq.mpr hbc) hac)
-
 @[no_expose, implicit_reducible]
 noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
     OrderBot α := by
