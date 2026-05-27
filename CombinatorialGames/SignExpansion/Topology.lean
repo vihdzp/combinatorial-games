@@ -20,16 +20,6 @@ import Mathlib.Topology.Separation.Connected
 We give sign expansions the Scott-Hausdorff topology.
 -/
 
-private theorem CompletelyRegularSpace.of_isTopologicalBasis_clopens {X} [TopologicalSpace X]
-    (h : TopologicalSpace.IsTopologicalBasis {s : Set X | IsClopen s}) :
-    CompletelyRegularSpace X where
-  completely_regular x K hK hx := by
-    obtain ⟨s, hs, hx, hsK⟩ := h.exists_subset_of_mem_open hx hK.isOpen_compl
-    refine ⟨(sᶜ).indicator 1, ?_, ?_, fun x hx ↦ Set.indicator_of_mem ?_ _⟩
-    · exact hs.compl.continuous_indicator continuous_const
-    · simpa
-    · exact fun hs ↦ hsK hs hx
-
 public section
 
 namespace Simplicity
@@ -50,8 +40,8 @@ theorem isClosed_iff_dirSupClosed {s : Set Simplicity} : IsClosed s ↔ DirSupCl
 theorem isClosed_iff_sSup {s : Set Simplicity} :
     IsClosed s ↔ ∀ t ⊆ s, t.Nonempty → BddAbove t → sSup t ∈ s := by
   rw [isClosed_iff_dirSupClosed]
-  refine ⟨fun hs t ht ht₀ ht₁ ↦ ?_, fun hs t ht₀ ht₁ x hx ht ↦ ?_⟩
-  · exact hs ht₀ (directedOn_iff_bddAbove.2 ht₁) (isLUB_sSup_of_bddAbove ht₁) ht
+  refine ⟨fun hs t ht ht₀ ht₁ ↦ ?_, fun hs t ht ht₀ ht₁ x hx ↦ ?_⟩
+  · exact hs ht ht₀ (directedOn_iff_bddAbove.2 ht₁) (isLUB_sSup_of_bddAbove ht₁)
   · rw [hx.unique (isLUB_sSup_of_bddAbove hx.bddAbove)]
     exact hs t ht ht₀ hx.bddAbove
 
@@ -120,7 +110,7 @@ theorem isClosed_of_pairwise_incompRel {s : Set Simplicity} (hs : s.Pairwise (In
 
 theorem isClopen_singleton_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x) :
     IsClopen {x} := by
-  rw [not_isSuccLimit_iff, not_isSuccPrelimit_iff_exists_covBy] at hx
+  rw [not_isSuccLimit_iff, not_isSuccPrelimit_iff] at hx
   obtain hx | ⟨y, hx⟩ := hx
   · rw [← hx.Iic_eq]
     exact isClopen_Iic x
@@ -161,7 +151,7 @@ theorem hasBasis_nhds_Ioc {x : Simplicity} (hx₀ : x ≠ ⊥) : (𝓝 x).HasBas
         · exact (isLUB_sSup_of_bddAbove bddAbove_Iio)
         · rwa [sSup_Iio_of_isSuccLimit hx']
       · simp_rw [not_isSuccLimit_iff, isMin_iff_eq_bot, hx₀, false_or,
-          not_isSuccPrelimit_iff_exists_covBy] at hx'
+          not_isSuccPrelimit_iff] at hx'
         obtain ⟨y, hy⟩ := hx'
         use y, hy.lt
         rw [hy.Ioc_eq, singleton_subset_iff]
