@@ -19,28 +19,6 @@ API between both stays consistent.
 
 open Lean
 
-/-! ### For Mathlib -/
-
-public section
-
-namespace Ordinal
-
-theorem eq_natCast_of_le_natCast {a : Ordinal} {b : ℕ} (h : a ≤ b) : ∃ c : ℕ, a = c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.natCast_lt_omega0 b))
-
-@[simp]
-theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Set.Iio n = Set.Iio (n : Ordinal) := by
-  ext o; have (h : o < n) := eq_natCast_of_le_natCast h.le; aesop
-
-theorem Iio_zero : Set.Iio (0 : Ordinal) = ∅ := by simp
-@[simp] theorem Iio_one : Set.Iio (1 : Ordinal) = {0} := by
-  rw [← zero_add 1, ← Order.succ_eq_add_one, Order.Iio_succ]; exact Set.Iic_bot
-@[simp] theorem Iio_two : Set.Iio (2 : Ordinal) = {0, 1} := by
-  rw [← one_add_one_eq_two, ← Order.succ_eq_add_one, Order.Iio_succ]; ext; simp [le_one_iff]
-
-end Ordinal
-end
-
 /-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
@@ -72,7 +50,7 @@ instance : PartialOrder $Alias := inferInstanceAs (PartialOrder $Source)
 instance : SuccOrder $Alias := inferInstanceAs (SuccOrder $Source)
 instance : OrderBot $Alias := inferInstanceAs (OrderBot $Source)
 instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
-instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
+instance : IsBotZeroClass $Alias := inferInstanceAs (IsBotZeroClass $Source)
 instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
@@ -137,21 +115,15 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
 
 theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
+$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
-    ($(mkIdent `mk) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
-  $(mkIdent `mk) ($(mkVal Alias) a)
+    ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
+  $(mkIdent `of) ($(mkVal Alias) a)
 
 $(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
-
-@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := bot_le
-@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := le_bot_iff
-@[simp] theorem $(mkIdent `not_neg) (a : $Alias) : ¬ a < 0 := not_lt_bot
-protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
-protected theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
 
 end $Alias
 end
@@ -168,17 +140,19 @@ universe u
 
 instance : Uncountable $Alias := Ordinal.uncountable
 
-@[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
-theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
+theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
+  Order.lt_one_iff (α := Ordinal)
+theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Order.le_one_iff (α := Ordinal)
 
 @[simp]
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
-  Ordinal.one_le_iff_ne_zero
+  Order.one_le_iff_ne_zero (α := Ordinal)
 
 theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
 
-theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Ordinal.Iio_zero
-@[simp] theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Ordinal.Iio_one
+theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Set.Iio_bot (α := Ordinal)
+theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α := Ordinal)
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
@@ -187,7 +161,7 @@ instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
-instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
+instance : IsEmpty (Set.Iio (0 : $Alias)) := Set.isEmpty_Iio_zero (α := Ordinal)
 instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
 
 @[simp]

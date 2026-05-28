@@ -7,7 +7,7 @@ module
 
 public import CombinatorialGames.NatOrdinal.Basic
 public meta import CombinatorialGames.Tactic.Register
-public import Mathlib.SetTheory.Ordinal.Family
+public import CombinatorialGames.NatOrdinal.Basic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Data.Nat.Bitwise
@@ -55,12 +55,12 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
-attribute [simp] succ_zero succ_ne_zero
+attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
-@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Ordinal.Iio_two
+@[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Order.Iio_two (α := Ordinal)
 theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
@@ -76,24 +76,24 @@ variable {a b c : Nimber.{u}}
 
 -- We write the binders like this so that the termination checker works.
 private def add (a b : Nimber.{u}) : Nimber.{u} :=
-  sInf {x | (∃ a', ∃ (_ : a' < a), Nimber.add a' b = x) ∨
-    ∃ b', ∃ (_ : b' < b), Nimber.add a b' = x}ᶜ
+  sInf {x | (∃ a', ∃ (_ : a' < a), add a' b = x) ∨ ∃ b', ∃ (_ : b' < b), add a b' = x}ᶜ
 termination_by (a, b)
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
 `a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-instance : Add Nimber :=
+noncomputable instance : Add Nimber :=
   ⟨Nimber.add⟩
 
 theorem add_def (a b : Nimber) :
     a + b = sInf {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ := by
-  change Nimber.add a b = _
-  rw [Nimber.add]
+  change add a b = _
+  rw [add]
   simp_rw [exists_prop]
   rfl
 
-/-- The set in the definition of `Nimber.add` is nonempty. -/
+/-- The set in the definition of `add` is nonempty. -/
 private theorem add_nonempty (a b : Nimber.{u}) :
     {x | (∃ a' < a, a' + b = x) ∨ ∃ b' < b, a + b' = x}ᶜ.Nonempty :=
   nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
@@ -122,20 +122,20 @@ theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + 
   apply add_le_of_forall_ne
   all_goals
     intro c hc
-    induction c with | mk c
+    cases c with | of c
     rw [← val_eq_iff.ne]
     apply ((add_le_nadd' ..).trans_lt _).ne
     simpa
 termination_by (a, b)
 
-theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a + NatOrdinal.of b).val :=
+theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
   add_le_nadd' ..
 
-protected theorem add_comm (a b : Nimber) : a + b = b + a := by
+private theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
   congr! 7 <;>
-    (rw [and_congr_right_iff]; intro; rw [Nimber.add_comm])
+    (rw [and_congr_right_iff]; intro; rw [add_comm])
 termination_by (a, b)
 
 instance : IsLeftCancelAdd Nimber where
@@ -147,7 +147,7 @@ instance : IsLeftCancelAdd Nimber where
 
 instance : IsRightCancelAdd Nimber where
   add_right_cancel a b c h := by
-    simp_rw [Nimber.add_comm] at h
+    simp_rw [add_comm] at h
     exact add_left_cancel h
 
 theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
@@ -159,7 +159,7 @@ theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
     · rfl
     · have hb : b + b = 0 := add_eq_zero.2 rfl
       rwa [← hb, add_left_inj] at hab
-  · rw [← Nimber.le_zero]
+  · rw [← le_zero_iff]
     apply add_le_of_forall_ne <;>
     simp_rw [ne_eq] <;>
     intro x hx
@@ -176,37 +176,34 @@ theorem add_ne_zero_iff : a + b ≠ 0 ↔ a ≠ b :=
 theorem add_self (a : Nimber) : a + a = 0 :=
   add_eq_zero.2 rfl
 
-protected theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
+private theorem add_assoc (a b c : Nimber) : a + b + c = a + (b + c) := by
   apply le_antisymm <;>
     apply add_le_of_forall_ne <;>
     intro x hx <;>
     try obtain ⟨y, hy, rfl⟩ | ⟨y, hy, rfl⟩ := exists_of_lt_add hx
-  on_goal 1 => rw [Nimber.add_assoc y, add_ne_add_left]
-  on_goal 2 => rw [Nimber.add_assoc _ y, add_ne_add_right, add_ne_add_left]
-  on_goal 3 => rw [Nimber.add_assoc _ _ x, add_ne_add_right, add_ne_add_right]
-  on_goal 4 => rw [← Nimber.add_assoc x, add_ne_add_left, add_ne_add_left]
-  on_goal 5 => rw [← Nimber.add_assoc _ y, add_ne_add_left, add_ne_add_right]
-  on_goal 6 => rw [← Nimber.add_assoc _ _ y, add_ne_add_right]
+  on_goal 1 => rw [add_assoc y, add_ne_add_left]
+  on_goal 2 => rw [add_assoc _ y, add_ne_add_right, add_ne_add_left]
+  on_goal 3 => rw [add_assoc _ _ x, add_ne_add_right, add_ne_add_right]
+  on_goal 4 => rw [← add_assoc x, add_ne_add_left, add_ne_add_left]
+  on_goal 5 => rw [← add_assoc _ y, add_ne_add_left, add_ne_add_right]
+  on_goal 6 => rw [← add_assoc _ _ y, add_ne_add_right]
   all_goals apply ne_of_lt; assumption
 termination_by (a, b, c)
 
-protected theorem add_zero (a : Nimber) : a + 0 = a := by
+private theorem add_zero (a : Nimber) : a + 0 = a := by
   apply le_antisymm
   · apply add_le_of_forall_ne
     · intro a' ha
-      rw [Nimber.add_zero]
+      rw [add_zero]
       exact ha.ne
     · intro _ h
-      exact (Nimber.not_neg _ h).elim
+      cases not_lt_zero h
   · by_contra! h
     replace h := h -- needed to remind `termination_by`
-    have := Nimber.add_zero (a + 0)
+    have := add_zero (a + 0)
     rw [add_left_inj] at this
     exact this.not_lt h
 termination_by a
-
-protected theorem zero_add (a : Nimber) : 0 + a = a := by
-  rw [Nimber.add_comm, Nimber.add_zero]
 
 instance : Neg Nimber :=
   ⟨id⟩
@@ -216,51 +213,13 @@ protected theorem neg_eq (a : Nimber) : -a = a :=
   rfl
 
 instance : AddCommGroupWithOne Nimber where
-  add_assoc := Nimber.add_assoc
-  add_zero := Nimber.add_zero
-  zero_add := Nimber.zero_add
+  add_assoc := by exact add_assoc
+  add_zero := by exact add_zero
+  zero_add _ := by rw [add_comm, add_zero]
   nsmul := nsmulRec
   zsmul := zsmulRec
   neg_add_cancel := add_self
-  add_comm := Nimber.add_comm
-
--- #34622
-section Mathlib
-
-theorem _root_.Set.range_if {α β : Type*} {p : α → Prop} [DecidablePred p] {x y : β}
-    (hp : ∃ a, p a) (hn : ∃ a, ¬ p a) :
-    Set.range (fun a ↦ if p a then x else y) = {x, y} := by
-  grind
-
-theorem natCast_eq_if (n : ℕ) : (n : Nimber) = if Even n then 0 else 1 := by
-  induction n <;> aesop
-
-@[simp]
-theorem range_natCast : Set.range ((↑) : ℕ → Nimber) = {0, 1} := by
-  rw [funext natCast_eq_if, Set.range_if]
-  · use 0; simp
-  · use 1; simp
-
-theorem natCast_eq_mod (n : ℕ) : (n : Nimber) = (n % 2 : ℕ) := by
-  simp [natCast_eq_if, Nat.even_iff]
-
-@[simp]
-theorem ofNat_eq_mod (n : ℕ) [n.AtLeastTwo] : (ofNat(n) : Nimber) = (n % 2 : ℕ) :=
-  natCast_eq_mod n
-
-theorem intCast_eq_if (n : ℤ) : (n : Nimber) = if Even n then 0 else 1 := by
-  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simpa using natCast_eq_if n
-
-@[simp]
-theorem range_intCast : Set.range ((↑) : ℤ → Nimber) = {0, 1} := by
-  rw [funext intCast_eq_if, Set.range_if]
-  · use 0; simp
-  · use 1; simp
-
-theorem intCast_eq_mod (n : ℤ) : (n : Nimber) = (n % 2 : ℤ) := by
-  simp [intCast_eq_if, Int.even_iff]
-
-end Mathlib
+  add_comm := by exact add_comm
 
 @[simp]
 theorem add_cancel_right (a b : Nimber) : a + b + b = a := by
@@ -272,7 +231,7 @@ theorem add_cancel_left (a b : Nimber) : a + (a + b) = b := by
 
 theorem add_trichotomy {a b c : Nimber} (h : a + b + c ≠ 0) :
     b + c < a ∨ c + a < b ∨ a + b < c := by
-  rw [← Nimber.pos_iff_ne_zero] at h
+  rw [← pos_iff_ne_zero] at h
   obtain ⟨x, hx, hx'⟩ | ⟨x, hx, hx'⟩ := exists_of_lt_add h <;>
   rw [add_eq_zero] at hx'
   · obtain ⟨x, hx, hx'⟩ | ⟨x, hx, hx'⟩ := exists_of_lt_add (hx' ▸ hx)

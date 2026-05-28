@@ -135,6 +135,7 @@ macro "!{" st:term "}'" h:term:max : term => `(OfSets.ofSets $st $h)
 @[inherit_doc OfSets.ofSets]
 macro "!{" s:term " | " t:term "}'" h:term:max : term => `(!{Player.cases $s $t}'$h)
 
+/-- A tactic which attempts to automatically solve goals which appear on `OfSets`. -/
 macro "of_sets_tactic" : tactic =>
   `(tactic| first
     | done
@@ -157,6 +158,7 @@ recommended_spelling "ofSets" for "!{st}" in [ofSets, «term!{_}»]
 recommended_spelling "ofSets" for "!{s | t}" in [ofSets, «term!{_|_}»]
 
 open Lean PrettyPrinter Delaborator SubExpr in
+/-- Delaborates `ofSets (Player.cases s t)` to `!{s | t}` and `ofSets st` to `!{st}`. -/
 @[app_delab OfSets.ofSets]
 meta def delabOfSets : Delab := do
   let e ← getExpr

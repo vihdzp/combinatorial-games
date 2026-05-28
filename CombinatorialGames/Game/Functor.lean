@@ -18,7 +18,7 @@ small sets of games (one for each player) and outputting a new game. This sugges
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : IGame.{u}
 ```
 
 However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
@@ -55,10 +55,10 @@ to various Lean limitations):
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : IGame.{u}
 
 coinductive LGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : LGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : LGame.{u}
 ```
 -/
 def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
