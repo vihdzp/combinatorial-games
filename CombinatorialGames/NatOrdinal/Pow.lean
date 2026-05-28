@@ -197,8 +197,8 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
 termination_by (x, y)
 
 theorem mul_lt_wpow_wpow (hx : x < ω^ ω^ z) (hy : y < ω^ ω^ z) : x * y < ω^ ω^ z := by
-  induction x with | mk x
-  induction y with | mk y
+  cases x with | of x
+  cases y with | of y
   obtain rfl | hz := eq_or_ne z 0
   · simp_rw [wpow_zero, wpow_one, of.lt_iff_lt, Ordinal.lt_omega0] at hx hy
     obtain ⟨m, rfl⟩ := hx

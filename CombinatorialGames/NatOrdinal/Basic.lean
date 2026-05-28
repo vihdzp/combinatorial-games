@@ -180,8 +180,6 @@ instance : AddMonoidWithOne NatOrdinal where
 @[simp, norm_cast] theorem val_lt_natCast_iff {a : NatOrdinal} {b : ℕ} : val a < b ↔ a < b := .rfl
 @[simp, norm_cast] theorem val_eq_natCast_iff {a : NatOrdinal} {b : ℕ} : val a = b ↔ a = b := .rfl
 
-@[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := one_add_one_eq_two (R := Ordinal)
-
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
   Ordinal.natCast_image_Iio n
