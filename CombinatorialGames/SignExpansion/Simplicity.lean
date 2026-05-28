@@ -74,7 +74,7 @@ def val : Simplicity ≃ SignExpansion := Equiv.refl _
 instance : Bot Simplicity := ⟨of 0⟩
 
 @[simp, grind =] theorem of_zero : of 0 = ⊥ := rfl
-@[simp, grind =] theorem val_zero : val ⊥ = 0 := rfl
+@[simp, grind =] theorem val_bot : val ⊥ = 0 := rfl
 
 instance : FunLike Simplicity NatOrdinal SignType where
   coe x := x.val
@@ -94,6 +94,10 @@ protected theorem ext {x y : Simplicity} (hxy : ∀ o, x o = y o) : x = y :=
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def ind {motive : Simplicity → Sort*} (of : ∀ a, motive (of a)) (a) : motive a :=
   of a.val
+
+@[simp]
+theorem ind_of {motive of} (a : SignExpansion) : @Simplicity.ind motive of (.of a) = of a :=
+  rfl
 
 /-! ### Order instances -/
 
@@ -202,7 +206,7 @@ instance : SemilatticeInf Simplicity :=
 
 theorem sInf_pair (x y : Simplicity) : sInf {x, y} = x ⊓ y := (rfl)
 
-instance : CompleteSemilatticeInf (WithTop Simplicity) where
+instance instCompleteSemilatticeInfWithTop : CompleteSemilatticeInf (WithTop Simplicity) where
   isGLB_sInf := by exact WithTop.isGLB_sInf_of_nonempty fun _ ↦ isGLB_sInf_of_nonempty
 
 /-! ### Supremum -/
@@ -284,7 +288,7 @@ protected theorem sup_of_le_left {x y : Simplicity} (h : y ≤ x) : x ⊔ y = x 
   exact Simplicity.sup_of_le_right h
 
 open Classical in
-instance : CompleteSemilatticeSup (WithTop Simplicity) where
+instance instCompleteSemilatticeSupWithTop : CompleteSemilatticeSup (WithTop Simplicity) where
   isLUB_sSup s := by
     change IsLUB s (dite ..)
     split_ifs with h hs
