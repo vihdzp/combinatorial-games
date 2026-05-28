@@ -24,6 +24,9 @@ define two separate `PartialOrder` instances on the same type, we instead create
 
 /-! ### For Mathlib -/
 
+instance {α : Type*} [Zero α] [LE α] [IsBotZeroClass α] : IsBotZeroClass (WithTop α) where
+  isBot_zero x := by cases x <;> simp
+
 @[no_expose, implicit_reducible]
 noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
     OrderBot α := by
@@ -204,7 +207,7 @@ theorem isSuccPrelimit_iff {x : Simplicity} :
 
 theorem isSuccLimit_iff {x : Simplicity} :
     Order.IsSuccLimit x ↔ Order.IsSuccLimit x.val.length := by
-  simp [Order.IsSuccLimit, isSuccPrelimit_iff]
+  simp [Order.IsSuccLimit, isSuccPrelimit_iff, bot_eq_zero]
 
 /-! ### Infimum -/
 
