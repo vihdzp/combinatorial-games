@@ -132,7 +132,7 @@ theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   exact omega0_opow_mul_nat_lt h n
 
 @[simp]
-theorem of_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by
+theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by
   simpa using (wpow_mul_natCast (of x) n).symm
 
 theorem lt_wpow_iff (hx : x ≠ 0) : y < ω^ x ↔ ∃ z < x, ∃ n : ℕ, y < ω^ z * n := by
