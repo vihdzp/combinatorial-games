@@ -10,6 +10,12 @@ public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso
 
+/-!
+# Birthday of a surreal number
+
+TODO: write a better docstring
+-/
+
 universe u
 
 public noncomputable section

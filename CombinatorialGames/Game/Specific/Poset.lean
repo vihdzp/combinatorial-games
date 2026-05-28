@@ -103,8 +103,8 @@ variable (α) in
 abbrev _root_.GameGraph.poset : GameGraph (Set α) where
   moves _ x := {y | Poset.Rel y x}
 
-instance : IsWellFounded _ (poset α).IsOption :=
-  isWellFounded_isOption_of_eq Poset.Rel fun _ _ ↦ rfl
+instance : (poset α).IsWellFounded :=
+  .of_subrelation Poset.Rel <| by simp
 
 /-- A state of the poset game on `α`. -/
 noncomputable def toIGame (s : Set α) : IGame :=
