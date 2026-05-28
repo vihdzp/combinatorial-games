@@ -55,7 +55,7 @@ universe u
 open Game IGame Relation WellFounded
 
 /-- A characterization of left moves of `x * y` in terms only of left moves. -/
-lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
+lemma forall_mem_moves_left_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴸ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ yᴸ, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ (-y)ᴸ, P (mulOption (-x) (-y) a b)) := by
@@ -63,7 +63,7 @@ lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
-lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
+lemma forall_moves_right_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴿ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ (-y)ᴸ, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ yᴸ, P (-mulOption (-x) y a b)) := by
@@ -268,7 +268,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
   refine .mk ?_ ?_
-  · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
+  · simp_rw [forall_mem_moves_left_mul', forall_moves_right_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
     · simpa [mulOption_comm] using mulOption_lt ihyx ihxy hb ha hd hc
@@ -360,11 +360,11 @@ lemma mul_right_le_of_equiv [Numeric x₁] [Numeric x₂]
   rw [IGame.le_iff_forall_lf]
   simp_rw [← Game.mk_le_mk]
   constructor
-  · rw [forall_leftMoves_mul']
+  · rw [forall_mem_moves_left_mul']
     constructor <;> intro a ha b hb
     · exact (mulOption_lt_mul_of_equiv ih₁₂ he ha hb).not_ge
     · simpa using (mulOption_lt_mul_of_equiv (IH24_neg <| (IH24_neg ih₂₁).1).2 he' ha hb).not_ge
-  · rw [forall_rightMoves_mul']
+  · rw [forall_moves_right_mul']
     constructor <;> intro a ha b hb
     · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₂₁).2 he.symm ha hb).not_ge
     · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₁₂).1 he'.symm ha hb).not_ge

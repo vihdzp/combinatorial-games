@@ -48,16 +48,16 @@ theorem undominate_def {x : IGame} : x.undominate =
   simp
 
 @[simp]
-theorem leftMoves_undominate {x : IGame} :
+theorem moves_left_undominate {x : IGame} :
     x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
   rw [undominate_def]
-  exact leftMoves_ofSets ..
+  exact moves_left_ofSets ..
 
 @[simp]
-theorem rightMoves_undominate {x : IGame} :
+theorem moves_right_undominate {x : IGame} :
     x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
   rw [undominate_def]
-  exact rightMoves_ofSets ..
+  exact moves_right_ofSets ..
 
 instance {x : IGame} [hx : Short x] : Short (undominate x) := by
   rw [short_iff_birthday_finite] at hx ⊢
@@ -72,7 +72,7 @@ termination_by x
 decreasing_by igame_wf
 
 private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
-  rw [le_def, leftMoves_undominate, rightMoves_undominate]
+  rw [le_def, moves_left_undominate, moves_right_undominate]
   refine ⟨fun y hy ↦ ?_, ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
     short
