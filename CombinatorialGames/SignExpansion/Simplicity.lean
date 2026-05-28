@@ -24,9 +24,6 @@ define two separate `PartialOrder` instances on the same type, we instead create
 
 /-! ### For Mathlib -/
 
-instance {α : Type*} [Zero α] [LE α] [IsBotZeroClass α] : IsBotZeroClass (WithTop α) where
-  isBot_zero x := by cases x <;> simp
-
 @[no_expose, implicit_reducible]
 noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
     OrderBot α := by
@@ -343,7 +340,6 @@ theorem length_sSup {s : Set Simplicity} (hs : BddAbove s) :
     rintro _ ⟨x, hx, rfl⟩
     exact length_strictMono.monotone (Simplicity.le_sSup hx hs)
 
-@[simp]
 theorem sSup_Iic (x : Simplicity) : sSup (Iic x) = x :=
   (isLUB_sSup_of_bddAbove bddAbove_Iic).unique isLUB_Iic
 

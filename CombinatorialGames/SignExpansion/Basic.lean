@@ -33,6 +33,9 @@ attribute [grind =] Pi.toLex_apply
 instance : ZeroLEOneClass SignType where
   zero_le_one := by decide
 
+instance {α : Type*} [Zero α] [LE α] [IsBotZeroClass α] : IsBotZeroClass (WithTop α) where
+  isBot_zero x := by cases x <;> simp
+
 @[local simp← ]
 theorem Set.preimage_neg {α ι : Type*} [InvolutiveNeg α] (f : ι → α) {s : Set α} :
     f ⁻¹' (-s) = (-f) ⁻¹' s :=
@@ -259,9 +262,8 @@ theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal
     (x ↾ o₁) ↾ o₂ = x ↾ min o₁ o₂ := by
   aesop
 
-@[simp]
 theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
-  ext; simp [apply_eq_zero]
+  simp
 
 @[simp]
 theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
