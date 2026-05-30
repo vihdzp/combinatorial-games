@@ -188,13 +188,14 @@ one (and thus infinitely many) zeros. -/
 def Small (x : SignExpansion) : Prop :=
   x.length ≠ ⊤
 
-theorem Small.length_ne_top {x : SignExpansion} (hx : x.Small) : x.length ≠ ⊤ :=
-  hx
+theorem small_iff_length_ne_top {x : SignExpansion} : x.Small ↔ x.length ≠ ⊤ := .rfl
+theorem small_iff_length_lt_top {x : SignExpansion} : x.Small ↔ x.length < ⊤ :=
+  lt_top_iff_ne_top.symm
 
-theorem Small.length_lt_top {x : SignExpansion} (hx : x.Small) : x.length < ⊤ :=
-  lt_top_iff_ne_top.2 hx
+alias ⟨Small.length_ne_top, _⟩ := small_iff_length_ne_top
+alias ⟨Small.length_lt_top, _⟩ := small_iff_length_lt_top
 
-theorem Small.zero : Small 0 := by simp [Small]
+@[simp] theorem Small.zero : Small 0 := by simp [Small]
 
 theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 0 := by
   rw [Small, ne_eq, length_eq_top, not_forall_not]
