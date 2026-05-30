@@ -331,7 +331,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen, Relation.SymmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto

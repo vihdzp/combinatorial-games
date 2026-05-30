@@ -92,7 +92,6 @@ def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
 /-! #### `coeff` -/
 
 /-- Returns the coefficient for `X ^ i`. -/
-@[no_expose]
 def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
   x.1.coeff <| OrderDual.toDual i
 

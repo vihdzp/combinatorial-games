@@ -147,6 +147,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
     rw [moves_nim] at hu
     obtain ⟨o', ho', rfl⟩ := hu
     grw [hxo]
+    rw [← NatOrdinal.val_lt_iff, ← Nimber.of.lt_iff_lt] at hxb
     simpa using (ho'.trans hxb).ne'
   obtain ⟨y, hy, hxy⟩ | ⟨y, hy, hyx⟩ := (le_def.1 hxo.le).2 _ (mem_moves_nim_of_lt _ hxb)
   · exact hu hy hxy
