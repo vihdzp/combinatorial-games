@@ -840,7 +840,7 @@ theorem sub_self_equiv (x : IGame) : x - x ≈ 0 := by
 
 /-- The sum of a game and its negative is equivalent, though not necessarily identical to zero. -/
 theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
-  simpa [add_comm] using sub_self_equiv x
+  simpa [add_comm, sub_eq_add_neg] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
   rw [le_iff_forall_lf, moves_add, moves_add]
@@ -999,7 +999,8 @@ theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
     x = (n + 1 : ℤ) := by
   have : -x ∈ (-n : ℤ)ᴸ := by simpa
   rw [← neg_inj]
-  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+  simpa [← IGame.intCast_neg, add_comm, sub_eq_add_neg] using
+    eq_sub_one_of_mem_leftMoves_intCast this
 
 /-- Every left option of an integer is equal to a smaller integer. -/
 theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴸ) :

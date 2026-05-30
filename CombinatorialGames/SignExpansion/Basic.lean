@@ -11,6 +11,8 @@ public import Mathlib.Data.Fintype.Order
 public import Mathlib.Data.Sign.Defs
 public import Mathlib.Order.CompleteLattice.PiLex
 
+import CombinatorialGames.Mathlib.WithTop
+
 /-!
 # Sign expansions
 
@@ -248,9 +250,8 @@ theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal
     (x ↾ o₁) ↾ o₂ = x ↾ min o₁ o₂ := by
   aesop
 
-@[simp]
 theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
-  ext; simp [apply_eq_zero]
+  simp
 
 @[simp]
 theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by

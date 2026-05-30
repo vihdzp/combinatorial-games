@@ -404,7 +404,7 @@ instance : IsStrictOrderedRing NatOrdinal where
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
+  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add' ..)
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp

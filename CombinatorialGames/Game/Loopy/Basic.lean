@@ -251,8 +251,8 @@ theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
   rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   cases p <;>
-    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right]
-      using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
+    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right] using!
+      exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
 
 theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
@@ -721,6 +721,7 @@ theorem neg_mulOption (p : Player) (x : α × β) (y : α × β) :
 @[simp]
 theorem swap_mulOption (p : Player) (x : α × β) (y : α × β) :
     swap (mulOption p x y) = mulOption p x.swap y.swap := by
+  cases y
   simpa [mulOption, ← Multiset.singleton_add] using add_left_comm ..
 
 theorem mulOption_eq_add (p : Player) (x : α × β) (y : α × β) :
