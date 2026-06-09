@@ -129,8 +129,6 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_sSup (s : Set Cut) : (sSup s).left = ⋃ x ∈ s, x.left := by
   simpa using (compl_right (sSup s)).symm
 
--- TODO: PR the iInf/iSup versions for concepts to Mathlib
-
 @[simp] theorem left_iInf {ι} (f : ι → Cut) : (⨅ i, f i).left = ⋂ i, (f i).left := by simp [iInf]
 @[simp] theorem right_iInf {ι} (f : ι → Cut) : (⨅ i, f i).right = ⋃ i, (f i).right := by simp [iInf]
 
@@ -138,7 +136,7 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
-  rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
+  rw [← not_le, ← left_subset_left_iff, ← sdiff_nonempty, sdiff_eq_compl_inter, compl_left]
 
 instance : Neg Cut where
   neg x := {

@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.Basic
-public import Mathlib.Data.Nat.Lattice
+public import Mathlib.Order.Lattice.Nat
 
 import CombinatorialGames.Tactic.OrdinalAlias
 

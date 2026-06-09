@@ -79,7 +79,7 @@ instance : Bot Simplicity := ⟨of 0⟩
 
 instance : FunLike Simplicity NatOrdinal SignType where
   coe x := x.val
-  coe_injective' _ := by simp
+  coe_injective _ := by simp
 
 @[simp, grind =] theorem val_apply (x o) : val x o = x o := rfl
 @[simp, grind =] theorem of_apply (x o) : of x o = x o := rfl
