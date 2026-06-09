@@ -187,7 +187,7 @@ theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
 issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
 @[expose]
-def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
+noncomputable def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
   .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
 

@@ -37,7 +37,10 @@ public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
+<<<<<<< HEAD
 public import CombinatorialGames.SignExpansion.Topology
+=======
+>>>>>>> master
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut

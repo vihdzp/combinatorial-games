@@ -88,7 +88,8 @@ theorem not_isWin_iff_mem_Strategy : ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrat
 
 @[simp]
 theorem not_isLoss_of_isWin (h : IsWin p x) : ¬ IsLoss p x :=
-  fun h' ↦ not_isWin_iff_mem_Strategy.mpr ⟨_, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
+  fun h' ↦ not_isWin_iff_mem_Strategy.mpr
+    ⟨setOf _, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
 
 @[simp]
 theorem not_isWin_of_isLoss (h : IsLoss p x) : ¬ IsWin p x :=

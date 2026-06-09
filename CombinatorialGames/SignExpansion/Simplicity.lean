@@ -76,7 +76,7 @@ def val : Simplicity ≃ SignExpansion := Equiv.refl _
 instance : Bot Simplicity := ⟨of 0⟩
 
 @[simp, grind =] theorem of_zero : of 0 = ⊥ := rfl
-@[simp, grind =] theorem val_zero : val ⊥ = 0 := rfl
+@[simp, grind =] theorem val_bot : val ⊥ = 0 := rfl
 @[simp] theorem val_eq_zero {x} : val x = 0 ↔ x = ⊥ := .rfl
 @[simp] theorem of_eq_bot {x} : of x = ⊥ ↔ x = 0 := .rfl
 
@@ -99,6 +99,10 @@ protected theorem ext {x y : Simplicity} (hxy : ∀ o, x o = y o) : x = y :=
 protected def ind {motive : Simplicity → Sort*} (of : ∀ a, motive (of a)) (a) : motive a :=
   of a.val
 
+@[simp]
+theorem ind_of {motive of} (a : SignExpansion) : @Simplicity.ind motive of (.of a) = of a :=
+  rfl
+
 /-! ### Order instances -/
 
 instance : Preorder Simplicity where
@@ -107,6 +111,8 @@ instance : Preorder Simplicity where
   le_trans x y z := by grind
 
 theorem le_def {x y : Simplicity} : x ≤ y ↔ y.val ↾ x.val.length = x.val := .rfl
+
+theorem of_le_of {x y} : of x ≤ of y ↔ y ↾ x.length = x := .rfl
 
 instance : OrderBot Simplicity where
   bot_le := by simp [le_def]
@@ -236,7 +242,7 @@ private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈
 theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s (sInf s) := by
   constructor <;> intro x hx
   · rw [sInf_eq_of_mem hx]
-    exact of_restrict_le ..
+    exact of_restrict_le_of ..
   · obtain ⟨y, hy⟩ := hs
     rw [sInf_eq_of_mem hy]
     apply le_restrict_of_le_of_length_le (hx hy)
@@ -251,7 +257,7 @@ instance : SemilatticeInf Simplicity :=
 
 theorem sInf_pair (x y : Simplicity) : sInf {x, y} = x ⊓ y := (rfl)
 
-instance : CompleteSemilatticeInf (WithTop Simplicity) where
+instance instCompleteSemilatticeInfWithTop : CompleteSemilatticeInf (WithTop Simplicity) where
   isGLB_sInf := by exact WithTop.isGLB_sInf_of_nonempty fun _ ↦ isGLB_sInf_of_nonempty
 
 /-! ### Supremum -/
@@ -263,7 +269,7 @@ instance : SupSet Simplicity where
     of ⟨fun i ↦ if h : ∃ x ∈ s, x i ≠ 0 then h.choose i else 0, ?_⟩ else ⊥
 where finally
   intro a b h
-  simp only [mem_preimage, mem_singleton_iff, dite_eq_right_iff,
+  simp only [mem_preimage, Set.mem_singleton_iff, dite_eq_right_iff,
     forall_exists_index, forall_and_index]
   refine fun H x hx hb ↦ isUpperSet_preimage_singleton_zero _ h ?_
   have := H x hx ?_
@@ -388,10 +394,10 @@ theorem directedOn_iff_bddAbove {s : Set Simplicity} : DirectedOn (· ≤ ·) s 
       exact ⟨ha, le_rfl, h⟩
 
 instance : CompletePartialOrder Simplicity where
-  lubOfDirected _ hs := (isLUB_sSup_of_bddAbove (directedOn_iff_bddAbove.1 hs))
+  lubOfDirected _ hs := isLUB_sSup_of_bddAbove (directedOn_iff_bddAbove.1 hs)
 
 open Classical in
-instance : CompleteSemilatticeSup (WithTop Simplicity) where
+instance instCompleteSemilatticeSupWithTop : CompleteSemilatticeSup (WithTop Simplicity) where
   isLUB_sSup s := by
     change IsLUB s (dite ..)
     split_ifs with h hs
