@@ -62,7 +62,7 @@ def Simplicity : Type _ := SignExpansion
 deriving Inhabited
 
 namespace Simplicity
-open Set
+open Order Set
 
 /-- The identity function between `SignExpansion` and `Simplicity`. -/
 def of : SignExpansion ≃ Simplicity := Equiv.refl _
@@ -193,8 +193,7 @@ theorem Iic_diff_Iic {x y : Simplicity} (h : x ≤ y) : Iic y \ Iic x = Ioc x y 
   · exact fun z ⟨hzy, hzx⟩ ↦ ⟨(lt_or_ge_of_le h hzy).resolve_right hzx, hzy⟩
   · grind
 
-theorem isSuccPrelimit_iff {x : Simplicity} :
-    Order.IsSuccPrelimit x ↔ Order.IsSuccPrelimit x.val.length := by
+theorem isSuccPrelimit_iff {x : Simplicity} : IsSuccPrelimit x ↔ IsSuccPrelimit x.val.length := by
   constructor <;> intro hx y hy
   · refine hx (of <| val x ↾ y) ⟨of_restrict_lt hy.lt, fun z hz hz' ↦ ?_⟩
     apply @hy.2 z.val.length
@@ -208,9 +207,8 @@ theorem isSuccPrelimit_iff {x : Simplicity} :
       simpa using hi'.le
     · exact of_restrict_lt hi'
 
-theorem isSuccLimit_iff {x : Simplicity} :
-    Order.IsSuccLimit x ↔ Order.IsSuccLimit x.val.length := by
-  simp [Order.IsSuccLimit, isSuccPrelimit_iff, bot_eq_zero]
+theorem isSuccLimit_iff {x : Simplicity} : IsSuccLimit x ↔ IsSuccLimit x.val.length := by
+  simp [Order.isSuccLimit_iff, isSuccPrelimit_iff, bot_eq_zero]
 
 /-! ### Infimum -/
 
@@ -242,7 +240,7 @@ private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈
 theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s (sInf s) := by
   constructor <;> intro x hx
   · rw [sInf_eq_of_mem hx]
-    exact of_restrict_le_of ..
+    exact of_restrict_le ..
   · obtain ⟨y, hy⟩ := hs
     rw [sInf_eq_of_mem hy]
     apply le_restrict_of_le_of_length_le (hx hy)

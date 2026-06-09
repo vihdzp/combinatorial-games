@@ -84,7 +84,7 @@ instance : TotallySeparatedSpace Simplicity := by
     simpa
 
 theorem isOpen_Iio (x : Simplicity) : IsOpen (Iio x) := by
-  rw [← Iic_diff_right]
+  rw [← Iic_sdiff_right]
   exact (isClopen_Iic x).isOpen.inter isOpen_compl_singleton
 
 theorem isClosed_Icc (x y : Simplicity) : IsClosed (Icc x y) := by

@@ -216,7 +216,7 @@ theorem length_eq_zero {x : SignExpansion} : x.length = 0 ↔ x = 0 := by
   refine ⟨fun hx ↦ ?_, ?_⟩
   · ext i
     rw [zero_apply, apply_eq_zero, hx]
-    exact bot_le
+    exact zero_le
   · rintro rfl
     simp
 
