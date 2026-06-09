@@ -310,7 +310,7 @@ def length (x : SurrealHahnSeries.{u}) : Ordinal.{u} :=
 theorem type_support (x : SurrealHahnSeries.{u}) :
     type (α := x.support) (· > ·) = lift.{u + 1} x.length :=
   ((orderIsoShrink x.support).dual.toRelIsoLT.trans
-    (RelIso.preimage Equiv.ulift _).symm).ordinal_type_eq
+    (RelIso.preimage Equiv.ulift _).symm).ordinalType_congr
 
 @[simp]
 theorem length_eq_zero {x : SurrealHahnSeries} : length x = 0 ↔ x = 0 := by
@@ -321,7 +321,6 @@ theorem length_eq_zero {x : SurrealHahnSeries} : length x = 0 ↔ x = 0 := by
 theorem length_zero : length 0 = 0 :=
   length_eq_zero.2 rfl
 
-@[gcongr]
 theorem length_mono {x y : SurrealHahnSeries} (h : x.support ⊆ y.support) :
     x.length ≤ y.length := by
   rw [← lift_le, ← type_support, ← type_support]
@@ -478,7 +477,7 @@ theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
   · rw [← lift_inj, ← type_support]
     trans type (Subrel (· > · : x.support → _) (· > x.exp ⟨i, hi⟩))
     · apply ((RelIso.subrel (q := fun y ↦ ∃ h : y ∈ x.support, ⟨y, h⟩ ∈ Ioi (x.exp ⟨i, hi⟩))
-        (· > ·) _).trans _).ordinal_type_eq
+        (· > ·) _).trans _).ordinalType_congr
       · rw [truncIdx_of_lt hi, support_trunc]
         aesop
       · use (Equiv.subtypeSubtypeEquivSubtypeExists ..).symm

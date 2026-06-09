@@ -98,7 +98,7 @@ open Order
 
 instance : FunLike SignExpansion NatOrdinal SignType where
   coe := sign
-  coe_injective' a b hab := by cases a; cases b; cases hab; rfl
+  coe_injective a b hab := by cases a; cases b; cases hab; rfl
 
 /-- Every sign after the first `0` is also `0`. -/
 theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
