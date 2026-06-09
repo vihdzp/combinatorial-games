@@ -52,7 +52,7 @@ local infixl:50 " ≺ " => Rel
 
 theorem subrelation_rel : @Subrelation (Set α) (· ≺ ·) (· ⊂ ·) := by
   rintro x y ⟨a, ha, rfl⟩
-  refine ⟨diff_subset, not_subset.2 ⟨a, ha, ?_⟩⟩
+  refine ⟨sdiff_subset, not_subset.2 ⟨a, ha, ?_⟩⟩
   simp
 
 theorem not_rel_empty (s : Set α) : ¬ s ≺ ∅ := by
@@ -66,13 +66,13 @@ instance : @Std.Irrefl (Set α) (· ≺ ·) where
 
 theorem top_compl_rel_univ {α : Type*} [PartialOrder α] [OrderTop α] : {⊤}ᶜ ≺ @univ α := by
   use ⊤
-  simp [Ici, compl_eq_univ_diff]
+  simp [Ici, compl_eq_univ_sdiff]
 
 theorem rel_univ_of_rel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {s : Set α}
     (h : s ≺ {⊤}ᶜ) : s ≺ univ := by
   obtain ⟨a, _, rfl⟩ := h
   use a, mem_univ _
-  rw [compl_eq_univ_diff, diff_diff, union_eq_right.2]
+  rw [compl_eq_univ_sdiff, sdiff_sdiff, union_eq_right.2]
   simp
 
 theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
@@ -85,7 +85,7 @@ theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ 
     obtain rfl | h := h.nat_succ_le.eq_or_lt
     · exact (hg _).1
     · exact (f'.map_rel_iff.2 h).le (hg n).1
-  rw [(hg m).2, mem_diff] at this
+  rw [(hg m).2, mem_sdiff] at this
   exact this.2 h'
 
 instance isWellFounded_rel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=

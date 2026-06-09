@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Data.Nat.Lattice
 public import Mathlib.SetTheory.Ordinal.Family
 
 /-!
