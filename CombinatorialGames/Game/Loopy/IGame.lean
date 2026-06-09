@@ -47,7 +47,6 @@ private theorem toLGame'_inj {x y : IGame} (h : x.toLGame' = y.toLGame') : x = y
 termination_by (x, y)
 decreasing_by igame_wf
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- The inclusion map from well-founded games into loopy games. -/
 noncomputable def toLGame : IGame ↪ LGame where
   toFun := toLGame'
