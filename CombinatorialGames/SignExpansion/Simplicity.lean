@@ -70,6 +70,9 @@ def of : SignExpansion ≃ Simplicity := Equiv.refl _
 /-- The identity function between `Simplicity` and `SignExpansion`. -/
 def val : Simplicity ≃ SignExpansion := Equiv.refl _
 
+@[simp, grind =] theorem of_symm : of.symm = val := rfl
+@[simp, grind =] theorem val_symm : val.symm = of := rfl
+
 @[simp, grind =] theorem of_val (x) : of (val x) = x := rfl
 @[simp, grind =] theorem val_of (x) : val (of x) = x := rfl
 

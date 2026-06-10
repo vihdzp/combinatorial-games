@@ -27,6 +27,11 @@ public section
 namespace Simplicity
 open Order Set SignExpansion Topology
 
+instance : TopologicalSpace NatOrdinal := Preorder.topology _
+instance : OrderTopology NatOrdinal := ⟨rfl⟩
+instance : TopologicalSpace (WithTop NatOrdinal) := Preorder.topology _
+instance : OrderTopology (WithTop NatOrdinal) := ⟨rfl⟩
+
 instance : TopologicalSpace Simplicity :=
   Topology.scottHausdorff _ .univ
 
@@ -131,6 +136,8 @@ theorem nhds_eq_pure_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x)
 @[simp]
 theorem nhds_bot : 𝓝 (⊥ : Simplicity) = pure ⊥ :=
   nhds_eq_pure_of_not_isSuccLimit not_isSuccLimit_bot
+
+proof_wanted continuous_restrict (x : Simplicity) : Continuous (of ∘ restrict x.val)
 
 theorem hasBasis_nhds_Ioc {x : Simplicity} (hx₀ : x ≠ ⊥) : (𝓝 x).HasBasis (· < x) (Ioc · x) where
   mem_iff' s := by
