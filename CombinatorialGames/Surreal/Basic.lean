@@ -309,6 +309,18 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
 
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
+    {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z < !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} < z) := by
+  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_le_ofSets_iff]
+
+theorem ofSets_lt_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
+    {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
+    !{s₁ | t₁} < !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
+  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_lf_ofSets_iff]
+
 theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
 theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop
 
