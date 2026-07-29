@@ -237,14 +237,9 @@ noncomputable def birthdayFinset : ℕ → Finset IGame.{u}
 
 @[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
 
-theorem birthdayFinset_succ (n : ℕ) : birthdayFinset (n + 1) =
-    ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
-      ⟨fun a => !{a.1 | a.2}, fun a b hab => by aesop⟩ :=
-  (rfl)
-
 theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n + 1) ↔
     ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
-  simp [birthdayFinset_succ]
+  simp [birthdayFinset]
   rfl
 
 theorem birthdayFinset_one :

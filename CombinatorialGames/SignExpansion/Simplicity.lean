@@ -244,6 +244,7 @@ private theorem sSup_apply_of_mem {x : Simplicity} {s : Set Simplicity}
 private theorem exists_of_sSup_apply_ne_zero {s : Set Simplicity} (hs : IsChain (· ≤ ·) s)
     {o : NatOrdinal} (ho : sSup s o ≠ 0) : ∃ x ∈ s, x o ≠ 0 := by
   dsimp [sSup] at ho
+  #adaptation_note /-- The three lines below are needed since v4.33.0-rc1. -/
   generalize_proofs at ho
   split_ifs at ho
   dsimp at ho

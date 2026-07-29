@@ -34,15 +34,16 @@ instance : ToString NatNimber where
 @[simp] theorem one_le_iff_ne_zero {a : NatNimber} : 1 ≤ a ↔ a ≠ 0 := Nat.one_le_iff_ne_zero
 theorem le_one_iff {a : NatNimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Nat.le_one_iff_eq_zero_or_eq_one
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The embedding `NatNimber ↪o Nimber`. -/
 def toNimber : NatNimber ↪o Nimber where
-  toFun x := .of (x.val : Ordinal)
+  toFun x := .of x.val
   inj' x y := by simp
-  map_rel_iff' := by simp
+  map_rel_iff' := by generalize_proofs; simp
+
+theorem toNimber_def (x : NatNimber) : toNimber x = .of x.val := rfl
 
 @[simp] theorem toNimber_zero : toNimber 0 = 0 := rfl
-@[simp] theorem toNimber_one : toNimber 1 = 1 := show Nimber.of (1 : ℕ) = _ by simp
+@[simp] theorem toNimber_one : toNimber 1 = 1 := by simp [toNimber_def]
 @[simp] theorem toNimber_of (n : ℕ) : toNimber (of n) = Nimber.of n := rfl
 
 instance : Neg NatNimber where

@@ -140,7 +140,6 @@ instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
     !{st}.moves p = st p := by
   dsimp [ofSets, moves]
-  ext
   -- TODO: avoid `erw`
   erw [QPF.Fix.dest_mk]
 
