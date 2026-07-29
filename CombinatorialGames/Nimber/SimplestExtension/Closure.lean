@@ -223,17 +223,25 @@ theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x �
     contrapose! h
     exact h ▸ IsGroup.groupClosure x
 
-theorem not_bddAbove_setOf_isGroup : ¬ BddAbove (setOf IsGroup) :=
-  fun ⟨a, ha⟩ ↦ (ha (.groupClosure _)).not_gt <| (Order.lt_succ a).trans_le (le_groupClosure _)
+theorem isCofinal_ofPred_isGroup : IsCofinal (ofPred IsGroup) :=
+  fun a ↦ ⟨_, .groupClosure _, le_groupClosure a⟩
 
 /-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
 def enumGroup : Ordinal ↪o Nimber :=
-  .ofStrictMono (fun x ↦ ∗(Ordinal.enumOrd {y | IsGroup (∗y)} x)) <|
-    Ordinal.enumOrd_strictMono not_bddAbove_setOf_isGroup
+  .ofStrictMono (fun x ↦ Order.enum _ isCofinal_ofPred_isGroup (of x)) fun _ ↦ by simp
+
+theorem enumGroup_def (x : Ordinal) :
+    enumGroup x = Order.enum _ isCofinal_ofPred_isGroup (of x) :=
+  (rfl)
+
+theorem enumGroup_def' (x : Ordinal) :
+    enumGroup x = of (Order.enum {x | IsGroup (∗x)} (by exact isCofinal_ofPred_isGroup) x) :=
+  (rfl)
 
 @[simp]
-theorem range_enumGroup : Set.range enumGroup = setOf IsGroup :=
-  Ordinal.range_enumOrd not_bddAbove_setOf_isGroup
+theorem range_enumGroup : .range enumGroup = ofPred IsGroup := by
+  erw [enumGroup, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
+  exact Subtype.range_val
 
 theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ Set.range enumGroup ↔ IsGroup x :=
   Set.ext_iff.1 range_enumGroup _
@@ -241,14 +249,20 @@ theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ Set.range enumGroup ↔ IsG
 theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
   mem_range_enumGroup_iff.1 ⟨x, rfl⟩
 
-theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
-  Ordinal.isNormal_enumOrd (fun _ ↦ IsGroup.sSup) not_bddAbove_setOf_isGroup
+theorem isNormal_enumGroup : Order.IsNormal enumGroup := by
+  refine Order.isNormal_enum_iff_dirSupClosed.2 fun s hs hs₀ hs₁ a ha ↦ ?_
+  change IsGroup (of a)
+  rw [← ha.csSup_eq hs₀]
+  exact IsGroup.sSup hs hs₀ ha.bddAbove
 
 theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
-  rw [enumGroup, OrderEmbedding.coe_ofStrictMono, of.eq_iff_eq]
-  simp_rw [isGroup_iff_mem_range_two_opow]
-  apply congrFun (Ordinal.enumOrd_range (f := fun y ↦ 2 ^ y) fun a b h ↦ ?_)
-  rwa [Ordinal.opow_lt_opow_iff_right one_lt_two]
+  rw [enumGroup_def', of.eq_iff_eq]
+  have : {x | (of x).IsGroup} = range fun y : Ordinal ↦ 2 ^ y := by
+    ext; simp [isGroup_iff_mem_range_two_opow]
+  rw! [this, Order.enum_range]
+  · rfl
+  · intro a b h
+    rwa [Ordinal.opow_lt_opow_iff_right one_lt_two]
 
 @[simp]
 theorem enumGroup_zero : enumGroup 0 = 1 := by

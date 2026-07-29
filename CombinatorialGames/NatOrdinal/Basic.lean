@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.SetTheory.Ordinal.Family
+public import Mathlib.SetTheory.Cardinal.Cofinality.Enum
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Tactic.Abel
