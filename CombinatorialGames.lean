@@ -23,7 +23,7 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Mathlib.Dyadic
-public import CombinatorialGames.Mathlib.Finlift
+public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.Basic
@@ -36,13 +36,14 @@ public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.SignExpansion.Basic
+public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut
+public import CombinatorialGames.Surreal.Birthday.Dyadic
 public import CombinatorialGames.Surreal.Cut
 public import CombinatorialGames.Surreal.Division
-public import CombinatorialGames.Surreal.Dyadic.Basic
-public import CombinatorialGames.Surreal.Dyadic.Birthday
+public import CombinatorialGames.Surreal.Dyadic
 public import CombinatorialGames.Surreal.HahnSeries.Basic
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication

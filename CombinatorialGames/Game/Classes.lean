@@ -204,7 +204,7 @@ theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
 theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
   have := hx.of_mem_moves hy
-  induction p with
+  cases p with
   | left => symm; simpa using left_lf hy
   | right => simpa using lf_right hy
 
@@ -216,7 +216,7 @@ private theorem equiv_iff_forall_fuzzy' :
 
 theorem equiv_iff_forall_fuzzy (p : Player) :
     x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
-  induction p with
+  cases p with
   | left => exact equiv_iff_forall_fuzzy'
   | right =>
     rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
@@ -278,7 +278,8 @@ elab "numeric" : tactic =>
 
 protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
@@ -330,7 +331,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen, Relation.SymmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -431,7 +432,8 @@ elab "short" : tactic =>
 
 protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
@@ -440,7 +442,7 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
   ext
-  rw [Set.mem_setOf, subposition_iff_exists]
+  rw [Set.mem_ofPred, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=

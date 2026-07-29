@@ -77,7 +77,7 @@ theorem isStrategy_setOf_isLoss (p : Player) : IsStrategy p {x | IsLoss (-p) x} 
 
 theorem isStrategy_setOf_not_isWin (p : Player) : IsStrategy p {x | ¬ IsWin (-p) x} :=
   fun x hx ↦ by
-    simp_rw [Set.mem_setOf, isWin_iff_exists, isLoss_iff_forall] at hx
+    simp_rw [Set.mem_ofPred, isWin_iff_exists, isLoss_iff_forall] at hx
     simpa using hx
 
 theorem not_isWin_iff_mem_Strategy : ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrategy (-p) s where
@@ -88,7 +88,8 @@ theorem not_isWin_iff_mem_Strategy : ¬ IsWin p x ↔ ∃ s, x ∈ s ∧ IsStrat
 
 @[simp]
 theorem not_isLoss_of_isWin (h : IsWin p x) : ¬ IsLoss p x :=
-  fun h' ↦ not_isWin_iff_mem_Strategy.mpr ⟨_, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
+  fun h' ↦ not_isWin_iff_mem_Strategy.mpr
+    ⟨.ofPred _, h', by simpa using isStrategy_setOf_isLoss (-p)⟩ h
 
 @[simp]
 theorem not_isWin_of_isLoss (h : IsLoss p x) : ¬ IsWin p x :=

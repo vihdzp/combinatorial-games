@@ -10,6 +10,12 @@ public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso
 
+/-!
+# Birthday of a surreal number
+
+TODO: write a better docstring
+-/
+
 universe u
 
 public noncomputable section
@@ -114,7 +120,7 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
   exact birthday_mk_le _
 
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
-  simpa using birthday_add_le x (-y)
+  simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday

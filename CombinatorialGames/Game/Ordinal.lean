@@ -134,7 +134,7 @@ theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
-  simpa using toIGame.monotone (NatOrdinal.zero_le a)
+  simpa using toIGame.monotone zero_le
 
 /-! ### `NatOrdinal` to `Game` -/
 

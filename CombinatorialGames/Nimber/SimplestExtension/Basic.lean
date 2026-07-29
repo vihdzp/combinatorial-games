@@ -9,7 +9,6 @@ public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -58,7 +57,7 @@ theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c
 
 -- TODO: come up with a better name, probably rename `log_eq_zero` while we're at it.
 theorem log_eq_zero' {b x : Ordinal} (hb : b ≤ 1) : log b x = 0 := by
-  cases Ordinal.le_one_iff.1 hb <;> simp_all
+  cases Order.le_one_iff.1 hb <;> simp_all
 
 theorem log_eq_zero_iff {b x : Ordinal} : log b x = 0 ↔ b ≤ 1 ∨ x < b := by
   constructor
@@ -122,12 +121,12 @@ theorem IsGroup.one : IsGroup 1 where
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
-  add_lt := Principal.sSup (fun x hx ↦ (H x hx).add_lt)
+  add_lt := IsPrincipal.sSup (fun x hx ↦ (H x hx).add_lt)
   ne_zero h := by
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
     apply (H x hx).ne_zero
-    rw [← Nimber.le_zero, ← h]
+    rw [← le_zero_iff, ← h]
     exact lub.left hx
 
 protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
@@ -190,8 +189,8 @@ theorem IsGroup.add_eq_of_lt' {x y : Ordinal} (h : IsGroup (∗x)) (hy : y < x) 
 @[simp]
 theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
   refine ⟨fun y z hy hz ↦ ?_, by simp⟩
-  induction y with | mk y
-  induction z with | mk z
+  cases y with | of y
+  cases z with | of z
   obtain rfl | hy₀ := eq_or_ne y 0; · simpa
   obtain rfl | hz₀ := eq_or_ne z 0; · simpa
   have hy' : log 2 y < x := by rwa [← lt_opow_iff_log_lt one_lt_two hy₀]
@@ -241,7 +240,7 @@ theorem add_lt_of_log_eq {a b : Ordinal} (ha₀ : a ≠ 0) (hb₀ : b ≠ 0) (h 
   apply (IsGroup.two_opow _).add_lt <;> exact mod_lt _ (opow_ne_zero _ two_ne_zero)
 
 theorem exists_isGroup_add_lt (hx : x ≠ 0) : ∃ y ≤ x, IsGroup y ∧ x + y < y := by
-  induction x with | mk x
+  cases x with | of x
   refine ⟨_, opow_log_le_self _ hx, .two_opow _, ?_⟩
   exact add_lt_of_log_eq hx (opow_ne_zero _ two_ne_zero) (log_opow one_lt_two _).symm
 
@@ -250,12 +249,14 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
   by_contra! H
   obtain ⟨h, hx⟩ := H
-  apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add h.ne_zero).symm).false
-  · rw [of.lt_iff_lt]
-    apply (opow_log_le_self _ h.ne_zero).lt_of_ne
+  have hx' := val_ne_zero.2 h.ne_zero
+  apply ((h.add_lt _ _).trans_eq (two_opow_log_add hx').symm).false
+  · rw [of_lt_iff]
+    apply (opow_log_le_self _ hx').lt_of_ne
+    rw [ne_eq, ← of_eq_iff]
     contrapose! hx
-    exact hx ▸ mem_range_self _
-  · exact mod_opow_log_lt_self _ h.ne_zero
+    exact ⟨_, hx⟩
+  · exact mod_opow_log_lt_self _ hx'
 
 /-- A version of `isGroup_iff_zero_or_mem_range_two_opow` stated in terms of `Ordinal`. -/
 theorem isGroup_iff_zero_or_mem_range_two_opow' {x : Ordinal} :
@@ -328,7 +329,7 @@ theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubrin
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
   toIsGroup := .sSup (fun x hx => (H x hx).toIsGroup) ne bdd
-  mul_lt := Principal.sSup fun x hx ↦ (H x hx).mul_lt
+  mul_lt := IsPrincipal.sSup fun x hx ↦ (H x hx).mul_lt
   ne_one h := by
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
@@ -374,12 +375,12 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
       of_val, ← mul_add]
     obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hwa)
-    · rw [← div_eq_iff hwa]
+    · rw [← _root_.div_eq_iff hwa]
       exact (H' hb (H _ (hy.add_lt hwy (ha.trans hwy)))).ne
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
     rw [add_comm, ← add_assoc, ← mul_add, add_comm]
-    induction b with | mk b
+    cases b with | of b
     rw [of.lt_iff_lt] at hb
     have hwz := hwy.trans_le hyz
     have hx' : val (a * (∗b + ∗w)) < x := H' ha (hz.add_lt (hb.trans hwz) hwz)
@@ -545,7 +546,7 @@ theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
         exact hx.one_lt
       rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
         ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
-      apply (opow_le_opow_right hx.pos hay.succ_le).trans_lt'
+      apply (opow_le_opow_right (of_pos.1 hx.pos) hay.succ_le).trans_lt'
       rw [opow_succ]
       exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
     · exact IH _ (mod_opow_log_lt_self _ ha') ((mod_le ..).trans_lt ha)

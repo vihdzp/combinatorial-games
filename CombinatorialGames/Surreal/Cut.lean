@@ -129,8 +129,6 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_sSup (s : Set Cut) : (sSup s).left = ⋃ x ∈ s, x.left := by
   simpa using (compl_right (sSup s)).symm
 
--- TODO: PR the iInf/iSup versions for concepts to Mathlib
-
 @[simp] theorem left_iInf {ι} (f : ι → Cut) : (⨅ i, f i).left = ⋂ i, (f i).left := by simp [iInf]
 @[simp] theorem right_iInf {ι} (f : ι → Cut) : (⨅ i, f i).right = ⋃ i, (f i).right := by simp [iInf]
 
@@ -138,7 +136,7 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
-  rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
+  rw [← not_le, ← left_subset_left_iff, ← sdiff_nonempty, sdiff_eq_compl_inter, compl_left]
 
 instance : Neg Cut where
   neg x := {
@@ -227,14 +225,18 @@ def rightGame : Game →o Cut where
 /-- The cut just to the left of a surreal number. -/
 def leftSurreal : Surreal ↪o Cut where
   toFun x := (leftGame x.toGame).copy
-    (Iio x) (Ici x) (by rw [leftGame]; aesop) (by rw [leftGame]; aesop)
+    (Iio x) (Ici x)
+    (show Iio x = {y | y.toGame ⧏ toGame x} by ext; simp)
+    (show Ici x = {y | toGame x ≤ y.toGame} by ext; simp)
   inj' _ := by simp [Concept.copy, Ici_inj]
   map_rel_iff' := Iio_subset_Iio_iff
 
 /-- The cut just to the right of a surreal number. -/
 def rightSurreal : Surreal ↪o Cut where
   toFun x := (rightGame x.toGame).copy
-    (Iic x) (Ioi x) (by rw [rightGame]; aesop) (by rw [rightGame]; aesop)
+    (Iic x) (Ioi x)
+    (show Iic x = {y | y.toGame ≤ toGame x} by ext; simp)
+    (show Ioi x = {y | toGame x ⧏ y.toGame} by ext; simp)
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
@@ -451,7 +453,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
       apply h at hy
       rw [right_infRight, mem_iUnion₂] at hy
       obtain ⟨i, hi, hy⟩ := hy
-      rw [mem_setOf, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
+      rw [mem_ofPred, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
       exact lf_of_right_le (hy.trans (Numeric.lt_right hz).le) hi
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
