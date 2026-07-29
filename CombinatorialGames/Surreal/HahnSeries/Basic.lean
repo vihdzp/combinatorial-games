@@ -333,7 +333,7 @@ theorem length_mono {x y : SurrealHahnSeries} (h : x.support ⊆ y.support) :
 This is registered as a `RelIso` between `Iio x.length` and `x.support`, so that `x.exp.symm` can be
 used to return the index of an element in the support. -/
 def exp (x : SurrealHahnSeries) : (· < · : Iio x.length → _ → _) ≃r (· > · : x.support → _ → _) :=
-  (Ordinal.enum _).trans (orderIsoShrink x.support).dual.toRelIsoLT.symm
+  (Ordinal.enum _).trans (orderIsoShrink x.support).toRelIsoGT.symm
 
 @[simp]
 theorem symm_exp_lt {x : SurrealHahnSeries} (i) : x.exp.symm i < x.length :=
@@ -380,9 +380,9 @@ theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
     typein (· > ·) i = lift.{u + 1} (x.exp.symm i) := by
   unfold exp length
   rw [typein, RelEmbedding.ofMonotone_coe, ← lift_id'.{u, u + 1} (type _)]
+  dsimp
   apply RelIso.ordinal_lift_type_eq
-  use Equiv.subtypeEquiv (equivShrink _) (fun a ↦ (orderIsoShrink _).toRelIsoLT.map_rel_iff.symm)
-  simp
+  refine ⟨Equiv.subtypeEquiv (equivShrink _) ?_, ?_⟩ <;> simp
 
 /-! #### `coeffIdx` -/
 
@@ -392,8 +392,8 @@ def coeffIdx (x : SurrealHahnSeries) (i : Ordinal) : ℝ :=
   if h : i < x.length then x.coeff (x.exp ⟨i, h⟩) else 0
 
 theorem coeffIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
-    x.coeffIdx i = x.coeff (x.exp ⟨i, h⟩) := by
-  rw [coeffIdx, dif_pos]
+    x.coeffIdx i = x.coeff (x.exp ⟨i, mem_Iio.2 h⟩) := by
+  rwa [coeffIdx, dif_pos]
 
 theorem coeffIdx_of_le {x : SurrealHahnSeries} {i : Ordinal} (h : x.length ≤ i) :
     x.coeffIdx i = 0 := by
@@ -405,7 +405,7 @@ theorem coeffIdx_zero : coeffIdx 0 = 0 := by
 
 @[simp]
 theorem coeff_exp (x : SurrealHahnSeries) (i) : x.coeff (x.exp i) = x.coeffIdx i :=
-  (coeffIdx_of_lt _).symm
+  (coeffIdx_of_lt i.2).symm
 
 @[simp]
 theorem coeffIdx_symm_exp (x : SurrealHahnSeries) (i) : x.coeffIdx (x.exp.symm i) = x.coeff i := by
@@ -436,8 +436,8 @@ theorem support_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
   aesop
 
 theorem truncIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
-    x.truncIdx i = x.trunc (x.exp ⟨i, h⟩) := by
-  rw [truncIdx, dif_pos]
+    x.truncIdx i = x.trunc (x.exp ⟨i, mem_Iio.2 h⟩) := by
+  rwa [truncIdx, dif_pos]
 
 theorem truncIdx_of_le {x : SurrealHahnSeries} {i : Ordinal} (h : x.length ≤ i) :
     x.truncIdx i = x := by
@@ -449,7 +449,7 @@ theorem truncIdx_zero : truncIdx 0 = 0 := by
 
 @[simp, grind =]
 theorem trunc_exp (x : SurrealHahnSeries) (i) : x.trunc (x.exp i) = x.truncIdx i :=
-  (truncIdx_of_lt _).symm
+  (truncIdx_of_lt i.2).symm
 
 @[simp]
 theorem truncIdx_symm_exp (x : SurrealHahnSeries) (i) : x.truncIdx (x.exp.symm i) = x.trunc i := by

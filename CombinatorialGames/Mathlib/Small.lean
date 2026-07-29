@@ -33,7 +33,7 @@ private theorem small_level (x : α) : ∀ n, Small.{u} (level r x n)
     refine @small_sUnion _ _ ?_ ?_
     · have := small_level x n
       exact small_image ..
-    · simp_all
+    · simp_all [coe_ofPred]
 
 private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x)) := by
   refine @small_sUnion _ _ ?_ ?_

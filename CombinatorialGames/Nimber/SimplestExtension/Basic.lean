@@ -245,12 +245,14 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
   by_contra! H
   obtain ⟨h, hx⟩ := H
-  apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add h.ne_zero).symm).false
-  · rw [of.lt_iff_lt]
-    apply (opow_log_le_self _ h.ne_zero).lt_of_ne
+  have hx' := val_ne_zero.2 h.ne_zero
+  apply ((h.add_lt _ _).trans_eq (two_opow_log_add hx').symm).false
+  · rw [of_lt_iff]
+    apply (opow_log_le_self _ hx').lt_of_ne
+    rw [ne_eq, ← of_eq_iff]
     contrapose! hx
-    exact hx ▸ mem_range_self _
-  · exact mod_opow_log_lt_self _ h.ne_zero
+    exact ⟨_, hx⟩
+  · exact mod_opow_log_lt_self _ hx'
 
 /-- A version of `isGroup_iff_zero_or_mem_range_two_opow` stated in terms of `Ordinal`. -/
 theorem isGroup_iff_zero_or_mem_range_two_opow' {x : Ordinal} :
@@ -536,7 +538,7 @@ theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
         exact hx.one_lt
       rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
         ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
-      apply (opow_le_opow_right hx.pos hay.succ_le).trans_lt'
+      apply (opow_le_opow_right (of_pos.1 hx.pos) hay.succ_le).trans_lt'
       rw [opow_succ]
       exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
     · exact IH _ (mod_opow_log_lt_self _ ha') ((mod_le ..).trans_lt ha)

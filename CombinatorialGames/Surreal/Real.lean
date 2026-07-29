@@ -32,7 +32,7 @@ theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrdere
   obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
   have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
   obtain ⟨z, hz, hz'⟩ := exists_div_btwn h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
-  use .mkRat z ⟨n, rfl⟩
+  use .mkRat z ((Submonoid.mem_powers_iff ..).2 ⟨n, rfl⟩)
   simp_all [Rat.mkRat_eq_div]
 
 namespace Real
@@ -49,7 +49,7 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
-  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]
+  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_ofPred]
     intro x hx y hy
     simpa using hx.trans hy
   · aesop (add simp [Numeric.dyadic])

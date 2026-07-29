@@ -235,11 +235,17 @@ noncomputable def birthdayFinset : ℕ → Finset IGame.{u}
   | n + 1 => ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
     ⟨fun a => !{a.1 | a.2}, fun a b hab => by aesop⟩
 
+@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
+
+theorem birthdayFinset_succ (n : ℕ) : birthdayFinset (n + 1) =
+    ((birthdayFinset n).powerset ×ˢ (birthdayFinset n).powerset).map
+      ⟨fun a => !{a.1 | a.2}, fun a b hab => by aesop⟩ :=
+  (rfl)
+
 theorem mem_birthdayFinset_succ {x : IGame} {n : ℕ} : x ∈ birthdayFinset (n + 1) ↔
     ∃ l r, (l ⊆ birthdayFinset n ∧ r ⊆ birthdayFinset n) ∧ !{l | r} = x := by
-  simp [birthdayFinset]
-
-@[simp] theorem birthdayFinset_zero : birthdayFinset 0 = {0} := (rfl)
+  simp [birthdayFinset_succ]
+  rfl
 
 theorem birthdayFinset_one :
     birthdayFinset 1 = ⟨[0, 1, -1, ⋆], by aesop (add simp [IGame.ext_iff])⟩ := by
@@ -275,7 +281,7 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
 
 theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
   refine strictMono_nat_of_lt_succ fun n ↦ ⟨fun y hy ↦ ?_, fun h ↦ ?_⟩
-  · rw [SetLike.mem_coe, mem_birthdayFinset] at *
+  · rw [mem_birthdayFinset] at hy ⊢
     apply hy.trans
     simp
   · have := Finset.card_le_card h
@@ -405,7 +411,7 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
-  small_subset (s := {x | birthday x ≤ o}) <| setOf_subset_setOf.2 fun _ => le_of_lt
+  small_subset (s := {x | birthday x ≤ o}) <| ofPred_subset_ofPred.2 fun _ => le_of_lt
 
 /-- A variant of `small_setOf_birthday_le` in simp-normal form -/
 instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=

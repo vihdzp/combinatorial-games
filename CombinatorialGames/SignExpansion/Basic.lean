@@ -230,7 +230,8 @@ instance : InvolutiveNeg SignExpansion where
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x i else 0
-  isUpperSet_preimage_singleton_zero' a b hab ha := by
+  isUpperSet_preimage_singleton_zero' := by
+    intro a b hab ha
     rw [← WithTop.coe_le_coe] at hab
     simp only [Set.mem_preimage, Set.mem_singleton_iff, ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
@@ -593,8 +594,8 @@ variable {o₁ o₂ : NatOrdinal}
 
 /-- Returns the sign expansion with the corresponding number of `1`s. -/
 def toSignExpansion : NatOrdinal ↪o SignExpansion :=
-  .ofStrictMono (⊤ ↾ ·) fun x y h ↦ by
-    use x
+  .ofStrictMono (⊤ ↾ ·) <| by
+    refine fun x y h ↦ ⟨x, ?_⟩
     aesop (add apply unsafe [lt_trans])
 
 instance : Coe NatOrdinal SignExpansion where
