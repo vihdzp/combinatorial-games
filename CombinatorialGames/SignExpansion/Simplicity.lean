@@ -235,6 +235,7 @@ theorem sSup_empty : sSup ∅ = (⊥ : Simplicity) := by
 private theorem sSup_apply_of_mem {x : Simplicity} {s : Set Simplicity}
     (hs : IsChain (· ≤ ·) s) (hx : x ∈ s) {o : NatOrdinal} (ho : x o ≠ 0) : sSup s o = x o := by
   dsimp [sSup]
+  generalize_proofs
   rw [if_pos hs, of_apply, coe_mk, dif_pos ⟨x, hx, ho⟩]
   generalize_proofs H
   obtain ⟨hc, hc'⟩ := H.choose_spec
@@ -243,6 +244,10 @@ private theorem sSup_apply_of_mem {x : Simplicity} {s : Set Simplicity}
 private theorem exists_of_sSup_apply_ne_zero {s : Set Simplicity} (hs : IsChain (· ≤ ·) s)
     {o : NatOrdinal} (ho : sSup s o ≠ 0) : ∃ x ∈ s, x o ≠ 0 := by
   dsimp [sSup] at ho
+  #adaptation_note /-- The three lines below are needed since v4.33.0-rc1. -/
+  generalize_proofs at ho
+  split_ifs at ho
+  dsimp at ho
   aesop
 
 private theorem isLUB_sSup_of_isChain {s : Set Simplicity} (hs : IsChain (· ≤ ·) s) :

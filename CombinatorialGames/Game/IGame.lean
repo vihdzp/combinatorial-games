@@ -139,7 +139,9 @@ instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 @[simp, game_cmp]
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
     !{st}.moves p = st p := by
-  dsimp [ofSets]; ext; rw [moves, QPF.Fix.dest_mk]
+  dsimp [ofSets, moves]
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk]
 
 @[simp]
 theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
@@ -207,7 +209,8 @@ theorem subposition_wf : WellFounded Subposition := by
   rintro _ ⟨⟨st, hst⟩, rfl⟩
   constructor
   rintro y hy
-  rw [QPF.Fix.dest_mk, mem_iUnion] at hy
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk, mem_iUnion] at hy
   obtain ⟨_, ⟨_, h⟩, _, rfl⟩ := hy
   exact h
 
