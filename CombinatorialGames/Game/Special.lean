@@ -229,5 +229,16 @@ theorem short_switch_iff {x : IGame} : Short (±x) ↔ Short x := by
 instance (x : IGame) [Short x] : Short (±x) := by
   rwa [short_switch_iff]
 
+theorem switch_equiv_zero_iff {x : IGame} : ±x ≈ 0 ↔ ¬0 ≤ x := by
+  constructor
+  · intro h
+    exact left_lf_of_le h.le (by simp)
+  · intro h
+    constructor
+    · exact le_zero.2 (by simp [h])
+    · exact zero_le.2 (by simp [h])
+
+alias ⟨_, switch_equiv_zero⟩ := switch_equiv_zero_iff
+
 end IGame
 end
