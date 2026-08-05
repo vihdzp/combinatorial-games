@@ -76,6 +76,12 @@ theorem birthday_toSurreal (o : NatOrdinal) : birthday o.toSurreal = o := by
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
   simpa using birthday_toSurreal n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
