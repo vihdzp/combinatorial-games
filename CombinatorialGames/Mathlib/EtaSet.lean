@@ -182,7 +182,7 @@ private theorem f_sep (a : α) :
   induction a using hr.wf.induction with
   | h a IH =>
     rintro _ ⟨⟨x, hrx, hxa⟩, rfl⟩ _ ⟨⟨y, hry, hay⟩, rfl⟩
-    change h.f hord s x < h.f hord s y
+    dsimp
     have hxy := hxa.trans hay
     rcases trichotomous_of r x y with hrxy | rfl | hryx
     --repetitive, single grind almost works except the .1 amd .2 and providing the arguments somehow
