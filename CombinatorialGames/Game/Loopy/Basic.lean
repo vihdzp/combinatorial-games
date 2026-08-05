@@ -205,7 +205,12 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
   ⟨fun
     | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
     | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
-    fun | left | right => inferInstance⟩
+    by
+      rintro (_|_) <;>
+      · apply @small_image ..
+        apply @small_range ..
+        infer_instance
+    ⟩
 
 private theorem unique (f g : Subtype (Reachable mov init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =

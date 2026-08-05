@@ -264,7 +264,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
     · apply h.coeff_add_lt (h.coeff_prod_lt _) (coeff_leastNoRoots_lt _)
-      aesop
+      aesop (add apply safe [Subtype.prop])
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_leastNoRoots_pos ht⟩
       apply_fun eval (f i).1
@@ -358,7 +358,7 @@ theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
 open Pointwise
 
 private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
-  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
+  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, mem_Iio.2 <| p.2 k⟩) fun p q h ↦ ?_
   ext k
   simpa using congrFun h k
 
