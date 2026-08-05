@@ -151,7 +151,7 @@ private noncomputable def f [Nonempty α] (h : IsEta #α β) (hord : (#α).ord =
     if hsep : ∀ x ∈ lo a g, ∀ y ∈ hi a g, x < y then
       hs.wf.min {z | (∀ x ∈ lo a g, x < z) ∧ ∀ y ∈ hi a g, z < y}
         (h.exists_between (mk_lo_lt hord a g) (mk_hi_lt hord a g) hsep)
-    else (h.nonempty <| mk_ne_zero α).some
+    else (h.nonempty <| have : Nonempty α := ⟨a⟩; mk_ne_zero α).some
 
 variable [Nonempty α] {s : β → β → Prop} [hs : IsWellOrder β s] {h : IsEta #α β}
   {hord : (#α).ord = Ordinal.type r}
@@ -189,7 +189,7 @@ private theorem f_sep (a : α) :
     rcases trichotomous_of r x y with hrxy | rfl | hryx
     --repetitive, single grind almost works except the .1 amd .2 and providing the arguments somehow
     · exact (f_mem y (IH y hry)).1 _ ⟨⟨x, hrxy, hxy⟩, rfl⟩
-    · exact hxy.false.elim
+    · cases hxy.false
     · exact (f_mem x (IH x hrx)).2 _ ⟨⟨y, hryx, hxy⟩, rfl⟩
 
 private theorem strictMono_f : StrictMono (h.f hord s) := fun x y hxy ↦ by
@@ -250,7 +250,7 @@ end
 end IsEta
 
 open IsEta OrderType
-/-- Existence of `η_|o|` ordered sets implies an order embedding between `o` and said eta order. -/
+/-- If `β` is an `η_c` set, any linear order of cardinal `c` embeds into it.  -/
 public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (h : IsEta #α β) : type α ≤ type β := by
   cases isEmpty_or_nonempty α with
@@ -260,7 +260,7 @@ public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α]
     obtain ⟨s, hs, -⟩ := Cardinal.exists_ord_eq β
     exact type_le_type_iff.2 ⟨.ofStrictMono _ (strictMono_f (h := h) (hord := hord) (s := s))⟩
 
-/-- Any two `η_o₁` and  `η_o₂` ordered sets are order-isomorphic if `o₁ = o₂`. -/
+/-- Any two `η_c` ordered sets of cardinal `c` are order-isomorphic. -/
 public theorem OrderType.type_eq_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (hα : IsEta #α α) (hβ : IsEta #β β) (heq : #α = #β) : type α = type β := by
   cases isEmpty_or_nonempty α with
