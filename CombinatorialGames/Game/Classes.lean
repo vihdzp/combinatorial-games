@@ -164,40 +164,75 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
 
-/-- The product instance is proven in `Game.Impartial.Grundy`. -/
-theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x := by
-  rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
+/- The product instance is proven in `Game.Impartial.Multiplication`. -/
+
+theorem _root_.le_comm_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) : x ≤ y ↔ y ≤ x := by
+  rw [← IGame.neg_le_neg_iff, hy.le_congr hx]
+
+theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x :=
+  le_comm_of_equiv_neg (equiv_neg x) (equiv_neg y)
+
+theorem _root_.not_lt_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) : ¬x < y := by
+  apply (lt_asymm · ?_)
+  rwa [← IGame.neg_lt_neg_iff, ← hx.lt_congr hy]
 
 @[simp]
-theorem not_lt : ¬x < y := by
-  apply (lt_asymm · ?_)
-  rwa [← IGame.neg_lt_neg_iff, (neg_equiv x).lt_congr (neg_equiv y)]
+theorem not_lt : ¬x < y :=
+  not_lt_of_equiv_neg (equiv_neg x) (equiv_neg y)
+
+theorem _root_.equiv_or_fuzzy_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    x ≈ y ∨ x ‖ y := by
+  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
+  · cases not_lt_of_equiv_neg hx hy h
+  · exact .inl h
+  · cases not_lt_of_equiv_neg hy hx h
+  · exact .inr h
 
 /-- By setting `y = 0`, we find that in an impartial game, either the first player always wins, or
 the second player always wins. -/
-theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y := by
-  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
-  · cases not_lt x y h
-  · exact .inl h
-  · cases not_lt y x h
-  · exact .inr h
+theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y :=
+  equiv_or_fuzzy_of_equiv_neg (equiv_neg x) (equiv_neg y)
 
 variable {x y}
 
+theorem _root_.not_equiv_iff_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    ¬x ≈ y ↔ x ‖ y :=
+  ⟨(equiv_or_fuzzy_of_equiv_neg hx hy).resolve_left, IncompRel.not_antisymmRel⟩
+
 @[simp]
 theorem not_equiv_iff : ¬ x ≈ y ↔ x ‖ y :=
-   ⟨(equiv_or_fuzzy x y).resolve_left, IncompRel.not_antisymmRel⟩
+  not_equiv_iff_of_equiv_neg (equiv_neg x) (equiv_neg y)
+
+theorem _root_.not_fuzzy_iff_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    ¬x ‖ y ↔ x ≈ y :=
+  not_iff_comm.1 (not_equiv_iff_of_equiv_neg hx hy)
 
 @[simp]
 theorem not_fuzzy_iff : ¬ x ‖ y ↔ x ≈ y :=
   not_iff_comm.1 not_equiv_iff
 
+theorem _root_.le_iff_equiv_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    x ≤ y ↔ x ≈ y :=
+  ⟨fun h ↦ ⟨h, (le_comm_of_equiv_neg hx hy).1 h⟩, And.left⟩
+
 @[simp]
 theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
   ⟨fun h ↦ ⟨h, le_comm.1 h⟩, And.left⟩
 
+theorem _root_.ge_iff_equiv_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    y ≤ x ↔ x ≈ y :=
+  (le_iff_equiv_of_equiv_neg hy hx).trans antisymmRel_comm
+
 theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
   ⟨fun h ↦ ⟨le_comm.2 h, h⟩, And.right⟩
+
+theorem _root_.lf_iff_fuzzy_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    x ⧏ y ↔ x ‖ y :=
+  (ge_iff_equiv_of_equiv_neg hx hy).not.trans (not_equiv_iff_of_equiv_neg hx hy)
+
+theorem _root_.gf_iff_fuzzy_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) :
+    y ⧏ x ↔ x ‖ y :=
+  (le_iff_equiv_of_equiv_neg hx hy).not.trans (not_equiv_iff_of_equiv_neg hx hy)
 
 theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
 theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
