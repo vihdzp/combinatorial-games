@@ -109,7 +109,7 @@ protected theorem aleph0 [Nonempty α] [DenselyOrdered α] [NoMaxOrder α] [NoMi
 
 theorem Rat.isEta_aleph0 : IsEta aleph0 ℚ := .aleph0
 
-section
+section BackAndForth
 
 variable {r : α → α → Prop}
 
@@ -243,7 +243,7 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
   · exact (hlo₀ a₀ ⟨hfa₀, h'⟩).false
   · exact (hhi₀ a₀ ⟨hfa₀, h'⟩).false
 
-end
+end BackAndForth
 
 end IsEta
 
