@@ -114,12 +114,10 @@ section
 variable {r : α → α → Prop}
 
 /-- The image under `g` of the `r`-predecessors of `a` lying below `a`. -/
-@[reducible]
 private def lo (a : α) (g : ∀ y, r y a → β) : Set β :=
   Set.range fun x : {x : α // r x a ∧ x < a} ↦ g x.1 x.2.1
 
 /-- The image under `g` of the `r`-predecessors of `a` lying above `a`. -/
-@[reducible]
 private def hi (a : α) (g : ∀ y, r y a → β) : Set β :=
   Set.range fun x : {x : α // r x a ∧ a < x} ↦ g x.1 x.2.1
 
@@ -195,7 +193,7 @@ private theorem f_sep (a : α) :
 private theorem strictMono_f : StrictMono (h.f hord s) := fun x y hxy ↦ by
   rcases trichotomous_of r x y with hrxy | rfl | hryx
   · exact (f_mem y (f_sep y)).1 _ ⟨⟨x, hrxy, hxy⟩, rfl⟩
-  · exact hxy.false.elim
+  · cases hxy.false
   · exact (f_mem x (f_sep x)).2 _ ⟨⟨y, hryx, hxy⟩, rfl⟩
 
 private theorem not_lt_f {z : β} (a : α)
