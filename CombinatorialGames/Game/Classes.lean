@@ -434,6 +434,16 @@ protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
 
+protected instance nsmul (n : Nat) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [succ_nsmul]; exact .add (n • x) x
+
+protected instance zsmul (n : Int) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg ih n => rw [neg_zsmul]; infer_instance
+
 end Numeric
 
 /-! ### Short games -/
