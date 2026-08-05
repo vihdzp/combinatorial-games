@@ -191,6 +191,12 @@ theorem birthday_natCast : ∀ n : ℕ, birthday n = n
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [intCast_nat, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [intCast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
   simp [tiny, Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
