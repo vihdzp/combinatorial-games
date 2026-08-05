@@ -248,7 +248,7 @@ end BackAndForth
 end IsEta
 
 open IsEta OrderType
-/-- If `β` is an `η_c` set, any linear order of cardinal `c` embeds into it. -/
+/-- If `β` is an `η_c` set, any linear order of cardinal `c` embeds into it.  -/
 public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (h : IsEta #α β) : type α ≤ type β := by
   cases isEmpty_or_nonempty α with
