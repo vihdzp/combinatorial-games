@@ -164,7 +164,7 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
 
-/- The product instance is proven in `Game.Impartial.Grundy`. -/
+/- The product instance is proven in `Game.Impartial.Multiplication`. -/
 
 theorem _root_.le_comm_of_equiv_neg {x y : IGame} (hx : x ≈ -x) (hy : y ≈ -y) : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, hy.le_congr hx]
