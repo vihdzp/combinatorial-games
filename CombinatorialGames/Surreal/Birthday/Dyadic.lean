@@ -65,6 +65,27 @@ where finally
   · exact h.elim rfl
   · rfl
 
+@[simp]
+theorem Dyadic.birthday_intCast (n : Int) : Dyadic.birthday n = n.natAbs := by
+  unfold Dyadic.birthday
+  rw [dif_pos (Dyadic.den_intCast n), Dyadic.num_intCast]
+
+@[simp]
+theorem Dyadic.birthday_natCast (n : Nat) : Dyadic.birthday n = n := by
+  rw [← Int.cast_natCast, Dyadic.birthday_intCast, Int.natAbs_natCast]
+
+theorem Dyadic.birthday_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
+  x.birthday = (x.precision.get (by
+    cases x
+    · exact hx.elim rfl
+    · rfl)).toNat + x.num.natAbs / x.den + 1 := dif_neg hx
+
+example : Dyadic.birthday ((13 : Dyadic) >>> 2) = 6 := rfl -- birthday 3.25 = 6
+example : Dyadic.birthday ((1 : Dyadic) >>> 1) = 2 := rfl -- birthday 1/2 = 2
+example : Dyadic.birthday 7 = 7 := rfl -- birthday 7 = 7
+example : Dyadic.birthday ((-5 : Dyadic) >>> 1) = 4 := rfl -- birthday -2.5 = 4
+example : Dyadic.birthday ((1 : Dyadic) <<< 4) = 16 := rfl -- birthday 16 = 16
+
 theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
   induction hd : x.den using Nat.strongRec generalizing x with | ind d ih
   cases hd
