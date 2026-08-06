@@ -10,6 +10,7 @@ public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Surreal.Division
 
 import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Data.Nat.Prime.Basic
 
 /-!
 # Dyadic games
@@ -128,6 +129,48 @@ theorem le_upper_add_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
 theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     upper x + y ≤ upper (x + y) := by
   simpa [add_comm] using le_upper_add_of_den_le h
+
+theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
+    max x.lower.den x.upper.den = x.den / 2 := by
+  unfold Dyadic.den at hx ⊢
+  rw [coe_lower, coe_upper]
+  unfold Dyadic.den
+  rw [Rat.sub_def', Rat.den_mkRat, if_neg (by positivity),
+    Rat.add_def', Rat.den_mkRat, if_neg (by positivity),
+    Rat.den_inv_of_ne_zero (by positivity), Rat.num_inv, Rat.num_natCast,
+    Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero (by positivity),
+    Nat.cast_one, Int.one_mul, ← Int.sub_mul, ← Int.add_mul,
+    Int.natAbs_mul, Int.natAbs_mul, Int.natAbs_natCast,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ (by positivity),
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ (by positivity)]
+  generalize hn : x.toRat.num = n, hd : x.toRat.den = d
+  obtain ⟨e, rfl⟩ : ∃ e, 2 ^ e = d := by
+    rw [← hd, ← Submonoid.mem_powers_iff]
+    exact x.den_mem_powers
+  cases e with
+  | zero => exact (hx hd).elim
+  | succ e =>
+    obtain ⟨l2, hl2⟩ : Even (n - 1).natAbs := by
+      rw [Int.natAbs_even, Int.even_sub_one, Int.not_even_iff_odd, ← hn]
+      exact x.odd_num hx
+    have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by
+      rw [Int.natAbs_even, Int.even_add_one, Int.not_even_iff_odd, ← hn]
+      exact x.odd_num hx
+    rw [pow_succ, Nat.mul_div_cancel _ (by decide), hl2, hu2,
+      ← Nat.mul_two, ← Nat.mul_two, Nat.gcd_mul_right, Nat.gcd_mul_right,
+      Nat.mul_div_mul_right _ _ (by decide), Nat.mul_div_mul_right _ _ (by decide)]
+    refine le_antisymm (max_le (Nat.div_le_self _ _) (Nat.div_le_self _ _)) ?_
+    suffices h : Nat.gcd 2 l2 = 1 ∨ Nat.gcd 2 u2 = 1 by
+      obtain h | h := h
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_left _ _
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_right _ _
+    rw [← Nat.coprime_iff_gcd_eq_one, ← Nat.coprime_iff_gcd_eq_one,
+      Nat.coprime_two_left, Nat.coprime_two_left,
+      ← Nat.not_even_iff_odd, ← Nat.not_even_iff_odd, ← not_and_or]
+    rintro ⟨⟨l4, rfl⟩, ⟨u4, rfl⟩⟩
+    lia
 
 /-! ### Dyadic numbers to games -/
 

@@ -75,6 +75,15 @@ theorem den_mem_powers (x : Dyadic) : x.den ∈ Submonoid.powers 2 := by
   | case3 => exact one_mem _ -- integer
   | case2 => apply pow_mem; exact Submonoid.mem_powers 2 -- dyadic rational
 
+theorem den_eq_two_pow_toNat_precision (x : Dyadic) :
+    x.den = 2 ^ (x.precision.getD 0).toNat := by
+  cases x with
+  | zero => rfl
+  | ofOdd n k hn =>
+    cases k with
+    | ofNat k => rfl
+    | negSucc k => rfl
+
 @[simp]
 theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
   simp_rw [Nat.le_one_iff_eq_zero_or_eq_one, x.den_ne_zero, false_or]
