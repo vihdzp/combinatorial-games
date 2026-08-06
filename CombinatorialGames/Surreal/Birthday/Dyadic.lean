@@ -56,6 +56,7 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
 
+/-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]
 def Dyadic.birthday (x : Dyadic) : Nat :=
   if h : x.den = 1 then x.num.natAbs else (x.precision.get ?isSome).toNat + x.num.natAbs / x.den + 1
