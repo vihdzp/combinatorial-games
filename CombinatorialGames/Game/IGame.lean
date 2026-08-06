@@ -791,6 +791,7 @@ instance : AddCommMonoid IGame where
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
+  sub a b := a + -b
   zsmul := zsmulRec
 
 @[simp]
@@ -921,11 +922,28 @@ theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
 theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
   sub_congr .rfl h
 
+theorem nsmul_congr {n : Nat} {a b : IGame} (h : a ≈ b) : n • a ≈ n • b := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [succ_nsmul, succ_nsmul]
+    exact add_congr ih h
+
+theorem zsmul_congr {n : Int} {a b : IGame} (h : a ≈ b) : n • a ≈ n • b := by
+  induction n using Int.negInduction with
+  | nat n =>
+    rw [natCast_zsmul, natCast_zsmul]
+    exact nsmul_congr h
+  | neg ih n =>
+    rw [neg_zsmul, neg_zsmul]
+    exact neg_congr (ih n)
+
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = !{{↑n} | ∅}`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = !{Iio n | ∅}`.
 For that, use `NatOrdinal.toIGame`. -/
 instance : AddCommMonoidWithOne IGame where
+  natCast := Nat.unaryCast
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
 @[game_cmp]
