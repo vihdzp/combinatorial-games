@@ -3,9 +3,13 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
-import CombinatorialGames.Surreal.Birthday.Basic
+module
+
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import Mathlib.Order.Concept
+public import Mathlib.Order.UpperLower.CompleteLattice
+
+import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
 # Surreal cuts
@@ -30,11 +34,13 @@ concept terminology.
 
 universe u
 
+@[expose] public section
+
 namespace Surreal
 open Set IGame
 
-/-- A surreal cut consists of two complementary sets of surreals, where every surreal in the former
-is less than every surreal in the latter. -/
+/-- A surreal cut, sometimes called a section, consists of two complementary sets of surreals,
+where every surreal in the former is less than every surreal in the latter. -/
 abbrev Cut := Concept Surreal Surreal (· < ·)
 
 namespace Cut
@@ -46,10 +52,12 @@ def left (x : Cut) := x.extent
 /-- The right set in a cut. This is an alias for `Concept.intent`. -/
 def right (x : Cut) := x.intent
 
-alias left_lt_right := Concept.rel_extent_intent
-alias disjoint_left_right := Concept.disjoint_extent_intent
-alias codisjoint_left_right := Concept.codisjoint_extent_intent
-alias isCompl_left_right := Concept.isCompl_extent_intent
+theorem left_lt_right {x : Cut} {y z : Surreal} (hy : y ∈ x.left) (hz : z ∈ x.right) : y < z :=
+  x.rel_extent_intent hy hz
+
+theorem disjoint_left_right (x : Cut) : Disjoint x.left x.right := x.disjoint_extent_intent
+theorem codisjoint_left_right (x : Cut) : Codisjoint x.left x.right := x.codisjoint_extent_intent
+theorem isCompl_left_right (x : Cut) : IsCompl x.left x.right := x.isCompl_extent_intent
 
 theorem isLowerSet_left (c : Cut) : IsLowerSet c.left := by
   intro a b hb ha
@@ -94,7 +102,7 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 @[simp] theorem left_top : (⊤ : Cut).left = univ := rfl
 @[simp] theorem right_top : (⊤ : Cut).right = ∅ := by simpa using (compl_left ⊤).symm
 
-instance : IsTotal Cut (· ≤ ·) where
+instance : @Std.Total Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
 
 noncomputable instance : LinearOrder Cut :=
@@ -121,8 +129,6 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_sSup (s : Set Cut) : (sSup s).left = ⋃ x ∈ s, x.left := by
   simpa using (compl_right (sSup s)).symm
 
--- TODO: PR the iInf/iSup versions for concepts to Mathlib
-
 @[simp] theorem left_iInf {ι} (f : ι → Cut) : (⨅ i, f i).left = ⋂ i, (f i).left := by simp [iInf]
 @[simp] theorem right_iInf {ι} (f : ι → Cut) : (⨅ i, f i).right = ⋃ i, (f i).right := by simp [iInf]
 
@@ -130,7 +136,7 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
-  rw [← not_le, ← left_subset_left_iff, ← diff_nonempty, diff_eq_compl_inter, compl_left]
+  rw [← not_le, ← left_subset_left_iff, ← sdiff_nonempty, sdiff_eq_compl_inter, compl_left]
 
 instance : Neg Cut where
   neg x := {
@@ -184,7 +190,7 @@ protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
 
 /-! ### Cuts from games -/
 
-/-- The left cut of a game `x` is such that its right set consists of surreals
+/-- The left stop $L(x)$ of a game `x` is such that its right set consists of surreals
 equal or larger to it. -/
 def leftGame : Game →o Cut where
   toFun x := {
@@ -200,7 +206,7 @@ def leftGame : Game →o Cut where
   }
   monotone' x y hy z hz := mt hy.trans hz
 
-/-- The right cut of a game `x` is such that its right set consists of surreals
+/-- The right stop $R(x)$ of a game `x` is such that its left set consists of surreals
 equal or lesser to it. -/
 def rightGame : Game →o Cut where
   toFun x := {
@@ -219,14 +225,18 @@ def rightGame : Game →o Cut where
 /-- The cut just to the left of a surreal number. -/
 def leftSurreal : Surreal ↪o Cut where
   toFun x := (leftGame x.toGame).copy
-    (Iio x) (Ici x) (by rw [leftGame]; aesop) (by rw [leftGame]; aesop)
+    (Iio x) (Ici x)
+    (show Iio x = {y | y.toGame ⧏ toGame x} by ext; simp)
+    (show Ici x = {y | toGame x ≤ y.toGame} by ext; simp)
   inj' _ := by simp [Concept.copy, Ici_inj]
   map_rel_iff' := Iio_subset_Iio_iff
 
 /-- The cut just to the right of a surreal number. -/
 def rightSurreal : Surreal ↪o Cut where
   toFun x := (rightGame x.toGame).copy
-    (Iic x) (Ioi x) (by rw [rightGame]; aesop) (by rw [rightGame]; aesop)
+    (Iic x) (Ioi x)
+    (show Iic x = {y | y.toGame ≤ toGame x} by ext; simp)
+    (show Ioi x = {y | toGame x ⧏ y.toGame} by ext; simp)
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
@@ -390,7 +400,7 @@ theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s]
 
 /-! ### Calculating cuts -/
 
-/-- The supremum of all right cuts of left options of `x`.
+/-- The supremum $L'(x)$ of all right cuts of left options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
@@ -405,7 +415,7 @@ theorem right_supLeft (x : IGame) :
     (supLeft x).right = ⋂ i ∈ xᴸ, {y | .mk i ⧏ y.toGame} := by
   simp [supLeft]
 
-/-- The infimum of all left cuts of right options of `x`.
+/-- The infimum $R'(x)$ of all left cuts of right options of `x`.
 
 If `infRight x ≤ supLeft x` then `leftGame x = supLeft x` and `rightGame x = infRight x`; otherwise,
 `x` is equivalent to the simplest surreal between `supLeft x` and `infRight x`. -/
@@ -443,7 +453,7 @@ theorem leftGame_eq_supLeft_of_le {x : IGame} (h : infRight x ≤ supLeft x) :
       apply h at hy
       rw [right_infRight, mem_iUnion₂] at hy
       obtain ⟨i, hi, hy⟩ := hy
-      rw [mem_setOf, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
+      rw [mem_ofPred, ← y.out_eq, toGame_mk, Game.mk_le_mk] at hy
       exact lf_of_right_le (hy.trans (Numeric.lt_right hz).le) hi
 
 theorem rightGame_eq_infRight_of_le {x : IGame} : infRight x ≤ supLeft x →
@@ -525,5 +535,17 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-- A characterization of games equivalent to numbers: they're precisely those with
+`supLeft x < infRight x`. -/
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ ∃ y : Subtype Numeric, x ≈ y where
+  mp h := by
+    refine ⟨⟨(simplestBtwn h).out, inferInstance⟩, ?_⟩
+    rw [← Game.mk_eq_mk, gameMk_out, simplestBtwn_supLeft_infRight]
+  mpr := by
+    rintro ⟨⟨y, _⟩, h⟩
+    exact supLeft_lt_infRight_of_equiv_numeric h
+
 end Cut
 end Surreal
+end

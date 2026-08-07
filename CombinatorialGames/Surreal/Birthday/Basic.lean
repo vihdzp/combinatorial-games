@@ -3,17 +3,30 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Surreal.Ordinal
+module
+
+public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Surreal.Ordinal
+
+import Mathlib.Algebra.Order.Group.OrderIso
+
+/-!
+# Birthday of a surreal number
+
+TODO: write a better docstring
+-/
 
 universe u
-noncomputable section
+
+public noncomputable section
 
 namespace Surreal
 open IGame NatOrdinal Order Set
 
 /-- The birthday of a surreal number is defined as the least birthday
-among all *numeric* pre-games that define it. -/
+among all *numeric* pre-games that define it.
+
+The numeric condition can be removed, see `Surreal.birthday_toGame`. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
 
@@ -63,6 +76,12 @@ theorem birthday_toSurreal (o : NatOrdinal) : birthday o.toSurreal = o := by
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
   simpa using birthday_toSurreal n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
@@ -107,7 +126,7 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
   exact birthday_mk_le _
 
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
-  simpa using birthday_add_le x (-y)
+  simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
@@ -117,9 +136,6 @@ theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := b
   obtain ⟨c, _, rfl, h⟩ := birthday_eq_iGameBirthday x
   rw [← h, toGame_mk]
   exact Game.birthday_mk_le c
-
--- See https://mathoverflow.net/a/497645
-proof_wanted birthday_toGame (x : Surreal) : x.toGame.birthday = x.birthday
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
