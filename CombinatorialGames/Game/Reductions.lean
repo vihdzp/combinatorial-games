@@ -12,7 +12,7 @@ public import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 # Game reductions
 
 We prove that dominated moves can be deleted, reversible moves can be bypassed,
-and gift horses can be given.
+and gift horses can be given, without changing the value of the game.
 -/
 
 public section
@@ -22,31 +22,24 @@ universe u v
 namespace IGame
 open Set
 
-/-- If every move in `u` is dominated by a move in `v`, then the game `!{w | r}` is equivalent
-to the game `!{v | r}` obtained by removing the dominated left-options in `u` from `!{w | r}`. -/
-theorem equiv_of_dominated_left {u v w r : Set IGame.{u}}
-    [Small.{u} v] [Small.{u} w] [Small.{u} r]
-    (hu : ∀ g ∈ u, ∃ g' ∈ v, g ≤ g') (hw : w ∈ Icc v (u ∪ v)) : !{w | r} ≈ !{v | r} := by
+variable {u v w g : Player → Set IGame.{u}}
+    [Small.{u} (u left)] [Small.{u} (u right)]
+    [Small.{u} (v left)] [Small.{u} (v right)]
+    [Small.{u} (w left)] [Small.{u} (w right)]
+
+omit [Small.{u} (u left)] [Small.{u} (u right)] in
+/-- If every move in `u` is dominated by a move in `v`, then the game `!{w}` is equivalent
+to the game `!{v}` obtained by removing the dominated options in `u` from `!{w}`. -/
+theorem equiv_of_dominated
+    (hu : ∀ p, ∀ g ∈ u p, ∃ g' ∈ v p, p.cases (g ≤ g') (g' ≤ g))
+    (hw : ∀ p, w p ∈ Icc (v p) (u p ∪ v p)) : !{w} ≈ !{v} := by
   apply equiv_of_exists_le <;> simp only [moves_ofSets] <;> intro z hz
-  · exact (hw.2 hz).elim (fun hz => hu z hz) (fun hz => ⟨z, hz, le_rfl⟩)
-  · exact ⟨z, hz, le_rfl⟩
-  · exact ⟨z, hw.1 hz, le_rfl⟩
-  · exact ⟨z, hz, le_rfl⟩
+  · exact ((hw left).2 hz).elim (fun hz => hu left z hz) (fun hz => ⟨z, hz, le_rfl⟩)
+  · exact ((hw right).2 hz).elim (fun hz => hu right z hz) (fun hz => ⟨z, hz, le_rfl⟩)
+  · exact ⟨z, (hw left).1 hz, le_rfl⟩
+  · exact ⟨z, (hw right).1 hz, le_rfl⟩
 
-/-- If every move in `u` is dominated by a move in `v`, then the game `!{l | w}` is equivalent
-to the game `!{l | v}` obtained by removing the dominated right-options in `u` from `!{l | w}`. -/
-theorem equiv_of_dominated_right {l u v w : Set IGame.{u}}
-    [Small.{u} l] [Small.{u} v] [Small.{u} w]
-    (hu : ∀ g ∈ u, ∃ g' ∈ v, g' ≤ g) (hw : w ∈ Icc v (u ∪ v)) : !{l | w} ≈ !{l | v} := by
-  apply equiv_of_exists_le <;> simp only [moves_ofSets, Player.cases]
-  · exact fun z hz => ⟨z, hz, le_rfl⟩
-  · exact fun z hz => (hw.2 hz).elim (fun hz => hu z hz) (fun hz => ⟨z, hz, le_rfl⟩)
-  · exact fun z hz => ⟨z, hz, le_rfl⟩
-  · exact fun z hz => ⟨z, hw.1 hz, le_rfl⟩
-
-/-- If each of the moves `c i ∈ u` in `{u | r}` is reversed by `cr i ∈ (c i)ᴿ`, the game `{v | r}`
-which bypasses each `c i` by replacing it with `(cr i)ᴸ` is equivalent. -/
-theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
+private theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
     [Small.{u} r] [Small.{u} u] [Small.{u} v]
     {c cr : ι → IGame.{u}} (hbb : ∀ i, cr i ≤ !{u | r})
     (hcr : ∀ i, cr i ∈ (c i).moves right)
@@ -75,9 +68,7 @@ theorem equiv_of_bypass_left {ι : Type v} {l r u v : Set IGame.{u}}
   · apply lf_right
     simpa using hz
 
-/-- If each of the moves `d i ∈ u` in `{l | u}` is reversed by `dl i ∈ (d i)ᴸ`, the game `{l | v}`
-which bypasses each `d i` by replacing it with `(dl i)ᴿ` is equivalent. -/
-theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
+private theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
     [Small.{u} l] [Small.{u} u] [Small.{u} v]
     {d dl : ι → IGame.{u}} (hbb : ∀ i, !{l | u} ≤ dl i)
     (hdl : ∀ i, dl i ∈ (d i).moves left)
@@ -90,30 +81,41 @@ theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
   · simpa [neg_subset, neg_range] using hu
   · simpa [neg_eq_iff_eq_neg] using hv
 
-/-- The game `!{l | r}` is equivalent to the game `!{u | r}` obtained from `!{l | r}`
-by adding the gift horses in `gs`. -/
-theorem equiv_of_gift_left {gs l r u : Set IGame.{u}} [Small.{u} l] [Small.{u} r] [Small.{u} u]
-    (hg : ∀ g ∈ gs, ¬!{l | r} ≤ g) (hu : u ∈ Icc l (gs ∪ l)) : !{l | r} ≈ !{u | r} := by
+/-- If each of the moves `c p i ∈ u p` in `!{u}` is reversed by `cr p i ∈ (c p i).moves (-p)`,
+then `!{u}` is equivalent to the game `!{v}` which bypasses each `c p i` by
+replacing it with `(cr p i).moves p`. -/
+theorem equiv_of_bypass {ι : Type v} {c cr : Player → ι → IGame.{u}}
+    (hbb : ∀ (p : Player) i, p.cases (cr p i ≤ !{u}) (!{u} ≤ cr p i))
+    (hcr : ∀ p i, cr p i ∈ (c p i).moves (-p))
+    (hu : ∀ p, u p ∈ Icc (g p) (range (c p) ∪ g p))
+    (hv : ∀ p, v p = (⋃ i ∈ c p ⁻¹' u p, (cr p i).moves p) ∪ g p) :
+    !{u} ≈ !{v} := by
+  rw [ofSets_eq_ofSets_cases u] at hbb ⊢
+  have hl := equiv_of_bypass_left (hbb left) (hcr left) (hu left) (hv left)
+  have hr := equiv_of_bypass_right
+    (fun i => hl.ge.trans (hbb right i)) (hcr right) (hu right) (hv right)
+  grw [hl, hr]
+  rw [ofSets_eq_ofSets_cases v]
+
+/-- The game `!{u}` is equivalent to the game `!{v}` obtained from `!{u}`
+by adding the gift horses in `g`. -/
+theorem equiv_of_gift
+    (hg : ∀ p, ∀ z ∈ g p, ¬p.cases (!{u} ≤ z) (z ≤ !{u}))
+    (hu : ∀ p, v p ∈ Icc (u p) (g p ∪ u p)) : !{u} ≈ !{v} := by
   apply equiv_of_forall_lf <;> simp only [moves_ofSets] <;> intro z hz
   · apply left_lf
-    rw [leftMoves_ofSets]
-    exact hu.1 hz
+    rw [moves_ofSets]
+    exact (hu left).1 hz
   · apply lf_right
-    simpa using hz
-  · obtain hz | hz := hu.2 hz
-    · exact hg z hz
+    rw [moves_ofSets]
+    exact (hu right).1 hz
+  · obtain hz | hz := (hu left).2 hz
+    · exact hg left z hz
     · apply left_lf
       simpa using hz
-  · apply lf_right
-    simpa using hz
-
-/-- The game `!{l | r}` is equivalent to the game `!{l | u}` obtained from `!{l | r}`
-by adding the gift horses in `gs`. -/
-theorem equiv_of_gift_right {gs l r u : Set IGame.{u}} [Small.{u} l] [Small.{u} r] [Small.{u} u]
-    (hg : ∀ g ∈ gs, ¬g ≤ !{l | r}) (hu : u ∈ Icc r (gs ∪ r)) : !{l | r} ≈ !{l | u} := by
-  rw [← neg_equiv_neg_iff, neg_ofSets, neg_ofSets]
-  refine @equiv_of_gift_left (-gs) (-r) (-l) (-u) _ _ _ ?_ ?_
-  · simpa [← neg_ofSets] using hg
-  · simpa [neg_subset] using hu
+  · obtain hz | hz := (hu right).2 hz
+    · exact hg right z hz
+    · apply lf_right
+      simpa using hz
 
 end IGame
