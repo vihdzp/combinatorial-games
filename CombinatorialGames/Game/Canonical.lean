@@ -26,6 +26,33 @@ public noncomputable section
 
 namespace IGame
 
+def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
+  {g | g ∈ z.moves (-p) ∧ p.cases (g ≤ x) (x ≤ g)}
+
+instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x p z) := by
+  unfold reverseSet
+  infer_instance
+
+-- false positive on `hg` which is referenced in the termination proof
+set_option linter.unusedVariables false in
+def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
+  open scoped Classical in
+  if reverseSet x p z = ∅ then {z} else
+  ⋃ (g) (hg : g ∈ reverseSet x p z), unreverse1 x p g
+termination_by z
+decreasing_by exact .of_mem_moves hg.1
+
+instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
+  fun_induction unreverse1 x p z with
+  | case1 => infer_instance
+  | case2 z _ ih => exact @small_biUnion _ _ (reverseSet x p z) _ _ ih
+
+@[expose]
+def unreverse (x : IGame) : IGame :=
+  !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
+termination_by x
+decreasing_by igame_wf
+
 /-- Undominating a game. This returns garbage values on non-short games -/
 def undominate (x : IGame) : IGame :=
   !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
