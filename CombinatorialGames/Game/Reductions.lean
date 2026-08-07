@@ -77,8 +77,8 @@ private theorem equiv_of_bypass_right {ι : Type v} {l r u v : Set IGame.{u}}
   · simpa [neg_subset, neg_range] using hu
   · simpa [neg_eq_iff_eq_neg] using hv
 
-/-- If each of the moves `c p i ∈ u p` in `!{u}` is reversed by `cr p i ∈ (c p i).moves (-p)`,
-then `!{u}` is equivalent to the game `!{v}` which bypasses each `c p i` by
+/-- If each of the moves `c p i ∈ u.moves p` in `u` is reversed by `cr p i ∈ (c p i).moves (-p)`,
+then `u` is equivalent to the game `v` which bypasses each `c p i` by
 replacing it with `(cr p i).moves p`. -/
 theorem equiv_of_bypass {ι : Type v} {c cr : Player → ι → IGame.{u}}
     (hbb : ∀ (p : Player) i, p.cases (cr p i ≤ u) (u ≤ cr p i))
@@ -93,7 +93,7 @@ theorem equiv_of_bypass {ι : Type v} {c cr : Player → ι → IGame.{u}}
   grw [hl, hr]
   simp
 
-/-- The game `!{u}` is equivalent to the game `!{v}` obtained from `!{u}`
+/-- The game `u` is equivalent to the game `v` obtained from `u`
 by adding the gift horses in `w`. -/
 theorem equiv_of_gift
     (hg : ∀ p, ∀ g ∈ w p, ¬p.cases (u ≤ g) (g ≤ u))
