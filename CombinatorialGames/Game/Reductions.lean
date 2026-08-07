@@ -22,20 +22,18 @@ universe u v
 namespace IGame
 open Set
 
-variable {u v w g : Player → Set IGame.{u}}
+variable {u v w : Player → Set IGame.{u}}
     [Small.{u} (u left)] [Small.{u} (u right)]
     [Small.{u} (v left)] [Small.{u} (v right)]
-    [Small.{u} (w left)] [Small.{u} (w right)]
 
-omit [Small.{u} (u left)] [Small.{u} (u right)] in
-/-- If every move in `u` is dominated by a move in `v`, then the game `!{w}` is equivalent
-to the game `!{v}` obtained by removing the dominated options in `u` from `!{w}`. -/
+/-- If every move in `w` is dominated by a move in `v`, then the game `!{u}` is equivalent
+to the game `!{v}` obtained by removing the dominated options in `w` from `!{u}`. -/
 theorem equiv_of_dominated
-    (hu : ∀ p, ∀ g ∈ u p, ∃ g' ∈ v p, p.cases (g ≤ g') (g' ≤ g))
-    (hw : ∀ p, w p ∈ Icc (v p) (u p ∪ v p)) : !{w} ≈ !{v} := by
+    (hu : ∀ p, ∀ g ∈ w p, ∃ g' ∈ v p, p.cases (g ≤ g') (g' ≤ g))
+    (hw : ∀ p, u p ∈ Icc (v p) (v p ∪ w p)) : !{u} ≈ !{v} := by
   apply equiv_of_exists_le <;> simp only [moves_ofSets] <;> intro z hz
-  · exact ((hw left).2 hz).elim (fun hz => hu left z hz) (fun hz => ⟨z, hz, le_rfl⟩)
-  · exact ((hw right).2 hz).elim (fun hz => hu right z hz) (fun hz => ⟨z, hz, le_rfl⟩)
+  · exact ((hw left).2 hz).elim (fun hz => ⟨z, hz, le_rfl⟩) (fun hz => hu left z hz)
+  · exact ((hw right).2 hz).elim (fun hz => ⟨z, hz, le_rfl⟩) (fun hz => hu right z hz)
   · exact ⟨z, (hw left).1 hz, le_rfl⟩
   · exact ⟨z, (hw right).1 hz, le_rfl⟩
 
@@ -87,8 +85,8 @@ replacing it with `(cr p i).moves p`. -/
 theorem equiv_of_bypass {ι : Type v} {c cr : Player → ι → IGame.{u}}
     (hbb : ∀ (p : Player) i, p.cases (cr p i ≤ !{u}) (!{u} ≤ cr p i))
     (hcr : ∀ p i, cr p i ∈ (c p i).moves (-p))
-    (hu : ∀ p, u p ∈ Icc (g p) (range (c p) ∪ g p))
-    (hv : ∀ p, v p = (⋃ i ∈ c p ⁻¹' u p, (cr p i).moves p) ∪ g p) :
+    (hu : ∀ p, u p ∈ Icc (w p) (range (c p) ∪ w p))
+    (hv : ∀ p, v p = (⋃ i ∈ c p ⁻¹' u p, (cr p i).moves p) ∪ w p) :
     !{u} ≈ !{v} := by
   rw [ofSets_eq_ofSets_cases u] at hbb ⊢
   have hl := equiv_of_bypass_left (hbb left) (hcr left) (hu left) (hv left)
@@ -98,10 +96,10 @@ theorem equiv_of_bypass {ι : Type v} {c cr : Player → ι → IGame.{u}}
   rw [ofSets_eq_ofSets_cases v]
 
 /-- The game `!{u}` is equivalent to the game `!{v}` obtained from `!{u}`
-by adding the gift horses in `g`. -/
+by adding the gift horses in `w`. -/
 theorem equiv_of_gift
-    (hg : ∀ p, ∀ z ∈ g p, ¬p.cases (!{u} ≤ z) (z ≤ !{u}))
-    (hu : ∀ p, v p ∈ Icc (u p) (g p ∪ u p)) : !{u} ≈ !{v} := by
+    (hg : ∀ p, ∀ g ∈ w p, ¬p.cases (!{u} ≤ g) (g ≤ !{u}))
+    (hu : ∀ p, v p ∈ Icc (u p) (u p ∪ w p)) : !{u} ≈ !{v} := by
   apply equiv_of_forall_lf <;> simp only [moves_ofSets] <;> intro z hz
   · apply left_lf
     rw [moves_ofSets]
@@ -110,12 +108,12 @@ theorem equiv_of_gift
     rw [moves_ofSets]
     exact (hu right).1 hz
   · obtain hz | hz := (hu left).2 hz
-    · exact hg left z hz
     · apply left_lf
       simpa using hz
+    · exact hg left z hz
   · obtain hz | hz := (hu right).2 hz
-    · exact hg right z hz
     · apply lf_right
       simpa using hz
+    · exact hg right z hz
 
 end IGame
