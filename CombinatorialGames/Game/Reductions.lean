@@ -3,8 +3,10 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.IGame
-import Mathlib.Algebra.Group.Pointwise.Set.Lattice
+module
+
+public import CombinatorialGames.Game.IGame
+public import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 
 /-!
 # Game reductions
@@ -12,6 +14,8 @@ import Mathlib.Algebra.Group.Pointwise.Set.Lattice
 We prove that dominated moves can be deleted, reversible moves can be bypassed,
 and gift horses can be given.
 -/
+
+public section
 
 universe u v
 
