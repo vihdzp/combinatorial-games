@@ -78,10 +78,20 @@ The order structures interact in the expected way with arithmetic. In particular
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
 -/
 
-theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
+public theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
     Relation.TransGen r x y ↔ ∃ z, r z y ∧ (x = z ∨ TransGen r x z) := by
   rw [transGen_iff]
   simp [and_or_left, exists_or, and_comm]
+
+-- mathlib PR #42549
+public theorem Set.forall_mem_union {α : Type*} {s t : Set α} {p : α → Prop} :
+    (∀ x ∈ s ∪ t, p x) ↔ (∀ x ∈ s, p x) ∧ (∀ x ∈ t, p x) := by
+  simp_rw [mem_union, or_imp, forall_and]
+
+-- mathlib PR #42549
+public theorem Set.exists_mem_union {α : Type*} {s t : Set α} {p : α → Prop} :
+    (∃ x ∈ s ∪ t, p x) ↔ (∃ x ∈ s, p x) ∨ (∃ x ∈ t, p x) := by
+  simp_rw [mem_union, or_and_right, exists_or]
 
 universe u
 
@@ -596,8 +606,10 @@ private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
 
 instance : InvolutiveNeg IGame where
   neg_neg x := by
-    refine ofSetsRecOn x ?_
-    aesop (add simp [neg_ofSets''])
+    induction x using ofSetsRecOn with | ofSets s t ihs iht
+    rw [neg_ofSets'', neg_ofSets'']
+    simp [Set.ext_iff]
+    grind
 
 @[simp]
 theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
@@ -747,21 +759,22 @@ theorem add_right_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ y.moves p)
 theorem forall_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x + y).moves p, P a) ↔
       (∀ a ∈ x.moves p, P (a + y)) ∧ (∀ b ∈ y.moves p, P (x + b)) := by
-  aesop
+  rw [moves_add, Set.forall_mem_union, Set.forall_mem_image, Set.forall_mem_image]
 
 @[game_cmp]
 theorem exists_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x + y).moves p, P a) ↔
       (∃ a ∈ x.moves p, P (a + y)) ∨ (∃ b ∈ y.moves p, P (x + b)) := by
-  aesop
+  rw [moves_add, Set.exists_mem_union, Set.exists_mem_image, Set.exists_mem_image]
 
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
 
 private theorem add_zero' (x : IGame) : x + 0 = x := by
-  refine moveRecOn x ?_
-  aesop
+  induction x using moveRecOn with | ind x ih
+  rw [add_eq', ← ofSets_moves x, ofSets_inj']
+  simp [Set.image_congr (ih _)]
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext
@@ -847,18 +860,21 @@ theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
   simpa [add_comm, sub_eq_add_neg] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
+  induction x using subposition_wf.induction generalizing y z with | _ x ihx
+  induction y using subposition_wf.induction generalizing z with | _ y ihy
+  induction z using IGame.moveRecOn with | ind z ihz
   rw [le_iff_forall_lf, moves_add, moves_add]
   refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
-  · exact lf_of_le_left (add_le_add_left' h a) (add_right_mem_moves_add ha y)
+  · exact lf_of_le_left (ihz left a ha) (add_right_mem_moves_add ha y)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (left_lf_of_le h ha)
-    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-    · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-  · exact lf_of_right_le (add_le_add_left' h a) (add_right_mem_moves_add ha x)
+    · exact lf_of_le_left (ihx a (.of_mem_moves ha) hb' z) (add_left_mem_moves_add hb z)
+    · exact lf_of_right_le (ihx b (.trans (.of_mem_moves hb) (.of_mem_moves ha)) hb' z)
+        (add_left_mem_moves_add hb z)
+  · exact lf_of_right_le (ihz right a ha) (add_right_mem_moves_add ha x)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (lf_right_of_le h ha)
-    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-    · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-termination_by (x, y, z)
-decreasing_by igame_wf (maxDepth := 8)
+    · exact lf_of_le_left (ihy b (.trans (.of_mem_moves hb) (.of_mem_moves ha)) hb' z)
+        (add_left_mem_moves_add hb z)
+    · exact lf_of_right_le (ihx b (.of_mem_moves hb) hb' z) (add_left_mem_moves_add hb z)
 
 private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
   simpa [add_comm] using add_le_add_left' h z
@@ -1103,34 +1119,39 @@ theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).moves p, P a) ↔
       (∀ p', ∀ a ∈ x.moves p', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  aesop
+  rw [moves_mul, forall_mem_image, forall_mem_union]
+  simp
+  grind only
 
 @[game_cmp]
 theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).moves p, P a) ↔
       (∃ p', ∃ a ∈ x.moves p', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  aesop
+  rw [moves_mul, exists_mem_image, exists_mem_union]
+  simp
+  grind only
 
 private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
   ext p; cases p <;> simp
 
 private theorem one_mul' (x : IGame) : 1 * x = x := by
-  refine moveRecOn x ?_
-  aesop (add simp [mulOption, and_assoc, zero_mul'])
+  induction x using moveRecOn with | ind x ih
+  rw [mul_eq]
+  simp [mulOption, Set.singleton_prod, Set.image_image, zero_mul', Set.image_congr (ih _)]
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
-  ext p
-  simp only [moves_mul, mem_image, mem_prod, mem_union, Prod.exists]
-  cases p; all_goals
-    dsimp
-    simp only [and_comm, or_comm]
-    rw [exists_comm]
-    congr! 4 with b a
-    rw [and_congr_left_iff]
-    rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
-      rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]
-termination_by (x, y)
-decreasing_by igame_wf
+  induction x using moveRecOn generalizing y with | ind x ihx
+  induction y using moveRecOn with | ind y ihy
+  rw [mul_eq x y, mul_eq y x, ofSets_inj]
+  simp_rw [Set.image_union,
+    ← Set.image_swap_prod (x.moves _) (y.moves _),
+    Set.image_image, Set.union_comm (_ '' IGame.moves left _ ×ˢ _) (_ '' IGame.moves right _ ×ˢ _),
+    Prod.fst_swap, Prod.snd_swap]
+  constructor <;> refine congrArg₂ (· ∪ ·) ?_ ?_ <;> apply Set.image_congr <;>
+  · simp_rw [Prod.forall, Set.mem_prod, and_imp, mulOption]
+    intro a b ha hb
+    rw [ihx _ _ ha, ihx _ _ ha, ihy _ _ hb]
+    ac_rfl
 
 instance : CommMagma IGame where
   mul_comm := private mul_comm'
