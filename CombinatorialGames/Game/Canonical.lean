@@ -38,14 +38,16 @@ set_option linter.unusedVariables false in
 def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   open scoped Classical in
   if reverseSet x p z = ∅ then {z} else
-  ⋃ (g) (hg : g ∈ reverseSet x p z), unreverse1 x p g
+  ⋃ (g) (hg : g ∈ reverseSet x p z) (g') (hg' : g' ∈ g.moves p), unreverse1 x p g'
 termination_by z
-decreasing_by exact .of_mem_moves hg.1
+decreasing_by exact .trans (.of_mem_moves hg') (.of_mem_moves hg.1)
 
 instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
   fun_induction unreverse1 x p z with
   | case1 => infer_instance
-  | case2 z _ ih => exact @small_biUnion _ _ (reverseSet x p z) _ _ ih
+  | case2 z _ ih =>
+    exact @small_biUnion _ _ (reverseSet x p z) _ _ fun g hg =>
+      @small_biUnion _ _ (g.moves p) _ _ (ih g hg)
 
 @[expose]
 def unreverse (x : IGame) : IGame :=
