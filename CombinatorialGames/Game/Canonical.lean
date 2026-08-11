@@ -61,6 +61,11 @@ theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
   unfold reverseSet
   cases p <;> simp [Set.ext_iff, IGame.neg_le]
 
+theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
+    reverseSet x p z = reverseSet y p z := by
+  unfold reverseSet
+  cases p <;> simp [hxy.le_congr_left, hxy.le_congr_right]
+
 -- false positive on `hg` which is referenced in the termination proof
 set_option linter.unusedVariables false in
 def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
@@ -91,6 +96,15 @@ theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
       Set.biUnion_image, moves_neg, neg_neg]
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
     rw [Set.image_neg_eq_neg, ih g hg g' hg']
+
+theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
+    unreverse1 x p z = unreverse1 y p z := by
+  fun_induction unreverse1 x p z with
+  | case1 z hx => rw [unreverse1, ← reverseSet_congr_left hxy, if_pos hx]
+  | case2 z hx ih =>
+    rw [unreverse1, ← reverseSet_congr_left hxy, if_neg hx]
+    refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
+    exact ih g hg g' hg'
 
 theorem lf_of_mem_reverseSet_of_mem_unreverse1
     (x : IGame) (p : Player) (z : IGame) {g g' c : IGame}
@@ -175,6 +189,33 @@ def unreverse (x : IGame) : IGame :=
   !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
 termination_by x
 decreasing_by igame_wf
+
+theorem unreverse_equiv (x : IGame) : unreverse x ≈ x := by
+  induction x using moveRecOn with | ind x ih
+  unfold unreverse
+  let x' := !{fun p => unreverse '' x.moves p}
+  have hx'l := unreverse_equiv_aux_left x'
+  have hx'r := hx'l.trans <| unreverse_equiv_aux_right _
+  simp_rw [leftMoves_ofSets, ← unreverse1_congr_left hx'l] at hx'r
+  have hx' : x' ≈ x := by
+    unfold x'
+    apply equiv_of_exists
+    · rw [moves_ofSets, Set.forall_mem_image]
+      intro z hz
+      exact ⟨z, hz, ih left z hz⟩
+    · rw [moves_ofSets, Set.forall_mem_image]
+      intro z hz
+      exact ⟨z, hz, ih right z hz⟩
+    · intro z hz
+      rw [moves_ofSets, Set.exists_mem_image]
+      exact ⟨z, hz, ih left z hz⟩
+    · intro z hz
+      rw [moves_ofSets, Set.exists_mem_image]
+      exact ⟨z, hz, ih right z hz⟩
+  simp_rw [unreverse1_congr_left hx'] at hx'r
+  refine ((ofSets_eq_ofSets_cases _ _).antisymmRel.trans ?_).trans (hx'r.symm.trans hx')
+  unfold x'
+  simp
 
 /-- Undominating a game. This returns garbage values on non-short games -/
 def undominate (x : IGame) : IGame :=
