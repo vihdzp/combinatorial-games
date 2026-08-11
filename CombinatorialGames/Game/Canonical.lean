@@ -24,6 +24,29 @@ universe u
 
 public noncomputable section
 
+section ForMathlib
+open Set
+
+variable {α : Type*} {ι : Sort*} {κ : ι → Sort*}
+
+-- mathlib PR #42549
+theorem forall_mem_iUnion {p : α → Prop} {f : ι → Set α} :
+    (∀ x ∈ ⋃ i, f i, p x) ↔ (∀ i, ∀ x ∈ f i, p x) := by
+  simp_rw [mem_iUnion, forall_exists_index]
+  apply forall_comm
+
+-- mathlib PR #42549
+theorem forall_mem_iUnion₂ {p : α → Prop} {f : (i : ι) → κ i → Set α} :
+    (∀ x ∈ ⋃ (i) (j), f i j, p x) ↔ (∀ i j, ∀ x ∈ f i j, p x) := by
+  simp_rw [forall_mem_iUnion]
+
+-- mathlib PR #42549
+theorem forall_mem_biUnion {p : α → Prop} {f : ι → Set α} {q : ι → Prop} :
+    (∀ x ∈ ⋃ (i : ι) (_ : q i), f i, p x) ↔ (∀ i, q i → ∀ x ∈ f i, p x) :=
+  forall_mem_iUnion₂
+
+end ForMathlib
+
 namespace IGame
 
 def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
@@ -81,6 +104,50 @@ theorem lf_of_mem_moves_of_mem_unreverse1
     simp_rw [Set.mem_iUnion] at hg
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact lf_of_mem_reverseSet_of_mem_unreverse1 x p z hg' hg'' hg
+
+private theorem unreverse_equiv_aux_left (x : IGame) :
+    x ≈ !{⋃ z : xᴸ, unreverse1 x left z | xᴿ} := by
+  apply equiv_of_forall_lf
+  · intro z hz
+    replace hz : unreverse1 x left z ⊆ ⋃ z : xᴸ, unreverse1 x left z :=
+      Set.subset_iUnion (fun z : xᴸ => unreverse1 x left z) ⟨z, hz⟩
+    induction z using subposition_wf.induction with | _ z ih
+    by_cases hx : reverseSet x left z = ∅
+    · apply left_lf
+      rw [leftMoves_ofSets]
+      apply hz
+      unfold unreverse1
+      simp [hx]
+    · obtain ⟨g, hg⟩ : (reverseSet x left z).Nonempty := Set.nonempty_iff_ne_empty.2 hx
+      refine lf_of_right_le (le_iff_forall_lf.2 ⟨?_, ?_⟩) hg.1
+      · intro g' hg'
+        refine ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) (subset_trans ?_ hz)
+        conv_rhs => unfold unreverse1
+        rw [if_neg hx]
+        exact Set.subset_iUnion₂_of_subset g hg (Set.subset_biUnion_of_mem hg')
+      · rw [rightMoves_ofSets]
+        intro g' hg'
+        exact fun h => lf_right hg' (h.trans hg.2)
+  · intro z hz
+    apply lf_right
+    rw [rightMoves_ofSets]
+    exact hz
+  · rw [leftMoves_ofSets, forall_mem_iUnion, Subtype.forall]
+    intro z hz g hg
+    exact lf_of_mem_moves_of_mem_unreverse1 x left z hz hg
+  · rw [rightMoves_ofSets]
+    intro z hz
+    exact lf_right hz
+
+private theorem unreverse_equiv_aux_right (x : IGame) :
+    x ≈ !{xᴸ | ⋃ z : xᴿ, unreverse1 x right z} := by
+  rw [← neg_equiv_neg_iff, neg_ofSets, neg_eq]
+  stop
+  -- refine @unreverse_equiv_aux_left !{-xᴿ | -xᴸ}
+  · simpa [← neg_ofSets] using hbb
+  · simpa using hdl
+  · simpa [neg_subset, neg_range] using hu
+  · simpa [neg_eq_iff_eq_neg] using hv
 
 def unreverse (x : IGame) : IGame :=
   !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
