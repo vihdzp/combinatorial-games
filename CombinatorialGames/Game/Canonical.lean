@@ -187,6 +187,8 @@ theorem unreverse_equiv_aux_right (x : IGame) :
 
 public section
 
+/-- Recursively repeatedly bypass all reversible options from a game `x`,
+so that `unreverse x` hereditarily has no reversible options. -/
 def unreverse (x : IGame) : IGame :=
   !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
 termination_by x
