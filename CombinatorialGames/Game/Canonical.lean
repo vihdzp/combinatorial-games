@@ -56,6 +56,11 @@ instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x 
   unfold reverseSet
   infer_instance
 
+theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
+    -reverseSet x p z = reverseSet (-x) (-p) (-z) := by
+  unfold reverseSet
+  cases p <;> simp [Set.ext_iff, IGame.neg_le]
+
 -- false positive on `hg` which is referenced in the termination proof
 set_option linter.unusedVariables false in
 def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
@@ -71,6 +76,21 @@ instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x 
   | case2 z _ ih =>
     exact @small_biUnion _ _ (reverseSet x p z) _ _ fun g hg =>
       @small_biUnion _ _ (g.moves p) _ _ (ih g hg)
+
+theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
+    -unreverse1 x p z = unreverse1 (-x) (-p) (-z) := by
+  fun_induction unreverse1 x p z with
+  | case1 z hx =>
+    unfold unreverse1
+    rw [← neg_reverseSet, hx]
+    simp
+  | case2 z hx ih =>
+    rw [unreverse1, ← neg_reverseSet]
+    simp_rw [Set.neg_eq_empty, if_neg hx]
+    simp only [← Set.image_neg_eq_neg, Set.image_iUnion,
+      Set.biUnion_image, moves_neg, neg_neg]
+    refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
+    rw [Set.image_neg_eq_neg, ih g hg g' hg']
 
 theorem lf_of_mem_reverseSet_of_mem_unreverse1
     (x : IGame) (p : Player) (z : IGame) {g g' c : IGame}
@@ -142,12 +162,14 @@ private theorem unreverse_equiv_aux_left (x : IGame) :
 private theorem unreverse_equiv_aux_right (x : IGame) :
     x ≈ !{xᴸ | ⋃ z : xᴿ, unreverse1 x right z} := by
   rw [← neg_equiv_neg_iff, neg_ofSets, neg_eq]
-  stop
-  -- refine @unreverse_equiv_aux_left !{-xᴿ | -xᴸ}
-  · simpa [← neg_ofSets] using hbb
-  · simpa using hdl
-  · simpa [neg_subset, neg_range] using hu
-  · simpa [neg_eq_iff_eq_neg] using hv
+  simp_rw [← Set.image_neg_eq_neg, Set.image_iUnion,
+    Set.image_neg_eq_neg, neg_unreverse1]
+  refine (unreverse_equiv_aux_left _).trans (Eq.antisymmRel ?_)
+  rw [ofSets_inj, rightMoves_ofSets, and_iff_left rfl,
+    Player.neg_right]
+  simp_rw [Set.iUnion_coe_set, ← Set.iSup_eq_iUnion]
+  apply (Equiv.neg IGame).iSup_congr
+  simp [neg_eq]
 
 def unreverse (x : IGame) : IGame :=
   !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
