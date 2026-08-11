@@ -22,9 +22,9 @@ games through undominating and unreversing games.
 
 universe u
 
-public noncomputable section
+noncomputable section
 
-section ForMathlib
+public section ForMathlib
 open Set
 
 variable {α : Type*} {ι : Sort*} {κ : ι → Sort*}
@@ -139,7 +139,7 @@ theorem lf_of_mem_moves_of_mem_unreverse1
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact lf_of_mem_reverseSet_of_mem_unreverse1 x p z hg' hg'' hg
 
-private theorem unreverse_equiv_aux_left (x : IGame) :
+theorem unreverse_equiv_aux_left (x : IGame) :
     x ≈ !{⋃ z : xᴸ, unreverse1 x left z | xᴿ} := by
   apply equiv_of_forall_lf
   · intro z hz
@@ -173,7 +173,7 @@ private theorem unreverse_equiv_aux_left (x : IGame) :
     intro z hz
     exact lf_right hz
 
-private theorem unreverse_equiv_aux_right (x : IGame) :
+theorem unreverse_equiv_aux_right (x : IGame) :
     x ≈ !{xᴸ | ⋃ z : xᴿ, unreverse1 x right z} := by
   rw [← neg_equiv_neg_iff, neg_ofSets, neg_eq]
   simp_rw [← Set.image_neg_eq_neg, Set.image_iUnion,
@@ -184,6 +184,8 @@ private theorem unreverse_equiv_aux_right (x : IGame) :
   simp_rw [Set.iUnion_coe_set, ← Set.iSup_eq_iUnion]
   apply (Equiv.neg IGame).iSup_congr
   simp [neg_eq]
+
+public section
 
 def unreverse (x : IGame) : IGame :=
   !{fun p => ⋃ z : x.moves p, unreverse1 x p (unreverse z)}
@@ -280,5 +282,6 @@ decreasing_by igame_wf
 theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
   ⟨by simpa using le_undominate (-x), le_undominate x⟩
 
+end
 end IGame
 end
