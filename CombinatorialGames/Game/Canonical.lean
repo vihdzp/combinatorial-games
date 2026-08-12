@@ -49,6 +49,10 @@ end ForMathlib
 
 namespace IGame
 
+/-- The set of `-p`-moves of `z` which reverse `z` with respect to a `p`-move from `x`.
+That is, if player `p` moves from `x` to `z`, then `reverseSet x p z` is the set of
+moves `-p` could make as a response that reverse the move from `x` to `z`.
+Note that `z` is not necessarily a `p`-option of `x`. -/
 def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   {g | g ∈ z.moves (-p) ∧ p.cases (g ≤ x) (x ≤ g)}
 
@@ -68,6 +72,9 @@ theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IG
 
 -- false positive on `hg` which is referenced in the termination proof
 set_option linter.unusedVariables false in
+/-- Repeatedly reverse the move `z` with respect to a `p`-move from `x`.
+Treating `z` as a `p`-option of `x`, bypass it if it is reversible, and
+then recursively reverse all the resulting games. -/
 def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   open scoped Classical in
   if reverseSet x p z = ∅ then {z} else
