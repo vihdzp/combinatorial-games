@@ -418,7 +418,7 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
-theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = -1 ∨ x = mk ⋆ ∨ x = 1 := by
+theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
   constructor
   · intro hx
     obtain ⟨x, rfl, hxb⟩ := birthday_eq_iGameBirthday x
@@ -426,10 +426,8 @@ theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = -1 ∨ x = mk ⋆ �
     obtain rfl | rfl | rfl := hx <;> simp
   · rintro (rfl | rfl | rfl) <;> simp
 
-theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = -1 ∨ x = 0 ∨ x = mk ⋆ ∨ x = 1 := by
+theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
   rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
-  apply iff_of_eq
-  ac_rfl
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
