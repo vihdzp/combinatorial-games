@@ -198,10 +198,6 @@ instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGe
 instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
-/-- A variant of `small_setOf_subposition` in simp-normal form -/
-instance small_subtype_subposition (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_transGen' _ x
-
 theorem subposition_wf : WellFounded Subposition := by
   refine ⟨fun x => Acc.transGen ?_⟩
   apply QPF.Fix.ind
@@ -241,10 +237,6 @@ theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
 
 /-- The set of games reachable from a given game is small. -/
 instance small_setOf_wsubposition (x : IGame.{u}) : Small.{u} {y | WSubposition y x} :=
-  small_insert x {y | Subposition y x}
-
-/-- A variant of `small_setOf_wsubposition` in simp-normal form -/
-instance small_subtype_wsubposition (x : IGame.{u}) : Small.{u} {y // WSubposition y x} :=
   small_insert x {y | Subposition y x}
 
 @[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
