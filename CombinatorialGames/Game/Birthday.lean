@@ -205,6 +205,34 @@ theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
 theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
   rw [← neg_tiny, birthday_neg, birthday_tiny]
 
+theorem birthday_eq_one {x : IGame} : birthday x = 1 ↔ x = -1 ∨ x = ⋆ ∨ x = 1 := by
+  constructor
+  · intro hx
+    have hxm (p : Player) : x.moves p ⊆ {0} := by
+      intro z hz
+      rw [Set.mem_singleton_iff, ← birthday_eq_zero, ← lt_one_iff, ← hx]
+      exact birthday_lt_of_mem_moves hz
+    have hxl := subset_singleton_iff_eq.1 (hxm left)
+    have hxr := subset_singleton_iff_eq.1 (hxm right)
+    rw [← ofSets_leftMoves_rightMoves x] at hx ⊢
+    obtain hxl | hxl := hxl <;> obtain hxr | hxr := hxr <;> simp_rw [hxl, hxr] at hx ⊢
+    · absurd hx
+      rw [← ofSets_eq_ofSets_cases (fun _ => ∅) trivial, ← zero_def]
+      simp
+    · refine .inl ?_
+      rw [one_def]
+      simp
+    · refine .inr (.inr ?_)
+      rw [one_def]
+    · refine .inr (.inl (ext fun p => ?_))
+      cases p <;> simp
+  · rintro (rfl | rfl | rfl) <;> simp
+
+theorem birthday_le_one {x : IGame} : birthday x ≤ 1 ↔ x = -1 ∨ x = 0 ∨ x = ⋆ ∨ x = 1 := by
+  rw [le_one_iff, birthday_eq_zero, birthday_eq_one]
+  apply iff_of_eq
+  ac_rfl
+
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   induction o using SuccOrder.prelimitRecOn with
@@ -409,6 +437,19 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
+
+theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = -1 ∨ x = mk ⋆ ∨ x = 1 := by
+  constructor
+  · intro hx
+    obtain ⟨x, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+    rw [← hxb, IGame.birthday_eq_one] at hx
+    obtain rfl | rfl | rfl := hx <;> simp
+  · rintro (rfl | rfl | rfl) <;> simp
+
+theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = -1 ∨ x = 0 ∨ x = mk ⋆ ∨ x = 1 := by
+  rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
+  apply iff_of_eq
+  ac_rfl
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by

@@ -54,6 +54,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
 protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+@[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
 /-! ### Half -/
 

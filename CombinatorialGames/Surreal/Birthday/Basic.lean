@@ -128,6 +128,23 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
+theorem birthday_eq_one {x : Surreal} : birthday x = 1 ↔ x = -1 ∨ x = 1 := by
+  constructor
+  · intro hx
+    obtain ⟨x, nx, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+    rw [← hxb, IGame.birthday_eq_one] at hx
+    obtain rfl | rfl | rfl := hx
+    · simp
+    · absurd nx
+      exact not_numeric_star
+    · simp
+  · rintro (rfl | rfl) <;> simp
+
+theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = -1 ∨ x = 0 ∨ x = 1 := by
+  rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
+  apply iff_of_eq
+  ac_rfl
+
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
 
