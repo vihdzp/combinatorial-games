@@ -49,7 +49,6 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
 @[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
-
 @[simp, game_cmp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext p; cases p <;> simp [mulOption]
