@@ -205,18 +205,6 @@ theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
 theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
   rw [← neg_tiny, birthday_neg, birthday_tiny]
 
-theorem birthday_le_one {x : IGame} : x.birthday ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = ⋆ := by
-  rw [← Nat.cast_one, ← mem_birthdayFinset, birthdayFinset_one]
-  simp
-
-@[simp]
-theorem zero_ne_star : 0 ≠ ⋆ :=
-  zero_fuzzy_star.ne
-
-theorem birthday_eq_one {x : IGame} : x.birthday = 1 ↔ x = 1 ∨ x = -1 ∨ x = ⋆ := by
-  rw [le_antisymm_iff, one_le_iff_ne_zero, birthday_le_one]
-  aesop
-
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   induction o using SuccOrder.prelimitRecOn with
@@ -320,6 +308,14 @@ decreasing_by igame_wf
 
 theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of .omega0 :=
   short_iff_birthday_finite.1 ‹_›
+
+theorem birthday_le_one {x : IGame} : x.birthday ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = ⋆ := by
+  rw [← Nat.cast_one, ← mem_birthdayFinset, birthdayFinset_one]
+  simp
+
+theorem birthday_eq_one {x : IGame} : x.birthday = 1 ↔ x = 1 ∨ x = -1 ∨ x = ⋆ := by
+  rw [le_antisymm_iff, one_le_iff_ne_zero, birthday_le_one]
+  aesop
 
 end IGame
 
