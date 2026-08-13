@@ -239,8 +239,8 @@ alias ⟨_, switch_equiv_zero⟩ := switch_equiv_zero_iff
 
 theorem switch_fuzzy_zero_iff {x : IGame} : ±x ‖ 0 ↔ 0 ≤ x := by
   rw [← not_iff_not, ← switch_equiv_zero_iff]
-  exact not_fuzzy_iff_of_equiv_neg
-    (neg_switch x).symm.antisymmRel neg_zero.symm.antisymmRel
+  exact not_fuzzy_iff_of_neg_equiv
+    (neg_switch x).antisymmRel neg_zero.antisymmRel
 
 alias ⟨_, switch_fuzzy_zero⟩ := switch_fuzzy_zero_iff
 
@@ -252,7 +252,7 @@ theorem switch_fuzzy_self_iff {x : IGame} : ±x ‖ x ↔ ¬x < 0 := by
         simp
       · intro h
         absurd h0x.trans_lt (lt_of_le_not_ge h (left_lf (by simp)))
-        exact not_lt_of_equiv_neg neg_zero.symm.antisymmRel (neg_switch x).symm.antisymmRel
+        exact not_lt_of_neg_equiv neg_zero.antisymmRel (neg_switch x).antisymmRel
     · exact h0x.not_gt
   · rw [lt_iff_le_not_ge, and_iff_left h0x]
     exact ⟨fun hx => mt (switch_equiv_zero h0x).ge.trans' hx.2,
