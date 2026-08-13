@@ -82,6 +82,15 @@ def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
 termination_by z
 decreasing_by exact .trans (.of_mem_moves hg') (.of_mem_moves hg.1)
 
+theorem unreverse1_of_reverseSet_eq_empty {x : IGame} {p : Player} {z : IGame}
+    (hx : reverseSet x p z = ∅) : unreverse1 x p z = {z} := by
+  rw [unreverse1, if_pos hx]
+
+theorem unreverse1_of_reverseSet_ne_empty {x : IGame} {p : Player} {z : IGame}
+    (hx : reverseSet x p z ≠ ∅) : unreverse1 x p z =
+    ⋃ (g) (_ : g ∈ reverseSet x p z) (g') (_ : g' ∈ g.moves p), unreverse1 x p g' := by
+  rw [unreverse1, if_neg hx]
+
 instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
   fun_induction unreverse1 x p z with
   | case1 => infer_instance
@@ -118,14 +127,13 @@ theorem lf_of_mem_reverseSet_of_mem_unreverse1
     (hg : g ∈ reverseSet x p z) (hg' : g' ∈ g.moves p) (hc : c ∈ unreverse1 x p g') :
     ¬p.cases (x ≤ c) (c ≤ x) := by
   induction z using subposition_wf.induction generalizing g g' with | _ z ih
-  unfold unreverse1 at hc
   by_cases hx : reverseSet x p g' = ∅
-  · rw [if_pos hx, Set.mem_singleton_iff] at hc
+  · rw [unreverse1_of_reverseSet_eq_empty hx, Set.mem_singleton_iff] at hc
     rw [hc]
     cases p with
     | left => exact fun h => left_lf hg' (hg.2.trans h)
     | right => exact fun h => lf_right hg' (h.trans hg.2)
-  · rw [if_neg hx] at hc
+  · rw [unreverse1_of_reverseSet_ne_empty hx] at hc
     simp_rw [Set.mem_iUnion] at hc
     obtain ⟨g'', hg'', g''', hg''', hc⟩ := hc
     exact ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) hg'' hg''' hc
@@ -134,14 +142,13 @@ theorem lf_of_mem_moves_of_mem_unreverse1
     (x : IGame) (p : Player) (z : IGame) {g : IGame}
     (hz : z ∈ x.moves p) (hg : g ∈ unreverse1 x p z) :
     ¬p.cases (x ≤ g) (g ≤ x) := by
-  unfold unreverse1 at hg
   by_cases hx : reverseSet x p z = ∅
-  · rw [if_pos hx, Set.mem_singleton_iff] at hg
+  · rw [unreverse1_of_reverseSet_eq_empty hx, Set.mem_singleton_iff] at hg
     rw [hg]
     cases p with
     | left => exact left_lf hz
     | right => exact lf_right hz
-  · rw [if_neg hx] at hg
+  · rw [unreverse1_of_reverseSet_ne_empty hx] at hg
     simp_rw [Set.mem_iUnion] at hg
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact lf_of_mem_reverseSet_of_mem_unreverse1 x p z hg' hg'' hg
@@ -157,14 +164,12 @@ theorem unreverse_equiv_aux_left (x : IGame) :
     · apply left_lf
       rw [leftMoves_ofSets]
       apply hz
-      unfold unreverse1
-      simp [hx]
+      rw [unreverse1_of_reverseSet_eq_empty hx, Set.mem_singleton_iff]
     · obtain ⟨g, hg⟩ : (reverseSet x left z).Nonempty := Set.nonempty_iff_ne_empty.2 hx
       refine lf_of_right_le (le_iff_forall_lf.2 ⟨?_, ?_⟩) hg.1
       · intro g' hg'
         refine ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) (subset_trans ?_ hz)
-        conv_rhs => unfold unreverse1
-        rw [if_neg hx]
+        rw [unreverse1_of_reverseSet_ne_empty hx]
         exact Set.subset_iUnion₂_of_subset g hg (Set.subset_biUnion_of_mem hg')
       · rw [rightMoves_ofSets]
         intro g' hg'
