@@ -53,19 +53,19 @@ namespace IGame
 That is, if player `p` moves from `x` to `z`, then `reverseSet x p z` is the set of
 moves `-p` could make as a response that reverse the move from `x` to `z`.
 Note that `z` is not necessarily a `p`-option of `x`. -/
-def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
+public def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   {g | g ∈ z.moves (-p) ∧ p.cases (g ≤ x) (x ≤ g)}
 
-instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x p z) := by
+public instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x p z) := by
   unfold reverseSet
   infer_instance
 
-theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
+public theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
     -reverseSet x p z = reverseSet (-x) (-p) (-z) := by
   unfold reverseSet
   cases p <;> simp [Set.ext_iff, IGame.neg_le]
 
-theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
+public theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
     reverseSet x p z = reverseSet y p z := by
   unfold reverseSet
   cases p <;> simp [hxy.le_congr_left, hxy.le_congr_right]
