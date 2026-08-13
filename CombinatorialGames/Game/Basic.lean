@@ -144,8 +144,8 @@ theorem mk_intCast (n : ℤ) : mk n = n := rfl
 theorem zero_def : (0 : Game) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; simp
 theorem one_def : (1 : Game) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; simp
 
-theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
-theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
+@[simp] theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
+@[simp] theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
 
 instance : ZeroLEOneClass Game where
   zero_le_one := zero_le_one (α := IGame)
