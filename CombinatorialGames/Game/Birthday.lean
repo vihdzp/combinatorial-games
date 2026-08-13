@@ -418,19 +418,16 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
-theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
-theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
-
 theorem mk_ofPred_birthday_lt (o : NatOrdinal) :
     mk '' {x | x.birthday < o} = {x | x.birthday < o} := by
   ext x
   constructor
-  · rintro ⟨x, hx, rfl⟩
-    exact (birthday_mk_le x).trans_lt hx
+  · revert x
+    exact Set.forall_mem_image.2 fun x hx => (birthday_mk_le x).trans_lt hx
   · intro hx
-    obtain ⟨x, rfl, hx⟩ := birthday_eq_iGameBirthday x
+    obtain ⟨x, rfl, hxb⟩ := birthday_eq_iGameBirthday x
     refine ⟨x, ?_, rfl⟩
-    rwa [mem_ofPred, hx]
+    rwa [mem_ofPred, hxb]
 
 theorem mk_ofPred_birthday_le (o : NatOrdinal) :
     mk '' {x | x.birthday ≤ o} = {x | x.birthday ≤ o} := by
