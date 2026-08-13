@@ -219,6 +219,6 @@ theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
 
 -- `Dyadic.toIGame` is canonical, so it minimizes the birthday in its equivalence class.
 proof_wanted Surreal.birthday_dyadic (x : Dyadic) :
-    Surreal.birthday x = IGame.birthday x
+    Surreal.birthday x = x.birthday
 
 end
