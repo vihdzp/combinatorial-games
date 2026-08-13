@@ -53,6 +53,7 @@ namespace IGame
 That is, if player `p` moves from `x` to `z`, then `reverseSet x p z` is the set of
 moves `-p` could make as a response that reverse the move from `x` to `z`.
 Note that `z` is not necessarily a `p`-option of `x`. -/
+@[expose]
 public def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   {g | g ∈ z.moves (-p) ∧ p.cases (g ≤ x) (x ≤ g)}
 
@@ -121,6 +122,26 @@ theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IG
     rw [unreverse1, ← reverseSet_congr_left hxy, if_neg hx]
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
     exact ih g hg g' hg'
+
+theorem reverseSet_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
+    (hg : g ∈ unreverse1 x p z) : reverseSet x p g = ∅ := by
+  fun_induction unreverse1 x p z with
+  | case1 z hx =>
+    rw [Set.mem_singleton_iff.1 hg]
+    exact hx
+  | case2 z hx ih =>
+    simp_rw [Set.mem_iUnion₂] at hg
+    obtain ⟨g', hg', g'', hg'', hg⟩ := hg
+    exact ih g' hg' g'' hg'' hg
+
+theorem wsubposition_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
+    (hg : g ∈ unreverse1 x p z) : WSubposition g z := by
+  fun_induction unreverse1 x p z with
+  | case1 z hx => rw [Set.mem_singleton_iff.1 hg]
+  | case2 z hx ih =>
+    simp_rw [Set.mem_iUnion₂] at hg
+    obtain ⟨g', hg', g'', hg'', hg⟩ := hg
+    exact (ih g' hg' g'' hg'' hg).trans (.trans (.of_mem_moves hg'') (.of_mem_moves hg'.1))
 
 theorem lf_of_mem_reverseSet_of_mem_unreverse1
     {x : IGame} {p : Player} {z : IGame} {g g' c : IGame}
@@ -220,6 +241,85 @@ theorem unreverse_equiv (x : IGame) : unreverse x ≈ x := by
   refine ((ofSets_eq_ofSets_cases _ _).antisymmRel.trans ?_).trans (hx'r.symm.trans hx')
   unfold x'
   simp
+
+theorem birthday_unreverse_le (x : IGame) : birthday (unreverse x) ≤ birthday x := by
+  induction x using moveRecOn with | ind x ih
+  unfold unreverse
+  simp_rw [birthday_le_iff, moves_ofSets, forall_mem_iUnion]
+  intro p z g hg
+  exact ((birthday_le_of_wsubposition (wsubposition_of_mem_unreverse1 hg)).trans
+    (ih p z.1 z.2)).trans_lt (birthday_lt_of_mem_moves z.2)
+
+theorem reverseSet_unreverse {x : IGame} {p : Player} {z : IGame} (hz : z ∈ (unreverse x).moves p) :
+    reverseSet x p z = ∅ := by
+  unfold unreverse at hz
+  rw [moves_ofSets, Set.mem_iUnion] at hz
+  obtain ⟨⟨g, hg⟩, hz⟩ := hz
+  exact reverseSet_of_mem_unreverse1 hz
+
+theorem reverseSet_eq_empty_of_mem_moves_of_unreverse_eq_self
+    {x : IGame} {p : Player} {z : IGame} (hz : z ∈ x.moves p) (hx : unreverse x = x) :
+    reverseSet x p z = ∅ :=
+  reverseSet_unreverse (hx.symm ▸ hz)
+
+theorem unreverse_eq_self_of_reverseSet {x : IGame}
+    (hx : ∀ p, ∀ z ∈ x.moves p, reverseSet x p z = ∅)
+    (ih : ∀ p, ∀ z ∈ x.moves p, unreverse z = z) : unreverse x = x := by
+  unfold unreverse
+  ext p z
+  rw [moves_ofSets,
+    Set.iUnion_congr fun g : x.moves p =>
+      (congrArg (unreverse1 x p) (ih p g.1 g.2)).trans
+        (unreverse1_of_reverseSet_eq_empty (hx p g.1 g.2))]
+  simp
+
+mutual
+
+theorem unreverse_eq_self_of_mem_moves_of_unreverse_eq_self {x : IGame} {p : Player} {z : IGame}
+    (hz : z ∈ x.moves p) (hx : unreverse x = x) : unreverse z = z :=
+  have hz : z ∈ ⋃ g : x.moves p, unreverse1 x p (unreverse g) := by
+    rwa [← hx, unreverse, moves_ofSets] at hz
+  (Set.mem_iUnion.1 hz).elim fun g hz =>
+    unreverse_eq_self_of_wsubposition_of_unreverse_eq_self
+      (wsubposition_of_mem_unreverse1 hz) (unreverse_unreverse g)
+termination_by (x.birthday, 0)
+decreasing_by
+  · refine .left _ _ ?_
+    exact birthday_lt_of_mem_moves g.2
+  · refine .left _ _ ?_
+    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.2)
+
+theorem unreverse_unreverse (x : IGame) : unreverse (unreverse x) = unreverse x :=
+  unreverse_eq_self_of_reverseSet
+    (fun p z hz => (reverseSet_congr_left (unreverse_equiv x) p z).trans (reverseSet_unreverse hz))
+    (fun p z hz =>
+      have hz : z ∈ ⋃ g : x.moves p, unreverse1 x p (unreverse g) := by
+        rwa [unreverse, moves_ofSets] at hz
+      (Set.mem_iUnion.1 hz).elim fun g hz =>
+        unreverse_eq_self_of_wsubposition_of_unreverse_eq_self
+          (wsubposition_of_mem_unreverse1 hz) (unreverse_unreverse g))
+termination_by (x.birthday, 0)
+decreasing_by
+  · refine .left _ _ ?_
+    exact birthday_lt_of_mem_moves g.2
+  · refine .left _ _ ?_
+    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.2)
+
+theorem unreverse_eq_self_of_wsubposition_of_unreverse_eq_self {x z : IGame}
+    (hz : WSubposition z x) (hx : unreverse x = x) : unreverse z = z :=
+  (wsubposition_iff_eq_or_subposition.1 hz).elim (fun hz => hz.symm ▸ hx)
+    (fun hz => (subposition_iff_exists.1 hz).elim fun p hp =>
+      hp.elim fun g hg => hg.elim fun hg hz =>
+        unreverse_eq_self_of_wsubposition_of_unreverse_eq_self hz
+          (unreverse_eq_self_of_mem_moves_of_unreverse_eq_self hg hx))
+termination_by (x.birthday, 1)
+decreasing_by
+  · refine .right _ ?_
+    simp
+  · refine .left _ _ ?_
+    exact birthday_lt_of_mem_moves hg
+
+end
 
 /-- Undominating a game. This returns garbage values on non-short games -/
 def undominate (x : IGame) : IGame :=
