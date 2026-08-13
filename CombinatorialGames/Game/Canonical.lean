@@ -123,7 +123,7 @@ theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IG
     exact ih g hg g' hg'
 
 theorem lf_of_mem_reverseSet_of_mem_unreverse1
-    (x : IGame) (p : Player) (z : IGame) {g g' c : IGame}
+    {x : IGame} {p : Player} {z : IGame} {g g' c : IGame}
     (hg : g ∈ reverseSet x p z) (hg' : g' ∈ g.moves p) (hc : c ∈ unreverse1 x p g') :
     ¬p.cases (x ≤ c) (c ≤ x) := by
   induction z using subposition_wf.induction generalizing g g' with | _ z ih
@@ -139,7 +139,7 @@ theorem lf_of_mem_reverseSet_of_mem_unreverse1
     exact ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) hg'' hg''' hc
 
 theorem lf_of_mem_moves_of_mem_unreverse1
-    (x : IGame) (p : Player) (z : IGame) {g : IGame}
+    {x : IGame} {p : Player} {z : IGame} {g : IGame}
     (hz : z ∈ x.moves p) (hg : g ∈ unreverse1 x p z) :
     ¬p.cases (x ≤ g) (g ≤ x) := by
   by_cases hx : reverseSet x p z = ∅
@@ -151,7 +151,7 @@ theorem lf_of_mem_moves_of_mem_unreverse1
   · rw [unreverse1_of_reverseSet_ne_empty hx] at hg
     simp_rw [Set.mem_iUnion] at hg
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
-    exact lf_of_mem_reverseSet_of_mem_unreverse1 x p z hg' hg'' hg
+    exact lf_of_mem_reverseSet_of_mem_unreverse1 hg' hg'' hg
 
 theorem unreverse_equiv_aux_left (x : IGame) :
     x ≈ !{⋃ z : xᴸ, unreverse1 x left z | xᴿ} := by
@@ -180,7 +180,7 @@ theorem unreverse_equiv_aux_left (x : IGame) :
     exact hz
   · rw [leftMoves_ofSets, forall_mem_iUnion, Subtype.forall]
     intro z hz g hg
-    exact lf_of_mem_moves_of_mem_unreverse1 x left z hz hg
+    exact lf_of_mem_moves_of_mem_unreverse1 hz hg
   · rw [rightMoves_ofSets]
     intro z hz
     exact lf_right hz
