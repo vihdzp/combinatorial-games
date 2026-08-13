@@ -84,6 +84,16 @@ theorem den_eq_two_pow_toNat_precision (x : Dyadic) :
     | ofNat k => rfl
     | negSucc k => rfl
 
+theorem precision_eq_none {x : Dyadic} : x.precision = none ↔ x = 0 := by
+  cases x <;> simp
+
+theorem isSome_precision_eq_true {x : Dyadic} : x.precision.isSome = true ↔ x ≠ 0 :=
+  Option.isSome_iff_ne_none.trans Dyadic.precision_eq_none.not
+
+theorem isSome_precision_eq_true_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
+    x.precision.isSome = true :=
+  x.isSome_precision_eq_true.mpr (mt (by rintro rfl; rfl) hx)
+
 @[simp]
 theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
   simp_rw [Nat.le_one_iff_eq_zero_or_eq_one, x.den_ne_zero, false_or]

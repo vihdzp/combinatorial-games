@@ -59,11 +59,8 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
 /-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]
 def Dyadic.birthday (x : Dyadic) : Nat :=
-  if h : x.den = 1 then x.num.natAbs else (x.precision.get ?isSome).toNat + x.num.natAbs / x.den + 1
-where finally
-  cases x
-  · exact h.elim rfl
-  · rfl
+  if h : x.den = 1 then x.num.natAbs else
+  (x.precision.get (isSome_precision_eq_true_of_den_ne_one h)).toNat + x.num.natAbs / x.den + 1
 
 @[simp]
 theorem Dyadic.birthday_intCast (n : Int) : Dyadic.birthday n = n.natAbs := by
@@ -75,10 +72,10 @@ theorem Dyadic.birthday_natCast (n : Nat) : Dyadic.birthday n = n := by
   rw [← Int.cast_natCast, Dyadic.birthday_intCast, Int.natAbs_natCast]
 
 theorem Dyadic.birthday_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
-  x.birthday = (x.precision.get (by
-    cases x
-    · exact hx.elim rfl
-    · rfl)).toNat + x.num.natAbs / x.den + 1 := dif_neg hx
+    x.birthday =
+      (x.precision.get (isSome_precision_eq_true_of_den_ne_one hx)).toNat +
+        x.num.natAbs / x.den + 1 :=
+  dif_neg hx
 
 example : Dyadic.birthday ((13 : Dyadic) >>> 2) = 6 := rfl -- birthday 3.25 = 6
 example : Dyadic.birthday ((1 : Dyadic) >>> 1) = 2 := rfl -- birthday 1/2 = 2
