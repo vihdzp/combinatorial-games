@@ -90,16 +90,13 @@ theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
   induction hd : x.den using Nat.strongRec generalizing x with | ind d ih
   cases hd
   obtain hd | hd := eq_or_ne x.den 1
-  · unfold Dyadic.birthday
-    rw [Dyadic.toIGame_of_den_eq_one hd, IGame.birthday_intCast, dif_pos hd]
+  · rw [Dyadic.birthday_of_den_eq_one hd, Dyadic.toIGame_of_den_eq_one hd, IGame.birthday_intCast]
   · rw [Dyadic.toIGame_of_den_ne_one hd, birthday_ofSets]
     simp_rw [Set.image_singleton, csSup_singleton, Function.comp_apply]
     rw [ih _ (x.den_lower_lt hd) _ rfl, ih _ (x.den_upper_lt hd) _ rfl,
       Order.succ_eq_add_one, Order.succ_eq_add_one,
       ← Nat.cast_add_one, ← Nat.cast_add_one, ← Nat.cast_max,
-      Nat.cast_inj, Nat.add_max_add_right]
-    unfold Dyadic.birthday
-    rw [dif_neg hd, Nat.add_one_inj]
+      Nat.cast_inj, Nat.add_max_add_right, Dyadic.birthday_of_den_ne_one hd, Nat.add_one_inj]
     have hnd := x.max_den_lower_upper hd
     have hnd0 : (x.precision.getD 0).toNat ≠ 0 := by
       rw [ne_eq, ← pow_right_inj₀ Nat.two_pos (by decide), pow_zero,
