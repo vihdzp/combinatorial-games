@@ -101,9 +101,8 @@ theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
       Nat.cast_inj, Nat.add_max_add_right, Dyadic.birthday_of_den_ne_one hd, Nat.add_one_inj]
     have hnd := x.max_den_lower_upper hd
     have hnd0 : (x.precision.getD 0).toNat ≠ 0 := by
-      rw [ne_eq, ← pow_right_inj₀ Nat.two_pos (by decide), pow_zero,
-        ← Dyadic.den_eq_two_pow_toNat_precision]
-      exact hd
+      apply_fun (2 ^ ·)
+      rwa [← Dyadic.den_eq_two_pow_toNat_precision]
     simp_rw [Dyadic.den_eq_two_pow_toNat_precision] at hnd
     rw [← (pow_right_monotone one_le_two).map_max,
       ← Nat.pow_sub_one (by decide) hnd0, pow_right_inj₀ Nat.two_pos (by decide),
