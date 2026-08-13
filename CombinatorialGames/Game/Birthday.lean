@@ -438,7 +438,7 @@ theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x 
 
 theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
   rw [le_antisymm_iff, one_le_iff_ne_zero, ne_eq, birthday_eq_zero, birthday_le_one]
-  aesop (add simp [zero_eq_mk])
+  aesop
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
