@@ -418,16 +418,30 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
 
-theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
+theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
+theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
+
+theorem mk_ofPred_birthday_lt (o : NatOrdinal) :
+    mk '' {x | x.birthday < o} = {x | x.birthday < o} := by
+  ext x
   constructor
+  · rintro ⟨x, hx, rfl⟩
+    exact (birthday_mk_le x).trans_lt hx
   · intro hx
-    obtain ⟨x, rfl, hxb⟩ := birthday_eq_iGameBirthday x
-    rw [← hxb, IGame.birthday_eq_one] at hx
-    obtain rfl | rfl | rfl := hx <;> simp
-  · rintro (rfl | rfl | rfl) <;> simp
+    obtain ⟨x, rfl, hx⟩ := birthday_eq_iGameBirthday x
+    refine ⟨x, ?_, rfl⟩
+    rwa [mem_ofPred, hx]
+
+theorem mk_ofPred_birthday_le (o : NatOrdinal) :
+    mk '' {x | x.birthday ≤ o} = {x | x.birthday ≤ o} := by
+  simpa using mk_ofPred_birthday_lt (o + 1)
 
 theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
-  rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
+  simpa [IGame.birthday_le_one, eq_comm] using Set.ext_iff.1 (mk_ofPred_birthday_le 1).symm x
+
+theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
+  rw [le_antisymm_iff, one_le_iff_ne_zero, ne_eq, birthday_eq_zero, birthday_le_one]
+  aesop (add simp [zero_eq_mk])
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
