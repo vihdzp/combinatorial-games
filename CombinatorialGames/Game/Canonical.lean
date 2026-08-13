@@ -215,19 +215,7 @@ theorem unreverse_equiv (x : IGame) : unreverse x ≈ x := by
   simp_rw [leftMoves_ofSets, ← unreverse1_congr_left hx'l] at hx'r
   have hx' : x' ≈ x := by
     unfold x'
-    apply equiv_of_exists
-    · rw [moves_ofSets, Set.forall_mem_image]
-      intro z hz
-      exact ⟨z, hz, ih left z hz⟩
-    · rw [moves_ofSets, Set.forall_mem_image]
-      intro z hz
-      exact ⟨z, hz, ih right z hz⟩
-    · intro z hz
-      rw [moves_ofSets, Set.exists_mem_image]
-      exact ⟨z, hz, ih left z hz⟩
-    · intro z hz
-      rw [moves_ofSets, Set.exists_mem_image]
-      exact ⟨z, hz, ih right z hz⟩
+    apply equiv_of_exists <;> simpa using fun z hz ↦ ⟨z, hz, ih _ z hz⟩
   simp_rw [unreverse1_congr_left hx'] at hx'r
   refine ((ofSets_eq_ofSets_cases _ _).antisymmRel.trans ?_).trans (hx'r.symm.trans hx')
   unfold x'
