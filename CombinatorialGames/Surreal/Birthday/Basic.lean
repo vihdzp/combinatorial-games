@@ -151,12 +151,4 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
   simp +contextual [le_of_lt]
 
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
-
 end Surreal

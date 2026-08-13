@@ -114,7 +114,7 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
     Subposition x z :=
   Relation.TransGen.trans h₁ h₂
 
-instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
+instance (x : LGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
 @[elab_as_elim]
