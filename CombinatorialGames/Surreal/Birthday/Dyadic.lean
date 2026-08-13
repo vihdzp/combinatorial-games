@@ -71,6 +71,11 @@ theorem Dyadic.birthday_intCast (n : Int) : Dyadic.birthday n = n.natAbs := by
 theorem Dyadic.birthday_natCast (n : Nat) : Dyadic.birthday n = n := by
   rw [← Int.cast_natCast, Dyadic.birthday_intCast, Int.natAbs_natCast]
 
+theorem Dyadic.birthday_of_den_eq_one {x : Dyadic} (hx : x.den = 1) :
+    x.birthday = x.num.natAbs :=
+  (congrArg birthday (intCast_num_eq_self_of_den_eq_one hx)).symm.trans
+    (birthday_intCast x.num)
+
 theorem Dyadic.birthday_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x.birthday =
       (x.precision.get (isSome_precision_eq_true_of_den_ne_one hx)).toNat +
@@ -110,7 +115,8 @@ theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
     conv =>
       enter [1]
       congr <;>
-      · enter [3]
+      · unfold Dyadic.birthday
+        enter [3]
         unfold Dyadic.num Dyadic.den
     have hle : x.lower.toRat = Int.cast (c - 1) / d := by
       rw [x.coe_lower, hdd, ← hcd, ← one_div, ← sub_div, ← Rat.intCast_one, ← Int.cast_sub]
