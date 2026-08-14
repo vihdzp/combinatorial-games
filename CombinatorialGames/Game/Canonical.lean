@@ -71,6 +71,11 @@ public theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) 
   unfold reverseSet
   cases p <;> simp [hxy.le_congr_left, hxy.le_congr_right]
 
+public theorem lf_of_reverseSet_eq_empty_of_mem_moves {x : IGame} {p : Player} {z : IGame}
+    (hx : reverseSet x p z = ∅) {g : IGame} (hg : g ∈ z.moves (-p)) :
+    ¬p.cases (g ≤ x) (x ≤ g) :=
+  fun h => Set.eq_empty_iff_forall_notMem.1 hx g ⟨hg, h⟩
+
 -- false positive on `hg` which is referenced in the termination proof
 set_option linter.unusedVariables false in
 /-- Repeatedly reverse the move `z` with respect to a `p`-move from `x`.
