@@ -25,6 +25,16 @@ universe u
 
 @[expose] public noncomputable section
 
+-- mathlib PR #42549
+theorem Set.forall_mem_singleton {α : Type*} {p : α → Prop} {a : α} :
+    (∀ x ∈ ({a} : Set α), p x) ↔ p a := by
+  simp
+
+-- mathlib PR #42549
+theorem Set.exists_mem_singleton {α : Type*} {p : α → Prop} {a : α} :
+    (∃ x ∈ ({a} : Set α), p x) ↔ p a := by
+  simp
+
 namespace IGame
 
 /-! ### Star -/
@@ -149,6 +159,17 @@ theorem short_tiny_iff {x : IGame} : Short (⧾x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
 
+theorem tiny_anti {x y : IGame} (hxy : x ≤ y) : ⧾y ≤ ⧾x := by
+  apply IGame.le_of_forall_moves_left_lf
+  · rw [leftMoves_tiny, Set.forall_mem_singleton]
+    exact left_lf (by simp)
+  · rw [rightMoves_tiny, Set.forall_mem_singleton, rightMoves_tiny, Set.exists_mem_singleton]
+    apply IGame.le_of_forall_moves_left_lf
+    · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+      exact left_lf (by simp)
+    · rw [rightMoves_ofSets, Set.forall_mem_singleton, rightMoves_ofSets, Set.exists_mem_singleton]
+      exact IGame.neg_le_neg_iff.2 hxy
+
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
   !{{!{{x} | {0}}} | {0}}
@@ -188,6 +209,10 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 
 @[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
 @[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
+
+theorem miny_mono {x y : IGame} (hxy : x ≤ y) : ⧿x ≤ ⧿y := by
+  rw [← neg_tiny, ← neg_tiny, IGame.neg_le_neg_iff]
+  exact tiny_anti hxy
 
 /-! ### Switches -/
 
