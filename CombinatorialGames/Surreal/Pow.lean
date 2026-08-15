@@ -46,7 +46,7 @@ namespace ArchimedeanClass
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
     mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
-  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
+  convert! mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
   · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.coe_lt_coe.mpr
 
@@ -733,10 +733,10 @@ theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x
   rw [add_comm, wlog_add_eq_left h]
 
 theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
-  simpa using @wlog_add_eq_left x (-y)
+  simpa [sub_eq_add_neg] using @wlog_add_eq_left x (-y)
 
 theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
-  simpa using @wlog_add_eq_right (-x) y
+  simpa [sub_eq_add_neg] using @wlog_add_eq_right (-x) y
 
 theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
   rw [← wpow_vle_wpow_iff]

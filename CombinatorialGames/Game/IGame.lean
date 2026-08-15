@@ -139,7 +139,9 @@ instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 @[simp, game_cmp]
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
     !{st}.moves p = st p := by
-  dsimp [ofSets]; ext; rw [moves, QPF.Fix.dest_mk]
+  dsimp [ofSets, moves]
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk]
 
 @[simp]
 theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
@@ -207,7 +209,8 @@ theorem subposition_wf : WellFounded Subposition := by
   rintro _ ⟨⟨st, hst⟩, rfl⟩
   constructor
   rintro y hy
-  rw [QPF.Fix.dest_mk, mem_iUnion] at hy
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk, mem_iUnion] at hy
   obtain ⟨_, ⟨_, h⟩, _, rfl⟩ := hy
   exact h
 
@@ -471,7 +474,7 @@ private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x 
   exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
 termination_by subposition_wf.cutExpand.wrap {x, y, z}
 decreasing_by
-  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
+  on_goal 1 => convert! Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
   on_goal 2 => convert Relation.cutExpand_single_add (Subposition.of_mem_moves ha) {x, y}
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
@@ -840,7 +843,7 @@ theorem sub_self_equiv (x : IGame) : x - x ≈ 0 := by
 
 /-- The sum of a game and its negative is equivalent, though not necessarily identical to zero. -/
 theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
-  simpa [add_comm] using sub_self_equiv x
+  simpa [add_comm, sub_eq_add_neg] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
   rw [le_iff_forall_lf, moves_add, moves_add]
@@ -999,7 +1002,8 @@ theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
     x = (n + 1 : ℤ) := by
   have : -x ∈ (-n : ℤ)ᴸ := by simpa
   rw [← neg_inj]
-  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+  simpa [← IGame.intCast_neg, add_comm, sub_eq_add_neg] using
+    eq_sub_one_of_mem_leftMoves_intCast this
 
 /-- Every left option of an integer is equal to a smaller integer. -/
 theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴸ) :

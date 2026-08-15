@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Data.Nat.Lattice
 public import Mathlib.SetTheory.Ordinal.Family
 
 /-!
@@ -81,6 +80,7 @@ theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias)
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
+@[simp] theorem $(mkIdent `bot_eq_zero_withTop) : (⊥ : WithTop $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
 @[simp] theorem $(mkIdent `val_zero) : $(mkVal Alias) 0 = 0 := rfl
@@ -92,6 +92,8 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
 theorem $(mkIdent `of_ne_zero) {a} : $(mkOf Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
+@[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
+@[simp] theorem $(mkIdent `val_pos) {a} : 0 < $(mkVal Alias) a ↔ 0 < a := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
@@ -100,7 +102,7 @@ theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 @[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
 @[simp] theorem $(mkIdent `val_le_one) {a} : $(mkVal Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
 theorem $(mkIdent `one_le_of) {a} : 1 ≤ $(mkOf Alias) a ↔ 1 ≤ a := .rfl
-@[simp] theorem $(mkIdent `one_le_val) {a} : 1 ≤ $(mkVal Alias) a ↔ 1 ≤ a := .rfl
+theorem $(mkIdent `one_le_val) {a} : 1 ≤ $(mkVal Alias) a ↔ 1 ≤ a := .rfl
 theorem $(mkIdent `of_lt_one) {a} : $(mkOf Alias) a < 1 ↔ a < 1 := .rfl
 theorem $(mkIdent `val_lt_one) {a} : $(mkVal Alias) a < 1 ↔ a < 1 := .rfl
 @[simp] theorem $(mkIdent `one_lt_of) {a} : 1 < $(mkOf Alias) a ↔ 1 < a := .rfl

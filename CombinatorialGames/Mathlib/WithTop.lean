@@ -16,6 +16,11 @@ open Set NatOrdinal WithTop
 
 public section
 
+-- #39952
+@[to_additive]
+instance {α} [LE α] [One α] [IsBotOneClass α] : IsBotOneClass (WithTop α) where
+  isBot_one x := by cases x <;> simp
+
 instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α] [NoMaxOrder α]
     [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where
   succ_eq_add_one := by

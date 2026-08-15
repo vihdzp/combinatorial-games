@@ -157,11 +157,11 @@ theorem leadingCoeff_add_eq_right {x y : Surreal} (h : y <ᵥ x) :
 
 theorem leadingCoeff_sub_eq_left {x y : Surreal} : y <ᵥ x →
     leadingCoeff (x - y) = leadingCoeff x := by
-  simpa using @leadingCoeff_add_eq_left x (-y)
+  simpa [sub_eq_add_neg] using @leadingCoeff_add_eq_left x (-y)
 
 theorem leadingCoeff_sub_eq_right {x y : Surreal} : y <ᵥ x →
     leadingCoeff (y - x) = -leadingCoeff x := by
-  simpa using @leadingCoeff_add_eq_right (-x) y
+  simpa [sub_eq_add_neg] using @leadingCoeff_add_eq_right (-x) y
 
 /-! ### Leading term -/
 
@@ -300,11 +300,11 @@ theorem leadingTerm_add_eq_right {x y : Surreal} (h : y <ᵥ x) :
 
 theorem leadingTerm_sub_eq_left {x y : Surreal} : y <ᵥ x →
     leadingTerm (x - y) = leadingTerm x := by
-  simpa using @leadingTerm_add_eq_left x (-y)
+  simpa [sub_eq_add_neg] using @leadingTerm_add_eq_left x (-y)
 
 theorem leadingTerm_sub_eq_right {x y : Surreal} : y <ᵥ x →
     leadingTerm (y - x) = -leadingTerm x := by
-  simpa using @leadingTerm_add_eq_right (-x) y
+  simpa [sub_eq_add_neg] using @leadingTerm_add_eq_right (-x) y
 
 end Surreal
 end

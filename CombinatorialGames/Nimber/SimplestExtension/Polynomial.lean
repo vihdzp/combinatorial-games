@@ -187,9 +187,9 @@ theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
 issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
 @[expose]
-def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
+noncomputable def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
-  .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
+  .ofFinsupp ⟨.mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])⟩
 
 @[simp]
 theorem IsField.coeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
@@ -236,15 +236,15 @@ namespace Lex
 noncomputable instance : LinearOrder (Nimber[X]) where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
-    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp)
-    (toFinsupp_injective.comp toColex.injective)
+    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff)
+    (toColex.injective.comp <| AddMonoidAlgebra.coeff_injective.comp toFinsupp_injective)
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
 instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp) wellFounded_lt
+  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
@@ -464,7 +464,7 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0))).coeff) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp ⟨(p.toFinsupp.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -786,7 +786,7 @@ theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
   refine ⟨q, ?_, hqk, rfl⟩
   rwa [oeval_lt_oeval_iff hqk hpk] at h
 
-theorem forall_lt_oeval_iff {x : Nimber} {P : Ordinal → Prop}
+theorem forall_lt_oeval_iff {x : Nimber} {P : Nimber → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
   mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk

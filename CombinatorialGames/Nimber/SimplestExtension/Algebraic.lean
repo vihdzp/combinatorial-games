@@ -264,7 +264,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
     · apply h.coeff_add_lt (h.coeff_prod_lt _) (coeff_leastNoRoots_lt _)
-      aesop
+      aesop (add apply safe [Subtype.prop])
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_leastNoRoots_pos ht⟩
       apply_fun eval (f i).1
@@ -317,7 +317,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     obtain ⟨hc, hm⟩ : ∃ hc, Irreducible (hf.embed _ hc) :=
       ⟨coeff_leastNoRoots_lt ht, irreducible_embed_leastNoRoots hf ht⟩
     have hxn : x < of (val x ^ (n + 1)) := by
-      simpa using (pow_lt_pow_iff_right₀ (a := x.val) hf.one_lt).2 (show 1 < n + 1 by lia)
+      simpa using! (pow_lt_pow_iff_right₀ (a := x.val) hf.one_lt).2 (show 1 < n + 1 by lia)
     have hcc := Set.Iio_subset_Iio hxn.le
     let r : hf.toSubfield[X] →+* hxr.toSubring := eval₂RingHom (Subring.inclusion hcc) ⟨x, hxn⟩
     have hoc : hxr.toSubring.subtype.comp (Subring.inclusion hcc) = hf.toSubfield.subtype := rfl
@@ -340,7 +340,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     · exact (r i).2
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
-      simpa using congrArg hxr.toSubring.subtype hi
+      simpa using! congrArg hxr.toSubring.subtype hi
 
 theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
     IsRing (of (val t ^ ω)) where
@@ -358,7 +358,7 @@ theorem IsAlgClosed.isRing_opow_omega0 {t : Nimber} (ht : IsAlgClosed t) :
 open Pointwise
 
 private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
-  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
+  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, mem_Iio.2 <| p.2 k⟩) fun p q h ↦ ?_
   ext k
   simpa using congrFun h k
 

@@ -205,7 +205,12 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
   ⟨fun
     | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
     | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
-    fun | left | right => inferInstance⟩
+    by
+      rintro (_|_) <;>
+      · apply @small_image ..
+        apply @small_range ..
+        infer_instance
+    ⟩
 
 private theorem unique (f g : Subtype (Reachable mov init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
@@ -251,8 +256,8 @@ theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
   rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   cases p <;>
-    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right]
-      using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
+    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right] using!
+      exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
 
 theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
@@ -647,7 +652,7 @@ theorem neg_def (x : MulTy α β) : -x = Multiset.map (fun y ↦ (-y.1, y.2)) x 
 
 @[simp]
 theorem mem_neg {x : Player × α × β} {y : MulTy α β} : x ∈ -y ↔ (-x.1, x.2) ∈ y := by
-  convert Multiset.mem_map_of_injective (a := (-x.1, x.2)) _ <;>
+  convert! Multiset.mem_map_of_injective (a := (-x.1, x.2)) _ <;>
     simp [Function.Injective]
 
 @[simp]
@@ -721,6 +726,7 @@ theorem neg_mulOption (p : Player) (x : α × β) (y : α × β) :
 @[simp]
 theorem swap_mulOption (p : Player) (x : α × β) (y : α × β) :
     swap (mulOption p x y) = mulOption p x.swap y.swap := by
+  cases y
   simpa [mulOption, ← Multiset.singleton_add] using add_left_comm ..
 
 theorem mulOption_eq_add (p : Player) (x : α × β) (y : α × β) :

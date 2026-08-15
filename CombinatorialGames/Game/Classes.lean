@@ -331,7 +331,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen, Relation.SymmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -442,7 +442,7 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
   ext
-  rw [Set.mem_setOf, subposition_iff_exists]
+  rw [Set.mem_ofPred, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
