@@ -3,8 +3,15 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Daniel Weber
 -/
-import CombinatorialGames.Nimber.SimplestExtension.Basic
+module
+
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+
+import Mathlib.Algebra.Field.Subfield.Defs
+import Mathlib.Algebra.Field.ZMod
+import Mathlib.Data.Rat.Cast.CharZero
 import Mathlib.SetTheory.Cardinal.Subfield
+import Mathlib.Algebra.CharP.Algebra
 
 /-!
 # Closures
@@ -14,6 +21,8 @@ equal or greater to another, which satisfies `IsGroup`, `IsRing`, or `IsField`.
 -/
 
 universe u
+
+public section
 
 /-! ### For Mathlib -/
 
@@ -44,9 +53,7 @@ theorem Subfield.coe_bot [DivisionRing R] :
       RingHom.fieldRange_eq_map, RingHom.fieldRange_eq_map, ← Subfield.map_map]
     exact (Subfield.gc_map_comap _).monotone_l le_top
   · trans (RingHom.fieldRange (ZMod.castHom (dvd_refl p) R) : Set R)
-    · -- todo: generalize `Subfield.charP` to division rings
-      -- have := Subfield.charP (⊥ : Subfield R) p
-      have := (⊥ : Subfield R).subtype.charP (⊥ : Subfield R).subtype_injective p
+    · have := Subfield.charP (⊥ : Subfield R) p
       refine congrArg SetLike.coe (le_antisymm bot_le ?_)
       rw [← Subfield.fieldRange_subtype (⊥ : Subfield R),
         Subsingleton.elim (ZMod.castHom (dvd_refl p) R)
@@ -67,8 +74,6 @@ theorem Subfield.coe_bot [DivisionRing R] :
         apply div_mem
         · apply intCast_mem
         · apply natCast_mem
-
-attribute [simp] Cardinal.aleph0_lt_univ
 
 instance Subfield.small_closure (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s) := by
@@ -151,7 +156,7 @@ protected theorem IsGroup.groupClosure (x : Nimber) : IsGroup (groupClosure x) w
     exact AddSubgroup.add_mem _
 
 theorem IsGroup.groupClosure_le_iff {x y : Nimber} (h : IsGroup x) :
-    groupClosure y ≤ x ↔ y ≤ x where
+    y.groupClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_groupClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_addSubgroupClosure_Iio]
@@ -160,13 +165,50 @@ theorem IsGroup.groupClosure_le_iff {x y : Nimber} (h : IsGroup x) :
     simpa
 
 theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
-    x < groupClosure y ↔ x < y :=
+    x < y.groupClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
+
+theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = x := by
+  apply (le_groupClosure x).antisymm'
+  rw [h.groupClosure_le_iff]
 
 theorem groupClosure_mono : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
+
+@[simp]
+theorem groupClosure_zero : groupClosure 0 = 1 := by
+  rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
+  simp
+
+@[simp]
+theorem groupClosure_one : groupClosure 1 = 1 :=
+  IsGroup.one.groupClosure_eq
+
+@[simp]
+theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
+  IsGroup.two.groupClosure_eq
+
+@[simp]
+theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
+  (IsGroup.two_opow x).groupClosure_eq
+
+theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x ≠ 0) :
+    groupClosure x = ∗(2 ^ (Ordinal.log 2 x.val + 1)) := by
+  rw [← val_ne_zero] at hx₀
+  apply le_antisymm
+  · rw [(IsGroup.two_opow _).groupClosure_le_iff, ← val_le_iff]
+    simpa using (Ordinal.lt_opow_succ_log_self one_lt_two x.val).le
+  · obtain ⟨y, hy⟩ := isGroup_iff_mem_range_two_opow.1 <| IsGroup.groupClosure x
+    rw [← hy]
+    apply Ordinal.opow_le_opow_right two_pos
+    rw [Order.add_one_le_iff, ← Ordinal.lt_opow_iff_log_lt one_lt_two hx₀]
+    rw [of_eq_iff] at hy
+    rw [hy, val.lt_iff_lt]
+    apply (le_groupClosure x).lt_of_ne
+    contrapose! h
+    exact h ▸ IsGroup.groupClosure x
 
 end AddSubgroup
 
@@ -239,7 +281,7 @@ protected theorem IsRing.ringClosure (x : Nimber) : IsRing (ringClosure x) where
     exact Subring.mul_mem _
 
 theorem IsRing.ringClosure_le_iff {x y : Nimber} (h : IsRing x) :
-    ringClosure y ≤ x ↔ y ≤ x where
+    y.ringClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_ringClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_subringClosure_Iio]
@@ -248,13 +290,38 @@ theorem IsRing.ringClosure_le_iff {x y : Nimber} (h : IsRing x) :
     simpa
 
 theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
-    x < ringClosure y ↔ x < y :=
+    x < y.ringClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
+
+theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x := by
+  apply (le_ringClosure x).antisymm'
+  rw [h.ringClosure_le_iff]
 
 theorem ringClosure_mono : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
+
+@[simp]
+theorem ringClosure_zero : ringClosure 0 = ∗2 := by
+  rw [← Iio_inj, ← coe_subringClosure_Iio]
+  simp [Subring.coe_bot]
+
+@[simp]
+theorem ringClosure_one : ringClosure 1 = ∗2 := by
+  apply le_antisymm
+  · rw [IsRing.two.ringClosure_le_iff]
+    simp
+  · rw [← ringClosure_zero]
+    exact ringClosure_mono zero_le_one
+
+@[simp]
+theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
+  IsRing.two.ringClosure_eq
+
+theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
+  rw [(IsRing.ringClosure x).groupClosure_le_iff]
+  exact le_ringClosure x
 
 end Subring
 
@@ -325,7 +392,7 @@ protected theorem IsField.fieldClosure (x : Nimber) : IsField (fieldClosure x) w
     exact Subfield.inv_mem _
 
 theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
-    fieldClosure y ≤ x ↔ y ≤ x where
+    y.fieldClosure ≤ x ↔ y ≤ x where
   mp := le_trans (le_fieldClosure y)
   mpr hyx := by
     rw [← not_lt, ← mem_subfieldClosure_Iio]
@@ -334,13 +401,41 @@ theorem IsField.fieldClosure_le_iff {x y : Nimber} (h : IsField x) :
     simpa
 
 theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
-    x < fieldClosure y ↔ x < y :=
+    x < y.fieldClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
+
+theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = x := by
+  apply (le_fieldClosure x).antisymm'
+  rw [h.fieldClosure_le_iff]
 
 theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
+
+@[simp]
+theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by
+  rw [← Iio_inj, ← coe_subfieldClosure_Iio]
+  simp
+
+@[simp]
+theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
+  apply le_antisymm
+  · rw [IsField.two.fieldClosure_le_iff]
+    simp
+  · rw [← fieldClosure_zero]
+    exact fieldClosure_mono zero_le_one
+
+@[simp]
+theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
+  IsField.two.fieldClosure_eq
+
+theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
+  rw [(IsField.fieldClosure x).ringClosure_le_iff]
+  exact le_fieldClosure x
+
+theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
+  (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
 
 end Subfield
 end Nimber

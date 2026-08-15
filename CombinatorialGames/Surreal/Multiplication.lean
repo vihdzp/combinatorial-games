@@ -3,8 +3,12 @@ Copyright (c) 2024 Theodore Hwa. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Mario Carneiro, Kim Morrison, Violeta Hernández Palacios, Junyan Xu, Theodore Hwa
 -/
-import CombinatorialGames.Surreal.Basic
+module
+
+public import CombinatorialGames.Surreal.Basic
+
 import Mathlib.Logic.Hydra
+import Mathlib.Tactic.Abel
 
 /-!
 # Surreal multiplication
@@ -51,7 +55,7 @@ universe u
 open Game IGame Relation WellFounded
 
 /-- A characterization of left moves of `x * y` in terms only of left moves. -/
-private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
+lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴸ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ yᴸ, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ (-y)ᴸ, P (mulOption (-x) (-y) a b)) := by
@@ -59,15 +63,12 @@ private lemma forall_leftMoves_mul' {P : IGame → Prop} {x y : IGame} :
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
-private lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
+lemma forall_rightMoves_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴿ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ (-y)ᴸ, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ yᴸ, P (-mulOption (-x) y a b)) := by
   rw [forall_moves_mul]
   simp [mulOption_neg_right, mulOption_neg_left]
-
--- Instead of making all of this private, we put it in an auxiliary namespace.
-namespace Surreal.Multiplication
 
 /-! ### Predicates P1 – P4 -/
 
@@ -270,11 +271,11 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
-    · simpa [mulOption_comm] using mulOption_lt ihyx ihxy hb ha hd hc
+    · simpa [mulOption_comm, ← mk_lt_mk] using mulOption_lt ihyx ihxy hb ha hd hc
     · rw [← neg_neg x] at hc
-      simpa [mulOption_comm] using mulOption_lt ihyxn ihxyn hb ha hd hc
+      simpa [mulOption_comm, ← mk_lt_mk] using mulOption_lt ihyxn ihxyn hb ha hd hc
     · rw [← neg_neg y] at hd
-      simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
+      simpa [← mk_lt_mk] using mulOption_lt ihxyn ihyxn ha hb hc hd
   · intro p
     simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
@@ -339,7 +340,7 @@ lemma IH24_neg : IH24 x₁ x₂ y → IH24 (-x₂) (-x₁) y ∧ IH24 x₁ x₂ 
   · exact (@h p z).2.2
 
 lemma IH4_neg : IH4 x₁ x₂ y → IH4 (-x₂) (-x₁) y ∧ IH4 x₁ x₂ (-y) := by
-  simp_rw [IH4, moves_neg]
+  simp_rw [IH4, moves_neg, Set.mem_neg]
   refine fun h ↦ ⟨fun p q z w h' ↦ ?_, fun p q z w h' ↦ ?_⟩
   · convert (h h').symm using 2 <;> rw [← P2_neg_left, neg_neg]
   · convert h h' using 2 <;> rw [P2_neg_right]
@@ -461,12 +462,11 @@ lemma P3_of_lt_of_lt {x₁ x₂ y₁ y₂} [Numeric x₁] [Numeric x₂] [Numeri
 termination_by (x₁, x₂)
 decreasing_by all_goals (try rw [moves_neg] at *); igame_wf
 
-end Surreal.Multiplication
-
 /-! ### Instances and corollaries -/
 
+public section
+
 namespace IGame.Numeric
-open Surreal.Multiplication
 
 variable {x x₁ x₂ y y₁ y₂ : IGame}
 
@@ -488,7 +488,7 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
   (mul_congr_left hx).trans (mul_congr_right hy)
 
 protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt h₁ h₂
+  simpa [P3, ← mk_lt_mk] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 
@@ -638,3 +638,4 @@ theorem mulOption_congr₄ {x y a b₁ b₂ : IGame}
   simp_all [← Surreal.mk_eq_mk, mulOption]
 
 end IGame.Numeric
+end

@@ -3,8 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
+module
+
 import CombinatorialGames.Game.Specific.Nim
+import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Tactic.GameCmp
 
 /-!
@@ -12,6 +14,7 @@ Tests for the `game_cmp` tactic.
 -/
 
 open IGame Nimber
+open scoped CharTwo
 
 -- Basic order relations
 example : (0 : IGame) < 1 := by game_cmp

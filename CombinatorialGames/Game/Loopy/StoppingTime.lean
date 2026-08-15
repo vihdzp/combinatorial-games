@@ -3,9 +3,11 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.NatOrdinal.Basic
+module
+
+public import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.NatOrdinal.Basic
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -60,7 +62,7 @@ theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOr
   rw [← Order.succ_eq_add_one]
   exact Order.le_succ x
 
-noncomputable section
+public noncomputable section
 namespace LGame
 open Order
 
@@ -78,7 +80,7 @@ private theorem le_of_finite (p : Player) {x y}
   have ihy : ∀ j, y j < y i → x j ≤ y j := fun j hj =>
     le_of_finite p hx hy (hj.trans (lt_top_iff_ne_top.2 hi)).ne
   obtain ⟨u, hui, (hu : iSup _ = y i)⟩ : y i ∈ _ '' _ := hy ▸ isGLB_biInf.mem_of_not_isPredPrelimit
-    (hy.symm ▸ (not_isPredPrelimit_iff_exists_covBy (y i)).2
+    (hy.symm ▸ not_isPredPrelimit_iff.2
       ⟨succ (y i), covBy_succ_of_not_isMax fun h => hi h.eq_top⟩)
   rw [← hu, ← hx, stoppingTimeApprox, OrderHom.coe_mk]
   refine iInf₂_le_of_le u hui (iSup₂_mono fun k hk => add_left_mono (ihy k ?_))

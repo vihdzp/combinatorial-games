@@ -3,8 +3,12 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Tristan Figueroa Reid
 -/
-import CombinatorialGames.Game.Classes
+module
+
+public import CombinatorialGames.Game.Classes
+
 import CombinatorialGames.Tactic.GameCmp
+import Mathlib.Data.Set.Finite.Basic
 
 /-!
 # Special games
@@ -19,7 +23,7 @@ This file defines some simple yet notable combinatorial games:
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 namespace IGame
 
@@ -34,11 +38,14 @@ recommended_spelling "star" for "⋆" in [«term⋆»]
 
 @[simp, game_cmp] theorem moves_star (p : Player) : moves p ⋆ = {0} := moves_ofSets ..
 
-@[simp] theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
-@[simp] theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
+theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
+theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
 theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
 theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
+
+@[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
+@[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
 @[simp, game_cmp] theorem neg_star : -⋆ = ⋆ := by simp [star]
 
@@ -221,6 +228,33 @@ theorem short_switch_iff {x : IGame} : Short (±x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (±x) := by
   rwa [short_switch_iff]
+
+theorem switch_equiv_zero_iff {x : IGame} : ±x ≈ 0 ↔ ¬0 ≤ x := by
+  refine ⟨fun h ↦ left_lf_of_le h.le ?_, fun h ↦ ⟨le_zero.2 ?_, zero_le.2 ?_⟩⟩
+  · simp
+  · simpa using h
+  · simpa using h
+
+alias ⟨_, switch_equiv_zero⟩ := switch_equiv_zero_iff
+
+theorem switch_fuzzy_zero_iff {x : IGame} : ±x ‖ 0 ↔ 0 ≤ x := by
+  rw [← not_iff_not, ← switch_equiv_zero_iff]
+  exact not_fuzzy_iff_of_neg_equiv
+    (neg_switch x).antisymmRel neg_zero.antisymmRel
+
+alias ⟨_, switch_fuzzy_zero⟩ := switch_fuzzy_zero_iff
+
+theorem switch_fuzzy_self_iff {x : IGame} : ±x ‖ x ↔ ¬x < 0 := by
+  by_cases h0x : 0 ≤ x
+  · refine iff_of_true ⟨left_lf ?_, fun h ↦ ?_⟩ h0x.not_gt
+    · simp
+    · absurd h0x.trans_lt (lt_of_le_not_ge h (left_lf (by simp)))
+      exact not_lt_of_neg_equiv neg_zero.antisymmRel (neg_switch x).antisymmRel
+  · rw [lt_iff_le_not_ge, and_iff_left h0x]
+    exact ⟨fun hx => mt (switch_equiv_zero h0x).ge.trans' hx.2,
+      fun hx0 => (switch_equiv_zero h0x).trans_incompRel ⟨h0x, hx0⟩⟩
+
+alias ⟨_, switch_fuzzy_self⟩ := switch_fuzzy_self_iff
 
 end IGame
 end
