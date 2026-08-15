@@ -10,6 +10,7 @@ public import Mathlib.Order.Concept
 public import Mathlib.Order.UpperLower.CompleteLattice
 
 import Mathlib.Algebra.Order.Group.OrderIso
+import Mathlib.Order.ConditionallyCompleteLattice.Finset
 
 /-!
 # Surreal cuts
