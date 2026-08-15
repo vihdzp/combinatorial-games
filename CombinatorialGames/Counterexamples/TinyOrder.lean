@@ -6,6 +6,7 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Special
+public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Tactic.GameCmp
 
 /-!
@@ -18,16 +19,20 @@ public section
 
 namespace IGame
 
-theorem tiny_not_reflect_le_pos : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ ⧾x ≤ ⧾y ∧ ¬y ≤ x :=
+theorem exists_pos_fuzzy_tiny_lt : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖ y ∧ ⧾x < ⧾y :=
   ⟨⧾⋆, ⧾0, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
-theorem tiny_not_preserve_lt_pos : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y ∧ ¬⧾y < ⧾x :=
-  ⟨!{{0} | {⋆}}, !{{↑} | {⋆}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
+theorem exists_pos_fuzzy_tiny_equiv : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖ y ∧ ⧾x ≈ ⧾y :=
+  ⟨!{{0} | {nim (.of 2)}}, !{{0} | {nim (.of 3)}},
+    by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
-theorem tiny_not_reflect_lt_pos : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ ⧾x < ⧾y ∧ ¬y < x :=
-  ⟨⧾⋆, ⧾0, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
+theorem exists_pos_fuzzy_tiny_fuzzy : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖ y ∧ ⧾x ‖ ⧾y :=
+  ⟨1, !{{2} | {1}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
-theorem tiny_not_reflect_equiv_pos : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ ⧾x ≈ ⧾y ∧ ¬x ≈ y :=
+theorem exists_pos_lt_tiny_gt : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y ∧ ⧾y < ⧾x :=
+  ⟨1, 2, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
+
+theorem exists_pos_lt_tiny_equiv : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y ∧ ⧾x ≈ ⧾y :=
   ⟨!{{0} | {⋆}}, !{{↑} | {⋆}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
 end IGame
