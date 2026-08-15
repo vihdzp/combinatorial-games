@@ -325,7 +325,6 @@ theorem rightSurreal_le_iff {x : Surreal} {y : Cut} : rightSurreal x ≤ y ↔ x
 theorem lt_rightSurreal_iff {x : Cut} {y : Surreal} : x < rightSurreal y ↔ y ∈ x.right := by
   simpa [← neg_rightSurreal] using @leftSurreal_lt_iff (-y) (-x)
 
-@[simp]
 theorem leftSurreal_lt_rightSurreal (x : Surreal) : leftSurreal x < rightSurreal x := by
   simp
 
@@ -356,14 +355,6 @@ theorem leftSurreal_lt_leftSurreal_iff {x y : Surreal} : leftSurreal x < leftSur
 
 theorem rightSurreal_lt_rightSurreal_iff {x y : Surreal} : leftSurreal x < leftSurreal y ↔ x < y :=
   leftSurreal_strictMono.lt_iff_lt
-
-@[simp]
-theorem leftSurreal_inj {x y : Surreal} : leftSurreal x = leftSurreal y ↔ x = y :=
-  leftSurreal_strictMono.injective.eq_iff
-
-@[simp]
-theorem rightSurreal_inj {x y : Surreal} : rightSurreal x = rightSurreal y ↔ x = y :=
-  rightSurreal_strictMono.injective.eq_iff
 
 theorem leftSurreal_covBy_rightSurreal (x : Surreal) : leftSurreal x ⋖ rightSurreal x := by
   refine ⟨leftSurreal_lt_rightSurreal x, fun y ↦ ?_⟩
@@ -657,7 +648,7 @@ theorem recOn'_leftSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : Su
   generalize_proofs _ H
   rw [cast_eq_iff_heq]
   congr
-  exact leftSurreal_inj.1 <| Classical.choose_spec H
+  exact Cut.leftSurreal.injective <| Classical.choose_spec H
 
 @[simp]
 theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : Surreal)
@@ -668,7 +659,7 @@ theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : S
   generalize_proofs _ H
   rw [cast_eq_iff_heq]
   congr
-  exact rightSurreal_inj.1 <| Classical.choose_spec H
+  exact Cut.rightSurreal.injective <| Classical.choose_spec H
 
 -- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
 -- are dyadic.
