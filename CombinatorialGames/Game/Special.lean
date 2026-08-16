@@ -170,6 +170,8 @@ theorem tiny_anti {x y : IGame} (hxy : x ≤ y) : ⧾y ≤ ⧾x := by
     · rw [rightMoves_ofSets, Set.forall_mem_singleton, rightMoves_ofSets, Set.exists_mem_singleton]
       exact IGame.neg_le_neg_iff.2 hxy
 
+theorem tiny_antitone : Antitone tiny := @tiny_anti
+
 theorem tiny_congr {x y : IGame} (hxy : x ≈ y) : ⧾x ≈ ⧾y :=
   ⟨tiny_anti hxy.ge, tiny_anti hxy.le⟩
 
@@ -216,6 +218,8 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 theorem miny_mono {x y : IGame} (hxy : x ≤ y) : ⧿x ≤ ⧿y := by
   rw [← neg_tiny, ← neg_tiny, IGame.neg_le_neg_iff]
   exact tiny_anti hxy
+
+theorem miny_monotone : Monotone miny := @miny_mono
 
 theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
   ⟨miny_mono hxy.le, miny_mono hxy.ge⟩
