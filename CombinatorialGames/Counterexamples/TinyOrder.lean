@@ -27,10 +27,10 @@ theorem exists_pos_fuzzy_tiny_equiv : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖
     by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
 theorem exists_pos_fuzzy_tiny_fuzzy : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖ y ∧ ⧾x ‖ ⧾y :=
-  ⟨1, !{{1} | {1}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
+  ⟨⧾↓, ⧾↓ + ⋆, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
 theorem exists_pos_lt_tiny_gt : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y ∧ ⧾y < ⧾x :=
-  ⟨1, 2, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
+  ⟨↑, ↑ + ↑, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
 theorem exists_pos_lt_tiny_equiv : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y ∧ ⧾x ≈ ⧾y :=
   ⟨!{{0} | {⋆}}, !{{↑} | {⋆}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
