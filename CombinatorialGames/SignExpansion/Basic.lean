@@ -58,6 +58,7 @@ theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → S
   mp := by simpa using @Pi.Lex.neg_lt_neg _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
+set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
     {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by

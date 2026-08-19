@@ -271,7 +271,6 @@ theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.
       use xᴸ.toFinset, xᴿ.toFinset
       aesop
 
-set_option backward.isDefEq.respectTransparency false in
 theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
   refine strictMono_nat_of_lt_succ fun n ↦ ⟨fun y hy ↦ ?_, fun h ↦ ?_⟩
   · rw [mem_birthdayFinset] at hy ⊢
