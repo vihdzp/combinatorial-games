@@ -236,10 +236,6 @@ alias ⟨_, Small.neg⟩ := small_neg_iff
 instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
 
--- TODO: why is this needed all of a sudden?
-instance : DecidableLT (WithTop NatOrdinal) :=
-  Classical.decRel _
-
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
 def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x i else 0
