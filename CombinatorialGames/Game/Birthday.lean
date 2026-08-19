@@ -191,6 +191,12 @@ theorem birthday_natCast : ∀ n : ℕ, birthday n = n
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [intCast_nat, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [intCast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
   simp [tiny, Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
@@ -216,16 +222,7 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
-  convert small_setOf_birthday_lt (succ o) using 1
-  simp
-
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
+  simpa using small_setOf_birthday_lt (succ o)
 
 /-! #### Short games -/
 
@@ -369,6 +366,12 @@ theorem birthday_natCast (n : ℕ) : birthday n = n := by
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
@@ -408,14 +411,6 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
   small_subset (s := {x | birthday x ≤ o}) <| ofPred_subset_ofPred.2 fun _ => le_of_lt
-
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
 
 end Game
 end

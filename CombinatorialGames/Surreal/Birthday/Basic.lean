@@ -76,6 +76,12 @@ theorem birthday_toSurreal (o : NatOrdinal) : birthday o.toSurreal = o := by
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
   simpa using birthday_toSurreal n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
@@ -144,13 +150,5 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
   simp +contextual [le_of_lt]
-
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
 
 end Surreal

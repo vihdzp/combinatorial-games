@@ -87,10 +87,15 @@ private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
-instance : Add Game := ⟨Quotient.map₂ _ @add_congr⟩
-instance : Neg Game := ⟨Quotient.map _ @neg_congr⟩
+instance : Add Game := ⟨Quotient.map₂ (· + ·) @add_congr⟩
+instance : Neg Game := ⟨Quotient.map (-·) @neg_congr⟩
+instance : Sub Game := ⟨Quotient.map₂ (· - ·) @sub_congr⟩
 instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrization ..))
 instance : Inhabited Game := ⟨0⟩
+instance : NSMul Game := ⟨fun n => Quotient.map (n • ·) (@nsmul_congr n)⟩
+instance : ZSMul Game := ⟨fun n => Quotient.map (n • ·) (@zsmul_congr n)⟩
+instance : NatCast Game := ⟨fun n => mk n⟩
+instance : IntCast Game := ⟨fun n => mk n⟩
 
 instance : AddCommGroupWithOne Game where
   zero_add := by rintro ⟨x⟩; exact congr(mk $(zero_add _))
@@ -98,8 +103,12 @@ instance : AddCommGroupWithOne Game where
   add_comm := by rintro ⟨x⟩ ⟨y⟩; exact congr(mk $(add_comm _ _))
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact congr(mk $(add_assoc _ _ _))
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul_zero := by rintro ⟨a⟩; rfl
+  nsmul_succ := by rintro n ⟨a⟩; rfl
+  zsmul_zero' := by rintro ⟨a⟩; rfl
+  zsmul_succ' := by rintro n ⟨a⟩; rfl
+  zsmul_neg' := by rintro n ⟨a⟩; rfl
+  sub_eq_add_neg := by rintro ⟨a⟩ ⟨b⟩; rfl
 
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
@@ -112,6 +121,8 @@ instance : RatCast Game where
 @[simp] theorem mk_add (x y : IGame) : mk (x + y) = mk x + mk y := rfl
 @[simp] theorem mk_neg (x : IGame) : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) : mk (x - y) = mk x - mk y := rfl
+@[simp] theorem mk_nsmul (n : Nat) (x : IGame) : mk (n • x) = n • mk x := rfl
+@[simp] theorem mk_zsmul (n : Int) (x : IGame) : mk (n • x) = n • mk x := rfl
 
 theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
@@ -122,13 +133,10 @@ theorem mk_mulOption (x y a b : IGame) :
 @[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp, norm_cast]
-theorem mk_natCast : ∀ n : ℕ, mk n = n
-  | 0 => rfl
-  | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
+theorem mk_natCast (n : Nat) : mk n = n := rfl
 
 @[simp, norm_cast]
-theorem mk_intCast (n : ℤ) : mk n = n := by
-  cases n <;> simp
+theorem mk_intCast (n : ℤ) : mk n = n := rfl
 
 @[simp, norm_cast] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
 @[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
