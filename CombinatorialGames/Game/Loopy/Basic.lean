@@ -369,9 +369,7 @@ theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 /-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
-set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
@@ -385,9 +383,7 @@ theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
 /-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
-set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
@@ -401,7 +397,6 @@ theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
 /-- The game `dud = !{{dud} | {dud}}`. -/
 def dud : LGame := corec (Player.cases ⊤ ⊤) ()
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp] theorem moves_dud (p : Player) : dud.moves p = {dud} := by cases p <;> simp [dud]
 theorem dud_eq : dud = !{{dud} | {dud}} := by ext p; cases p <;> simp
 

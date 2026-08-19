@@ -58,7 +58,6 @@ theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → S
   mp := by simpa using @Pi.Lex.neg_lt_neg _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
     {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by
@@ -134,7 +133,6 @@ or `⊤` is no such ordinal exists. -/
 def length (x : SignExpansion) : WithTop NatOrdinal :=
   sInf ((↑) '' (x ⁻¹' {0}))
 
-set_option backward.isDefEq.respectTransparency false in
 theorem apply_of_length_le {x : SignExpansion} {o : NatOrdinal} (h : x.length ≤ o) : x o = 0 := by
   obtain he | he := (WithTop.some '' (x ⁻¹' {0})).eq_empty_or_nonempty
   · simp_all [length]
@@ -146,13 +144,9 @@ theorem apply_eq_zero {x : SignExpansion} {o : NatOrdinal} : x o = 0 ↔ x.lengt
   refine ⟨fun h ↦ csInf_le' ?_, apply_of_length_le⟩
   simpa
 
-<<<<<<< HEAD
 theorem apply_ne_zero {x : SignExpansion} {o : NatOrdinal} : x o ≠ 0 ↔ o < x.length := by
   simpa using apply_eq_zero.not
 
-=======
-set_option backward.isDefEq.respectTransparency false in
->>>>>>> master
 theorem length_eq_top {x : SignExpansion} : x.length = ⊤ ↔ ∀ o, x o ≠ 0 := by
   simpa [apply_eq_zero] using WithTop.eq_top_iff_forall_gt
 
@@ -272,23 +266,18 @@ theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
 theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := if_neg h.not_gt
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
     (x ↾ o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
   cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
 
-<<<<<<< HEAD
 @[simp]
 theorem small_restrict (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
   rw [Small, length_restrict]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
 @[simp]
-=======
-set_option backward.isDefEq.respectTransparency false in
->>>>>>> master
 theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     (ho : x.length ≤ o) : x ↾ o = x := by
   ext o'
@@ -298,7 +287,6 @@ theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     apply apply_of_length_le
     simp [ho']
 
-<<<<<<< HEAD
 @[simp, grind =]
 theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
     (x ↾ o₁) ↾ o₂ = x ↾ min o₁ o₂ := by
@@ -306,23 +294,11 @@ theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal
 
 theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
   simp
-=======
-set_option backward.isDefEq.respectTransparency false in
-@[simp]
-theorem restrict_zero_left (o : NatOrdinal) : 0 ↾ o = 0 := by
-  ext; simp [apply_eq_zero]
->>>>>>> master
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
-<<<<<<< HEAD
-=======
-set_option backward.isDefEq.respectTransparency false in
-@[simp]
->>>>>>> master
 theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
   simp
 

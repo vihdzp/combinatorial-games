@@ -81,7 +81,6 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
   simp [iSup, image_eq_range]
 
-set_option backward.isDefEq.respectTransparency false in
 theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
     birthday !{fun _ ↦ s} = sSup (succ ∘ birthday '' s) := by
   rw [ofSets_eq_ofSets_cases, birthday_ofSets, max_self]
@@ -260,7 +259,6 @@ theorem mem_birthdayFinset_of_mem_moves {p : Player} {x y : IGame}
   rw [mem_birthdayFinset_succ] at hnx
   aesop
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem mem_birthdayFinset {x : IGame} {n : ℕ} : x ∈ birthdayFinset n ↔ x.birthday ≤ n := by
   induction n generalizing x with
@@ -286,13 +284,7 @@ theorem strictMono_birthdayFinset : StrictMono birthdayFinset := by
     rw [card_birthdayFinset] at this
     exact (Nat.lt_pow_self (Nat.one_lt_succ_succ 2)).not_ge this
 
-<<<<<<< HEAD
 theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .omega0 := by
-=======
-set_option backward.isDefEq.respectTransparency false in
-theorem short_iff_birthday_finite {x : IGame} :
-    x.Short ↔ x.birthday < of Ordinal.omega0 := by
->>>>>>> master
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (p : Player) (y : x.moves p) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
@@ -381,7 +373,6 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   apply le_antisymm
