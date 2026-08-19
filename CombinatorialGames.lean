@@ -1,4 +1,4 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import CombinatorialGames.Counterexamples.Multiplication
 public import CombinatorialGames.Game.Basic
@@ -28,6 +28,7 @@ public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.Basic
 public import CombinatorialGames.NatOrdinal.Pow
+public import CombinatorialGames.NatOrdinal.Topology
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
 public import CombinatorialGames.Nimber.Nat
@@ -37,6 +38,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
+public import CombinatorialGames.SignExpansion.Topology
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut
