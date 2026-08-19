@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.NatOrdinal.Topology
 public import CombinatorialGames.SignExpansion.Simplicity
 public import Mathlib.Order.Comparable
 public import Mathlib.Topology.Clopen
@@ -26,11 +27,6 @@ public section
 
 namespace Simplicity
 open Order Set SignExpansion Topology
-
-instance : TopologicalSpace NatOrdinal := Preorder.topology _
-instance : OrderTopology NatOrdinal := ⟨rfl⟩
-instance : TopologicalSpace (WithTop NatOrdinal) := Preorder.topology _
-instance : OrderTopology (WithTop NatOrdinal) := ⟨rfl⟩
 
 instance : TopologicalSpace Simplicity :=
   Topology.scottHausdorff _ .univ
@@ -64,7 +60,7 @@ theorem isClopen_Iic (x : Simplicity) : IsClopen (Iic x) := by
 
 theorem isClopen_Ioc (x y : Simplicity) : IsClopen (Ioc x y) := by
   by_cases h : x < y
-  · rw [← Iic_diff_Iic h.le]
+  · rw [← Iic_sdiff_Iic h.le]
     exact (isClopen_Iic y).diff (isClopen_Iic x)
   · rw [Ioc_eq_empty h]
     exact isClopen_empty
@@ -79,6 +75,7 @@ theorem isClopen_Ioi (x : Simplicity) : IsClopen (Ioi x) := by
     rw [this]
     exact isOpen_iUnion fun i ↦ (isClopen_Ioc ..).isOpen
 
+-- TODO: this would follow from the `ZeroDimensionalSpace` instance.
 instance : TotallySeparatedSpace Simplicity := by
   rw [totallySeparatedSpace_iff_exists_isClopen]
   intro x y _
@@ -168,6 +165,7 @@ theorem hasBasis_nhds_Ioc {x : Simplicity} (hx₀ : x ≠ ⊥) : (𝓝 x).HasBas
     · rintro ⟨y, hy, hs⟩
       exact ⟨_, hs, (isClopen_Ioc y x).isOpen, ⟨hy, le_rfl⟩⟩
 
+-- TODO: this should be a `ZeroDimensionalSpace` instance.
 theorem isTopologicalBasis_setOf_isClopen :
     TopologicalSpace.IsTopologicalBasis {s : Set Simplicity | IsClopen s} := by
   refine .of_hasBasis_nhds fun x ↦ ?_

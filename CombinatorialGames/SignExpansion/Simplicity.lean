@@ -191,7 +191,7 @@ theorem lt_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x < 
 theorem le_or_gt_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x ≤ y ∨ y < x :=
   (lt_or_ge_of_le hy hx).symm
 
-theorem Iic_diff_Iic {x y : Simplicity} (h : x ≤ y) : Iic y \ Iic x = Ioc x y := by
+theorem Iic_sdiff_Iic {x y : Simplicity} (h : x ≤ y) : Iic y \ Iic x = Ioc x y := by
   apply subset_antisymm
   · exact fun z ⟨hzy, hzx⟩ ↦ ⟨(lt_or_ge_of_le h hzy).resolve_right hzx, hzy⟩
   · grind
