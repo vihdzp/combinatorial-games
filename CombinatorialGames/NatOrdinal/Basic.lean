@@ -93,7 +93,6 @@ instance : AddLeftMono NatOrdinal :=
 instance : AddRightMono NatOrdinal :=
   addRightMono_of_addRightStrictMono _
 
-set_option backward.isDefEq.respectTransparency false in
 private theorem add_comm' (a b : NatOrdinal) : a + b = b + a := by
   rw [add_def, add_def, max_comm]
   congr with x <;> cases x <;> exact congrArg _ (add_comm' ..)
@@ -118,7 +117,6 @@ private theorem iSup_add_of_monotone (f : NatOrdinal.{u} → NatOrdinal.{u}) (h 
     refine csSup_le_csSup' (bddAbove_of_small _) fun _ ↦ ?_
     aesop
 
-set_option backward.isDefEq.respectTransparency false in
 private theorem add_assoc' (a b c : NatOrdinal) : a + b + c = a + (b + c) := by
   rw [add_def, add_def a (b + c)]
   rw [iSup_add_of_monotone (fun _ ↦ succ _) (succ_mono.comp add_right_mono),
@@ -402,7 +400,6 @@ instance : CommSemiring NatOrdinal where
 
 instance : IsStrictOrderedRing NatOrdinal where
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
