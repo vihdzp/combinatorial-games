@@ -27,6 +27,19 @@ open Set
 
 public noncomputable section
 
+section ForMathlib
+
+theorem WithTop.isSuccPrelimit_coe_iff {α : Type*} [Preorder α] {x : α} :
+    Order.IsSuccPrelimit (WithTop.some x) ↔ Order.IsSuccPrelimit x := by
+  simp [Order.IsSuccPrelimit, WithTop.forall]
+
+theorem Set.forall_mem_iUnion {α : Type*} {ι : Sort*} {p : α → Prop} {f : ι → Set α} :
+    (∀ x ∈ ⋃ i, f i, p x) ↔ (∀ i, ∀ x ∈ f i, p x) := by
+  simp_rw [mem_iUnion, forall_exists_index]
+  apply forall_comm
+
+end ForMathlib
+
 namespace Surreal.Cut
 
 /-! ### Birthday of cuts -/
@@ -295,6 +308,114 @@ theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.bir
   rw [← WithTop.coe_le_coe]
   exact (hs ▸ birthday_simplestBtwn_le hsi).trans <|
     hy' ▸ max_le (birthday_supLeft_le y) (birthday_infRight_le y)
+
+theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.birthday := by
+  constructor
+  · rintro (_ | _) <;>
+      · simp only [birthday_leftSurreal, birthday_rightSurreal]
+        rw [← WithTop.coe_add_one, WithTop.isSuccPrelimit_coe_iff]
+        exact Order.not_isSuccPrelimit_add_one _
+  · intro h
+    rw [Order.not_isSuccPrelimit_iff] at h
+    obtain ⟨b, hb⟩ := h
+    cases b with | top => simp at hb | coe b
+    obtain ⟨s, hx | hx, hsb⟩ := birthday_eq_sSup_birthday x
+    · by_cases! hs : ∃ u ∈ s, ∀ v ∈ s, u ≤ v
+      · obtain ⟨u, hus, hu⟩ := hs
+        have hxu : x = leftSurreal u := by
+          apply le_antisymm
+          · rw [← hx]
+            apply sInf_le
+            exact Set.mem_image_of_mem leftSurreal hus
+          · rw [← hx, le_sInf_iff, Set.forall_mem_image]
+            intro v hv
+            rw [le_leftSurreal_iff, mem_right_leftSurreal]
+            exact hu v hv
+        rw [hxu]
+        constructor
+      · have hbs := Order.succ_eq_of_covBy hb
+        rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
+        have he (v : Surreal) (hv : v ∈ s) : ∃ c, c ≤ v ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
+          obtain ⟨w, hws, hwv⟩ := hs v hv
+          have hvb := birthday_lt_sSup_birthday hv
+          have hwb := birthday_lt_sSup_birthday hws
+          rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
+          obtain hvb | hvb := hvb.eq_or_lt
+          · obtain hwb | hwb := hwb.eq_or_lt
+            · exact ⟨!{{w} | {v}}, (ofSets_lt_of_mem_right (by simp)).le,
+                birthday_ofSets_singleton_lt_of_birthday_eq hwb hvb hwv,
+                w, hws, (lt_ofSets_of_mem_left (by simp)).le⟩
+            · exact ⟨w, hwv.le, hwb, w, hws, le_rfl⟩
+          · exact ⟨v, le_rfl, hvb, v, hv, le_rfl⟩
+        choose vv hvv hvb hvw using he
+        have hxv : x = sInf (leftSurreal '' ⋃ v, Set.range (vv v)) := by
+          apply le_antisymm
+          · simp_rw [le_sInf_iff, forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
+            intro v hv
+            obtain ⟨w, hws, hwv⟩ := hvw v hv
+            rw [← hx]
+            refine sInf_le_of_le ?_ (leftSurreal_strictMono.monotone hwv)
+            exact mem_image_of_mem leftSurreal hws
+          · rw [← hx, le_sInf_iff, Set.forall_mem_image]
+            intro v hv
+            refine sInf_le_of_le ?_ (leftSurreal_strictMono.monotone (hvv v hv))
+            apply mem_image_of_mem
+            apply mem_iUnion_of_mem
+            apply mem_range_self
+        absurd hb.lt.not_ge
+        grw [hxv, birthday_sInf_le]
+        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
+        intro v hv
+        rw [birthday_leftSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
+        apply hvb
+    · by_cases! hs : ∃ u ∈ s, ∀ v ∈ s, v ≤ u
+      · obtain ⟨u, hus, hu⟩ := hs
+        have hxu : x = rightSurreal u := by
+          apply le_antisymm
+          · rw [← hx, sSup_le_iff, Set.forall_mem_image]
+            intro v hv
+            rw [rightSurreal_le_iff, mem_left_rightSurreal]
+            exact hu v hv
+          · rw [← hx]
+            apply le_sSup
+            exact Set.mem_image_of_mem rightSurreal hus
+        rw [hxu]
+        constructor
+      · have hbs := Order.succ_eq_of_covBy hb
+        rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
+        have he (v : Surreal) (hv : v ∈ s) : ∃ c, v ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
+          obtain ⟨w, hws, hvw⟩ := hs v hv
+          have hvb := birthday_lt_sSup_birthday hv
+          have hwb := birthday_lt_sSup_birthday hws
+          rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
+          obtain hvb | hvb := hvb.eq_or_lt
+          · obtain hwb | hwb := hwb.eq_or_lt
+            · exact ⟨!{{v} | {w}}, (lt_ofSets_of_mem_left (by simp)).le,
+                birthday_ofSets_singleton_lt_of_birthday_eq hvb hwb hvw,
+                w, hws, (ofSets_lt_of_mem_right (by simp)).le⟩
+            · exact ⟨w, hvw.le, hwb, w, hws, le_rfl⟩
+          · exact ⟨v, le_rfl, hvb, v, hv, le_rfl⟩
+        choose vv hvv hvb hvw using he
+        have hxv : x = sSup (rightSurreal '' ⋃ v, Set.range (vv v)) := by
+          apply le_antisymm
+          · rw [← hx, sSup_le_iff, Set.forall_mem_image]
+            intro v hv
+            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone (hvv v hv))
+            apply mem_image_of_mem
+            apply mem_iUnion_of_mem
+            apply mem_range_self
+          · simp_rw [sSup_le_iff, forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
+            intro v hv
+            obtain ⟨w, hws, hvw⟩ := hvw v hv
+            rw [← hx]
+            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone hvw)
+            exact mem_image_of_mem rightSurreal hws
+        absurd hb.lt.not_ge
+        grw [hxv, birthday_sSup_le]
+        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
+        intro v hv
+        rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
+        apply hvb
 
 end Surreal.Cut
 end
