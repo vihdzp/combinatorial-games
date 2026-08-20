@@ -20,6 +20,10 @@ universe u
 
 public noncomputable section
 
+-- mathlib PR #42549
+theorem Set.forall_mem_singleton {α : Type*} {p : α → Prop} {x : α} :
+    (∀ z ∈ ({x} : Set α), p z) ↔ p x := by simp
+
 namespace Surreal
 open IGame NatOrdinal Order Set
 
@@ -118,6 +122,56 @@ theorem birthday_ofSets_le {s t : Set Surreal.{u}}
   apply (birthday_mk_le _).trans
   simp_rw [IGame.birthday_ofSets, image_comp]
   congr! <;> aesop
+
+theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
+    {x y : Surreal} (hx : birthday x = o) (hy : birthday y = o) (hxy : x < y) :
+    birthday !{{x} | {y}} < o := by
+  obtain ⟨x, nx, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+  obtain ⟨y, ny, rfl, hyb⟩ := birthday_eq_iGameBirthday y
+  have nxy : !{{x} | {y}}.Numeric := by rw [numeric_def]; aesop
+  have mxy : mk !{{x} | {y}} = !{{mk x} | {mk y}} := by simp [mk_ofSets]
+  by_contra hbxy
+  apply hxy.ne
+  rw [mk_eq_mk]
+  apply Fits.antisymm
+  · constructor
+    · intro z hzy hxz
+      numeric
+      have hzx : ¬z ≤ x := by
+        intro hzx
+        apply hx.not_lt
+        grw [mk_eq_mk.2 ⟨hxz, hzx⟩, birthday_mk_le, birthday_lt_of_mem_moves hzy, hyb, hy]
+      have hzf : z.Fits !{{x} | {y}} := by
+        constructor
+        · rwa [leftMoves_ofSets, Set.forall_mem_singleton]
+        · rw [rightMoves_ofSets, Set.forall_mem_singleton]
+          exact left_lf hzy
+      obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
+      apply hbxy
+      have := Numeric.wsubposition hwz
+      grw [← mxy, ← mk_eq_mk.2 hwxy, birthday_mk_le, birthday_le_of_wsubposition hwz,
+        birthday_lt_of_mem_moves hzy, hyb, hy]
+    · intro z hz
+      exact ((mk_lt_mk.1 hxy).trans (Numeric.lt_right hz)).not_ge
+  · constructor
+    · intro z hz
+      exact ((Numeric.left_lt hz).trans (mk_lt_mk.1 hxy)).not_ge
+    · intro z hzx hzy
+      numeric
+      have hyz : ¬y ≤ z := by
+        intro hyz
+        apply hy.not_lt
+        grw [mk_eq_mk.2 ⟨hyz, hzy⟩, birthday_mk_le, birthday_lt_of_mem_moves hzx, hxb, hx]
+      have hzf : z.Fits !{{x} | {y}} := by
+        constructor
+        · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+          exact lf_right hzx
+        · rwa [rightMoves_ofSets, Set.forall_mem_singleton]
+      obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
+      apply hbxy
+      have := Numeric.wsubposition hwz
+      grw [← mxy, ← mk_eq_mk.2 hwxy, birthday_mk_le, birthday_le_of_wsubposition hwz,
+        birthday_lt_of_mem_moves hzx, hxb, hx]
 
 theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, _, ha, ha'⟩ := birthday_eq_iGameBirthday x
