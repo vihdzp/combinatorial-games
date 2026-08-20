@@ -44,6 +44,8 @@ theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
 theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
+@[simp] theorem star_ne_zero : ⋆ ≠ 0 := star_fuzzy_zero.ne
+@[simp] theorem zero_ne_star : 0 ≠ ⋆ := zero_fuzzy_star.ne
 @[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
 @[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
@@ -54,6 +56,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
 protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+@[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
 /-! ### Half -/
 
