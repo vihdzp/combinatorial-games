@@ -30,8 +30,9 @@ theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d
     refine ⟨b - b % c, ?_, Nat.sub_le b _, Nat.dvd_sub_mod b⟩
     have hc0 : c ≠ 0 := by rintro rfl; simp at h
     -- lean4 PR #14699
-    rw [← Nat.div_mul_cancel (Nat.dvd_sub_mod b),
-      ← Nat.div_lt_iff_lt_mul (Nat.pos_of_ne_zero hc0), ← Nat.div_eq_sub_mod_div]
+    fail_if_success rw [← Nat.div_lt_div_right hc0 (Nat.dvd_sub_mod b)]
+    rw [← Nat.div_mul_cancel (Nat.dvd_sub_mod b), ← Nat.div_lt_iff_lt_mul (Nat.pos_of_ne_zero hc0)]
+    rw [← Nat.div_eq_sub_mod_div]
     exact h
   · intro ⟨d, ha, hb, hc⟩
     grw [← hb]
