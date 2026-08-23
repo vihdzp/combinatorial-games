@@ -183,8 +183,8 @@ instance : AddCommGroupWithOne Surreal where
   add_comm := by rintro ⟨x⟩ ⟨y⟩; change mk (x + y) = mk (y + x); simp_rw [add_comm]
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; change mk (x + y + z) = mk (x + (y + z)); simp_rw [add_assoc]
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  nsmul_zero := by rintro ⟨a⟩; rfl
-  nsmul_succ := by rintro n ⟨a⟩; rfl
+  nsmul_zero := by rintro ⟨a⟩; change mk (0 • a) = mk 0; simp_rw [zero_nsmul]
+  nsmul_succ := by rintro n ⟨a⟩; change mk ((n + 1) • a) = mk (n • a + a); simp_rw [succ_nsmul]
   zsmul_zero' := by rintro ⟨a⟩; rfl
   zsmul_succ' := by rintro n ⟨a⟩; rfl
   zsmul_neg' := by rintro n ⟨a⟩; rfl
