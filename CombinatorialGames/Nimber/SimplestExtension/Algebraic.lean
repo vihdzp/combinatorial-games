@@ -62,7 +62,7 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
           rw [degree_prod_of_monic] <;> simp [Monic]
         have hq' : (X ^ n + ∏ i, (X + C (f i).1)).degree < n := by
           rw [← CharTwo.sub_eq_add]
-          convert degree_sub_lt .. <;> simp_all
+          convert degree_sub_lt_left .. <;> simp_all
         have H : ∀ k, (X ^ n + ∏ i, (X + C (f i).1)).coeff k < x := by
           refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
           have : (f y).1 < x := (f y).2
@@ -233,7 +233,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
   apply le_antisymm
   · have hp : (X ^ n + x.leastNoRoots.untop ht).degree < (n : WithBot ℕ) := by
       rw [← CharTwo.sub_eq_add]
-      apply (degree_sub_lt ..).trans_eq <;> aesop
+      apply (degree_sub_lt_left ..).trans_eq <;> aesop
     conv_lhs => left; rw [← eval_X_pow]
     rw [← eval_add, h.eval_eq_of_lt hld hp hxp]
     apply le_of_forall_lt_imp_ne
@@ -260,7 +260,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     apply (h.root_lt _ _ ((mem_roots _).2 hf)).false
     · conv_rhs => rw [← WithTop.coe_untop _ ht]
       rw [WithTop.coe_lt_coe, add_comm, ← CharTwo.sub_eq_add]
-      apply Lex.lt_of_degree_lt (degree_sub_lt _ (leastNoRoots_ne_zero' ht) _)
+      apply Lex.lt_of_degree_lt (degree_sub_lt_left _ (leastNoRoots_ne_zero' ht) _)
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
     · apply h.coeff_add_lt (h.coeff_prod_lt _) (coeff_leastNoRoots_lt _)

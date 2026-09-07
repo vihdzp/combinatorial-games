@@ -206,7 +206,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
     rw [← val.lt_iff_lt] at H' ⊢
     apply (add_right_strictMono H').trans_le
     dsimp
-    rwa [← Ordinal.mul_two, ← opow_succ, opow_le_opow_iff_right one_lt_two, succ_le_iff]
+    rwa [← Ordinal.mul_two, ← opow_add_one, opow_le_opow_iff_right one_lt_two, add_one_le_iff]
   obtain hyz | hyz | hyz := lt_trichotomy (log 2 y) (log 2 z)
   · rw [add_comm]
     exact H hyz hz'
@@ -538,8 +538,8 @@ theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
         exact hx.one_lt
       rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
         ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
-      apply (opow_le_opow_right (of_pos.1 hx.pos) hay.succ_le).trans_lt'
-      rw [opow_succ]
+      apply (opow_le_opow_right (of_pos.1 hx.pos) (add_one_le_of_lt hay)).trans_lt'
+      rw [opow_add_one]
       exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
     · exact IH _ (mod_opow_log_lt_self _ ha') ((mod_le ..).trans_lt ha)
   · exact mod_lt _ (opow_ne_zero _ hz.ne_bot)
