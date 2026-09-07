@@ -1224,7 +1224,7 @@ private theorem inv_eq'' {x : IGame} :
 
 private theorem inv_eq {x : IGame.{u}} (hx : 0 < x) :
     x⁻¹ = !{.range (InvTy.val x left) | .range (InvTy.val x right)} := by
-  rw [inv_eq'', if_pos hx, inv']
+  rw [inv_eq'', ite_eq_left hx, inv']
   rfl
 
 private theorem inv_eq' {x : IGame.{u}} (hx : 0 < x) :
@@ -1256,7 +1256,7 @@ def invOption (x y a : IGame) : IGame :=
 
 private theorem invOption_eq {x y a : IGame} (hy : 0 < y) :
     invOption x y a = (1 + (y - x) * a) * inv' y := by
-  rw [invOption, IGame.div_eq_mul_inv, inv_eq'', if_pos hy]
+  rw [invOption, IGame.div_eq_mul_inv, inv_eq'', ite_eq_left hy]
 
 theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
   rw [inv_eq hx, leftMoves_ofSets]

@@ -358,11 +358,11 @@ instance : Inv Nimber where
   inv a := if a = 0 then 0 else invAux a
 
 private theorem inv_eq_invAux (ha : a ≠ 0) : a⁻¹ = invAux a :=
-  dif_neg ha
+  dite_eq_right ha
 
 instance : Field Nimber where
   mul_inv_cancel a ha := by rw [inv_eq_invAux ha, (mul_inv_cancel_aux a).2 ha]
-  inv_zero := by exact dif_pos rfl
+  inv_zero := by exact dite_eq_left rfl
   nnqsmul := _
   qsmul := _
 

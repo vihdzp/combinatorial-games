@@ -8,7 +8,7 @@ module
 public import CombinatorialGames.Game.IGame
 public meta import CombinatorialGames.Tactic.AddInstances
 
-import Mathlib.Data.Finite.Prod
+import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
 
 /-!
