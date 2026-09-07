@@ -89,6 +89,11 @@ theorem round_add_of_eq {x y r : Surreal} (hx : x.round r = x) (hy : y.round r =
   dsimp
   congr <;> rw [hx, hy] <;> grind
 
+theorem round_sub_of_eq {x y r : Surreal} (hx : x.round r = x) (hy : y.round r = y) :
+    (x - y).round r = x - y := by
+  rw [sub_eq_add_neg, round_add_of_eq hx]
+  rw [round_neg, hy]
+
 theorem round_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.round r = x) (hy : y.round r = y) :
     (x * y).round (r * r) = x * y := by
   have h' : 0 < r * r := mul_self_pos.2 h.ne'
