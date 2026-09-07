@@ -24,21 +24,6 @@ noncomputable section
 
 /-! ### For Mathlib -/
 
-namespace Set
-variable {α β : Type*}
-
-@[simp]
-theorem range_singleton (x : α) (f : ({x} : Set α) → β) : range f = {f ⟨x, mem_singleton x⟩} :=
-  range_unique
-
-@[simp]
-theorem range_insert (x : α) (s : Set α) (f : ((insert x s) : Set α) → β) :
-    range f = insert (f ⟨x, mem_insert x s⟩)
-      (range fun y : s ↦ f ⟨y, mem_insert_of_mem _ y.2⟩) := by
-  aesop
-
-end Set
-
 section CommGroup
 variable {α : Type*} {x y : α} [CommGroup α] [LinearOrder α] [IsOrderedMonoid α]
 
@@ -158,12 +143,13 @@ theorem IsOmnific.add {x y : Surreal}
   round_add_of_eq hx hy
 
 theorem IsOmnific.sub {x y : Surreal}
-    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) :=
-  hx.add hy.neg
+    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) := by
+  rw [sub_eq_add_neg]
+  exact hx.add hy.neg
 
 theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
-  simpa using round_mul_of_eq zero_lt_one hx hy
+  simpa [IsOmnific] using round_mul_of_eq zero_lt_one hx hy
 
 theorem IsOmnific.one_le_iff_pos {x : Surreal} (h : IsOmnific x) : 1 ≤ x ↔ 0 < x where
   mp := zero_lt_one.trans_le
