@@ -3,8 +3,10 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Real
-import Mathlib.Algebra.Ring.Subring.Defs
+module
+
+public import CombinatorialGames.Surreal.Real
+public import Mathlib.Algebra.Ring.Subring.Defs
 
 /-!
 # Omnific integers
@@ -20,7 +22,7 @@ following form:
 - `x.coeff 0` is an integer
 -/
 
-noncomputable section
+public noncomputable section
 
 /-! ### For Mathlib -/
 
