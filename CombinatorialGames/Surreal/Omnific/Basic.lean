@@ -24,23 +24,10 @@ following form:
 
 public noncomputable section
 
-/-! ### For Mathlib -/
-
-section CommGroup
-variable {α : Type*} {x y : α} [CommGroup α] [LinearOrder α] [IsOrderedMonoid α]
-
-@[to_additive (attr := simp)]
-theorem div_lt_mul_self_iff : x / y < x * y ↔ 1 < y := by
-  simp [div_eq_mul_inv]
-
-@[to_additive (attr := simp)]
-theorem div_le_mul_self_iff : x / y ≤ x * y ↔ 1 ≤ y := by
-  simp [div_eq_mul_inv]
-
-end CommGroup
-
 namespace Surreal
 open IGame Set
+
+attribute [local simp] add_assoc sub_lt_iff_lt_add
 
 /-! ### Rounding operation -/
 
