@@ -3,7 +3,11 @@ Copyright (c) 2024 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Special
+module
+
+public import CombinatorialGames.Game.Special
+
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 # Multiplication of pre-games can't be lifted to the quotient
@@ -16,7 +20,7 @@ is colloquially known as `star`, so we use the name `star'` for the second. We p
 `star ≈ star'` and `star * star ≈ star`, but `star' * star ≉ star`.
 -/
 
-noncomputable section
+public noncomputable section
 open IGame
 
 namespace IGame
@@ -37,3 +41,4 @@ theorem mul_not_lift : ∃ x₁ x₂ y : IGame, x₁ ≈ x₂ ∧ ¬ x₁ * y �
   rw [star_mul_star]
 
 end IGame
+end

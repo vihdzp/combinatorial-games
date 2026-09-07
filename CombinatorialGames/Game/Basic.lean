@@ -1,9 +1,15 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
+Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison,
+Apurva Nakade, Yuyang Zhao
 -/
-import CombinatorialGames.Game.Classes
+module
+
+public import CombinatorialGames.Game.Classes
+public import Mathlib.Algebra.CharZero.Defs
+public import Mathlib.Algebra.Order.Monoid.Defs
+
 import Mathlib.Algebra.Order.Ring.Cast
 import Mathlib.Tactic.Abel
 
@@ -21,7 +27,7 @@ there exist `x₁ ≈ x₂` and `y₁ ≈ y₂` with `x₁ * y₁ ≉ x₂ * y�
 
 universe u
 
-noncomputable section
+@[expose] public noncomputable section
 
 open IGame Set Pointwise
 
@@ -51,7 +57,7 @@ theorem ind {motive : Game → Prop} (mk : ∀ y, motive (mk y)) (x : Game) : mo
   Quotient.ind mk x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-def out (x : Game) : IGame := Quotient.out x
+@[no_expose] def out (x : Game) : IGame := Quotient.out x
 @[simp] theorem out_eq (x : Game) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) : (mk x).out ≈ x := Quotient.mk_out (s := AntisymmRel.setoid ..) x
@@ -81,10 +87,15 @@ private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
-instance : Add Game := ⟨Quotient.map₂ _ @add_congr⟩
-instance : Neg Game := ⟨Quotient.map _ @neg_congr⟩
+instance : Add Game := ⟨Quotient.map₂ (· + ·) @add_congr⟩
+instance : Neg Game := ⟨Quotient.map (-·) @neg_congr⟩
+instance : Sub Game := ⟨Quotient.map₂ (· - ·) @sub_congr⟩
 instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrization ..))
 instance : Inhabited Game := ⟨0⟩
+instance : NSMul Game := ⟨fun n => Quotient.map (n • ·) (@nsmul_congr n)⟩
+instance : ZSMul Game := ⟨fun n => Quotient.map (n • ·) (@zsmul_congr n)⟩
+instance : NatCast Game := ⟨fun n => mk n⟩
+instance : IntCast Game := ⟨fun n => mk n⟩
 
 instance : AddCommGroupWithOne Game where
   zero_add := by rintro ⟨x⟩; exact congr(mk $(zero_add _))
@@ -92,8 +103,12 @@ instance : AddCommGroupWithOne Game where
   add_comm := by rintro ⟨x⟩ ⟨y⟩; exact congr(mk $(add_comm _ _))
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact congr(mk $(add_assoc _ _ _))
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul_zero := by rintro ⟨a⟩; rfl
+  nsmul_succ := by rintro n ⟨a⟩; rfl
+  zsmul_zero' := by rintro ⟨a⟩; rfl
+  zsmul_succ' := by rintro n ⟨a⟩; rfl
+  zsmul_neg' := by rintro n ⟨a⟩; rfl
+  sub_eq_add_neg := by rintro ⟨a⟩ ⟨b⟩; rfl
 
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
@@ -106,6 +121,8 @@ instance : RatCast Game where
 @[simp] theorem mk_add (x y : IGame) : mk (x + y) = mk x + mk y := rfl
 @[simp] theorem mk_neg (x : IGame) : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) : mk (x - y) = mk x - mk y := rfl
+@[simp] theorem mk_nsmul (n : Nat) (x : IGame) : mk (n • x) = n • mk x := rfl
+@[simp] theorem mk_zsmul (n : Int) (x : IGame) : mk (n • x) = n • mk x := rfl
 
 theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
@@ -116,13 +133,10 @@ theorem mk_mulOption (x y a b : IGame) :
 @[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp, norm_cast]
-theorem mk_natCast : ∀ n : ℕ, mk n = n
-  | 0 => rfl
-  | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
+theorem mk_natCast (n : Nat) : mk n = n := rfl
 
 @[simp, norm_cast]
-theorem mk_intCast (n : ℤ) : mk n = n := by
-  cases n <;> simp
+theorem mk_intCast (n : ℤ) : mk n = n := rfl
 
 @[simp, norm_cast] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
 @[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
@@ -158,13 +172,13 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 theorem mk_mul_sub (x y z : IGame) : mk (x * (y - z)) = mk (x * y) - mk (x * z) := by
-  simpa using mk_mul_add x y (-z)
+  simpa [sub_eq_add_neg] using mk_mul_add x y (-z)
 
 theorem mk_add_mul (x y z : IGame) : mk ((x + y) * z) = mk (x * z) + mk (y * z) := by
   rw [mul_comm, mk_mul_add, mul_comm, mul_comm z]
 
 theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
-  simpa using mk_add_mul x (-y) z
+  simpa [sub_eq_add_neg] using mk_add_mul x (-y) z
 
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   induction x using IGame.ofSetsRecOn generalizing y z with | ofSets xL xR ihxl ihxr
