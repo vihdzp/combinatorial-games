@@ -300,6 +300,14 @@ decreasing_by igame_wf
 theorem Short.birthday_lt_omega0 (x : IGame) [Short x] : birthday x < of .omega0 :=
   short_iff_birthday_finite.1 ‹_›
 
+theorem birthday_le_one {x : IGame} : x.birthday ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = ⋆ := by
+  rw [← Nat.cast_one, ← mem_birthdayFinset, birthdayFinset_one]
+  simp
+
+theorem birthday_eq_one {x : IGame} : x.birthday = 1 ↔ x = 1 ∨ x = -1 ∨ x = ⋆ := by
+  rw [le_antisymm_iff, one_le_iff_ne_zero, birthday_le_one]
+  aesop
+
 end IGame
 
 /-! ### `Game` birthday -/
@@ -400,6 +408,28 @@ theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birth
 
 theorem birthday_sub_le (x y : Game) : (x - y).birthday ≤ x.birthday + y.birthday := by
   simpa [sub_eq_add_neg] using birthday_add_le x (-y)
+
+theorem mk_ofPred_birthday_lt (o : NatOrdinal) :
+    mk '' {x | x.birthday < o} = {x | x.birthday < o} := by
+  ext x
+  constructor
+  · revert x
+    exact Set.forall_mem_image.2 fun x hx => (birthday_mk_le x).trans_lt hx
+  · intro hx
+    obtain ⟨x, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+    refine ⟨x, ?_, rfl⟩
+    rwa [mem_ofPred, hxb]
+
+theorem mk_ofPred_birthday_le (o : NatOrdinal) :
+    mk '' {x | x.birthday ≤ o} = {x | x.birthday ≤ o} := by
+  simpa using mk_ofPred_birthday_lt (o + 1)
+
+theorem birthday_le_one {x : Game} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
+  simpa [IGame.birthday_le_one, eq_comm] using Set.ext_iff.1 (mk_ofPred_birthday_le 1).symm x
+
+theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x = mk ⋆ := by
+  rw [le_antisymm_iff, one_le_iff_ne_zero, ne_eq, birthday_eq_zero, birthday_le_one]
+  aesop
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
