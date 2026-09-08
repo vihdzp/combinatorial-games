@@ -27,8 +27,8 @@ noncomputable def toNat (o : Ordinal) : ℕ :=
 
 @[simp]
 theorem toNat_natCast (n : ℕ) : toNat n = n := by
-  have h := nat_lt_omega0 n
-  rw [toNat, dif_pos h, ← @Nat.cast_inj Ordinal, ← Classical.choose_spec (lt_omega0.1 h)]
+  have h := natCast_lt_omega0 n
+  rw [toNat, dite_eq_left h, ← @Nat.cast_inj Ordinal, ← Classical.choose_spec (lt_omega0.1 h)]
 
 theorem natCast_toNat {o : Ordinal} (h : o < ω) : toNat o = o := by
   obtain ⟨n, rfl⟩ := lt_omega0.1 h
@@ -51,14 +51,6 @@ theorem coeff_lt {b : Ordinal} (hb : 1 < b) (o e : Ordinal) : coeff b o e < b :=
 
 end CNF
 end Ordinal
-
-namespace AddMonoidAlgebra
-variable {R S T : Type*} [Semiring R]
-
-@[simp] theorem coe_zero : ⇑(0 : R[S]) = 0 := rfl
-theorem zero_apply (x : S) : (0 : R[S]) x = 0 := rfl
-
-end AddMonoidAlgebra
 
 namespace Finsupp
 variable {M N α : Type*} [AddZeroClass M]
@@ -91,11 +83,11 @@ open AddMonoidAlgebra Ordinal
 /-- `toAddMonoidAlgebra x e` returns the coefficient of `ω^ e` in `x`. This is a specialization of
 `Ordinal.CNF.coeff`. -/
 def toAddMonoidAlgebra (x : NatOrdinal) : ℕ[NatOrdinal] :=
-  ((CNF.coeff ω x.val).mapRange toNat toNat_zero).equivMapDomain of
+  .ofCoeff <| ((CNF.coeff ω x.val).mapRange toNat toNat_zero).equivMapDomain of
 
 @[simp]
-private theorem toAddMonoidAlgebra_apply (x e : NatOrdinal) :
-    toAddMonoidAlgebra x e = (CNF.coeff ω x.val e.val).toNat :=
+private theorem coeff_toAddMonoidAlgebra (x e : NatOrdinal) :
+    (toAddMonoidAlgebra x).coeff e = (CNF.coeff ω x.val e.val).toNat :=
   rfl
 
 @[simp]
@@ -106,9 +98,8 @@ theorem toAddMonoidAlgebra_zero : toAddMonoidAlgebra 0 = 0 := by
 `Ordinal.CNF.eval`. -/
 @[pp_nodot]
 def ofAddMonoidAlgebra (x : ℕ[NatOrdinal]) : NatOrdinal :=
-  of (CNF.eval ω ((x.mapRange (↑) rfl).equivMapDomain val))
+  of (CNF.eval ω ((x.coeff.mapRange (↑) Nat.cast_zero).equivMapDomain val))
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem ofAddMonoidAlgebra_zero : ofAddMonoidAlgebra 0 = 0 := by
   simp [ofAddMonoidAlgebra]
@@ -117,7 +108,7 @@ theorem ofAddMonoidAlgebra_zero : ofAddMonoidAlgebra 0 = 0 := by
 theorem toAddMonoidAlgebra_ofAddMonoidAlgebra (x) :
     toAddMonoidAlgebra (ofAddMonoidAlgebra x) = x := by
   ext e
-  simp only [ofAddMonoidAlgebra, OrderIso.toEquiv_eq, toAddMonoidAlgebra_apply, val_of]
+  simp only [ofAddMonoidAlgebra, OrderIso.toEquiv_eq, coeff_toAddMonoidAlgebra, val_of]
   rw [CNF.coeff_eval one_lt_omega0] <;> simp
 
 @[simp]
@@ -143,8 +134,8 @@ theorem ofAddMonoidAlgebra_inj {x y} : ofAddMonoidAlgebra x = ofAddMonoidAlgebra
   ofAddMonoidAlgebra_injective.eq_iff
 
 open Finsupp in
-set_option backward.isDefEq.respectTransparency false in
-theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.sum fun o y ↦ y * ω^ o := by
+theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.coeff.sum fun o y ↦ y * ω^ o := by
+  cases x with | ofCoeff x
   induction x using induction_on_max with
   | zero => simp
   | single_add o n f hf hn IH =>
@@ -156,8 +147,8 @@ theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.sum fun o y ↦ y 
       rfl
     · apply CNF.eval_lt
       · simp
-      · simpa using hf
-    · simpa using hf
+      · simpa using! hf
+    · simpa using! hf
 
 @[simp]
 theorem ofAddMonoidAlgebra_single (x y) : ofAddMonoidAlgebra (single x y) = y * ω^ x := by
@@ -167,7 +158,6 @@ theorem ofAddMonoidAlgebra_single (x y) : ofAddMonoidAlgebra (single x y) = y * 
 theorem toAddMonoidAlgebra_wpow (x) : toAddMonoidAlgebra (ω^ x) = single x 1 := by
   simp [← ofAddMonoidAlgebra_inj]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- `toAddMonoidAlgebra` as a `RingEquiv`. -/
 @[expose, simps!]
 def toAddMonoidAlgebraIso : NatOrdinal ≃+* ℕ[NatOrdinal] :=
@@ -182,7 +172,7 @@ def toAddMonoidAlgebraIso : NatOrdinal ≃+* ℕ[NatOrdinal] :=
       · simp
       · simp [add_mul]
     map_mul' x y := by
-      simp_rw [ofAddMonoidAlgebra_def, Finsupp.sum_mul, AddMonoidAlgebra.mul_def]
+      simp_rw [ofAddMonoidAlgebra_def, Finsupp.sum_mul, AddMonoidAlgebra.mul_def, coeff_finsuppSum]
       rw [Finsupp.sum_sum_index]
       · congr!
         rw [Finsupp.sum_sum_index]
