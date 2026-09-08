@@ -111,9 +111,8 @@ If `x` is a numeric game fitting within `y`, then `y` is equivalent to some subp
 theorem Fits.exists_wsubposition_equiv {x y : IGame} [Numeric x] (hx : x.Fits y) :
     ∃ z, WSubposition z x ∧ z ≈ y := by
   induction x using moveRecOn generalizing ‹Numeric x› with | ind x ih
-  by_cases hm : ∀ p, ∀ z ∈ x.moves p, ¬z.Fits y
+  by_cases! hm : ∀ p, ∀ z ∈ x.moves p, ¬z.Fits y
   · exact ⟨x, .rfl, hx.equiv_of_forall_not_fits hm⟩
-  simp_rw [not_forall, not_not] at hm
   obtain ⟨p, z, hzx, hz⟩ := hm
   numeric
   obtain ⟨w, hwz, hw⟩ := ih p z hzx hz
