@@ -7,8 +7,8 @@ module
 
 public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.Algebra.Group.Pointwise.Set.Basic
+public import Mathlib.Basic.Sign.Defs
 public import Mathlib.Data.Fintype.Order
-public import Mathlib.Data.Sign.Defs
 public import Mathlib.Order.CompleteLattice.PiLex
 
 import CombinatorialGames.Mathlib.WithTop
@@ -35,7 +35,7 @@ attribute [grind =] Pi.toLex_apply
 instance : ZeroLEOneClass SignType where
   zero_le_one := by decide
 
-@[local simp← ]
+@[local simp ←]
 theorem Set.preimage_neg {α ι : Type*} [InvolutiveNeg α] (f : ι → α) {s : Set α} :
     f ⁻¹' (-s) = (-f) ⁻¹' s :=
   rfl
@@ -249,10 +249,10 @@ theorem neg_restrict (x : SignExpansion) (o : WithTop NatOrdinal) : -x ↾ o = (
   aesop
 
 theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
-    {o₂ : NatOrdinal} (h : o₂ < o₁) : (x ↾ o₁) o₂ = x o₂ := if_pos h
+    {o₂ : NatOrdinal} (h : o₂ < o₁) : (x ↾ o₁) o₂ = x o₂ := ite_eq_left h
 
 theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
-    {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := if_neg h.not_gt
+    {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := ite_eq_right h.not_gt
 
 @[simp]
 theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
@@ -374,7 +374,7 @@ private theorem nonempty_of_not_isUpperSet {f : NatOrdinal → SignType}
 
 theorem floor_of_isUpperSet {f : NatOrdinal → SignType} (hf : IsUpperSet (f ⁻¹' {0})) :
     floor f = ⟨f, hf⟩ :=
-  dif_pos hf
+  dite_eq_left hf
 
 @[simp]
 theorem floor_coe (x : SignExpansion) : floor x = x :=
@@ -391,7 +391,7 @@ theorem floor_lt_of_not_isUpperSet {f : NatOrdinal → SignType} (hf : ¬ IsUppe
     toLex ⇑(floor f) < toLex f := by
   obtain ⟨hf₁, hf₂⟩ := nonempty_of_not_isUpperSet hf
   have hf' := csInf_mem hf₁
-  rw [floor, dif_neg hf]
+  rw [floor, dite_eq_right hf]
   dsimp
   split_ifs with h
   · use sInf (f ⁻¹' {0})
@@ -404,7 +404,7 @@ theorem floor_lt_of_not_isUpperSet {f : NatOrdinal → SignType} (hf : ¬ IsUppe
       · simp_all
       · exact notMem_of_lt_csInf' ha ⟨ha', Ne.symm ha₀⟩
     · dsimp
-      rw [if_neg]
+      rw [ite_eq_right]
       · obtain h | h | h := (f (sInf {b | sInf (f ⁻¹' {0}) < b ∧ f b ≠ 0})).trichotomy
         · contradiction
         · cases (csInf_mem hf₂).2 h
@@ -430,9 +430,9 @@ theorem floor_lt {f : NatOrdinal → SignType} {x : SignExpansion} :
   · rw [floor_apply_of_lt_sInf ha'] at ha
     exact ⟨a, fun b hb ↦ (floor_apply_of_lt_sInf (hb.trans ha')).symm.trans (ha.1 _ hb), ha.2⟩
   · obtain h | h | h := (f (sInf {b | sInf (f ⁻¹' {0}) < b ∧ f b ≠ 0})).trichotomy
-    · simp_rw [floor_of_eq_neg_one hf h, if_neg ha'.not_gt] at ha
+    · simp_rw [floor_of_eq_neg_one hf h, ite_eq_right ha'.not_gt] at ha
       obtain rfl | ha' := ha'.eq_or_lt
-      · rw [if_pos rfl] at ha
+      · rw [ite_eq_left rfl] at ha
         simp +contextual only [↓reduceIte] at ha
         obtain hx | hx | hx := (x (sInf (f ⁻¹' {0}))).trichotomy
         · simp [hx] at ha
@@ -448,10 +448,10 @@ theorem floor_lt {f : NatOrdinal → SignType} {x : SignExpansion} :
             exact (x.isUpperSet_preimage_singleton_zero hf₂'.1.le hx).ge
         · use sInf (f ⁻¹' {0})
           simp_all
-      · rw [if_neg ha'.ne'] at ha
+      · rw [ite_eq_right ha'.ne'] at ha
         simpa using ha.2
     · cases hf₂'.2 h
-    · simp_rw [floor_of_eq_one hf h, if_neg ha'.not_gt] at ha
+    · simp_rw [floor_of_eq_one hf h, ite_eq_right ha'.not_gt] at ha
       obtain rfl | ha' := ha'.eq_or_lt
       · use sInf (f ⁻¹' {0})
         simp_all

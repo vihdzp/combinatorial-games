@@ -667,14 +667,14 @@ instance _root_.IGame.Numeric.wlog (x : IGame) : Numeric x.wlog := by
 
 @[simp]
 theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
-  simp_rw [IGame.wlog, dif_pos h, Surreal.out_eq]
+  simp_rw [IGame.wlog, dite_eq_left h, Surreal.out_eq]
 
 @[simp]
 theorem wlog_zero : wlog 0 = 0 :=
-  dif_pos rfl
+  dite_eq_left rfl
 
 theorem wpow_wlog_veq (h : x ≠ 0) : ω^ wlog x =ᵥ x := by
-  rw [wlog, dif_neg h]
+  rw [wlog, dite_eq_right h]
   exact Classical.choose_spec (exists_wpow_veq h)
 
 @[simp]
@@ -804,7 +804,7 @@ theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
   rw [archimedeanClassMk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
 
-private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
+private theorem ofSets_wlog_eq {x : IGame} :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
       range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, Numeric.wlog x⟩)} := by
