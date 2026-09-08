@@ -41,7 +41,11 @@ open Function
 
 /-- A Domineering board is an arbitrary finite subset of `ℤ × ℤ`. -/
 def Domineering := Finset (ℤ × ℤ) deriving DecidableEq
+
+/-- Cast a finset to a domineering position. -/
 @[match_pattern] def toDomineering : Finset (ℤ × ℤ) ≃ Domineering := Equiv.refl _
+
+/-- Cast a domineering position to a finset. -/
 @[match_pattern] def ofDomineering : Domineering ≃ Finset (ℤ × ℤ) := Equiv.refl _
 
 @[simp] theorem toDomineering_ofDomineering (a : Domineering) :

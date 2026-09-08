@@ -65,8 +65,8 @@ instance : DenselyOrdered IGame where
 
 instance : DenselyOrdered Game where
   dense a b hab := by
-    induction a using Game.ind with | mk a =>
-    induction b using Game.ind with | mk b =>
+    induction a using Game.ind with | mk a
+    induction b using Game.ind with | mk b
     rw [Game.mk_lt_mk] at hab
     obtain ⟨c, hac, hcb⟩ := exists_between hab
     exact ⟨.mk c, hac, hcb⟩
