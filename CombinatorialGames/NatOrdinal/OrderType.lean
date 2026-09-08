@@ -5,7 +5,8 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.NatOrdinal.Pow
+import Mathlib.Order.GameAdd
 
 /-!
 # Maximal order types of embeddings
@@ -17,10 +18,41 @@ universe u
 
 public section
 
-variable {α β γ : Type u}
+/-! ### For Mathlib -/
+
+section Preorder
+
+variable {α β : Type*}
+
+theorem Sum.swap_surjective : Function.Surjective (α := α ⊕ β) Sum.swap :=
+  Sum.swap_leftInverse.surjective
+
+variable [Preorder α] [Preorder β]
+
+theorem Monotone.rangeFactorization {f : α → β} (hf : Monotone f) :
+    Monotone (rangeFactorization f) :=
+  fun _ _ h ↦ hf h
+
+theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap := by
+  rintro (a | a) (b | b) (hab | hab)
+  · exact Sum.inr_mono hab
+  · exact Sum.inl_mono hab
+
+theorem Equiv.emptySum_monotone [IsEmpty α] : Monotone (Equiv.emptySum α β) := by
+  simp [Monotone]
+
+theorem Equiv.sumEmpty_monotone [IsEmpty β] : Monotone (Equiv.sumEmpty α β) := by
+  simp [Monotone]
+
+end Preorder
+
+section LinearOrder
+
+variable {α β γ : Type*}
   [LinearOrder α] [LinearOrder β] [LinearOrder γ]
   [WellFoundedLT α] [WellFoundedLT β] [WellFoundedLT γ]
 
+-- #43588
 instance : WellFoundedLT (α ⊕ₗ β) :=
   have H : IsWellOrder _ (Sum.Lex (· < · : α → _) (· < · : β → _)) := inferInstance
   ⟨H.wf⟩
@@ -42,6 +74,11 @@ def orderIsoInsert {s : Set α} [DecidablePred (· ∈ s)] {a : α} (ha : ∀ b 
 
 namespace Ordinal
 
+@[simp]
+theorem type_lt_sum_lex {α β : Type u} [LinearOrder α] [LinearOrder β]
+    [WellFoundedLT α] [WellFoundedLT β] : typeLT (α ⊕ₗ β) = typeLT α + typeLT β :=
+  rfl
+
 theorem type_insert {s : Set α} {a : α} (ha : ∀ b ∈ s, b < a) :
     typeLT (insert a s :) = typeLT s + 1 := by
   classical exact (orderIsoInsert ha).ordinalType_congr
@@ -58,9 +95,28 @@ theorem type_le_iff_forall {x : Ordinal} :
     by_contra! hx
     simpa using h (enum (· < ·) ⟨x, hx⟩)
 
+theorem exists_orderIso_sum {α : Type u} [LinearOrder α] [WellFoundedLT α]
+    {x : Ordinal} (hx : x ≤ typeLT α) :
+    ∃ (β : Type u) (_ : LinearOrder β) (_ : WellFoundedLT β)
+      (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ)
+      (_ : β ⊕ₗ γ ≃o α), typeLT β = x := by
+  obtain rfl | hx := hx.eq_or_lt
+  · exact ⟨α, inferInstance, inferInstance, PEmpty, inferInstance, inferInstance,
+      OrderIso.sumLexEmpty .., rfl⟩
+  · refine ⟨_, inferInstance, inferInstance, _, inferInstance, inferInstance,
+      OrderIso.sumLexIioIci (enum _ ⟨x, hx⟩), ?_⟩
+    simp
+
 end Ordinal
+end LinearOrder
+
+/-! ### Sum embeddings -/
 
 namespace NatOrdinal
+
+variable {α β γ : Type u}
+  [LinearOrder α] [LinearOrder β] [LinearOrder γ]
+  [WellFoundedLT α] [WellFoundedLT β] [WellFoundedLT γ]
 
 theorem type_sum_embedding_le {f : α ⊕ β → γ} (hf : Monotone f) (hfs : f.Surjective) :
     NatOrdinal.of (typeLT γ) ≤ .of (typeLT α) + .of (typeLT β) := by
@@ -96,6 +152,67 @@ theorem type_sum_embedding_le {f : α ⊕ β → γ} (hf : Monotone f) (hfs : f.
     · exact ⟨.inl ⟨a, hx⟩, rfl⟩
     · exact ⟨.inr ⟨b, hx⟩, rfl⟩
   · rfl
+
+theorem type_sum_embedding_range_le {f : α ⊕ β → γ} (hf : Monotone f) :
+    NatOrdinal.of (typeLT (range f)) ≤ .of (typeLT α) + .of (typeLT β) :=
+  type_sum_embedding_le hf.rangeFactorization rangeFactorization_surjective
+
+theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
+    [WellFoundedLT α] [WellFoundedLT β] :
+    ∃ (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ),
+      .of (typeLT α) + .of (typeLT β) = NatOrdinal.of (typeLT γ) ∧
+      ∃ f : α ⊕ β →o γ, Function.Surjective f := by
+  induction H : NatOrdinal.of (typeLT α) + .of (typeLT β) using WellFoundedLT.induction
+    generalizing α β with | ind s IH
+  subst H
+  have H {α' β' : Type u} [LinearOrder α'] [LinearOrder β']
+      [WellFoundedLT α'] [WellFoundedLT β']
+      (H : NatOrdinal.of (typeLT α') + .of (typeLT β') = .of (typeLT α) + .of (typeLT β))
+      (hle : typeLT β' ≤ typeLT α') :
+      ∃ (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ),
+        .of (typeLT α') + .of (typeLT β') = NatOrdinal.of (typeLT γ) ∧
+        ∃ f : α' ⊕ β' →o γ, Function.Surjective f := by
+    obtain hα₀ | hα₀ := eq_or_ne (typeLT α') 0
+    · rw [type_eq_zero_iff_isEmpty] at hα₀
+      exact ⟨β', ‹_›, ‹_›, by simpa, ⟨_, Equiv.emptySum_monotone⟩, Equiv.surjective _⟩
+    obtain hβ₀ | hβ₀ := eq_or_ne (typeLT β') 0
+    · rw [type_eq_zero_iff_isEmpty] at hβ₀
+      exact ⟨α', ‹_›, ‹_›, by simpa, ⟨_, Equiv.sumEmpty_monotone⟩, Equiv.surjective _⟩
+    obtain ⟨γ, _, _, δ, _, _, e, hγ⟩ := exists_orderIso_sum (opow_log_le_self ω hα₀)
+    have hδ : typeLT δ < typeLT α' := by
+      have := e.ordinalType_congr
+      rw [type_lt_sum_lex, hγ] at this
+      rw [← sub_eq_of_add_eq this]
+      exact sub_omega0_opow_log_lt hα₀
+    obtain ⟨ε, _, _, hε, ⟨f, hf⟩, hf'⟩ := IH _ (by simpa [← H]) δ β' rfl
+    let g : α' ⊕ β' → γ ⊕ₗ ε := toLex ∘ Sum.map id (f ∘ ofLex) ∘ ofLex ∘
+      OrderIso.sumLexAssoc γ δ β' ∘ toLex ∘ Sum.map e.symm id
+    refine ⟨_, inferInstance, inferInstance, ?_, ⟨g, ?_⟩, ?_⟩
+    · have hα' : of (typeLT α') < ω^ (of (log ω (typeLT α')) + 1) := by
+        rw [of_lt_iff, val_wpow, val_add_one, val_of]
+        exact lt_opow_succ_log_self one_lt_omega0 _
+      have hδ' : of (typeLT δ) < ω^ (of (log ω (typeLT α')) + 1) := (of.strictMono hδ).trans hα'
+      rwa [type_lt_sum_lex, hγ, ← val_of (log _ _), ← val_of (typeLT ε), ← wpow_add_of_lt,
+        ← hε, ← add_assoc, add_left_inj, wpow_add_of_lt, val_of, val_of, ← hγ,
+        ← e.ordinalType_congr, type_lt_sum_lex]
+      · rw [← hε]
+        exact add_lt_wpow hδ' ((of.monotone hle).trans_lt hα')
+    · rintro (x | x) (y | y) (hxy | hxy)
+      · unfold g
+        revert x y
+        simp_rw [e.symm.forall_congr_left]
+        simpa using fun x y hxy ↦ hf (Sum.inl_mono hxy)
+      · simpa [g] using hf (Sum.inr_mono hxy)
+    · apply toLex.surjective.comp <| Function.Surjective.comp _
+        (ofLex.surjective.comp <| (Equiv.surjective _).comp <| toLex.surjective.comp _) <;>
+        rw [Sum.map_surjective]
+      · exact ⟨Function.surjective_id, hf'⟩
+      · exact ⟨e.symm.surjective, Function.surjective_id⟩
+  obtain hle | hle := le_total (typeLT α) (typeLT β)
+  · obtain ⟨γ, _, _, hγ, ⟨f, hf⟩, hf'⟩ := H (add_comm ..) hle
+    rw [add_comm] at hγ
+    exact ⟨γ, ‹_›, ‹_›, hγ, ⟨_, hf.comp Sum.swap_monotone⟩, hf'.comp Sum.swap_surjective⟩
+  · exact H rfl hle
 
 end NatOrdinal
 end
