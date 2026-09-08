@@ -143,7 +143,7 @@ open Classical in
 /-- The function which will be shown to be either just an order embedding,
 or potentially an order isomorphism if the cardinalities of β and α are equal. -/
 @[reducible]
-private noncomputable def f [Nonempty α] (h : IsEta #α β) (hord : (#α).ord = Ordinal.type r)
+private noncomputable def f (h : IsEta #α β) (hord : (#α).ord = Ordinal.type r)
     (s : β → β → Prop) [hs : IsWellOrder β s] : α → β :=
   hr.wf.fix fun a g ↦
     if hsep : ∀ x ∈ lo a g, ∀ y ∈ hi a g, x < y then
@@ -151,7 +151,7 @@ private noncomputable def f [Nonempty α] (h : IsEta #α β) (hord : (#α).ord =
         (h.exists_between (mk_lo_lt hord a g) (mk_hi_lt hord a g) hsep)
     else (h.nonempty <| have : Nonempty α := ⟨a⟩; mk_ne_zero α).some
 
-variable [Nonempty α] {s : β → β → Prop} [hs : IsWellOrder β s] {h : IsEta #α β}
+variable {s : β → β → Prop} [hs : IsWellOrder β s] {h : IsEta #α β}
   {hord : (#α).ord = Ordinal.type r}
 
 open Classical in
@@ -163,7 +163,7 @@ private theorem f_def (a : α) :
           {z | (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
             ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y}
           (h.exists_between (mk_lo_lt hord a _) (mk_hi_lt hord a _) hsep)
-      else (h.nonempty <| mk_ne_zero α).some :=
+      else (have : Nonempty α := ⟨a⟩; h.nonempty <| mk_ne_zero α).some :=
   hr.wf.fix_eq _ a
 
 private theorem f_mem (a : α)
@@ -171,7 +171,7 @@ private theorem f_mem (a : α)
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, x < y) :
     (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < h.f hord s a) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, h.f hord s a < y := by
-  rw [f_def a, dif_pos hsep]
+  rw [f_def a, dite_eq_left hsep]
   exact hs.wf.min_mem
     {z | (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y} _
@@ -200,7 +200,7 @@ private theorem not_lt_f {z : β} (a : α)
     (hz : (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y) :
     ¬s z (h.f hord s a) := by
-  rw [f_def a, dif_pos (f_sep a)]
+  rw [f_def a, dite_eq_left (f_sep a)]
   exact hs.wf.not_lt_min _ hz
 
 private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.type s)

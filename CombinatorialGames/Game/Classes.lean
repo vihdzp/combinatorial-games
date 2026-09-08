@@ -8,7 +8,7 @@ module
 public import CombinatorialGames.Game.IGame
 public meta import CombinatorialGames.Tactic.AddInstances
 
-import Mathlib.Data.Finite.Prod
+import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
 
 /-!
@@ -417,7 +417,7 @@ protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) :
   · rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
     any_goals simpa using left_lt_right ha hb
     all_goals
-      trans (x + y)
+      trans x + y
       · simpa using left_lt ha
       · simpa using lt_right hb
   · rintro p _ (⟨z, hz, rfl⟩ | ⟨z, hz, rfl⟩)
@@ -426,7 +426,7 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 protected instance sub (x y : IGame) [Numeric x] [Numeric y] : Numeric (x - y) :=
-  inferInstanceAs (Numeric (x + -y))
+  .add ..
 
 protected instance natCast : ∀ n : ℕ, Numeric n
   | 0 => inferInstanceAs (Numeric 0)

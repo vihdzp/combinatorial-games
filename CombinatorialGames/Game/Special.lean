@@ -44,6 +44,8 @@ theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
 theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
+@[simp] theorem star_ne_zero : ⋆ ≠ 0 := star_fuzzy_zero.ne
+@[simp] theorem zero_ne_star : 0 ≠ ⋆ := zero_fuzzy_star.ne
 @[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
 @[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
@@ -54,6 +56,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
 protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+@[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
 /-! ### Half -/
 
@@ -149,6 +152,21 @@ theorem short_tiny_iff {x : IGame} : Short (⧾x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
 
+theorem tiny_antitone : Antitone tiny := by
+  intro x y hxy
+  apply IGame.le_of_forall_moves_left_lf
+  · rw [leftMoves_tiny, Set.forall_mem_singleton]
+    exact left_lf (by simp)
+  · rw [rightMoves_tiny, Set.forall_mem_singleton, rightMoves_tiny, Set.exists_mem_singleton]
+    apply IGame.le_of_forall_moves_left_lf
+    · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+      exact left_lf (by simp)
+    · rw [rightMoves_ofSets, Set.forall_mem_singleton, rightMoves_ofSets, Set.exists_mem_singleton]
+      exact IGame.neg_le_neg_iff.2 hxy
+
+theorem tiny_congr {x y : IGame} (hxy : x ≈ y) : ⧾x ≈ ⧾y :=
+  ⟨tiny_antitone hxy.ge, tiny_antitone hxy.le⟩
+
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
   !{{!{{x} | {0}}} | {0}}
@@ -188,6 +206,14 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 
 @[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
 @[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
+
+theorem miny_monotone : Monotone miny := by
+  intro x y hxy
+  rw [← neg_tiny, ← neg_tiny, IGame.neg_le_neg_iff]
+  exact tiny_antitone hxy
+
+theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
+  ⟨miny_monotone hxy.le, miny_monotone hxy.ge⟩
 
 /-! ### Switches -/
 
