@@ -774,36 +774,12 @@ private theorem add_assoc' (x y z : IGame) : x + y + z = x + (y + z) := by
 termination_by (x, y, z)
 decreasing_by igame_wf
 
-private def nsmul' (n : Nat) (x : IGame) : IGame :=
-  match n with
-  | 0 => 0
-  | n + 1 => !{fun p => (nsmul' n x + ·) '' x.moves p}
-
-@[no_expose]
-instance : NSMul IGame where
-  nsmul := nsmul'
-
-private theorem nsmul_zero' (x : IGame) : 0 • x = 0 := rfl
-private theorem nsmul_succ' (n : Nat) (x : IGame) : (n + 1) • x = n • x + x := by
-  change nsmul' (n + 1) x = nsmul' n x + x
-  induction n with
-  | zero => simp [nsmul', (add_comm' 0 _).trans (add_zero' _)]
-  | succ n ih =>
-    refine ext fun p => ?_
-    rw [nsmul', moves_ofSets, moves_add, eq_comm, Set.union_eq_right, Set.image_subset_iff]
-    intro c hc
-    rw [nsmul', moves_ofSets, Set.mem_image] at hc
-    obtain ⟨c, hc, rfl⟩ := hc
-    rw [Set.mem_preimage, ih, add_assoc', add_comm' c x, ← add_assoc']
-    exact Set.mem_image_of_mem _ hc
-
 instance : AddCommMonoid IGame where
   add_zero := by exact add_zero'
   zero_add _ := by exact add_comm' .. ▸ add_zero' _
   add_comm := by exact add_comm'
   add_assoc := by exact add_assoc'
-  nsmul_zero := by exact nsmul_zero'
-  nsmul_succ := by exact nsmul_succ'
+  nsmul := nsmulRec
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
