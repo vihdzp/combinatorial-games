@@ -10,6 +10,21 @@ import Mathlib.Order.GameAdd
 
 /-!
 # Maximal order types of embeddings
+
+This file is devoted to two theorems, which also serve as characterizations of the natural sum and
+product. Let `α`, `β`, `γ` be well-orders.
+
+- Given the existence of a monotone, surjective map `f : α ⊕ β → γ`, the order type of `γ` is at
+  most the natural sum of the order types of `α` and `β`, and the inequality is strict.
+- Given the existence of a monotone, surjective map `f : α × β → γ`, the order type of `γ` is at
+  most the natural product of the order types of `α` and `β`, and the inequality is strict.
+
+## Main statements
+
+- `type_sum_embedding_le`: inequality for the sum case
+- `exists_sum_embedding`: equality for the sum case
+
+TODO: prove product case
 -/
 
 open Ordinal Order Set
@@ -74,6 +89,7 @@ def orderIsoInsert {s : Set α} [DecidablePred (· ∈ s)] {a : α} (ha : ∀ b 
 
 namespace Ordinal
 
+-- #43588
 @[simp]
 theorem type_lt_sum_lex {α β : Type u} [LinearOrder α] [LinearOrder β]
     [WellFoundedLT α] [WellFoundedLT β] : typeLT (α ⊕ₗ β) = typeLT α + typeLT β :=
@@ -165,6 +181,7 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
   induction H : NatOrdinal.of (typeLT α) + .of (typeLT β) using WellFoundedLT.induction
     generalizing α β with | ind s IH
   subst H
+  -- `wlog` doesn't play well with `induction`, unfortunately.
   have H {α' β' : Type u} [LinearOrder α'] [LinearOrder β']
       [WellFoundedLT α'] [WellFoundedLT β']
       (H : NatOrdinal.of (typeLT α') + .of (typeLT β') = .of (typeLT α) + .of (typeLT β))
@@ -172,12 +189,10 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
       ∃ (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ),
         .of (typeLT α') + .of (typeLT β') = NatOrdinal.of (typeLT γ) ∧
         ∃ f : α' ⊕ β' →o γ, Function.Surjective f := by
-    obtain hα₀ | hα₀ := eq_or_ne (typeLT α') 0
-    · rw [type_eq_zero_iff_isEmpty] at hα₀
-      exact ⟨β', ‹_›, ‹_›, by simpa, ⟨_, Equiv.emptySum_monotone⟩, Equiv.surjective _⟩
     obtain hβ₀ | hβ₀ := eq_or_ne (typeLT β') 0
     · rw [type_eq_zero_iff_isEmpty] at hβ₀
       exact ⟨α', ‹_›, ‹_›, by simpa, ⟨_, Equiv.sumEmpty_monotone⟩, Equiv.surjective _⟩
+    have hα₀ := (hβ₀.pos.trans_le hle).ne_zero
     obtain ⟨γ, _, _, δ, _, _, e, hγ⟩ := exists_orderIso_sum (opow_log_le_self ω hα₀)
     have hδ : typeLT δ < typeLT α' := by
       have := e.ordinalType_congr
