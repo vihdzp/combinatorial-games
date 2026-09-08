@@ -775,10 +775,10 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
-  add_zero := private add_zero'
-  zero_add _ := private add_comm' .. ▸ add_zero' _
-  add_comm := private add_comm'
-  add_assoc := private add_assoc'
+  add_zero := by exact add_zero'
+  zero_add _ := by exact add_comm' .. ▸ add_zero' _
+  add_comm := by exact add_comm'
+  add_assoc := by exact add_assoc'
   nsmul := nsmulRec
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
@@ -790,6 +790,16 @@ instance : SubNegMonoid IGame where
 theorem moves_sub (p : Player) (x y : IGame) :
     (x - y).moves p = (· - y) '' x.moves p ∪ (x + ·) '' (-y.moves (-p)) := by
   simp [sub_eq_add_neg]
+
+theorem moves_succ_nsmul (p : Player) (n : Nat) (x : IGame) :
+    ((n + 1) • x).moves p = (n • x + ·) '' x.moves p := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    rw [succ_nsmul, moves_add, IH, union_eq_right]
+    simp_rw [image_subset_iff, subset_def, mem_preimage, mem_image]
+    refine fun y hy ↦ ⟨y, hy, ?_⟩
+    rw [succ_nsmul, add_right_comm]
 
 theorem sub_left_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ y.moves p) (z : IGame) :
     z - x ∈ (z - y).moves (-p) := by
