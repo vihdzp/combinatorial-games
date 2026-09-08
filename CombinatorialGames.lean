@@ -48,7 +48,6 @@ public import CombinatorialGames.Surreal.Dyadic
 public import CombinatorialGames.Surreal.HahnSeries.Basic
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
-public import CombinatorialGames.Surreal.Omnific.Basic
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
