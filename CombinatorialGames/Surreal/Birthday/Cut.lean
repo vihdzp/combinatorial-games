@@ -33,11 +33,6 @@ theorem WithTop.isSuccPrelimit_coe_iff {α : Type*} [Preorder α] {x : α} :
     Order.IsSuccPrelimit (WithTop.some x) ↔ Order.IsSuccPrelimit x := by
   simp [Order.IsSuccPrelimit, WithTop.forall]
 
-theorem Set.forall_mem_iUnion {α : Type*} {ι : Sort*} {p : α → Prop} {f : ι → Set α} :
-    (∀ x ∈ ⋃ i, f i, p x) ↔ (∀ i, ∀ x ∈ f i, p x) := by
-  simp_rw [mem_iUnion, forall_exists_index]
-  apply forall_comm
-
 end ForMathlib
 
 namespace Surreal.Cut
