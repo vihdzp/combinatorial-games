@@ -318,6 +318,11 @@ protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := b
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
+protected theorem wsubposition [Numeric x] (h : WSubposition y x) : Numeric y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact Numeric.subposition hy
+
 @[simp]
 protected instance zero : Numeric 0 := by
   rw [numeric_def]; simp

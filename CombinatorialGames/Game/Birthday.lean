@@ -76,6 +76,12 @@ theorem birthday_lt_of_subposition {x y : IGame} (hy : Subposition y x) :
   · exact birthday_lt_of_mem_moves hz
   · exact (ih p z hz hy).trans (birthday_lt_of_mem_moves hz)
 
+theorem birthday_le_of_wsubposition {x y : IGame} (hy : WSubposition y x) :
+    y.birthday ≤ x.birthday := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
+  · rfl
+  · exact (birthday_lt_of_subposition hy).le
+
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
