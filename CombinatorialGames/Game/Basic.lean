@@ -103,8 +103,8 @@ instance : AddCommGroupWithOne Game where
   add_comm := by rintro ⟨x⟩ ⟨y⟩; exact congr(mk $(add_comm _ _))
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact congr(mk $(add_assoc _ _ _))
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  nsmul_zero := by rintro ⟨a⟩; exact congr(mk $(zero_nsmul _))
-  nsmul_succ := by rintro n ⟨a⟩; exact congr(mk $(succ_nsmul _ _))
+  nsmul_zero := by rintro ⟨a⟩; rfl
+  nsmul_succ := by rintro n ⟨a⟩; rfl
   zsmul_zero' := by rintro ⟨a⟩; rfl
   zsmul_succ' := by rintro n ⟨a⟩; rfl
   zsmul_neg' := by rintro n ⟨a⟩; rfl
