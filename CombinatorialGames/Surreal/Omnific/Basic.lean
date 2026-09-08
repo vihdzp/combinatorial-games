@@ -158,7 +158,7 @@ theorem IsOmnific.lt_one_iff_nonpos {x : Surreal} (h : IsOmnific x) : x < 1 ↔ 
   simpa using h.one_le_iff_pos
 
 /-- The subring of `IsOmnific` surreal numbers. -/
-def Omnific : Subring Surreal where
+def omnific : Subring Surreal where
   carrier := {x | IsOmnific x}
   zero_mem' := .zero
   one_mem' := .one
@@ -166,8 +166,9 @@ def Omnific : Subring Surreal where
   add_mem' := .add
   mul_mem' := .mul
 
-@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).2
-@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).2
+@[simp] theorem mem_omnific_iff {x : Surreal} : x ∈ omnific ↔ IsOmnific x := .rfl
+@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).2
+@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).2
 
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where
