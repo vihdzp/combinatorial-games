@@ -47,7 +47,7 @@ theorem round_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.round r = x :=
 
 theorem round_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
     (mk x).round (mk r) = @mk !{{x - r} | {x + r}}
-      (.mk (by simpa [← Surreal.mk_lt_mk]) (by aesop)) := by
+      (.mk (by simpa [← Surreal.mk_lt_mk]) (by simp [Numeric.add, Numeric.sub])) := by
   rw [round_of_pos hr, mk_ofSets]
   congr <;> aesop
 
