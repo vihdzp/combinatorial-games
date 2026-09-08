@@ -27,14 +27,6 @@ open Set
 
 public noncomputable section
 
-section ForMathlib
-
-theorem WithTop.isSuccPrelimit_coe_iff {α : Type*} [Preorder α] {x : α} :
-    Order.IsSuccPrelimit (WithTop.some x) ↔ Order.IsSuccPrelimit x := by
-  simp [Order.IsSuccPrelimit, WithTop.forall]
-
-end ForMathlib
-
 namespace Surreal.Cut
 
 /-! ### Birthday of cuts -/
