@@ -25,16 +25,6 @@ universe u
 
 @[expose] public noncomputable section
 
--- mathlib PR #42549
-theorem Set.forall_mem_singleton {α : Type*} {p : α → Prop} {a : α} :
-    (∀ x ∈ ({a} : Set α), p x) ↔ p a := by
-  simp
-
--- mathlib PR #42549
-theorem Set.exists_mem_singleton {α : Type*} {p : α → Prop} {a : α} :
-    (∃ x ∈ ({a} : Set α), p x) ↔ p a := by
-  simp
-
 namespace IGame
 
 /-! ### Star -/
