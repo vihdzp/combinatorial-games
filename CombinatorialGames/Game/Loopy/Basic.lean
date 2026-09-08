@@ -13,15 +13,15 @@ import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
 import Mathlib.Algebra.Ring.Defs
-import Mathlib.Data.Countable.Small
+import Mathlib.Basic.Countable.Small
 
 /-!
 # Loopy games
 
 The standard notion of a game studied in combinatorial game theory is that of a terminating game,
 meaning that there exists no infinite sequence of moves. Loopy games relax this condition by
-allowing "self-refential" games, with the basic examples being `on = {on | }`, `off = { | off}`, and
-`dud = {dud | dud}`.
+allowing "self-referential" games, with the basic examples being `on = {on | }`, `off = { | off}`,
+and `dud = {dud | dud}`.
 
 In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
 it's simpler to define `LGame` as the coinductive type for the single constructor:
@@ -50,10 +50,6 @@ universe u v w
 variable {α : Type v} {β : Type w}
 
 /-! ### For Mathlib -/
-
-theorem Set.forall_mem_union {P : α → Prop} {s t : Set α} :
-    (∀ x ∈ s ∪ t, P x) ↔ (∀ x ∈ s, P x) ∧ (∀ x ∈ t, P x) := by
-  simp_rw [mem_union, or_imp, forall_and]
 
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=

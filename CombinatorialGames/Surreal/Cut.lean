@@ -644,7 +644,7 @@ theorem recOn'_leftSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : Su
     (leftSurreal : ∀ y, motive (Cut.leftSurreal y))
     (rightSurreal : ∀ y, motive (Cut.rightSurreal y)) :
     recOn' (motive := motive) (Cut.leftSurreal y) leftSurreal rightSurreal = leftSurreal y := by
-  rw [recOn', dif_pos (by simp)]
+  rw [recOn', dite_eq_left (by simp)]
   generalize_proofs _ H
   rw [cast_eq_iff_heq]
   congr
@@ -655,7 +655,7 @@ theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : S
     (leftSurreal : ∀ y, motive (Cut.leftSurreal y))
     (rightSurreal : ∀ y, motive (Cut.rightSurreal y)) :
     recOn' (motive := motive) (Cut.rightSurreal y) leftSurreal rightSurreal = rightSurreal y := by
-  rw [recOn', dif_neg (by simp)]
+  rw [recOn', dite_eq_right (by simp)]
   generalize_proofs _ H
   rw [cast_eq_iff_heq]
   congr
