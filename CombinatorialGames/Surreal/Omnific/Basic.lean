@@ -40,10 +40,10 @@ def round (x r : Surreal) : Surreal :=
   if hr : 0 < r then !{{x - r} | {x + r}} else x
 
 theorem round_of_pos {x r : Surreal} (hr : 0 < r) : x.round r = !{{x - r} | {x + r}} :=
-  dif_pos hr
+  dite_eq_left hr
 
 theorem round_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.round r = x :=
-  dif_neg hr.not_gt
+  dite_eq_right hr.not_gt
 
 theorem round_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
     (mk x).round (mk r) = @mk !{{x - r} | {x + r}}
