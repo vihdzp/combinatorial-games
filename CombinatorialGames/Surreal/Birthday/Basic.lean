@@ -10,6 +10,12 @@ public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso
 
+/-!
+# Birthday of a surreal number
+
+TODO: write a better docstring
+-/
+
 universe u
 
 public noncomputable section
@@ -70,6 +76,12 @@ theorem birthday_toSurreal (o : NatOrdinal) : birthday o.toSurreal = o := by
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
   simpa using birthday_toSurreal n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
@@ -114,7 +126,22 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
   exact birthday_mk_le _
 
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
-  simpa using birthday_add_le x (-y)
+  simpa [sub_eq_add_neg] using birthday_add_le x (-y)
+
+theorem birthday_eq_one {x : Surreal} : birthday x = 1 ↔ x = 1 ∨ x = -1 := by
+  constructor
+  · intro hx
+    obtain ⟨x, nx, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+    rw [← hxb, IGame.birthday_eq_one] at hx
+    obtain rfl | rfl | rfl := hx
+    · simp
+    · simp
+    · absurd nx
+      exact not_numeric_star
+  · rintro (rfl | rfl) <;> simp
+
+theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 := by
+  rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
 
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
@@ -138,13 +165,5 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
   simp +contextual [le_of_lt]
-
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
 
 end Surreal

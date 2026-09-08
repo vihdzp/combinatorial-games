@@ -8,7 +8,7 @@ module
 public import CombinatorialGames.Game.IGame
 public meta import CombinatorialGames.Tactic.AddInstances
 
-import Mathlib.Data.Finite.Prod
+import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
 
 /-!
@@ -164,47 +164,82 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
 
-/-- The product instance is proven in `Game.Impartial.Grundy`. -/
-theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x := by
-  rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
+/- The product instance is proven in `Game.Impartial.Multiplication`. -/
+
+theorem _root_.le_comm_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : x ≤ y ↔ y ≤ x := by
+  rw [← IGame.neg_le_neg_iff, hy.le_congr hx]
+
+theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x :=
+  le_comm_of_neg_equiv (neg_equiv x) (neg_equiv y)
+
+theorem _root_.not_lt_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : ¬x < y := by
+  apply (lt_asymm · ?_)
+  rwa [← IGame.neg_lt_neg_iff, hx.lt_congr hy]
 
 @[simp]
-theorem not_lt : ¬x < y := by
-  apply (lt_asymm · ?_)
-  rwa [← IGame.neg_lt_neg_iff, (neg_equiv x).lt_congr (neg_equiv y)]
+theorem not_lt : ¬x < y :=
+  not_lt_of_neg_equiv (neg_equiv x) (neg_equiv y)
+
+theorem _root_.equiv_or_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    x ≈ y ∨ x ‖ y := by
+  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
+  · cases not_lt_of_neg_equiv hx hy h
+  · exact .inl h
+  · cases not_lt_of_neg_equiv hy hx h
+  · exact .inr h
 
 /-- By setting `y = 0`, we find that in an impartial game, either the first player always wins, or
 the second player always wins. -/
-theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y := by
-  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
-  · cases not_lt x y h
-  · exact .inl h
-  · cases not_lt y x h
-  · exact .inr h
+theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y :=
+  equiv_or_fuzzy_of_neg_equiv (neg_equiv x) (neg_equiv y)
 
 variable {x y}
 
+theorem _root_.not_equiv_iff_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    ¬x ≈ y ↔ x ‖ y :=
+  ⟨(equiv_or_fuzzy_of_neg_equiv hx hy).resolve_left, IncompRel.not_antisymmRel⟩
+
 @[simp]
 theorem not_equiv_iff : ¬ x ≈ y ↔ x ‖ y :=
-   ⟨(equiv_or_fuzzy x y).resolve_left, IncompRel.not_antisymmRel⟩
+  not_equiv_iff_of_neg_equiv (neg_equiv x) (neg_equiv y)
+
+theorem _root_.not_fuzzy_iff_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    ¬x ‖ y ↔ x ≈ y :=
+  not_iff_comm.1 (not_equiv_iff_of_neg_equiv hx hy)
 
 @[simp]
 theorem not_fuzzy_iff : ¬ x ‖ y ↔ x ≈ y :=
   not_iff_comm.1 not_equiv_iff
 
+theorem _root_.le_iff_equiv_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    x ≤ y ↔ x ≈ y :=
+  ⟨fun h ↦ ⟨h, (le_comm_of_neg_equiv hx hy).1 h⟩, And.left⟩
+
 @[simp]
 theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
   ⟨fun h ↦ ⟨h, le_comm.1 h⟩, And.left⟩
 
+theorem _root_.ge_iff_equiv_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    y ≤ x ↔ x ≈ y :=
+  (le_iff_equiv_of_neg_equiv hy hx).trans antisymmRel_comm
+
 theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
   ⟨fun h ↦ ⟨le_comm.2 h, h⟩, And.right⟩
+
+theorem _root_.lf_iff_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    x ⧏ y ↔ x ‖ y :=
+  (ge_iff_equiv_of_neg_equiv hx hy).not.trans (not_equiv_iff_of_neg_equiv hx hy)
+
+theorem _root_.gf_iff_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
+    y ⧏ x ↔ x ‖ y :=
+  (le_iff_equiv_of_neg_equiv hx hy).not.trans (not_equiv_iff_of_neg_equiv hx hy)
 
 theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
 theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
 
 theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
   have := hx.of_mem_moves hy
-  induction p with
+  cases p with
   | left => symm; simpa using left_lf hy
   | right => simpa using lf_right hy
 
@@ -216,7 +251,7 @@ private theorem equiv_iff_forall_fuzzy' :
 
 theorem equiv_iff_forall_fuzzy (p : Player) :
     x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
-  induction p with
+  cases p with
   | left => exact equiv_iff_forall_fuzzy'
   | right =>
     rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
@@ -278,7 +313,8 @@ elab "numeric" : tactic =>
 
 protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
@@ -330,7 +366,7 @@ protected theorem lt_or_ge (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ y �
   exact em _
 
 theorem not_fuzzy (x y : IGame) [Numeric x] [Numeric y] : ¬ x ‖ y := by
-  simpa [not_incompRel_iff_symmGen] using Numeric.le_total x y
+  simpa [not_incompRel_iff_symmGen, Relation.SymmGen] using Numeric.le_total x y
 
 theorem lt_or_equiv_or_gt (x y : IGame) [Numeric x] [Numeric y] : x < y ∨ x ≈ y ∨ y < x := by
   simp_rw [← Numeric.not_le]; tauto
@@ -398,6 +434,16 @@ protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
 
+protected instance nsmul (n : Nat) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [succ_nsmul]; exact .add (n • x) x
+
+protected instance zsmul (n : Int) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg ih n => rw [neg_zsmul]; infer_instance
+
 end Numeric
 
 /-! ### Short games -/
@@ -431,7 +477,8 @@ elab "short" : tactic =>
 
 protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
-  obtain ⟨p, z, hz, rfl | hy⟩ := subposition_iff_exists.1 h
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
@@ -440,7 +487,7 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
   ext
-  rw [Set.mem_setOf, subposition_iff_exists]
+  rw [Set.mem_ofPred, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=

@@ -105,7 +105,7 @@ theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
   refine ⟨fun hs ↦ ?_, fun _ ↦ NatOrdinal.withTop_sSup_lt_top.2 <| by simp⟩
   obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hs.ne
   refine small_subset (s := {x : Surreal | x.birthday < a}) fun x hx ↦ ?_
-  rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
+  rw [mem_ofPred, ← WithTop.coe_lt_coe, ha]
   exact birthday_lt_sSup_birthday hx
 
 theorem sSup_birthday_eq_top_iff {s : Set Surreal.{u}} :
@@ -153,6 +153,9 @@ theorem birthday_leftSurreal (x : Surreal) : (leftSurreal x).birthday = x.birthd
 @[simp]
 theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birthday + 1 := by
   simpa [← neg_rightSurreal] using birthday_leftSurreal (-x)
+
+theorem birthday_of_numeric (x : Cut) [hx : x.Numeric] : x.birthday = x.toSurreal.birthday + 1 := by
+  cases hx <;> simp
 
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
