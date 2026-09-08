@@ -20,10 +20,6 @@ universe u
 
 public noncomputable section
 
--- mathlib PR #42549
-theorem Set.forall_mem_singleton {α : Type*} {p : α → Prop} {x : α} :
-    (∀ z ∈ ({x} : Set α), p z) ↔ p x := by simp
-
 namespace Surreal
 open IGame NatOrdinal Order Set
 
