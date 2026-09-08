@@ -817,8 +817,13 @@ theorem moves_sub (p : Player) (x y : IGame) :
 
 theorem moves_succ_nsmul (p : Player) (n : Nat) (x : IGame) :
     ((n + 1) • x).moves p = (n • x + ·) '' x.moves p := by
-  change (nsmul' (n + 1) x).moves p = (nsmul' n x + ·) '' x.moves p
-  rw [nsmul', moves_ofSets]
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    rw [succ_nsmul, moves_add, IH, union_eq_right]
+    simp_rw [image_subset_iff, subset_def, mem_preimage, mem_image]
+    refine fun y hy ↦ ⟨y, hy, ?_⟩
+    rw [succ_nsmul, add_right_comm]
 
 theorem sub_left_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ y.moves p) (z : IGame) :
     z - x ∈ (z - y).moves (-p) := by
