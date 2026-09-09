@@ -48,10 +48,9 @@ theorem Monotone.rangeFactorization {f : α → β} (hf : Monotone f) :
     Monotone (rangeFactorization f) :=
   fun _ _ h ↦ hf h
 
-theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap := by
-  rintro (a | a) (b | b) (hab | hab)
-  · exact Sum.inr_mono hab
-  · exact Sum.inl_mono hab
+-- #43598
+theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap :=
+  fun _ _ ↦ swap_le_swap_iff.2
 
 theorem Equiv.emptySum_monotone [IsEmpty α] : Monotone (Equiv.emptySum α β) := by
   simp [Monotone]
