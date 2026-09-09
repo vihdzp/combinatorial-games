@@ -94,6 +94,11 @@ theorem type_lt_sum_lex {α β : Type u} [LinearOrder α] [LinearOrder β]
     [WellFoundedLT α] [WellFoundedLT β] : typeLT (α ⊕ₗ β) = typeLT α + typeLT β :=
   rfl
 
+@[simp]
+theorem type_univ {α : Type*} [LinearOrder α] [WellFoundedLT α] :
+    typeLT (univ (α := α)) = typeLT α :=
+  OrderIso.Set.univ.ordinalType_congr
+
 theorem type_insert {s : Set α} {a : α} (ha : ∀ b ∈ s, b < a) :
     typeLT (insert a s :) = typeLT s + 1 := by
   classical exact (orderIsoInsert ha).ordinalType_congr
@@ -174,6 +179,17 @@ theorem type_sum_embedding_range_le {f : α ⊕ β → γ} (hf : Monotone f) :
     NatOrdinal.of (typeLT (range f)) ≤ .of (typeLT α) + .of (typeLT β) :=
   type_sum_embedding_le hf.rangeFactorization rangeFactorization_surjective
 
+theorem type_union_le (s t : Set α) :
+    NatOrdinal.of (typeLT (s ∪ t :)) ≤ .of (typeLT s) + .of (typeLT t) := by
+  let f (x : s ⊕ t) : (s ∪ t :) :=
+    x.rec (fun y ↦ ⟨y, subset_union_left y.2⟩) (fun y ↦ ⟨y, subset_union_right y.2⟩)
+  apply type_sum_embedding_le (f := f) <;> intro <;> aesop
+
+theorem le_type_add_of_codisjoint {s t : Set α} (h : Codisjoint s t) :
+    NatOrdinal.of (typeLT α) ≤ .of (typeLT s) + .of (typeLT t) := by
+  rw [← type_univ, ← top_eq_univ, ← codisjoint_iff.1 h]
+  exact type_union_le s t
+
 theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
     [WellFoundedLT α] [WellFoundedLT β] :
     ∃ (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ),
@@ -232,16 +248,117 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
 
 /-! ### Product embeddings -/
 
-theorem type_prod_embedding_le {f : α × β → γ} (hf : Monotone f) (hfs : f.Surjective) :
+theorem type_prod_embedding_le {α β γ : Type u} [LinearOrder α] [LinearOrder β] [LinearOrder γ]
+    [WellFoundedLT α] [WellFoundedLT β] [WellFoundedLT γ]
+    {f : α × β → γ} (hf : Monotone f) (hfs : f.Surjective) :
     NatOrdinal.of (typeLT γ) ≤ .of (typeLT α) * .of (typeLT β) := by
-  induction hγ : typeLT γ using WellFoundedLT.induction generalizing α β γ with | ind c IH
-  subst hγ
+  obtain hα₀ | hα₀ := eq_or_ne (typeLT α) 0
+  · rw [type_eq_zero_iff_isEmpty] at hα₀
+    have := hfs.isEmpty
+    simp [type_eq_zero_of_empty]
+  obtain hβ₀ | hβ₀ := eq_or_ne (typeLT β) 0
+  · rw [type_eq_zero_iff_isEmpty] at hβ₀
+    have := hfs.isEmpty
+    simp [type_eq_zero_of_empty]
+  have hα := opow_log_le_self ω hα₀
+  have hβ := opow_log_le_self ω hβ₀
+  obtain ⟨β₁, _, _, β₂, _, _, eβ, hβ₁⟩ := exists_orderIso_sum hβ
+  obtain ⟨α₁, _, _, α₂, _, _, eα, hα₁⟩ := exists_orderIso_sum hα
+  have heα : typeLT α = typeLT α₁ + typeLT α₂ := eα.ordinalType_congr.symm
+  have heβ : typeLT β = typeLT β₁ + typeLT β₂ := eβ.ordinalType_congr.symm
+  obtain hα | hα := (hα₁ ▸ hα).lt_or_eq
+  · have : typeLT α₂ < typeLT α := by
+      rw [hα₁] at heα
+      rw [← Ordinal.sub_eq_of_add_eq heα.symm]
+      exact sub_omega0_opow_log_lt hα₀
+    rw [heα, hα₁, ← val_of (log _ _), ← val_of (typeLT α₂), ← wpow_add_of_lt, add_mul,
+      ← of_omega0_opow, ← hα₁]
+    · let e : α₁ × β ⊕ α₂ × β ≃ α × β :=
+        (Equiv.sumProdDistrib α₁ α₂ β).symm.trans (Equiv.prodCongr (toLex.trans eα) (.refl _))
+      have he : Monotone e := by rintro (x | x) (y | y) (hxy | hxy) <;> simpa [e]
+      apply (le_type_add_of_codisjoint
+        (s := (f ∘ e) '' range Sum.inl) (t := (f ∘ e) '' range Sum.inr) _).trans
+      · apply add_le_add
+        all_goals
+          rw [← range_comp, Function.comp_assoc]
+          apply type_prod_embedding_le _ rangeFactorization_surjective
+          apply (hf.comp (he.comp _)).rangeFactorization
+        · exact Sum.inl_mono
+        · exact Sum.inr_mono
+      · rw [codisjoint_iff]
+        dsimp
+        rw [← image_union, range_inl_union_range_inr, image_univ]
+        simpa using hfs.range_eq
+    · rw [of_lt_iff, val_wpow, val_add_one, val_of]
+      apply (lt_opow_succ_log_self one_lt_omega0 _).trans_le'
+      rw [heα]
+      exact self_le_add_left ..
+  obtain hβ | hβ := (hβ₁ ▸ hβ).lt_or_eq
+  · have : typeLT β₂ < typeLT β := by
+      rw [hβ₁] at heβ
+      rw [← Ordinal.sub_eq_of_add_eq heβ.symm]
+      exact sub_omega0_opow_log_lt hβ₀
+    rw [heβ, hβ₁, ← val_of (log _ _), ← val_of (typeLT β₂), ← wpow_add_of_lt, mul_add,
+      ← of_omega0_opow, ← hβ₁]
+    · let e : α × β₁ ⊕ α × β₂ ≃ α × β :=
+        (Equiv.prodSumDistrib α β₁ β₂).symm.trans (Equiv.prodCongr (.refl _) (toLex.trans eβ))
+      have he : Monotone e := by rintro (x | x) (y | y) (hxy | hxy) <;> simpa [e]
+      apply (le_type_add_of_codisjoint
+        (s := (f ∘ e) '' range Sum.inl) (t := (f ∘ e) '' range Sum.inr) _).trans
+      · apply add_le_add
+        all_goals
+          rw [← range_comp, Function.comp_assoc]
+          apply type_prod_embedding_le _ rangeFactorization_surjective
+          apply (hf.comp (he.comp _)).rangeFactorization
+        · exact Sum.inl_mono
+        · exact Sum.inr_mono
+      · rw [codisjoint_iff]
+        dsimp
+        rw [← image_union, range_inl_union_range_inr, image_univ]
+        simpa using hfs.range_eq
+    · rw [of_lt_iff, val_wpow, val_add_one, val_of]
+      apply (lt_opow_succ_log_self one_lt_omega0 _).trans_le'
+      rw [heβ]
+      exact self_le_add_left ..
   rw [of_le_iff, type_le_iff_forall]
   intro c
-  obtain ⟨a, b, rfl⟩ := hfs c
-  rw [← of_lt_iff]
-  let g (x : (f ∘ Sum.inl) ⁻¹' Iio c ⊕ (f ∘ Sum.inr) ⁻¹' Iio c) : Iio c :=
-    x.rec (fun y ↦ ⟨f (.inl y.1), y.2⟩) (fun y ↦ ⟨f (.inr y.1), y.2⟩)
+  obtain ⟨⟨a, b⟩, rfl⟩ := hfs c
+  rw [← type_Iio_lt]
+  let gα : Iio a × β → γ := f ∘ Prod.map Subtype.val id
+  let gβ : α × Iio b → γ := f ∘ Prod.map id Subtype.val
+  apply (type_mono (t := range gα ∪ range gβ) _).trans_lt
+  · rw [← of_lt_iff]
+    apply (type_union_le _ _).trans_lt
+    rw [← hα, ← hβ, hα₁, hβ₁, of_omega0_opow, of_omega0_opow, ← wpow_add]
+    apply add_lt_wpow
+    · have : typeLT (Iio a) < typeLT α := typein_lt_type (· < ·) a
+      rw [wpow_add]
+      apply (type_prod_embedding_le (f := rangeFactorization gα) ..).trans_lt
+      · apply mul_lt_mul_of_lt_of_le_of_nonneg_of_pos
+        · rwa [of_lt_iff, val_wpow, val_of, ← hα₁, hα]
+        · rw [of_le_iff, val_wpow, val_of, ← hβ₁, hβ]
+        · exact zero_le
+        · exact wpow_pos _
+      · exact (hf.comp (Monotone.prodMap (Subtype.mono_coe _) monotone_id)).rangeFactorization
+      · exact rangeFactorization_surjective
+    · have : typeLT (Iio b) < typeLT β := typein_lt_type (· < ·) b
+      rw [wpow_add]
+      apply (type_prod_embedding_le (f := rangeFactorization gβ) ..).trans_lt
+      · apply mul_lt_mul_of_le_of_lt_of_nonneg_of_pos
+        · rw [of_le_iff, val_wpow, val_of, ← hα₁, hα]
+        · rwa [of_lt_iff, val_wpow, val_of, ← hβ₁, hβ]
+        · exact zero_le
+        · exact wpow_pos _
+      · exact (hf.comp (Monotone.prodMap monotone_id (Subtype.mono_coe _))).rangeFactorization
+      · exact rangeFactorization_surjective
+  · intro x hx
+    obtain ⟨⟨c, d⟩, rfl⟩ := hfs x
+    obtain hca | hac := lt_or_ge c a
+    · exact .inl ⟨⟨⟨c, hca⟩, d⟩, rfl⟩
+    obtain hda | had := lt_or_ge d b
+    · exact .inr ⟨⟨c, ⟨d, hda⟩⟩, rfl⟩
+    · cases hx.not_ge (hf ⟨hac, had⟩)
+termination_by (typeLT α, typeLT β)
 
 end NatOrdinal
 end
