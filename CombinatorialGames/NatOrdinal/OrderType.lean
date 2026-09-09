@@ -110,17 +110,19 @@ theorem type_le_iff_forall {x : Ordinal} :
     by_contra! hx
     simpa using h (enum (· < ·) ⟨x, hx⟩)
 
+/-- Well-orders of the same order type are isomorphic. -/
+noncomputable def OrderIso.of_ordinalType_eq {α β : Type u} [LinearOrder α] [LinearOrder β]
+    [WellFoundedLT α] [WellFoundedLT β] (H : typeLT α = typeLT β) : α ≃o β :=
+  .ofRelIsoLT (type_eq.1 H).some
+
 theorem exists_orderIso_sum {α : Type u} [LinearOrder α] [WellFoundedLT α]
     {x : Ordinal} (hx : x ≤ typeLT α) :
     ∃ (β : Type u) (_ : LinearOrder β) (_ : WellFoundedLT β)
       (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ)
       (_ : β ⊕ₗ γ ≃o α), typeLT β = x := by
-  obtain rfl | hx := hx.eq_or_lt
-  · exact ⟨α, inferInstance, inferInstance, PEmpty, inferInstance, inferInstance,
-      OrderIso.sumLexEmpty .., rfl⟩
-  · refine ⟨_, inferInstance, inferInstance, _, inferInstance, inferInstance,
-      OrderIso.sumLexIioIci (enum _ ⟨x, hx⟩), ?_⟩
-    simp
+  refine ⟨x.ToType, inferInstance, inferInstance,
+    (typeLT α - x).ToType, inferInstance, inferInstance, .of_ordinalType_eq ?_, by simp⟩
+  simpa using Ordinal.add_sub_cancel_of_le hx
 
 end Ordinal
 end LinearOrder
