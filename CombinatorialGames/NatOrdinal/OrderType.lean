@@ -48,10 +48,9 @@ theorem Monotone.rangeFactorization {f : α → β} (hf : Monotone f) :
     Monotone (rangeFactorization f) :=
   fun _ _ h ↦ hf h
 
-theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap := by
-  rintro (a | a) (b | b) (hab | hab)
-  · exact Sum.inr_mono hab
-  · exact Sum.inl_mono hab
+-- #43598
+theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap :=
+  fun _ _ ↦ swap_le_swap_iff.2
 
 theorem Equiv.emptySum_monotone [IsEmpty α] : Monotone (Equiv.emptySum α β) := by
   simp [Monotone]
@@ -228,6 +227,19 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
     rw [add_comm] at hγ
     exact ⟨γ, ‹_›, ‹_›, hγ, ⟨_, hf.comp Sum.swap_monotone⟩, hf'.comp Sum.swap_surjective⟩
   · exact H rfl hle
+
+/-! ### Product embeddings -/
+
+theorem type_prod_embedding_le {f : α × β → γ} (hf : Monotone f) (hfs : f.Surjective) :
+    NatOrdinal.of (typeLT γ) ≤ .of (typeLT α) * .of (typeLT β) := by
+  induction hγ : typeLT γ using WellFoundedLT.induction generalizing α β γ with | ind c IH
+  subst hγ
+  rw [of_le_iff, type_le_iff_forall]
+  intro c
+  obtain ⟨a, b, rfl⟩ := hfs c
+  rw [← of_lt_iff]
+  let g (x : (f ∘ Sum.inl) ⁻¹' Iio c ⊕ (f ∘ Sum.inr) ⁻¹' Iio c) : Iio c :=
+    x.rec (fun y ↦ ⟨f (.inl y.1), y.2⟩) (fun y ↦ ⟨f (.inr y.1), y.2⟩)
 
 end NatOrdinal
 end
