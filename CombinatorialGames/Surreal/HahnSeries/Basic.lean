@@ -675,7 +675,7 @@ theorem coeffIdx_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
     coeffIdx s i = s.coeff ⟨i, h⟩ := by
   rw [coeffIdx_of_lt (by simpa), exp_coe, coeff_coe]
 
-theorem coeffIdx_coe_of_le {s : TermSeq} {i} (h : s.length ≤ i) : coeffIdx s i = 0 :=
+theorem coeffIdx_coe_of_ge {s : TermSeq} {i} (h : s.length ≤ i) : coeffIdx s i = 0 :=
   coeffIdx_of_le (by simpa)
 
 @[aesop simp]
@@ -683,13 +683,13 @@ theorem coeffIdx_coe (s : TermSeq) (i) :
     coeffIdx s i = if h : i < s.length then s.coeff ⟨i, h⟩ else 0 := by
   split_ifs with h
   · exact coeffIdx_coe_of_lt h
-  · exact coeffIdx_coe_of_le (le_of_not_gt h)
+  · exact coeffIdx_coe_of_ge (le_of_not_gt h)
 
 theorem term_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
     term s i = s.coeff ⟨i, h⟩ * ω^ s.exp ⟨i, h⟩ := by
   rw [term_of_lt (by simpa), coeffIdx_coe_of_lt, exp_coe]
 
-theorem term_coe_of_le {s : TermSeq} {i} (h : s.length ≤ i) : term s i = 0 :=
+theorem term_coe_of_ge {s : TermSeq} {i} (h : s.length ≤ i) : term s i = 0 :=
   term_of_le (by simpa)
 
 @[aesop simp]
@@ -697,7 +697,7 @@ theorem term_coe (s : TermSeq) (i) :
     term s i = if h : i < s.length then s.coeff ⟨i, h⟩ * ω^ s.exp ⟨i, h⟩ else 0 := by
   split_ifs with h
   · exact term_coe_of_lt h
-  · exact term_coe_of_le (le_of_not_gt h)
+  · exact term_coe_of_ge (le_of_not_gt h)
 
 /-- `TermSeq` and `SurrealHahnSeries` are alternate representations for the same structure. -/
 @[simps!, expose]
