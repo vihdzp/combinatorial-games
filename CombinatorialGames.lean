@@ -1,6 +1,7 @@
-module  -- shake: keep-all
+module  -- shake: keep-all --deprecated_module: ignore
 
 public import CombinatorialGames.Counterexamples.Multiplication
+public import CombinatorialGames.Counterexamples.TinyOrder
 public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Canonical
@@ -23,7 +24,7 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Mathlib.Dyadic
-public import CombinatorialGames.Mathlib.Finlift
+public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.Basic
@@ -36,6 +37,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.SignExpansion.Basic
+public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut
@@ -46,6 +48,7 @@ public import CombinatorialGames.Surreal.Dyadic
 public import CombinatorialGames.Surreal.HahnSeries.Basic
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
+public import CombinatorialGames.Surreal.Omnific.Basic
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real

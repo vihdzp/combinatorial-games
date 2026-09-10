@@ -6,8 +6,8 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
+public import Mathlib.Algebra.Order.Archimedean.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
-public import Mathlib.Data.Real.Archimedean
 
 /-!
 # Real numbers as games
@@ -32,7 +32,7 @@ theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrdere
   obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
   have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
   obtain ⟨z, hz, hz'⟩ := exists_div_btwn h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
-  use .mkRat z ⟨n, rfl⟩
+  use .mkRat z ((Submonoid.mem_powers_iff ..).2 ⟨n, rfl⟩)
   simp_all [Rat.mkRat_eq_div]
 
 namespace Real
@@ -49,7 +49,7 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
-  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_setOf]
+  · simp only [leftMoves_ofSets, rightMoves_ofSets, Set.forall_mem_image, Set.mem_ofPred]
     intro x hx y hy
     simpa using hx.trans hy
   · aesop (add simp [Numeric.dyadic])
@@ -254,19 +254,19 @@ theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
     simpa
 
 theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x - q) ≈ x - q := by
-  simpa using toIGame_add_ratCast_equiv x (-q)
+  simpa [sub_eq_add_neg] using toIGame_add_ratCast_equiv x (-q)
 
 theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : toIGame (q - x) ≈ q - x := by
-  simpa using toIGame_ratCast_add_equiv q (-x)
+  simpa [sub_eq_add_neg] using toIGame_ratCast_add_equiv q (-x)
 
 theorem toIGame_sub_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x - q.toRat) ≈ x - q := by
-  simpa using toIGame_add_dyadic_equiv x (-q)
+  simpa [sub_eq_add_neg] using toIGame_add_dyadic_equiv x (-q)
 
 theorem toIGame_dyadic_sub_equiv (q : Dyadic) (x : ℝ) : toIGame (q.toRat - x) ≈ q - x := by
-  simpa using toIGame_dyadic_add_equiv q (-x)
+  simpa [sub_eq_add_neg] using toIGame_dyadic_add_equiv q (-x)
 
 theorem toIGame_sub_equiv (x y : ℝ) : toIGame (x - y) ≈ x - y := by
-  simpa using toIGame_add_equiv x (-y)
+  simpa [sub_eq_add_neg] using toIGame_add_equiv x (-y)
 
 /-! ### `ℝ` to `Game` -/
 

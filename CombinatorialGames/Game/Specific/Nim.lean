@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
+Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 -/
 module
 
@@ -38,8 +38,8 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : IsWellFounded _ nim.IsOption :=
-  isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
+instance : nim.IsWellFounded :=
+  .of_subrelation (· < ·) <| by simp
 
 end GameGraph
 
@@ -142,6 +142,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
   simp_rw [Game.le_birthday_iff, Game.mk_eq_mk]
   refine fun x hxo ↦ le_of_not_gt fun hxb ↦ ?_
+  rw [← NatOrdinal.val_lt_iff, ← Nimber.of.lt_iff_lt] at hxb
   induction o using Nimber.induction generalizing x with | _ o iho
   have hu {u : IGame} (hu : u ∈ (nim (.of x.birthday.val))ᴸ) : u ⧏ x := by
     rw [moves_nim] at hu

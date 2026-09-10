@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 
-import Mathlib.Tactic.DeriveFintype
+-- import Mathlib.Tactic.DeriveFintype
 
 /-!
 # Type of players
@@ -31,9 +31,14 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Fintype, Inhabited
+deriving DecidableEq, Inhabited
 
 namespace Player
+
+#adaptation_note /-- `deriving Fintype` is currently broken. -/
+instance : Fintype Player where
+  elems := ⟨[left, right], by decide⟩
+  complete x := by cases x <;> simp
 
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
