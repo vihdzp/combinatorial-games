@@ -90,16 +90,15 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
-theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] [Numeric y] (h : Fits x y) :
-    birthday (.mk y) ≤ birthday (.mk x) := by
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
+    Game.birthday (.mk y) ≤ birthday (.mk x) := by
   obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
   obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
-  have := Numeric.wsubposition hzx
-  rw [← Surreal.mk_eq hzy, ← hxb]
-  exact (birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
+  rw [← Game.mk_eq hzy, ← hxb]
+  exact (Game.birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
 
-theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] [Numeric y]
-    (h : Fits x y) (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
+    Game.birthday (.mk y) < birthday (.mk x) := by
   apply h.birthday_le.lt_of_not_ge
   contrapose he
   obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
