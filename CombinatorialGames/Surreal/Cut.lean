@@ -557,12 +557,12 @@ noncomputable def simplestBtwn (x y : Cut) : Surreal :=
     Classical.choose (exists_minimalFor_of_wellFoundedLT _ birthday (lt_iff_nonempty_inter.1 h))
     else 0
 
-theorem simplestBtwn_of_le {x y : Cut} (h : y ≤ x) : simplestBtwn x y = 0 := by
-  rw [simplestBtwn, dif_neg h.not_gt]
+theorem simplestBtwn_of_le {x y : Cut} (h : y ≤ x) : simplestBtwn x y = 0 :=
+  dite_eq_right h.not_gt
 
 private theorem simplestBtwn_spec {x y : Cut} (h : x < y) :
     MinimalFor (fun z ↦ z ∈ x.right ∩ y.left) birthday (simplestBtwn x y) := by
-  rw [simplestBtwn, dif_pos h]
+  rw [simplestBtwn, dite_eq_left h]
   generalize_proofs H
   exact Classical.choose_spec H
 
@@ -597,14 +597,18 @@ theorem simplestBtwn_eq {x y : Cut} {z : Surreal} (h : Fits z x y)
   replace hz := (birthday_simplestBtwn_le_of_fits h).antisymm hz
   by_contra h'
   obtain h' | h' := lt_or_gt_of_ne h'
-  · obtain ⟨w, hw, hw'⟩ := exists_birthday_lt_between h' hz
-    refine hw'.not_ge (birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩)
-    · exact x.isUpperSet_right hw.1.le (fits_simplestBtwn h.lt).1
-    · exact y.isLowerSet_left hw.2.le h.2
-  · obtain ⟨w, hw, hw'⟩ := exists_birthday_lt_between h' hz.symm
-    refine (hz ▸ hw').not_ge (birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩)
-    · exact x.isUpperSet_right hw.1.le h.1
-    · exact y.isLowerSet_left hw.2.le (fits_simplestBtwn h.lt).2
+  · apply (birthday_ofSets_singleton_lt_of_birthday_eq hz rfl h').not_ge
+    conv_lhs => rw [← hz]
+    refine birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩
+    · exact x.isUpperSet_right (lt_ofSets_of_mem_left (mem_singleton _)).le
+        (fits_simplestBtwn h.lt).1
+    · exact y.isLowerSet_left (ofSets_lt_of_mem_right (mem_singleton _)).le h.2
+  · apply (birthday_ofSets_singleton_lt_of_birthday_eq rfl hz h').not_ge
+    conv_lhs => rw [← hz]
+    refine birthday_simplestBtwn_le_of_fits ⟨?_, ?_⟩
+    · exact x.isUpperSet_right (lt_ofSets_of_mem_left (mem_singleton _)).le h.1
+    · exact y.isLowerSet_left (ofSets_lt_of_mem_right (mem_singleton _)).le
+        (fits_simplestBtwn h.lt).2
 
 /-- If `x` is a game with `supLeft x < infRight x`, then the simplest number between those two cuts
 is equal to `x`. -/
