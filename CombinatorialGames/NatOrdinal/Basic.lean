@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import Mathlib.Algebra.Order.GroupWithZero.Canonical
 public import Mathlib.SetTheory.Ordinal.Family
 
 import CombinatorialGames.Tactic.OrdinalAlias
@@ -58,16 +59,14 @@ private def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
 termination_by (a, b)
 decreasing_by all_goals cases x; decreasing_tactic
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- Natural addition on ordinals `a + b`, also known as the Hessenberg sum, is recursively defined
 as the least ordinal greater than `a' + b` and `a + b'` for all `a' < a` and `b' < b`. In contrast
 to normal ordinal addition, it is commutative.
 
 Natural addition can equivalently be characterized as the ordinal resulting from adding up
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
-@[no_expose] instance : Add NatOrdinal := ⟨add⟩
-
-/-- Add two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:65 x:65 "+ₒ" y:66 => of (val x + val y)
+@[no_expose] noncomputable instance : Add NatOrdinal := ⟨add⟩
 
 theorem add_def (a b : NatOrdinal) :
     a + b = max (⨆ x : Iio a, succ (x.1 + b)) (⨆ x : Iio b, succ (a + x.1)) := by
@@ -145,7 +144,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · repeat rw [← NatOrdinal.le_zero]
+  · repeat rw [← le_zero_iff]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
@@ -161,18 +160,12 @@ instance : SuccAddOrder NatOrdinal := ⟨by exact succ_eq_add_one'⟩
 @[simp] theorem of_add_one (a : Ordinal) : of (a + 1) = of a + 1 := succ_eq_add_one _
 @[simp] theorem val_add_one (a : NatOrdinal) : val (a + 1) = val a + 1 := (succ_eq_add_one a).symm
 
-@[simp] theorem add_one_ne_zero (a : NatOrdinal) : a + 1 ≠ 0 := by simp [← succ_eq_add_one]
-
-attribute [simp] Order.succ_eq_add_one
-
 instance : AddMonoidWithOne NatOrdinal where
   natCast n := of n
   natCast_succ n := by simp
 
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
-
-@[simp] protected theorem succ_one : succ (1 : NatOrdinal) = 2 := Ordinal.succ_one
 
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
@@ -191,8 +184,8 @@ theorem exists_lt_natCast {P : NatOrdinal → Prop} {n : ℕ} : (∃ a < ↑n, P
 theorem lt_omega0 {o : NatOrdinal} : o < of .omega0 ↔ ∃ n : ℕ, o = n :=
   Ordinal.lt_omega0
 
-theorem nat_lt_omega0 (n : ℕ) : n < of .omega0 :=
-  Ordinal.nat_lt_omega0 n
+theorem natCast_lt_omega0 (n : ℕ) : n < of .omega0 :=
+  Ordinal.natCast_lt_omega0 n
 
 instance : CharZero NatOrdinal where
   cast_injective m n h := by
@@ -213,13 +206,13 @@ theorem val_add_natCast (a : NatOrdinal) (n : ℕ) : val (a + n) = val a + n :=
 theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [← add_assoc] using add_le_add_left IH 1
+  | add_one c IH => simpa [← add_assoc] using add_le_add_left IH 1
   | limit c hc IH =>
     rw [(Ordinal.isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
     exact (IH i hi).trans (add_le_add_right hi.le (of a))
 
-theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
+theorem oadd_le_add (a b : NatOrdinal) : of (a.val + b.val) ≤ a + b :=
   oadd_le_add' ..
 
 /-! ### Natural multiplication -/
@@ -228,6 +221,7 @@ private def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
   sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
 termination_by (a, b)
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- Natural multiplication on ordinals `a * b`, also known as the Hessenberg product, is recursively
 defined as the least ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for all
 `a' < a` and `b < b'`. In contrast to normal ordinal multiplication, it is commutative and
@@ -236,10 +230,7 @@ distributive (over natural addition).
 Natural multiplication can equivalently be characterized as the ordinal resulting from multiplying
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
-@[no_expose] instance : Mul NatOrdinal := ⟨mul⟩
-
-/-- Multiply two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:70 x:70 "*ₒ" y:71 => of (val x * val y)
+@[no_expose] noncomputable instance : Mul NatOrdinal := ⟨mul⟩
 
 theorem mul_def (a b : NatOrdinal) :
     a * b = sInf {c | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'} := by
@@ -287,7 +278,7 @@ instance : CommMagma NatOrdinal where
   mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
-  rw [← NatOrdinal.le_zero, mul_le_iff]
+  rw [← le_zero_iff, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where
@@ -316,7 +307,7 @@ instance : MulPosStrictMono NatOrdinal where
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
     obtain rfl | h₁ := h.eq_or_lt; · simp
-    obtain rfl | h₂ := NatOrdinal.eq_zero_or_pos a; · simp
+    obtain rfl | h₂ := eq_zero_or_pos a; · simp
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
 instance : MulRightMono NatOrdinal where
@@ -409,12 +400,13 @@ instance : CommSemiring NatOrdinal where
   mul_assoc := private mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
+instance : LinearOrderedCommMonoidWithZero NatOrdinal where
 
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
+  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add' ..)
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp
@@ -422,7 +414,7 @@ theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
       rintro ⟨i, hi⟩
       exact (IH i hi).trans (mul_le_mul_right hi.le (of a))
 
-theorem omul_le_mul (a b : NatOrdinal) : a *ₒ b ≤ a * b :=
+theorem omul_le_mul (a b : NatOrdinal) : of (a.val * b.val) ≤ a * b :=
   omul_le_mul' ..
 
 end NatOrdinal
