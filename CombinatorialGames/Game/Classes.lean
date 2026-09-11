@@ -77,9 +77,22 @@ theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.mov
 protected theorem of_mem_moves {p : Player} [hx : Dicotic x] (h : y ∈ x.moves p) : Dicotic y :=
   (dicotic_def.1 hx).2 p y h
 
+protected theorem subposition [Dicotic x] (h : Subposition y x) : Dicotic y := by
+  induction x using IGame.moveRecOn generalizing ‹x.Dicotic› with | ind x ih
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
+
+protected theorem wsubposition [Dicotic x] (h : WSubposition y x) : Dicotic y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact .subposition hy
+
 /-- `dicotic` eagerly adds all possible `Dicotic` hypotheses. -/
 elab "dicotic" : tactic =>
-  addInstances <| .mk [`IGame.Dicotic.of_mem_moves]
+  addInstances <| .mk
+    [`IGame.Dicotic.of_mem_moves, `IGame.Dicotic.subposition, `IGame.Dicotic.wsubposition]
 
 @[simp]
 protected instance zero : Dicotic 0 := by
@@ -133,9 +146,22 @@ protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
     y ∈ x.moves p → Impartial y :=
   (impartial_def.1 h).2 p y
 
+protected theorem subposition {x y} [Impartial x] (h : Subposition y x) : Impartial y := by
+  induction x using IGame.moveRecOn generalizing ‹x.Impartial› with | ind x ih
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
+
+protected theorem wsubposition {x y} [Impartial x] (h : WSubposition y x) : Impartial y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact .subposition hy
+
 /-- `impartial` eagerly adds all possible `Impartial` hypotheses. -/
 elab "impartial" : tactic =>
-  addInstances <| .mk [`IGame.Impartial.of_mem_moves]
+  addInstances <| .mk
+    [`IGame.Impartial.of_mem_moves, `IGame.Impartial.subposition, `IGame.Impartial.wsubposition]
 
 @[simp] protected instance zero : Impartial 0 := by rw [impartial_def]; simp
 
@@ -307,10 +333,6 @@ theorem left_lt_right [h : Numeric x] (hy : y ∈ xᴸ) (hz : z ∈ xᴿ) : y < 
 protected theorem of_mem_moves {p : Player} [h : Numeric x] (hy : y ∈ x.moves p) : Numeric y :=
   (numeric_def.1 h).2 p y hy
 
-/-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
-elab "numeric" : tactic =>
-  addInstances <| .mk [`IGame.Numeric.of_mem_moves]
-
 protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
   obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
@@ -321,7 +343,12 @@ protected theorem subposition [Numeric x] (h : Subposition y x) : Numeric y := b
 protected theorem wsubposition [Numeric x] (h : WSubposition y x) : Numeric y := by
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
   · assumption
-  · exact Numeric.subposition hy
+  · exact .subposition hy
+
+/-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
+elab "numeric" : tactic =>
+  addInstances <| .mk
+    [`IGame.Numeric.of_mem_moves, `IGame.Numeric.subposition, `IGame.Numeric.wsubposition]
 
 @[simp]
 protected instance zero : Numeric 0 := by
@@ -476,16 +503,22 @@ instance (p : Player) (x : IGame) [Short x] : Finite (x.moves p) :=
 protected theorem of_mem_moves [h : Short x] {p} (hy : y ∈ x.moves p) : Short y :=
   (short_def.1 h p).2 y hy
 
-/-- `short` eagerly adds all possible `Short` hypotheses. -/
-elab "short" : tactic =>
-  addInstances <| .mk [`IGame.Short.of_mem_moves]
-
-protected theorem subposition {x : IGame} [Short x] (h : Subposition y x) : Short y := by
+protected theorem subposition [Short x] (h : Subposition y x) : Short y := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
+
+protected theorem wsubposition [Numeric x] (h : WSubposition y x) : Numeric y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact .subposition hy
+
+/-- `short` eagerly adds all possible `Short` hypotheses. -/
+elab "short" : tactic =>
+  addInstances <| .mk
+    [`IGame.Short.of_mem_moves, `IGame.Short.subposition, `IGame.Short.wsubposition]
 
 theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
