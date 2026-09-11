@@ -159,8 +159,8 @@ theorem subrelation_relRight :
   rw [InvImage, ← card_of_relRight h, lt_add_iff_pos_right]
   exact Nat.succ_pos _
 
-instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
-instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
+instance : WellFounded relLeft := subrelation_relLeft.isWellFounded
+instance : WellFounded relRight := subrelation_relRight.isWellFounded
 
 end Domineering
 

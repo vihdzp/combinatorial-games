@@ -41,7 +41,7 @@ public noncomputable section
 
 attribute [aesop simp] Pi.single_apply
 
-theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := ⟨h⟩
+theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := h
 
 /-- This is like `RelIso.cast` with better def-eqs. -/
 def RelIso.subrel {α : Type*} (r : α → α → Prop) {p q : α → Prop} (H : ∀ x, p x ↔ q x) :
