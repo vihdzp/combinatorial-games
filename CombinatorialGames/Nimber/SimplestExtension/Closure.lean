@@ -75,8 +75,6 @@ theorem Subfield.coe_bot [DivisionRing R] :
         · apply intCast_mem
         · apply natCast_mem
 
-attribute [simp] Cardinal.aleph0_lt_univ
-
 instance Subfield.small_closure (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s) := by
   rw [Cardinal.small_iff_lift_mk_lt_univ] at *

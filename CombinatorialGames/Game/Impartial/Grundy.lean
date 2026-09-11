@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
+Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 -/
 module
 
@@ -48,7 +48,7 @@ theorem grundyAux_def (p) (x : IGame) : grundyAux p x = sInf (grundyAux p '' x.m
 
 theorem le_grundyAux_iff {p : Player} {x : IGame} {o : Nimber} :
     o ≤ grundyAux p x ↔ Iio o ⊆ grundyAux p '' x.moves p := by
-  rw [grundyAux_def, le_csInf_iff'']
+  rw [grundyAux_def, le_csInf_iff']
   · rw [← compl_subset_compl (t := Iio o), subset_def]
     simp
   · exact nonempty_of_not_bddAbove (Nimber.not_bddAbove_compl_of_small _)

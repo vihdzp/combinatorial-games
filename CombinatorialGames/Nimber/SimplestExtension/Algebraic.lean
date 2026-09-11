@@ -62,7 +62,7 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
           rw [degree_prod_of_monic] <;> simp [Monic]
         have hq' : (X ^ n + ∏ i, (X + C (f i).1)).degree < n := by
           rw [← CharTwo.sub_eq_add]
-          convert degree_sub_lt .. <;> simp_all
+          convert degree_sub_lt_left .. <;> simp_all
         have H : ∀ k, (X ^ n + ∏ i, (X + C (f i).1)).coeff k < x := by
           refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
           have : (f y).1 < x := (f y).2
@@ -127,9 +127,8 @@ theorem IsRing.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
   · have := zero_lt_one.trans hx₁
     aesop
 
-theorem IsRing.pow_eq {n : ℕ} {x y : Nimber} (h : IsRing x)
-    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) (hy : y < x) :
-    x ^ n = ∗(x.val ^ n) := by
+theorem IsRing.pow_eq {n : ℕ} {x : Nimber} (h : IsRing x)
+    (h' : .some (X ^ (n + 1)) ≤ leastNoRoots x) : x ^ n = ∗(x.val ^ n) := by
   obtain hx₁ | hx₁ := le_or_gt x 1
   · have := le_one_iff.1 hx₁; aesop
   · simpa using h.pow_mul_eq h' hx₁
@@ -195,6 +194,14 @@ theorem IsAlgClosed.eval_eq_of_lt {x : Nimber} (h : IsAlgClosed x)
   h.toIsRing.eval_eq_of_lt (n := p.natDegree + 1) (by simp [h.leastNoRoots_eq_top])
     (by simpa using degree_le_natDegree) hpk
 
+theorem IsAlgClosed.pow_mul_eq {n : ℕ} {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) :
+    x ^ n * y = ∗(x.val ^ n * y.val) :=
+  h.toIsRing.pow_mul_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm) hy
+
+theorem IsAlgClosed.pow_eq {n : ℕ} {x : Nimber} (h : IsAlgClosed x) :
+    x ^ n = ∗(x.val ^ n) :=
+  h.toIsRing.pow_eq (le_top.trans_eq h.leastNoRoots_eq_top.symm)
+
 /-- If `x` is a field, to prove it algebraically closed, it suffices to check
 *monic* polynomials. -/
 theorem IsAlgClosed.ofMonic {x : Nimber} (h : IsField x)
@@ -226,7 +233,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
   apply le_antisymm
   · have hp : (X ^ n + x.leastNoRoots.untop ht).degree < (n : WithBot ℕ) := by
       rw [← CharTwo.sub_eq_add]
-      apply (degree_sub_lt ..).trans_eq <;> aesop
+      apply (degree_sub_lt_left ..).trans_eq <;> aesop
     conv_lhs => left; rw [← eval_X_pow]
     rw [← eval_add, h.eval_eq_of_lt hld hp hxp]
     apply le_of_forall_lt_imp_ne
@@ -253,11 +260,11 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     apply (h.root_lt _ _ ((mem_roots _).2 hf)).false
     · conv_rhs => rw [← WithTop.coe_untop _ ht]
       rw [WithTop.coe_lt_coe, add_comm, ← CharTwo.sub_eq_add]
-      apply Lex.lt_of_degree_lt (degree_sub_lt _ (leastNoRoots_ne_zero' ht) _)
+      apply Lex.lt_of_degree_lt (degree_sub_lt_left _ (leastNoRoots_ne_zero' ht) _)
       · rw [degree_prod_of_monic] <;> aesop (add simp [Monic])
       · aesop
     · apply h.coeff_add_lt (h.coeff_prod_lt _) (coeff_leastNoRoots_lt _)
-      aesop
+      aesop (add apply safe [Subtype.prop])
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_leastNoRoots_pos ht⟩
       apply_fun eval (f i).1
@@ -310,7 +317,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     obtain ⟨hc, hm⟩ : ∃ hc, Irreducible (hf.embed _ hc) :=
       ⟨coeff_leastNoRoots_lt ht, irreducible_embed_leastNoRoots hf ht⟩
     have hxn : x < of (val x ^ (n + 1)) := by
-      simpa using (pow_lt_pow_iff_right₀ (a := x.val) hf.one_lt).2 (show 1 < n + 1 by lia)
+      simpa using! (pow_lt_pow_iff_right₀ (a := x.val) hf.one_lt).2 (show 1 < n + 1 by lia)
     have hcc := Set.Iio_subset_Iio hxn.le
     let r : hf.toSubfield[X] →+* hxr.toSubring := eval₂RingHom (Subring.inclusion hcc) ⟨x, hxn⟩
     have hoc : hxr.toSubring.subtype.comp (Subring.inclusion hcc) = hf.toSubfield.subtype := rfl
@@ -333,14 +340,65 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
     · exact (r i).2
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
-      simpa using congrArg hxr.toSubring.subtype hi
+      simpa using! congrArg hxr.toSubring.subtype hi
+
+namespace IsAlgClosed
+variable {t : Nimber} (ht : IsAlgClosed t)
+include ht
+
+-- todo: generalize to `IsField t`, and prove `IsField (of (val t ^ ω))` when `¬IsAlgClosed t`
+theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
+  toIsGroup := ht.toIsGroup.opow _
+  ne_one := ne_of_gt (by simp [ht.one_lt])
+  mul_lt y z hy hz := by
+    obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
+    obtain ⟨pz, hzd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hz
+    rw [← ht.eval_eq_of_lt hyd, ← ht.eval_eq_of_lt hzd,
+      ← eval_mul, ht.eval_eq_of_lt (ht.coeff_mul_lt hyd hzd)]
+    exact oeval_lt_opow_omega0 (ht.coeff_mul_lt hyd hzd)
+
+theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
+  apply le_antisymm
+  · rw [ht.isRing_opow_omega0.ringClosure_le_iff, succ_le_iff]
+    exact val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)
+  · refine le_of_forall_lt fun c hc => ?_
+    obtain ⟨p, hpc, hpr⟩ := eq_oeval_of_lt_opow_omega0 hc
+    have htr := (lt_succ t).trans_le (le_ringClosure (succ t))
+    rw [← hpr, ← ht.eval_eq_of_lt hpc]
+    exact (IsRing.ringClosure _).eval_lt (fun k => (hpc k).trans htr) htr
+
+protected theorem transcendental : Transcendental ht.toSubfield t := by
+  rw [transcendental_iff]
+  intro p hp
+  rwa [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
+    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2,
+    oeval_eq_zero_iff ht.ne_zero, Polynomial.map_eq_zero] at hp
+
+theorem algebraAdjoin_simple_self :
+    (Algebra.adjoin ht.toSubfield {t}).toSubring = ht.isRing_opow_omega0.toSubring := by
+  apply SetLike.ext'
+  rw [Algebra.adjoin_eq_ring_closure, union_singleton,
+    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
+
+theorem fieldAdjoin_simple_self :
+    (IntermediateField.adjoin ht.toSubfield {t}).toSubfield =
+      (IsField.fieldClosure (succ t)).toSubfield := by
+  apply SetLike.ext'
+  rw [IntermediateField.adjoin_toSubfield, union_singleton,
+    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subfieldClosure_Iio, coe_toSubfield]
+
+end IsAlgClosed
 
 /-! ### Nimbers are algebraically closed -/
 
 open Pointwise
 
 private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
-  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
+  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, mem_Iio.2 <| p.2 k⟩) fun p q h ↦ ?_
   ext k
   simpa using congrFun h k
 

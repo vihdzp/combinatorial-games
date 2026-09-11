@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2020 Fox Thomson. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Fox Thomson, Markus Himmel, Violeta Hernández Palacios
+Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 -/
 module
 
@@ -11,6 +11,7 @@ public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
 import CombinatorialGames.Tactic.OrdinalAlias
+import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
 # Nim
@@ -37,8 +38,8 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : IsWellFounded _ nim.IsOption :=
-  isWellFounded_isOption_of_eq (· < ·) fun _ _ ↦ rfl
+instance : nim.WellFounded :=
+  .of_subrelation (· < ·) <| by simp
 
 end GameGraph
 
@@ -69,12 +70,12 @@ theorem exists_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
 @[game_cmp]
 theorem forall_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (nim (∗n)).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) := by
-  simp [← of_image_Iio, ← Ordinal.natCast_image_Iio]
+  simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
 theorem exists_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (nim (∗n)).moves p, P x) ↔ (∃ m < n, P (nim (∗m))) := by
-  simp [← of_image_Iio, ← Ordinal.natCast_image_Iio]
+  simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
 theorem forall_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
@@ -141,6 +142,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
   simp_rw [Game.le_birthday_iff, Game.mk_eq_mk]
   refine fun x hxo ↦ le_of_not_gt fun hxb ↦ ?_
+  rw [← NatOrdinal.val_lt_iff, ← Nimber.of.lt_iff_lt] at hxb
   induction o using Nimber.induction generalizing x with | _ o iho
   have hu {u : IGame} (hu : u ∈ (nim (.of x.birthday.val))ᴸ) : u ⧏ x := by
     rw [moves_nim] at hu
@@ -151,7 +153,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   · exact hu hy hxy
   have hyo := lf_right_of_le hxo.ge hy
   replace hy := Subposition.of_mem_moves hy
-  induction y using IsWellFounded.induction Subposition with | ind y ihy
+  induction y using wellFounded_subposition.induction with | h y ihy
   obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
   · refine lf_of_le_left ?_ hw hyx
     rw [le_iff_forall_lf]

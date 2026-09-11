@@ -44,13 +44,9 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
 
 namespace ArchimedeanClass
 
-@[simp]
-theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
-  simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
-
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
     mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
-  convert mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
+  convert! mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
   · simp
   · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.coe_lt_coe.mpr
 
@@ -72,8 +68,9 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 @[no_expose]
-instance : Wpow IGame where
+noncomputable instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
@@ -670,14 +667,14 @@ instance _root_.IGame.Numeric.wlog (x : IGame) : Numeric x.wlog := by
 
 @[simp]
 theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
-  simp_rw [IGame.wlog, dif_pos h, Surreal.out_eq]
+  simp_rw [IGame.wlog, dite_eq_left h, Surreal.out_eq]
 
 @[simp]
 theorem wlog_zero : wlog 0 = 0 :=
-  dif_pos rfl
+  dite_eq_left rfl
 
 theorem wpow_wlog_veq (h : x ≠ 0) : ω^ wlog x =ᵥ x := by
-  rw [wlog, dif_neg h]
+  rw [wlog, dite_eq_right h]
   exact Classical.choose_spec (exists_wpow_veq h)
 
 @[simp]
@@ -736,10 +733,10 @@ theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x
   rw [add_comm, wlog_add_eq_left h]
 
 theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
-  simpa using @wlog_add_eq_left x (-y)
+  simpa [sub_eq_add_neg] using @wlog_add_eq_left x (-y)
 
 theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
-  simpa using @wlog_add_eq_right (-x) y
+  simpa [sub_eq_add_neg] using @wlog_add_eq_right (-x) y
 
 theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
   rw [← wpow_vle_wpow_iff]
@@ -807,7 +804,7 @@ theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
   rw [archimedeanClassMk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
 
-private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
+private theorem ofSets_wlog_eq {x : IGame} :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
       range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, Numeric.wlog x⟩)} := by

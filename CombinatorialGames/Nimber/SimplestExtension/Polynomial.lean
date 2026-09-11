@@ -11,7 +11,6 @@ public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
 public import Mathlib.Data.Finsupp.WellFounded
 
-import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Polynomial.Degree.Lemmas
 import Mathlib.Algebra.Polynomial.Eval.Coeff
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
@@ -141,6 +140,9 @@ theorem coeff_X_pow_lt {x : Nimber} (n : ℕ) (h : 1 < x) : ∀ k, (X ^ n).coeff
   have : 0 < x := h.bot_lt
   aesop
 
+theorem coeff_X_lt {x : Nimber} (h : 1 < x) : ∀ k, X.coeff k < x := by
+  simpa using coeff_X_pow_lt 1 h
+
 theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p + q).coeff k < x := by
   intro k
@@ -150,8 +152,12 @@ theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
 theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsGroup x)
     (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.sum f).coeff k < x := by
   intro k
-  rw [finset_sum_coeff]
+  rw [finsetSum_coeff]
   exact h.sum_lt fun y hy ↦ (hs y hy k)
+
+theorem coeff_zero_lt {x : Nimber} (h : x ≠ 0) :
+    ∀ k, (0 : Nimber[X]).coeff k < x := by
+  simpa [pos_iff_ne_zero]
 
 theorem IsRing.coeff_mul_lt {x : Nimber} {p q : Nimber[X]} (h : IsRing x)
     (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p * q).coeff k < x := by
@@ -167,6 +173,13 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
     rw [Finset.prod_cons]
     apply h.coeff_mul_lt <;> simp_all
 
+theorem coeff_one_lt {x : Nimber} (h : 1 < x) :
+    ∀ k, (1 : Nimber[X]).coeff k < x := by
+  simpa using coeff_X_pow_lt 0 h
+
+theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
+  aesop (add simp [pos_iff_ne_zero])
+
 /-! ### Embedding in a subfield -/
 
 /-- Reinterpret a polynomial in the nimbers as a polynomial in the subfield `x`.
@@ -174,9 +187,9 @@ theorem IsRing.coeff_prod_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finse
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
 issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
 @[expose]
-def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
+noncomputable def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
-  .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
+  .ofFinsupp ⟨.mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])⟩
 
 @[simp]
 theorem IsField.coeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
@@ -223,18 +236,15 @@ namespace Lex
 noncomputable instance : LinearOrder (Nimber[X]) where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
-    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp)
-    (toFinsupp_injective.comp toColex.injective)
+    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff)
+    (toColex.injective.comp <| AddMonoidAlgebra.coeff_injective.comp toFinsupp_injective)
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Colex (ℕ →₀ Nimber)) where
-  wf := Finsupp.Lex.wellFounded' Nimber.not_neg lt_wf wellFounded_lt
-
-instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp) wellFounded_lt
+instance : WellFoundedLT (Nimber[X]) :=
+  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
@@ -342,7 +352,7 @@ theorem degree_mono : Monotone (α := Nimber[X]) degree := by
   refine ⟨p.natDegree, fun k hk ↦ ?_, ?_⟩
   · rw [p.coeff_eq_zero_of_natDegree_lt hk, q.coeff_eq_zero_of_natDegree_lt (h'.trans hk)]
   · rw [q.coeff_eq_zero_of_natDegree_lt h']
-    aesop (add simp [Nimber.pos_iff_ne_zero])
+    aesop (add simp [pos_iff_ne_zero])
 
 theorem natDegree_mono : Monotone (α := Nimber[X]) natDegree := by
   apply Monotone.comp (fun a b ↦ ?_) degree_mono
@@ -424,8 +434,8 @@ theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree +
       apply hd.trans_lt
       rw [add_comm, ← CharTwo.sub_eq_add, self_sub_X_pow_of_monic hm, ← degree_eq_natDegree hp₀]
       exact degree_eraseLead_lt hp₀
-    · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, if_neg hk', zero_add]
-  · rwa [coeff_add, coeff_X_pow, if_neg hnp.ne, zero_add] at hn' ⊢
+    · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, ite_eq_right hk', zero_add]
+  · rwa [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
 
 theorem X_pow_add_le {p q : Nimber[X]} (hm : p.Monic) (h : q ≤ X ^ p.natDegree + p) :
     X ^ p.natDegree + q ≤ p := by
@@ -454,7 +464,7 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0)))) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp ⟨(p.toFinsupp.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -480,13 +490,11 @@ noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
 @[aesop simp]
 theorem coeff_succ (p : Nimber[X]) :
     (succ p).coeff = Function.update p.coeff 0 (succ (p.coeff 0)) := by
-  change coeff (Polynomial.ofFinsupp _) = _
-  simp
+  simp [succ]
   rfl
 
 @[simp]
-theorem coeff_succ_zero (p : Nimber[X]) :
-    (succ p).coeff 0 = succ (p.coeff 0) := by
+theorem coeff_succ_zero (p : Nimber[X]) : (succ p).coeff 0 = succ (p.coeff 0) := by
   rw [coeff_succ, Function.update_self]
 
 @[simp]
@@ -600,7 +608,7 @@ theorem opow_natDegree_le_oeval (x : Nimber) {p : Nimber[X]} (hp : p ≠ 0) :
 
 theorem oeval_lt_pow {x : Nimber} {p : Nimber[X]} {n : ℕ}
     (hpk : ∀ k, p.coeff k < x) (hn : p.degree < n) : oeval x p < ∗(x.val ^ n) := by
-  obtain rfl | hx₀ := x.eq_zero_or_pos; · simp at hpk
+  obtain rfl | hx₀ := eq_zero_or_pos x; · simp at hpk
   induction n generalizing p with
   | zero => simp_all
   | succ n IH =>
@@ -638,7 +646,7 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p < oeval x q := by
   rw [Nimber.Lex.lt_def] at h
   obtain ⟨n, hnl, hnr⟩ := h
-  have hx : 0 < x := (zero_le (p.coeff 0)).trans_lt (hpk 0)
+  have hx : 0 < x := (hpk 0).pos
   induction hk : p.natDegree - n using Nat.caseStrongRecOn generalizing p q with
   | zero =>
     rw [Nat.sub_eq_zero_iff_le] at hk
@@ -706,7 +714,7 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
       split
       · rfl
       · exact hnl u hu
-    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, if_neg hqd.ne, if_neg hqd.ne]
+    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, ite_eq_right hqd.ne, ite_eq_right hqd.ne]
     · rfl
 
 theorem oeval_le_oeval {x : Nimber} {p q : Nimber[X]} (h : p ≤ q)
@@ -725,6 +733,16 @@ theorem oeval_lt_oeval_iff {x : Nimber} {p q : Nimber[X]}
 theorem oeval_le_oeval_iff {x : Nimber} {p q : Nimber[X]}
     (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p ≤ oeval x q ↔ p ≤ q :=
   le_iff_le_iff_lt_iff_lt.2 (oeval_lt_oeval_iff hqk hpk)
+
+theorem oeval_inj {x : Nimber} {p q : Nimber[X]}
+    (hpk : ∀ k, p.coeff k < x) (hqk : ∀ k, q.coeff k < x) : oeval x p = oeval x q ↔ p = q := by
+  simp_rw [le_antisymm_iff, oeval_le_oeval_iff hpk hqk, oeval_le_oeval_iff hqk hpk]
+
+theorem oeval_eq_zero_iff {x : Nimber} {p : Nimber[X]} (hx : x ≠ 0) : oeval x p = 0 ↔ p = 0 := by
+  refine ⟨?_, by simp +contextual⟩
+  contrapose
+  rw [← val_ne_zero] at hx
+  exact fun hp ↦ ((pow_pos hx.pos _).trans_le <| opow_natDegree_le_oeval x hp).ne'
 
 /-- A version of `eq_oeval_of_lt_pow` stated in terms of `Ordinal`. -/
 theorem eq_oeval_of_lt_pow' {x y : Ordinal} {n : ℕ} (hx₀ : x ≠ 0) (h : y < x ^ n) :
@@ -766,7 +784,7 @@ theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
   refine ⟨q, ?_, hqk, rfl⟩
   rwa [oeval_lt_oeval_iff hqk hpk] at h
 
-theorem forall_lt_oeval_iff {x : Nimber} {P : Ordinal → Prop}
+theorem forall_lt_oeval_iff {x : Nimber} {P : Nimber → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
   mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk
@@ -891,10 +909,19 @@ theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   contrapose! hpn
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
 
+theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
+    (hp : ∀ c < p, 0 < c.degree → (∀ k, c.coeff k < x) → ∃ r < x, c.IsRoot r) :
+    p ≤ leastNoRoots x := by
+  refine le_of_not_gt fun h => ?_
+  have ht : x.leastNoRoots ≠ ⊤ := ne_top_of_lt h
+  obtain ⟨r, hr, hrr⟩ := hp (WithTop.untop _ ht) ((WithTop.untop_lt_iff ht).2 h)
+    (degree_leastNoRoots_pos ht) (coeff_leastNoRoots_lt ht)
+  exact not_isRoot_leastNoRoots_of_lt ht hr hrr
+
 theorem IsField.exists_root_subfield {x : Nimber} (h : IsField x)
     {p : h.toSubfield[X]} (hp₀ : p.degree ≠ 0)
     (hpn : map (Subfield.subtype _) p < leastNoRoots x) : ∃ r, p.IsRoot r := by
-  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simpa using (em _).symm
+  have hd : (p.map (Subring.subtype _)).degree = p.degree := by simp
   have ⟨r, hr, hr'⟩ := exists_root_of_lt_leastNoRoots (hd ▸ hp₀) (by simp) hpn
   exact ⟨⟨r, hr⟩, (isRoot_map_iff (Subring.subtype_injective _)).1 hr'⟩
 
@@ -945,7 +972,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
     · convert zero_lt_one' (WithBot ℕ)
       compute_degree!
     · have := h.inv_lt_self_of_not_isField h'
-      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [Nimber.pos_iff_ne_zero])
+      apply h.coeff_add_lt (h.coeff_mul_lt _ _) <;> aesop (add simp [pos_iff_ne_zero])
     · replace H : x⁻¹ * r + 1 = 0 := by simpa using H
       rw [Nimber.add_eq_zero] at H
       obtain rfl := eq_of_inv_mul_eq_one H
@@ -953,7 +980,7 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
   · apply le_of_forall_lt_imp_ne
     rw [WithTop.forall_lt_coe, ← C_1, Lex.forall_lt_linear]
     refine ⟨?_, fun y hy z ht ↦ ?_⟩
-    · simp_rw [lt_one_iff_zero, forall_eq, map_zero, add_zero]
+    · simp_rw [lt_one_iff, forall_eq, map_zero, add_zero]
       intro ht
       have ht' := ht ▸ WithTop.coe_ne_top
       simpa [← ht] using coeff_leastNoRoots_zero_ne ht'
@@ -1007,7 +1034,7 @@ theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     · aesop
   · have H := coeff_leastNoRoots_lt ht
     have : c⁻¹ < x := h.inv_lt (H _)
-    apply h.coeff_mul_lt <;> aesop (add simp [Nimber.pos_iff_ne_zero])
+    apply h.coeff_mul_lt <;> aesop (add simp [pos_iff_ne_zero])
   · have := @not_isRoot_leastNoRoots_of_lt x
     aesop
 
