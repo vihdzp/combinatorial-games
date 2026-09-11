@@ -11,9 +11,13 @@ public import CombinatorialGames.Surreal.Ordinal
 import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
-# Birthday of a surreal number
+# Birthdays of surreals
 
-TODO: write a better docstring
+We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
+equivalent to it.
+
+The numeric condition can be removed to yield an equivalent definition, but that is proved in
+`CombinatorialGames.Surreal.Birthday.Cut`.
 -/
 
 universe u
