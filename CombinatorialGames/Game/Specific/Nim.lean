@@ -38,7 +38,7 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : nim.IsWellFounded :=
+instance : nim.WellFounded :=
   .of_subrelation (· < ·) <| by simp
 
 end GameGraph
@@ -153,7 +153,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   · exact hu hy hxy
   have hyo := lf_right_of_le hxo.ge hy
   replace hy := Subposition.of_mem_moves hy
-  induction y using IsWellFounded.induction Subposition with | ind y ihy
+  induction y using wellFounded_subposition.induction with | h y ihy
   obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
   · refine lf_of_le_left ?_ hw hyx
     rw [le_iff_forall_lf]

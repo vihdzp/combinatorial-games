@@ -198,7 +198,7 @@ instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGe
 instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
-theorem subposition_wf : WellFounded Subposition := by
+instance wellFounded_subposition : WellFounded Subposition := by
   refine ⟨fun x => Acc.transGen ?_⟩
   apply QPF.Fix.ind
   unfold moves
@@ -213,8 +213,7 @@ theorem subposition_wf : WellFounded Subposition := by
 -- We make no use of `IGame`'s definition from a `QPF` after this point.
 attribute [irreducible] IGame
 
-instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
-instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
+instance : WellFoundedRelation IGame := ⟨Subposition, wellFounded_subposition⟩
 
 theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
 
@@ -320,12 +319,12 @@ See `ofSetsRecOn` for an alternate form. -/
 def moveRecOn {motive : IGame → Sort*} (x)
     (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     motive x :=
-  subposition_wf.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
+  wellFounded_subposition.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
 
 theorem moveRecOn_eq {motive : IGame → Sort*} (x)
     (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     moveRecOn x ind = ind x (fun _ y _ ↦ moveRecOn y ind) :=
-  subposition_wf.fix_eq ..
+  wellFounded_subposition.fix_eq ..
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -385,7 +384,7 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
 @[no_expose]
 instance : LE IGame where
-  le := Sym2.GameAdd.recursion subposition_wf fun x y le ↦
+  le := Sym2.GameAdd.recursion wellFounded_subposition fun x y le ↦
     (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
     (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
@@ -464,7 +463,7 @@ private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x 
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
   exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
-termination_by subposition_wf.cutExpand.wrap {x, y, z}
+termination_by wellFounded_subposition.cutExpand.wrap {x, y, z}
 decreasing_by
   on_goal 1 => convert! Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
   on_goal 2 => convert Relation.cutExpand_single_add (Subposition.of_mem_moves ha) {x, y}
@@ -631,7 +630,7 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  induction x, y using Sym2.GameAdd.recursion subposition_wf with | _ x y IH
+  induction x, y using Sym2.GameAdd.recursion wellFounded_subposition with | _ x y IH
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
   dsimp
   congr! 3 with z hz z hz
