@@ -92,7 +92,7 @@ protected theorem wsubposition [Dicotic x] (h : WSubposition y x) : Dicotic y :=
 /-- `dicotic` eagerly adds all possible `Dicotic` hypotheses. -/
 elab "dicotic" : tactic =>
   addInstances <| .mk
-    [`IGame.Dicotic.of_mem_moves, `IGame.Dicotic.subposition, `IGame.Dicotic.wsubposition]
+    [``Dicotic.of_mem_moves, ``Dicotic.subposition, ``Dicotic.wsubposition]
 
 @[simp]
 protected instance zero : Dicotic 0 := by
@@ -161,7 +161,7 @@ protected theorem wsubposition {x y} [Impartial x] (h : WSubposition y x) : Impa
 /-- `impartial` eagerly adds all possible `Impartial` hypotheses. -/
 elab "impartial" : tactic =>
   addInstances <| .mk
-    [`IGame.Impartial.of_mem_moves, `IGame.Impartial.subposition, `IGame.Impartial.wsubposition]
+    [``Impartial.of_mem_moves, ``Impartial.subposition, ``Impartial.wsubposition]
 
 @[simp] protected instance zero : Impartial 0 := by rw [impartial_def]; simp
 
@@ -348,7 +348,7 @@ protected theorem wsubposition [Numeric x] (h : WSubposition y x) : Numeric y :=
 /-- `numeric` eagerly adds all possible `Numeric` hypotheses. -/
 elab "numeric" : tactic =>
   addInstances <| .mk
-    [`IGame.Numeric.of_mem_moves, `IGame.Numeric.subposition, `IGame.Numeric.wsubposition]
+    [``Numeric.of_mem_moves, ``Numeric.subposition, ``Numeric.wsubposition]
 
 @[simp]
 protected instance zero : Numeric 0 := by
@@ -518,7 +518,7 @@ protected theorem wsubposition [Numeric x] (h : WSubposition y x) : Numeric y :=
 /-- `short` eagerly adds all possible `Short` hypotheses. -/
 elab "short" : tactic =>
   addInstances <| .mk
-    [`IGame.Short.of_mem_moves, `IGame.Short.subposition, `IGame.Short.wsubposition]
+    [``Short.of_mem_moves, ``Short.subposition, ``Short.wsubposition]
 
 theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
