@@ -83,16 +83,6 @@ public theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop
   rw [transGen_iff]
   simp [and_or_left, exists_or, and_comm]
 
--- mathlib PR #42549
-public theorem Set.forall_mem_union {α : Type*} {s t : Set α} {p : α → Prop} :
-    (∀ x ∈ s ∪ t, p x) ↔ (∀ x ∈ s, p x) ∧ (∀ x ∈ t, p x) := by
-  simp_rw [mem_union, or_imp, forall_and]
-
--- mathlib PR #42549
-public theorem Set.exists_mem_union {α : Type*} {s t : Set α} {p : α → Prop} :
-    (∃ x ∈ s ∪ t, p x) ↔ (∃ x ∈ s, p x) ∨ (∃ x ∈ t, p x) := by
-  simp_rw [mem_union, or_and_right, exists_or]
-
 universe u
 
 open Set Pointwise
@@ -861,8 +851,8 @@ theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
   simpa [add_comm, sub_eq_add_neg] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
-  induction x using subposition_wf.induction generalizing y z with | _ x ihx
-  induction y using subposition_wf.induction generalizing z with | _ y ihy
+  induction x using wellFounded_subposition.induction generalizing y z with | _ x ihx
+  induction y using wellFounded_subposition.induction generalizing z with | _ y ihy
   induction z using IGame.moveRecOn with | ind z ihz
   rw [le_iff_forall_lf, moves_add, moves_add]
   refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
