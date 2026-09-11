@@ -97,30 +97,15 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
-theorem birthday_eq_iInf_fits (x : IGame) [hx : Numeric x] :
-    birthday (.mk x) = ⨅ y : {y : Subtype Numeric // Fits y x}, birthday (.mk y.1.1) := by
-  let f (y : {y : Subtype Numeric // Fits y x}) := birthday (.mk y.1)
-  let : Inhabited {y : Subtype Numeric // Fits y x} := ⟨⟨x, hx⟩, Fits.refl _⟩
-  apply (ciInf_le' f default).antisymm'
-  obtain ⟨⟨⟨y, _⟩, hy⟩, hy'⟩ := ciInf_mem f
-  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk y)
-  rw [← hz'.trans hy']
-  apply (birthday_mk_le z).trans'
-  congr! 1
-  rw [eq_comm, mk_eq_mk] at hz ⊢
-  refine (hy.congr hz).equiv_of_forall_birthday_le fun w hw hw' ↦ hz' ▸ ?_
-  exact hy'.trans_le <| (ciInf_le' f ⟨⟨w, hw⟩, hw'⟩).trans (birthday_mk_le _)
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
+    Game.birthday (.mk y) ≤ birthday (.mk x) := by
+  obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
+  obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
+  rw [← Game.mk_eq hzy, ← hxb]
+  exact (Game.birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
 
--- TODO: can we remove the `Numeric x` assumption?
-theorem _root_.IGame.Fits.birthday_le {x y : IGame} [hx : Numeric x] [Numeric y] (h : Fits x y) :
-    birthday (.mk y) ≤ birthday (.mk x) := by
-  let f (x : {x : Subtype Numeric // Fits x y}) := birthday (.mk x.1)
-  rw [birthday_eq_iInf_fits y]
-  exact ciInf_le' f ⟨⟨x, hx⟩, h⟩
-
--- TODO: can we remove the `Numeric x` assumption?
-theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] [Numeric y]
-    (h : Fits x y) (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
+    Game.birthday (.mk y) < birthday (.mk x) := by
   apply h.birthday_le.lt_of_not_ge
   contrapose he
   obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
