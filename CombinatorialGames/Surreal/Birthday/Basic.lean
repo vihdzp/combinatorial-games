@@ -10,15 +10,10 @@ public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso
 
-
 /-!
-# Birthdays of surreals
+# Birthday of a surreal number
 
-We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
-equivalent to it.
-
-The numeric condition can be removed to yield an equivalent definition, but that is proved in
-`CombinatorialGames.Surreal.Birthday.Cut`.
+TODO: write a better docstring
 -/
 
 universe u
@@ -34,8 +29,6 @@ among all *numeric* pre-games that define it.
 The numeric condition can be removed, see `Surreal.birthday_toGame`. -/
 def birthday (x : Surreal.{u}) : NatOrdinal.{u} :=
   sInf (IGame.birthday '' {c | ∃ _ : Numeric c, mk c = x})
-
-/-! ### Basic properties -/
 
 theorem birthday_eq_iGameBirthday (x : Surreal) :
     ∃ (y : IGame) (_ : Numeric y), mk y = x ∧ y.birthday = birthday x := by
@@ -225,8 +218,6 @@ theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := b
   obtain ⟨c, _, rfl, h⟩ := birthday_eq_iGameBirthday x
   rw [← h, toGame_mk]
   exact Game.birthday_mk_le c
-
-/-! ### Small instances -/
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
