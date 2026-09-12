@@ -148,7 +148,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     ← Nat.pow_sub_one two_ne_zero hnd0, pow_right_inj₀ Nat.two_pos (by decide),
     eq_comm, Nat.sub_eq_iff_eq_add (Nat.one_le_iff_ne_zero.2 hnd0)] at hnd
   rw [birthday_of_den_ne_one hx, Option.get_eq_getD, hnd, Nat.add_one_inj, Nat.add_right_comm]
-  have hk (c : Int) (d : Nat) : (Rat.num (c / d)).natAbs / Rat.den (c / d) = c.natAbs / d := by
+  have hk (c : ℤ) (d : ℕ) : (Rat.num (c / d)).natAbs / Rat.den (c / d) = c.natAbs / d := by
     obtain hd0 | hd0 := eq_zero_or_pos d
     · simp [hd0]
     · rw [← Rat.mkRat_eq_div, Rat.num_mkRat, Rat.den_mkRat,
@@ -161,7 +161,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
   have hue : x.upper.toRat = Int.cast (x.num + 1) / x.den := by
     rw [x.coe_upper, ← hcd, ← one_div, ← add_div, ← Rat.intCast_one, ← Int.cast_add]
   have hlnd (hl : x.lower.den = 1) : x.lower.num.natAbs = (x.num - 1).natAbs / x.den := by
-    have hlnd := congr((x.lower.num / $hl : Rat))
+    have hlnd := congr((x.lower.num / $hl : ℚ))
     rw [Nat.cast_one, div_one, ← Int.cast_natCast, ← Rat.intCast_div _ _ (by simp [hl]),
       Int.cast_inj] at hlnd
     rw [← hlnd, Int.natAbs_ediv_of_dvd (by simp [hl]), Int.natAbs_natCast,
