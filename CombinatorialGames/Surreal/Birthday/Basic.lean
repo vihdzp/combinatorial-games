@@ -43,6 +43,12 @@ theorem birthday_eq_iGameBirthday (x : Surreal) :
 theorem birthday_mk_le (x : IGame) [Numeric x] : birthday (mk x) ≤ x.birthday :=
   csInf_le' ⟨x, ⟨_, rfl⟩, rfl⟩
 
+/-- See `Surreal.birthday_toGame` for the equality. -/
+theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := by
+  obtain ⟨c, _, rfl, h⟩ := birthday_eq_iGameBirthday x
+  rw [← h, toGame_mk]
+  exact Game.birthday_mk_le c
+
 @[simp]
 theorem birthday_zero : birthday 0 = 0 := by
   simpa using birthday_mk_le 0
@@ -216,12 +222,6 @@ theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨
 
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
-
-/-- The birthday of a surreal number is at least the birthday of the corresponding game. -/
-theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := by
-  obtain ⟨c, _, rfl, h⟩ := birthday_eq_iGameBirthday x
-  rw [← h, toGame_mk]
-  exact Game.birthday_mk_le c
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
