@@ -217,7 +217,8 @@ theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
 
 /-! ### Switches -/
 
-/-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
+/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is just
+equal to 0. -/
 def switch (x : IGame) : IGame :=
   !{{x} | {-x}}
 
@@ -240,6 +241,9 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 @[simp]
 theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
+
+theorem switch_of_lf_zero {x : IGame} (h : x ⧏ 0) : ±x ≈ 0 := by
+  apply equiv_of_forall_lf <;> simp [h]
 
 @[simp]
 theorem dicotic_switch_iff {x : IGame} : Dicotic (±x) ↔ Dicotic x := by
