@@ -540,6 +540,14 @@ theorem truncIdx_eq_self {x : SurrealHahnSeries} {i : Ordinal} :
 theorem truncIdx_length (x : SurrealHahnSeries) : x.truncIdx x.length = x := by
   simp
 
+theorem coeff_truncIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} {j : Surreal} (hi : i < x.length)
+    (h : x.exp ⟨i, mem_Iio.2 hi⟩ < j) : (x.truncIdx i).coeff j = x.coeff j := by
+  rw [truncIdx_of_lt hi, coeff_trunc_of_lt h]
+
+theorem coeff_truncIdx_of_ge {x : SurrealHahnSeries} {i : Ordinal} {j : Surreal} (hi : i < x.length)
+    (h : j ≤ x.exp ⟨i, mem_Iio.2 hi⟩) : (x.truncIdx i).coeff j = 0 := by
+  rw [truncIdx_of_lt hi, coeff_trunc_of_ge h]
+
 theorem coeff_truncIdx_of_mem {x : SurrealHahnSeries} {i : Ordinal} {j k : Surreal}
     (hjk : j ≤ k) (h : j ∈ (x.truncIdx i).support) : (x.truncIdx i).coeff k = x.coeff k := by
   obtain hi | hi := lt_or_ge i x.length
@@ -604,7 +612,7 @@ def term (x : SurrealHahnSeries) (i : Ordinal) : Surreal :=
   if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, hi⟩).1 else 0
 
 theorem term_of_lt {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
-    x.term i = x.coeffIdx i * ω^ (x.exp ⟨i, hi⟩).1 :=
+    x.term i = x.coeffIdx i * ω^ (x.exp ⟨i, mem_Iio.2 hi⟩).1 :=
   dite_eq_left hi
 
 @[simp]
@@ -626,12 +634,12 @@ theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
   aesop (add simp [eq_comm 0])
 
 theorem wlog_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
-    (x.term i).wlog = x.exp ⟨i, hi⟩ := by
+    (x.term i).wlog = x.exp ⟨i, mem_Iio.2 hi⟩ := by
   rw [term]
   aesop
 
 theorem mk_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
-    ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, hi⟩)) := by
+    ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, mem_Iio.2 hi⟩)) := by
   rw [term]
   aesop
 

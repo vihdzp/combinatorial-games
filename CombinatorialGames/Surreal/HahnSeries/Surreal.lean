@@ -69,7 +69,7 @@ When `y.length` is a limit ordinal, the series with `x ≺ y` describe the left 
 def truncLT (x : SurrealHahnSeries) : Set SurrealHahnSeries :=
   truncAux x (· < ·)
 
-notation:50 x:50 " ≺ " y:50 => x ∈ truncLT y
+@[inherit_doc truncLT] local notation:50 x:50 " ≺ " y:50 => x ∈ truncLT y
 recommended_spelling "truncLT" for "≺" in [«term_≺_»]
 
 /-- We write `x ≻ y` whenever `x = y.trunc i + single i r` for some `i ∈ y.support` and
@@ -80,7 +80,7 @@ When `y.length` is a limit ordinal, the series with `x ≻ y` describe the right
 def truncGT (x : SurrealHahnSeries) : Set SurrealHahnSeries :=
   truncAux x (· > ·)
 
-local notation:50 x:50 " ≻ " y:50 => x ∈ truncGT y
+@[inherit_doc truncGT] local notation:50 x:50 " ≻ " y:50 => x ∈ truncGT y
 recommended_spelling "truncGT" for "≻" in [«term_≺_»]
 
 private theorem truncAux_def {x y : SurrealHahnSeries} {R : ℝ → ℝ → Prop} :
@@ -550,7 +550,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_ge le_rfl,
             ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
-          · simp
+          · simp only [coeff_add_apply, Pi.toColex_apply, add_zero]
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
             grind
           · aesop
@@ -572,7 +572,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_ge le_rfl,
             ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
-          · simp
+          · simp only [coeff_add, Pi.toColex_apply, Pi.add_apply, add_zero]
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
             grind
           · aesop
@@ -678,12 +678,10 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     all_goals
       rw [← toSurreal_succ (by aesop), toSurreal_lt_toSurreal_iff, lt_def, truncIdx_of_lt hi]
       use x.exp ⟨i, hi⟩
-      simp
+      simp only [trunc_exp, coeff_add_apply, Pi.toColex_apply, coeff_single_self, coeff_exp]
       refine ⟨fun j hj ↦ ?_, ?_⟩
-      · rw [coeff_trunc_of_lt hj]
-        aesop
-      · rw [coeff_trunc_of_ge le_rfl, zero_add]
-        simpa
+      · rw [coeff_truncIdx_of_lt hi hj, coeff_single_of_ne hj.ne, add_zero]
+      · rwa [coeff_truncIdx_of_ge hi le_rfl, zero_add]
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
@@ -867,8 +865,8 @@ theorem term_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : 
     rwa [← truncIdx_length_of_le hyz, carrier_truncIdx, term_truncIdx_of_lt]
 
 theorem exp_congr {y z : PartialSum x} {i : Ordinal} (hy : i < y.length) (hz : i < z.length) :
-    (exp y.carrier ⟨i, hy⟩).1 = exp z.carrier ⟨i, hz⟩ := by
-  simp_rw [← wlog_term, term_congr hy hz]
+    (exp y.carrier ⟨i, mem_Iio.2 hy⟩).1 = exp z.carrier ⟨i, mem_Iio.2 hz⟩ := by
+  rw [← wlog_term hy, ← wlog_term hz, term_congr hy hz]
 
 theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.carrier := by
   intro y z h
@@ -910,17 +908,18 @@ private def sSupAux (s : Set (PartialSum x)) : TermSeq where
   exp_strictAnti _ _ h := exp_lt_exp h
   coeff_ne_zero i := by
     generalize_proofs H
-    rw [ne_eq, coeffIdx_eq_zero, not_le]
+    rw [ne_eq, coeffIdx_eq_zero_iff, not_le]
     exact Classical.choose_spec H
 
 private theorem term_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
     {i : Ordinal} (hs : i < (sSupAux s).length) (hi : i < y.length) :
     term (sSupAux s) i = term y.carrier i := by
-  unfold sSupAux
+  unfold sSupAux at *
   generalize_proofs _ H _
   rw [TermSeq.term_coe_of_lt, ← term_of_lt, term_congr hi]
   · exact H _
-  · simpa
+  · exact H _
+  · simpa using hs
 
 private theorem truncIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
     {i : Ordinal} (hs : i < (sSupAux s).length) (hy : i < y.length) :
@@ -931,10 +930,11 @@ private theorem truncIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
   · rw [term_truncIdx_of_ge hj, term_truncIdx_of_ge hj]
 
 /-- Directed union of partial sums. -/
+@[no_expose]
 instance : SupSet (PartialSum x) where
   sSup s := ⟨sSupAux s, fun hi ↦ by
     have hi' := TermSeq.length_coe _ ▸ hi
-    obtain ⟨⟨y, hy⟩, hy'⟩ := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 hi'
+    obtain ⟨⟨y, hy⟩, hy'⟩ := (lt_ciSup_iff' Ordinal.bddAbove_of_small).1 hi'
     rw [truncIdx_sSupAux hi' hy', term_sSupAux hi' hy', term_eq_leadingTerm_sub _ hy']
   ⟩
 
@@ -996,8 +996,8 @@ theorem mk_sub_strictMono :
     have hi' := hi.add_one_lt h
     apply (IH _ hi' _ (truncIdx ⟨z, hz⟩ (y.length + 1)).2 _ _).trans_le
     · apply mk_le_mk_of_sub
-      simp
-      simp_rw [sub_sub_sub_cancel_left, ← mk_leadingTerm (_ - _)]
+      rw [carrier_truncIdx, sub_sub_sub_cancel_left]
+      simp_rw [← mk_leadingTerm (_ - _)]
       rwa [← hz, ← leadingTerm_sub_truncIdx]
     · rw [← length_lt_length]
       simpa [length]
@@ -1008,7 +1008,7 @@ theorem wlog_sub_lt {y : PartialSum x} (h : x ≠ y.carrier) (i) :
   obtain ⟨i, hi⟩ := i
   have hi' : (y.truncIdx i).length = i := by simpa using hi.le
   have hy := hi' ▸ hi
-  rw [← wlog_term, term_eq_leadingTerm_sub _ hi, ← carrier_truncIdx, wlog_leadingTerm]
+  rw [← wlog_term hi, term_eq_leadingTerm_sub _ hi, ← carrier_truncIdx, wlog_leadingTerm]
   exact wlog_lt_wlog_of_vlt (by simpa [sub_eq_zero]) (vlt_def.2 <| mk_sub_strictMono hy)
 
 private def succ' (y : PartialSum x) : PartialSum x where
@@ -1021,8 +1021,8 @@ private def succ' (y : PartialSum x) : PartialSum x where
     have hr : (x - ↑↑s).leadingCoeff ≠ 0 := by simpa [sub_eq_zero]
     have he : ∀ i, (x - s).wlog < s.exp i := by simpa using wlog_sub_lt hx
     rw [← TermSeq.coe_appendSingle hr he] at ⊢ hj
-    rw [TermSeq.length_coe, TermSeq.appendSingle_length, Order.lt_add_one_iff] at hj
-    rw [TermSeq.term_coe_of_lt (by simpa), TermSeq.appendSingle_coeff,
+    rw [TermSeq.length_coe, TermSeq.length_appendSingle, Order.lt_add_one_iff] at hj
+    rw [TermSeq.term_coe_of_lt (by simpa), TermSeq.coeff_appendSingle,
       ← TermSeq.coe_trunc, TermSeq.trunc_appendSingle hj]
     split_ifs with h
     · subst h
