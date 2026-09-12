@@ -208,6 +208,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
       Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den_of_den_upper_ne_one hr,
       Nat.add_max_add_right, Nat.add_max_add_right, Option.get_eq_getD, Option.get_eq_getD]
 
+@[simp]
 theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
   induction hd : x.den using Nat.strongRec generalizing x with | ind d ih
   cases hd
