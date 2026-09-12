@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Pow
+public import CombinatorialGames.Surreal.Leading
 public import Mathlib.Order.Shrink
 public import Mathlib.RingTheory.HahnSeries.Lex
 
@@ -40,7 +40,6 @@ public noncomputable section
 /-! ### For Mathlib -/
 
 attribute [aesop simp] Pi.single_apply
-attribute [-simp] Ordinal.add_one_eq_succ
 attribute [grind =] Subtype.mk_le_mk Subtype.mk_lt_mk Order.lt_add_one_iff
 
 theorem Set.IsWF.to_subtype {α : Type*} [LT α] {s : Set α} (h : IsWF s) : WellFoundedLT s := h
@@ -97,8 +96,8 @@ def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
 def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
   x.1.coeff <| OrderDual.toDual i
 
-@[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := rfl
-@[simp, grind =] theorem coeff_zero : coeff 0 = 0 := rfl
+@[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := (rfl)
+@[simp, grind =] theorem coeff_zero : coeff 0 = 0 := (rfl)
 @[simp, grind =] theorem coeff_one : coeff 1 = Pi.single 0 1 := by
   ext x; apply HahnSeries.coeff_one.trans; aesop
 
@@ -217,12 +216,12 @@ theorem coeff_trunc (x : SurrealHahnSeries) (i : Surreal) :
 @[simp]
 theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
     (x.trunc i).coeff j = x.coeff j :=
-  if_pos h
+  ite_eq_left h
 
 @[simp]
 theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
     (x.trunc i).coeff j = 0 :=
-  if_neg h.not_gt
+  ite_eq_right h.not_gt
 
 @[simp, grind =]
 theorem support_trunc (x : SurrealHahnSeries) (i : Surreal) :
@@ -235,16 +234,6 @@ theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
 
 theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
   fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
-
-@[simp]
-theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
-    (x.trunc i).coeff j = x.coeff j :=
-  ite_eq_left h
-
-@[simp]
-theorem coeff_trunc_of_le {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
-    (x.trunc i).coeff j = 0 :=
-  ite_eq_right h.not_gt
 
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by
@@ -439,7 +428,7 @@ theorem coeffIdx_eq_zero {x : SurrealHahnSeries} {i : Ordinal} :
     contrapose! h
     rw [coeffIdx_of_lt h]
     exact (x.exp _).2
-  mpr h := by rw [coeffIdx, dif_neg h.not_gt]
+  mpr h := by rw [coeffIdx, dite_eq_right h.not_gt]
 
 alias ⟨_, coeffIdx_of_le⟩ := coeffIdx_eq_zero
 
@@ -668,7 +657,7 @@ def toSurrealHahnSeries (s : TermSeq) : SurrealHahnSeries :=
   have H := toSurrealHahnSeries_aux s.length fun i ↦ (s.exp i, s.coeff i)
   .mk _ (small_subset H) (.subset (by
     rw [wellFoundedOn_range]
-    convert wellFounded_lt (α := Iio s.length)
+    convert! wellFounded_lt (α := Iio s.length)
     ext
     exact s.exp_strictAnti.lt_iff_gt
   ) H)
@@ -677,7 +666,7 @@ instance : Coe TermSeq SurrealHahnSeries where
   coe := toSurrealHahnSeries
 
 /-- Build a `TermSeq` from a `SurrealHahnSeries`. -/
-@[simps!]
+@[simps!, expose, reducible]
 def ofSurrealHahnSeries (x : SurrealHahnSeries) : TermSeq where
   length := x.length
   exp := (↑) ∘ x.exp
@@ -712,7 +701,7 @@ theorem exp_inj {s : TermSeq} {i j} : s.exp i = s.exp j ↔ i = j :=
 
 @[simp, grind =]
 theorem coeff_exp {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff i := by
-  rw [toSurrealHahnSeries, coeff_mk, dif_pos ⟨i, rfl⟩]
+  rw [toSurrealHahnSeries, coeff_mk, dite_eq_left ⟨i, rfl⟩]
   generalize_proofs H
   rw [s.exp_strictAnti.injective <| Classical.choose_spec H]
 
