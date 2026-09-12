@@ -84,8 +84,8 @@ theorem Dyadic.birthday_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
   dif_neg hx
 
 example : Dyadic.birthday ((13 : Dyadic) >>> 2) = 6 := rfl -- birthday 3.25 = 6
-example : Dyadic.birthday ((1 : Dyadic) >>> 1) = 2 := rfl -- birthday 1/2 = 2
-example : Dyadic.birthday 7 = 7 := rfl -- birthday 7 = 7
+example : Dyadic.birthday ((1 : Dyadic) >>> 1) = 2 := rfl  -- birthday 1/2 = 2
+example : Dyadic.birthday 7 = 7 := rfl                     -- birthday 7 = 7
 example : Dyadic.birthday ((-5 : Dyadic) >>> 1) = 4 := rfl -- birthday -2.5 = 4
 example : Dyadic.birthday ((1 : Dyadic) <<< 4) = 16 := rfl -- birthday 16 = 16
 
