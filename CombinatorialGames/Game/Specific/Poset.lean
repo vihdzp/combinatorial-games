@@ -75,7 +75,7 @@ theorem rel_univ_of_rel_top_compl {α : Type*} [PartialOrder α] [OrderTop α] {
   rw [compl_eq_univ_sdiff, sdiff_sdiff, union_eq_right.2]
   simp
 
-theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
+instance wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ ·) := by
   rw [wellFounded_iff_isEmpty_descending_chain]
   refine ⟨fun ⟨f, hf⟩ ↦ ?_⟩
   choose g hg using id hf
@@ -88,8 +88,6 @@ theorem wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺ 
   rw [(hg m).2, mem_sdiff] at this
   exact this.2 h'
 
-instance isWellFounded_rel [WellQuasiOrderedLE α] : IsWellFounded (Set α) (· ≺ ·) :=
-  ⟨wellFounded_rel⟩
 
 /-! ### Poset game -/
 
@@ -103,7 +101,7 @@ variable (α) in
 abbrev _root_.GameGraph.poset : GameGraph (Set α) where
   moves _ x := {y | Poset.Rel y x}
 
-instance : (poset α).IsWellFounded :=
+instance : (poset α).WellFounded :=
   .of_subrelation Poset.Rel <| by simp
 
 /-- A state of the poset game on `α`. -/
