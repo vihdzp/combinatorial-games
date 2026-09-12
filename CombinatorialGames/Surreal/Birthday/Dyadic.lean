@@ -109,7 +109,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_on
   rw [hlnd]
   apply le_antisymm
   · rw [← not_lt, Nat.div_lt_div_iff_exists]
-    simp_rw [not_exists, not_and]
+    push Not
     intro k hkl hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_sub_le _ 1))
     rw [le_antisymm hkr (Int.natAbs_sub_le _ 1), ← Int.natCast_dvd]
@@ -118,7 +118,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_on
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hle
     rw [Dyadic.den, hle, Rat.den_intCast]
   · rw [← not_lt, Nat.div_lt_div_iff_exists]
-    simp_rw [not_exists, not_and]
+    push Not
     intro k hkl hkr
     rw [← Int.sub_add_cancel x.num 1] at hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_add_le _ 1))
