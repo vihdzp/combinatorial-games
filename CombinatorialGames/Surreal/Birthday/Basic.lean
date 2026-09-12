@@ -100,22 +100,67 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
 
-theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
+theorem _root_.IGame.Fits.gameBirthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
     Game.birthday (.mk y) ≤ birthday (.mk x) := by
   obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
   obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
   rw [← Game.mk_eq hzy, ← hxb]
   exact (Game.birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
 
-theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
+theorem _root_.IGame.Fits.gameBirthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
     Game.birthday (.mk y) < birthday (.mk x) := by
-  apply h.birthday_le.lt_of_not_ge
+  apply h.gameBirthday_le.lt_of_not_ge
   contrapose he
   obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
   rw [← hz'] at he
   rw [eq_comm, mk_eq_mk] at hz
   exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
-    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
+    he.trans (hw.gameBirthday_le.trans <| birthday_mk_le _)
+
+theorem _root_.IGame.Fits.surrealBirthday_le {x y : IGame} [Numeric x] [Numeric y] (h : Fits x y) :
+    birthday (.mk y) ≤ birthday (.mk x) := by
+  obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
+  obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
+  numeric
+  rw [← hxb, ← mk_eq hzy]
+  exact (birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
+
+theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric y] (h : Fits x y)
+    (he : ¬ x ≈ y) : birthday (.mk y) < birthday (.mk x) := by
+  apply h.surrealBirthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
+
+theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.surrealBirthday_le
+  simp_all [IGame.Fits]
+
+theorem birthday_ofSets_lt_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    !{s | t}.birthday < z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  apply IGame.Fits.surrealBirthday_lt
+  · simp_all [IGame.Fits]
+  · rwa [← mk_eq_mk, ← ofSets_eq_mk, out_eq, eq_comm]
+
+theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
+    (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
+    !{s | t} = z := by
+  by_contra hz
+  exact (birthday_ofSets_lt_of_mem hL hR hz).not_ge <|
+    h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :

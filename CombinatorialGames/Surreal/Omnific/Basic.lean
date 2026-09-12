@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Cut
+public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Real
 public import Mathlib.Algebra.Ring.Subring.Defs
 
