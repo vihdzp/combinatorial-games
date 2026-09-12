@@ -90,7 +90,7 @@ example : Dyadic.birthday 7 = 7 := rfl                     -- birthday 7 = 7
 example : Dyadic.birthday ((-5 : Dyadic) >>> 1) = 4 := rfl -- birthday -2.5 = 4
 example : Dyadic.birthday ((1 : Dyadic) <<< 4) = 16 := rfl -- birthday 16 = 16
 
-theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_one {x : Dyadic}
+theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
     (hxl : x.lower.den ≠ 1) : x.lower.num.natAbs / x.lower.den = x.num.natAbs / x.den := by
   have hcd : x.num / x.den = x.toRat := x.toRat.num_div_den
   have hd : x.den ≠ 1 := by
@@ -127,13 +127,13 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_on
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hcd
     rw [Dyadic.den, ← hcd, Rat.den_intCast]
 
-theorem Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den_of_den_upper_ne_one {x : Dyadic}
+theorem Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den {x : Dyadic}
     (hxl : x.upper.den ≠ 1) : x.upper.num.natAbs / x.upper.den = x.num.natAbs / x.den := by
   rw [← den_neg] at hxl
   rw [← Int.natAbs_neg x.upper.num, ← Int.natAbs_neg x.num, ← den_neg x.upper, ← den_neg x,
     ← num_neg x.upper, ← num_neg x]
   rw [← lower_neg] at hxl ⊢
-  exact Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_one hxl
+  exact Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den hxl
 
 theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyadic}
     (hx : x.den ≠ 1) : max x.lower.birthday x.upper.birthday + 1 = x.birthday := by
@@ -185,7 +185,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
       Rat.num_intCast, Rat.num_intCast]
     lia
   · rw [birthday_of_den_eq_one hl, birthday_of_den_ne_one hr,
-      Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den_of_den_upper_ne_one hr, hlnd hl]
+      Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den hr, hlnd hl]
     rw [Dyadic.den_eq_two_pow_toNat_precision, Nat.pow_eq_one, or_iff_right (by decide)] at hl
     rw [hl, zero_max] at hnd ⊢
     rw [Option.get_eq_getD, max_eq_right_iff, Nat.add_assoc]
@@ -194,7 +194,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     rw [Int.natAbs_one, Nat.succ_div, Nat.add_le_add_iff_left]
     apply ite_le_sup
   · rw [birthday_of_den_ne_one hl, birthday_of_den_eq_one hr,
-      Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_one hl, hund hr]
+      Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den hl, hund hr]
     rw [Dyadic.den_eq_two_pow_toNat_precision, Nat.pow_eq_one, or_iff_right (by decide)] at hr
     rw [hr, max_zero] at hnd ⊢
     rw [Option.get_eq_getD, max_eq_left_iff, Nat.add_assoc]
@@ -203,8 +203,8 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     rw [Int.natAbs_one, Nat.succ_div, Nat.add_le_add_iff_left]
     apply ite_le_sup
   · rw [birthday_of_den_ne_one hl, birthday_of_den_ne_one hr,
-      Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_one hl,
-      Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den_of_den_upper_ne_one hr,
+      Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den hl,
+      Dyadic.natAbs_num_div_den_upper_eq_natAbs_num_div_den hr,
       Nat.add_max_add_right, Nat.add_max_add_right, Option.get_eq_getD, Option.get_eq_getD]
 
 @[simp]
