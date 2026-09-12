@@ -688,12 +688,12 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
   conv_lhs => rw [toSurreal_eq']
-  exact (fits_ofSets_truncLT_truncGT ..).birthday_le
+  exact (fits_ofSets_truncLT_truncGT ..).surrealBirthday_le
 
 theorem birthday_truncIdx_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
     Surreal.birthday (x.truncIdx i) < Surreal.birthday x := by
   conv_lhs => rw [toSurreal_eq']
-  apply (fits_ofSets_truncLT_truncGT ..).birthday_lt
+  apply (fits_ofSets_truncLT_truncGT ..).surrealBirthday_lt
   grw [← toIGame_equiv, toIGame_equiv_toIGame_iff]
   exact (truncIdx_ne h).symm
 
@@ -763,6 +763,8 @@ theorem carrier_bot : carrier (⊥ : PartialSum x) = 0 :=
   rfl
 
 /-- The length of the carrier. -/
+-- TODO: I probably want to get rid of this.
+@[reducible, expose]
 def length (y : PartialSum x) : Ordinal :=
   y.carrier.length
 
@@ -877,7 +879,7 @@ theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.car
 theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
   cases x with | mk z
   rw [toSurreal_eq']
-  apply Fits.birthday_le
+  apply Fits.surrealBirthday_le
   unfold truncLT truncGT
   constructor
   all_goals
@@ -892,18 +894,18 @@ theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
     simpa using hr
 
 instance : Small.{u} (PartialSum x) := by
-  refine small_of_injective (β := Iic x.birthday) (f := fun y ↦ ⟨_, birthday_le y⟩) fun y z h ↦
-    birthday_strictMono.injective ?_
+  refine small_of_injective (β := Iic x.birthday) (f := fun y ↦ ⟨_, mem_Iic.2 <| birthday_le y⟩)
+    fun y z h ↦ birthday_strictMono.injective ?_
   simpa using h
 
 /-- Auxiliary definition for the `SupSet` instance. -/
 private def sSupAux (s : Set (PartialSum x)) : TermSeq where
   length := ⨆ x : s, x.1.length
   exp i :=
-    haveI H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
+    haveI H := (lt_ciSup_iff' Ordinal.bddAbove_of_small).1 i.2
     exp _ ⟨_, Classical.choose_spec H⟩
   coeff i :=
-    haveI H := (lt_ciSup_iff' (Ordinal.bddAbove_of_small _)).1 i.2
+    haveI H := (lt_ciSup_iff' Ordinal.bddAbove_of_small).1 i.2
     coeffIdx (Classical.choose H).1.1 i
   exp_strictAnti _ _ h := exp_lt_exp h
   coeff_ne_zero i := by
@@ -926,7 +928,7 @@ private theorem truncIdx_sSupAux {s : Set (PartialSum x)} {y : PartialSum x}
   refine term_injective <| funext fun j ↦ ?_
   obtain hj | hj := lt_or_ge j i
   · rw [term_truncIdx_of_lt hj, term_truncIdx_of_lt hj, term_sSupAux (hj.trans hs) (hj.trans hy)]
-  · rw [term_truncIdx_of_le hj, term_truncIdx_of_le hj]
+  · rw [term_truncIdx_of_ge hj, term_truncIdx_of_ge hj]
 
 /-- Directed union of partial sums. -/
 instance : SupSet (PartialSum x) where
@@ -941,12 +943,12 @@ theorem length_sSup (s : Set (PartialSum x)) : (sSup s).length = ⨆ x : s, x.1.
   TermSeq.length_coe _
 
 instance : CompleteSemilatticeSup (PartialSum x) where
-  le_sSup s y hy := by
-    rw [← length_le_length, length_sSup]
-    exact le_ciSup (Ordinal.bddAbove_of_small _) (⟨y, hy⟩ : s)
-  sSup_le s y := by
-    rw [← length_le_length, length_sSup, ciSup_le_iff' (Ordinal.bddAbove_of_small _)]
-    simp
+  isLUB_sSup s := by
+    refine ⟨fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+    · rw [← length_le_length, length_sSup]
+      exact le_ciSup Ordinal.bddAbove_of_small (⟨y, hy⟩ : s)
+    · rw [← length_le_length, length_sSup, ciSup_le_iff' Ordinal.bddAbove_of_small]
+      simpa
 
 instance : CompleteLattice (PartialSum x) :=
   completeLatticeOfCompleteSemilatticeSup _
@@ -994,7 +996,7 @@ theorem mk_sub_strictMono :
     have hi' := hi.add_one_lt h
     apply (IH _ hi' _ (truncIdx ⟨z, hz⟩ (y.length + 1)).2 _ _).trans_le
     · apply mk_le_mk_of_sub
-      dsimp
+      simp
       simp_rw [sub_sub_sub_cancel_left, ← mk_leadingTerm (_ - _)]
       rwa [← hz, ← leadingTerm_sub_truncIdx]
     · rw [← length_lt_length]
@@ -1045,6 +1047,7 @@ theorem coe_carrier_top : (⊤ : PartialSum x).carrier = x := by
   apply (le_top (a := succ' ⊤)).not_gt
   rw [← length_lt_length, length_succ'_of_ne h.symm, Order.lt_add_one_iff]
 
+@[no_expose]
 instance : SuccOrder (PartialSum x) :=
   .ofCore succ' (by
     intro y hy z
@@ -1088,7 +1091,7 @@ theorem toSurreal_toHahnSeries (x : Surreal) : x.toHahnSeries = x :=
 
 @[simp]
 theorem PartialSum.carrier_top (x : Surreal) : (⊤ : PartialSum x).carrier = x.toHahnSeries :=
-  rfl
+  (rfl)
 
 @[simp]
 theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) :
@@ -1097,7 +1100,7 @@ theorem _root_.SurrealHahnSeries.toHahnSeries_toSurreal (x : SurrealHahnSeries) 
   rw [toSurreal_toHahnSeries]
 
 /-- `Surreal.toHahnSeries` as an `OrderIso`. -/
-@[simps!]
+@[simps!, expose]
 def toHahnSeriesOrderIso : Surreal ≃o SurrealHahnSeries :=
   .symm {
     toFun := SurrealHahnSeries.toSurreal
