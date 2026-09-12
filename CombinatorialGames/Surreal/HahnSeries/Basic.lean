@@ -261,8 +261,8 @@ theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
   obtain hi | hi := lt_or_ge i k
   · obtain hj | hj := lt_or_ge j k
     · rw [coeff_trunc_of_lt hj, coeff_trunc_of_lt hi, coeff_trunc_of_lt (max_lt hi hj)]
-    · rw [coeff_trunc_of_ge hj, coeff_trunc_of_ge (le_max_of_ge_right hj)]
-  · rw [coeff_trunc_eq_zero (coeff_trunc_of_ge hi), coeff_trunc_of_ge (le_max_of_ge_left hi)]
+    · rw [coeff_trunc_of_ge hj, coeff_trunc_of_ge (le_max_of_le_right hj)]
+  · rw [coeff_trunc_eq_zero (coeff_trunc_of_ge hi), coeff_trunc_of_ge (le_max_of_le_left hi)]
 
 theorem trunc_eq_self_iff {x : SurrealHahnSeries} {i : Surreal} :
     x.trunc i = x ↔ ∀ j ∈ x.support, i < j := by
