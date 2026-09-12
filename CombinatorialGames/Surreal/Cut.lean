@@ -3,11 +3,6 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, Violeta Hernández Palacios
 -/
-<<<<<<< HEAD
-import CombinatorialGames.Surreal.Birthday.Basic
-import Mathlib.Order.Concept
-import Mathlib.Order.UpperLower.CompleteLattice
-=======
 module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
@@ -16,7 +11,6 @@ public import Mathlib.Order.UpperLower.CompleteLattice
 
 import Mathlib.Algebra.Order.Group.OrderIso
 import Mathlib.Order.ConditionallyCompleteLattice.Finset
->>>>>>> master
 
 /-!
 # Surreal cuts
@@ -251,7 +245,7 @@ def rightSurreal : Surreal ↪o Cut where
   map_rel_iff' := Iic_subset_Iic
 
 @[simp, grind =]
-theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
+theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x} := rfl
 @[simp, grind =]
 theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
 @[simp, grind =]

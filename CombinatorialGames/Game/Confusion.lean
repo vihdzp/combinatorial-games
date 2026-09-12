@@ -136,9 +136,17 @@ theorem confusionInterval_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
   ext
   simp
 
--- This should be easy after #306.
-proof_wanted bddAbove_confusionInterval (x : Game) : BddAbove (confusionInterval x)
-proof_wanted bddBelow_confusionInterval (x : Game) : BddBelow (confusionInterval x)
+theorem bddAbove_confusionInterval (x : Game) : BddAbove (confusionInterval x) := by
+  refine ⟨x.birthday, fun y hy ↦ ?_⟩
+  contrapose! hy
+  rw [mem_confusionInterval, incompRel_comm]
+  exact (x.le_toGame_birthday.trans_lt <| toGame.strictMono hy).not_incompRel
+
+theorem bddBelow_confusionInterval (x : Game) : BddBelow (confusionInterval x) := by
+  refine ⟨-x.birthday, fun y hy ↦ ?_⟩
+  contrapose! hy
+  rw [mem_confusionInterval]
+  exact ((toGame.strictMono hy).trans_le x.neg_toGame_birthday_le).not_incompRel
 
 -- Do this after #303.
 proof_wanted confusionInterval_subset_zero (x : IGame) [x.Dicotic] : confusionInterval (.mk x) ⊆ {0}
