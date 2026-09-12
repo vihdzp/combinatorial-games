@@ -3,7 +3,9 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Cut
+module
+
+public import CombinatorialGames.Surreal.Cut
 
 /-!
 # Confusion intervals of games
@@ -11,6 +13,8 @@ import CombinatorialGames.Surreal.Cut
 For a game `x`, its confusion interval is the set of surreals that are fuzzy (or confused) with it.
 We prove that this set is always order connected, and calculate some explicit confusion intervals.
 -/
+
+public section
 
 /-! ### Some explicit calculations with cuts -/
 
@@ -152,3 +156,4 @@ theorem confusionInterval_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
 proof_wanted confusionInterval_subset_zero (x : IGame) [x.Dicotic] : confusionInterval (.mk x) ⊆ {0}
 
 end Game
+end
