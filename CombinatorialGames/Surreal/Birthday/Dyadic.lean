@@ -19,22 +19,12 @@ and give an explicit formula for the birthday of a dyadic number.
 
 public section
 
--- mathlib PR #42481
-theorem Nat.add_div_le_div_add_div_add_one (a b c : ℕ) : (a + b) / c ≤ a / c + b / c + 1 :=
-  if h : c = 0 then by simp [h] else
-    (Nat.add_div (Nat.pos_of_ne_zero h)).trans_le
-      (Nat.add_le_add_left (by split <;> decide) _)
-
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
   · intro h
     refine ⟨b - b % c, ?_, Nat.sub_le b _, Nat.dvd_sub_mod b⟩
     have hc0 : c ≠ 0 := by rintro rfl; simp at h
-    -- lean4 PR #14699
-    fail_if_success rw [← Nat.div_lt_div_right hc0 (Nat.dvd_sub_mod b)]
-    rw [← Nat.div_mul_cancel (Nat.dvd_sub_mod b), ← Nat.div_lt_iff_lt_mul (Nat.pos_of_ne_zero hc0)]
-    rw [← Nat.div_eq_sub_mod_div]
-    exact h
+    rwa [← Nat.div_lt_div_right hc0 (Nat.dvd_sub_mod b), ← Nat.div_eq_sub_mod_div]
   · intro ⟨d, ha, hb, hc⟩
     grw [← hb]
     exact Nat.div_lt_div_of_lt_of_dvd hc ha
@@ -67,7 +57,7 @@ def Dyadic.birthday (x : Dyadic) : Nat :=
 @[simp]
 theorem Dyadic.birthday_intCast (n : Int) : Dyadic.birthday n = n.natAbs := by
   unfold Dyadic.birthday
-  rw [dif_pos (Dyadic.den_intCast n), Dyadic.num_intCast]
+  rw [dite_eq_left (Dyadic.den_intCast n), Dyadic.num_intCast]
 
 @[simp]
 theorem Dyadic.birthday_natCast (n : Nat) : Dyadic.birthday n = n := by
@@ -82,7 +72,7 @@ theorem Dyadic.birthday_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x.birthday =
       (x.precision.get (isSome_precision_eq_true_of_den_ne_one hx)).toNat +
         x.num.natAbs / x.den + 1 :=
-  dif_neg hx
+  dite_eq_right hx
 
 example : Dyadic.birthday ((13 : Dyadic) >>> 2) = 6 := rfl -- birthday 3.25 = 6
 example : Dyadic.birthday ((1 : Dyadic) >>> 1) = 2 := rfl  -- birthday 1/2 = 2
@@ -101,7 +91,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
   have hlnd : x.lower.num.natAbs / x.lower.den = (x.num - 1).natAbs / x.den := by
     rw [Dyadic.num, Dyadic.den, x.coe_lower, ← hcd, ← one_div, ← sub_div,
       ← Int.cast_one, ← Int.cast_sub, ← Rat.mkRat_eq_div, Rat.num_mkRat, Rat.den_mkRat,
-      if_neg x.den_ne_zero, if_neg x.den_ne_zero,
+      ite_eq_right x.den_ne_zero, ite_eq_right x.den_ne_zero,
       Int.natAbs_ediv_of_dvd (Int.natCast_dvd.2 (Nat.gcd_dvd_right _ _)),
       Int.natAbs_natCast, ← Nat.mul_div_mul_right _ _ (Nat.gcd_pos_of_pos_left _ x.den_pos),
       Nat.div_mul_cancel (Nat.gcd_dvd_left _ _), Nat.div_mul_cancel (Nat.gcd_dvd_right _ _)]
@@ -151,7 +141,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     obtain hd0 | hd0 := eq_zero_or_pos d
     · simp [hd0]
     · rw [← Rat.mkRat_eq_div, Rat.num_mkRat, Rat.den_mkRat,
-        if_neg hd0.ne', if_neg hd0.ne',
+        ite_eq_right hd0.ne', ite_eq_right hd0.ne',
         Int.natAbs_ediv_of_dvd (Int.natCast_dvd.2 (Nat.gcd_dvd_right _ _)),
         Int.natAbs_natCast, ← Nat.mul_div_mul_right _ _ (Nat.gcd_pos_of_pos_left c.natAbs hd0),
         Nat.div_mul_cancel (Nat.gcd_dvd_left _ _), Nat.div_mul_cancel (Nat.gcd_dvd_right _ _)]

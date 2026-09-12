@@ -135,8 +135,8 @@ theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
   unfold Dyadic.den at hx ⊢
   rw [coe_lower, coe_upper]
   unfold Dyadic.den
-  rw [Rat.sub_def', Rat.den_mkRat, if_neg (by positivity),
-    Rat.add_def', Rat.den_mkRat, if_neg (by positivity),
+  rw [Rat.sub_def', Rat.den_mkRat, ite_eq_right (by positivity),
+    Rat.add_def', Rat.den_mkRat, ite_eq_right (by positivity),
     Rat.den_inv_of_ne_zero (by positivity), Rat.num_inv, Rat.num_natCast,
     Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero x.den_ne_zero,
     Nat.cast_one, Int.one_mul, ← Int.sub_mul, ← Int.add_mul,
