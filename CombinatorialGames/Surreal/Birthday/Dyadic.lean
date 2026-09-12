@@ -94,9 +94,8 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den_of_den_lower_ne_on
     (hxl : x.lower.den ≠ 1) : x.lower.num.natAbs / x.lower.den = x.num.natAbs / x.den := by
   have hcd : x.num / x.den = x.toRat := x.toRat.num_div_den
   have hd : x.den ≠ 1 := by
-    intro hd
-    apply hxl
-    rw [x.lower_eq_of_den_eq_one hd, ← Int.cast_one, ← Int.cast_sub, Dyadic.den_intCast]
+    contrapose hxl
+    rw [x.lower_eq_of_den_eq_one hxl, ← Int.cast_one, ← Int.cast_sub, Dyadic.den_intCast]
   have hle : x.lower.toRat = Int.cast (x.num - 1) / x.den := by
     rw [x.coe_lower, ← hcd, ← one_div, ← sub_div, ← Rat.intCast_one, ← Int.cast_sub]
   have hlnd : x.lower.num.natAbs / x.lower.den = (x.num - 1).natAbs / x.den := by
