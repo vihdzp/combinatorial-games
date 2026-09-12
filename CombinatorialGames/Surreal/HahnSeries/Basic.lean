@@ -746,8 +746,7 @@ theorem coeff_coe {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff
 theorem coeff_coe_of_notMem {s : TermSeq} {x : Surreal} (h : x ∉ range s.exp) : coeff s x = 0 := by
   grind [toSurrealHahnSeries]
 
-@[simp, grind =]
-theorem coeff_ofSurrealHahnSeries_coe {x : SurrealHahnSeries} (i : Iio x.length) :
+private theorem coeff_ofSurrealHahnSeries_coe {x : SurrealHahnSeries} (i : Iio x.length) :
     coeff (ofSurrealHahnSeries x) (x.exp i) = x.coeffIdx i :=
   coeff_coe ..
 
@@ -825,6 +824,7 @@ def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
     ext i
     by_cases h : i ∈ x.support
     · obtain ⟨⟨i, _⟩, hi, rfl⟩ := eq_exp_of_mem_support h
+      rw [coeff_ofSurrealHahnSeries_coe]
       simp
     · have hx : x.coeff i = 0 := by rwa [← notMem_support_iff]
       rw [coeff_coe_of_notMem, hx]
@@ -848,13 +848,24 @@ theorem ofSurrealHahnSeries_inj {x y : SurrealHahnSeries} :
   surrealHahnSeriesEquiv.symm.apply_eq_iff_eq
 
 /-- A `TermSeq` with a single term. -/
-@[simps (attr := grind =), expose]
 def single (r : ℝ) (e : Surreal) (hr : r ≠ 0) : TermSeq where
   length := 1
   exp _ := e
   coeff _ := r
   exp_strictAnti _ := by simp
   coeff_ne_zero _ := hr
+
+@[simp, grind =]
+theorem length_single (r e hr) : (single r e hr).length = 1 :=
+  (rfl)
+
+@[simp, grind =]
+theorem exp_single (r e hr) (i : Iio (single r e hr).length) : (single r e hr).exp i = e :=
+  (rfl)
+
+@[simp, grind =]
+theorem coeff_single (r e hr) (i : Iio (single r e hr).length) : (single r e hr).coeff i = r :=
+  (rfl)
 
 /-- Appends a single term at the end of a `TermSeq`.
 
@@ -872,26 +883,33 @@ theorem length_appendSingle (s : TermSeq) (r e hr he) :
     (s.appendSingle r e hr he).length = s.length + 1 :=
   (rfl)
 
+@[grind =]
 theorem exp_appendSingle (s : TermSeq) (r e hr he) (i : Iio (s.appendSingle r e hr he).length) :
     (s.appendSingle r e hr he).exp i = if h : i = s.length then e else s.exp ⟨i, by grind⟩ := by
   rfl
-  #exit
 
-theorem exp_eq_exp_appendSingle (s : TermSeq) (i r e hr he) :
+@[grind =]
+theorem coeff_appendSingle (s : TermSeq) (r e hr he) (i : Iio (s.appendSingle r e hr he).length) :
+    (s.appendSingle r e hr he).coeff i = if h : i = s.length then r else s.coeff ⟨i, by grind⟩ := by
+  rfl
+
+theorem exp_eq_exp_appendSingle (s : TermSeq) (r e hr he i) :
     s.exp i = (s.appendSingle r e hr he).exp ⟨i.1, by grind⟩ := by
   unfold appendSingle
   grind
 
-theorem coeff_eq_coeff_appendSingle (s : TermSeq) (i r e hr he) :
+theorem coeff_eq_coeff_appendSingle (s : TermSeq) (r e hr he i) :
     s.coeff i = (s.appendSingle r e hr he).coeff ⟨i.1, by grind⟩ := by
   unfold appendSingle
   grind
 
+@[simp]
 theorem exp_appendSingle_same (s : TermSeq) (r e hr he) :
     (s.appendSingle r e hr he).exp ⟨s.length, by grind⟩ = e := by
   unfold appendSingle
   simp
 
+@[simp]
 theorem coeff_appendSingle_same (s : TermSeq) (r e hr he) :
     (s.appendSingle r e hr he).coeff ⟨s.length, by grind⟩ = r := by
   unfold appendSingle
@@ -903,24 +921,49 @@ theorem coe_appendSingle {s : TermSeq} {r : ℝ} {e : Surreal} (hr he) :
   ext j
   by_cases hj : j ∈ range s.exp
   · obtain ⟨j, rfl⟩ := hj
-    conv_lhs => rw [exp_eq_exp_appendSingle s j r e hr he, coeff_coe]
+    conv_lhs => rw [exp_eq_exp_appendSingle s r e hr he, coeff_coe, coeff_appendSingle]
+    simp
     grind
   · rw [coeff_add_apply, coeff_coe_of_notMem hj, zero_add]
     obtain rfl | he := eq_or_ne e j
     · conv_lhs => right; rw [← exp_appendSingle_same s r e hr he]
-      rw [coeff_exp]
+      rw [coeff_coe]
       simp
-    · rw [coeff_single_of_ne he, coeff_coe_of_notMem]
+    · rw [coeff_single_of_ne he]
+      apply coeff_coe_of_notMem
+      rw [mem_range]
       grind
 
 /-- Truncate a `TermSeq` at the i-th term. -/
-@[simps (attr := grind =), expose]
 def trunc (s : TermSeq) (i : Ordinal) : TermSeq where
   length := min i s.length
-  exp i := s.exp ⟨i, by grind⟩
-  coeff i := s.coeff ⟨i, by grind⟩
+  exp j := s.exp ⟨j, by grind⟩
+  coeff j := s.coeff ⟨j, by grind⟩
   exp_strictAnti _ := by grind
   coeff_ne_zero := by grind
+
+@[simp, grind =]
+theorem length_trunc (s : TermSeq) (i : Ordinal) :
+    (s.trunc i).length = min i s.length :=
+  (rfl)
+
+@[simp, grind =]
+theorem exp_trunc (s : TermSeq) (i : Ordinal) (j) :
+    (s.trunc i).exp j = s.exp ⟨j.1, by grind⟩ :=
+  (rfl)
+
+@[simp, grind =]
+theorem coeff_trunc (s : TermSeq) (i : Ordinal) (j) :
+    (s.trunc i).coeff j = s.coeff ⟨j.1, by grind⟩ :=
+  (rfl)
+
+theorem exp_eq_exp_trunc (s : TermSeq) {i : Ordinal} {j} (hj : j.1 < i) :
+    s.exp j = (s.trunc i).exp ⟨j, by simpa using ⟨hj, j.2⟩⟩ :=
+  (rfl)
+
+theorem coeff_eq_coeff_trunc (s : TermSeq) (i : Ordinal) (j) (hj : j.1 < i) :
+    s.coeff j = (s.trunc i).coeff ⟨j, by simpa using ⟨hj, j.2⟩⟩ :=
+  (rfl)
 
 @[simp]
 theorem trunc_of_ge {s : TermSeq} {i : Ordinal} (h : s.length ≤ i) : s.trunc i = s := by
@@ -932,12 +975,12 @@ theorem trunc_of_ge {s : TermSeq} {i : Ordinal} (h : s.length ≤ i) : s.trunc i
 @[simp]
 theorem trunc_trunc (s : TermSeq) (i j : Ordinal) : (s.trunc i).trunc j = s.trunc (min i j) := by
   ext
-  · dsimp
+  · simp
     ac_rfl
   · simp
   · simp
 
-@[simp← ]
+@[simp ←]
 theorem coe_trunc (s : TermSeq) (i : Ordinal) : s.trunc i = truncIdx s i := by
   obtain hi | hi := lt_or_ge i s.length
   · rw [truncIdx_of_lt (by simpa), exp_coe]
@@ -945,9 +988,8 @@ theorem coe_trunc (s : TermSeq) (i : Ordinal) : s.trunc i = truncIdx s i := by
     by_cases hj : j ∈ range s.exp
     · obtain ⟨⟨j, hj⟩, _, rfl⟩ := hj
       obtain hj' | hj' := lt_or_ge j i
-      · rw [coeff_trunc_of_lt, coeff_exp]
-        · apply (s.trunc i).coeff_exp ⟨j, _⟩
-          simpa [hj']
+      · rw [coeff_trunc_of_lt, exp_eq_exp_trunc s hj', coeff_coe]
+        · simp
         · simpa
       · rw [coeff_trunc_of_ge, coeff_coe_of_notMem]
         · grind
@@ -961,10 +1003,10 @@ theorem trunc_appendSingle {s : TermSeq} {r e hr he} {i} (hi : i ≤ s.length) :
     trunc (s.appendSingle r e hr he) i = trunc s i := by
   ext
   · rw [← Order.lt_add_one_iff] at hi
-    rw [trunc_length, trunc_length, appendSingle_length]
+    rw [length_trunc, length_trunc, length_appendSingle]
     grind
-  · grind
-  · grind
+  · simp [exp_appendSingle]; grind
+  · simp [coeff_appendSingle]; grind
 
 @[simp]
 theorem trunc_appendSingle_self (s : TermSeq) {r e} (hr he) :
@@ -977,8 +1019,8 @@ theorem trunc_add_one {s : TermSeq} {i} (hi : i < s.length) :
   ext
   · rw [← Order.add_one_le_iff] at hi
     grind
-  · grind [appendSingle]
-  · grind [appendSingle]
+  · simp [exp_appendSingle]; grind
+  · simp [coeff_appendSingle]; grind
 
 end TermSeq
 
