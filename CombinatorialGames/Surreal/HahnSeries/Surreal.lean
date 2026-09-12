@@ -3,8 +3,10 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.HahnSeries.Basic
-import CombinatorialGames.Surreal.Birthday.Basic
+module
+
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import CombinatorialGames.Surreal.HahnSeries.Basic
 
 /-!
 # Converting between surreal Hahn series and surreals
@@ -49,9 +51,7 @@ universe u
 
 open IGame Order Set
 
-attribute [-simp] Ordinal.add_one_eq_succ
-
-noncomputable section
+public noncomputable section
 
 /-! ### Hahn series as games -/
 
@@ -111,7 +111,7 @@ theorem forall_mem_truncGT {y : SurrealHahnSeries} {P : SurrealHahnSeries → Pr
       ∀ i ∈ y.support, ∀ r : ℝ, y.coeff i < r → P (y.trunc i + single i r) :=
   forall_mem_truncAux
 
-theorem exists_mem_truncAux {y : SurrealHahnSeries}
+private theorem exists_mem_truncAux {y : SurrealHahnSeries}
     {P : SurrealHahnSeries → Prop} {R : ℝ → ℝ → Prop} :
     (∃ x ∈ truncAux y R, P x) ↔
       ∃ i ∈ y.support, ∃ r : ℝ, R r (y.coeff i) ∧ P (y.trunc i + single i r) := by
@@ -147,7 +147,8 @@ theorem trunc_add_single_truncGT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (hi : i ∈ x.support) (hr : x.coeff i < r) : x.trunc i + single i r ≻ x :=
   trunc_add_single_truncAux hi hr
 
-instance small_truncAux (x : SurrealHahnSeries.{u}) (R : ℝ → ℝ → Prop) : Small.{u} (truncAux x R) :=
+private instance small_truncAux (x : SurrealHahnSeries.{u}) (R : ℝ → ℝ → Prop) :
+    Small.{u} (truncAux x R) :=
   by unfold truncAux; infer_instance
 
 instance small_truncLT (x : SurrealHahnSeries.{u}) : Small.{u} (truncLT x) := small_truncAux ..
@@ -213,7 +214,7 @@ private theorem truncAux_truncIdx_subset {x : SurrealHahnSeries} {R : ℝ → �
     (hR : ∀ r, ∃ s ≠ 0, R s r) : truncAux (truncIdx x i) R ⊆ truncAux x R := by
   obtain hi | hi := lt_or_ge i x.length
   · exact (truncAux_truncIdx_ssubset hi hR).le
-  · rw [truncIdx_of_le hi]
+  · rw [truncIdx_of_ge hi]
 
 private theorem truncAux_truncIdx_strictMonoOn {x : SurrealHahnSeries} {R : ℝ → ℝ → Prop}
     (hR : ∀ r, ∃ s ≠ 0, R s r) :
@@ -320,7 +321,7 @@ private theorem toIGame_lt_toIGame_of_truncLT {x y : SurrealHahnSeries} (h : x �
     replace hj := union_subset_union_right y.support support_single_subset (support_add_subset hj)
     have hij : i ≤ j := by rw [le_iff_lt_or_eq]; aesop
     dsimp
-    rw [trunc_add, trunc_single_of_le hij, add_zero, toIGame_succ hi hr]
+    rw [trunc_add, trunc_single_of_ge hij, add_zero, toIGame_succ hi hr]
     grw [toIGame_succ_equiv (by simp)]
     obtain hj | rfl := hj
     · replace hij := hi _ hj
@@ -362,7 +363,7 @@ private theorem toIGame_lt_toIGame_of_truncGT {x y : SurrealHahnSeries} (h : x �
     replace hj := union_subset_union_right y.support support_single_subset (support_add_subset hj)
     have hij : i ≤ j := by rw [le_iff_lt_or_eq]; aesop
     dsimp
-    rw [trunc_add, trunc_single_of_le hij, add_zero, toIGame_succ hi hr]
+    rw [trunc_add, trunc_single_of_ge hij, add_zero, toIGame_succ hi hr]
     grw [toIGame_succ_equiv (by simp)]
     obtain hj | rfl := hj
     · replace hij := hi _ hj
@@ -546,10 +547,10 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         obtain ⟨t, ht⟩ := exists_lt ((x + single i r).coeff i)
         refine ⟨i, ?_, t, ht, ?_⟩
         · simp_all
-        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl,
+        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_ge le_rfl,
             ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
-          · dsimp
+          · simp
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
             grind
           · aesop
@@ -558,7 +559,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         refine ⟨i, ?_, t, ?_, ?_⟩
         · simp_all
         · simp_all
-        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
+        · grw [trunc_single_of_ge le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
           simpa using ht.le
     -- TODO: can we more immediately prove this case from the previous?
     · simp_rw [forall_moves_add, moves_ofSets, Player.cases,
@@ -568,10 +569,10 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         obtain ⟨t, ht⟩ := exists_gt ((x + single i r).coeff i)
         refine ⟨i, ?_, t, ht, ?_⟩
         · simp_all
-        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_le le_rfl,
+        · grw [← Numeric.realCast_mul_wpow_equiv, trunc_single_of_ge le_rfl,
             ← toIGame_succ_equiv (by aesop), toIGame_le_toIGame_iff]
           refine (lt_def.2 ⟨j, fun k hk ↦ ?_, ?_⟩).le
-          · dsimp
+          · simp
             rw [coeff_trunc_of_lt hk, coeff_trunc_of_lt ((hi _ hj).trans hk)]
             grind
           · aesop
@@ -580,7 +581,7 @@ theorem toIGame_equiv (x : SurrealHahnSeries) :
         refine ⟨i, ?_, t, ?_, ?_⟩
         · simp_all
         · simp_all
-        · grw [trunc_single_of_le le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
+        · grw [trunc_single_of_ge le_rfl, ← IH, toIGame_succ_equiv (by simp), trunc_eq_self hi]
           simpa using ht'.le
   | limit x hx IH => rw [toIGame_limit hx]
 
@@ -605,7 +606,7 @@ theorem fits_ofSets_truncLT_truncGT (x : SurrealHahnSeries) (i : Ordinal) :
   exacts [lt_of_truncLT (truncLT_truncIdx_subset hk), gt_of_truncGT (truncGT_truncIdx_subset hk)]
 
 /-- The surreal that corresponds to a given surreal Hahn series. -/
-@[coe]
+@[coe, expose]
 def toSurreal (x : SurrealHahnSeries) : Surreal :=
   .mk x
 
@@ -652,7 +653,7 @@ theorem toSurreal_of_length_le_add_one {x : SurrealHahnSeries} {i : Ordinal}
     · simp [term]
     · aesop
   · rw [Order.lt_add_one_iff] at hi
-    rw [truncIdx_of_le hi, term_of_le hi, add_zero]
+    rw [truncIdx_of_ge hi, term_of_ge hi, add_zero]
 
 theorem toSurreal_eq' (x : SurrealHahnSeries) :
     toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
@@ -669,7 +670,7 @@ theorem toSurreal_eq (x : SurrealHahnSeries) :
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
   obtain hi | hi := le_or_gt x.length i
-  · rw [term_of_le hi, truncIdx_of_le hi, sub_self, Surreal.leadingTerm_zero]
+  · rw [term_of_ge hi, truncIdx_of_ge hi, sub_self, Surreal.leadingTerm_zero]
   · rw [term_of_lt hi]
     apply Surreal.leadingTerm_eq (by simpa) <;> refine fun s hs ↦ le_of_lt ?_
     on_goal 1 => rw [lt_sub_iff_add_lt']
@@ -677,11 +678,11 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
     all_goals
       rw [← toSurreal_succ (by aesop), toSurreal_lt_toSurreal_iff, lt_def, truncIdx_of_lt hi]
       use x.exp ⟨i, hi⟩
-      dsimp
+      simp
       refine ⟨fun j hj ↦ ?_, ?_⟩
       · rw [coeff_trunc_of_lt hj]
         aesop
-      · rw [coeff_trunc_of_le le_rfl, zero_add]
+      · rw [coeff_trunc_of_ge le_rfl, zero_add]
         simpa
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
@@ -772,8 +773,8 @@ theorem length_bot : length (⊥ : PartialSum x) = 0 := by
 instance : Preorder (PartialSum x) :=
   .lift length
 
-instance : WellFoundedLT (PartialSum x) where
-  wf := InvImage.wf length wellFounded_lt
+instance : WellFoundedLT (PartialSum x) :=
+  InvImage.wf length wellFounded_lt
 
 instance : WellFoundedRelation (PartialSum x) :=
   ⟨_, wellFounded_lt⟩
@@ -796,7 +797,7 @@ def truncIdx (y : PartialSum x) (i : Ordinal) : PartialSum x where
 @[simp]
 theorem carrier_truncIdx (y : PartialSum x) (i : Ordinal) :
     (y.truncIdx i).carrier = y.carrier.truncIdx i :=
-  rfl
+  (rfl)
 
 @[simp, grind =]
 theorem length_truncIdx (y : PartialSum x) (i : Ordinal) : (y.truncIdx i).length = min i y.length :=
@@ -813,7 +814,7 @@ theorem truncIdx_truncIdx (y : PartialSum x) (i j : Ordinal) :
 @[simp]
 theorem truncIdx_length (y : PartialSum x) : y.truncIdx y.length = y := by
   apply carrier_injective
-  rw [carrier_truncIdx, truncIdx_of_le]
+  rw [carrier_truncIdx, truncIdx_of_ge]
   rfl
 
 @[simp]
@@ -832,7 +833,7 @@ theorem truncIdx_length_of_le {y z : PartialSum x} (h : y ≤ z) : z.truncIdx y.
     · congr 3
       rw [← carrier_truncIdx, ← carrier_truncIdx, carrier_inj, IH hi]
     · simpa [hi] using hi.trans_le h
-  · rw [term_of_le (by simp [hi]), term_of_le hi]
+  · rw [term_of_ge (by simp [hi]), term_of_ge hi]
 termination_by y
 
 theorem length_injective : Function.Injective (length (x := x)) := by
@@ -1064,7 +1065,7 @@ theorem length_succ_of_ne_top (y : PartialSum x) (h : y ≠ ⊤) :
 theorem term_succ_length (y : PartialSum x) :
     (succ y).carrier.term y.length = (x - y.carrier).leadingTerm := by
   obtain rfl | hy := eq_top_or_lt_top y
-  · rw [succ_top, coe_carrier_top, term_of_le]
+  · rw [succ_top, coe_carrier_top, term_of_ge]
     · simp
     · rfl
   · rw [term_eq_leadingTerm_sub]
