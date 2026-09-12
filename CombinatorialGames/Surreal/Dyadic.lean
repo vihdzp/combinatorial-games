@@ -150,12 +150,8 @@ theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
   cases e with
   | zero => exact (hx hd).elim
   | succ e =>
-    obtain ⟨l2, hl2⟩ : Even (n - 1).natAbs := by
-      rw [Int.natAbs_even, Int.even_sub_one, Int.not_even_iff_odd, ← hn]
-      exact x.odd_num hx
-    have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by
-      rw [Int.natAbs_even, Int.even_add_one, Int.not_even_iff_odd, ← hn]
-      exact x.odd_num hx
+    have ⟨l2, hl2⟩ : Even (n - 1).natAbs := by simpa [hn] using x.odd_num hx
+    have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by simpa [hn] using x.odd_num hx
     rw [pow_succ, Nat.mul_div_cancel _ two_pos, hl2, hu2,
       ← Nat.mul_two, ← Nat.mul_two, Nat.gcd_mul_right, Nat.gcd_mul_right,
       Nat.mul_div_mul_right _ _ two_pos, Nat.mul_div_mul_right _ _ two_pos]
