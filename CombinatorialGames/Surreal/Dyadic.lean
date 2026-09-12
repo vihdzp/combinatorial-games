@@ -3,9 +3,14 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Mathlib.Dyadic
-import CombinatorialGames.Surreal.Division
+module
+
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Surreal.Division
+
+import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Data.Nat.Prime.Basic
 
 /-!
 # Dyadic games
@@ -30,6 +35,8 @@ the future:
 
 universe u
 open IGame
+
+@[expose] public section
 
 namespace Dyadic
 
@@ -123,6 +130,44 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     upper x + y ≤ upper (x + y) := by
   simpa [add_comm] using le_upper_add_of_den_le h
 
+theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
+    max x.lower.den x.upper.den = x.den / 2 := by
+  unfold Dyadic.den at hx ⊢
+  rw [coe_lower, coe_upper]
+  unfold Dyadic.den
+  rw [Rat.sub_def', Rat.den_mkRat, ite_eq_right (by positivity),
+    Rat.add_def', Rat.den_mkRat, ite_eq_right (by positivity),
+    Rat.den_inv_of_ne_zero (by positivity), Rat.num_inv, Rat.num_natCast,
+    Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero x.den_ne_zero,
+    Nat.cast_one, Int.one_mul, ← Int.sub_mul, ← Int.add_mul,
+    Int.natAbs_mul, Int.natAbs_mul, Int.natAbs_natCast,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos]
+  generalize hn : x.toRat.num = n, hd : x.toRat.den = d
+  obtain ⟨e, rfl⟩ : ∃ e, 2 ^ e = d := by
+    rw [← hd, ← Submonoid.mem_powers_iff]
+    exact x.den_mem_powers
+  cases e with
+  | zero => exact (hx hd).elim
+  | succ e =>
+    have ⟨l2, hl2⟩ : Even (n - 1).natAbs := by simpa [hn] using x.odd_num hx
+    have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by simpa [hn] using x.odd_num hx
+    rw [pow_succ, Nat.mul_div_cancel _ two_pos, hl2, hu2,
+      ← Nat.mul_two, ← Nat.mul_two, Nat.gcd_mul_right, Nat.gcd_mul_right,
+      Nat.mul_div_mul_right _ _ two_pos, Nat.mul_div_mul_right _ _ two_pos]
+    refine le_antisymm (max_le (Nat.div_le_self _ _) (Nat.div_le_self _ _)) ?_
+    suffices h : Nat.gcd 2 l2 = 1 ∨ Nat.gcd 2 u2 = 1 by
+      obtain h | h := h
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_left _ _
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_right _ _
+    rw [← Nat.coprime_iff_gcd_eq_one, ← Nat.coprime_iff_gcd_eq_one,
+      Nat.coprime_two_left, Nat.coprime_two_left,
+      ← Nat.not_even_iff_odd, ← Nat.not_even_iff_odd, ← not_and_or]
+    rintro ⟨⟨l4, rfl⟩, ⟨u4, rfl⟩⟩
+    lia
+
 /-! ### Dyadic numbers to games -/
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
@@ -139,7 +184,7 @@ decreasing_by dyadic_wf
 noncomputable instance : Coe Dyadic IGame := ⟨toIGame⟩
 
 theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.num := by
-  rw [toIGame, dif_pos hx]
+  rw [toIGame, dite_eq_left hx]
 
 @[simp] theorem toIGame_intCast (n : ℤ) : ((n : Dyadic) : IGame) = n := by
   simpa using toIGame_of_den_eq_one (Dyadic.den_intCast n)
@@ -150,7 +195,7 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
-  by rw [toIGame, dif_neg hx]
+  by rw [toIGame, dite_eq_right hx]
 
 @[simp]
 theorem toIGame_half : half = ½ := by
@@ -274,7 +319,7 @@ decreasing_by dyadic_wf
 /-- `Dyadic.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
 noncomputable def toIGameEmbedding : Dyadic ↪o IGame :=
-  .ofStrictMono toIGame fun _ _ ↦ toIGame_lt_toIGame_aux
+  .ofStrictMono toIGame fun _ _ ↦ by exact toIGame_lt_toIGame_aux
 
 @[simp, norm_cast]
 theorem toIGame_le_toIGame {x y : Dyadic} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -556,6 +601,7 @@ rational number.
 
 TODO: it should be possible to compute this value explicitly, given the finsets of `Dyadic`
 rationals corresponding to the left and right moves. -/
+@[no_expose]
 noncomputable def toDyadic (x : IGame) [Short x] [Numeric x] : Dyadic :=
   Classical.choose x.equiv_dyadic
 
@@ -640,3 +686,4 @@ theorem toDyadic_mul (x y : IGame) [Short x] [Numeric x] [Short y] [Numeric y] :
   simp
 
 end IGame
+end

@@ -3,9 +3,11 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Birthday.Basic
-import CombinatorialGames.Surreal.Real
-import Mathlib.Algebra.Ring.Subring.Defs
+module
+
+public import CombinatorialGames.Surreal.Birthday.Cut
+public import CombinatorialGames.Surreal.Real
+public import Mathlib.Algebra.Ring.Subring.Defs
 
 /-!
 # Omnific integers
@@ -21,40 +23,12 @@ following form:
 - `x.coeff 0` is an integer
 -/
 
-noncomputable section
-
-/-! ### For Mathlib -/
-
-namespace Set
-variable {α β : Type*}
-
-@[simp]
-theorem range_singleton (x : α) (f : ({x} : Set α) → β) : range f = {f ⟨x, mem_singleton x⟩} :=
-  range_unique
-
-@[simp]
-theorem range_insert (x : α) (s : Set α) (f : ((insert x s) : Set α) → β) :
-    range f = insert (f ⟨x, mem_insert x s⟩)
-      (range fun y : s ↦ f ⟨y, mem_insert_of_mem _ y.2⟩) := by
-  aesop
-
-end Set
-
-section CommGroup
-variable {α : Type*} {x y : α} [CommGroup α] [LinearOrder α] [IsOrderedMonoid α]
-
-@[to_additive (attr := simp)]
-theorem div_lt_mul_self_iff : x / y < x * y ↔ 1 < y := by
-  simp [div_eq_mul_inv]
-
-@[to_additive (attr := simp)]
-theorem div_le_mul_self_iff : x / y ≤ x * y ↔ 1 ≤ y := by
-  simp [div_eq_mul_inv]
-
-end CommGroup
+public noncomputable section
 
 namespace Surreal
 open IGame Set
+
+attribute [local simp] add_assoc sub_lt_iff_lt_add
 
 /-! ### Rounding operation -/
 
@@ -67,14 +41,14 @@ def round (x r : Surreal) : Surreal :=
   if hr : 0 < r then !{{x - r} | {x + r}} else x
 
 theorem round_of_pos {x r : Surreal} (hr : 0 < r) : x.round r = !{{x - r} | {x + r}} :=
-  dif_pos hr
+  dite_eq_left hr
 
 theorem round_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.round r = x :=
-  dif_neg hr.not_gt
+  dite_eq_right hr.not_gt
 
 theorem round_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
     (mk x).round (mk r) = @mk !{{x - r} | {x + r}}
-      (.mk (by simpa [← Surreal.mk_lt_mk]) (by aesop)) := by
+      (.mk (by simpa [← Surreal.mk_lt_mk]) (by simp [Numeric.add, Numeric.sub])) := by
   rw [round_of_pos hr, mk_ofSets]
   congr <;> aesop
 
@@ -83,7 +57,7 @@ theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr]
-  apply birthday_ofSets_le_of_mem <;> simpa
+  apply birthday_ofSets_le_of_mem <;> simp_all
 
 theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
@@ -91,7 +65,7 @@ theorem round_eq_of_forall_birthday_le {x y r : Surreal}
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr, ofSets_eq_of_forall_birthday_le]
-  · simpa
+  · simp_all
   · simpa
   · simpa using hz
 
@@ -128,6 +102,11 @@ theorem round_add_of_eq {x y r : Surreal} (hx : x.round r = x) (hy : y.round r =
     range_singleton, range_insert]
   dsimp
   congr <;> rw [hx, hy] <;> grind
+
+theorem round_sub_of_eq {x y r : Surreal} (hx : x.round r = x) (hy : y.round r = y) :
+    (x - y).round r = x - y := by
+  rw [sub_eq_add_neg, round_add_of_eq hx]
+  rw [round_neg, hy]
 
 theorem round_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.round r = x) (hy : y.round r = y) :
     (x * y).round (r * r) = x * y := by
@@ -172,12 +151,13 @@ theorem IsOmnific.add {x y : Surreal}
   round_add_of_eq hx hy
 
 theorem IsOmnific.sub {x y : Surreal}
-    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) :=
-  hx.add hy.neg
+    (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x - y) := by
+  rw [sub_eq_add_neg]
+  exact hx.add hy.neg
 
 theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
-  simpa using round_mul_of_eq zero_lt_one hx hy
+  simpa [IsOmnific] using round_mul_of_eq zero_lt_one hx hy
 
 theorem IsOmnific.one_le_iff_pos {x : Surreal} (h : IsOmnific x) : 1 ≤ x ↔ 0 < x where
   mp := zero_lt_one.trans_le
@@ -192,7 +172,7 @@ theorem IsOmnific.lt_one_iff_nonpos {x : Surreal} (h : IsOmnific x) : x < 1 ↔ 
   simpa using h.one_le_iff_pos
 
 /-- The subring of `IsOmnific` surreal numbers. -/
-def Omnific : Subring Surreal where
+def omnific : Subring Surreal where
   carrier := {x | IsOmnific x}
   zero_mem' := .zero
   one_mem' := .one
@@ -200,8 +180,9 @@ def Omnific : Subring Surreal where
   add_mem' := .add
   mul_mem' := .mul
 
-@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).2
-@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).2
+@[simp] theorem mem_omnific_iff {x : Surreal} : x ∈ omnific ↔ IsOmnific x := .rfl
+@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).2
+@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).2
 
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where

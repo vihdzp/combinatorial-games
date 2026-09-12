@@ -3,11 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.Ordinal
-import CombinatorialGames.Surreal.Real
-import CombinatorialGames.NatOrdinal.Pow
-import Mathlib.Algebra.Order.Ring.Archimedean
-import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
+module
+
+public import CombinatorialGames.Surreal.Ordinal
+public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.NatOrdinal.Pow
+public import Mathlib.Algebra.Order.Ring.Archimedean
+public import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 /-!
 # Surreal exponentiation
@@ -26,6 +28,8 @@ Among other things, we prove that every non-zero surreal number is commensurate 
 universe u
 
 open Set
+
+public section
 
 /-! ## For Mathlib -/
 
@@ -64,7 +68,9 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
-instance : Wpow IGame where
+#adaptation_note /-- noncomputable is now needed -/ in
+@[no_expose]
+noncomputable instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
@@ -581,15 +587,6 @@ theorem veq_def {x y : Surreal} : x =ᵥ y ↔ ArchimedeanClass.mk x = .mk y :=
 @[simp] theorem vlt_neg {x y : Surreal} : x <ᵥ -y ↔ x <ᵥ y := by simp [vlt_def]
 @[simp] theorem neg_vlt {x y : Surreal} : -x <ᵥ y ↔ x <ᵥ y := by simp [vlt_def]
 
--- #34579
-@[simp]
-theorem not_vlt_zero (x : Surreal) : ¬ x <ᵥ 0 := by
-  simp
-
--- #34579
-theorem _root_.ValuativeRel.vlt.ne_zero (h : x <ᵥ y) : y ≠ 0 := by
-  rintro rfl; exact not_vlt_zero _ h
-
 theorem archimedeanClassMk_wpow_strictAnti :
     StrictAnti fun x : Surreal ↦ ArchimedeanClass.mk (ω^ x) := by
   refine fun x y h ↦ (mk_antitoneOn (wpow_nonneg _) (wpow_nonneg _)
@@ -747,14 +744,14 @@ instance _root_.IGame.Numeric.wlog (x : IGame) : Numeric x.wlog := by
 
 @[simp]
 theorem mk_wlog (x : IGame) [h : Numeric x] : mk x.wlog = (mk x).wlog := by
-  simp_rw [IGame.wlog, dif_pos h, Surreal.out_eq]
+  simp_rw [IGame.wlog, dite_eq_left h, Surreal.out_eq]
 
 @[simp]
 theorem wlog_zero : wlog 0 = 0 :=
-  dif_pos rfl
+  dite_eq_left rfl
 
 theorem wpow_wlog_veq (h : x ≠ 0) : ω^ wlog x =ᵥ x := by
-  rw [wlog, dif_neg h]
+  rw [wlog, dite_eq_right h]
   exact Classical.choose_spec (exists_wpow_veq h)
 
 @[simp]
@@ -813,10 +810,10 @@ theorem wlog_add_eq_right {x y : Surreal} (h : y <ᵥ x) : wlog (y + x) = wlog x
   rw [add_comm, wlog_add_eq_left h]
 
 theorem wlog_sub_eq_left {x y : Surreal} : y <ᵥ x → wlog (x - y) = wlog x := by
-  simpa using @wlog_add_eq_left x (-y)
+  simpa [sub_eq_add_neg] using @wlog_add_eq_left x (-y)
 
 theorem wlog_sub_eq_right {x y : Surreal} : y <ᵥ x → wlog (y - x) = wlog x := by
-  simpa using @wlog_add_eq_right (-x) y
+  simpa [sub_eq_add_neg] using @wlog_add_eq_right (-x) y
 
 theorem wlog_le_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x ≤ wlog y ↔ x ≤ᵥ y := by
   rw [← wpow_vle_wpow_iff]
@@ -837,7 +834,7 @@ theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x < wlog y ↔ x <
   rw [← not_le, wlog_le_wlog_iff hy hx, ValuativeRel.not_vle]
 
 theorem wlog_lt_wlog_of_vlt (hx : x ≠ 0) (h : x <ᵥ y) : wlog x < wlog y := by
-  obtain rfl | hy := eq_or_ne y 0; · simp [vlt_def] at h -- Missing `not_vlt_zero`
+  obtain rfl | hy := eq_or_ne y 0; · simp at h
   rwa [wlog_lt_wlog_iff hx hy]
 
 @[simp]
@@ -884,7 +881,7 @@ theorem mk_div_wpow_wlog_of_ne_zero {x : Surreal} (hx : x ≠ 0) :
   rw [archimedeanClassMk_div_wpow_wlog, LinearOrderedAddCommGroupWithTop.sub_self_eq_zero_of_ne_top]
   simpa
 
-private theorem ofSets_wlog_eq {x : IGame} [Numeric x] :
+private theorem ofSets_wlog_eq {x : IGame} :
     !{IGame.wlog '' {y ∈ xᴸ | 0 < y} | IGame.wlog '' xᴿ} =
     !{range (Subtype.val ∘ fun x : (xᴸ ∩ Ioi 0 :) ↦ ⟨_, Numeric.wlog x⟩) |
       range (Subtype.val ∘ fun x : xᴿ ↦ ⟨_, Numeric.wlog x⟩)} := by

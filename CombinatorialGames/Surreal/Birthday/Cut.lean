@@ -3,7 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios, Aaron Liu
 -/
-import CombinatorialGames.Surreal.Cut
+module
+
+public import CombinatorialGames.Surreal.Cut
+
 import CombinatorialGames.Mathlib.WithTop
 
 /-!
@@ -22,6 +25,8 @@ universe u
 
 open Set
 
+public noncomputable section
+
 namespace Surreal
 namespace Cut
 
@@ -36,7 +41,7 @@ the set `s` is not small.
 
 This isn't a term in the literature, but it's useful for proving that birthdays of surreals equal
 those of their associated games. -/
-noncomputable def birthday (x : Cut) : WithTop NatOrdinal :=
+def birthday (x : Cut) : WithTop NatOrdinal :=
   sInf <| (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
      {s : Set Surreal | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
 
@@ -101,7 +106,7 @@ theorem sSup_birthday_lt_top_iff {s : Set Surreal.{u}} :
   refine ⟨fun hs ↦ ?_, fun _ ↦ NatOrdinal.withTop_sSup_lt_top.2 <| by simp⟩
   obtain ⟨a, ha⟩ := WithTop.ne_top_iff_exists.1 hs.ne
   refine small_subset (s := {x : Surreal | x.birthday < a}) fun x hx ↦ ?_
-  rw [mem_setOf, ← WithTop.coe_lt_coe, ha]
+  rw [mem_ofPred, ← WithTop.coe_lt_coe, ha]
   exact birthday_lt_sSup_birthday hx
 
 theorem sSup_birthday_eq_top_iff {s : Set Surreal.{u}} :
@@ -149,6 +154,9 @@ theorem birthday_leftSurreal (x : Surreal) : (leftSurreal x).birthday = x.birthd
 @[simp]
 theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birthday + 1 := by
   simpa [← neg_rightSurreal] using birthday_leftSurreal (-x)
+
+theorem birthday_of_numeric (x : Cut) [hx : x.Numeric] : x.birthday = x.toSurreal.birthday + 1 := by
+  cases hx <;> simp
 
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
@@ -290,4 +298,35 @@ theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.bir
     hy' ▸ max_le (birthday_supLeft_le y) (birthday_infRight_le y)
 
 end Cut
+
+theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  rw [← birthday_toGame, toGame_mk]
+  apply IGame.Fits.birthday_le
+  simp_all [IGame.Fits]
+
+theorem birthday_ofSets_lt_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    !{s | t}.birthday < z.birthday := by
+  rw [ofSets_eq_mk, ← out_eq z]
+  generalize_proofs
+  rw [← birthday_toGame, toGame_mk]
+  apply IGame.Fits.birthday_lt
+  · simp_all [IGame.Fits]
+  · rwa [← mk_eq_mk, ← ofSets_eq_mk, out_eq, eq_comm]
+
+theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
+    (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
+    !{s | t} = z := by
+  by_contra hz
+  exact (birthday_ofSets_lt_of_mem hL hR hz).not_ge <|
+    h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
+
 end Surreal
+end
