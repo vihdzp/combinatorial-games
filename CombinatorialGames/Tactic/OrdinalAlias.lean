@@ -3,8 +3,9 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import Mathlib.Data.Nat.Lattice
-import Mathlib.SetTheory.Ordinal.Family
+module
+
+public import Mathlib.SetTheory.Ordinal.Family
 
 /-!
 # Declare type aliases of `Ordinal`
@@ -20,21 +21,22 @@ open Lean
 /-! ### Auxiliary defs -/
 
 /-- Doc-comment allowing antiquotation. -/
-def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
+meta def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
   .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
 
 /-- `Alias.of` -/
-def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
+meta def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `of)
 
 /-- `Alias.val` -/
-def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
+meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
   .mk <| mkIdent (Alias.getId ++ `val)
 
 /-! ### Macros -/
 
 /-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
+@[expose] public section
 
 $doc:docComment
 def $Alias : Type _ :=
@@ -47,7 +49,7 @@ instance : PartialOrder $Alias := inferInstanceAs (PartialOrder $Source)
 instance : SuccOrder $Alias := inferInstanceAs (SuccOrder $Source)
 instance : OrderBot $Alias := inferInstanceAs (OrderBot $Source)
 instance : NoMaxOrder $Alias := inferInstanceAs (NoMaxOrder $Source)
-instance : ZeroLEOneClass $Alias := inferInstanceAs (ZeroLEOneClass $Source)
+instance : IsBotZeroClass $Alias := inferInstanceAs (IsBotZeroClass $Source)
 instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
@@ -77,15 +79,8 @@ theorem $(mkIdent `of_le_iff) {a b} : $(mkOf Alias) a ≤ b ↔ a ≤ $(mkVal Al
 theorem $(mkIdent `of_lt_iff) {a b} : $(mkOf Alias) a < b ↔ a < $(mkVal Alias) b := .rfl
 theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias) b := .rfl
 
-@[simp]
-theorem $(mkIdent `of_image_Iio) (a) : $(mkOf Alias) '' Set.Iio a = Set.Iio ($(mkOf Alias) a) :=
-  Set.image_id _
-
-@[simp]
-theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($(mkVal Alias) a) :=
-  Set.image_id _
-
 @[simp] theorem $(mkIdent `bot_eq_zero) : (⊥ : $Alias) = 0 := rfl
+@[simp] theorem $(mkIdent `bot_eq_zero_withTop) : (⊥ : WithTop $Alias) = 0 := rfl
 
 @[simp] theorem $(mkIdent `of_zero) : $(mkOf Alias) 0 = 0 := rfl
 @[simp] theorem $(mkIdent `val_zero) : $(mkVal Alias) 0 = 0 := rfl
@@ -95,9 +90,23 @@ theorem $(mkIdent `val_image_Iio) (a) : $(mkVal Alias) '' Set.Iio a = Set.Iio ($
 
 @[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+theorem $(mkIdent `of_ne_zero) {a} : $(mkOf Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
+theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
+@[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
+@[simp] theorem $(mkIdent `val_pos) {a} : 0 < $(mkVal Alias) a ↔ 0 < a := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+theorem $(mkIdent `of_ne_one) {a} : $(mkOf Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
+theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
+@[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
+@[simp] theorem $(mkIdent `val_le_one) {a} : $(mkVal Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
+theorem $(mkIdent `one_le_of) {a} : 1 ≤ $(mkOf Alias) a ↔ 1 ≤ a := .rfl
+theorem $(mkIdent `one_le_val) {a} : 1 ≤ $(mkVal Alias) a ↔ 1 ≤ a := .rfl
+theorem $(mkIdent `of_lt_one) {a} : $(mkOf Alias) a < 1 ↔ a < 1 := .rfl
+theorem $(mkIdent `val_lt_one) {a} : $(mkVal Alias) a < 1 ↔ a < 1 := .rfl
+@[simp] theorem $(mkIdent `one_lt_of) {a} : 1 < $(mkOf Alias) a ↔ 1 < a := .rfl
+@[simp] theorem $(mkIdent `one_lt_val) {a} : 1 < $(mkVal Alias) a ↔ 1 < a := .rfl
 
 theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVal Alias) a + 1) :=
   rfl
@@ -106,28 +115,20 @@ theorem $(mkIdent `succ_def) (a : $Alias) : Order.succ a = $(mkOf Alias) ($(mkVa
 theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkOf Alias) (a + 1) :=
   rfl
 
-@[simp] theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
-@[simp] theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := by
-  change Order.succ (0 : $Source) = 1
-  simp
+theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `induction x`. "):docComment
+$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
-    ($(mkIdent `mk) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
-  $(mkIdent `mk) ($(mkVal Alias) a)
+    ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
+  $(mkIdent `of) ($(mkVal Alias) a)
 
 $(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
 
-@[simp] theorem $(mkIdent `zero_le) (a : $Alias) : 0 ≤ a := bot_le
-@[simp] theorem $(mkIdent `le_zero) {a : $Alias} : a ≤ 0 ↔ a = 0 := le_bot_iff
-@[simp] theorem $(mkIdent `not_neg) (a : $Alias) : ¬ a < 0 := not_lt_bot
-protected theorem $(mkIdent `pos_iff_ne_zero) {a : $Alias} : 0 < a ↔ a ≠ 0 := bot_lt_iff_ne_bot
-protected theorem $(mkIdent `eq_zero_or_pos) (a : $Alias) : a = 0 ∨ 0 < a := eq_bot_or_bot_lt a
-
 end $Alias
+end
 )
 
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
@@ -135,23 +136,29 @@ macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 alias! $doc $Alias Ordinal
 
+@[expose] public section
 namespace $Alias
 universe u
 
-noncomputable instance : LinearOrder $Alias := Ordinal.instLinearOrder
 instance : Uncountable $Alias := Ordinal.uncountable
 
-@[simp] theorem $(mkIdent `lt_one_iff_zero) {a : $Alias} : a < 1 ↔ a = 0 := Ordinal.lt_one_iff_zero
-theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Ordinal.le_one_iff
+theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
+  Order.lt_one_iff (α := Ordinal)
+theorem $(mkIdent `le_one_iff) {a : $Alias} : a ≤ 1 ↔ a = 0 ∨ a = 1 :=
+  Order.le_one_iff (α := Ordinal)
 
 @[simp]
 theorem $(mkIdent `one_le_iff_ne_zero) {a : $Alias} : 1 ≤ a ↔ a ≠ 0 :=
-  Ordinal.one_le_iff_ne_zero
+  Order.one_le_iff_ne_zero (α := Ordinal)
 
--- TODO: upstream to Mathlib for Ordinal
+theorem $(mkIdent `succ_zero) : Order.succ (0 : $Alias) = 1 := zero_add (1 : Ordinal)
+
+theorem $(mkIdent `Iio_zero) : Set.Iio (0 : $Alias) = ∅ := Set.Iio_bot (α := Ordinal)
+theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α := Ordinal)
+
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
-  Ordinal.lt_omega0.1 (h.trans_lt (Ordinal.nat_lt_omega0 b))
+  Ordinal.eq_natCast_of_le_natCast h
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
@@ -160,22 +167,23 @@ instance (a b : $Alias.{u}) : Small.{u} (Set.Icc a b) := Ordinal.small_Icc a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioo a b) := Ordinal.small_Ioo a b
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ioc a b) := Ordinal.small_Ioc a b
 
-instance : IsEmpty (Set.Iio (0 : $Alias)) := Ordinal.instIsEmptyIioZero
+instance : IsEmpty (Set.Iio (0 : $Alias)) := Set.isEmpty_Iio_zero (α := Ordinal)
 instance : Unique (Set.Iio (1 : $Alias)) := Ordinal.uniqueIioOne
 
 @[simp]
-theorem $(mkIdent `Iio_one_default_eq) : 
+theorem $(mkIdent `Iio_one_default_eq) :
     (default : Set.Iio (1 : $Alias)) = ⟨0, zero_lt_one' $Alias⟩ :=
   rfl
 
 theorem $(mkIdent `bddAbove_iff_small) {s : Set $Alias.{u}} : BddAbove s ↔ Small.{u} s :=
   Ordinal.bddAbove_iff_small
 
-theorem $(mkIdent `bddAbove_of_small) (s : Set $Alias.{u}) [Small.{u} s] : BddAbove s :=
-  Ordinal.bddAbove_of_small s
+theorem $(mkIdent `bddAbove_of_small) (s : Set $Alias.{u}) [hs : Small.{u} s] : BddAbove s :=
+  @Ordinal.bddAbove_of_small s hs
 
-theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [Small.{u} s] : ¬BddAbove sᶜ :=
-  Ordinal.not_bddAbove_compl_of_small s
+theorem $(mkIdent `not_bddAbove_compl_of_small) (s : Set $Alias.{u}) [hs : Small.{u} s] :
+    ¬BddAbove sᶜ :=
+  @Ordinal.not_bddAbove_compl_of_small s hs
 
 theorem $(mkIdent `le_iSup) {ι : Type*} (f : ι → $Alias.{u}) [Small.{u} ι] (i : ι) : f i ≤ iSup f :=
   Ordinal.le_iSup f i
@@ -193,6 +201,7 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
   Ordinal.iSup_eq_zero_iff
 
 end $Alias
+end
 
 -- TODO: how do we name this correctly?
 -- theorem not_small_nimber : ¬ Small.{u} $Alias.{max u v} := not_small_ordinal

@@ -3,11 +3,26 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu
 -/
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Surreal.Ordinal
+module
+
+public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Surreal.Ordinal
+
+import Mathlib.Algebra.Order.Group.OrderIso
+
+/-!
+# Birthdays of surreals
+
+We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
+equivalent to it.
+
+The numeric condition can be removed to yield an equivalent definition, but that is proved in
+`CombinatorialGames.Surreal.Birthday.Cut`.
+-/
 
 universe u
-noncomputable section
+
+public noncomputable section
 
 namespace Surreal
 open IGame NatOrdinal Order Set
@@ -65,6 +80,12 @@ theorem birthday_toSurreal (o : NatOrdinal) : birthday o.toSurreal = o := by
 theorem birthday_natCast (n : ℕ) : birthday n = n := by
   simpa using birthday_toSurreal n
 
+@[simp, norm_cast]
+theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
+  induction n using Int.negInduction with
+  | nat n => rw [Int.cast_natCast, Int.natAbs_natCast, birthday_natCast]
+  | neg ih n => rw [Int.cast_neg, birthday_neg, Int.natAbs_neg, ih]
+
 @[simp]
 theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
   birthday_natCast n
@@ -72,6 +93,23 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 @[simp]
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
+
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
+    Game.birthday (.mk y) ≤ birthday (.mk x) := by
+  obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
+  obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
+  rw [← Game.mk_eq hzy, ← hxb]
+  exact (Game.birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
+
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
+    Game.birthday (.mk y) < birthday (.mk x) := by
+  apply h.birthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
@@ -102,6 +140,56 @@ theorem birthday_ofSets_le {s t : Set Surreal.{u}}
   simp_rw [IGame.birthday_ofSets, image_comp]
   congr! <;> aesop
 
+theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
+    {x y : Surreal} (hx : birthday x = o) (hy : birthday y = o) (hxy : x < y) :
+    birthday !{{x} | {y}} < o := by
+  obtain ⟨x, nx, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+  obtain ⟨y, ny, rfl, hyb⟩ := birthday_eq_iGameBirthday y
+  have nxy : !{{x} | {y}}.Numeric := by rw [numeric_def]; aesop
+  have mxy : mk !{{x} | {y}} = !{{mk x} | {mk y}} := by simp [mk_ofSets]
+  by_contra hbxy
+  apply hxy.ne
+  rw [mk_eq_mk]
+  apply Fits.antisymm
+  · constructor
+    · intro z hzy hxz
+      numeric
+      have hzx : ¬z ≤ x := by
+        intro hzx
+        apply hx.not_lt
+        grw [mk_eq_mk.2 ⟨hxz, hzx⟩, birthday_mk_le, birthday_lt_of_mem_moves hzy, hyb, hy]
+      have hzf : z.Fits !{{x} | {y}} := by
+        constructor
+        · rwa [leftMoves_ofSets, Set.forall_mem_singleton]
+        · rw [rightMoves_ofSets, Set.forall_mem_singleton]
+          exact left_lf hzy
+      obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
+      apply hbxy
+      have := Numeric.wsubposition hwz
+      grw [← mxy, ← mk_eq_mk.2 hwxy, birthday_mk_le, birthday_le_of_wsubposition hwz,
+        birthday_lt_of_mem_moves hzy, hyb, hy]
+    · intro z hz
+      exact ((mk_lt_mk.1 hxy).trans (Numeric.lt_right hz)).not_ge
+  · constructor
+    · intro z hz
+      exact ((Numeric.left_lt hz).trans (mk_lt_mk.1 hxy)).not_ge
+    · intro z hzx hzy
+      numeric
+      have hyz : ¬y ≤ z := by
+        intro hyz
+        apply hy.not_lt
+        grw [mk_eq_mk.2 ⟨hyz, hzy⟩, birthday_mk_le, birthday_lt_of_mem_moves hzx, hxb, hx]
+      have hzf : z.Fits !{{x} | {y}} := by
+        constructor
+        · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+          exact lf_right hzx
+        · rwa [rightMoves_ofSets, Set.forall_mem_singleton]
+      obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
+      apply hbxy
+      have := Numeric.wsubposition hwz
+      grw [← mxy, ← mk_eq_mk.2 hwxy, birthday_mk_le, birthday_le_of_wsubposition hwz,
+        birthday_lt_of_mem_moves hzx, hxb, hx]
+
 theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, _, ha, ha'⟩ := birthday_eq_iGameBirthday x
   obtain ⟨b, _, hb, hb'⟩ := birthday_eq_iGameBirthday y
@@ -109,7 +197,22 @@ theorem birthday_add_le (x y : Surreal) : (x + y).birthday ≤ x.birthday + y.bi
   exact birthday_mk_le _
 
 theorem birthday_sub_le (x y : Surreal) : (x - y).birthday ≤ x.birthday + y.birthday := by
-  simpa using birthday_add_le x (-y)
+  simpa [sub_eq_add_neg] using birthday_add_le x (-y)
+
+theorem birthday_eq_one {x : Surreal} : birthday x = 1 ↔ x = 1 ∨ x = -1 := by
+  constructor
+  · intro hx
+    obtain ⟨x, nx, rfl, hxb⟩ := birthday_eq_iGameBirthday x
+    rw [← hxb, IGame.birthday_eq_one] at hx
+    obtain rfl | rfl | rfl := hx
+    · simp
+    · simp
+    · absurd nx
+      exact not_numeric_star
+  · rintro (rfl | rfl) <;> simp
+
+theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 := by
+  rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
 
 /- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
@@ -133,13 +236,5 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
 instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
   simp +contextual [le_of_lt]
-
-/-- A variant of `small_setOf_birthday_le` in simp-normal form -/
-instance small_subtype_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x // birthday x ≤ o} :=
-  small_setOf_birthday_le o
-
-/-- A variant of `small_setOf_birthday_lt` in simp-normal form -/
-instance small_subtype_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x // birthday x < o} :=
-  small_setOf_birthday_lt o
 
 end Surreal

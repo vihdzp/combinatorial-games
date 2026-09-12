@@ -1,16 +1,22 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Yuyang Zhao
+Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison,
+Yuyang Zhao
 -/
+module
+
+public import Batteries.Classes.RatCast
+public import CombinatorialGames.Game.Player
+public meta import CombinatorialGames.Tactic.Register
+public import Mathlib.Algebra.Group.Pointwise.Set.Small
+public import Mathlib.Algebra.Order.ZeroLEOne
+public import Mathlib.Order.Comparable
+
 import CombinatorialGames.Game.Functor
-import CombinatorialGames.Mathlib.Order
 import CombinatorialGames.Mathlib.Small
-import CombinatorialGames.Tactic.Register
-import Mathlib.Algebra.Group.Pointwise.Set.Small
 import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Order.Comparable
 import Mathlib.Order.GameAdd
 
 /-!
@@ -72,7 +78,7 @@ The order structures interact in the expected way with arithmetic. In particular
 `SubtractionCommMonoid`, since the equation `x - x = 0` is only true up to equivalence.
 -/
 
-theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
+public theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop} {x y : α} :
     Relation.TransGen r x y ↔ ∃ z, r z y ∧ (x = z ∨ TransGen r x z) := by
   rw [transGen_iff]
   simp [and_or_left, exists_or, and_comm]
@@ -82,7 +88,7 @@ universe u
 open Set Pointwise
 
 -- Computations can be performed through the `game_cmp` tactic.
-noncomputable section
+public noncomputable section
 
 /-! ### Game moves -/
 
@@ -115,8 +121,9 @@ export Player (left right)
 
 This function is regrettably noncomputable. Among other issues, sets simply do not carry data in
 Lean. To perform computations on `IGame` we can instead make use of the `game_cmp` tactic. -/
+@[no_expose]
 instance : OfSets IGame fun _ ↦ True where
-  ofSets st _ := QPF.Fix.mk ⟨st, fun | left => inferInstance | right => inferInstance⟩
+  ofSets st _ := QPF.Fix.mk ⟨st, by rintro (_ | _) <;> assumption⟩
 
 /-- The set of moves of the game. -/
 def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
@@ -132,7 +139,9 @@ instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
 @[simp, game_cmp]
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
     !{st}.moves p = st p := by
-  dsimp [ofSets]; ext; rw [moves, QPF.Fix.dest_mk]
+  dsimp [ofSets, moves]
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk]
 
 @[simp]
 theorem ofSets_moves (x : IGame) : !{x.moves} = x := x.mk_dest
@@ -189,26 +198,22 @@ instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGe
 instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
-/-- A variant of `small_setOf_subposition` in simp-normal form -/
-instance small_subtype_subposition (x : IGame.{u}) : Small.{u} {y // Subposition y x} :=
-  small_transGen' _ x
-
-theorem subposition_wf : WellFounded Subposition := by
+instance wellFounded_subposition : WellFounded Subposition := by
   refine ⟨fun x => Acc.transGen ?_⟩
   apply QPF.Fix.ind
   unfold moves
   rintro _ ⟨⟨st, hst⟩, rfl⟩
   constructor
   rintro y hy
-  rw [QPF.Fix.dest_mk, mem_iUnion] at hy
+  -- TODO: avoid `erw`
+  erw [QPF.Fix.dest_mk, mem_iUnion] at hy
   obtain ⟨_, ⟨_, h⟩, _, rfl⟩ := hy
   exact h
 
 -- We make no use of `IGame`'s definition from a `QPF` after this point.
 attribute [irreducible] IGame
 
-instance : IsWellFounded _ Subposition := ⟨subposition_wf⟩
-instance : WellFoundedRelation IGame := ⟨Subposition, instIsWellFoundedSubposition.wf⟩
+instance : WellFoundedRelation IGame := ⟨Subposition, wellFounded_subposition⟩
 
 theorem Subposition.irrefl (x : IGame) : ¬Subposition x x := _root_.irrefl x
 
@@ -228,6 +233,10 @@ theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
   rw [Relation.transGen_iff_exists]
   simp_rw [mem_iUnion, ← exists_and_right, and_or_left]
   exact exists_comm
+
+/-- The set of games reachable from a given game is small. -/
+instance small_setOf_wsubposition (x : IGame.{u}) : Small.{u} {y | WSubposition y x} :=
+  small_insert x {y | Subposition y x}
 
 @[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
 theorem WSubposition.rfl {x : IGame} : WSubposition x x := .refl x
@@ -310,12 +319,12 @@ See `ofSetsRecOn` for an alternate form. -/
 def moveRecOn {motive : IGame → Sort*} (x)
     (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     motive x :=
-  subposition_wf.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
+  wellFounded_subposition.recursion x fun x IH ↦ ind x (fun _ _ h ↦ IH _ (.of_mem_moves h))
 
 theorem moveRecOn_eq {motive : IGame → Sort*} (x)
     (ind : Π x, (Π p, Π y ∈ x.moves p, motive y) → motive x) :
     moveRecOn x ind = ind x (fun _ y _ ↦ moveRecOn y ind) :=
-  subposition_wf.fix_eq ..
+  wellFounded_subposition.fix_eq ..
 
 /-- **Conway recursion**: build data for a game by recursively building it on its
 left and right sets. You rarely need to use this explicitly, as the termination checker will handle
@@ -340,7 +349,7 @@ theorem ofSetsRecOn_ofSets {motive : IGame.{u} → Sort*}
       ofSets _ _ (fun y _ ↦ ofSetsRecOn y ofSets) (fun y _ ↦ ofSetsRecOn y ofSets) := by
   rw [ofSetsRecOn, cast_eq_iff_heq, moveRecOn_eq]
   simp_rw [ofSetsRecOn]
-  congr! <;> simp
+  congr! <;> simp_all
 
 /-- Discharges proof obligations of the form `⊢ Subposition ..` arising in termination proofs
 of definitions using well-founded recursion on `IGame`. -/
@@ -373,8 +382,9 @@ theorem one_def : (1 : IGame) = !{{0} | ∅} := rfl
 /-- The less or equal relation on games.
 
 If `0 ≤ x`, then Left can win `x` as the second player. `x ≤ y` means that `0 ≤ y - x`. -/
+@[no_expose]
 instance : LE IGame where
-  le := Sym2.GameAdd.fix subposition_wf fun x y le ↦
+  le := Sym2.GameAdd.recursion wellFounded_subposition fun x y le ↦
     (∀ z (h : z ∈ xᴸ), ¬le y z (Sym2.GameAdd.snd_fst (.of_mem_moves h))) ∧
     (∀ z (h : z ∈ yᴿ), ¬le z x (Sym2.GameAdd.fst_snd (.of_mem_moves h)))
 
@@ -387,7 +397,7 @@ recommended_spelling "lf" for "⧏" in [«term_⧏_»]
 /-- Definition of `x ≤ y` on games, in terms of `⧏`. -/
 theorem le_iff_forall_lf {x y : IGame} :
     x ≤ y ↔ (∀ z ∈ xᴸ, z ⧏ y) ∧ (∀ z ∈ yᴿ, x ⧏ z) :=
-  propext_iff.1 <| Sym2.GameAdd.fix_eq ..
+  propext_iff.1 <| Sym2.GameAdd.recursion_eq ..
 
 /-- Definition of `x ⧏ y` on games, in terms of `≤`. -/
 theorem lf_iff_exists_le {x y : IGame} :
@@ -453,15 +463,15 @@ private theorem le_trans' {x y z : IGame} (h₁ : x ≤ y) (h₂ : y ≤ z) : x 
   rw [le_iff_forall_lf]
   constructor <;> intro a ha h₃
   exacts [left_lf_of_le h₁ ha (le_trans' h₂ h₃), lf_right_of_le h₂ ha (le_trans' h₃ h₁)]
-termination_by subposition_wf.cutExpand.wrap {x, y, z}
+termination_by wellFounded_subposition.cutExpand.wrap {x, y, z}
 decreasing_by
-  on_goal 1 => convert Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
+  on_goal 1 => convert! Relation.cutExpand_add_single {y, z} (Subposition.of_mem_moves ha)
   on_goal 2 => convert Relation.cutExpand_single_add (Subposition.of_mem_moves ha) {x, y}
   all_goals simp [← Multiset.singleton_add, add_comm, add_assoc, WellFounded.wrap]
 
 instance : Preorder IGame where
-  le_refl _ := le_rfl'
-  le_trans x y z := le_trans'
+  le_refl _ := private le_rfl'
+  le_trans x y z := private le_trans'
 
 theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
   lf_of_le_left le_rfl h
@@ -492,8 +502,9 @@ notation:50 x:50 " ‖ " y:50 => IncompRel (· ≤ ·) x y
 recommended_spelling "fuzzy" for "‖" in [«term_‖_»]
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `AntisymmRel (· ≤ ·) x y` into `x ≈ y`. -/
 @[delab app.AntisymmRel]
-def delabEquiv : Delab := do
+meta def delabEquiv : Delab := do
   try
     let_expr f@AntisymmRel α r _ _ := ← getExpr | failure
     have u := f.constLevels![0]!
@@ -512,8 +523,9 @@ def delabEquiv : Delab := do
   catch _ => failure -- fail over to the default delaborator
 
 open Lean PrettyPrinter Delaborator SubExpr Qq in
+/-- Delaborates `IncompRel (· ≤ ·) x y` into `x ‖ y`. -/
 @[delab app.IncompRel]
-def delabFuzzy : Delab := do
+meta def delabFuzzy : Delab := do
   try
     let_expr f@IncompRel α r _ _ := ← getExpr | failure
     have u := f.constLevels![0]!
@@ -561,8 +573,10 @@ private def neg' (x : IGame) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
-instance : Neg IGame where
+@[no_expose]
+noncomputable instance : Neg IGame where
   neg := neg'
 
 private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
@@ -573,8 +587,10 @@ private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
 
 instance : InvolutiveNeg IGame where
   neg_neg x := by
-    refine ofSetsRecOn x ?_
-    aesop (add simp [neg_ofSets''])
+    induction x using ofSetsRecOn with | ofSets s t ihs iht
+    rw [neg_ofSets'', neg_ofSets'']
+    simp [Set.ext_iff]
+    grind
 
 @[simp]
 theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
@@ -616,9 +632,9 @@ theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
-  induction x, y using Sym2.GameAdd.induction subposition_wf with | _ x y IH
-  dsimp at *
+  induction x, y using Sym2.GameAdd.recursion wellFounded_subposition with | _ x y IH
   rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
+  dsimp
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_moves hz))]
   · rw [IH _ _ (Sym2.GameAdd.snd_fst (.of_mem_moves hz))]
@@ -676,8 +692,10 @@ private def add' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by igame_wf
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
-instance : Add IGame where
+@[no_expose]
+noncomputable instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
@@ -722,21 +740,22 @@ theorem add_right_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ y.moves p)
 theorem forall_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x + y).moves p, P a) ↔
       (∀ a ∈ x.moves p, P (a + y)) ∧ (∀ b ∈ y.moves p, P (x + b)) := by
-  aesop
+  rw [moves_add, Set.forall_mem_union, Set.forall_mem_image, Set.forall_mem_image]
 
 @[game_cmp]
 theorem exists_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x + y).moves p, P a) ↔
       (∃ a ∈ x.moves p, P (a + y)) ∨ (∃ b ∈ y.moves p, P (x + b)) := by
-  aesop
+  rw [moves_add, Set.exists_mem_union, Set.exists_mem_image, Set.exists_mem_image]
 
 @[simp]
 theorem add_eq_zero_iff {x y : IGame} : x + y = 0 ↔ x = 0 ∧ y = 0 := by
   constructor <;> simp_all [IGame.ext_iff]
 
 private theorem add_zero' (x : IGame) : x + 0 = x := by
-  refine moveRecOn x ?_
-  aesop
+  induction x using moveRecOn with | ind x ih
+  rw [add_eq', ← ofSets_moves x, ofSets_inj']
+  simp [Set.image_congr (ih _)]
 
 private theorem add_comm' (x y : IGame) : x + y = y + x := by
   ext
@@ -758,20 +777,31 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 instance : AddCommMonoid IGame where
-  add_zero := add_zero'
-  zero_add _ := add_comm' .. ▸ add_zero' _
-  add_comm := add_comm'
-  add_assoc := add_assoc'
+  add_zero := by exact add_zero'
+  zero_add _ := by exact add_comm' .. ▸ add_zero' _
+  add_comm := by exact add_comm'
+  add_assoc := by exact add_assoc'
   nsmul := nsmulRec
 
 /-- The subtraction of `x` and `y` is defined as `x + (-y)`. -/
 instance : SubNegMonoid IGame where
+  sub a b := a + -b
   zsmul := zsmulRec
 
 @[simp]
 theorem moves_sub (p : Player) (x y : IGame) :
     (x - y).moves p = (· - y) '' x.moves p ∪ (x + ·) '' (-y.moves (-p)) := by
   simp [sub_eq_add_neg]
+
+theorem moves_succ_nsmul (p : Player) (n : Nat) (x : IGame) :
+    ((n + 1) • x).moves p = (n • x + ·) '' x.moves p := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    rw [succ_nsmul, moves_add, IH, union_eq_right]
+    simp_rw [image_subset_iff, subset_def, mem_preimage, mem_image]
+    refine fun y hy ↦ ⟨y, hy, ?_⟩
+    rw [succ_nsmul, add_right_comm]
 
 theorem sub_left_mem_moves_sub {p : Player} {x y : IGame} (h : x ∈ y.moves p) (z : IGame) :
     z - x ∈ (z - y).moves (-p) := by
@@ -818,21 +848,24 @@ theorem sub_self_equiv (x : IGame) : x - x ≈ 0 := by
 
 /-- The sum of a game and its negative is equivalent, though not necessarily identical to zero. -/
 theorem neg_add_equiv (x : IGame) : -x + x ≈ 0 := by
-  simpa [add_comm] using sub_self_equiv x
+  simpa [add_comm, sub_eq_add_neg] using sub_self_equiv x
 
 private theorem add_le_add_left' {x y : IGame} (h : x ≤ y) (z : IGame) : z + x ≤ z + y := by
+  induction x using wellFounded_subposition.induction generalizing y z with | _ x ihx
+  induction y using wellFounded_subposition.induction generalizing z with | _ y ihy
+  induction z using IGame.moveRecOn with | ind z ihz
   rw [le_iff_forall_lf, moves_add, moves_add]
   refine ⟨?_, ?_⟩ <;> rintro a (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩)
-  · exact lf_of_le_left (add_le_add_left' h a) (add_right_mem_moves_add ha y)
+  · exact lf_of_le_left (ihz left a ha) (add_right_mem_moves_add ha y)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (left_lf_of_le h ha)
-    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-    · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-  · exact lf_of_right_le (add_le_add_left' h a) (add_right_mem_moves_add ha x)
+    · exact lf_of_le_left (ihx a (.of_mem_moves ha) hb' z) (add_left_mem_moves_add hb z)
+    · exact lf_of_right_le (ihx b (.trans (.of_mem_moves hb) (.of_mem_moves ha)) hb' z)
+        (add_left_mem_moves_add hb z)
+  · exact lf_of_right_le (ihz right a ha) (add_right_mem_moves_add ha x)
   · obtain (⟨b, hb, hb'⟩ | ⟨b, hb, hb'⟩) := lf_iff_exists_le.1 (lf_right_of_le h ha)
-    · exact lf_of_le_left (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-    · exact lf_of_right_le (add_le_add_left' hb' z) (add_left_mem_moves_add hb z)
-termination_by (x, y, z)
-decreasing_by igame_wf (maxDepth := 8)
+    · exact lf_of_le_left (ihy b (.trans (.of_mem_moves hb) (.of_mem_moves ha)) hb' z)
+        (add_left_mem_moves_add hb z)
+    · exact lf_of_right_le (ihx b (.of_mem_moves hb) hb' z) (add_left_mem_moves_add hb z)
 
 private theorem add_le_add_right' {x y : IGame} (h : x ≤ y) (z : IGame) : x + z ≤ y + z := by
   simpa [add_comm] using add_le_add_left' h z
@@ -841,7 +874,7 @@ instance : AddLeftMono IGame := ⟨fun x _ _ h ↦ add_le_add_left' h x⟩
 instance : AddRightMono IGame := ⟨fun x _ _ h ↦ add_le_add_right' h x⟩
 
 instance : AddLeftReflectLE IGame where
-  elim x y z h := by
+  le_of_add_le_add_left {x y} z h := by
     rw [← zero_add y, ← zero_add z]
     apply (add_le_add_left (neg_add_equiv x).ge y).trans
     rw [add_assoc]
@@ -896,11 +929,28 @@ theorem sub_congr_left {a b c : IGame} (h : a ≈ b) : a - c ≈ b - c :=
 theorem sub_congr_right {a b c : IGame} (h : a ≈ b) : c - a ≈ c - b :=
   sub_congr .rfl h
 
+theorem nsmul_congr {n : Nat} {a b : IGame} (h : a ≈ b) : n • a ≈ n • b := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [succ_nsmul, succ_nsmul]
+    exact add_congr ih h
+
+theorem zsmul_congr {n : Int} {a b : IGame} (h : a ≈ b) : n • a ≈ n • b := by
+  induction n using Int.negInduction with
+  | nat n =>
+    rw [natCast_zsmul, natCast_zsmul]
+    exact nsmul_congr h
+  | neg ih n =>
+    rw [neg_zsmul, neg_zsmul]
+    exact neg_congr (ih n)
+
 /-- We define the `NatCast` instance as `↑0 = 0` and `↑(n + 1) = !{{↑n} | ∅}`.
 
 Note that this is equivalent, but not identical, to the more common definition `↑n = !{Iio n | ∅}`.
 For that, use `NatOrdinal.toIGame`. -/
 instance : AddCommMonoidWithOne IGame where
+  natCast := Nat.unaryCast
 
 /-- This version of the theorem is more convenient for the `game_cmp` tactic. -/
 @[game_cmp]
@@ -977,7 +1027,8 @@ theorem eq_add_one_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
     x = (n + 1 : ℤ) := by
   have : -x ∈ (-n : ℤ)ᴸ := by simpa
   rw [← neg_inj]
-  simpa [← IGame.intCast_neg, add_comm] using eq_sub_one_of_mem_leftMoves_intCast this
+  simpa [← IGame.intCast_neg, add_comm, sub_eq_add_neg] using
+    eq_sub_one_of_mem_leftMoves_intCast this
 
 /-- Every left option of an integer is equal to a smaller integer. -/
 theorem eq_intCast_of_mem_leftMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴸ) :
@@ -996,7 +1047,7 @@ theorem eq_intCast_of_mem_rightMoves_intCast {n : ℤ} {x : IGame} (hx : x ∈ n
 -- TODO: upstream
 attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
-def mul' (x y : IGame) : IGame :=
+private def mul' (x y : IGame) : IGame :=
   !{(range fun a : (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ :) ↦
     mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
   (range fun a : (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ :) ↦
@@ -1004,18 +1055,20 @@ def mul' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by all_goals aesop
 
+#adaptation_note /-- noncomputable is now needed -/ in
 /-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
 `!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 
 Using `IGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
-instance : Mul IGame where
+@[no_expose]
+noncomputable instance : Mul IGame where
   mul := mul'
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
 `x` and `y`, respectively. -/
-@[pp_nodot, game_cmp]
+@[pp_nodot, game_cmp, expose]
 def mulOption (x y a b : IGame) : IGame :=
   a * y + x * b - a * b
 
@@ -1057,45 +1110,50 @@ theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
 theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).moves p, P a) ↔
       (∀ p', ∀ a ∈ x.moves p', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  aesop
+  rw [moves_mul, forall_mem_image, forall_mem_union]
+  simp
+  grind only
 
 @[game_cmp]
 theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).moves p, P a) ↔
       (∃ p', ∃ a ∈ x.moves p', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
-  aesop
+  rw [moves_mul, exists_mem_image, exists_mem_union]
+  simp
+  grind only
 
 private theorem zero_mul' (x : IGame) : 0 * x = 0 := by
   ext p; cases p <;> simp
 
 private theorem one_mul' (x : IGame) : 1 * x = x := by
-  refine moveRecOn x ?_
-  aesop (add simp [mulOption, and_assoc, zero_mul'])
+  induction x using moveRecOn with | ind x ih
+  rw [mul_eq]
+  simp [mulOption, Set.singleton_prod, Set.image_image, zero_mul', Set.image_congr (ih _)]
 
 private theorem mul_comm' (x y : IGame) : x * y = y * x := by
-  ext p
-  simp only [moves_mul, mem_image, mem_prod, mem_union, Prod.exists]
-  cases p; all_goals
-    dsimp
-    simp only [and_comm, or_comm]
-    rw [exists_comm]
-    congr! 4 with b a
-    rw [and_congr_left_iff]
-    rintro (⟨_, _⟩ | ⟨_, _⟩) <;>
-      rw [mulOption, mulOption, mul_comm' x, mul_comm' _ y, add_comm, mul_comm' a b]
-termination_by (x, y)
-decreasing_by igame_wf
+  induction x using moveRecOn generalizing y with | ind x ihx
+  induction y using moveRecOn with | ind y ihy
+  rw [mul_eq x y, mul_eq y x, ofSets_inj]
+  simp_rw [Set.image_union,
+    ← Set.image_swap_prod (x.moves _) (y.moves _),
+    Set.image_image, Set.union_comm (_ '' IGame.moves left _ ×ˢ _) (_ '' IGame.moves right _ ×ˢ _),
+    Prod.fst_swap, Prod.snd_swap]
+  constructor <;> refine congrArg₂ (· ∪ ·) ?_ ?_ <;> apply Set.image_congr <;>
+  · simp_rw [Prod.forall, Set.mem_prod, and_imp, mulOption]
+    intro a b ha hb
+    rw [ihx _ _ ha, ihx _ _ ha, ihy _ _ hb]
+    ac_rfl
 
 instance : CommMagma IGame where
-  mul_comm := mul_comm'
+  mul_comm := private mul_comm'
 
 instance : MulZeroClass IGame where
-  zero_mul := zero_mul'
-  mul_zero x := mul_comm' .. ▸ zero_mul' x
+  zero_mul := private zero_mul'
+  mul_zero x := private mul_comm' .. ▸ zero_mul' x
 
 instance : MulZeroOneClass IGame where
-  one_mul := one_mul'
-  mul_one x := mul_comm' .. ▸ one_mul' x
+  one_mul := private one_mul'
+  mul_one x := private mul_comm' .. ▸ one_mul' x
 
 theorem mulOption_comm (x y a b : IGame) : mulOption x y a b = mulOption y x b a := by
   simp [mulOption, add_comm, mul_comm]
@@ -1116,7 +1174,7 @@ termination_by (x, y)
 decreasing_by igame_wf
 
 instance : HasDistribNeg IGame where
-  neg_mul := neg_mul'
+  neg_mul := private neg_mul'
   mul_neg _ _ := by rw [mul_comm, neg_mul', mul_comm]
 
 theorem mulOption_neg_left (x y a b : IGame) : mulOption (-x) y a b = -mulOption x y (-a) b := by
@@ -1172,6 +1230,7 @@ If `x` is negative, we define `x⁻¹ = -(-x)⁻¹`. For any other game, we set 
 
 If `x` is a non-zero numeric game, then `x * x⁻¹ ≈ 1`. The value of this function on any non-numeric
 game should be treated as a junk value. -/
+@[no_expose]
 instance : Inv IGame where
   inv x := by classical exact if 0 < x then inv' x else if x < 0 then -inv' (-x) else 0
 
@@ -1185,7 +1244,7 @@ private theorem inv_eq'' {x : IGame} :
 
 private theorem inv_eq {x : IGame.{u}} (hx : 0 < x) :
     x⁻¹ = !{.range (InvTy.val x left) | .range (InvTy.val x right)} := by
-  rw [inv_eq'', if_pos hx, inv']
+  rw [inv_eq'', ite_eq_left hx, inv']
   rfl
 
 private theorem inv_eq' {x : IGame.{u}} (hx : 0 < x) :
@@ -1211,13 +1270,13 @@ protected theorem inv_neg (x : IGame) : (-x)⁻¹ = -x⁻¹ := by
 
 /-- The general option of `x⁻¹` looks like `(1 + (y - x) * a) / y`, for `y` an option of `x`, and
 `a` some other "earlier" option of `x⁻¹`. -/
-@[pp_nodot]
+@[pp_nodot, expose]
 def invOption (x y a : IGame) : IGame :=
   (1 + (y - x) * a) / y
 
 private theorem invOption_eq {x y a : IGame} (hy : 0 < y) :
     invOption x y a = (1 + (y - x) * a) * inv' y := by
-  rw [invOption, IGame.div_eq_mul_inv, inv_eq'', if_pos hy]
+  rw [invOption, IGame.div_eq_mul_inv, inv_eq'', ite_eq_left hy]
 
 theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
   rw [inv_eq hx, leftMoves_ofSets]
@@ -1226,6 +1285,7 @@ theorem zero_mem_leftMoves_inv {x : IGame} (hx : 0 < x) : 0 ∈ x⁻¹ᴸ := by
 theorem inv_nonneg {x : IGame} (hx : 0 < x) : 0 ⧏ x⁻¹ :=
   left_lf (zero_mem_leftMoves_inv hx)
 
+set_option backward.isDefEq.respectTransparency false in
 theorem invOption_mem_moves_inv {x y a : IGame} {p₁ p₂} (hx : 0 < x) (hy : 0 < y)
     (hyx : y ∈ x.moves (-(p₁ * p₂))) (ha : a ∈ x⁻¹.moves p₁) :
     invOption x y a ∈ x⁻¹.moves p₂ := by
