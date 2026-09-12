@@ -13,7 +13,8 @@ import CombinatorialGames.Surreal.Birthday.Cut
 /-!
 # Birthday of dyadic rationals
 
-We prove that a surreal number has a finite birthday iff it's a dyadic number.
+We prove that a surreal number has a finite birthday iff it's a dyadic number,
+and give an explicit formula for the birthday of a dyadic number.
 -/
 
 public section
