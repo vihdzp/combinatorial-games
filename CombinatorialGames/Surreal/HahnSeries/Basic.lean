@@ -1184,12 +1184,12 @@ theorem truncIdx_add_one {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.lengt
   · congr
     rw [TermSeq.coeffIdx_coe_of_lt (by simpa using hi)]
   · simpa using hi
-  · simp_rw [TermSeq.trunc_exp]
+  · simp_rw [TermSeq.exp_trunc]
     grind
 
-theorem eq_of_gength_eq_add_one {x : SurrealHahnSeries} {i : Ordinal} (hi : x.length = i + 1) :
-    x = x.truncIdx i + single (x.exp ⟨i, by simp [hi]⟩) (x.coeffIdx i) := by
-  rw [← truncIdx_add_one, truncIdx_of_ge hi.le]
+theorem eq_of_length_eq_add_one {x : SurrealHahnSeries} {i : Ordinal} (hi : x.length = i + 1) :
+    x = x.truncIdx i + single (x.exp ⟨i, by simp [hi]⟩) (x.coeffIdx i) :=
+  (truncIdx_of_ge hi.le).symm.trans (truncIdx_add_one ..)
 
 theorem support_truncIdx_strictMonoOn {x : SurrealHahnSeries} :
     StrictMonoOn (fun i ↦ (truncIdx x i).support) (Iio x.length) := by
@@ -1208,7 +1208,7 @@ theorem support_truncIdx_mono {x : SurrealHahnSeries} :
 
 @[simp]
 theorem exp_truncIdx {x : SurrealHahnSeries} {i : Ordinal} (j : Iio (x.truncIdx i).length) :
-    (x.truncIdx i).exp j = ⟨x.exp ⟨j, by aesop⟩, by aesop⟩ := by
+    (x.truncIdx i).exp j = ⟨x.exp ⟨j, by aesop⟩, by have := j.2; aesop⟩ := by
   induction x using termSeqRecOn with | mk s
   apply Subtype.val_injective
   rw [exp_congr (TermSeq.coe_trunc s i).symm]
@@ -1241,7 +1241,7 @@ theorem term_injective : term.Injective := by
       simpa
   · have := congrFun h i
     convert congrArg Surreal.leadingCoeff this <;>
-    · rw [leadingCoeff_term, TermSeq.coeffIdx_coe_of_lt]
+    · rwa [leadingCoeff_term, TermSeq.coeffIdx_coe_of_lt]
 
 @[simp]
 theorem term_inj {x y : SurrealHahnSeries} : x.term = y.term ↔ x = y :=
