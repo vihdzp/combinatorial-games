@@ -439,7 +439,6 @@ decreasing_by igame_wf
 theorem neg_iff {x : IGame} : Numeric (-x) ↔ Numeric x :=
   ⟨fun _ ↦ by simpa using Numeric.neg (-x), fun _ ↦ Numeric.neg x⟩
 
-@[aesop forward safe]
 protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) := by
   apply mk <;> simp only [moves_add, Set.mem_union, Set.mem_image]
   · rintro _ (⟨a, ha, rfl⟩ | ⟨a, ha, rfl⟩) _ (⟨b, hb, rfl⟩ | ⟨b, hb, rfl⟩)
@@ -453,7 +452,6 @@ protected instance add (x y : IGame) [Numeric x] [Numeric y] : Numeric (x + y) :
 termination_by (x, y)
 decreasing_by igame_wf
 
-@[aesop forward safe]
 protected instance sub (x y : IGame) [Numeric x] [Numeric y] : Numeric (x - y) :=
   .add ..
 
