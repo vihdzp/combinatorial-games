@@ -138,11 +138,11 @@ theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
   rw [Rat.sub_def', Rat.den_mkRat, if_neg (by positivity),
     Rat.add_def', Rat.den_mkRat, if_neg (by positivity),
     Rat.den_inv_of_ne_zero (by positivity), Rat.num_inv, Rat.num_natCast,
-    Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero (by positivity),
+    Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero x.den_ne_zero,
     Nat.cast_one, Int.one_mul, ← Int.sub_mul, ← Int.add_mul,
     Int.natAbs_mul, Int.natAbs_mul, Int.natAbs_natCast,
-    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ (by positivity),
-    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ (by positivity)]
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos]
   generalize hn : x.toRat.num = n, hd : x.toRat.den = d
   obtain ⟨e, rfl⟩ : ∃ e, 2 ^ e = d := by
     rw [← hd, ← Submonoid.mem_powers_iff]
@@ -156,9 +156,9 @@ theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
     have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by
       rw [Int.natAbs_even, Int.even_add_one, Int.not_even_iff_odd, ← hn]
       exact x.odd_num hx
-    rw [pow_succ, Nat.mul_div_cancel _ (by decide), hl2, hu2,
+    rw [pow_succ, Nat.mul_div_cancel _ two_pos, hl2, hu2,
       ← Nat.mul_two, ← Nat.mul_two, Nat.gcd_mul_right, Nat.gcd_mul_right,
-      Nat.mul_div_mul_right _ _ (by decide), Nat.mul_div_mul_right _ _ (by decide)]
+      Nat.mul_div_mul_right _ _ two_pos, Nat.mul_div_mul_right _ _ two_pos]
     refine le_antisymm (max_le (Nat.div_le_self _ _) (Nat.div_le_self _ _)) ?_
     suffices h : Nat.gcd 2 l2 = 1 ∨ Nat.gcd 2 u2 = 1 by
       obtain h | h := h

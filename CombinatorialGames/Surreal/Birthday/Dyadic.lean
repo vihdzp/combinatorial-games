@@ -144,7 +144,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     rwa [← Dyadic.den_eq_two_pow_toNat_precision]
   simp_rw [Dyadic.den_eq_two_pow_toNat_precision] at hnd
   rw [← (pow_right_monotone one_le_two).map_max,
-    ← Nat.pow_sub_one (by decide) hnd0, pow_right_inj₀ Nat.two_pos (by decide),
+    ← Nat.pow_sub_one two_ne_zero hnd0, pow_right_inj₀ Nat.two_pos (by decide),
     eq_comm, Nat.sub_eq_iff_eq_add (Nat.one_le_iff_ne_zero.2 hnd0)] at hnd
   rw [birthday_of_den_ne_one hx, Option.get_eq_getD, hnd, Nat.add_one_inj, Nat.add_right_comm]
   have hk (c : Int) (d : Nat) : (Rat.num (c / d)).natAbs / Rat.den (c / d) = c.natAbs / d := by
@@ -181,7 +181,7 @@ theorem Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one {x : Dyad
     unfold Dyadic.num
     rw [hle, hue, hnd, hc, Int.add_sub_cancel, Int.add_assoc, ← two_mul, ← Int.mul_add,
       Rat.intCast_mul, Rat.intCast_mul, Rat.intCast_ofNat, Rat.natCast_ofNat,
-      mul_div_cancel_left₀ _ (by decide), mul_div_cancel_left₀ _ (by decide),
+      mul_div_cancel_left₀ _ two_ne_zero, mul_div_cancel_left₀ _ two_ne_zero,
       Rat.num_intCast, Rat.num_intCast]
     lia
   · rw [birthday_of_den_eq_one hl, birthday_of_den_ne_one hr,
