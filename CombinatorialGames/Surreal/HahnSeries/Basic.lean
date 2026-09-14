@@ -271,8 +271,8 @@ theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
   obtain hi | hi := lt_or_ge i k
   · obtain hj | hj := lt_or_ge j k
     · rw [coeff_trunc_of_lt hj, coeff_trunc_of_lt hi, coeff_trunc_of_lt (max_lt hi hj)]
-    · rw [coeff_trunc_of_ge hj, coeff_trunc_of_ge (le_max_of_ge_right hj)]
-  · rw [coeff_trunc_eq_zero (coeff_trunc_of_ge hi), coeff_trunc_of_ge (le_max_of_ge_left hi)]
+    · rw [coeff_trunc_of_ge hj, coeff_trunc_of_ge (le_max_of_le_right hj)]
+  · rw [coeff_trunc_eq_zero (coeff_trunc_of_ge hi), coeff_trunc_of_ge (le_max_of_le_left hi)]
 
 theorem trunc_eq_self_iff {x : SurrealHahnSeries} {i : Surreal} :
     x.trunc i = x ↔ ∀ j ∈ x.support, i < j := by
@@ -695,7 +695,7 @@ theorem coeffIdx_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
   rw [coeffIdx_of_lt (by simpa), exp_coe, coeff_coe]
 
 theorem coeffIdx_coe_of_ge {s : TermSeq} {i} (h : s.length ≤ i) : coeffIdx s i = 0 :=
-  coeffIdx_of_le (by simpa)
+  coeffIdx_of_ge (by simpa)
 
 @[aesop simp]
 theorem coeffIdx_coe (s : TermSeq) (i) :
@@ -709,7 +709,7 @@ theorem term_coe_of_lt {s : TermSeq} {i} (h : i < s.length) :
   rw [term_of_lt (by simpa), coeffIdx_coe_of_lt, exp_coe]
 
 theorem term_coe_of_ge {s : TermSeq} {i} (h : s.length ≤ i) : term s i = 0 :=
-  term_of_le (by simpa)
+  term_of_ge (by simpa)
 
 @[aesop simp]
 theorem term_coe (s : TermSeq) (i) :
