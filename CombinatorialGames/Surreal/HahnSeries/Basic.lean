@@ -653,7 +653,6 @@ theorem coeff_coe {s : TermSeq} (i : Iio s.length) : coeff s (s.exp i) = s.coeff
 theorem coeff_coe_of_notMem {s : TermSeq} {x : Surreal} (h : x ∉ range s.exp) : coeff s x = 0 := by
   grind [toSurrealHahnSeries]
 
-@[simp, grind =]
 theorem coeff_ofSurrealHahnSeries_coe {x : SurrealHahnSeries} (i : Iio x.length) :
     coeff (ofSurrealHahnSeries x) (x.exp i) = x.coeffIdx i :=
   coeff_coe ..
@@ -732,7 +731,7 @@ def surrealHahnSeriesEquiv : TermSeq ≃ SurrealHahnSeries where
     ext i
     by_cases h : i ∈ x.support
     · obtain ⟨⟨i, _⟩, hi, rfl⟩ := eq_exp_of_mem_support h
-      simp
+      simp [coeff_ofSurrealHahnSeries_coe]
     · have hx : x.coeff i = 0 := by rwa [← notMem_support_iff]
       rw [coeff_coe_of_notMem, hx]
       simpa [ofSurrealHahnSeries]
