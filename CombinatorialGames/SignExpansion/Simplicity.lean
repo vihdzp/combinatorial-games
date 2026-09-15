@@ -173,13 +173,13 @@ instance : InfSet Simplicity where
 
 @[simp]
 theorem sInf_empty : sInf ∅ = (⊥ : Simplicity) :=
-  dif_neg (by simp)
+  dite_eq_right (by simp)
 
 private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈ s) :
     sInf s = of (x.val ↾ sInf ((↑) '' {i | ∃ y ∈ s, ∃ z ∈ s, y i ≠ z i})) := by
   have hs : s.Nonempty := ⟨x, hx⟩
   have hsc := hs.choose_spec
-  apply (dif_pos hs).trans
+  apply (dite_eq_left hs).trans
   rw [of.apply_eq_iff_eq]
   ext i
   obtain ha | ha := lt_or_ge (i : WithTop NatOrdinal)
@@ -236,7 +236,7 @@ private theorem sSup_apply_of_mem {x : Simplicity} {s : Set Simplicity}
     (hs : IsChain (· ≤ ·) s) (hx : x ∈ s) {o : NatOrdinal} (ho : x o ≠ 0) : sSup s o = x o := by
   dsimp [sSup]
   generalize_proofs
-  rw [if_pos hs, of_apply, coe_mk, dif_pos ⟨x, hx, ho⟩]
+  rw [ite_eq_left hs, of_apply, coe_mk, dite_eq_left ⟨x, hx, ho⟩]
   generalize_proofs H
   obtain ⟨hc, hc'⟩ := H.choose_spec
   obtain h | h := hs.total hx hc <;> rwa [apply_eq_of_le h]
@@ -272,7 +272,7 @@ theorem isLUB_sSup_iff_bddAbove {s : Set Simplicity} : IsLUB s (sSup s) ↔ BddA
 alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
 
 theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s = ⊥ := by
-  apply dif_neg
+  apply dite_eq_right
   rwa [isChain_iff_bddAbove]
 
 instance : Max Simplicity where

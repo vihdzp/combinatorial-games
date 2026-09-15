@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import Mathlib.Algebra.Order.GroupWithZero.Canonical
 public import Mathlib.SetTheory.Ordinal.Family
 
 import CombinatorialGames.Tactic.OrdinalAlias
@@ -399,6 +400,7 @@ instance : CommSemiring NatOrdinal where
   mul_assoc := private mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
+instance : LinearOrderedCommMonoidWithZero NatOrdinal where
 
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by

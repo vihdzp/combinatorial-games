@@ -160,11 +160,9 @@ repeatedly removing a game from `a₂` and adding back one or two options of the
 See also `WellFounded.CutExpand`. -/
 def ArgsRel := InvImage (TransGen <| CutExpand fun x y => ∃ p, x ∈ y.moves p) Args.toMultiset
 
-/-- `ArgsRel` is well-founded. -/
-lemma argsRel_wf : WellFounded ArgsRel :=
+instance wellFounded_argsRel : WellFounded ArgsRel :=
   InvImage.wf _ (Subrelation.wf (fun h => h.elim fun _ => Subposition.of_mem_moves)
-    subposition_wf).cutExpand.transGen
-instance : IsWellFounded _ ArgsRel := ⟨argsRel_wf⟩
+    wellFounded_subposition).cutExpand.transGen
 
 /-- The property that all arguments are numeric is leftward-closed under `ArgsRel`. -/
 lemma ArgsRel.numeric_closed {a' a} : ArgsRel a' a → a.Numeric → a'.Numeric :=
@@ -428,7 +426,7 @@ lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x
 
 /-- We tie everything together to complete the induction. -/
 theorem main (a : Args) : a.Numeric → P124 a := by
-  apply argsRel_wf.induction a
+  apply wellFounded_argsRel.induction a
   intro a IH ha
   replace ih : ∀ a', ArgsRel a' a → P124 a' := fun a' hr ↦ IH a' hr (hr.numeric_closed ha)
   cases a with
