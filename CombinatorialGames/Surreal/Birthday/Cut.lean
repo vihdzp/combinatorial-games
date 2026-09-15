@@ -326,9 +326,9 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
           rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
           obtain hvb | hvb := hvb.eq_or_lt
           · obtain hwb | hwb := hwb.eq_or_lt
-            · exact ⟨!{{w} | {v}}, (ofSets_lt_of_mem_right (by simp)).le,
+            · exact ⟨_, (ofSets_lt_of_mem_right (mem_singleton v)).le,
                 birthday_ofSets_singleton_lt_of_birthday_eq hwb hvb hwv,
-                w, hws, (lt_ofSets_of_mem_left (by simp)).le⟩
+                w, hws, (lt_ofSets_of_mem_left (mem_singleton w)).le⟩
             · exact ⟨w, hwv.le, hwb, w, hws, le_rfl⟩
           · exact ⟨v, le_rfl, hvb, v, hv, le_rfl⟩
         choose vv hvv hvb hvw using he
