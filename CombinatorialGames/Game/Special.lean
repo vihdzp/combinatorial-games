@@ -18,7 +18,10 @@ This file defines some simple yet notable combinatorial games:
 * `⋆ = {0 | 0}`
 * `½ = {0 | 1}`
 * `↑ = {0 | ⋆}`
-* `↓ = {⋆ | 0}`.
+* `↓ = {⋆ | 0}`
+* `⧾x = {0 | {0 | -x}}`
+* `⧿x = {{x | 0} | 0}`
+* `±x = {x | -x}`.
 -/
 
 universe u
