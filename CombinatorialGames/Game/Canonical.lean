@@ -24,29 +24,6 @@ universe u
 
 noncomputable section
 
-public section ForMathlib
-open Set
-
-variable {α : Type*} {ι : Sort*} {κ : ι → Sort*}
-
--- mathlib PR #42549
-theorem forall_mem_iUnion {p : α → Prop} {f : ι → Set α} :
-    (∀ x ∈ ⋃ i, f i, p x) ↔ (∀ i, ∀ x ∈ f i, p x) := by
-  simp_rw [mem_iUnion, forall_exists_index]
-  apply forall_comm
-
--- mathlib PR #42549
-theorem forall_mem_iUnion₂ {p : α → Prop} {f : (i : ι) → κ i → Set α} :
-    (∀ x ∈ ⋃ (i) (j), f i j, p x) ↔ (∀ i j, ∀ x ∈ f i j, p x) := by
-  simp_rw [forall_mem_iUnion]
-
--- mathlib PR #42549
-theorem forall_mem_biUnion {p : α → Prop} {f : ι → Set α} {q : ι → Prop} :
-    (∀ x ∈ ⋃ (i : ι) (_ : q i), f i, p x) ↔ (∀ i, q i → ∀ x ∈ f i, p x) :=
-  forall_mem_iUnion₂
-
-end ForMathlib
-
 namespace IGame
 
 /-- The set of `-p`-moves of `z` which reverse `z` with respect to a `p`-move from `x`.
@@ -90,12 +67,12 @@ decreasing_by exact .trans (.of_mem_moves hg') (.of_mem_moves hg.1)
 
 theorem unreverse1_of_reverseSet_eq_empty {x : IGame} {p : Player} {z : IGame}
     (hx : reverseSet x p z = ∅) : unreverse1 x p z = {z} := by
-  rw [unreverse1, if_pos hx]
+  rw [unreverse1, ite_eq_left hx]
 
 theorem unreverse1_of_reverseSet_ne_empty {x : IGame} {p : Player} {z : IGame}
     (hx : reverseSet x p z ≠ ∅) : unreverse1 x p z =
     ⋃ (g) (_ : g ∈ reverseSet x p z) (g') (_ : g' ∈ g.moves p), unreverse1 x p g' := by
-  rw [unreverse1, if_neg hx]
+  rw [unreverse1, ite_eq_right hx]
 
 instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
   fun_induction unreverse1 x p z with
@@ -113,7 +90,7 @@ theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
     simp
   | case2 z hx ih =>
     rw [unreverse1, ← neg_reverseSet]
-    simp_rw [Set.neg_eq_empty, if_neg hx]
+    simp_rw [Set.neg_eq_empty, ite_eq_right hx]
     simp only [← Set.image_neg_eq_neg, Set.image_iUnion,
       Set.biUnion_image, moves_neg, neg_neg]
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
@@ -122,9 +99,9 @@ theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
 theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
     unreverse1 x p z = unreverse1 y p z := by
   fun_induction unreverse1 x p z with
-  | case1 z hx => rw [unreverse1, ← reverseSet_congr_left hxy, if_pos hx]
+  | case1 z hx => rw [unreverse1, ← reverseSet_congr_left hxy, ite_eq_left hx]
   | case2 z hx ih =>
-    rw [unreverse1, ← reverseSet_congr_left hxy, if_neg hx]
+    rw [unreverse1, ← reverseSet_congr_left hxy, ite_eq_right hx]
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
     exact ih g hg g' hg'
 
@@ -152,7 +129,7 @@ theorem lf_of_mem_reverseSet_of_mem_unreverse1
     {x : IGame} {p : Player} {z : IGame} {g g' c : IGame}
     (hg : g ∈ reverseSet x p z) (hg' : g' ∈ g.moves p) (hc : c ∈ unreverse1 x p g') :
     ¬p.cases (x ≤ c) (c ≤ x) := by
-  induction z using subposition_wf.induction generalizing g g' with | _ z ih
+  induction z using wellFounded_subposition.induction generalizing g g' with | _ z ih
   by_cases hx : reverseSet x p g' = ∅
   · rw [unreverse1_of_reverseSet_eq_empty hx, Set.mem_singleton_iff] at hc
     rw [hc]
@@ -185,7 +162,7 @@ theorem unreverse_equiv_aux_left (x : IGame) :
   · intro z hz
     replace hz : unreverse1 x left z ⊆ ⋃ z : xᴸ, unreverse1 x left z :=
       Set.subset_iUnion (fun z : xᴸ => unreverse1 x left z) ⟨z, hz⟩
-    induction z using subposition_wf.induction with | _ z ih
+    induction z using wellFounded_subposition.induction with | _ z ih
     by_cases hx : reverseSet x left z = ∅
     · apply left_lf
       rw [leftMoves_ofSets]
@@ -204,7 +181,7 @@ theorem unreverse_equiv_aux_left (x : IGame) :
     apply lf_right
     rw [rightMoves_ofSets]
     exact hz
-  · rw [leftMoves_ofSets, forall_mem_iUnion, Subtype.forall]
+  · rw [leftMoves_ofSets, Set.forall_mem_iUnion, Subtype.forall]
     intro z hz g hg
     exact lf_of_mem_moves_of_mem_unreverse1 hz hg
   · rw [rightMoves_ofSets]
@@ -250,7 +227,7 @@ theorem unreverse_equiv (x : IGame) : unreverse x ≈ x := by
 theorem birthday_unreverse_le (x : IGame) : birthday (unreverse x) ≤ birthday x := by
   induction x using moveRecOn with | ind x ih
   unfold unreverse
-  simp_rw [birthday_le_iff, moves_ofSets, forall_mem_iUnion]
+  simp_rw [birthday_le_iff, moves_ofSets, Set.forall_mem_iUnion]
   intro p z g hg
   exact ((birthday_le_of_wsubposition (wsubposition_of_mem_unreverse1 hg)).trans
     (ih p z.1 z.2)).trans_lt (birthday_lt_of_mem_moves z.2)
