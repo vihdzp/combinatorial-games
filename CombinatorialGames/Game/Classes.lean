@@ -418,10 +418,16 @@ theorem lt_iff_exists_le [Numeric x] [Numeric y] :
     x < y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ xᴿ, z ≤ y) := by
   rw [← Numeric.not_le, lf_iff_exists_le]
 
-theorem pos_iff_exists_le [Numeric x] : 0 < x ↔ ∃ z ∈ xᴸ, 0 ≤ z := by
+theorem zero_le_iff_forall_pos [Numeric x] : 0 ≤ x ↔ ∀ z ∈ xᴿ, 0 < z := by
+  simpa using le_iff_forall_lt (x := 0)
+
+theorem le_zero_iff_forall_neg [Numeric x] : x ≤ 0 ↔ ∀ z ∈ xᴸ, z < 0 := by
+  simpa using le_iff_forall_lt (y := 0)
+
+theorem pos_iff_exists_zero_le [Numeric x] : 0 < x ↔ ∃ z ∈ xᴸ, 0 ≤ z := by
   simpa using lt_iff_exists_le (x := 0)
 
-theorem neg_iff_exists_le [Numeric x] : x < 0 ↔ ∃ z ∈ xᴿ, z ≤ 0 := by
+theorem neg_iff_exists_le_zero [Numeric x] : x < 0 ↔ ∃ z ∈ xᴿ, z ≤ 0 := by
   simpa using lt_iff_exists_le (y := 0)
 
 theorem left_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
