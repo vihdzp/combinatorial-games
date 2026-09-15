@@ -198,6 +198,9 @@ theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
 theorem neg_miny (x : IGame) : -(⧿x) = ⧾x := by
   simp [miny, tiny]
 
+theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
+
 @[simp]
 theorem dicotic_miny_iff {x : IGame} : Dicotic (⧿x) ↔ Dicotic x := by
   rw [← neg_tiny, Dicotic.neg_iff]; simp
