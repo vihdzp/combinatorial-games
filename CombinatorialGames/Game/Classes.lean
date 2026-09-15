@@ -427,7 +427,7 @@ protected theorem le_zero [Numeric x] : x ≤ 0 ↔ ∀ z ∈ xᴸ, z < 0 := by
 theorem pos_iff_exists_zero_le [Numeric x] : 0 < x ↔ ∃ z ∈ xᴸ, 0 ≤ z := by
   simpa using lt_iff_exists_le (x := 0)
 
-theorem neg_iff_exists_le_zero [Numeric x] : x < 0 ↔ ∃ z ∈ xᴿ, z ≤ 0 := by
+protected theorem lt_zero [Numeric x] : x < 0 ↔ ∃ z ∈ xᴿ, z ≤ 0 := by
   simpa using lt_iff_exists_le (y := 0)
 
 theorem left_lt [Numeric x] (h : y ∈ xᴸ) : y < x := by
