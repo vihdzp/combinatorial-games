@@ -319,7 +319,7 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         constructor
       · have hbs := Order.succ_eq_of_covBy hb
         rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
-        have he (v : Surreal) (hv : v ∈ s) : ∃ c, c ≤ v ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
+        have he (v : s) : ∃ c, c ≤ v ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
           obtain ⟨w, hws, hwv⟩ := hs v hv
           have hvb := birthday_lt_sSup_birthday hv
           have hwb := birthday_lt_sSup_birthday hws
