@@ -142,7 +142,7 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
-theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
 
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
@@ -192,7 +192,7 @@ theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
 theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
   rightMoves_ofSets ..
 
-theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
+@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
