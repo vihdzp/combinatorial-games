@@ -61,9 +61,16 @@ protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 theorem star_lf_of_pos {x : IGame} (hx : 0 < x) : ⋆ ⧏ x :=
   lf_iff_exists_le.mpr <| Or.inr ⟨0, by simp, hx.le⟩
 
+theorem lf_star_of_neg {x : IGame} (hx : x < 0) : x ⧏ ⋆ :=
+  lf_iff_exists_le.mpr <| Or.inl ⟨0, by simp, hx.le⟩
+
 theorem star_lt_of_numeric_of_pos {x : IGame} [Numeric x] (hx : 0 < x) : ⋆ < x := by
   refine ⟨le_def.mpr ?_, star_lf_of_pos hx⟩
-  simpa using ⟨Numeric.zero_lt.mp hx, fun a ha ↦ Or.inr <| (Numeric.zero_le.mp hx.le a ha).le⟩
+  simpa using ⟨Numeric.zero_lt.mp hx, fun a ha ↦ Or.inr (Numeric.zero_le.mp hx.le a ha).le⟩
+
+theorem lt_star_of_numeric_of_neg {x : IGame} [Numeric x] (hx : x < 0) : x < ⋆ := by
+  refine ⟨le_def.mpr ?_, lf_star_of_neg hx⟩
+  simpa using ⟨fun a ha ↦ Or.inl (Numeric.le_zero.mp hx.le a ha).le, Numeric.lt_zero.mp hx⟩
 
 /-! ### Half -/
 
