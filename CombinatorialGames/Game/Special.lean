@@ -58,11 +58,11 @@ protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
 @[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
-theorem star_lf_of_pos {x : IGame} (hx : 0 < x) : ⋆ ⧏ x :=
-  lf_iff_exists_le.mpr <| Or.inr ⟨0, by simp, hx.le⟩
+theorem star_lf_of_nonneg {x : IGame} (hx : 0 ≤ x) : ⋆ ⧏ x :=
+  fun h => star_lf_zero (hx.trans h)
 
-theorem lf_star_of_neg {x : IGame} (hx : x < 0) : x ⧏ ⋆ :=
-  lf_iff_exists_le.mpr <| Or.inl ⟨0, by simp, hx.le⟩
+theorem lf_star_of_nonpos {x : IGame} (hx : x ≤ 0) : x ⧏ ⋆ :=
+  fun h => zero_lf_star (h.trans hx)
 
 theorem star_lt_of_numeric_of_pos {x : IGame} [Numeric x] (hx : 0 < x) : ⋆ < x := by
   refine ⟨le_def.mpr ?_, star_lf_of_pos hx⟩
