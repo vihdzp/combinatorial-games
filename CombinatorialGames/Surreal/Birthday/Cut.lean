@@ -297,12 +297,10 @@ theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.bir
     hy' ▸ max_le (birthday_supLeft_le y) (birthday_infRight_le y)
 
 theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.birthday := by
-  constructor
-  · rintro (_ | _) <;>
-      · simp only [birthday_leftSurreal, birthday_rightSurreal]
-        rw [← WithTop.coe_add_one, WithTop.isSuccPrelimit_coe_iff]
-        exact Order.not_isSuccPrelimit_add_one _
-  · intro h
+  constructor <;> intro h
+  · rw [birthday_of_numeric, ← WithTop.coe_add_one, WithTop.isSuccPrelimit_coe_iff]
+    exact Order.not_isSuccPrelimit_add_one _
+  · rw [Order.not_isSuccPrelimit_iff] at h
     rw [Order.not_isSuccPrelimit_iff] at h
     obtain ⟨b, hb⟩ := h
     cases b with | top => simp at hb | coe b
