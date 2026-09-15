@@ -93,8 +93,13 @@ recommended_spelling "up" for "↑" in [«term↑»]
 @[simp, game_cmp] theorem rightMoves_up : ↑ᴿ = {⋆} := rightMoves_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
+theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
+theorem star_lt_up_add_up : ⋆ < ↑ + ↑ := by game_cmp
+
+/-- The upstart equality. -/
+@[simp] theorem ofSets_zero_up : !{{0} | {↑}} ≈ ↑ + ↑ + ⋆ := by game_cmp
 
 protected instance Dicotic.up : Dicotic ↑ := by rw [dicotic_def]; simp
 protected instance Short.up : Short ↑ := by rw [short_def]; simp
