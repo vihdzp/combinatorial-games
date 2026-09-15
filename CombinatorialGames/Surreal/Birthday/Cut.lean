@@ -301,7 +301,6 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
   · rw [birthday_of_numeric, ← WithTop.coe_add_one, WithTop.isSuccPrelimit_coe_iff]
     exact Order.not_isSuccPrelimit_add_one _
   · rw [Order.not_isSuccPrelimit_iff] at h
-    rw [Order.not_isSuccPrelimit_iff] at h
     obtain ⟨b, hb⟩ := h
     cases b with | top => simp at hb | coe b
     obtain ⟨s, hx | hx, hsb⟩ := birthday_eq_sSup_birthday x
