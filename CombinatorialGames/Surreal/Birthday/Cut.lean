@@ -366,37 +366,36 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         constructor
       · have hbs := Order.succ_eq_of_covBy hb
         rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
-        have he (v : Surreal) (hv : v ∈ s) : ∃ c, v ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
-          obtain ⟨w, hws, hvw⟩ := hs v hv
-          have hvb := birthday_lt_sSup_birthday hv
+        have he (v : s) : ∃ c, v.1 ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
+          obtain ⟨w, hws, hvw⟩ := hs v.1 v.2
+          have hvb := birthday_lt_sSup_birthday v.2
           have hwb := birthday_lt_sSup_birthday hws
           rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
           obtain hvb | hvb := hvb.eq_or_lt
           · obtain hwb | hwb := hwb.eq_or_lt
-            · exact ⟨_, (lt_ofSets_of_mem_left (mem_singleton v)).le,
+            · exact ⟨_, (lt_ofSets_of_mem_left (mem_singleton v.1)).le,
                 birthday_ofSets_singleton_lt_of_birthday_eq hvb hwb hvw,
                 w, hws, (ofSets_lt_of_mem_right (mem_singleton w)).le⟩
             · exact ⟨w, hvw.le, hwb, w, hws, le_rfl⟩
-          · exact ⟨v, le_rfl, hvb, v, hv, le_rfl⟩
+          · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
         choose vv hvv hvb hvw using he
-        have hxv : x = sSup (rightSurreal '' ⋃ v, Set.range (vv v)) := by
+        have hxv : x = sSup (rightSurreal '' Set.range vv) := by
           apply le_antisymm
           · rw [← hx, sSup_le_iff, Set.forall_mem_image]
             intro v hv
-            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone (hvv v hv))
+            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone (hvv ⟨v, hv⟩))
             apply mem_image_of_mem
-            apply mem_iUnion_of_mem
             apply mem_range_self
-          · simp_rw [sSup_le_iff, forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
-            intro v hv
-            obtain ⟨w, hws, hvw⟩ := hvw v hv
+          · simp_rw [sSup_le_iff, forall_mem_image, Set.forall_mem_range]
+            intro v
+            obtain ⟨w, hws, hvw⟩ := hvw v
             rw [← hx]
             refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone hvw)
             exact mem_image_of_mem rightSurreal hws
         absurd hb.lt.not_ge
         grw [hxv, birthday_sSup_le]
-        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_iUnion, Set.forall_mem_range]
-        intro v hv
+        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_range]
+        intro v
         rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
         apply hvb
 
