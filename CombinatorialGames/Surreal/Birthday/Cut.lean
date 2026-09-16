@@ -306,16 +306,8 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
     obtain ⟨s, hx | hx, hsb⟩ := birthday_eq_sSup_birthday x
     · by_cases! hs : ∃ u ∈ s, ∀ v ∈ s, u ≤ v
       · obtain ⟨u, hus, hu⟩ := hs
-        have hxu : x = leftSurreal u := by
-          apply le_antisymm
-          · rw [← hx]
-            apply sInf_le
-            exact Set.mem_image_of_mem leftSurreal hus
-          · rw [← hx, le_sInf_iff, Set.forall_mem_image]
-            intro v hv
-            rw [le_leftSurreal_iff, mem_right_leftSurreal]
-            exact hu v hv
-        rw [hxu]
+        obtain rfl : x = leftSurreal u := by
+          apply le_antisymm <;> aesop
         constructor
       · have hbs := Order.succ_eq_of_covBy hb
         rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
