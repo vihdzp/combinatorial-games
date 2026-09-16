@@ -55,9 +55,9 @@ public theorem lf_of_reverseSet_eq_empty_of_mem_moves {x : IGame} {p : Player} {
 
 -- false positive on `hg` which is referenced in the termination proof
 set_option linter.unusedVariables false in
-/-- Repeatedly reverse the move `z` with respect to a `p`-move from `x`.
+/-- Repeatedly unreverse the move `z` with respect to a `p`-move from `x`.
 Treating `z` as a `p`-option of `x`, bypass it if it is reversible, and
-then recursively reverse all the resulting games. -/
+then recursively unreverse all the resulting games. -/
 def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   open scoped Classical in
   if reverseSet x p z = ∅ then {z} else
