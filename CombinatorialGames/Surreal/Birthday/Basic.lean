@@ -11,9 +11,13 @@ public import CombinatorialGames.Surreal.Ordinal
 import Mathlib.Algebra.Order.Group.OrderIso
 
 /-!
-# Birthday of a surreal number
+# Birthdays of surreals
 
-TODO: write a better docstring
+We define the birthday of a surreal number as the smallest birthday of all numeric pre-games
+equivalent to it.
+
+The numeric condition can be removed to yield an equivalent definition, but that is proved in
+`CombinatorialGames.Surreal.Birthday.Cut`.
 -/
 
 universe u
@@ -89,6 +93,23 @@ theorem birthday_ofNat (n : ℕ) [n.AtLeastTwo] : birthday ofNat(n) = n :=
 @[simp]
 theorem birthday_one : birthday 1 = 1 := by
   simpa using birthday_natCast 1
+
+theorem _root_.IGame.Fits.birthday_le {x y : IGame} [Numeric x] (h : Fits x y) :
+    Game.birthday (.mk y) ≤ birthday (.mk x) := by
+  obtain ⟨x', _, hx', hxb⟩ := Surreal.birthday_eq_iGameBirthday (.mk x)
+  obtain ⟨z, hzx, hzy⟩ := (h.congr (mk_eq_mk.1 hx'.symm)).exists_wsubposition_equiv
+  rw [← Game.mk_eq hzy, ← hxb]
+  exact (Game.birthday_mk_le z).trans <| birthday_le_of_wsubposition hzx
+
+theorem _root_.IGame.Fits.birthday_lt {x y : IGame} [Numeric x] (h : Fits x y) (he : ¬ x ≈ y) :
+    Game.birthday (.mk y) < birthday (.mk x) := by
+  apply h.birthday_le.lt_of_not_ge
+  contrapose he
+  obtain ⟨z, _, hz, hz'⟩ := birthday_eq_iGameBirthday (.mk x)
+  rw [← hz'] at he
+  rw [eq_comm, mk_eq_mk] at hz
+  exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
+    he.trans (hw.birthday_le.trans <| birthday_mk_le _)
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :

@@ -243,8 +243,8 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
+instance : WellFoundedLT (Nimber[X]) :=
+  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
