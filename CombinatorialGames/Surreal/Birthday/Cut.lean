@@ -325,18 +325,13 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
           · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
         choose vv hvv hvb hvw using he
         have hxv : x = sInf (leftSurreal '' Set.range vv) := by
-          apply le_antisymm
-          · simp_rw [le_sInf_iff, forall_mem_image, Set.forall_mem_range]
-            intro v
-            obtain ⟨w, hws, hwv⟩ := hvw v
-            rw [← hx]
-            refine sInf_le_of_le ?_ (leftSurreal_strictMono.monotone hwv)
-            exact mem_image_of_mem leftSurreal hws
-          · rw [← hx, le_sInf_iff, Set.forall_mem_image]
-            intro v hv
-            refine sInf_le_of_le ?_ (leftSurreal_strictMono.monotone (hvv ⟨v, hv⟩))
-            apply mem_image_of_mem
-            apply mem_range_self
+          rw [← hx, sInf_image, sInf_image, iInf_range, ← iInf_subtype'']
+          apply le_antisymm <;> (
+              refine le_iInf fun i => ?_
+              rw [le_leftSurreal_iff, right_iInf, mem_iUnion])
+          · simp_rw [Subtype.exists, exists_prop]
+            exact hvw i
+          · exact ⟨i, hvv i⟩
         absurd hb.lt.not_ge
         grw [hxv, birthday_sInf_le]
         simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_range]
@@ -364,18 +359,13 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
           · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
         choose vv hvv hvb hvw using he
         have hxv : x = sSup (rightSurreal '' Set.range vv) := by
-          apply le_antisymm
-          · rw [← hx, sSup_le_iff, Set.forall_mem_image]
-            intro v hv
-            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone (hvv ⟨v, hv⟩))
-            apply mem_image_of_mem
-            apply mem_range_self
-          · simp_rw [sSup_le_iff, forall_mem_image, Set.forall_mem_range]
-            intro v
-            obtain ⟨w, hws, hvw⟩ := hvw v
-            rw [← hx]
-            refine le_sSup_of_le ?_ (rightSurreal_strictMono.monotone hvw)
-            exact mem_image_of_mem rightSurreal hws
+          rw [← hx, sSup_image, sSup_image, iSup_range, ← iSup_subtype'']
+          apply le_antisymm <;> (
+              refine iSup_le fun i => ?_
+              rw [rightSurreal_le_iff, left_iSup, mem_iUnion])
+          · exact ⟨i, hvv i⟩
+          · simp_rw [Subtype.exists, exists_prop]
+            exact hvw i
         absurd hb.lt.not_ge
         grw [hxv, birthday_sSup_le]
         simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_range]
