@@ -46,6 +46,8 @@ macro "game_cmp" : tactic =>
       rw [IGame.le_iff_forall_lf]
       simp only [game_cmp]})
 
+register_hint 200 game_cmp
+
 /-! ### Extra tagged lemmas -/
 
 public section
