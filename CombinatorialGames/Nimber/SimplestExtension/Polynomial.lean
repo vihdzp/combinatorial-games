@@ -435,7 +435,8 @@ theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree +
       rw [add_comm, ← CharTwo.sub_eq_add, self_sub_X_pow_of_monic hm, ← degree_eq_natDegree hp₀]
       exact degree_eraseLead_lt hp₀
     · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, ite_eq_right hk', zero_add]
-  · rwa [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
+  · rw [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
+    assumption
 
 theorem X_pow_add_le {p q : Nimber[X]} (hm : p.Monic) (h : q ≤ X ^ p.natDegree + p) :
     X ^ p.natDegree + q ≤ p := by
