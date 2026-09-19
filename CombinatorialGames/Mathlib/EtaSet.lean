@@ -203,8 +203,7 @@ private theorem not_lt_f {z : β} (a : α)
   rw [f_def a, dite_eq_left (f_sep a)]
   exact hs.wf.not_lt_min _ hz
 
-private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.type s)
-    (heq : #α = #β) :
+private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.type s) (heq : #α = #β) :
     Function.Surjective (h.f hord s) := by
   intro b
   by_contra hb
@@ -239,7 +238,6 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
   have hfa₀ : s (h.f hord s a₀) b := (trichotomous_of s _ b).resolve_right <|
     not_or.2 ⟨hb a₀, not_lt_f a₀ ⟨hcand₁, hcand₂⟩⟩
   rcases lt_or_gt_of_ne (hb a₀) with h' | h'
-  --couldnt get grind to play nice here either, even though its so repetitive
   · exact (hlo₀ a₀ ⟨hfa₀, h'⟩).false
   · exact (hhi₀ a₀ ⟨hfa₀, h'⟩).false
 
@@ -251,25 +249,17 @@ open IsEta OrderType
 /-- If `β` is an `η_c` set, any linear order of cardinal `c` embeds into it. -/
 public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (h : IsEta #α β) : type α ≤ type β := by
-  cases isEmpty_or_nonempty α with
-  | inl _ => exact type_le_type_iff.2 ⟨.ofIsEmpty⟩
-  | inr _ =>
-    obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
-    obtain ⟨s, hs, -⟩ := Cardinal.exists_ord_eq β
-    exact type_le_type_iff.2 ⟨.ofStrictMono _ (strictMono_f (h := h) (hord := hord) (s := s))⟩
+  obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
+  obtain ⟨s, hs, -⟩ := Cardinal.exists_ord_eq β
+  exact type_le_type_iff.2 ⟨.ofStrictMono _ (strictMono_f (h := h) (hord := hord) (s := s))⟩
 
 /-- Any two `η_c` ordered sets of cardinal `c` are order-isomorphic. -/
 public theorem OrderType.type_eq_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (hα : IsEta #α α) (hβ : IsEta #β β) (heq : #α = #β) : type α = type β := by
-  cases isEmpty_or_nonempty α with
-  | inl h' =>
-    have h'' : IsEmpty β := mk_eq_zero_iff.1 (heq ▸ mk_eq_zero α)
-    rw [type_eq_zero.2 h', type_eq_zero.2 h'']
-  | inr _ =>
-    obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
-    obtain ⟨s, hs, hords⟩ := Cardinal.exists_ord_eq β
-    have h : IsEta #α β := heq ▸ hβ
-    exact type_eq_type.2 ⟨(strictMono_f (h := h) (hord := hord) (s := s)).orderIsoOfSurjective _
-      (surjective_f hα hords heq)⟩
+  obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
+  obtain ⟨s, hs, hords⟩ := Cardinal.exists_ord_eq β
+  have h : IsEta #α β := heq ▸ hβ
+  exact type_eq_type.2 ⟨(strictMono_f (h := h) (hord := hord) (s := s)).orderIsoOfSurjective _
+    (surjective_f hα hords heq)⟩
 
 end Order
