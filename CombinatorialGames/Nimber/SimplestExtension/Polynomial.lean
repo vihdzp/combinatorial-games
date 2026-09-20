@@ -243,8 +243,8 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
+instance : WellFoundedLT (Nimber[X]) :=
+  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
@@ -435,7 +435,8 @@ theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree +
       rw [add_comm, ← CharTwo.sub_eq_add, self_sub_X_pow_of_monic hm, ← degree_eq_natDegree hp₀]
       exact degree_eraseLead_lt hp₀
     · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, ite_eq_right hk', zero_add]
-  · rwa [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
+  · rw [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
+    assumption
 
 theorem X_pow_add_le {p q : Nimber[X]} (hm : p.Monic) (h : q ≤ X ^ p.natDegree + p) :
     X ^ p.natDegree + q ≤ p := by
