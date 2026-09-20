@@ -48,10 +48,6 @@ theorem Monotone.rangeFactorization {f : α → β} (hf : Monotone f) :
     Monotone (rangeFactorization f) :=
   fun _ _ h ↦ hf h
 
--- #43598
-theorem Sum.swap_monotone : Monotone (α := α ⊕ β) Sum.swap :=
-  fun _ _ ↦ swap_le_swap_iff.2
-
 theorem Equiv.emptySum_monotone [IsEmpty α] : Monotone (Equiv.emptySum α β) := by
   simp [Monotone]
 
@@ -69,7 +65,7 @@ variable {α β γ : Type*}
 -- #43588
 instance : WellFoundedLT (α ⊕ₗ β) :=
   have H : IsWellOrder _ (Sum.Lex (· < · : α → _) (· < · : β → _)) := inferInstance
-  ⟨H.wf⟩
+  H.wf
 
 /-- An order isomorphism between `insert a s` and `s ⊕ₗ PUnit`. -/
 def orderIsoInsert {s : Set α} [DecidablePred (· ∈ s)] {a : α} (ha : ∀ b ∈ s, b < a) :
@@ -134,6 +130,10 @@ namespace NatOrdinal
 variable {α β γ : Type u}
   [LinearOrder α] [LinearOrder β] [LinearOrder γ]
   [WellFoundedLT α] [WellFoundedLT β] [WellFoundedLT γ]
+
+@[simp]
+theorem typein_eq_val (x : NatOrdinal.{u}) : typein LT.lt x = Ordinal.lift.{u + 1} x.val :=
+  Ordinal.typein_ordinal _
 
 theorem type_sum_embedding_le {f : α ⊕ β → γ} (hf : Monotone f) (hfs : f.Surjective) :
     NatOrdinal.of (typeLT γ) ≤ .of (typeLT α) + .of (typeLT β) := by
@@ -229,6 +229,10 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
     rw [add_comm] at hγ
     exact ⟨γ, ‹_›, ‹_›, hγ, ⟨_, hf.comp Sum.swap_monotone⟩, hf'.comp Sum.swap_surjective⟩
   · exact H rfl hle
+
+-- TODO: we probably want to define `NatOrdinal.lift` before doing this.
+proof_wanted exists_sum_embedding_Iio (x y : NatOrdinal) :
+    ∃ f : Iio x ⊕ Iio y →o Iio (x + y), Function.Surjective f
 
 end NatOrdinal
 end
