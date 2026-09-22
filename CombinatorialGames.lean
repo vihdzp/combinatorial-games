@@ -27,6 +27,7 @@ public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
+public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 public import CombinatorialGames.NatOrdinal.Basic
 public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
