@@ -626,6 +626,19 @@ def toSurrealRingHom : ℝ →+*o Surreal where
   map_mul' := toSurreal_mul
   monotone' := toSurrealEmbedding.monotone
 
+instance : Algebra ℝ Surreal :=
+  Real.toSurrealRingHom.toAlgebra
+
+instance : IsOrderedModule ℝ Surreal where
+  smul_le_smul_of_nonneg_left _ hr _ _ hxy :=
+    mul_le_mul_of_nonneg_left hxy (Real.toSurreal_nonneg_iff.mpr hr)
+  smul_le_smul_of_nonneg_right _ hx _ _ hrs :=
+    mul_le_mul_of_nonneg_right (Real.toSurreal_le_iff.mpr hrs) hx
+
+@[simp]
+theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
+  rfl
+
 @[simp, norm_cast]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=
   map_inv₀ toSurrealRingHom x
