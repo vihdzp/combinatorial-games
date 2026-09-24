@@ -1,7 +1,25 @@
-import CombinatorialGames.NatOrdinal.Basic
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import CombinatorialGames.NatOrdinal.Basic
+
+/-!
+# Extra lemmas on WithTop
+-/
 
 universe u
 open Set NatOrdinal WithTop
+
+public section
+
+-- #39952
+@[to_additive]
+instance {α} [LE α] [One α] [IsBotOneClass α] : IsBotOneClass (WithTop α) where
+  isBot_one x := by cases x <;> simp
 
 instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α] [NoMaxOrder α]
     [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where
@@ -70,3 +88,4 @@ theorem withTop_sSup_lt_top {s : Set (WithTop NatOrdinal.{u})} [Small.{u} s] :
   rw [sSup_eq_iSup', withTop_iSup_lt_top, Subtype.forall]
 
 end NatOrdinal
+end

@@ -3,7 +3,9 @@ Copyright (c) 2025 Tristan Figueroa-Reid. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Tristan Figueroa-Reid
 -/
-import CombinatorialGames.Game.Impartial.Grundy
+module
+
+public import CombinatorialGames.Game.Impartial.Grundy
 import CombinatorialGames.Surreal.Division
 
 /-!
@@ -17,7 +19,7 @@ We prove that every dicotic game, and hence every impartial game is small. The f
 results is known as the lawnmower theorem.
 -/
 
-namespace IGame
+public section
 
 /-- Small games lie between all the positive and negative surreals. -/
 class Small (x : IGame) : Prop where
@@ -118,3 +120,4 @@ instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
 
 end IGame
+end

@@ -1,14 +1,29 @@
+/-
+Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
+module
+
+public import Mathlib.Logic.Small.Defs
+
 import Mathlib.Logic.Small.Set
 import Mathlib.Logic.Relation
 import Mathlib.Order.SetNotation
 
-open Set
+/-!
+# Tree with small sets of branches is small
+-/
 
 universe u
 
+public section
+
+open Set
+
 variable {α : Type*} (r : α → α → Prop) [H : ∀ x, Small.{u} {y // r x y}]
 
-private def level [∀ x, Small.{u} {y // r x y}] (x : α) : ℕ → Set α
+private def level (x : α) : ℕ → Set α
   | 0 => {x}
   | n + 1 => ⋃₀ ((fun x ↦ {y | r x y}) '' level x n)
 
@@ -18,7 +33,7 @@ private theorem small_level (x : α) : ∀ n, Small.{u} (level r x n)
     refine @small_sUnion _ _ ?_ ?_
     · have := small_level x n
       exact small_image ..
-    · simp_all
+    · simp_all [coe_ofPred]
 
 private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x)) := by
   refine @small_sUnion _ _ ?_ ?_
