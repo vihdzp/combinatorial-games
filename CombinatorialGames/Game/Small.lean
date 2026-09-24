@@ -6,7 +6,9 @@ Authors: Tristan Figueroa-Reid
 module
 
 public import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Surreal.Division
+public import CombinatorialGames.Surreal.Division
+
+import Mathlib.Algebra.Order.Field.Basic
 
 /-!
 # Small games all around
@@ -20,6 +22,8 @@ results is known as the lawnmower theorem.
 -/
 
 public section
+
+namespace IGame
 
 /-- Small games lie between all the positive and negative surreals. -/
 class Small (x : IGame) : Prop where
@@ -114,7 +118,6 @@ instance toSmall (x) [Dicotic x] : Small x where
 end Dicotic
 
 -- TODO: a game is dicotic iff every non-strict subposition is small.
--- First, we need a predicate for non-strict subpositions!
 
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
