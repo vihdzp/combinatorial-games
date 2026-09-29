@@ -8,6 +8,7 @@ module
 public meta import CombinatorialGames.Tactic.Register
 public import CombinatorialGames.NatOrdinal.Basic
 
+import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Data.Nat.Bitwise
 
