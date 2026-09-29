@@ -14,7 +14,7 @@ import Mathlib.Algebra.Order.Field.Basic
 # Small games all around
 
 A small game is one that's smaller than all positive surreals, but larger than all negative
-surreals. The only small numeric game can be zero, but surprisingly there are other non-numeric
+surreals. The only small numeric games are zero, but surprisingly there are other non-numeric
 small games, such as the nimbers.
 
 We prove that every dicotic game, and hence every impartial game is small. The former of these
@@ -113,7 +113,8 @@ decreasing_by igame_wf
 /-- The **lawnmower theorem**: every dicotic game is small. -/
 instance toSmall (x) [Dicotic x] : Small x where
   lt_numeric_of_pos
-  numeric_lt_of_neg {y} _ hy := by have := lt_numeric_of_pos (x := -x) (y := -y); simp_all
+  numeric_lt_of_neg {y} _ hy :=
+    IGame.neg_lt_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy))
 
 end Dicotic
 
