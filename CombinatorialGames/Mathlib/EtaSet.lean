@@ -6,9 +6,9 @@ Authors: Yan Yablonovskiy
 module
 
 public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
-public import Mathlib.SetTheory.Cardinal.Order
-public import Mathlib.SetTheory.Ordinal.Basic
+public import Mathlib.SetTheory.Ordinal.Basic -- shake: keep
 public import Mathlib.Order.Types.Defs
+
 import Mathlib.Algebra.Field.Rat
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Order.Ring.Rat

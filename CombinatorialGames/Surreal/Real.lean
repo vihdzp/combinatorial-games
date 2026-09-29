@@ -9,7 +9,6 @@ public import CombinatorialGames.Surreal.Dyadic
 public import Mathlib.Algebra.Order.Hom.Ring
 public import Mathlib.Basic.Real.Basic
 
-import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Algebra.InfiniteSum.Order

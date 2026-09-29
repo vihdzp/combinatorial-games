@@ -7,7 +7,7 @@ module -- shake: keep-all
 
 public import CombinatorialGames.Game.IGame
 
-meta import CombinatorialGames.Tactic.Register
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Tactic for game inequalities
