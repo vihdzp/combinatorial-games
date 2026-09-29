@@ -6,6 +6,7 @@ Authors: Tristan Figueroa-Reid
 module
 
 public import CombinatorialGames.Game.Classes
+
 import CombinatorialGames.Game.Impartial.Grundy
 
 /-!

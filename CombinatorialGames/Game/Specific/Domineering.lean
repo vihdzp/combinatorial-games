@@ -10,10 +10,10 @@ public import Mathlib.Algebra.Group.Int.Defs
 public import Mathlib.Algebra.Group.Units.Equiv
 public import Mathlib.Data.Finset.Sort
 
+import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Algebra.Order.Sub.Unbundled.Basic
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Ring.Int.Defs
-import Mathlib.Algebra.Order.Group.Nat
 
 /-!
 # Domineering as a combinatorial game.

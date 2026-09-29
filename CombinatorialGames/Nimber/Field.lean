@@ -6,13 +6,13 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
 
 import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.Tactic.Abel
-public import Mathlib.Algebra.CharP.Defs
 import Mathlib.Algebra.CharP.Two
+import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring.RingNF
 
 /-!

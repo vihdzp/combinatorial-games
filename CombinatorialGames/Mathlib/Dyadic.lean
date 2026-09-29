@@ -5,11 +5,12 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Data.Nat.Log
 public import Mathlib.Algebra.Group.Submonoid.Membership
 public import Mathlib.Algebra.Order.Archimedean.Defs
 public import Mathlib.Algebra.Ring.Parity
 public import Mathlib.Algebra.Ring.Rat
+public import Mathlib.Data.Nat.Log
+
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Algebra.InfiniteSum.Order

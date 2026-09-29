@@ -8,13 +8,13 @@ module
 
 public import CombinatorialGames.Game.Player
 public import Mathlib.Algebra.Group.Pointwise.Set.Small
+public import Mathlib.Data.Rat.Init
 public import Mathlib.Order.Comparable
 
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
-import Mathlib.Logic.Hydra
-public import Mathlib.Data.Rat.Init
 import CombinatorialGames.Tactic.Register
+import Mathlib.Logic.Hydra
 
 /-!
 # Combinatorial (pre-)games

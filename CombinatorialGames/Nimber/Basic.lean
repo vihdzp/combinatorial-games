@@ -9,8 +9,8 @@ public import CombinatorialGames.NatOrdinal.Basic
 
 import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
-import Mathlib.Data.Nat.Bitwise
 import CombinatorialGames.Tactic.Register
+import Mathlib.Data.Nat.Bitwise
 
 /-!
 # Nimbers

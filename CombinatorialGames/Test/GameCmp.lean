@@ -7,8 +7,8 @@ module -- shake: keep-all
 
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Nimber.Field
+import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.CharP.Two
-public import CombinatorialGames.Tactic.GameCmp
 
 -- `lake build` fails without this.
 meta import CombinatorialGames.Tactic.GameCmp

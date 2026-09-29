@@ -5,11 +5,11 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import Mathlib.Data.Nat.SuccPred
 public import Mathlib.Order.Lattice.Nat
 
-import CombinatorialGames.Tactic.OrdinalAlias
-public import Mathlib.Data.Nat.SuccPred
 import CombinatorialGames.Nimber.Basic
+import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
 # Finite nimber arithmetic

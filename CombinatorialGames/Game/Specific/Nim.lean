@@ -9,8 +9,8 @@ public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
-import Mathlib.Order.Interval.Set.OrderIso
 import CombinatorialGames.Tactic.Register
+import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
 # Nim

@@ -7,11 +7,11 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import Mathlib.Algebra.Polynomial.Splits
-
-import Mathlib.RingTheory.Polynomial.UniqueFactorization
 public import Mathlib.Data.Finsupp.Lex
+
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Data.Finsupp.WellFounded
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
 
 /-!
 # Nimber polynomials
