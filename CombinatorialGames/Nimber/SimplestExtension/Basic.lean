@@ -11,6 +11,7 @@ public import Mathlib.SetTheory.Ordinal.Exponential
 
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
+import Mathlib.Algebra.CharP.Two
 
 /-!
 # Simplest extension theorems

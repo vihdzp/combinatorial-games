@@ -5,7 +5,8 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Game.Impartial.Grundy
+public import CombinatorialGames.Game.Classes
+import CombinatorialGames.Game.Impartial.Grundy
 
 /-!
 # Small games all around

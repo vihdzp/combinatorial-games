@@ -6,12 +6,16 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Pow
-public import Mathlib.Order.Shrink
-public import Mathlib.RingTheory.HahnSeries.Lex
 
 import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Ring.Subring.Order
 import Mathlib.RingTheory.HahnSeries.Cardinal
+public import Mathlib.Order.PiLex
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.RingTheory.HahnSeries.Lex
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Surreal Hahn series

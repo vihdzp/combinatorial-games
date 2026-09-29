@@ -9,6 +9,7 @@ public import CombinatorialGames.Game.Classes
 
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Data.Set.Finite.Basic
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Special games

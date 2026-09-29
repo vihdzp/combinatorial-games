@@ -6,12 +6,11 @@ Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Birthday
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
-import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Order.Interval.Set.OrderIso
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Nim

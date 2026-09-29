@@ -57,3 +57,7 @@ public import CombinatorialGames.Tactic.GameCmp
 public import CombinatorialGames.Tactic.OrdinalAlias
 public import CombinatorialGames.Tactic.Register
 public import CombinatorialGames.Test.GameCmp
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded

@@ -6,18 +6,15 @@ Yuyang Zhao
 -/
 module
 
-public import Batteries.Classes.RatCast
 public import CombinatorialGames.Game.Player
-public meta import CombinatorialGames.Tactic.Register
 public import Mathlib.Algebra.Group.Pointwise.Set.Small
-public import Mathlib.Algebra.Order.ZeroLEOne
 public import Mathlib.Order.Comparable
 
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
-import Mathlib.Lean.PrettyPrinter.Delaborator
 import Mathlib.Logic.Hydra
-import Mathlib.Order.GameAdd
+public import Mathlib.Data.Rat.Init
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Combinatorial (pre-)games

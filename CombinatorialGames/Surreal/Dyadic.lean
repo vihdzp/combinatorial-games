@@ -5,12 +5,16 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Surreal.Division
 
 import Mathlib.Data.Finset.DenselyOrdered
 import Mathlib.Data.Nat.Prime.Basic
+public meta import Mathlib.Tactic.ToAdditive
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Dyadic games

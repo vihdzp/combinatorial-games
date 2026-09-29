@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Game.Special
 
 import CombinatorialGames.Tactic.GameCmp
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Multiplication of pre-games can't be lifted to the quotient
