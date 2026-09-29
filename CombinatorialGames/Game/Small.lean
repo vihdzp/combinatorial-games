@@ -113,8 +113,7 @@ decreasing_by igame_wf
 /-- The **lawnmower theorem**: every dicotic game is small. -/
 instance toSmall (x) [Dicotic x] : Small x where
   lt_numeric_of_pos
-  numeric_lt_of_neg {y} _ hy :=
-    IGame.neg_lt_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy))
+  numeric_lt_of_neg hy := IGame.neg_lt_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy))
 
 end Dicotic
 
