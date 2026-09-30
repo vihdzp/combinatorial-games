@@ -12,7 +12,6 @@ public import Mathlib.Algebra.Group.Pointwise.Set.Small
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Ring.Defs
 import Mathlib.Basic.Countable.Small
 
 /-!

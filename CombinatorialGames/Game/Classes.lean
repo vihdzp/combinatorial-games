@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 module
 
 public import CombinatorialGames.Game.IGame
-public meta import CombinatorialGames.Tactic.AddInstances
+public import CombinatorialGames.Tactic.AddInstances
 
 import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice

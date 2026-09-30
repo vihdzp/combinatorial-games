@@ -8,6 +8,11 @@ module
 public import CombinatorialGames.Surreal.Pow
 public import Mathlib.Algebra.Order.Ring.StandardPart
 
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
+
 /-!
 # Leading term and coefficient
 

@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Ordinal
 public import CombinatorialGames.Surreal.Multiplication
 public import Mathlib.Algebra.Order.Hom.Ring
 

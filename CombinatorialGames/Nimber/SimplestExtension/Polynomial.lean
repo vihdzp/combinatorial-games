@@ -6,16 +6,12 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
-public import Mathlib.Algebra.Polynomial.EraseLead
-public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
-public import Mathlib.Data.Finsupp.WellFounded
+public import Mathlib.Data.Finsupp.Lex
 
-import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Polynomial.Eval.Coeff
+import Mathlib.Algebra.CharP.Two
+import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
-import Mathlib.Tactic.ComputeDegree
-import Mathlib.Algebra.Polynomial.Degree.Domain
 
 /-!
 # Nimber polynomials

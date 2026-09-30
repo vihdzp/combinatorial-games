@@ -5,10 +5,11 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Game.Impartial.Grundy
-public import CombinatorialGames.Surreal.Division
+public import CombinatorialGames.Surreal.Basic
 
 import Mathlib.Algebra.Order.Field.Basic
+import CombinatorialGames.Game.Impartial.Grundy
+import CombinatorialGames.Surreal.Division
 
 /-!
 # Small games all around

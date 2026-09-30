@@ -6,8 +6,10 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Special
-public import CombinatorialGames.Game.Specific.Nim
-public import CombinatorialGames.Tactic.GameCmp
+
+import CombinatorialGames.Game.Specific.Nim
+import CombinatorialGames.Tactic.GameCmp
+import CombinatorialGames.Tactic.Register
 
 /-!
 # Order properties of tiny

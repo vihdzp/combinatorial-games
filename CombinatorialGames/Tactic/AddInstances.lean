@@ -3,7 +3,7 @@ Copyright (c) 2025 Aaron Liu. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Aaron Liu, František Silváši
 -/
-module
+module -- shake: keep-all
 
 public meta import Lean.Elab.Tactic.Basic
 public meta import Lean.Meta.Tactic.Assert
