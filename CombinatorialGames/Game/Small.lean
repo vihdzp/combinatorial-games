@@ -29,13 +29,27 @@ namespace IGame
 /-- Small games lie between all the positive and negative surreals. -/
 class Small (x : IGame) : Prop where
   /-- A small game is smaller than any positive numeric game. -/
-  lt_numeric_of_pos {y : IGame} [Numeric y] : 0 < y → x < y
+  le_numeric_of_pos {y : IGame} [Numeric y] : 0 < y → x ≤ y
   /-- A small game is larger than any negative numeric game. -/
-  numeric_lt_of_neg {y : IGame} [Numeric y] : y < 0 → y < x
+  numeric_le_of_neg {y : IGame} [Numeric y] : y < 0 → y ≤ x
 
 namespace Small
 
-protected instance zero : Small 0 := ⟨id, id⟩
+protected instance zero : Small 0 := ⟨le_of_lt, le_of_lt⟩
+
+theorem lt_numeric_of_pos {x y : IGame} [Small x] [Numeric y] (h : 0 < y) : x < y := by
+  have h' : 0 < Surreal.mk y := by simpa
+  obtain ⟨z, hz, hzy⟩ := exists_between h'
+  cases z with | mk z
+  rw [Surreal.mk_lt_mk] at hzy
+  apply (le_numeric_of_pos hz).trans_lt hzy
+
+theorem numeric_lt_of_neg {x y : IGame} [Small x] [Numeric y] (h : y < 0) : y < x := by
+  have h' : Surreal.mk y < 0 := by simpa
+  obtain ⟨z, hzy, hz⟩ := exists_between h'
+  cases z with | mk z
+  rw [Surreal.mk_lt_mk] at hzy
+  exact hzy.trans_le (numeric_le_of_neg hz)
 
 theorem lt_surreal_of_pos {x : IGame} [Small x] {y : Surreal} (h : 0 < y) : .mk x < y.toGame := by
   rw [← Surreal.gameMk_out]
@@ -50,8 +64,8 @@ theorem surreal_lt_of_neg {x : IGame} [Small x] {y : Surreal} (h : y < 0) : y.to
   simpa
 
 theorem of_equiv {x y : IGame} (h : x ≈ y) [Small x] : Small y where
-  lt_numeric_of_pos := by grw [← h]; exact Small.lt_numeric_of_pos
-  numeric_lt_of_neg := by grw [← h]; exact Small.numeric_lt_of_neg
+  le_numeric_of_pos := by grw [← h]; exact Small.le_numeric_of_pos
+  numeric_le_of_neg := by grw [← h]; exact Small.numeric_le_of_neg
 
 theorem congr {x y : IGame} (h : x ≈ y) : Small x ↔ Small y :=
   ⟨fun _ ↦ of_equiv h, fun _ ↦ of_equiv h.symm⟩
@@ -64,25 +78,25 @@ theorem _root_.IGame.Numeric.small_iff_equiv_zero {x : IGame} [Numeric x] : Smal
   · cases (lt_numeric_of_pos hx).false
 
 protected instance neg (x : IGame) [Small x] : Small (-x) where
-  lt_numeric_of_pos {y} _ hy := by
-    rw [← IGame.neg_lt]
-    apply Small.numeric_lt_of_neg
+  le_numeric_of_pos {y} _ hy := by
+    rw [← IGame.neg_le]
+    apply Small.numeric_le_of_neg
     rwa [IGame.neg_lt_zero]
-  numeric_lt_of_neg {y} _ hy := by
-    rw [← IGame.lt_neg]
-    apply Small.lt_numeric_of_pos
+  numeric_le_of_neg {y} _ hy := by
+    rw [← IGame.le_neg]
+    apply Small.le_numeric_of_pos
     rwa [IGame.zero_lt_neg]
 
 protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
-  lt_numeric_of_pos {z} _ hz := by
-    rw [← Game.mk_lt_mk]
+  le_numeric_of_pos {z} _ hz := by
+    rw [← Game.mk_le_mk]
     have H (x) [Small x] := lt_surreal_of_pos (x := x) (y := .mk z / 2) ?_
-    · simpa [← Surreal.toGame_add] using add_lt_add (H x) (H y)
+    · simpa [← Surreal.toGame_add] using (add_lt_add (H x) (H y)).le
     · simpa
-  numeric_lt_of_neg {z} _ hz := by
-    rw [← Game.mk_lt_mk]
+  numeric_le_of_neg {z} _ hz := by
+    rw [← Game.mk_le_mk]
     have H (x) [Small x] := surreal_lt_of_neg (x := x) (y := .mk z / 2) ?_
-    · simpa [← Surreal.toGame_add] using add_lt_add (H x) (H y)
+    · simpa [← Surreal.toGame_add] using (add_lt_add (H x) (H y)).le
     · rw [div_neg_iff]
       exact .inr ⟨hz, two_pos⟩
 
@@ -113,8 +127,8 @@ decreasing_by igame_wf
 
 /-- The **lawnmower theorem**: every dicotic game is small. -/
 instance toSmall (x) [Dicotic x] : Small x where
-  lt_numeric_of_pos
-  numeric_lt_of_neg hy := IGame.neg_lt_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy))
+  le_numeric_of_pos hy := (lt_numeric_of_pos hy).le
+  numeric_le_of_neg hy := IGame.neg_le_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy)).le
 
 end Dicotic
 
