@@ -8,7 +8,6 @@ module
 public import CombinatorialGames.Game.Classes
 
 import CombinatorialGames.Tactic.GameCmp
-import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Set.Finite.Basic
 
 /-!

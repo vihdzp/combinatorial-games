@@ -10,9 +10,6 @@ import CombinatorialGames.Nimber.Field
 import CombinatorialGames.Tactic.GameCmp
 import Mathlib.Algebra.CharP.Two
 
--- `lake build` fails without this.
-meta import CombinatorialGames.Tactic.GameCmp
-
 /-!
 Tests for the `game_cmp` tactic.
 -/
