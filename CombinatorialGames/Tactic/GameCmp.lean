@@ -6,8 +6,7 @@ Authors: Violeta Hernández Palacios
 module -- shake: keep-all
 
 public import CombinatorialGames.Game.IGame
-
-import CombinatorialGames.Tactic.Register
+public import CombinatorialGames.Tactic.Register
 
 /-!
 # Tactic for game inequalities

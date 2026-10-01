@@ -9,7 +9,6 @@ public import CombinatorialGames.Game.Special
 
 import CombinatorialGames.Game.Specific.Nim
 import CombinatorialGames.Tactic.GameCmp
-import CombinatorialGames.Tactic.Register
 
 /-!
 # Order properties of tiny
