@@ -24,6 +24,7 @@ notation "𝔻≥-1" => { t : Dyadic // -1 ≤ t }
 instance : Zero 𝔻≥-1 := ⟨0, Dyadic.coe_le_zero.mp rfl⟩
 
 open Classical in
+/-- The IGame `x` cooled by `t`. -/
 noncomputable def cool (x : IGame) (t : 𝔻≥-1) : IGame :=
   let _cool τ := !{.range fun l : xᴸ ↦ cool l τ - τ | .range fun r : xᴿ ↦ cool r τ + τ}
   if hn : ∃ n : ℤ, x ≈ n then hn.choose else
@@ -54,7 +55,15 @@ theorem nat_frozen_neg_one (x : ℕ) : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩
       exact hy.trans_antisymmRel (sub_self_equiv _).symm
     · exact (sub_self_equiv _).trans_lt <| Dyadic.zero_lt_toIGame.mpr hy
 
+proof_wanted int_frozen_neg_one (x : ℤ) : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩
+
 open Classical in
+/-- The IGame `x` is first frozen at temperature `t`. -/
 noncomputable def temperature (x : IGame) : 𝔻≥-1 := epsilon (IsLeast {τ | frozen x τ} ·)
+
+open Classical in
+theorem temperature_of_frozen_neg_one {x : IGame} (h : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩) :
+    temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
+  IsLeast.unique (epsilon_spec ⟨_, h, fun _ _ ↦ bot_le⟩) ⟨h, fun _ _ ↦ bot_le⟩
 
 end
