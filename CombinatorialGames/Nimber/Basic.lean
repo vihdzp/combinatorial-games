@@ -5,10 +5,11 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public meta import CombinatorialGames.Tactic.Register
 public import CombinatorialGames.NatOrdinal.Basic
 
+import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
+import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
 
 /-!
