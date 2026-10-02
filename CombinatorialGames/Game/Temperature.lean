@@ -7,7 +7,7 @@ module
 
 public import CombinatorialGames.Game.Small
 
-import CombinatorialGames.Tactic.GameCmp
+import Mathlib.Tactic.NormNum.Basic
 
 /-!
 # Cooled games and temperature
@@ -64,6 +64,6 @@ noncomputable def temperature (x : IGame) : 𝔻≥-1 := epsilon (IsLeast {τ | 
 open Classical in
 theorem temperature_of_frozen_neg_one {x : IGame} (h : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩) :
     temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
-  IsLeast.unique (epsilon_spec ⟨_, h, fun _ _ ↦ bot_le⟩) ⟨h, fun _ _ ↦ bot_le⟩
+  IsLeast.unique (epsilon_spec ⟨_, h, fun _ ↦ by aesop⟩) ⟨h, fun _ ↦ by aesop⟩
 
 end

@@ -9,6 +9,7 @@ public import CombinatorialGames.Game.Impartial.Grundy
 public import CombinatorialGames.Surreal.Dyadic
 
 import Init.Data.Dyadic.Instances
+import Mathlib.Algebra.Order.Field.Basic
 
 /-!
 # Small games all around
@@ -123,8 +124,6 @@ end Dicotic
 
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
-
-end Impartial
 
 @[mk_iff infinitesimal_iff]
 class Infinitesimal (x : IGame) : Prop where
