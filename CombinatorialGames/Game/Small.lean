@@ -5,11 +5,11 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Surreal.Basic
+public import CombinatorialGames.Game.Impartial.Grundy
+public import CombinatorialGames.Surreal.Dyadic
 
+import Init.Data.Dyadic.Instances
 import Mathlib.Algebra.Order.Field.Basic
-import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Surreal.Division
 
 /-!
 # Small games all around
@@ -102,6 +102,12 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
+
+theorem dyadic_eq_zero (x : Dyadic) [inst : Small x] : x = 0 := by
+  by_contra hd
+  rcases lt_or_gt_of_ne hd with h | h
+  · simpa using inst.numeric_lt_of_neg (Dyadic.toIGame_lt_zero.mpr h)
+  · simpa using inst.lt_numeric_of_pos (Dyadic.zero_lt_toIGame.mpr h)
 
 end Small
 
