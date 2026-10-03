@@ -7,6 +7,8 @@ module
 
 public import CombinatorialGames.Game.Loopy.IGame
 
+import Mathlib.Data.Set.Lattice.Bounded
+
 /-!
 # Outcomes of loopy games
 

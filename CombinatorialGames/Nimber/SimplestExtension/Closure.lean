@@ -7,9 +7,7 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 
-import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.Algebra.Field.ZMod
-import Mathlib.Data.Rat.Cast.CharZero
 import Mathlib.SetTheory.Cardinal.Subfield
 import Mathlib.Algebra.CharP.Algebra
 

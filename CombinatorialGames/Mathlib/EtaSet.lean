@@ -5,13 +5,15 @@ Authors: Yan Yablonovskiy
 -/
 module
 
-public import Mathlib.Algebra.Field.Rat
-public import Mathlib.Algebra.Order.Field.Basic
-public import Mathlib.Algebra.Order.Ring.Rat
-public import Mathlib.Data.Finset.DenselyOrdered
-public import Mathlib.Order.Interval.Set.Infinite
+public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
+public import Mathlib.SetTheory.Ordinal.Basic -- shake: keep
 public import Mathlib.Order.Types.Defs
-public import Mathlib.SetTheory.Ordinal.Basic
+
+import Mathlib.Algebra.Field.Rat
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Ring.Rat
+import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Order.Interval.Set.Infinite
 
 /-!
 # Eta sets

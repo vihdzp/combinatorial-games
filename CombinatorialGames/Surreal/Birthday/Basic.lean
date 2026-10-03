@@ -5,7 +5,6 @@ Authors: Aaron Liu
 -/
 module
 
-public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso

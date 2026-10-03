@@ -5,9 +5,10 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Nimber.Basic
+public import Mathlib.Data.Nat.SuccPred
 public import Mathlib.Order.Lattice.Nat
 
+import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
