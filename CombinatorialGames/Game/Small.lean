@@ -22,8 +22,6 @@ We prove that every dicotic game, and hence every impartial game is small. The f
 results is known as the lawnmower theorem.
 -/
 
-universe u
-
 public section
 
 namespace IGame
