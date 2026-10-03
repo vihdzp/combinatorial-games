@@ -5,10 +5,9 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Game.Impartial.Grundy
 public import CombinatorialGames.Surreal.Dyadic
 
-import Init.Data.Dyadic.Instances
+import CombinatorialGames.Game.Impartial.Grundy
 import Mathlib.Algebra.Order.Field.Basic
 
 /-!
