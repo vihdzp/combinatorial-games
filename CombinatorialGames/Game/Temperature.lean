@@ -34,10 +34,10 @@ noncomputable def cool (x : IGame) (t : 𝔻≥-1) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
-@[simp] theorem int_cool (x : ℤ) (t : 𝔻≥-1) : cool x t = x := by simp [cool]
-@[simp] theorem nat_cool (x : ℕ) (t : 𝔻≥-1) : cool x t = x := int_cool x t
-@[simp] theorem zero_cool (t : 𝔻≥-1) : cool 0 t = 0 := int_cool 0 t
-@[simp] theorem one_cool (t : 𝔻≥-1) : cool 1 t = 1 := by simpa using int_cool 1 t
+@[simp] theorem cool_intCast (x : ℤ) (t : 𝔻≥-1) : cool x t = x := by simp [cool]
+@[simp] theorem cool_natCast (x : ℕ) (t : 𝔻≥-1) : cool x t = x := cool_intCast x t
+@[simp] theorem cool_zero (t : 𝔻≥-1) : cool 0 t = 0 := cool_intCast 0 t
+@[simp] theorem cool_one (t : 𝔻≥-1) : cool 1 t = 1 := by simpa using cool_intCast 1 t
 
 /-- The IGame `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
 def frozen (x : IGame) (t : 𝔻≥-1) :=
@@ -66,5 +66,13 @@ open Classical in
 theorem temperature_of_frozen_neg_one {x : IGame} (h : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩) :
     temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
   IsLeast.unique (epsilon_spec ⟨_, h, fun _ ↦ by aesop⟩) ⟨h, fun _ ↦ by aesop⟩
+
+@[simp]
+theorem temperature_zero_eq_neg_one : temperature 0 = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
+  temperature_of_frozen_neg_one zero_frozen_neg_one
+
+@[simp]
+theorem temperature_nat_eq_neg_one (x : ℕ) : temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
+  temperature_of_frozen_neg_one (nat_frozen_neg_one x)
 
 end
