@@ -22,10 +22,6 @@ We prove that a surreal number has a finite birthday iff it's a dyadic number,
 and give an explicit formula for the birthday of a dyadic number.
 -/
 
-public section
-
-/-! ### Surreals to dyadics -/
-
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
   · intro h
@@ -36,18 +32,23 @@ theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d
     grw [← hb]
     exact Nat.div_lt_div_of_lt_of_dvd hc ha
 
-local notation "ω" => NatOrdinal.of Ordinal.omega0
+public section
+
+/-! ### Surreals to dyadics -/
+
+section Ordinal
+open Ordinal
 
 @[simp]
 theorem Game.birthday_ratCast (x : ℚ) : Game.birthday x = Surreal.birthday x := by
   rw [← Surreal.toGame_ratCast, Surreal.birthday_toGame]
 
-theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < ω := by
+theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < .of ω := by
   rw [← Surreal.mk_dyadic]
   exact (Surreal.birthday_mk_le _).trans_lt (IGame.Short.birthday_lt_omega0 _)
 
 theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
-    x.birthday < ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
+    x.birthday < .of ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
@@ -56,7 +57,7 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
     exact Surreal.birthday_dyadic_lt_omega0 q
 
 namespace IGame
-open Surreal.Cut Ordinal
+open Surreal.Cut
 
 /-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
 noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
@@ -139,6 +140,7 @@ theorem Small.of_infinitesimal {x : IGame} [Short x]
     exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
 
 end IGame
+end Ordinal
 
 /-! ### Explicit birthday of dyadic numbers -/
 
