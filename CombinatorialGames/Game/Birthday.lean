@@ -212,7 +212,7 @@ theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
   rw [← neg_tiny, birthday_neg, birthday_tiny]
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
+instance small_setOfPred_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   induction o using SuccOrder.prelimitRecOn with
   | succ o _ ih =>
     apply small_subset
@@ -228,8 +228,8 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
     simp [and_comm]
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
-  simpa using small_setOf_birthday_lt (succ o)
+instance small_setOfPred_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
+  simpa using small_setOfPred_birthday_lt (succ o)
 
 /-! #### Short games -/
 
@@ -297,7 +297,7 @@ theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .ome
     apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))
     rw [birthday_le_iff, Nat.cast_add_one, ← succ_eq_add_one]
     aesop
-  · rw [NatOrdinal.lt_omega0, short_iff_finite_setOf_subposition]
+  · rw [NatOrdinal.lt_omega0, short_iff_finite_setOfPred_subposition]
     intro ⟨n, hn⟩
     apply (birthdayFinset n).finite_toSet.subset fun y hy ↦ ?_
     simpa using (birthday_lt_of_subposition hy).le.trans_eq hn
@@ -439,13 +439,13 @@ theorem birthday_eq_one {x : Game} : birthday x = 1 ↔ x = 1 ∨ x = -1 ∨ x =
   aesop
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
+instance small_setOfPred_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
   refine small_subset (s := mk '' {x | IGame.birthday x ≤ o}) fun x hx ↦ ?_
   obtain ⟨y, rfl, hy⟩ := birthday_eq_iGameBirthday x
   exact mem_image_of_mem mk (hy.trans_le hx)
 
 /-- Games with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
+instance small_setOfPred_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} :=
   small_subset (s := {x | birthday x ≤ o}) <| ofPred_subset_ofPred.2 fun _ => le_of_lt
 
 end Game

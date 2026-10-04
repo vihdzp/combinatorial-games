@@ -192,7 +192,7 @@ theorem Subposition.trans {x y z : IGame} (h₁ : Subposition x y) (h₂ : Subpo
 instance : IsTrans _ Subposition := inferInstanceAs (IsTrans _ (Relation.TransGen _))
 
 /-- The set of games reachable from a given game is small. -/
-instance small_setOf_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
+instance small_setOfPred_subposition (x : IGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
 instance wellFounded_subposition : WellFounded Subposition := by
@@ -232,7 +232,7 @@ theorem subposition_iff_exists {x y : IGame} : Subposition x y ↔
   exact exists_comm
 
 /-- The set of games reachable from a given game is small. -/
-instance small_setOf_wsubposition (x : IGame.{u}) : Small.{u} {y | WSubposition y x} :=
+instance small_setOfPred_wsubposition (x : IGame.{u}) : Small.{u} {y | WSubposition y x} :=
   small_insert x {y | Subposition y x}
 
 @[simp, refl] theorem WSubposition.refl (x : IGame) : WSubposition x x := .inl rfl
