@@ -661,8 +661,6 @@ theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : S
   congr
   exact Cut.rightSurreal.injective <| Classical.choose_spec H
 
--- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
--- are dyadic.
 private theorem short_aux (x : IGame) [Short x] :
     (leftGame <| .mk x).Numeric ∧ (rightGame <| .mk x).Numeric := by
   obtain h | h := lt_or_ge (supLeft x) (infRight x)

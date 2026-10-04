@@ -5,10 +5,9 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Basic
+public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
-import CombinatorialGames.Surreal.Birthday.Cut
 import Mathlib.Algebra.Ring.CharZero
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
@@ -23,6 +22,8 @@ and give an explicit formula for the birthday of a dyadic number.
 -/
 
 public section
+
+/-! ### Surreals to dyadics -/
 
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
@@ -52,6 +53,53 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
     exact ⟨_, ratCast_toDyadic _⟩
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
+
+namespace IGame
+open Surreal.Cut Ordinal
+
+/-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
+noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
+  have H : (leftGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+    rw [← Surreal.birthday_lt_omega0_iff]
+    apply (lt_add_one _).trans
+    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+    grw [birthday_leftGame_le]
+    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+      exact NatOrdinal.natCast_lt_omega0 _
+    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+  Classical.choose H
+
+/-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
+noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
+  have H : (rightGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+    rw [← Surreal.birthday_lt_omega0_iff]
+    apply (lt_add_one _).trans
+    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+    grw [birthday_rightGame_le]
+    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+      exact NatOrdinal.natCast_lt_omega0 _
+    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+  Classical.choose H
+
+@[simp]
+theorem toSurreal_leftGame_mk_of_short (x : IGame) [Short x] :
+    (leftGame (.mk x)).toSurreal = leftStop x := by
+  unfold leftStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+@[simp]
+theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
+    (rightGame (.mk x)).toSurreal = rightStop x := by
+  unfold rightStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+end IGame
+
+/-! ### Explicit birthday of dyadic numbers -/
 
 /-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]
