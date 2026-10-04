@@ -88,11 +88,8 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
 
-theorem dyadic_eq_zero (x : Dyadic) [inst : Small x] : x = 0 := by
-  by_contra hd
-  rcases lt_or_gt_of_ne hd with h | h
-  · simpa using inst.numeric_lt_of_neg (Dyadic.toIGame_lt_zero.mpr h)
-  · simpa using inst.lt_numeric_of_pos (Dyadic.zero_lt_toIGame.mpr h)
+theorem dyadic_eq_zero (x : Dyadic) [inst : Small x] : x = 0 :=
+  x.toIGame_equiv_zero.mp (Numeric.small_iff_equiv_zero.mp inst)
 
 end Small
 
