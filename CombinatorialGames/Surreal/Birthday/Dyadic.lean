@@ -99,6 +99,18 @@ theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
   generalize_proofs _ H
   exact (Classical.choose_spec H).symm
 
+theorem leftStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    leftStop x = leftStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_leftGame_mk_of_short, Game.mk_eq h, toSurreal_leftGame_mk_of_short]
+  rfl
+
+theorem rightStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    rightStop x = rightStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_rightGame_mk_of_short, Game.mk_eq h, toSurreal_rightGame_mk_of_short]
+  rfl
+
 theorem lt_of_leftStop_lt {x y : IGame} [Short x] [Numeric y] (h : leftStop x < y) : x < y := by
   obtain ⟨z, _, hxz, hzy⟩ := Numeric.exists_between h
   apply hzy.trans_le'
