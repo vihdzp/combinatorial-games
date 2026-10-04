@@ -520,7 +520,7 @@ elab "short" : tactic =>
   addInstances <| .mk
     [``Short.of_mem_moves, ``Short.subposition, ``Short.wsubposition]
 
-theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
+theorem finite_setOfPred_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
@@ -528,14 +528,14 @@ theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.F
   rw [Set.mem_ofPred, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
-instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
-  (Short.finite_setOf_subposition x).to_subtype
+instance (x : IGame) [Short x] : Finite {y | Subposition y x} :=
+  (Short.finite_setOfPred_subposition x).to_subtype
 
-theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
+theorem _root_.IGame.short_iff_finite_setOfPred_subposition {x : IGame} :
     Short x ↔ {y | Subposition y x}.Finite := by
-  refine ⟨@finite_setOf_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
+  refine ⟨@finite_setOfPred_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
   on_goal 1 => refine h.subset fun y hy ↦ ?_
-  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
+  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOfPred_subposition.2 <| h.subset fun z hz ↦ ?_
   all_goals igame_wf
 termination_by x
 decreasing_by igame_wf

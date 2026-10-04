@@ -223,7 +223,7 @@ theorem birthday_toGame_le (x : Surreal) : x.toGame.birthday ≤ x.birthday := b
   exact Game.birthday_mk_le c
 
 /-- Surreals with a bounded birthday form a small set. -/
-instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
+instance small_setOfPred_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
   have h₁ : {x | birthday x ≤ o} ⊆ toGame ⁻¹' {x | x.birthday ≤ o} := by
     intro x hx
     exact x.birthday_toGame_le.trans hx
@@ -232,7 +232,7 @@ instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   exact small_subset h₁
 
 /-- Surreals with a bounded birthday form a small set. -/
-instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
+instance small_setOfPred_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday x < o} := by
   refine small_subset (?_ : {x : Surreal | x.birthday < o} ⊆ {x : Surreal | x.birthday ≤ o})
   simp +contextual [le_of_lt]
 
