@@ -22,6 +22,7 @@ open IGame
 notation "𝔻≥-1" => { t : Dyadic // -1 ≤ t }
 
 instance : Zero 𝔻≥-1 := ⟨0, Dyadic.coe_le_zero.mp rfl⟩
+instance : One 𝔻≥-1 := ⟨1, Dyadic.coe_le_one.mp rfl⟩
 
 open Classical in
 /-- The IGame `x` cooled by `t`. -/
@@ -36,6 +37,7 @@ decreasing_by igame_wf
 @[simp] theorem int_cool (x : ℤ) (t : 𝔻≥-1) : cool x t = x := by simp [cool]
 @[simp] theorem nat_cool (x : ℕ) (t : 𝔻≥-1) : cool x t = x := int_cool x t
 @[simp] theorem zero_cool (t : 𝔻≥-1) : cool 0 t = 0 := int_cool 0 t
+@[simp] theorem one_cool (t : 𝔻≥-1) : cool 1 t = 1 := by simpa using int_cool 1 t
 
 /-- The IGame `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
 def frozen (x : IGame) (t : 𝔻≥-1) :=
