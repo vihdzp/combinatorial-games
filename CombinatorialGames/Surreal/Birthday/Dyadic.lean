@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
@@ -96,6 +97,46 @@ theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
   unfold rightStop
   generalize_proofs _ H
   exact (Classical.choose_spec H).symm
+
+theorem lt_of_leftStop_lt {x y : IGame} [Short x] [Numeric y] (h : leftStop x < y) : x < y := by
+  obtain ⟨z, _, hxz, hzy⟩ := Numeric.exists_between h
+  apply hzy.trans_le'
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_right_leftGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using hxz
+
+theorem lf_of_lt_leftStop {x y : IGame} [Short x] [Numeric y] (h : y < leftStop x) : y ⧏ x := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_left_leftGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using h
+
+theorem lt_of_lt_rightStop {x y : IGame} [Short x] [Numeric y] (h : y < rightStop x) : y < x := by
+  obtain ⟨z, _, hyz, hzx⟩ := Numeric.exists_between h
+  apply hyz.trans_le
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_left_rightGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using hzx
+
+theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x < y) : x ⧏ y := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_right_rightGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using h
+
+/-- A short infinitesimal game is in fact small. -/
+theorem Small.of_infinitesimal {x : IGame} [Short x]
+    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
+  le_numeric_of_pos {y} _ hy := by
+    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
+    rw [Dyadic.toIGame_le_zero]
+    contrapose! hr
+    obtain ⟨z, hz, hzx⟩ := exists_between hr
+    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
+  numeric_le_of_neg {y} _ hy := by
+    apply (lt_of_lt_rightStop (hy.trans_le _)).le
+    rw [Dyadic.zero_le_toIGame]
+    contrapose! hl
+    obtain ⟨z, hxz, hz⟩ := exists_between hl
+    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
 
 end IGame
 

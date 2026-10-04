@@ -717,6 +717,14 @@ theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
 theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
   Numeric.recOn'_rightSurreal ..
 
+theorem mem_left_of_lt_toSurreal (x : Cut) [hx : x.Numeric] {y : Surreal} (h : y < x.toSurreal) :
+    y ∈ x.left := by
+  induction hx <;> simp_all [le_iff_lt_or_eq]
+
+theorem mem_right_of_toSurreal_lt (x : Cut) [hx : x.Numeric] {y : Surreal} (h : x.toSurreal < y) :
+    y ∈ x.right := by
+  induction hx <;> simp_all [le_iff_lt_or_eq]
+
 end Cut
 end Surreal
 end
