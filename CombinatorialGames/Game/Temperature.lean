@@ -40,14 +40,14 @@ decreasing_by igame_wf
 @[simp] theorem cool_one (t : 𝔻≥-1) : cool 1 t = 1 := by simpa using cool_intCast 1 t
 
 /-- The IGame `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
-def frozen (x : IGame) (t : 𝔻≥-1) :=
+def Frozen (x : IGame) (t : 𝔻≥-1) : Prop :=
   ∃ y, Numeric y ∧ Small (!{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ} - y)
 
-theorem zero_frozen_neg_one : frozen 0 ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
+theorem zero_frozen_neg_one : Frozen 0 ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
   use 0
   simp [← zero_eq, Small.zero]
 
-theorem nat_frozen_neg_one (x : ℕ) : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
+theorem nat_frozen_neg_one (x : ℕ) : Frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
   rcases x with _ | n
   · exact zero_frozen_neg_one
   · use n + 2
@@ -60,10 +60,10 @@ proof_wanted int_frozen_neg_one (x : ℤ) : frozen x ⟨-1, neg_le_neg_iff.mpr r
 
 open Classical in
 /-- The IGame `x` is first frozen at temperature `t`. -/
-noncomputable def temperature (x : IGame) : 𝔻≥-1 := epsilon (IsLeast {τ | frozen x τ} ·)
+noncomputable def temperature (x : IGame) : 𝔻≥-1 := epsilon (IsLeast {τ | Frozen x τ} ·)
 
 open Classical in
-theorem temperature_of_frozen_neg_one {x : IGame} (h : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩) :
+theorem temperature_of_frozen_neg_one {x : IGame} (h : Frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩) :
     temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
   IsLeast.unique (epsilon_spec ⟨_, h, fun _ ↦ by aesop⟩) ⟨h, fun _ ↦ by aesop⟩
 
