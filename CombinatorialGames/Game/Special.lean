@@ -260,9 +260,6 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
 theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
 
-theorem switch_of_lf_zero {x : IGame} (h : x ⧏ 0) : ±x ≈ 0 := by
-  apply equiv_of_forall_lf <;> simp [h]
-
 @[simp]
 theorem dicotic_switch_iff {x : IGame} : Dicotic (±x) ↔ Dicotic x := by
   rw [dicotic_def]; simp
