@@ -296,5 +296,82 @@ theorem _root_.Surreal.birthday_toGame (x : Surreal) : x.toGame.birthday = x.bir
   exact (hs ▸ birthday_simplestBtwn_le hsi).trans <|
     hy' ▸ max_le (birthday_supLeft_le y) (birthday_infRight_le y)
 
+theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.birthday := by
+  constructor <;> intro h
+  · rw [birthday_of_numeric, ← WithTop.coe_add_one, WithTop.isSuccPrelimit_coe_iff]
+    exact Order.not_isSuccPrelimit_add_one _
+  · rw [Order.not_isSuccPrelimit_iff] at h
+    obtain ⟨b, hb⟩ := h
+    cases b with | top => simp at hb | coe b
+    obtain ⟨s, hx | hx, hsb⟩ := birthday_eq_sSup_birthday x
+    · by_cases! hs : ∃ u ∈ s, ∀ v ∈ s, u ≤ v
+      · obtain ⟨u, hus, hu⟩ := hs
+        obtain rfl : x = leftSurreal u := by
+          apply le_antisymm <;> aesop
+        constructor
+      · have hbs := Order.succ_eq_of_covBy hb
+        rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
+        have he (v : s) : ∃ c, c ≤ v.1 ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
+          obtain ⟨w, hws, hwv⟩ := hs v.1 v.2
+          have hvb := birthday_lt_sSup_birthday v.2
+          have hwb := birthday_lt_sSup_birthday hws
+          rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
+          obtain hvb | hvb := hvb.eq_or_lt
+          · obtain hwb | hwb := hwb.eq_or_lt
+            · exact ⟨_, (ofSets_lt_of_mem_right (mem_singleton v.1)).le,
+                birthday_ofSets_singleton_lt_of_birthday_eq hwb hvb hwv,
+                w, hws, (lt_ofSets_of_mem_left (mem_singleton w)).le⟩
+            · exact ⟨w, hwv.le, hwb, w, hws, le_rfl⟩
+          · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
+        choose vv hvv hvb hvw using he
+        have hxv : x = sInf (leftSurreal '' Set.range vv) := by
+          rw [← hx, sInf_image, sInf_image, iInf_range, ← iInf_subtype'']
+          apply le_antisymm <;> (
+              refine le_iInf fun i => ?_
+              rw [le_leftSurreal_iff, right_iInf, mem_iUnion])
+          · simp_rw [Subtype.exists, exists_prop]
+            exact hvw i
+          · exact ⟨i, hvv i⟩
+        absurd hb.lt.not_ge
+        grw [hxv, birthday_sInf_le]
+        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_range]
+        intro v
+        rw [birthday_leftSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
+        apply hvb
+    · by_cases! hs : ∃ u ∈ s, ∀ v ∈ s, v ≤ u
+      · obtain ⟨u, hus, hu⟩ := hs
+        obtain rfl : x = rightSurreal u := by
+          apply le_antisymm <;> aesop
+        constructor
+      · have hbs := Order.succ_eq_of_covBy hb
+        rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
+        have he (v : s) : ∃ c, v.1 ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
+          obtain ⟨w, hws, hvw⟩ := hs v.1 v.2
+          have hvb := birthday_lt_sSup_birthday v.2
+          have hwb := birthday_lt_sSup_birthday hws
+          rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
+          obtain hvb | hvb := hvb.eq_or_lt
+          · obtain hwb | hwb := hwb.eq_or_lt
+            · exact ⟨_, (lt_ofSets_of_mem_left (mem_singleton v.1)).le,
+                birthday_ofSets_singleton_lt_of_birthday_eq hvb hwb hvw,
+                w, hws, (ofSets_lt_of_mem_right (mem_singleton w)).le⟩
+            · exact ⟨w, hvw.le, hwb, w, hws, le_rfl⟩
+          · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
+        choose vv hvv hvb hvw using he
+        have hxv : x = sSup (rightSurreal '' Set.range vv) := by
+          rw [← hx, sSup_image, sSup_image, iSup_range, ← iSup_subtype'']
+          apply le_antisymm <;> (
+              refine iSup_le fun i => ?_
+              rw [rightSurreal_le_iff, left_iSup, mem_iUnion])
+          · exact ⟨i, hvv i⟩
+          · simp_rw [Subtype.exists, exists_prop]
+            exact hvw i
+        absurd hb.lt.not_ge
+        grw [hxv, birthday_sSup_le]
+        simp_rw [sSup_le_iff, Set.forall_mem_image, Set.forall_mem_range]
+        intro v
+        rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
+        apply hvb
+
 end Surreal.Cut
 end

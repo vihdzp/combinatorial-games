@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 module
 
 public import CombinatorialGames.Game.IGame
-public meta import CombinatorialGames.Tactic.AddInstances
+public import CombinatorialGames.Tactic.AddInstances
 
 import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
@@ -19,7 +19,7 @@ develop their theory elsewhere.
 
 ## Dicotic games
 
-A game is dicotic when every non-zero subposition has both left and right moves. The Lawnmower
+A game is dicotic when every non-zero subposition has both left and right moves. The lawnmower
 theorem (proven in `CombinatorialGames.Game.Small`) shows that every dicotic game is small.
 
 ## Impartial games

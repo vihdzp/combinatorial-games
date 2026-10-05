@@ -224,7 +224,8 @@ instance small_setOf_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birthday 
   | isSuccPrelimit o ho ih =>
     convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih
     ext x
-    simpa using ho.lt_iff_exists_lt
+    rw [mem_ofPred_eq, ho.lt_iff_nonempty_Ioo, Set.Nonempty]
+    simp [and_comm]
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOf_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
