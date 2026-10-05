@@ -364,7 +364,7 @@ theorem zero_def : (0 : IGame) = !{fun _ ↦ ∅} := rfl
 
 @[simp, game_cmp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
-theorem zero_eq : (0 : IGame) = !{∅ | ∅} := by ext p; cases p <;> simp
+theorem zero_eq : (0 : IGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
 
 instance : Inhabited IGame := ⟨0⟩
 
