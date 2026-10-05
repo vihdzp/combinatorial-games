@@ -383,7 +383,7 @@ def coeRingHom : Dyadic →+* ℚ where
 
 section shift
 
-theorem toRat_shiftRight_int (x : Dyadic) (n : ℤ) : toRat (x >>> n) = toRat x * 2 ^ (-n) := by
+theorem toRat_shiftRight (x : Dyadic) (n : ℤ) : toRat (x >>> n) = toRat x * 2 ^ (-n) := by
   simp_rw [(· >>> ·), Dyadic.shiftRight]
   match x with
   | .zero => norm_num
@@ -398,12 +398,12 @@ theorem toRat_shiftRight_int (x : Dyadic) (n : ℤ) : toRat (x >>> n) = toRat x 
   · group
 
 theorem add_shiftRight (x y : Dyadic) (n : ℤ) : (x + y) >>> n = x >>> n + y >>> n := by
-  simp only [Dyadic.ext_iff, toRat_shiftRight_int, toRat_add, zpow_neg]
+  simp only [Dyadic.ext_iff, toRat_shiftRight, toRat_add, zpow_neg]
   ring
 
 @[simp] theorem shiftRight_one_add_shiftRight_one (x : Dyadic) :
     x >>> (1 : ℤ) + x >>> (1 : ℤ) = x := by
-  rw [Dyadic.ext_iff, toRat_add, toRat_shiftRight_int]
+  rw [Dyadic.ext_iff, toRat_add, toRat_shiftRight]
   ring
 
 @[simp] theorem shiftRight_add_one_add_shiftRight_add_one (x : Dyadic) (n : ℤ) :
@@ -411,7 +411,7 @@ theorem add_shiftRight (x y : Dyadic) (n : ℤ) : (x + y) >>> n = x >>> n + y >>
   rw [← shiftRight_shiftRight, shiftRight_one_add_shiftRight_one (x >>> n)]
 
 theorem shiftRight_pos_of_pos (x : Dyadic) (n : ℤ) (h : 0 < x) : 0 < x >>> n := by
-  rw [← toRat_lt_toRat_iff, toRat_shiftRight_int]
+  rw [← toRat_lt_toRat_iff, toRat_shiftRight]
   simp_all only [coe_ofNat, Nat.cast_zero, zero_lt_coe, mul_pos_iff_of_pos_left]
   exact Rat.zpow_pos rfl
 
