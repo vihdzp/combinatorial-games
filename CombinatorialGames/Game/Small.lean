@@ -129,6 +129,11 @@ theorem of_leftStop_rightStop_eq_zero {x : IGame} [Short x]
     apply (lt_of_lt_rightStop _).le
     simp_all
 
+theorem iff_leftStop_rightStop_eq_zero {x : IGame} [Short x] :
+    Small x ↔ leftStop x = 0 ∧ rightStop x = 0 :=
+  ⟨fun _ ↦ ⟨leftStop_of_small x, rightStop_of_small x⟩,
+    fun ⟨hl, hr⟩ ↦ of_leftStop_rightStop_eq_zero hl hr⟩
+
 /-- A short infinitesimal game is in fact small. -/
 theorem of_infinitesimal {x : IGame} [Short x]
     (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
