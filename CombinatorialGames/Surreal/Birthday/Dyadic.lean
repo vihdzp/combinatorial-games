@@ -98,6 +98,21 @@ theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
   generalize_proofs _ H
   exact (Classical.choose_spec H).symm
 
+@[simp]
+theorem leftStop_of_numeric (x : IGame) [Short x] [Numeric x] : leftStop x = x.toDyadic := by
+  simpa [← Surreal.ratCast_toDyadic] using (toSurreal_leftGame_mk_of_short x).symm
+
+@[simp]
+theorem rightStop_of_numeric (x : IGame) [Short x] [Numeric x] : rightStop x = x.toDyadic := by
+  simpa [← Surreal.ratCast_toDyadic] using (toSurreal_rightGame_mk_of_short x).symm
+
+theorem leftStop_dyadic (x : Dyadic) : leftStop x = x := by simp
+theorem rightStop_dyadic (x : Dyadic) : rightStop x = x := by simp
+theorem leftStop_zero : leftStop 0 = 0 := by simp
+theorem rightStop_zero : rightStop 0 = 0 := by simp
+theorem leftStop_one : leftStop 1 = 1 := by simp
+theorem rightStop_one : rightStop 1 = 1 := by simp
+
 theorem leftStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
     leftStop x = leftStop y := by
   rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
@@ -133,12 +148,6 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
   rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_right_rightGame]
   apply mem_right_of_toSurreal_lt
   simpa [← Surreal.mk_lt_mk] using h
-
-theorem leftStop_zero : leftStop 0 = 0 := by
-  simpa using (toSurreal_leftGame_mk_of_short 0).symm
-
-theorem rightStop_zero : rightStop 0 = 0 := by
-  simpa using (toSurreal_rightGame_mk_of_short 0).symm
 
 @[simp]
 theorem leftStop_neg (x : IGame) [Short x] : leftStop (-x) = -rightStop x := by
