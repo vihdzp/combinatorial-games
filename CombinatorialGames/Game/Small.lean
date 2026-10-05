@@ -5,7 +5,7 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Game.Confusion
+public import CombinatorialGames.Surreal.Birthday.Dyadic
 
 import Mathlib.Algebra.Order.Field.Basic
 import CombinatorialGames.Game.Impartial.Grundy
@@ -179,11 +179,9 @@ end Dicotic
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
 
-instance : Small ↑ := by
-  apply Small.of_leftStop_rightStop_eq_zero <;> simp
-
-instance : Small ↓ := by
-  apply Small.of_leftStop_rightStop_eq_zero <;> simp
+example : Small ⋆ := by infer_instance
+example : Small ↑ := by infer_instance
+example : Small ↓ := by infer_instance
 
 end IGame
 end
