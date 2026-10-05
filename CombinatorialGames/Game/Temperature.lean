@@ -80,7 +80,11 @@ theorem temperature_zero_eq_neg_one : temperature 0 = ⟨-1, neg_le_neg_iff.mpr 
   temperature_of_frozen_neg_one (frozen_zero _)
 
 @[simp]
-theorem temperature_nat_eq_neg_one (x : ℕ) : temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
+theorem temperature_natCast_eq_neg_one (x : ℕ) : temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
   temperature_of_frozen_neg_one (frozen_natCast ..)
+
+@[simp]
+theorem temperature_intCast_eq_neg_one (x : ℤ) : temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
+  temperature_of_frozen_neg_one (frozen_intCast ..)
 
 end
