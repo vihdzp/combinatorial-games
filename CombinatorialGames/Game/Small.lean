@@ -5,7 +5,7 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Dyadic
+public import CombinatorialGames.Game.Confusion
 
 import Mathlib.Algebra.Order.Field.Basic
 import CombinatorialGames.Game.Impartial.Grundy
@@ -120,6 +120,15 @@ theorem _root_.IGame.leftStop_of_small (x : IGame) [Small x] [Short x] : leftSto
 theorem _root_.IGame.rightStop_of_small (x : IGame) [Small x] [Short x] : rightStop x = 0 := by
   rw [← neg_eq_zero, ← leftStop_neg, leftStop_of_small]
 
+theorem of_leftStop_rightStop_eq_zero {x : IGame} [Short x]
+    (hl : leftStop x = 0) (hr : rightStop x = 0) : Small x where
+  le_numeric_of_pos {y} _ hy := by
+    apply (lt_of_leftStop_lt _).le
+    simp_all
+  numeric_le_of_neg {y} _ hy := by
+    apply (lt_of_lt_rightStop _).le
+    simp_all
+
 /-- A short infinitesimal game is in fact small. -/
 theorem of_infinitesimal {x : IGame} [Short x]
     (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
@@ -170,23 +179,11 @@ end Dicotic
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
 
-private theorem lt_up_of_pos {x : IGame} [Numeric x] (hx : 0 < x) : ↑ < x := by
-  rw [lt_iff_le_not_ge, IGame.le_iff_forall_lf]
-  refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · simp_all
-  · numeric
-    exact (lt_up_of_pos (hx.trans (Numeric.lt_right hz))).not_ge
-  · exact lf_of_right_le (Small.le_numeric_of_pos hx) star_mem_moves_right_up
-termination_by x
-decreasing_by igame_wf
-
-instance : Small ↑ where
-  le_numeric_of_pos hy := (lt_up_of_pos hy).le
-  numeric_le_of_neg hy := hy.le.trans up_pos.le
+instance : Small ↑ := by
+  apply Small.of_leftStop_rightStop_eq_zero <;> simp
 
 instance : Small ↓ := by
-  rw [← Small.neg_iff, neg_down]
-  infer_instance
+  apply Small.of_leftStop_rightStop_eq_zero <;> simp
 
 end IGame
 end

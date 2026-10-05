@@ -6,6 +6,7 @@ public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Canonical
 public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Confusion
 public import CombinatorialGames.Game.Functor
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Game.IGame
