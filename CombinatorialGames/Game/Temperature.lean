@@ -63,9 +63,8 @@ theorem frozen_intCast (n : ℤ) (t : 𝔻≥-1) : Frozen n t := by
     rw [← intCast_nat, ← intCast_neg, cool_intCast]
     exact Numeric.add ..
 
-theorem frozen_zero (t : 𝔻≥-1) : Frozen 0 t := frozen_intCast 0 t
-
 theorem frozen_natCast (n : ℕ) (t : 𝔻≥-1) : Frozen n t := frozen_intCast n t
+theorem frozen_zero (t : 𝔻≥-1) : Frozen 0 t := frozen_intCast 0 t
 
 open Classical in
 /-- The IGame `x` is first frozen at temperature `t`. -/
@@ -78,10 +77,10 @@ theorem temperature_of_frozen_neg_one {x : IGame} (h : Frozen x ⟨-1, neg_le_ne
 
 @[simp]
 theorem temperature_zero_eq_neg_one : temperature 0 = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
-  temperature_of_frozen_neg_one zero_frozen_neg_one
+  temperature_of_frozen_neg_one (frozen_zero _)
 
 @[simp]
 theorem temperature_nat_eq_neg_one (x : ℕ) : temperature x = ⟨-1, neg_le_neg_iff.mpr rfl⟩ :=
-  temperature_of_frozen_neg_one (nat_frozen_neg_one x)
+  temperature_of_frozen_neg_one (frozen_natCast ..)
 
 end
