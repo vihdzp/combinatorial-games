@@ -134,11 +134,9 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
   apply mem_right_of_toSurreal_lt
   simpa [← Surreal.mk_lt_mk] using h
 
-@[simp]
 theorem leftStop_zero : leftStop 0 = 0 := by
   simpa using (toSurreal_leftGame_mk_of_short 0).symm
 
-@[simp]
 theorem rightStop_zero : rightStop 0 = 0 := by
   simpa using (toSurreal_rightGame_mk_of_short 0).symm
 
