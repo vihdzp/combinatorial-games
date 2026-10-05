@@ -29,7 +29,7 @@ open Classical in
 noncomputable def cool (x : IGame) (t : 𝔻≥-1) : IGame :=
   let _cool τ := !{.range fun l : xᴸ ↦ cool l τ - τ | .range fun r : xᴿ ↦ cool r τ + τ}
   if hn : ∃ n : ℤ, x ≈ n then hn.choose else
-    if hy : ∃ t', t' < t ∧ IsLeast {τ | ∃ y, Numeric y ∧ Small (_cool τ - y)} t'
+    if hy : ∃ t', t' < t ∧ IsLeast {τ | ∃ y, Numeric y ∧ Infinitesimal (_cool τ - y)} t'
       then choose hy.choose_spec.right.left else _cool t
 termination_by x
 decreasing_by igame_wf
@@ -41,7 +41,7 @@ decreasing_by igame_wf
 
 /-- The IGame `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
 def Frozen (x : IGame) (t : 𝔻≥-1) : Prop :=
-  ∃ y, Numeric y ∧ Small (!{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ} - y)
+  ∃ y, Numeric y ∧ Infinitesimal (!{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ} - y)
 
 theorem frozen_of_numeric {x : IGame} {t : 𝔻≥-1}
     (H : Numeric !{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ}) : Frozen x t :=
