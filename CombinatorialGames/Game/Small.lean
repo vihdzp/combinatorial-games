@@ -5,7 +5,7 @@ Authors: Tristan Figueroa-Reid
 -/
 module
 
-public import CombinatorialGames.Surreal.Basic
+public import CombinatorialGames.Surreal.Birthday.Dyadic
 
 import Mathlib.Algebra.Order.Field.Basic
 import CombinatorialGames.Game.Impartial.Grundy
@@ -87,6 +87,10 @@ protected instance neg (x : IGame) [Small x] : Small (-x) where
     apply Small.le_numeric_of_pos
     rwa [IGame.zero_lt_neg]
 
+@[simp]
+theorem neg_iff {x : IGame} : Small (-x) ↔ Small x :=
+  ⟨fun _ ↦ by simpa using Small.neg (-x), fun _ ↦ .neg x⟩
+
 protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
   le_numeric_of_pos {z} _ hz := by
     rw [← Game.mk_le_mk]
@@ -102,6 +106,35 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
+
+@[simp]
+theorem _root_.IGame.leftStop_of_small (x : IGame) [Small x] [Short x] : leftStop x = 0 := by
+  obtain h | h | h := lt_trichotomy (leftStop x) 0
+  · obtain ⟨y, hxy, hy⟩ := exists_between h
+    cases (lt_of_leftStop_lt (y := y) (mod_cast hxy)).asymm <| numeric_lt_of_neg (mod_cast hy)
+  · exact h
+  · obtain ⟨y, hy, hyx⟩ := exists_between h
+    cases (lf_of_lt_leftStop (y := y) (mod_cast hyx)) <| le_numeric_of_pos (mod_cast hy)
+
+@[simp]
+theorem _root_.IGame.rightStop_of_small (x : IGame) [Small x] [Short x] : rightStop x = 0 := by
+  rw [← neg_eq_zero, ← leftStop_neg, leftStop_of_small]
+
+/-- A short infinitesimal game is in fact small. -/
+theorem of_infinitesimal {x : IGame} [Short x]
+    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
+  le_numeric_of_pos {y} _ hy := by
+    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
+    rw [Dyadic.toIGame_le_zero]
+    contrapose! hr
+    obtain ⟨z, hz, hzx⟩ := exists_between hr
+    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
+  numeric_le_of_neg {y} _ hy := by
+    apply (lt_of_lt_rightStop (hy.trans_le _)).le
+    rw [Dyadic.zero_le_toIGame]
+    contrapose! hl
+    obtain ⟨z, hxz, hz⟩ := exists_between hl
+    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
 
 end Small
 
@@ -136,6 +169,24 @@ end Dicotic
 
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
+
+private theorem lt_up_of_pos {x : IGame} [Numeric x] (hx : 0 < x) : ↑ < x := by
+  rw [lt_iff_le_not_ge, IGame.le_iff_forall_lf]
+  refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
+  · simp_all
+  · numeric
+    exact (lt_up_of_pos (hx.trans (Numeric.lt_right hz))).not_ge
+  · exact lf_of_right_le (Small.le_numeric_of_pos hx) star_mem_moves_right_up
+termination_by x
+decreasing_by igame_wf
+
+instance : Small ↑ where
+  le_numeric_of_pos hy := (lt_up_of_pos hy).le
+  numeric_le_of_neg hy := hy.le.trans up_pos.le
+
+instance : Small ↓ := by
+  rw [← Small.neg_iff, neg_down]
+  infer_instance
 
 end IGame
 end

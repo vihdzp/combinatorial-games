@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
@@ -135,21 +134,23 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
   apply mem_right_of_toSurreal_lt
   simpa [← Surreal.mk_lt_mk] using h
 
-/-- A short infinitesimal game is in fact small. -/
-theorem Small.of_infinitesimal {x : IGame} [Short x]
-    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
-  le_numeric_of_pos {y} _ hy := by
-    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
-    rw [Dyadic.toIGame_le_zero]
-    contrapose! hr
-    obtain ⟨z, hz, hzx⟩ := exists_between hr
-    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
-  numeric_le_of_neg {y} _ hy := by
-    apply (lt_of_lt_rightStop (hy.trans_le _)).le
-    rw [Dyadic.zero_le_toIGame]
-    contrapose! hl
-    obtain ⟨z, hxz, hz⟩ := exists_between hl
-    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
+@[simp]
+theorem leftStop_zero : leftStop 0 = 0 := by
+  simpa using (toSurreal_leftGame_mk_of_short 0).symm
+
+@[simp]
+theorem rightStop_zero : rightStop 0 = 0 := by
+  simpa using (toSurreal_rightGame_mk_of_short 0).symm
+
+@[simp]
+theorem leftStop_neg (x : IGame) [Short x] : leftStop (-x) = -rightStop x := by
+  have := toSurreal_leftGame_mk_of_short (-x)
+  simp at this
+  exact mod_cast this.symm
+
+@[simp]
+theorem rightStop_neg (x : IGame) [Short x] : rightStop (-x) = -leftStop x := by
+  simpa [neg_eq_iff_eq_neg] using (leftStop_neg (-x)).symm
 
 end IGame
 end Ordinal

@@ -270,6 +270,19 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
 @[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
+@[simp]
+theorem leftGame_mk_of_numeric (x : IGame) [Numeric x] :
+    leftGame (.mk x) = leftSurreal (.mk x) := by
+  rw [← toGame_mk, leftGame_toGame]
+
+@[simp]
+theorem rightGame_mk_of_numeric (x : IGame) [Numeric x] :
+    rightGame (.mk x) = rightSurreal (.mk x) := by
+  rw [← toGame_mk, rightGame_toGame]
+
+@[simp] theorem leftGame_zero : leftGame 0 = leftSurreal 0 := by simpa using leftGame_toGame 0
+@[simp] theorem rightGame_zero : rightGame 0 = rightSurreal 0 := by simpa using rightGame_toGame 0
+
 @[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
 
@@ -616,7 +629,10 @@ theorem numeric_def {x : Cut} : x.Numeric ↔ x ∈ Set.range leftSurreal ∪ Se
 
 namespace Numeric
 
-attribute [instance] Numeric.leftSurreal Numeric.rightSurreal
+attribute [simp, instance] Numeric.leftSurreal Numeric.rightSurreal
+
+instance (x : Cut) [hx : x.Numeric] : (-x).Numeric := by
+  cases hx <;> simp
 
 @[simp low]
 theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
@@ -724,6 +740,10 @@ theorem mem_left_of_lt_toSurreal (x : Cut) [hx : x.Numeric] {y : Surreal} (h : y
 theorem mem_right_of_toSurreal_lt (x : Cut) [hx : x.Numeric] {y : Surreal} (h : x.toSurreal < y) :
     y ∈ x.right := by
   induction hx <;> simp_all [le_iff_lt_or_eq]
+
+@[simp]
+theorem toSurreal_neg (x : Cut) [hx : x.Numeric] : (-x).toSurreal = -x.toSurreal := by
+  cases hx <;> simp
 
 end Cut
 end Surreal
