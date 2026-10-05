@@ -88,9 +88,6 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
 
-theorem dyadic_eq_zero (x : Dyadic) [inst : Small x] : x = 0 :=
-  x.toIGame_equiv_zero.mp (Numeric.small_iff_equiv_zero.mp inst)
-
 end Small
 
 namespace Dicotic
