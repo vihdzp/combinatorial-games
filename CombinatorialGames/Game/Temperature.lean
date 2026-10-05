@@ -63,6 +63,10 @@ theorem frozen_intCast (n : ℤ) (t : 𝔻≥-1) : Frozen n t := by
     rw [← intCast_nat, ← intCast_neg, cool_intCast]
     exact Numeric.add ..
 
+theorem frozen_zero (t : 𝔻≥-1) : Frozen 0 t := frozen_intCast 0 t
+
+theorem frozen_natCast (n : ℕ) (t : 𝔻≥-1) : Frozen n t := frozen_intCast n t
+
 open Classical in
 /-- The IGame `x` is first frozen at temperature `t`. -/
 noncomputable def temperature (x : IGame) : 𝔻≥-1 := epsilon (IsLeast {τ | Frozen x τ} ·)
