@@ -43,8 +43,6 @@ open IGame
 
 namespace Dyadic
 
-section
-
 /-! ### Upper and lower dyadic fractions -/
 
 /-- For a dyadic number `m / n`, returns `(m - 1) / n`. -/
@@ -172,44 +170,6 @@ theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
       ← Nat.not_even_iff_odd, ← Nat.not_even_iff_odd, ← not_and_or]
     rintro ⟨⟨l4, rfl⟩, ⟨u4, rfl⟩⟩
     lia
-
-end
-
-section shift
-
-theorem toRat_shiftRight_int (x : Dyadic) (n : ℤ) : toRat (x >>> n) = toRat x * 2 ^ (-n) := by
-  simp_rw [(· >>> ·), Dyadic.shiftRight]
-  match x with
-  | .zero => norm_num
-  | .ofOdd m k hm =>
-      rw [toRat_ofOdd_eq_mul_two_pow, toRat_ofOdd_eq_mul_two_pow, neg_add, zpow_add₀ two_ne_zero]
-      ring
-
-@[simp] theorem shiftRight_shiftRight (x : Dyadic) (m n : ℤ) : x >>> m >>> n = x >>> (m + n) := by
-  simp_rw [(· >>> ·), Dyadic.shiftRight, Dyadic.ext_iff]
-  cases x
-  · gcongr
-  · group
-
-theorem add_shiftRight (x y : Dyadic) (n : ℤ) : (x + y) >>> n = x >>> n + y >>> n := by
-  simp only [Dyadic.ext_iff, toRat_shiftRight_int, toRat_add, zpow_neg]
-  ring
-
-@[simp] theorem shiftRight_one_add_shiftRight_one (x : Dyadic) :
-    x >>> (1 : ℤ) + x >>> (1 : ℤ) = x := by
-  rw [Dyadic.ext_iff, toRat_add, toRat_shiftRight_int]
-  ring
-
-@[simp] theorem shiftRight_add_one_add_shiftRight_add_one (x : Dyadic) (n : ℤ) :
-    x >>> (n + 1) + x >>> (n + 1) = x >>> n := by
-  rw [← shiftRight_shiftRight, shiftRight_one_add_shiftRight_one (x >>> n)]
-
-theorem shiftRight_pos_of_pos (x : Dyadic) (n : ℤ) (h : 0 < x) : 0 < x >>> n := by
-  rw [← toRat_lt_toRat_iff, toRat_shiftRight_int]
-  simp_all only [coe_ofNat, Nat.cast_zero, zero_lt_coe, mul_pos_iff_of_pos_left]
-  exact Rat.zpow_pos rfl
-
-end shift
 
 /-! ### Dyadic numbers to games -/
 
