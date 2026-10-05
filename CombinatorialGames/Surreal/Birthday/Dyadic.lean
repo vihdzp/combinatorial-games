@@ -5,10 +5,9 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Basic
+public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
-import CombinatorialGames.Surreal.Birthday.Cut
 import Mathlib.Algebra.Ring.CharZero
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
@@ -22,8 +21,6 @@ We prove that a surreal number has a finite birthday iff it's a dyadic number,
 and give an explicit formula for the birthday of a dyadic number.
 -/
 
-public section
-
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
   · intro h
@@ -34,24 +31,138 @@ theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d
     grw [← hb]
     exact Nat.div_lt_div_of_lt_of_dvd hc ha
 
-local notation "ω" => NatOrdinal.of Ordinal.omega0
+public section
+
+/-! ### Surreals to dyadics -/
+
+section Ordinal
+open Ordinal
 
 @[simp]
 theorem Game.birthday_ratCast (x : ℚ) : Game.birthday x = Surreal.birthday x := by
   rw [← Surreal.toGame_ratCast, Surreal.birthday_toGame]
 
-theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < ω := by
+theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < .of ω := by
   rw [← Surreal.mk_dyadic]
   exact (Surreal.birthday_mk_le _).trans_lt (IGame.Short.birthday_lt_omega0 _)
 
 theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
-    x.birthday < ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
+    x.birthday < .of ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
     exact ⟨_, ratCast_toDyadic _⟩
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
+
+namespace IGame
+open Surreal.Cut
+
+/-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
+noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
+  have H : (leftGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+    rw [← Surreal.birthday_lt_omega0_iff]
+    apply (lt_add_one _).trans
+    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+    grw [birthday_leftGame_le]
+    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+      exact NatOrdinal.natCast_lt_omega0 _
+    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+  Classical.choose H
+
+/-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
+noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
+  have H : (rightGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+    rw [← Surreal.birthday_lt_omega0_iff]
+    apply (lt_add_one _).trans
+    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+    grw [birthday_rightGame_le]
+    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+      exact NatOrdinal.natCast_lt_omega0 _
+    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+  Classical.choose H
+
+@[simp]
+theorem toSurreal_leftGame_mk_of_short (x : IGame) [Short x] :
+    (leftGame (.mk x)).toSurreal = leftStop x := by
+  unfold leftStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+@[simp]
+theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
+    (rightGame (.mk x)).toSurreal = rightStop x := by
+  unfold rightStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+@[simp]
+theorem leftStop_of_numeric (x : IGame) [Short x] [Numeric x] : leftStop x = x.toDyadic := by
+  simpa [← Surreal.ratCast_toDyadic] using (toSurreal_leftGame_mk_of_short x).symm
+
+@[simp]
+theorem rightStop_of_numeric (x : IGame) [Short x] [Numeric x] : rightStop x = x.toDyadic := by
+  simpa [← Surreal.ratCast_toDyadic] using (toSurreal_rightGame_mk_of_short x).symm
+
+theorem leftStop_dyadic (x : Dyadic) : leftStop x = x := by simp
+theorem rightStop_dyadic (x : Dyadic) : rightStop x = x := by simp
+theorem leftStop_zero : leftStop 0 = 0 := by simp
+theorem rightStop_zero : rightStop 0 = 0 := by simp
+theorem leftStop_one : leftStop 1 = 1 := by simp
+theorem rightStop_one : rightStop 1 = 1 := by simp
+
+theorem leftStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    leftStop x = leftStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_leftGame_mk_of_short, Game.mk_eq h, toSurreal_leftGame_mk_of_short]
+  rfl
+
+theorem rightStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    rightStop x = rightStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_rightGame_mk_of_short, Game.mk_eq h, toSurreal_rightGame_mk_of_short]
+  rfl
+
+theorem lt_of_leftStop_lt {x y : IGame} [Short x] [Numeric y] (h : leftStop x < y) : x < y := by
+  obtain ⟨z, _, hxz, hzy⟩ := Numeric.exists_between h
+  apply hzy.trans_le'
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_right_leftGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using hxz
+
+theorem lf_of_lt_leftStop {x y : IGame} [Short x] [Numeric y] (h : y < leftStop x) : y ⧏ x := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_left_leftGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using h
+
+theorem lt_of_lt_rightStop {x y : IGame} [Short x] [Numeric y] (h : y < rightStop x) : y < x := by
+  obtain ⟨z, _, hyz, hzx⟩ := Numeric.exists_between h
+  apply hyz.trans_le
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_left_rightGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using hzx
+
+theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x < y) : x ⧏ y := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_right_rightGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using h
+
+@[simp]
+theorem leftStop_neg (x : IGame) [Short x] : leftStop (-x) = -rightStop x := by
+  have := toSurreal_leftGame_mk_of_short (-x)
+  simp at this
+  exact mod_cast this.symm
+
+@[simp]
+theorem rightStop_neg (x : IGame) [Short x] : rightStop (-x) = -leftStop x := by
+  simpa [neg_eq_iff_eq_neg] using (leftStop_neg (-x)).symm
+
+end IGame
+end Ordinal
+
+/-! ### Explicit birthday of dyadic numbers -/
 
 /-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]

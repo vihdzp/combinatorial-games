@@ -344,5 +344,10 @@ instance : DenselyOrdered Surreal where
   dense a b hab := ⟨!{{a} | {b}},
     lt_ofSets_of_mem_left (Set.mem_singleton a), ofSets_lt_of_mem_right (Set.mem_singleton b)⟩
 
+protected theorem _root_.IGame.Numeric.exists_between
+    {x y : IGame} [Numeric x] [Numeric y] (h : x < y) : ∃ z, Numeric z ∧ x < z ∧ z < y := by
+  obtain ⟨z, hxz, hzy⟩ := exists_between (Surreal.mk_lt_mk.2 h)
+  refine ⟨z.out, inferInstance, ?_, ?_⟩ <;> simpa [← Surreal.mk_lt_mk]
+
 end Surreal
 end
