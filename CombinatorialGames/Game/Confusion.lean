@@ -68,12 +68,12 @@ theorem infRight_switch_le_supLeft_switch {x : IGame} (h : 0 ≤ x) :
   · apply le_of_lt
     simpa
 
-theorem leftGame_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+theorem leftGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
     leftGame (.mk (±x)) = rightSurreal (.mk x) := by
   rw [leftGame_eq_supLeft_of_le (infRight_switch_le_supLeft_switch h)]
   simp
 
-theorem rightGame_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+theorem rightGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
     rightGame (.mk (±x)) = -rightSurreal (.mk x) := by
   rw [rightGame_eq_infRight_of_le (infRight_switch_le_supLeft_switch h)]
   simp
@@ -146,13 +146,13 @@ theorem confusionInterval_down : confusionInterval (.mk ↓) = ∅ := by
   grind [confusionInterval]
 
 @[simp]
-theorem confusionInterval_switch {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+theorem confusionInterval_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
     confusionInterval (.mk (±x)) = Set.Icc (-Surreal.mk x) (.mk x) := by
-  rw [confusionInterval, leftGame_switch h, rightGame_switch h]
+  rw [confusionInterval, leftGame_switch_of_numeric h, rightGame_switch_of_numeric h]
   ext
   simp
 
--- Do this after #303.
+-- TODO: this is really a theorem about `Small` games.
 proof_wanted confusionInterval_subset_zero (x : IGame) [x.Dicotic] : confusionInterval (.mk x) ⊆ {0}
 
 end Game

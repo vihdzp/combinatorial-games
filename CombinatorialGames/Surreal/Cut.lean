@@ -275,11 +275,13 @@ theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y :=
   apply Concept.copy_eq <;> simp <;> rfl
 
 @[simp, grind =]
-theorem leftGame_mk (x : IGame) [Numeric x] : leftGame (.mk x) = leftSurreal (.mk x) := by
+theorem leftGame_mk_of_numeric (x : IGame) [Numeric x] :
+    leftGame (.mk x) = leftSurreal (.mk x) := by
   rw [← toGame_mk, leftGame_toGame]
 
 @[simp, grind =]
-theorem rightGame_mk (x : IGame) [Numeric x] : rightGame (.mk x) = rightSurreal (.mk x) := by
+theorem rightGame_mk_of_numeric (x : IGame) [Numeric x] :
+    rightGame (.mk x) = rightSurreal (.mk x) := by
   rw [← toGame_mk, rightGame_toGame]
 
 @[simp, grind =]
