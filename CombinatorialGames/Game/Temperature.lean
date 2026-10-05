@@ -43,20 +43,25 @@ decreasing_by igame_wf
 def Frozen (x : IGame) (t : 𝔻≥-1) : Prop :=
   ∃ y, Numeric y ∧ Small (!{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ} - y)
 
-theorem zero_frozen_neg_one : Frozen 0 ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
-  use 0
-  simp [← zero_eq, Small.zero]
+theorem frozen_of_numeric {x : IGame} {t : 𝔻≥-1}
+    (H : Numeric !{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ}) : Frozen x t :=
+  ⟨_, H, .of_equiv (sub_self_equiv _).symm⟩
 
-theorem nat_frozen_neg_one (x : ℕ) : Frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩ := by
-  rcases x with _ | n
-  · exact zero_frozen_neg_one
-  · use n + 2
-    refine ⟨inferInstance, fun hy ↦ ?_, fun hy ↦ ?_⟩
-    all_goals norm_num; norm_cast; rw [← IGame.natCast_succ_eq]
-    · exact (sub_self_equiv _).trans_lt hy
-    · exact hy.trans_antisymmRel (sub_self_equiv _).symm
-
-proof_wanted int_frozen_neg_one (x : ℤ) : frozen x ⟨-1, neg_le_neg_iff.mpr rfl⟩
+theorem frozen_intCast (n : ℤ) (t : 𝔻≥-1) : Frozen n t := by
+  apply frozen_of_numeric
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> constructor
+  · simp
+  · suffices ∀ a ∈ nᴸ, (cool a t - t).Numeric by simpa
+    intro m hm
+    obtain ⟨m, hmn, rfl⟩ := eq_natCast_of_mem_leftMoves_natCast hm
+    rw [cool_natCast]
+    exact Numeric.sub ..
+  · simp
+  · suffices ∀ a ∈ nᴸ, (cool (-a) t + t).Numeric by simpa
+    intro m hm
+    obtain ⟨m, hmn, rfl⟩ := eq_natCast_of_mem_leftMoves_natCast hm
+    rw [← intCast_nat, ← intCast_neg, cool_intCast]
+    exact Numeric.add ..
 
 open Classical in
 /-- The IGame `x` is first frozen at temperature `t`. -/
