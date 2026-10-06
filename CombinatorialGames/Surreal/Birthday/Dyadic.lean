@@ -59,31 +59,26 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
 namespace IGame
 open Surreal.Cut
 
+private theorem stop_aux₁ {x : Surreal.Cut} [x.Numeric] (hx : x.birthday < NatOrdinal.of ω) :
+    x.toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+  rw [← Surreal.birthday_lt_omega0_iff]
+  apply (lt_add_one _).trans
+  rwa [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+
+private theorem stop_aux₂ (x : IGame) [Short x] :
+    ((Game.mk x).birthday : WithTop NatOrdinal) + 1 < NatOrdinal.of ω := by
+  have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+  · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+    exact NatOrdinal.natCast_lt_omega0 _
+  · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+
 /-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
 noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
-  have H : (leftGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
-    rw [← Surreal.birthday_lt_omega0_iff]
-    apply (lt_add_one _).trans
-    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
-    grw [birthday_leftGame_le]
-    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
-    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
-      exact NatOrdinal.natCast_lt_omega0 _
-    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
-  Classical.choose H
+  Classical.choose (stop_aux₁ ((birthday_leftGame_le _).trans_lt (stop_aux₂ x)))
 
 /-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
 noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
-  have H : (rightGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
-    rw [← Surreal.birthday_lt_omega0_iff]
-    apply (lt_add_one _).trans
-    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
-    grw [birthday_rightGame_le]
-    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
-    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
-      exact NatOrdinal.natCast_lt_omega0 _
-    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
-  Classical.choose H
+  Classical.choose (stop_aux₁ ((birthday_rightGame_le _).trans_lt (stop_aux₂ x)))
 
 @[simp]
 theorem toSurreal_leftGame_mk_of_short (x : IGame) [Short x] :
