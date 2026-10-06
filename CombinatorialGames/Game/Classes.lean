@@ -503,33 +503,6 @@ protected instance intCast : ∀ n : ℤ, Numeric n
 
 end Numeric
 
-/-! ### Numeric-like games -/
-
-class inductive NumericLike (x : IGame) : Prop
-  | mk (y : IGame) [Numeric y] (h : x ≈ y) : NumericLike x
-
-namespace NumericLike
-
-theorem exists_numeric_equiv (x : IGame) [hx : NumericLike x] : ∃ y, Numeric y ∧ x ≈ y := by
-  cases hx with | mk y h
-  exact ⟨_, ‹_›, h⟩
-
-instance ofNumeric (x : IGame) [Numeric x] : NumericLike x := .mk _ .rfl
-
-instance neg (x : IGame) [NumericLike x] : NumericLike (-x) := by
-  obtain ⟨y, _, h⟩ := exists_numeric_equiv x
-  exact .mk _ (neg_congr h)
-
-instance add (x y : IGame) [NumericLike x] [NumericLike y] : NumericLike (x + y) := by
-  obtain ⟨a, _, ha⟩ := exists_numeric_equiv x
-  obtain ⟨b, _, hb⟩ := exists_numeric_equiv y
-  exact .mk _ (add_congr ha hb)
-
-instance sub (x y : IGame) [NumericLike x] [NumericLike y] : NumericLike (x - y) :=
-  .add ..
-
-end NumericLike
-
 /-! ### Short games -/
 
 /-- A short game is one with finitely many subpositions. That is, the left and right sets are
