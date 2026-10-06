@@ -130,6 +130,11 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
   apply mem_right_of_toSurreal_lt
   simpa [← Surreal.mk_lt_mk] using h
 
+theorem rightStop_le_leftStop (x : IGame) [Short x] : rightStop x ≤ leftStop x := by
+  by_contra! h
+  obtain ⟨y, hl, hr⟩ := exists_between h
+  cases ((lt_of_leftStop_lt (mod_cast hl)).trans (lt_of_lt_rightStop (y := y) (mod_cast hr))).false
+
 /-- A short infinitesimal game is small. -/
 theorem Small.of_infinitesimal {x : IGame} [Short x]
     (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
