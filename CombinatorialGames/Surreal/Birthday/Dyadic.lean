@@ -135,7 +135,7 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
   apply mem_right_of_toSurreal_lt
   simpa [← Surreal.mk_lt_mk] using h
 
-/-- A short infinitesimal game is in fact small. -/
+/-- A short infinitesimal game is small. -/
 theorem Small.of_infinitesimal {x : IGame} [Short x]
     (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
   le_numeric_of_pos {y} _ hy := by
