@@ -9,7 +9,6 @@ public import CombinatorialGames.Surreal.Basic
 
 import Mathlib.Algebra.Order.Field.Basic
 import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Surreal.Division
 
 /-!
 # Small games all around
@@ -89,16 +88,17 @@ protected instance neg (x : IGame) [Small x] : Small (-x) where
 
 protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
   le_numeric_of_pos {z} _ hz := by
-    rw [← Game.mk_le_mk]
-    have H (x) [Small x] := lt_surreal_of_pos (x := x) (y := .mk z / 2) ?_
-    · simpa [← Surreal.toGame_add] using (add_lt_add (H x) (H y)).le
-    · simpa
+    rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, Game.mk_add]
+    obtain ⟨z₁, hz₁0, hz₁z⟩ := exists_between (Surreal.mk_lt_mk.2 hz)
+    grw [← add_sub_cancel z₁ (.mk z), Surreal.toGame_add,
+      ‹x.Small›.lt_surreal_of_pos hz₁0, add_le_add_iff_left]
+    exact lt_surreal_of_pos (sub_pos_of_lt hz₁z) |>.le
   numeric_le_of_neg {z} _ hz := by
-    rw [← Game.mk_le_mk]
-    have H (x) [Small x] := surreal_lt_of_neg (x := x) (y := .mk z / 2) ?_
-    · simpa [← Surreal.toGame_add] using (add_lt_add (H x) (H y)).le
-    · rw [div_neg_iff]
-      exact .inr ⟨hz, two_pos⟩
+    rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, Game.mk_add]
+    obtain ⟨z₁, hz₁0, hz₁z⟩ := exists_between' (Surreal.mk_lt_mk.2 hz)
+    grw [← add_sub_cancel z₁ (.mk z), Surreal.toGame_add,
+      ‹x.Small›.surreal_lt_of_neg hz₁0, add_le_add_iff_left]
+    exact surreal_lt_of_neg (sub_neg_of_lt hz₁z) |>.le
 
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
