@@ -87,6 +87,10 @@ protected instance neg (x : IGame) [Small x] : Small (-x) where
     apply Small.le_numeric_of_pos
     rwa [IGame.zero_lt_neg]
 
+@[simp]
+theorem neg_iff {x : IGame} : Small (-x) ↔ Small x :=
+  ⟨fun _ ↦ by simpa using Small.neg (-x), fun _ ↦ .neg x⟩
+
 protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
   le_numeric_of_pos {z} _ hz := by
     rw [← Game.mk_le_mk]
@@ -102,6 +106,10 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
+
+theorem of_between (x y) {z} [Small x] [Small y] (h : z ∈ Set.Icc x y) : Small z where
+  le_numeric_of_pos hw := h.2.trans (le_numeric_of_pos hw)
+  numeric_le_of_neg hw := (numeric_le_of_neg hw).trans h.1
 
 end Small
 
@@ -136,6 +144,15 @@ end Dicotic
 
 instance Impartial.toSmall (x) [Impartial x] : Small x :=
   .of_equiv (nim_grundy_equiv x)
+
+protected theorem Small.tiny {x : IGame} (hx : 0 ≤ x) : Small (⧾x) := by
+  refine of_between 0 (↑) ⟨(tiny_pos _).le, ?_⟩
+  rw [← tiny_zero]
+  exact tiny_antitone hx
+
+protected theorem Small.miny {x : IGame} (hx : 0 ≤ x) : Small (⧿x) := by
+  rw [← neg_tiny, Small.neg_iff]
+  exact .tiny hx
 
 end IGame
 end
