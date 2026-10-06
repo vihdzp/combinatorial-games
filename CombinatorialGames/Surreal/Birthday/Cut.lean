@@ -157,6 +157,125 @@ theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birt
 theorem birthday_of_numeric (x : Cut) [hx : x.Numeric] : x.birthday = x.toSurreal.birthday + 1 := by
   cases hx <;> simp
 
+theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
+    (hxb : birthday x ≠ 0) (hxt : birthday x ≠ ⊤)
+    (hyb : birthday y ≠ 0) (hyt : birthday y ≠ ⊤)
+    (h : y ≤ x) : ∃ g : Game, leftGame g = x ∧ rightGame g = y := by
+  choose f nf hf hfb using birthday_eq_iGameBirthday
+  let st (s : Set Surreal) [Small s] := !{f '' s | f '' s}
+  have hstl {s : Set Surreal} [Small s] :
+      supLeft (st s) = sSup (rightSurreal '' s) := by
+    unfold st supLeft
+    rw [IGame.leftMoves_ofSets, iSup_image, sSup_image]
+    refine iSup_congr fun u => iSup_congr fun hu => ?_
+    rw [← rightGame_toGame]
+    apply congrArg rightGame
+    rw [← hf u, toGame_mk, hf u]
+  have hstr {s : Set Surreal} [Small s] :
+      infRight (st s) = sInf (leftSurreal '' s) := by
+    unfold st infRight
+    rw [IGame.rightMoves_ofSets, iInf_image, sInf_image]
+    refine iInf_congr fun u => iInf_congr fun hu => ?_
+    rw [← leftGame_toGame]
+    apply congrArg leftGame
+    rw [← hf u, toGame_mk, hf u]
+  have hstrl {s : Set Surreal} [Small s] (hs : s.Nonempty) :
+      infRight (st s) ≤ supLeft (st s) := by
+    rw [hstl, hstr]
+    obtain ⟨x, hx⟩ := hs
+    apply le_of_lt
+    rw [lt_iff_nonempty_inter]
+    refine ⟨x, ?_, ?_⟩
+    · rw [← lt_rightSurreal_iff, sInf_lt_iff, exists_mem_image]
+      exact ⟨x, hx, leftSurreal_lt_rightSurreal x⟩
+    · rw [← leftSurreal_lt_iff, lt_sSup_iff, exists_mem_image]
+      exact ⟨x, hx, leftSurreal_lt_rightSurreal x⟩
+  obtain ⟨s, rfl | rfl, hs⟩ := birthday_eq_sSup_birthday x <;>
+  obtain ⟨t, rfl | rfl, ht⟩ := birthday_eq_sSup_birthday y <;> (
+    rw [← hs] at hxt
+    rw [← ht] at hyt
+    rw [← lt_top_iff_ne_top, sSup_birthday_lt_top_iff] at hxt hyt
+    replace hxb : s.Nonempty := by
+      rw [Set.nonempty_iff_ne_empty]
+      rintro rfl
+      simp at hxb
+    replace hyb : t.Nonempty := by
+      rw [Set.nonempty_iff_ne_empty]
+      rintro rfl
+      simp at hyb)
+  · let dn := !{{st s} | f '' t}
+    have hdl : supLeft dn = sInf (leftSurreal '' s) := by
+      unfold dn supLeft
+      rw [IGame.leftMoves_ofSets, iSup_singleton]
+      rw [rightGame_eq_infRight_of_le (hstrl hxb), hstr]
+    have hdr : infRight dn = sInf (leftSurreal '' t) := by
+      unfold dn
+      rw [infRight, IGame.rightMoves_ofSets,
+        ← IGame.rightMoves_ofSets (f '' t) (f '' t), ← infRight, hstr]
+    refine ⟨Game.mk dn, ?_, ?_⟩
+    · rw [← hdl]
+      apply leftGame_eq_supLeft_of_le
+      rw [hdl, hdr]
+      exact h
+    · rw [← hdr]
+      apply rightGame_eq_infRight_of_le
+      rw [hdl, hdr]
+      exact h
+  · let zr := !{{st s} | {st t}}
+    have hzl : supLeft zr = sInf (leftSurreal '' s) := by
+      unfold zr supLeft
+      rw [IGame.leftMoves_ofSets, iSup_singleton]
+      rw [rightGame_eq_infRight_of_le (hstrl hxb), hstr]
+    have hzr : infRight zr = sSup (rightSurreal '' t) := by
+      unfold zr infRight
+      rw [IGame.rightMoves_ofSets, iInf_singleton]
+      rw [leftGame_eq_supLeft_of_le (hstrl hyb), hstl]
+    refine ⟨Game.mk zr, ?_, ?_⟩
+    · rw [← hzl]
+      apply leftGame_eq_supLeft_of_le
+      rw [hzl, hzr]
+      exact h
+    · rw [← hzr]
+      apply rightGame_eq_infRight_of_le
+      rw [hzl, hzr]
+      exact h
+  · let sr := !{f '' s | f '' t}
+    have hsl : supLeft sr = sSup (rightSurreal '' s) := by
+      unfold sr
+      rw [supLeft, IGame.leftMoves_ofSets,
+        ← IGame.leftMoves_ofSets (f '' s) (f '' s), ← supLeft, hstl]
+    have hsr : infRight sr = sInf (leftSurreal '' t) := by
+      unfold sr
+      rw [infRight, IGame.rightMoves_ofSets,
+        ← IGame.rightMoves_ofSets (f '' t) (f '' t), ← infRight, hstr]
+    refine ⟨Game.mk sr, ?_, ?_⟩
+    · rw [← hsl]
+      apply leftGame_eq_supLeft_of_le
+      rw [hsl, hsr]
+      exact h
+    · rw [← hsr]
+      apply rightGame_eq_infRight_of_le
+      rw [hsl, hsr]
+      exact h
+  · let up := !{f '' s | {st t}}
+    have hul : supLeft up = sSup (rightSurreal '' s) := by
+      unfold up
+      rw [supLeft, IGame.leftMoves_ofSets,
+        ← IGame.leftMoves_ofSets (f '' s) (f '' s), ← supLeft, hstl]
+    have hur : infRight up = sSup (rightSurreal '' t) := by
+      unfold up infRight
+      rw [IGame.rightMoves_ofSets, iInf_singleton]
+      rw [leftGame_eq_supLeft_of_le (hstrl hyb), hstl]
+    refine ⟨Game.mk up, ?_, ?_⟩
+    · rw [← hul]
+      apply leftGame_eq_supLeft_of_le
+      rw [hul, hur]
+      exact h
+    · rw [← hur]
+      apply rightGame_eq_infRight_of_le
+      rw [hul, hur]
+      exact h
+
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
   obtain ⟨y, rfl | rfl, hy⟩ := birthday_eq_sSup_birthday y
