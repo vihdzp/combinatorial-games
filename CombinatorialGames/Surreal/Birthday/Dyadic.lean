@@ -5,10 +5,10 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Basic
+public import CombinatorialGames.Game.Small
+public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
-import CombinatorialGames.Surreal.Birthday.Cut
 import Mathlib.Algebra.Ring.CharZero
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
@@ -22,8 +22,6 @@ We prove that a surreal number has a finite birthday iff it's a dyadic number,
 and give an explicit formula for the birthday of a dyadic number.
 -/
 
-public section
-
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
   · intro h
@@ -34,24 +32,129 @@ theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d
     grw [← hb]
     exact Nat.div_lt_div_of_lt_of_dvd hc ha
 
-local notation "ω" => NatOrdinal.of Ordinal.omega0
+public section
+
+/-! ### Surreals to dyadics -/
+
+section Ordinal
+open Ordinal
 
 @[simp]
 theorem Game.birthday_ratCast (x : ℚ) : Game.birthday x = Surreal.birthday x := by
   rw [← Surreal.toGame_ratCast, Surreal.birthday_toGame]
 
-theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < ω := by
+theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < .of ω := by
   rw [← Surreal.mk_dyadic]
   exact (Surreal.birthday_mk_le _).trans_lt (IGame.Short.birthday_lt_omega0 _)
 
 theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
-    x.birthday < ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
+    x.birthday < .of ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
     exact ⟨_, ratCast_toDyadic _⟩
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
+
+namespace IGame
+open Surreal.Cut
+
+private theorem stop_aux₁ {x : Surreal.Cut} [x.Numeric] (hx : x.birthday < NatOrdinal.of ω) :
+    x.toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+  rw [← Surreal.birthday_lt_omega0_iff]
+  apply (lt_add_one _).trans
+  rwa [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+
+private theorem stop_aux₂ (x : IGame) [Short x] :
+    ((Game.mk x).birthday : WithTop NatOrdinal) + 1 < NatOrdinal.of ω := by
+  have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+  · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+    exact NatOrdinal.natCast_lt_omega0 _
+  · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+
+/-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
+noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
+  Classical.choose (stop_aux₁ ((birthday_leftGame_le _).trans_lt (stop_aux₂ x)))
+
+/-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
+noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
+  Classical.choose (stop_aux₁ ((birthday_rightGame_le _).trans_lt (stop_aux₂ x)))
+
+@[simp]
+theorem toSurreal_leftGame_mk_of_short (x : IGame) [Short x] :
+    (leftGame (.mk x)).toSurreal = leftStop x := by
+  unfold leftStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+@[simp]
+theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
+    (rightGame (.mk x)).toSurreal = rightStop x := by
+  unfold rightStop
+  generalize_proofs _ H
+  exact (Classical.choose_spec H).symm
+
+theorem leftStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    leftStop x = leftStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_leftGame_mk_of_short, Game.mk_eq h, toSurreal_leftGame_mk_of_short]
+  rfl
+
+theorem rightStop_congr {x y : IGame} [Short x] [Short y] (h : x ≈ y) :
+    rightStop x = rightStop y := by
+  rw! [← Dyadic.toRat_inj, ← Rat.cast_inj (α := Surreal),
+    ← toSurreal_rightGame_mk_of_short, Game.mk_eq h, toSurreal_rightGame_mk_of_short]
+  rfl
+
+theorem lt_of_leftStop_lt {x y : IGame} [Short x] [Numeric y] (h : leftStop x < y) : x < y := by
+  obtain ⟨z, _, hxz, hzy⟩ := Numeric.exists_between h
+  apply hzy.trans_le'
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_right_leftGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using hxz
+
+theorem lf_of_lt_leftStop {x y : IGame} [Short x] [Numeric y] (h : y < leftStop x) : y ⧏ x := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_left_leftGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using h
+
+theorem lt_of_lt_rightStop {x y : IGame} [Short x] [Numeric y] (h : y < rightStop x) : y < x := by
+  obtain ⟨z, _, hyz, hzx⟩ := Numeric.exists_between h
+  apply hyz.trans_le
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk z, ← mem_left_rightGame]
+  apply mem_left_of_lt_toSurreal
+  simpa [← Surreal.mk_lt_mk] using hzx
+
+theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x < y) : x ⧏ y := by
+  rw [← Game.mk_le_mk, ← Surreal.toGame_mk y, ← mem_right_rightGame]
+  apply mem_right_of_toSurreal_lt
+  simpa [← Surreal.mk_lt_mk] using h
+
+theorem rightStop_le_leftStop (x : IGame) [Short x] : rightStop x ≤ leftStop x := by
+  by_contra! h
+  obtain ⟨y, hl, hr⟩ := exists_between h
+  cases ((lt_of_leftStop_lt (mod_cast hl)).trans (lt_of_lt_rightStop (y := y) (mod_cast hr))).false
+
+/-- A short infinitesimal game is small. -/
+theorem Small.of_infinitesimal {x : IGame} [Short x]
+    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
+  le_numeric_of_pos {y} _ hy := by
+    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
+    rw [Dyadic.toIGame_le_zero]
+    contrapose! hr
+    obtain ⟨z, hz, hzx⟩ := exists_between hr
+    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
+  numeric_le_of_neg {y} _ hy := by
+    apply (lt_of_lt_rightStop (hy.trans_le _)).le
+    rw [Dyadic.zero_le_toIGame]
+    contrapose! hl
+    obtain ⟨z, hxz, hz⟩ := exists_between hl
+    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
+
+end IGame
+end Ordinal
+
+/-! ### Explicit birthday of dyadic numbers -/
 
 /-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]
