@@ -179,6 +179,9 @@ theorem tiny_antitone : Antitone tiny := by
 theorem tiny_congr {x y : IGame} (hxy : x ≈ y) : ⧾x ≈ ⧾y :=
   ⟨tiny_antitone hxy.ge, tiny_antitone hxy.le⟩
 
+theorem tiny_tiny_tiny_equiv (x : IGame) : ⧾⧾⧾x ≈ ↑ := by
+  game_cmp
+
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
   !{{!{{x} | {0}}} | {0}}

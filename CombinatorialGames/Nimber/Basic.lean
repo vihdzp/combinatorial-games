@@ -76,11 +76,10 @@ private def add (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | (∃ a', ∃ (_ : a' < a), add a' b = x) ∨ ∃ b', ∃ (_ : b' < b), add a b' = x}ᶜ
 termination_by (a, b)
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
 `a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-noncomputable instance : Add Nimber :=
+instance : Add Nimber :=
   ⟨Nimber.add⟩
 
 theorem add_def (a b : Nimber) :

@@ -73,9 +73,8 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
-#adaptation_note /-- noncomputable is now needed -/ in
 @[no_expose]
-noncomputable instance : Wpow IGame where
+instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
