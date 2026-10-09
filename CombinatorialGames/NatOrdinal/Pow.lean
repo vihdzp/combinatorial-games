@@ -18,7 +18,7 @@ This file characterizes natural operations on powers of `ω`. In particular, we 
 
 These two results imply the validity of an algorithm to evaluate natural addition and
 multiplication: write down the base `ω` Cantor Normal Forms of both ordinals, and add/multiply them
-as polynomials.
+as polynomials. See `CombinatorialGames.NatOrdinal.AddMonoidAlgebra` for the explicit isomorphism.
 
 ## Implementation notes
 
@@ -28,7 +28,7 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 `CombinatorialGames.Surreal.Pow`.
 -/
 
-@[expose] public section
+public section
 
 open Ordinal
 
