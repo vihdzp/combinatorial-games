@@ -6,7 +6,9 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
+public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
+public import Mathlib.Algebra.Order.Module.Defs
 public import Mathlib.Basic.Real.Basic
 
 import Mathlib.Analysis.Normed.Group.Basic
@@ -630,6 +632,25 @@ def toSurrealRingHom : ℝ →+*o Surreal where
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
   monotone' := toSurrealEmbedding.monotone
+
+instance : Algebra ℝ Surreal :=
+  Real.toSurrealRingHom.toAlgebra
+
+instance : IsOrderedModule ℝ Surreal where
+  smul_le_smul_of_nonneg_left _ hr _ _ hxy :=
+    mul_le_mul_of_nonneg_left hxy (Real.toSurreal_nonneg_iff.mpr hr)
+  smul_le_smul_of_nonneg_right _ hx _ _ hrs :=
+    mul_le_mul_of_nonneg_right (Real.toSurreal_le_iff.mpr hrs) hx
+
+@[simp]
+theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
+  rfl
+
+@[simp]
+theorem algebraMap_def : algebraMap ℝ Surreal = toSurrealRingHom :=
+  rfl
+
+theorem algebraMap_apply (r : ℝ) : algebraMap ℝ Surreal r = r := rfl
 
 @[simp, norm_cast]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=
