@@ -646,8 +646,11 @@ instance : IsOrderedModule ℝ Surreal where
 theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
   rfl
 
+@[simp]
 theorem algebraMap_def : algebraMap ℝ Surreal = toSurrealRingHom :=
   rfl
+
+theorem algebraMap_apply (r : ℝ) : algebraMap ℝ Surreal r = r := rfl
 
 @[simp, norm_cast]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=
