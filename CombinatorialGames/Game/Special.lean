@@ -18,7 +18,10 @@ This file defines some simple yet notable combinatorial games:
 * `⋆ = {0 | 0}`
 * `½ = {0 | 1}`
 * `↑ = {0 | ⋆}`
-* `↓ = {⋆ | 0}`.
+* `↓ = {⋆ | 0}`
+* `⧾x = {0 | {0 | -x}}`
+* `⧿x = {{x | 0} | 0}`
+* `±x = {x | -x}`.
 -/
 
 universe u
@@ -90,8 +93,13 @@ recommended_spelling "up" for "↑" in [«term↑»]
 @[simp, game_cmp] theorem rightMoves_up : ↑ᴿ = {⋆} := rightMoves_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
+theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
+theorem star_lt_up_add_up : ⋆ < ↑ + ↑ := by game_cmp
+
+/-- The upstart equality. -/
+@[simp] theorem ofSets_zero_up : !{{0} | {↑}} ≈ ↑ + ↑ + ⋆ := by game_cmp
 
 protected instance Dicotic.up : Dicotic ↑ := by rw [dicotic_def]; simp
 protected instance Short.up : Short ↑ := by rw [short_def]; simp
@@ -133,6 +141,8 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 @[simp, game_cmp]
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
+
+@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
 
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
@@ -181,6 +191,8 @@ theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
 @[simp, game_cmp]
 theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
   rightMoves_ofSets ..
+
+@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
