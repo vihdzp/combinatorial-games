@@ -6,7 +6,9 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
+public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
+public import Mathlib.Algebra.Order.Module.Defs
 public import Mathlib.Basic.Real.Basic
 
 import Mathlib.Analysis.Normed.Group.Basic
@@ -642,6 +644,9 @@ instance : IsOrderedModule ℝ Surreal where
 
 @[simp]
 theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
+  rfl
+
+theorem algebraMap_def : algebraMap ℝ Surreal = toSurrealRingHom :=
   rfl
 
 @[simp, norm_cast]
