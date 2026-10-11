@@ -25,6 +25,35 @@ instance : Zero 𝔻≥-1 := ⟨0, Dyadic.coe_le_zero.mp rfl⟩
 instance : One 𝔻≥-1 := ⟨1, Dyadic.coe_le_one.mp rfl⟩
 
 open Classical in
+mutual
+
+noncomputable def leftWall (x : IGame) (t : 𝔻≥-1) : ℚ :=
+  if hn : ∃ n : ℤ, x ≈ n then hn.choose else
+    if ht' : ∃ t' < t, IsLeast {τ | leftScaffold x τ = rightScaffold x τ} t'
+      then leftScaffold x ht'.choose else leftScaffold x t
+termination_by (x, 1)
+decreasing_by igame_wf
+
+noncomputable def rightWall (x : IGame) (t : 𝔻≥-1) : ℚ :=
+  if hn : ∃ n : ℤ, x ≈ n then hn.choose else
+    if ht' : ∃ t' < t, IsLeast {τ | leftScaffold x τ = rightScaffold x τ} t'
+      then rightScaffold x ht'.choose else rightScaffold x t
+termination_by (x, 1)
+decreasing_by igame_wf
+
+noncomputable def leftScaffold (x : IGame) (t : 𝔻≥-1) :=
+  epsilon (IsGreatest (.range fun l : xᴸ ↦ rightWall l t - (t : ℚ)))
+termination_by (x, 0)
+decreasing_by igame_wf
+
+noncomputable def rightScaffold (x : IGame) (t : 𝔻≥-1) :=
+  epsilon (IsLeast (.range fun r : xᴿ ↦ leftWall r t + (t : ℚ)))
+termination_by (x, 0)
+decreasing_by igame_wf
+
+end
+
+open Classical in
 /-- The IGame `x` cooled by `t`. -/
 noncomputable def cool (x : IGame) (t : 𝔻≥-1) : IGame :=
   let _cool τ := !{.range fun l : xᴸ ↦ cool l τ - τ | .range fun r : xᴿ ↦ cool r τ + τ}
