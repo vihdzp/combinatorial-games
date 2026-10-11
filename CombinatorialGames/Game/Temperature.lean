@@ -28,18 +28,13 @@ instance : One 𝔻≥-1 := ⟨1, by decide⟩
 
 abbrev lineSegment (t a b : ℚ) : ℚ := a * t + b
 
-inductive Trajectory : ℚ → ℚ → Type
-  | last (s a b : ℚ) : Trajectory s (lineSegment s a b)
-  | cons (s t a b v : ℚ) (h : s < t) (rest : Trajectory t v) (hv : lineSegment t a b = v) :
-      Trajectory s (lineSegment s a b)
+inductive Trajectory : ℚ → Type
+  | last (s a b : ℚ) : Trajectory s
+  | cons (s t a b : ℚ) (h : s < t) (rest : Trajectory t) : Trajectory s
 
-def Trajectory.eval {s v : ℚ} (τ : ℚ) : Trajectory s v → ℚ
-  | .last _ a b => lineSegment τ a b
-  | .cons _ t a b _ _ rest _ => if τ ≤ t then lineSegment τ a b else rest.eval τ
-
-@[simp] private theorem Trajectory.eval_start {s v : ℚ} (T : Trajectory s v) : T.eval s = v := by
-  unfold Trajectory.eval
-  split <;> grind
+def Trajectory.eval {s : ℚ} (τ : ℚ) : Trajectory s → ℚ
+  | last _ a b => lineSegment τ a b
+  | cons _ t a b _ rest => if τ ≤ t then lineSegment τ a b else rest.eval τ
 
 private theorem exists_isLeast_eval_eq_zero' {a b t₁ t₂ : ℚ} (ha : a ≤ 0) (ht : t₁ < t₂)
     (h0 : 0 ∈ Set.Icc (lineSegment t₂ a b) (lineSegment t₁ a b)) :
@@ -49,17 +44,23 @@ private theorem exists_isLeast_eval_eq_zero' {a b t₁ t₂ : ℚ} (ha : a ≤ 0
   use if a = 0 then t₁ else -b / a
   grind [IsLeast, lowerBounds]
 
+def Trajectory.Continuous {s : ℚ} : Trajectory s → Prop
+  | last .. => True
+  | cons s t a b _ rest => lineSegment t a b = rest.eval t ∧ rest.Continuous
+
 /-- Intermediate value theorem. -/
-theorem exists_isLeast_eval_eq_zero {t v t₁ t₂ : ℚ} (T : Trajectory t v) (ht : t₁ < t₂)
-    (hT : AntitoneOn T.eval (Set.Icc t₁ t₂)) (h0 : 0 ∈ Set.Icc (T.eval t₂) (T.eval t₁)) :
+theorem exists_isLeast_eval_eq_zero {t t₁ t₂ : ℚ} (T : Trajectory t) (hC : T.Continuous)
+    (ht : t₁ < t₂) (hT : AntitoneOn T.eval (Set.Icc t₁ t₂))
+    (h0 : 0 ∈ Set.Icc (T.eval t₂) (T.eval t₁)) :
     ∃ τ ∈ Set.Icc t₁ t₂, IsLeast {t' ∈ Set.Icc t₁ t₂ | T.eval t' = 0} τ := by
   induction T generalizing t₁ t₂ with
   | last =>
       unfold Trajectory.eval at hT
       refine exists_isLeast_eval_eq_zero' ?_ ht h0
       nlinarith [hT ⟨le_rfl, ht.le⟩ ⟨ht.le, le_rfl⟩ ht.le]
-  | cons _ t a b _ h rest hv ih =>
-    let T := Trajectory.cons _ t a b _ h rest hv
+  | cons s t a b hst rest ih =>
+    have ih {t₁ t₂} := @ih t₁ t₂ hC.right
+    let T := Trajectory.cons s t a b hst rest
     have hl {τ} (hτ : τ ≤ t) : T.eval τ = lineSegment τ a b := by simp [Trajectory.eval, hτ, T]
     by_cases h₂ : t₂ ≤ t
     · have : a ≤ 0 := by nlinarith [hl (ht.le.trans h₂), hl h₂, hT (by grind) (by grind) ht.le]
@@ -68,7 +69,7 @@ theorem exists_isLeast_eval_eq_zero {t v t₁ t₂ : ℚ} (T : Trajectory t v) (
       exact ⟨τ, h, by grind, by grind [lowerBounds]⟩
     · have hr {τ} (hτ : t ≤ τ) : T.eval τ = rest.eval τ := by
         by_cases hτt : τ ≤ t
-        · simp [T, Trajectory.eval, hv, le_antisymm hτt hτ]
+        · simp [T, Trajectory.eval, le_antisymm hτt hτ, hC.left]
         · simp [T, Trajectory.eval, hτt]
       have hT' {l} (hl₁ : t₁ ≤ l) (hl₂ : t ≤ l) : AntitoneOn rest.eval (Set.Icc l t₂) := by
         intro _ ⟨ha₁, ha₂⟩ _ ⟨hb₁, hb₂⟩ hab
