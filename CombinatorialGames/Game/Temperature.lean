@@ -105,12 +105,12 @@ noncomputable def rightWall (x : IGame) (t : 𝔻≥-1) : ℚ :=
 termination_by (x, 1)
 decreasing_by igame_wf
 
-noncomputable def leftScaffold (x : IGame) (t : 𝔻≥-1) :=
+noncomputable def leftScaffold (x : IGame) (t : 𝔻≥-1) : ℚ :=
   epsilon (IsGreatest (.range fun l : xᴸ ↦ rightWall l t - (t : ℚ)))
 termination_by (x, 0)
 decreasing_by igame_wf
 
-noncomputable def rightScaffold (x : IGame) (t : 𝔻≥-1) :=
+noncomputable def rightScaffold (x : IGame) (t : 𝔻≥-1) : ℚ :=
   epsilon (IsLeast (.range fun r : xᴿ ↦ leftWall r t + (t : ℚ)))
 termination_by (x, 0)
 decreasing_by igame_wf
