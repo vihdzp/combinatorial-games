@@ -7,6 +7,8 @@ module
 
 public import CombinatorialGames.Game.Small
 
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum.Basic
 
 /-!
@@ -23,6 +25,68 @@ notation "𝔻≥-1" => { t : Dyadic // -1 ≤ t }
 
 instance : Zero 𝔻≥-1 := ⟨0, Dyadic.coe_le_zero.mp rfl⟩
 instance : One 𝔻≥-1 := ⟨1, Dyadic.coe_le_one.mp rfl⟩
+
+abbrev lineSegment (t a b : ℚ) : ℚ := a * t + b
+
+inductive Trajectory : ℚ → ℚ → Type
+  | last (s a b : ℚ) : Trajectory s (lineSegment s a b)
+  | cons (s t a b v : ℚ) (h : s < t) (rest : Trajectory t v) (hv : lineSegment t a b = v) :
+      Trajectory s (lineSegment s a b)
+
+def Trajectory.eval {s v : ℚ} (τ : ℚ) : Trajectory s v → ℚ
+  | .last _ a b => lineSegment τ a b
+  | .cons _ t a b _ _ rest _ => if τ ≤ t then lineSegment τ a b else rest.eval τ
+
+@[simp] private theorem Trajectory.eval_start {s v : ℚ} (T : Trajectory s v) : T.eval s = v := by
+  unfold Trajectory.eval
+  split <;> grind
+
+private theorem exists_isLeast_eval_eq_zero' {a b t₁ t₂ : ℚ} (ha : a ≤ 0) (ht : t₁ < t₂)
+    (h0 : 0 ∈ Set.Icc (lineSegment t₂ a b) (lineSegment t₁ a b)) :
+    ∃ t ∈ Set.Icc t₁ t₂, IsLeast {t' ∈ Set.Icc t₁ t₂ | lineSegment t' a b = 0} t := by
+  have (h : a < 0) := (le_div_iff_of_neg' h).mpr (Rat.le_add_iff_sub_le.mp h0.right)
+  have (h : a < 0) := (div_le_iff_of_neg' h).mpr (Rat.add_le_iff_le_sub.mp h0.left)
+  use if a = 0 then t₁ else -b / a
+  grind [IsLeast, lowerBounds]
+
+/-- Intermediate value theorem. -/
+theorem exists_isLeast_eval_eq_zero {t v t₁ t₂ : ℚ} (T : Trajectory t v) (ht : t₁ < t₂)
+    (hT : AntitoneOn T.eval (Set.Icc t₁ t₂)) (h0 : 0 ∈ Set.Icc (T.eval t₂) (T.eval t₁)) :
+    ∃ τ ∈ Set.Icc t₁ t₂, IsLeast {t' ∈ Set.Icc t₁ t₂ | T.eval t' = 0} τ := by
+  induction T generalizing t₁ t₂ with
+  | last t a b =>
+      unfold Trajectory.eval at hT
+      refine exists_isLeast_eval_eq_zero' ?_ ht h0
+      nlinarith [hT ⟨le_rfl, ht.le⟩ ⟨ht.le, le_rfl⟩ ht.le]
+  | cons s t a b v h rest hv ih =>
+    let T := Trajectory.cons s t a b v h rest hv
+    have hl {τ} (hτ : τ ≤ t) : T.eval τ = lineSegment τ a b := by simp [Trajectory.eval, hτ, T]
+    by_cases h₂ : t₂ ≤ t
+    · have : a ≤ 0 := by nlinarith [hl (ht.le.trans h₂), hl h₂, hT (by grind) (by grind) ht.le]
+      obtain ⟨τ, h, _, _⟩ := exists_isLeast_eval_eq_zero' this ht
+        (by rwa [← hl, ← hl (ht.le.trans h₂)])
+      exact ⟨τ, h, by grind, by grind [lowerBounds]⟩
+    · have hr {τ} (hτ : t ≤ τ) : T.eval τ = rest.eval τ := by
+        by_cases hτt : τ ≤ t
+        · simp [T, Trajectory.eval, hv, le_antisymm hτt hτ]
+        · simp [T, Trajectory.eval, hτt]
+      have hT' {l} (hl₁ : t₁ ≤ l) (hl₂ : t ≤ l) : AntitoneOn rest.eval (Set.Icc l t₂) := by
+        intro _ ⟨ha₁, ha₂⟩ _ ⟨hb₁, hb₂⟩ hab
+        grind [hT ⟨hl₁.trans ha₁, ha₂⟩ ⟨hl₁.trans hb₁, hb₂⟩ hab]
+      by_cases h₁ : t₁ < t
+      · by_cases he : T.eval t ≤ 0
+        · have : a ≤ 0 := by nlinarith [hl le_rfl, hl h₁.le, hT (by grind) (by grind) h₁.le]
+          obtain ⟨τ, _, _, _⟩ := exists_isLeast_eval_eq_zero' this h₁
+            (by rw [← hl le_rfl, ← hl h₁.le]; exact ⟨he, h0.right⟩)
+          exact ⟨τ, by grind, by grind, by grind [lowerBounds]⟩
+        · obtain ⟨τ, _, _, _⟩ := ih (not_le.mp h₂) (hT' h₁.le le_rfl) (by grind)
+          refine ⟨τ, by grind, by grind, fun τ' ⟨_, _⟩ ↦ ?_⟩
+          by_cases hτ' : t ≤ τ'
+          · grind [lowerBounds]
+          · linarith [hT (by grind) (by grind) (not_le.mp hτ').le]
+      · have hr {τ} (hτ : t₁ ≤ τ) := hr ((not_lt.mp h₁).trans hτ)
+        obtain ⟨τ, h, _, _⟩ := ih ht (hT' le_rfl (not_lt.mp h₁)) (by rwa [← hr ht.le, ← hr le_rfl])
+        exact ⟨τ, h, by grind, by grind⟩
 
 open Classical in
 mutual
