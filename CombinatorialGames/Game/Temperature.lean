@@ -23,8 +23,8 @@ open IGame
 
 notation "𝔻≥-1" => { t : Dyadic // -1 ≤ t }
 
-instance : Zero 𝔻≥-1 := ⟨0, Dyadic.coe_le_zero.mp rfl⟩
-instance : One 𝔻≥-1 := ⟨1, Dyadic.coe_le_one.mp rfl⟩
+instance : Zero 𝔻≥-1 := ⟨0, by decide⟩
+instance : One 𝔻≥-1 := ⟨1, by decide⟩
 
 abbrev lineSegment (t a b : ℚ) : ℚ := a * t + b
 
