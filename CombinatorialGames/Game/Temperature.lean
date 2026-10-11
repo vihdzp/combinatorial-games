@@ -118,7 +118,7 @@ decreasing_by igame_wf
 end
 
 open Classical in
-/-- The IGame `x` cooled by `t`. -/
+/-- The game `x` cooled by `t`. -/
 noncomputable def cool (x : IGame) (t : 𝔻≥-1) : IGame :=
   let _cool τ := !{.range fun l : xᴸ ↦ cool l τ - τ | .range fun r : xᴿ ↦ cool r τ + τ}
   if hn : ∃ n : ℤ, x ≈ n then hn.choose else
@@ -132,7 +132,7 @@ decreasing_by igame_wf
 @[simp] theorem cool_zero (t : 𝔻≥-1) : cool 0 t = 0 := cool_intCast 0 t
 @[simp] theorem cool_one (t : 𝔻≥-1) : cool 1 t = 1 := by simpa using cool_intCast 1 t
 
-/-- The IGame `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
+/-- The game `x` cooled by `t` is equivalent to an integer or infinitesimally close to a number. -/
 def Frozen (x : IGame) (t : 𝔻≥-1) : Prop :=
   ∃ y, Numeric y ∧ Infinitesimal (!{(cool · t - t) '' xᴸ | (cool · t + t) '' xᴿ} - y)
 
