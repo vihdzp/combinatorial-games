@@ -54,12 +54,12 @@ theorem exists_isLeast_eval_eq_zero {t v t₁ t₂ : ℚ} (T : Trajectory t v) (
     (hT : AntitoneOn T.eval (Set.Icc t₁ t₂)) (h0 : 0 ∈ Set.Icc (T.eval t₂) (T.eval t₁)) :
     ∃ τ ∈ Set.Icc t₁ t₂, IsLeast {t' ∈ Set.Icc t₁ t₂ | T.eval t' = 0} τ := by
   induction T generalizing t₁ t₂ with
-  | last t a b =>
+  | last =>
       unfold Trajectory.eval at hT
       refine exists_isLeast_eval_eq_zero' ?_ ht h0
       nlinarith [hT ⟨le_rfl, ht.le⟩ ⟨ht.le, le_rfl⟩ ht.le]
-  | cons s t a b v h rest hv ih =>
-    let T := Trajectory.cons s t a b v h rest hv
+  | cons _ t a b _ h rest hv ih =>
+    let T := Trajectory.cons _ t a b _ h rest hv
     have hl {τ} (hτ : τ ≤ t) : T.eval τ = lineSegment τ a b := by simp [Trajectory.eval, hτ, T]
     by_cases h₂ : t₂ ≤ t
     · have : a ≤ 0 := by nlinarith [hl (ht.le.trans h₂), hl h₂, hT (by grind) (by grind) ht.le]
