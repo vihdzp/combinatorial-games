@@ -342,6 +342,34 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       rw [map_add, map_mul, hs] at hi
       simpa using! congrArg hxr.toSubring.subtype hi
 
+theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) :
+    (h.pow_degree_leastNoRoots ht hn).toSubfield =
+      (IntermediateField.adjoin h.toSubfield {x}).toSubfield := by
+  apply le_antisymm
+  · intro c hc
+    rw [mem_toSubfield_iff] at hc
+    apply IntermediateField.algebra_adjoin_le_adjoin
+    rw [Algebra.adjoin_singleton_eq_range_aeval, AlgHom.mem_range]
+    obtain ⟨p, hpn, hpc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hc
+    refine ⟨p.toSubring h.toSubring ?_, ?_⟩
+    · apply id
+      intro u hu
+      rw [SetLike.mem_coe, mem_coeffs_iff] at hu
+      obtain ⟨c, -, rfl⟩ := hu
+      exact hpc c
+    rw [aeval_def, eval₂_eq_eval_map]
+    refine congr(eval x $(p.map_toSubring h.toSubring _)).trans ?_
+    refine h.eval_eq_of_lt ?_ hpn hpc
+    exact (X_pow_lt_leastNoRoots_of_le_degree ht hn.ge).le
+  · rw [IntermediateField.adjoin_toSubfield, Subfield.closure_le, Set.union_subset_iff,
+      Subfield.algebraMap_ofSubfield, Subfield.coe_subtype, Subtype.range_coe,
+      coe_toSubfield, coe_toSubfield, Set.singleton_subset_iff, Set.Iio_subset_Iio_iff,
+      Set.mem_Iio, and_iff_right_of_imp le_of_lt, ← val_lt_iff]
+    apply lt_self_pow₀ (one_lt_val.2 h.one_lt)
+    rw [← WithBot.coe_lt_coe, WithBot.coe_one, ← WithBot.natCast_eq_coe, ← hn]
+    exact h.one_lt_degree_leastNoRoots ht
+
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
@@ -413,7 +441,6 @@ private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
 noncomputable def algClosure (x : Nimber) : Nimber :=
   sSup (succ '' rootSet x.fieldClosure)
 
-set_option backward.isDefEq.respectTransparency false in
 mutual
 
 private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x)
