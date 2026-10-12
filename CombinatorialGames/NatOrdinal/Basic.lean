@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import Mathlib.Algebra.Order.GroupWithZero.Canonical
-public import Mathlib.SetTheory.Ordinal.Family
+public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Tactic.Abel
