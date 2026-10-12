@@ -21,7 +21,7 @@ universe u
 
 open Order Ordinal Polynomial Set
 
-public section
+public noncomputable section
 
 namespace Nimber
 
@@ -410,7 +410,7 @@ private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
   small_iUnion _
 
 /-- Returns the smallest `IsAlgClosed` that's at least `x`. -/
-noncomputable def algClosure (x : Nimber) : Nimber :=
+def algClosure (x : Nimber) : Nimber :=
   sSup (succ '' rootSet x.fieldClosure)
 
 set_option backward.isDefEq.respectTransparency false in
@@ -521,6 +521,16 @@ theorem algClosure_mono : Monotone algClosure := by
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
   exact (le_algClosure y).trans'
 
+theorem fieldClosure_le_algClosure (x : Nimber) : fieldClosure x ≤ algClosure x := by
+  rw [(IsAlgClosed.algClosure x).fieldClosure_le_iff]
+  exact le_algClosure x
+
+theorem ringClosure_le_algClosure (x : Nimber) : ringClosure x ≤ algClosure x :=
+  (ringClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
+
+theorem groupClosure_le_algClosure (x : Nimber) : groupClosure x ≤ algClosure x :=
+  (groupClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
+
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
   refine .of_exists_root Nimber fun p _ hp ↦ ?_
@@ -540,6 +550,33 @@ theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
     ∃ l, IsAlgClosed l ∧ ∃ u, IsAlgClosed u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsAlgClosed z → l < z → u ≤ z :=
   isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
 
+/-- The normal enumerator function for algebraically closed fields. -/
+def enumAlgClosed : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ Order.enum _ isClub_ofPred_isAlgClosed.isCofinal (of x)) fun _ ↦ by simp
+
+theorem enumAlgClosed_def (x : Ordinal) :
+    enumAlgClosed x = Order.enum _ isClub_ofPred_isAlgClosed.isCofinal (of x) :=
+  (rfl)
+
+theorem enumAlgClosed_def' (x : Ordinal) :
+    enumAlgClosed x = of (Order.enum {x | IsAlgClosed (∗x)}
+      (by exact isClub_ofPred_isAlgClosed.isCofinal) x) :=
+  (rfl)
+
+@[simp]
+theorem range_enumAlgClosed : .range enumAlgClosed = ofPred IsAlgClosed := by
+  erw [enumAlgClosed, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
+  exact Subtype.range_val
+
+theorem mem_range_enumAlgClosed_iff {x : Nimber} : x ∈ Set.range enumAlgClosed ↔ IsAlgClosed x :=
+  Set.ext_iff.1 range_enumAlgClosed _
+
+theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) :=
+  mem_range_enumAlgClosed_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
+  isClub_ofPred_isAlgClosed.isNormal_enum
+
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
@@ -547,7 +584,7 @@ proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
 /-! ### Square roots -/
 
 /-- The square root of a nimber `x` is the unique value with `(√x)^2 = x`. -/
-noncomputable def sqrt : Nimber ≃+* Nimber :=
+def sqrt : Nimber ≃+* Nimber :=
   (frobeniusEquiv _ 2).symm
 
 @[inherit_doc] scoped prefix:max "√" => sqrt
