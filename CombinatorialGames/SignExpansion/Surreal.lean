@@ -192,13 +192,13 @@ theorem truncate_eq_of_birthday_le_of_forall_lt_gt_iff
     by_contra! hzb
     obtain hzk | hzk | hkz := lt_trichotomy (mk z) (mk k)
     · refine hz.1 z ?_ le_rfl
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       exact ⟨by order, zn, (hgt (mk z) (by order [birthday_mk_le z])).1 hzk⟩
     · absurd hzb
       rw [hk, ← hzk]
       exact (birthday_mk_le z).not_gt
     · refine hz.2 z ?_ le_rfl
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       exact ⟨by order, zn, (hlt (mk z) (by order [birthday_mk_le z])).1 hkz⟩
 
 theorem truncate_eq_of_birthday_le_of_forall_le_ge_iff
@@ -247,6 +247,7 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
   .ofStrictMono (fun x =>
     { sign i := .sign (x - x.truncate i)
       isUpperSet_preimage_singleton_zero' := by
+        apply id
         intro a b hab ha
         rw [Set.mem_preimage, Set.mem_singleton_iff,
           sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff] at ha ⊢
@@ -301,7 +302,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
   apply subset_antisymm
   · simp [Set.range_subset_iff]
   · intro f hf
-    rw [Set.mem_setOf, WithTop.ne_top_iff_exists] at hf
+    rw [Set.mem_ofPred, WithTop.ne_top_iff_exists] at hf
     obtain ⟨l, hl⟩ := hf
     rw [Set.mem_range]
     induction l using WellFoundedLT.induction generalizing f with | ind l ih
@@ -321,7 +322,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
     have hgo : g.birthday ≤ l := by
       rw [birthday_le_iff]
       intro p m hm
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf] at hm
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred] at hm
       exact hm.left
     refine ⟨Surreal.mk g, ?_⟩
     ext o
@@ -336,7 +337,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
     | neg =>
       rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
@@ -347,7 +348,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := 
     | pos =>
       rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_setOf, Set.mem_setOf]
+      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
