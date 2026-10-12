@@ -5,7 +5,8 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.SetTheory.Ordinal.Family
+public import Mathlib.Algebra.Order.GroupWithZero.Canonical
+public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Tactic.Abel
@@ -413,12 +414,13 @@ instance : CommSemiring NatOrdinal where
   mul_assoc := private mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
+instance : LinearOrderedCommMonoidWithZero NatOrdinal where
 
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
+  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add' ..)
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp

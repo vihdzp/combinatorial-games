@@ -79,7 +79,7 @@ private theorem wpow_mul_natCast_add_of_lt_aux {x y : NatOrdinal} (hy : y < ω^ 
       _ < ω^ of a * n + ω^ of a * n := add_lt_add hn hn
       _ < _ := by
         rw [← mul_add, ← Nat.cast_add, ← val.lt_iff_lt, hyz, val_wpow]
-        exact omega0_opow_mul_nat_lt ha _
+        exact opow_mul_lt_opow (natCast_lt_omega0 _) ha
   refine ⟨H, le_antisymm ?_ ?_⟩
   · refine add_le_iff.2 ⟨?_, ?_⟩ <;> intro z hz
     · match n with
@@ -129,7 +129,7 @@ theorem wpow_mul_natCast (x : NatOrdinal) (n : ℕ) : ω^ x * n = of (ω ^ x.val
 
 theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   rw [wpow_mul_natCast]
-  exact omega0_opow_mul_nat_lt h n
+  exact opow_mul_lt_opow (natCast_lt_omega0 n) h
 
 @[simp]
 theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by

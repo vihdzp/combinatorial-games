@@ -6,13 +6,14 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.Basic
-public import Mathlib.Algebra.CharP.Two
+public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
 
 import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
-import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Ring.RingNF
 
 /-!
 # Nimber multiplication and division
@@ -76,7 +77,7 @@ private theorem mul_nonempty (a b : Nimber.{u}) :
   convert nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
     ((fun x ↦ x.1 * b + a * x.2 + x.1 * x.2) '' Set.Iio a ×ˢ Set.Iio b)
   ext
-  simp_rw [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
+  simp_rw [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
   tauto
 
 theorem exists_of_lt_mul (h : c < a * b) : ∃ a' < a, ∃ b' < b, a' * b + a * b' + a' * b' = c := by
@@ -358,11 +359,11 @@ instance : Inv Nimber where
   inv a := if a = 0 then 0 else invAux a
 
 private theorem inv_eq_invAux (ha : a ≠ 0) : a⁻¹ = invAux a :=
-  dif_neg ha
+  dite_eq_right ha
 
 instance : Field Nimber where
   mul_inv_cancel a ha := by rw [inv_eq_invAux ha, (mul_inv_cancel_aux a).2 ha]
-  inv_zero := by exact dif_pos rfl
+  inv_zero := by exact dite_eq_left rfl
   nnqsmul := _
   qsmul := _
 

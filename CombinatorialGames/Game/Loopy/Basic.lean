@@ -12,16 +12,15 @@ public import Mathlib.Algebra.Group.Pointwise.Set.Small
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Ring.Defs
-import Mathlib.Data.Countable.Small
+import Mathlib.Basic.Countable.Small
 
 /-!
 # Loopy games
 
 The standard notion of a game studied in combinatorial game theory is that of a terminating game,
 meaning that there exists no infinite sequence of moves. Loopy games relax this condition by
-allowing "self-refential" games, with the basic examples being `on = {on | }`, `off = { | off}`, and
-`dud = {dud | dud}`.
+allowing "self-referential" games, with the basic examples being `on = {on | }`, `off = { | off}`,
+and `dud = {dud | dud}`.
 
 In the literature, loopy games are defined as rooted directed graphs up to isomorphism. However,
 it's simpler to define `LGame` as the coinductive type for the single constructor:
@@ -50,10 +49,6 @@ universe u v w
 variable {α : Type v} {β : Type w}
 
 /-! ### For Mathlib -/
-
-theorem Set.forall_mem_union {P : α → Prop} {s t : Set α} :
-    (∀ x ∈ s ∪ t, P x) ↔ (∀ x ∈ s, P x) ∧ (∀ x ∈ t, P x) := by
-  simp_rw [mem_union, or_imp, forall_and]
 
 -- This is problematic as an instance.
 theorem small_succ' (α : Type u) [Small.{v} α] : Small.{v + 1} α :=
@@ -114,7 +109,7 @@ theorem Subposition.trans {x y z : LGame} (h₁ : Subposition x y) (h₂ : Subpo
     Subposition x z :=
   Relation.TransGen.trans h₁ h₂
 
-instance (x : LGame.{u}) : Small.{u} {y // Subposition y x} :=
+instance (x : LGame.{u}) : Small.{u} {y | Subposition y x} :=
   small_transGen' _ x
 
 @[elab_as_elim]
@@ -205,7 +200,12 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
   ⟨fun
     | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
     | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
-    fun | left | right => inferInstance⟩
+    by
+      rintro (_|_) <;>
+      · apply @small_image ..
+        apply @small_range ..
+        infer_instance
+    ⟩
 
 private theorem unique (f g : Subtype (Reachable mov init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
@@ -251,8 +251,8 @@ theorem moves_corec : (corec mov init).moves p = corec mov '' mov p init := by
   rw [moves, corec, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
   ext f
   cases p <;>
-    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right]
-      using exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
+    simpa [← (equivShrink (Subtype (Reachable _ _))).exists_congr_right] using!
+      exists_congr fun a ↦ and_congr_right fun ha ↦ corec'_aux mov init (by aesop)
 
 theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
@@ -647,7 +647,7 @@ theorem neg_def (x : MulTy α β) : -x = Multiset.map (fun y ↦ (-y.1, y.2)) x 
 
 @[simp]
 theorem mem_neg {x : Player × α × β} {y : MulTy α β} : x ∈ -y ↔ (-x.1, x.2) ∈ y := by
-  convert Multiset.mem_map_of_injective (a := (-x.1, x.2)) _ <;>
+  convert! Multiset.mem_map_of_injective (a := (-x.1, x.2)) _ <;>
     simp [Function.Injective]
 
 @[simp]
@@ -721,6 +721,7 @@ theorem neg_mulOption (p : Player) (x : α × β) (y : α × β) :
 @[simp]
 theorem swap_mulOption (p : Player) (x : α × β) (y : α × β) :
     swap (mulOption p x y) = mulOption p x.swap y.swap := by
+  cases y
   simpa [mulOption, ← Multiset.singleton_add] using add_left_comm ..
 
 theorem mulOption_eq_add (p : Player) (x : α × β) (y : α × β) :

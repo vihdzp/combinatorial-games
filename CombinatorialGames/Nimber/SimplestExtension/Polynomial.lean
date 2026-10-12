@@ -6,16 +6,12 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
-public import Mathlib.Algebra.Polynomial.EraseLead
-public import Mathlib.Algebra.Polynomial.Eval.Defs
 public import Mathlib.Algebra.Polynomial.Splits
-public import Mathlib.Data.Finsupp.WellFounded
+public import Mathlib.Data.Finsupp.Lex
 
-import Mathlib.Algebra.Polynomial.Degree.Lemmas
-import Mathlib.Algebra.Polynomial.Eval.Coeff
+import Mathlib.Algebra.CharP.Two
+import Mathlib.Data.Finsupp.WellFounded
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
-import Mathlib.Tactic.ComputeDegree
-import Mathlib.Algebra.Polynomial.Degree.Domain
 
 /-!
 # Nimber polynomials
@@ -187,9 +183,9 @@ theorem coeff_C_lt {x y : Nimber} (h : y < x) : ∀ k, (C y).coeff k < x := by
 We could define this under the weaker assumption `IsRing`, but due to proof erasure, this leads to
 issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x`. -/
 @[expose]
-def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
+noncomputable def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
-  .ofFinsupp <| .mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])
+  .ofFinsupp ⟨.mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])⟩
 
 @[simp]
 theorem IsField.coeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
@@ -236,15 +232,15 @@ namespace Lex
 noncomputable instance : LinearOrder (Nimber[X]) where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
-    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp)
-    (toFinsupp_injective.comp toColex.injective)
+    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff)
+    (toColex.injective.comp <| AddMonoidAlgebra.coeff_injective.comp toFinsupp_injective)
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Nimber[X]) where
-  wf := InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp) wellFounded_lt
+instance : WellFoundedLT (Nimber[X]) :=
+  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
 noncomputable instance : OrderBot (Nimber[X]) where
   bot := 0
@@ -434,8 +430,9 @@ theorem X_pow_add_lt {p q : Nimber[X]} (hm : p.Monic) (h : q < X ^ p.natDegree +
       apply hd.trans_lt
       rw [add_comm, ← CharTwo.sub_eq_add, self_sub_X_pow_of_monic hm, ← degree_eq_natDegree hp₀]
       exact degree_eraseLead_lt hp₀
-    · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, if_neg hk', zero_add]
-  · rwa [coeff_add, coeff_X_pow, if_neg hnp.ne, zero_add] at hn' ⊢
+    · rw [zero_add, hn k hk, coeff_add, coeff_X_pow, ite_eq_right hk', zero_add]
+  · rw [coeff_add, coeff_X_pow, ite_eq_right hnp.ne, zero_add] at hn' ⊢
+    assumption
 
 theorem X_pow_add_le {p q : Nimber[X]} (hm : p.Monic) (h : q ≤ X ^ p.natDegree + p) :
     X ^ p.natDegree + q ≤ p := by
@@ -464,7 +461,7 @@ instance : NoMaxOrder (Nimber[X]) where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
-  refine .ofCore (fun p ↦ .ofFinsupp (p.toFinsupp.update 0 (succ (p.coeff 0))).coeff) ?_ (by simp)
+  refine .ofCore (fun p ↦ .ofFinsupp ⟨(p.toFinsupp.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -490,13 +487,11 @@ noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
 @[aesop simp]
 theorem coeff_succ (p : Nimber[X]) :
     (succ p).coeff = Function.update p.coeff 0 (succ (p.coeff 0)) := by
-  change coeff (Polynomial.ofFinsupp _) = _
-  simp
+  simp [succ]
   rfl
 
 @[simp]
-theorem coeff_succ_zero (p : Nimber[X]) :
-    (succ p).coeff 0 = succ (p.coeff 0) := by
+theorem coeff_succ_zero (p : Nimber[X]) : (succ p).coeff 0 = succ (p.coeff 0) := by
   rw [coeff_succ, Function.update_self]
 
 @[simp]
@@ -716,7 +711,7 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
       split
       · rfl
       · exact hnl u hu
-    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, if_neg hqd.ne, if_neg hqd.ne]
+    · rwa [eraseLead_coeff, eraseLead_coeff, hpqd, ite_eq_right hqd.ne, ite_eq_right hqd.ne]
     · rfl
 
 theorem oeval_le_oeval {x : Nimber} {p q : Nimber[X]} (h : p ≤ q)
@@ -786,7 +781,7 @@ theorem eq_oeval_of_lt_oeval {x y : Nimber} {p : Nimber[X]} (hx₀ : x ≠ 0)
   refine ⟨q, ?_, hqk, rfl⟩
   rwa [oeval_lt_oeval_iff hqk hpk] at h
 
-theorem forall_lt_oeval_iff {x : Nimber} {P : Ordinal → Prop}
+theorem forall_lt_oeval_iff {x : Nimber} {P : Nimber → Prop}
     {p : Nimber[X]} (hpk : ∀ k, p.coeff k < x) :
     (∀ y < oeval x p, P y) ↔ ∀ q < p, (∀ k, q.coeff k < x) → P (oeval x q) where
   mp H q hqp hqk := H _ <| oeval_lt_oeval hqp hqk hpk
