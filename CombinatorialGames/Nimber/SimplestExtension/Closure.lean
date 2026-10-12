@@ -154,10 +154,6 @@ noncomputable section
 namespace Nimber
 open Set
 
-private theorem exists_map_le_lt_map_succ' {f : Ordinal.{u} → Nimber.{u}} {x : Nimber}
-    (hf : Order.IsNormal f) (hx : f 0 ≤ x) : ∃ a, f a ≤ x ∧ x < f (a + 1) :=
-  hf.exists_map_le_lt_map_succ_of_exists_ge ⟨_, hf.strictMono.le_apply⟩ hx
-
 /-! ### Groups -/
 
 section AddSubgroup

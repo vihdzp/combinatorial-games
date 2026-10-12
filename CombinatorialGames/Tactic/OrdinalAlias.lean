@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module -- shake: keep-all
 
-public import Mathlib.SetTheory.Cardinal.Cofinality.Enum
+public import Mathlib.SetTheory.Ordinal.Family
 
 /-!
 # Declare type aliases of `Ordinal`
@@ -141,7 +141,6 @@ namespace $Alias
 universe u
 
 instance : Uncountable $Alias := Ordinal.uncountable
-instance : IsRegularCardinalOrder $Alias := inferInstanceAs (IsRegularCardinalOrder Ordinal)
 
 theorem $(mkIdent `lt_one_iff) {a : $Alias} : a < 1 ↔ a = 0 :=
   Order.lt_one_iff (α := Ordinal)
