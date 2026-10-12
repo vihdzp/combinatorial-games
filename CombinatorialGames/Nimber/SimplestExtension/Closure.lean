@@ -330,7 +330,6 @@ theorem enumGroup_zero : enumGroup 0 = 1 := by
 theorem enumGroup_one : enumGroup 1 = ∗2 := by
   simp [enumGroup_eq_two_opow]
 
-@[simp]
 theorem enumGroup_natCast (n : ℕ) : enumGroup n = ∗(2 ^ n) := by
   simp [enumGroup_eq_two_opow]
 
