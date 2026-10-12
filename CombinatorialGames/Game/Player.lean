@@ -24,6 +24,7 @@ universe u
 
 /-! ### Players -/
 
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Either the Left or Right player. -/
 @[aesop safe cases, grind cases]
 inductive Player where
@@ -31,7 +32,7 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Fintype, Inhabited
+deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
 

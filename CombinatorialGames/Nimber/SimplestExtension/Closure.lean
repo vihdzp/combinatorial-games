@@ -7,9 +7,7 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 
-import Mathlib.Algebra.Field.Subfield.Defs
 import Mathlib.Algebra.Field.ZMod
-import Mathlib.Data.Rat.Cast.CharZero
 import Mathlib.SetTheory.Cardinal.Subfield
 import Mathlib.Algebra.CharP.Algebra
 
@@ -75,8 +73,6 @@ theorem Subfield.coe_bot [DivisionRing R] :
         · apply intCast_mem
         · apply natCast_mem
 
-attribute [simp] Cardinal.aleph0_lt_univ
-
 instance Subfield.small_closure (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s) := by
   rw [Cardinal.small_iff_lift_mk_lt_univ] at *
@@ -100,15 +96,13 @@ section AddSubgroup
 open AddSubgroup
 
 theorem isGroup_sInf_compl (s : AddSubgroup Nimber) (hs : s ≠ ⊤) : IsGroup (sInf sᶜ) := by
-  obtain rfl | hsb := eq_or_ne s ⊥
-  · simp [← Iio_one]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
-    have hI := csInf_mem hsn
-    by_contra hs
-    obtain ⟨y, hy, z, hz, hyz⟩ := exists_add_of_not_isGroup hs fun _ ↦ by simp_all
-    apply (hyz ▸ hI) (add_mem ..)
-    · simpa using notMem_of_lt_csInf' hy
-    · simpa using notMem_of_lt_csInf' hz
+  have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
+  have hI := csInf_mem hsn
+  by_contra hs
+  obtain ⟨y, hy, z, hz, hyz⟩ := exists_add_of_not_isGroup hs fun _ ↦ by simp_all
+  apply (hyz ▸ hI) (add_mem ..)
+  · simpa using notMem_of_lt_csInf' hy
+  · simpa using notMem_of_lt_csInf' hz
 
 theorem isLowerSet_addSubgroupClosure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
@@ -220,17 +214,15 @@ section Subring
 open Subring
 
 theorem isRing_sInf_compl (s : Subring Nimber) (hs : s ≠ ⊤) : IsRing (sInf sᶜ) := by
-  obtain rfl | hsb := eq_or_ne s ⊥
-  · simp [coe_bot, ← Iio_two]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
-    have hI := csInf_mem hsn
-    by_contra hs'
-    have ⟨y, hy, z, hz, hyz⟩ :=
-      (isGroup_sInf_compl s.toAddSubgroup (by simpa)).exists_mul_of_not_isRing hs'
-      fun _ ↦ by simp_all
-    apply (hyz ▸ hI) (mul_mem ..)
-    · simpa using notMem_of_lt_csInf' hy
-    · simpa using notMem_of_lt_csInf' hz
+  have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
+  have hI := csInf_mem hsn
+  by_contra hs'
+  have ⟨y, hy, z, hz, hyz⟩ :=
+    (isGroup_sInf_compl s.toAddSubgroup (by simpa)).exists_mul_of_not_isRing hs'
+    fun _ ↦ by simp_all
+  apply (hyz ▸ hI) (mul_mem ..)
+  · simpa using notMem_of_lt_csInf' hy
+  · simpa using notMem_of_lt_csInf' hz
 
 theorem isLowerSet_subringClosure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
@@ -333,14 +325,12 @@ section Subfield
 open Subfield
 
 theorem isField_sInf_compl (s : Subfield Nimber) (hs : s ≠ ⊤) : IsField (sInf sᶜ) := by
-  obtain rfl | hsb := eq_or_ne s ⊥
-  · simp [coe_bot, ← Iio_two]
-  · have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
-    have hI := csInf_mem hsn
-    contrapose hI
-    have := notMem_of_lt_csInf' <|
-      (isRing_sInf_compl s.toSubring (by simpa)).inv_lt_self_of_not_isField hI
-    simpa
+  have hsn : (s : Set Nimber)ᶜ.Nonempty := by contrapose! hs; simpa using hs
+  have hI := csInf_mem hsn
+  contrapose hI
+  have := notMem_of_lt_csInf' <|
+    (isRing_sInf_compl s.toSubring (by simpa)).inv_lt_self_of_not_isField hI
+  simpa
 
 theorem isLowerSet_subfieldClosure {s : Set Nimber} (hs : IsLowerSet s) :
     IsLowerSet (closure s : Set Nimber) := by
