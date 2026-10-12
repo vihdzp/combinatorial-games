@@ -210,6 +210,7 @@ theorem mul_lt_wpow_wpow (hx : x < ω^ ω^ z) (hy : y < ω^ ω^ z) : x * y < ω^
     obtain ⟨b, hb, n, hn⟩ := hy
     rw [← of.lt_iff_lt] at hm hn
     apply (mul_le_mul' hm.le hn.le).trans_lt
+    rw [← of_lt_iff] at ha hb
     simpa [← wpow_add] using add_lt_wpow (wpow_mul_natCast_lt ha m) (wpow_mul_natCast_lt hb n)
 
 end NatOrdinal
