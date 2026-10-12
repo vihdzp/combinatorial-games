@@ -84,6 +84,7 @@ instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
 
+-- #44793
 theorem Order.IsNormal.of_dirSupClosed_range {α β : Type*} {f : α → β}
     [LinearOrder α] [LinearOrder β] [WellFoundedLT β]
     (hf : StrictMono f) (hf' : DirSupClosed (.range f)) : IsNormal f := by

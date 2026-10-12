@@ -297,11 +297,10 @@ theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   exact ⟨h.ne_zero, h.ne_one⟩
 
 theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
-  rw [← one_add_one_eq_two, ← succ_of, Order.succ_le_iff]
+  rw [← succ_one, succ_le_iff]
   exact h.one_lt
 
-theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
-    y ^ n < x := by
+theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
   induction n with
   | zero =>
     rw [pow_zero]
