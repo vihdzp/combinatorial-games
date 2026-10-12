@@ -1010,10 +1010,9 @@ theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
 
 theorem IsField.one_lt_degree_leastNoRoots {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
     1 < ((leastNoRoots x).untop ht).degree := by
-  by_contra! hd
-  apply h.X_sq_lt_leastNoRoots.not_gt
-  rw [← not_le, ← WithTop.le_untop_iff ht, Lex.X_pow_le_iff, not_le]
-  exact hd.trans_lt (by decide)
+  rw [← Order.succ_le_iff, ← WithBot.coe_one, WithBot.orderSucc_coe,
+    ← WithBot.natCast_eq_coe, ← Lex.X_pow_le_iff, Nat.succ_eq_succ, WithTop.le_untop_iff]
+  exact (h.X_sq_lt_leastNoRoots).le
 
 theorem IsField.one_lt_natDegree_leastNoRoots
     {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
