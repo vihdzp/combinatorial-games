@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 module
 
+public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 
 import Mathlib.Algebra.Field.ZMod
@@ -82,6 +83,70 @@ instance Subfield.small_closure (s : Set R) [DivisionRing R] [Small.{u} s] :
 instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
+
+-- #44793
+theorem Order.IsNormal.of_dirSupClosed_range {α β : Type*} {f : α → β}
+    [LinearOrder α] [LinearOrder β] [WellFoundedLT β]
+    (hf : StrictMono f) (hf' : DirSupClosed (.range f)) : IsNormal f := by
+  refine isNormal_iff.2 ⟨hf, fun x hx y hy ↦ ?_⟩
+  have : Nonempty α := ⟨x⟩
+  have : Nonempty β := ⟨f x⟩
+  have := WellFoundedLT.toOrderBot β
+  let := WellFoundedLT.conditionallyCompleteLinearOrderBot β
+  have hfb : BddAbove (f '' Set.Iio x) := by
+    use f x
+    rintro _ ⟨y, hy, rfl⟩
+    exact (hf hy).le
+  obtain ⟨z, hz⟩ : ⨆ b : Set.Iio x, f b ∈ Set.range f := by
+    apply hf' (d := f '' Set.Iio x) _ _ (DirectedOn.of_linearOrder _)
+    · rw [← sSup_image']
+      exact isLUB_csSup' hfb
+    · simp
+    · simpa using hx.not_isMin
+  trans f z
+  · apply hf.monotone
+    by_contra! hzx
+    have ⟨w, hzw, hwx⟩ := hx.lt_iff_nonempty_Ioo.1 hzx
+    apply (hf hzw).not_ge
+    rw [hz]
+    refine le_ciSup (f := fun b : Set.Iio x ↦ f b) ?_ ⟨w, hwx⟩
+    rwa [← Set.image_eq_range]
+  · rw [hz]
+    apply ciSup_le'
+    simpa
+
+theorem IsClub.isNormal_subtypeVal {α : Type*} [LinearOrder α] [WellFoundedLT α]
+    {s : Set α} (hs : IsClub s) : Order.IsNormal (Subtype.val (p := (· ∈ s))) := by
+  apply Order.IsNormal.of_dirSupClosed_range s.strictMono_coe
+  rw [Subtype.range_coe_subtype]
+  exact hs.dirSupClosed
+
+theorem IsCofinal.noMaxOrder {α : Type*} [LinearOrder α] [NoMaxOrder α]
+    {s : Set α} (hs : IsCofinal s) : NoMaxOrder s where
+  exists_gt x := by
+    obtain ⟨y, hxy⟩ := exists_gt x.1
+    obtain ⟨z, hz, hyz⟩ := hs y
+    exact ⟨⟨z, hz⟩, hxy.trans_le hyz⟩
+
+theorem IsClub.exists_between {α : Type*} [LinearOrder α] [WellFoundedLT α] [NoMaxOrder α]
+    {s : Set α} (hs : IsClub s) {x : α} (hx : ∃ y ∈ s, y ≤ x) :
+    ∃ l ∈ s, ∃ r ∈ s, l ≤ x ∧ x < r ∧ ∀ z ∈ s, l < z → r ≤ z := by
+  have : Nonempty α := ⟨x⟩
+  have := hs.nonempty.to_subtype
+  have := WellFoundedLT.toOrderBot s
+  have := SuccOrder.ofLinearWellFoundedLT s
+  have := hs.isCofinal.noMaxOrder
+  have hbx : (⊥ : s) ≤ x := by
+    obtain ⟨y, hy, hyx⟩ := hx
+    apply hyx.trans'
+    exact bot_le (α := s) (a := ⟨y, hy⟩)
+  have ⟨⟨l, hl⟩, hlx, hxr⟩ :=
+    Order.IsNormal.exists_map_le_lt_map_succ_of_exists_ge hs.isNormal_subtypeVal ?_ hbx
+  · refine ⟨l, hl, _, Subtype.prop _, hlx, hxr, fun z hz hlz ↦ ?_⟩
+    change _ ≤ (⟨z, hz⟩ : s)
+    rwa [Order.succ_le_iff]
+  · obtain ⟨y, hy, hxy⟩ := hs.isCofinal x
+    exact ⟨⟨y, hy⟩, hxy⟩
 
 end
 
@@ -206,6 +271,16 @@ theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x �
     contrapose! h
     exact h ▸ IsGroup.groupClosure x
 
+theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where
+  isCofinal a := ⟨_, .groupClosure _, le_groupClosure a⟩
+  dirSupClosed s hs hs₀ _ a ha := by
+    rw [← ha.csSup_eq hs₀]
+    exact IsGroup.sSup hs hs₀ ha.bddAbove
+
+theorem exists_isGroup_between {x : Nimber} (hx : x ≠ 0) :
+    ∃ l, IsGroup l ∧ ∃ u, IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z :=
+  isClub_ofPred_isGroup.exists_between ⟨1, by simpa⟩
+
 end AddSubgroup
 
 /-! ### Rings -/
@@ -316,6 +391,16 @@ theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
+
+theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
+  isCofinal a := ⟨_, .ringClosure _, le_ringClosure a⟩
+  dirSupClosed s hs hs₀ _ a ha := by
+    rw [← ha.csSup_eq hs₀]
+    exact IsRing.sSup hs hs₀ ha.bddAbove
+
+theorem exists_isRing_between {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsRing l ∧ ∃ u, IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z :=
+  isClub_ofPred_isRing.exists_between ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
 
 end Subring
 
@@ -428,6 +513,16 @@ theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosur
 
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
+
+theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
+  isCofinal a := ⟨_, .fieldClosure _, le_fieldClosure a⟩
+  dirSupClosed s hs hs₀ _ a ha := by
+    rw [← ha.csSup_eq hs₀]
+    exact IsField.sSup hs hs₀ ha.bddAbove
+
+theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
+  isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
 
 end Subfield
 end Nimber
