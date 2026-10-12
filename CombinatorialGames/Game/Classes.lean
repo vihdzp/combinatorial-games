@@ -100,7 +100,7 @@ protected instance zero : Dicotic 0 := by
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   apply mk
-  · simp [moves_eq_empty_iff .left .right]
+  · simp [moves_eq_empty_iff left right]
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
     dicotic
@@ -112,6 +112,32 @@ decreasing_by igame_wf
 @[simp]
 theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
   ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
+protected instance add (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) := by
+  apply mk
+  · simp [moves_eq_empty_iff left right]
+  · intro p
+    rw [forall_moves_add]
+    refine ⟨?_, ?_⟩
+    all_goals
+      intro z hz
+      dicotic
+      exact Dicotic.add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) :=
+  .add ..
+
+protected instance nsmul (n : ℕ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
 
 end Dicotic
 
@@ -455,9 +481,18 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Numeric x] [Numeric y] : Numeric (x - y) :=
   .add ..
 
-protected instance natCast : ∀ n : ℕ, Numeric n
-  | 0 => inferInstanceAs (Numeric 0)
-  | n + 1 => have := Numeric.natCast n; inferInstanceAs (Numeric (n + 1))
+protected instance nsmul (n : ℕ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
+
+protected instance natCast (n : ℕ) : Numeric n := by
+  simpa using Numeric.nsmul n 1
 
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
@@ -465,16 +500,6 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
 protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
-
-protected instance nsmul (n : Nat) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n with
-  | zero => simp
-  | succ n ih => rw [succ_nsmul]; exact .add (n • x) x
-
-protected instance zsmul (n : Int) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n using Int.negInduction with
-  | nat n => rw [natCast_zsmul]; infer_instance
-  | neg ih n => rw [neg_zsmul]; infer_instance
 
 end Numeric
 

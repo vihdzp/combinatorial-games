@@ -570,10 +570,9 @@ private def neg' (x : IGame) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- The negative of a game is defined by `-!{s | t} = !{-t | -s}`. -/
 @[no_expose]
-noncomputable instance : Neg IGame where
+instance : Neg IGame where
   neg := neg'
 
 private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
@@ -689,10 +688,9 @@ private def add' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by igame_wf
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- The sum of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is `!{s₁ + y, x + s₂ | t₁ + y, x + t₂}`. -/
 @[no_expose]
-noncomputable instance : Add IGame where
+instance : Add IGame where
   add := add'
 
 theorem add_eq (x y : IGame) : x + y =
@@ -1070,7 +1068,6 @@ private def mul' (x y : IGame) : IGame :=
 termination_by (x, y)
 decreasing_by all_goals aesop
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- The product of `x = !{s₁ | t₁}` and `y = !{s₂ | t₂}` is
 `!{a₁ * y + x * b₁ - a₁ * b₁ | a₂ * y + x * b₂ - a₂ * b₂}`, where `(a₁, b₁) ∈ s₁ ×ˢ s₂ ∪ t₁ ×ˢ t₂`
 and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
@@ -1078,7 +1075,7 @@ and `(a₂, b₂) ∈ s₁ ×ˢ t₂ ∪ t₁ ×ˢ s₂`.
 Using `IGame.mulOption`, this can alternatively be written as
 `x * y = !{mulOption x y a₁ b₁ | mulOption x y a₂ b₂}`. -/
 @[no_expose]
-noncomputable instance : Mul IGame where
+instance : Mul IGame where
   mul := mul'
 
 /-- The general option of `x * y` looks like `a * y + x * b - a * b`, for `a` and `b` options of
