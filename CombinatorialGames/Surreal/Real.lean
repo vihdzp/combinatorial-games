@@ -6,8 +6,13 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
-public import Mathlib.Algebra.Order.Archimedean.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
+public import Mathlib.Basic.Real.Basic
+
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Real numbers as games
@@ -88,14 +93,14 @@ theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q.toRat) :
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
-def toIGameEmbedding : ℝ ↪o IGame := by
-  refine .ofStrictMono toIGame fun x y h ↦ ?_
-  obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
-  trans (q : IGame)
-  · apply Numeric.lt_right
-    simpa [toIGame]
-  · apply Numeric.left_lt
-    simpa [toIGame]
+def toIGameEmbedding : ℝ ↪o IGame :=
+  .ofStrictMono toIGame fun x y h ↦ by
+    obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
+    trans (q : IGame)
+    · apply Numeric.lt_right
+      simpa [toIGame]
+    · apply Numeric.left_lt
+      simpa [toIGame]
 
 @[simp, norm_cast]
 theorem toIGame_le_iff {x y : ℝ} : (x : IGame) ≤ y ↔ x ≤ y :=

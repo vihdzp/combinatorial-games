@@ -8,9 +8,9 @@ module
 public import CombinatorialGames.Game.Graph
 public import Mathlib.Algebra.Group.Int.Defs
 public import Mathlib.Algebra.Group.Units.Equiv
-public import Mathlib.Algebra.Order.Group.Nat
 public import Mathlib.Data.Finset.Sort
 
+import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Algebra.Order.Sub.Unbundled.Basic
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Ring.Int.Defs
@@ -159,8 +159,8 @@ theorem subrelation_relRight :
   rw [InvImage, ← card_of_relRight h, lt_add_iff_pos_right]
   exact Nat.succ_pos _
 
-instance : IsWellFounded _ relLeft := subrelation_relLeft.isWellFounded
-instance : IsWellFounded _ relRight := subrelation_relRight.isWellFounded
+instance : WellFounded relLeft := subrelation_relLeft.isWellFounded
+instance : WellFounded relRight := subrelation_relRight.isWellFounded
 
 end Domineering
 
