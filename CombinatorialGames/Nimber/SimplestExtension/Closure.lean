@@ -298,11 +298,11 @@ theorem enumGroup_def' (x : Ordinal) :
   (rfl)
 
 @[simp]
-theorem range_enumGroup : .range enumGroup = ofPred IsGroup := by
+theorem range_enumGroup : range enumGroup = ofPred IsGroup := by
   erw [enumGroup, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
   exact Subtype.range_val
 
-theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ Set.range enumGroup ↔ IsGroup x :=
+theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ range enumGroup ↔ IsGroup x :=
   Set.ext_iff.1 range_enumGroup _
 
 theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
@@ -466,11 +466,11 @@ theorem enumRing_def' (x : Ordinal) :
   (rfl)
 
 @[simp]
-theorem range_enumRing : .range enumRing = ofPred IsRing := by
+theorem range_enumRing : range enumRing = ofPred IsRing := by
   erw [enumRing, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
   exact Subtype.range_val
 
-theorem mem_range_enumRing_iff {x : Nimber} : x ∈ Set.range enumRing ↔ IsRing x :=
+theorem mem_range_enumRing_iff {x : Nimber} : x ∈ range enumRing ↔ IsRing x :=
   Set.ext_iff.1 range_enumRing _
 
 theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
@@ -621,11 +621,11 @@ theorem enumField_def' (x : Ordinal) :
   (rfl)
 
 @[simp]
-theorem range_enumField : .range enumField = ofPred IsField := by
+theorem range_enumField : range enumField = ofPred IsField := by
   erw [enumField, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
   exact Subtype.range_val
 
-theorem mem_range_enumField_iff {x : Nimber} : x ∈ Set.range enumField ↔ IsField x :=
+theorem mem_range_enumField_iff {x : Nimber} : x ∈ range enumField ↔ IsField x :=
   Set.ext_iff.1 range_enumField _
 
 theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=

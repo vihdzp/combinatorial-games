@@ -564,11 +564,11 @@ theorem enumAlgClosed_def' (x : Ordinal) :
   (rfl)
 
 @[simp]
-theorem range_enumAlgClosed : .range enumAlgClosed = ofPred IsAlgClosed := by
+theorem range_enumAlgClosed : range enumAlgClosed = ofPred IsAlgClosed := by
   erw [enumAlgClosed, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
   exact Subtype.range_val
 
-theorem mem_range_enumAlgClosed_iff {x : Nimber} : x ∈ Set.range enumAlgClosed ↔ IsAlgClosed x :=
+theorem mem_range_enumAlgClosed_iff {x : Nimber} : x ∈ range enumAlgClosed ↔ IsAlgClosed x :=
   Set.ext_iff.1 range_enumAlgClosed _
 
 theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) :=
