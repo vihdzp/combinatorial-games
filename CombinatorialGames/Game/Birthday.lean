@@ -222,9 +222,8 @@ instance small_setOfPred_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birth
     simp_rw [lt_succ_iff, birthday_le_iff] at hx
     ext p; cases p <;> simp_all
   | isSuccPrelimit o ho ih =>
-    convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih
-    ext x
-    rw [mem_ofPred_eq, ho.lt_iff_nonempty_Ioo, Set.Nonempty]
+    convert @small_biUnion _ _ (Iio o) _ (fun i _ => {x : IGame.{u} | x.birthday < i}) ih with x
+    rw [Set.mem_eq_mem, mem_ofPred_eq, ho.lt_iff_nonempty_Ioo, Set.Nonempty]
     simp [and_comm]
 
 /-- Games with a bounded birthday form a small set. -/
@@ -401,7 +400,7 @@ theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   choose f hf using birthday_eq_iGameBirthday
   trans !{f '' s | f '' t}.birthday
-  · convert birthday_mk_le !{f '' s | f '' t} using 2
+  · convert birthday_mk_le !{f '' s | f '' t}
     simp_rw [mk_ofSets, image_image]
     aesop
   · simp_rw [IGame.birthday_ofSets, image_comp]

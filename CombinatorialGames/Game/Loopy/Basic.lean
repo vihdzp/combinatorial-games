@@ -152,7 +152,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   choose s hs₁ hs₂ hs using H _ _ hxy
   simp_rw [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
-  refine ⟨⟨fun p ↦ range (inclusion (hs p)), ?_⟩, ?_, ?_⟩
+  refine ⟨⟨fun p ↦ range (inclusion (t := {x : LGame × LGame | r x.1 x.2}) (hs p)), ?_⟩, ?_, ?_⟩
   · have this (p) : Small.{u} (s p) := small_subset (s := moves p x ×ˢ moves p y) fun z hz ↦
       ⟨(hs₁ p z.1).1 ⟨_, hz⟩, (hs₂ p z.2).1 ⟨_, hz⟩⟩
     rintro (_ | _) <;> infer_instance
@@ -207,6 +207,7 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
         infer_instance
     ⟩
 
+#exit
 private theorem unique (f g : Subtype (Reachable mov init) → LGame.{u})
     (hf : QPF.Cofix.dest ∘ f ∘ (equivShrink _).symm =
       Functor.map (f ∘ (equivShrink _).symm) ∘ dest mov init)
