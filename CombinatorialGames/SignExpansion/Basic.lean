@@ -211,6 +211,15 @@ theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 
 instance : Neg SignExpansion where
   neg e := ⟨-e, by simpa using e.2⟩
 
+@[simp]
+theorem length_eq_zero {x : SignExpansion} : x.length = 0 ↔ x = 0 := by
+  refine ⟨fun hx ↦ ?_, ?_⟩
+  · ext i
+    rw [zero_apply, apply_eq_zero, hx]
+    exact zero_le
+  · rintro rfl
+    simp
+
 @[simp] theorem coe_neg (x : SignExpansion) : ⇑(-x : SignExpansion) = -⇑x := rfl
 theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 @[simp] theorem neg_mk (f h) : -mk f h = mk (-f) (by simpa) := rfl
