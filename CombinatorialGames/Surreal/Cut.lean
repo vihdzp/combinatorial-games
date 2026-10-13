@@ -244,15 +244,19 @@ def rightSurreal : Surreal ↪o Cut where
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
-@[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
-@[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
+@[simp, grind =]
+theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x} := rfl
+@[simp, grind =]
+theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
+@[simp, grind =]
+theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp, grind =]
+theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
-@[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
-@[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
-@[simp] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
-@[simp] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
+@[simp, grind =] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
+@[simp, grind =] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
+@[simp, grind =] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
+@[simp, grind =] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
 
 theorem mem_left_leftGame {x y} : y ∈ (leftGame x).left ↔ y.toGame ⧏ x := .rfl
 theorem mem_right_leftGame {x y} : y ∈ (leftGame x).right ↔ x ≤ y.toGame := .rfl
@@ -264,11 +268,31 @@ theorem mem_right_leftSurreal {x y} : y ∈ (leftSurreal x).right ↔ x ≤ y :=
 theorem mem_left_rightSurreal {x y} : y ∈ (rightSurreal x).left ↔ y ≤ x := .rfl
 theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y := .rfl
 
-@[simp] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
+@[simp, grind =] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
+@[simp, grind =] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
+
+@[simp, grind =]
+theorem leftGame_mk_of_numeric (x : IGame) [Numeric x] :
+    leftGame (.mk x) = leftSurreal (.mk x) := by
+  rw [← toGame_mk, leftGame_toGame]
+
+@[simp, grind =]
+theorem rightGame_mk_of_numeric (x : IGame) [Numeric x] :
+    rightGame (.mk x) = rightSurreal (.mk x) := by
+  rw [← toGame_mk, rightGame_toGame]
+
+@[simp, grind =]
+theorem leftGame_zero : leftGame 0 = leftSurreal 0 := by simpa using leftGame_toGame 0
+@[simp, grind =]
+theorem rightGame_zero : rightGame 0 = rightSurreal 0 := by simpa using rightGame_toGame 0
+
+@[simp, grind =]
+theorem leftGame_one : leftGame 1 = leftSurreal 1 := by simpa using leftGame_toGame 1
+@[simp, grind =]
+theorem rightGame_one : rightGame 1 = rightSurreal 1 := by simpa using rightGame_toGame 1
 
 @[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
@@ -616,7 +640,10 @@ theorem numeric_def {x : Cut} : x.Numeric ↔ x ∈ Set.range leftSurreal ∪ Se
 
 namespace Numeric
 
-attribute [instance] Numeric.leftSurreal Numeric.rightSurreal
+attribute [simp, instance] Numeric.leftSurreal Numeric.rightSurreal
+
+instance (x : Cut) [hx : x.Numeric] : (-x).Numeric := by
+  cases hx <;> simp
 
 @[simp low]
 theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
@@ -661,8 +688,6 @@ theorem recOn'_rightSurreal {motive : ∀ x : Cut, [x.Numeric] → Sort*} (y : S
   congr
   exact Cut.rightSurreal.injective <| Classical.choose_spec H
 
--- TODO: prove the stronger condition that `(leftGame x).toSurreal` and `(rightGame x).toSurreal`
--- are dyadic.
 private theorem short_aux (x : IGame) [Short x] :
     (leftGame <| .mk x).Numeric ∧ (rightGame <| .mk x).Numeric := by
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
@@ -718,6 +743,18 @@ theorem toSurreal_leftSurreal (x : Surreal) : toSurreal (leftSurreal x) = x :=
 @[simp]
 theorem toSurreal_rightSurreal (x : Surreal) : toSurreal (rightSurreal x) = x :=
   Numeric.recOn'_rightSurreal ..
+
+theorem mem_left_of_lt_toSurreal (x : Cut) [hx : x.Numeric] {y : Surreal} (h : y < x.toSurreal) :
+    y ∈ x.left := by
+  induction hx <;> simp_all [le_iff_lt_or_eq]
+
+theorem mem_right_of_toSurreal_lt (x : Cut) [hx : x.Numeric] {y : Surreal} (h : x.toSurreal < y) :
+    y ∈ x.right := by
+  induction hx <;> simp_all [le_iff_lt_or_eq]
+
+@[simp]
+theorem toSurreal_neg (x : Cut) [hx : x.Numeric] : (-x).toSurreal = -x.toSurreal := by
+  cases hx <;> simp
 
 end Cut
 end Surreal
