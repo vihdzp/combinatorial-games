@@ -212,21 +212,17 @@ theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
     !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) := by
   apply IGame.le_iff_forall_lf.trans
-  simp only [moves_ofSets, mem_image, forall_exists_index, and_imp, forall_apply_eq_imp_iff₂]
-  congr!
-  all_goals
-    rw [← Game.mk_le_mk, out_eq]
+  simp_rw [moves_ofSets, forall_mem_image]
+  congr! <;>
+  · rw [← Game.mk_le_mk, out_eq]
     rfl
 
 theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
     !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
-  apply IGame.lf_iff_exists_le.trans
-  simp only [moves_ofSets, mem_image, exists_exists_and_eq_and]
-  congr!
-  all_goals
-    rw [← Game.mk_le_mk, out_eq]
-    rfl
+  rw [ofSets_le_ofSets_iff]
+  push +distrib Not
+  rfl
 
 end Game
 
