@@ -61,6 +61,20 @@ protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
 @[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
+theorem star_lf_of_nonneg {x : IGame} (hx : 0 ≤ x) : ⋆ ⧏ x :=
+  fun h ↦ star_lf_zero (hx.trans h)
+
+theorem lf_star_of_nonpos {x : IGame} (hx : x ≤ 0) : x ⧏ ⋆ :=
+  fun h ↦ zero_lf_star (h.trans hx)
+
+theorem star_lt_of_numeric_of_pos {x : IGame} [Numeric x] (hx : 0 < x) : ⋆ < x := by
+  refine ⟨le_def.mpr ?_, star_lf_of_nonneg hx.le⟩
+  simpa using ⟨Numeric.zero_lt.mp hx, fun a ha ↦ Or.inr (Numeric.zero_le.mp hx.le a ha).le⟩
+
+theorem lt_star_of_numeric_of_neg {x : IGame} [Numeric x] (hx : x < 0) : x < ⋆ := by
+  refine ⟨le_def.mpr ?_, lf_star_of_nonpos hx.le⟩
+  simpa using ⟨fun a ha ↦ Or.inl (Numeric.le_zero.mp hx.le a ha).le, Numeric.lt_zero.mp hx⟩
+
 /-! ### Half -/
 
 /-- The game `½ = {0 | 1}`, which we prove satisfies `½ + ½ = 1`. -/
