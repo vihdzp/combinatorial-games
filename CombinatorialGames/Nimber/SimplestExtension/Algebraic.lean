@@ -530,6 +530,16 @@ instance : _root_.IsAlgClosed Nimber := by
   obtain ⟨r, -, hr⟩ := (IsAlgClosed.algClosure _).exists_root hp.degree_pos.ne' hk
   exact ⟨r, hr⟩
 
+theorem isClub_ofPred_isAlgClosed : IsClub (ofPred IsAlgClosed) where
+  isCofinal a := ⟨_, .algClosure _, le_algClosure a⟩
+  dirSupClosed s hs hs₀ _ a ha := by
+    rw [← ha.csSup_eq hs₀]
+    exact IsAlgClosed.sSup hs hs₀ ha.bddAbove
+
+theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
+    ∃ l, IsAlgClosed l ∧ ∃ u, IsAlgClosed u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsAlgClosed z → l < z → u ≤ z :=
+  isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
+
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)

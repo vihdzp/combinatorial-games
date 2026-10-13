@@ -7,7 +7,6 @@ module
 
 public import CombinatorialGames.Game.Birthday
 
-import CombinatorialGames.Tactic.AddInstances
 import Mathlib.Data.Int.Cast.Lemmas
 
 /-!

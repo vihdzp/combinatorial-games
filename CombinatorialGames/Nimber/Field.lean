@@ -6,13 +6,14 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.Basic
-public import Mathlib.Algebra.CharP.Two
+public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
 
 import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
-import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Ring.RingNF
 
 /-!
 # Nimber multiplication and division
@@ -56,11 +57,10 @@ private def mul (a b : Nimber.{u}) : Nimber.{u} :=
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-noncomputable instance : Mul Nimber :=
+instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
 theorem mul_def (a b : Nimber) :

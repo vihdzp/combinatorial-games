@@ -9,6 +9,11 @@ public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Dyadic
 
 import CombinatorialGames.Surreal.Birthday.Cut
+import Mathlib.Algebra.Ring.CharZero
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Birthday of dyadic rationals
