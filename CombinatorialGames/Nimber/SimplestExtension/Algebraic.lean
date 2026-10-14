@@ -166,8 +166,7 @@ proof_wanted leastNoRoots_omega0 : leastNoRoots (∗ω) = .some (X ^ 3 + C (∗2
 /-! ### Algebraically closed fields -/
 
 /-- A nimber `x` is algebraically closed when `IsRing x`, and every non-constant polynomial in the
-nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
-algebraically closed under this definition.
+nimbers with coefficients less than `x` has a root that's less than `x`.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
 `IsAlgClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
