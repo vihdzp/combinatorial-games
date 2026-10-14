@@ -7,7 +7,6 @@ module
 
 public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
-public import Mathlib.FieldTheory.IntermediateField.Adjoin.Defs
 
 import Mathlib.Algebra.Field.ZMod
 import Mathlib.SetTheory.Cardinal.Subfield
