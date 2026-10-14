@@ -605,7 +605,7 @@ theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
 
 theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
-  isClub_ofPred_isField.exists_between ⟨∗ 2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+  isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
 
 /-- The normal enumerator function for fields. -/
 def enumField : Ordinal ↪o Nimber :=

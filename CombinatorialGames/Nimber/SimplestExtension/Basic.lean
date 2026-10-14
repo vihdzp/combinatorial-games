@@ -103,6 +103,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     apply h.add_lt <;> simp_all
 
 /-- `Iio x` as a subgroup of `Nimber`. -/
+@[implicit_reducible]
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
   zero_mem' := h.zero_lt
@@ -316,6 +317,7 @@ theorem IsRing.two : IsRing (∗2) where
   __ := IsGroup.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
@@ -435,6 +437,7 @@ theorem IsField.two : IsField (∗2) where
   __ := IsRing.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
