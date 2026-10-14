@@ -42,12 +42,16 @@ This isn't a term in the literature, but it's useful for proving that birthdays 
 those of their associated games. -/
 def birthday (x : Cut) : WithTop NatOrdinal :=
   sInf <| (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
-     {s : Set Surreal | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
+     {s | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x}
 
 theorem birthday_eq_sSup_birthday (x : Cut) :
     ∃ s : Set Surreal, (sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x) ∧
-      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x :=
-  csInf_mem (image_nonempty.2 ⟨_, .inr <| sSup_rightSurreal_left x⟩)
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x := by
+  have H := csInf_mem (α := WithTop NatOrdinal)
+    (s := (fun s ↦ sSup ((fun x ↦ x.birthday + 1) '' s)) ''
+      {s | sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x})
+        (image_nonempty.2 ⟨_, Or.inr <| sSup_rightSurreal_left x⟩)
+  exact H
 
 theorem birthday_sInf_leftSurreal_le (s : Set Surreal) :
     (sInf (leftSurreal '' s)).birthday ≤

@@ -326,7 +326,7 @@ noncomputable def birthday (x : Game.{u}) : NatOrdinal.{u} :=
 
 theorem birthday_eq_iGameBirthday (x : Game) :
     ∃ y : IGame, Game.mk y = x ∧ y.birthday = birthday x := by
-  refine csInf_mem (image_nonempty.2 ?_)
+  refine csInf_mem (s := IGame.birthday '' (mk ⁻¹' {x})) (image_nonempty.2 ?_)
   exact ⟨_, x.out_eq⟩
 
 theorem birthday_mk_le (x : IGame) : birthday (mk x) ≤ x.birthday :=
