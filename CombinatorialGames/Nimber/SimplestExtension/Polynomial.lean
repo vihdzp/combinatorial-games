@@ -1016,10 +1016,8 @@ theorem IsField.one_lt_degree_leastNoRoots {x : Nimber} (h : IsField x) (ht : le
 
 theorem IsField.one_lt_natDegree_leastNoRoots
     {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
-    1 < ((leastNoRoots x).untop ht).natDegree := by
-  rw [← WithBot.coe_lt_coe, WithBot.coe_one, ← WithBot.natCast_eq_coe,
-    ← degree_eq_natDegree (leastNoRoots_ne_zero' ht)]
-  exact h.one_lt_degree_leastNoRoots ht
+    1 < ((leastNoRoots x).untop ht).natDegree :=
+  Polynomial.coe_lt_degree.1 (h.one_lt_degree_leastNoRoots ht)
 
 theorem IsRing.toIsField_of_X_sq_lt_leastNoRoots {x : Nimber} (h : IsRing x)
     (h' : .some (X ^ 2) ≤ leastNoRoots x) : IsField x := by
