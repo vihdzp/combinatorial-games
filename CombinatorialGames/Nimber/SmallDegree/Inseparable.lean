@@ -40,8 +40,7 @@ theorem leastNoRoots_fieldClosure_succ :
     leastNoRoots (fieldClosure (succ t)) = .some (X ^ 2 + C t) := by
   apply le_antisymm
   · apply leastNoRoots_le_of_not_isRoot
-    · refine zero_lt_two.trans_eq (Eq.symm ?_)
-      compute_degree!
+    · simp [degree_X_pow_add_C]
     · apply (IsField.fieldClosure _).coeff_add_lt
       · exact coeff_X_pow_lt 2 (IsField.fieldClosure _).one_lt
       · exact coeff_C_lt ((lt_succ t).trans_le (le_fieldClosure (succ t)))
@@ -157,8 +156,7 @@ theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
   have him := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n
   apply le_antisymm
   · apply leastNoRoots_le_of_not_isRoot
-    · refine zero_lt_two.trans_eq (Eq.symm ?_)
-      compute_degree!
+    · simp [degree_X_pow_add_C]
     · apply hf.coeff_add_lt
       · exact coeff_X_pow_lt 2 hf.one_lt
       · exact coeff_C_lt (of.strictMono (pow_lt_pow_right₀
