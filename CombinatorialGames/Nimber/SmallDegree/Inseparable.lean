@@ -213,84 +213,55 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m (hf1t m hm)
   rw [pow_succ, pow_mul] at hf1 ⊢
   rw [← coe_toSubfield hf0, ← coe_toSubfield hf1, ← RingEquiv.coe_toRingHom,
-    ← Subfield.coe_map, SetLike.coe_injective.eq_iff]
+    ← Subfield.coe_map, SetLike.coe_set_eq]
   erw [hf0.pow_degree_leastNoRoots_eq_adjoin hf0t hf0d]
-  apply le_antisymm
-  · cases n with
-    | zero =>
-      revert hf0
-      rw [pow_zero, pow_one, of_val]
-      intro hf0
-      rw [← ht.fieldAdjoin_simple_self, Subfield.map_le_iff_le_comap,
-        IntermediateField.adjoin_toSubfield, IntermediateField.adjoin_toSubfield,
-        Subfield.algebraMap_ofSubfield, Subfield.algebraMap_ofSubfield,
-        ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype,
-        ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype]
-      grw [← Subfield.closure_preimage_le]
-      rw [Set.preimage_union, RingEquiv.coe_toRingHom,
-        ← RingEquiv.image_symm_eq_preimage, ← RingEquiv.image_symm_eq_preimage,
-        Set.image_singleton, Nimber.sqrt_symm_apply, ← RingEquiv.coe_toRingHom,
-        ← Subfield.coe_map, ht.fieldClosure_succ_pow_two]
-      gcongr
-      -- this was impossible to find
-      -- todo: fix names
-      rw [RingHom.map_field_closure]
-      rw [Set.image_union, ← SetLike.coe_subset_coe]
-      refine subset_trans ?_ (Set.subset_union_left.trans Subfield.subset_closure)
-      rw [RingEquiv.coe_toRingHom, RingEquiv.image_symm_eq_preimage, coe_toSubfield]
+  rw [← SetLike.coe_set_eq, Subfield.coe_map, RingEquiv.coe_toRingHom,
+    ← RingEquiv.coe_toEquiv, ← Equiv.eq_preimage_iff_image_eq, RingEquiv.coe_toEquiv,
+    ← RingEquiv.image_symm_eq_preimage, ← RingEquiv.coe_toRingHom, ← Subfield.coe_map,
+    IntermediateField.adjoin_toSubfield, Subfield.algebraMap_ofSubfield,
+    ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype, coe_toSubfield,
+    /- this was impossible to find
+      todo: fix names -/ RingHom.map_field_closure,
+    Set.image_union, Set.image_singleton,
+    RingEquiv.coe_toRingHom, Nimber.sqrt_symm_apply]
+  cases n with
+  | zero =>
+    rw [pow_zero, pow_one, of_val] at hf0 ⊢
+    rw [ht.fieldClosure_succ_pow_two, ← coe_toSubfield hf0, ← ht.fieldAdjoin_simple_self,
+      IntermediateField.adjoin_toSubfield, SetLike.coe_set_eq, Subfield.algebraMap_ofSubfield,
+      ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype, ← RingEquiv.coe_toRingHom,
+      ← Subfield.coe_map,
+      /- this was impossible to find
+        todo: fix names -/ RingHom.map_field_closure,
+      Set.image_union, Set.image_singleton, RingEquiv.coe_toRingHom, Nimber.sqrt_symm_apply]
+    apply le_antisymm
+    · gcongr
+      grw [← Set.subset_union_left]
       intro x hx
-      apply ht.sqrt_lt hx
-      rw [ht.leastNoRoots_eq_top]
-      simp
-    | succ n =>
-      specialize hp2 n rfl
-      revert hf0
-      rw [pow_succ 2, pow_mul] at hp2 ⊢
-      intro hf0
-      erw [(hfm n rfl).pow_degree_leastNoRoots_eq_adjoin (hf1t n rfl) (hf1d n rfl)]
-      rw [Subfield.map_le_iff_le_comap,
-        IntermediateField.adjoin_toSubfield, IntermediateField.adjoin_toSubfield,
-        Subfield.algebraMap_ofSubfield, Subfield.algebraMap_ofSubfield,
-        ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype,
-        ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype]
-      grw [← Subfield.closure_preimage_le]
-      rw [Set.preimage_union, RingEquiv.coe_toRingHom,
-        ← RingEquiv.image_symm_eq_preimage, ← RingEquiv.image_symm_eq_preimage,
-        Set.image_singleton, Nimber.sqrt_symm_apply, ← RingEquiv.coe_toRingHom,
-        ← Subfield.coe_map, hp2]
-      gcongr
-      -- this was impossible to find
-      -- todo: fix names
-      rw [← SetLike.coe_subset_coe, Subfield.coe_map, RingEquiv.coe_toRingHom,
-        RingEquiv.image_symm_eq_preimage, ← Set.image_subset_iff, coe_toSubfield,
-        ih n rfl, pow_succ, pow_mul, ← coe_toSubfield hf0, ← coe_toSubfield (hfm n rfl),
-        ← Subfield.fieldRange_subtype (hfm n rfl).toSubfield, RingHom.coe_fieldRange,
-        ← Subfield.algebraMap_ofSubfield, ← IntermediateField.adjoin_toSubfield,
-        ← (hfm n rfl).pow_degree_leastNoRoots_eq_adjoin (hf1t n rfl) (hf1d n rfl),
-        coe_toSubfield, coe_toSubfield, val_of]
-  · rw [IntermediateField.adjoin_toSubfield, Subfield.closure_le, Set.union_subset_iff,
-      Set.singleton_subset_iff, Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-      Subfield.coe_map, RingEquiv.coe_toRingHom, RingEquiv.image_eq_preimage_symm,
-      ← RingEquiv.coe_toRingHom, Set.mem_preimage, RingEquiv.coe_toRingHom, Nimber.sqrt_symm_apply,
-      Subfield.fieldRange_subtype]
-    constructor
-    · intro x hx
-      rw [Set.mem_preimage, Nimber.sqrt_symm_apply]
-      exact pow_mem hx 2
-    · cases n with
-      | zero =>
-        revert hf0
-        rw [pow_zero, pow_one, of_val, ht.fieldClosure_succ_pow_two]
-        intro hf0
-        rw [SetLike.mem_coe, mem_toSubfield_iff, ← Order.succ_le_iff]
-        exact le_fieldClosure (succ t)
-      | succ n =>
-        rw [hp2 n rfl]
-        rw [SetLike.mem_coe, mem_toSubfield_iff, of.lt_iff_lt, pow_succ, pow_mul]
-        apply lt_self_pow₀
-        · refine Ordinal.one_lt_pow.2 ⟨?_, (Nat.pow_pos Nat.two_pos).ne'⟩
-          exact one_lt_val.2 (IsField.fieldClosure (succ t)).one_lt
-        · simp
+      exact Subfield.mem_closure_of_mem ⟨x.sqrt, ht.sqrt_lt, by simp⟩
+    · rw [Subfield.closure_le, Set.union_subset_iff, SetLike.coe_subset_coe,
+        Subfield.closure_le, Set.union_subset_iff, Set.singleton_subset_iff,
+        Set.singleton_subset_iff, Set.image_subset_iff]
+      refine ⟨⟨?_, ?_⟩, ?_⟩
+      · intro x hx
+        grw [← Set.subset_union_left]
+        rw [Set.mem_preimage, Nimber.sqrt_symm_apply, Subfield.closure_eq]
+        exact pow_mem hx 2
+      · refine pow_mem (Subfield.mem_closure_of_mem ?_) 2
+        simp
+      · apply Subfield.mem_closure_of_mem
+        simp
+  | succ n =>
+    specialize ih n rfl
+    specialize hfm n rfl
+    rw [← RingEquiv.coe_toEquiv, ← Equiv.eq_preimage_iff_image_eq,
+      RingEquiv.coe_toEquiv, ← RingEquiv.image_symm_eq_preimage] at ih
+    rw [← ih, hp2 n rfl]
+    rw [pow_succ, pow_mul] at hf0 ⊢
+    rw [← coe_toSubfield hfm, ← hfm.toSubfield.fieldRange_subtype,
+      RingHom.coe_fieldRange, ← Subfield.algebraMap_ofSubfield,
+      ← IntermediateField.adjoin_toSubfield, ← coe_toSubfield hf0, SetLike.coe_set_eq]
+    exact hfm.pow_degree_leastNoRoots_eq_adjoin (hf1t n rfl) (hf1d n rfl)
 termination_by (n + 1, 1)
 
 end
