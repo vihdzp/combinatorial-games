@@ -93,8 +93,7 @@ mutual
 
 theorem isField_fieldClosure_succ_pow_two_pow (n : Nat) :
     IsField (of (val (fieldClosure (succ t)) ^ 2 ^ n)) := by
-  have ih1 (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top m
-  have ih2 (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
+  have ih12 (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
   have ih3 (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
   cases n with
   | zero =>
@@ -102,33 +101,20 @@ theorem isField_fieldClosure_succ_pow_two_pow (n : Nat) :
     exact IsField.fieldClosure (succ t)
   | succ n =>
     rw [pow_succ, pow_mul]
-    exact (ih3 n rfl).pow_degree_leastNoRoots (ih1 n rfl) (ih2 n rfl (ih1 n rfl))
+    exact (ih3 n rfl).pow_degree_leastNoRoots (ih12 n rfl).1 (ih12 n rfl).2
 termination_by (n, 0)
 
-theorem leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top (n : Nat) :
-    leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n)) ≠ ⊤ := by
-  have ih (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_succ m
-  cases n with
-  | zero =>
-    rw [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ]
-    simp
-  | succ n =>
-    rw [ih n rfl]
-    simp
-termination_by (n, 3)
-decreasing_by grind
-
-private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat)
-    (hc : leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n)) ≠ ⊤) :
+private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat) :
+    ∃ (hc : leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n)) ≠ ⊤),
     ((leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n))).untop hc).degree = 2 := by
   have ih (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_succ m
   cases n with
   | zero =>
     rw! [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ, WithTop.untop_coe]
-    compute_degree!
+    exact ⟨by simp, by compute_degree!⟩
   | succ n =>
     rw! [ih n rfl, WithTop.untop_coe]
-    compute_degree!
+    exact ⟨by simp, by compute_degree!⟩
 termination_by (n, 3)
 decreasing_by grind
 
@@ -169,18 +155,17 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
       Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) := by
   have hf0 := isField_fieldClosure_succ_pow_two_pow n
   have hf1 := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  have hf0t := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n
-  have hf0d := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n hf0t
+  -- have hf0t := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n
+  have hf0td := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
   have hp2 (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
   have hfm (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
   have ih (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
-  have hf1t (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top m
-  have hf1d (m : Nat) (hm : m + 1 = n) :=
-    degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m (hf1t m hm)
+  -- have hf1t (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top m
+  have hf1td (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
   rw [pow_succ, pow_mul] at hf1 ⊢
   rw [← coe_toSubfield hf0, ← coe_toSubfield hf1, ← RingEquiv.coe_toRingHom,
     ← Subfield.coe_map, SetLike.coe_set_eq]
-  erw [hf0.pow_degree_leastNoRoots_eq_adjoin hf0t hf0d]
+  erw [hf0.pow_degree_leastNoRoots_eq_adjoin hf0td.1 hf0td.2]
   rw [← SetLike.coe_set_eq, Subfield.coe_map, RingEquiv.coe_toRingHom,
     ← RingEquiv.coe_toEquiv, ← Equiv.eq_preimage_iff_image_eq, RingEquiv.coe_toEquiv,
     ← RingEquiv.image_symm_eq_preimage, ← RingEquiv.coe_toRingHom, ← Subfield.coe_map,
@@ -227,16 +212,10 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     rw [← coe_toSubfield hfm, ← hfm.toSubfield.fieldRange_subtype,
       RingHom.coe_fieldRange, ← Subfield.algebraMap_ofSubfield,
       ← IntermediateField.adjoin_toSubfield, ← coe_toSubfield hf0, SetLike.coe_set_eq]
-    exact hfm.pow_degree_leastNoRoots_eq_adjoin (hf1t n rfl) (hf1d n rfl)
+    exact hfm.pow_degree_leastNoRoots_eq_adjoin (hf1td n rfl).1 (hf1td n rfl).2
 termination_by (n + 1, 1)
 
 end
-
-theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow (n : Nat) :
-    ((leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n))).untop
-      (ht.leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n)).degree = 2 :=
-  ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
-    (ht.leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n)
 
 theorem sqrt_map_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
     (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield.map Nimber.sqrt.toRingHom =
