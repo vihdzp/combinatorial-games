@@ -37,6 +37,18 @@ theorem coeffs_subset_iff {s : Finset R} :
   simpa using coe_coeffs_subset_iff (s := (s : Set R))
 
 end Polynomial
+
+namespace Polynomial
+
+variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S] {p : R[X]} {T : Subring R}
+    (hp : (p.coeffs : Set R) ⊆ T) (x : S)
+
+theorem aeval_toSubring : aeval x (p.toSubring T hp) = aeval x p := by
+  rw [aeval_def, IsScalarTower.algebraMap_eq T R S, ← eval₂_map,
+    Algebra.algebraMap_ofSubring, p.map_toSubring, ← aeval_def]
+
+end Polynomial
+
 end ForMathlib
 
 namespace Nimber
@@ -371,8 +383,8 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     refine ⟨p.toSubring h.toSubring ?_, ?_⟩
     · rw [coe_coeffs_subset_iff]
       simp [hpc]
-    rw [aeval_def, eval₂_eq_eval_map]
-    refine congr(eval x $(p.map_toSubring h.toSubring _)).trans ?_
+    erw [aeval_toSubring]
+    rw [coe_aeval_eq_eval]
     refine h.eval_eq_of_lt ?_ hpn hpc
     exact (X_pow_lt_leastNoRoots_of_le_degree ht hn.ge).le
   · rw [IntermediateField.adjoin_toSubfield, Subfield.closure_le, Set.union_subset_iff,
