@@ -23,10 +23,10 @@ A surreal cut is defined as consisting of two sets of surreals with the followin
 This construction resembles the construction of the surreals themselves, but yields a "bigger"
 structure, which can embed the surreals, but is also a complete linear order.
 
-Note that surreal cuts are is **not** the same as the Dedekind completion of the surreals. Whereas
-the Dedekind completion maps every element of the original order to a unique Dedekind cut, every
-surreal number `x` actually corresponds to two cuts `(Iio x, Ici x)` and `(Iic x, Ioi x)`, which we
-call the left and right cut, respectively.
+Note that surreal cuts are **not** the same as the Dedekind completion of the surreals. Whereas the
+Dedekind completion maps every element of the original order to a unique Dedekind cut, every surreal
+number `x` actually corresponds to two cuts `(Iio x, Ici x)` and `(Iic x, Ioi x)`, which we call the
+left and right cut, respectively.
 
 The theory of concept lattices gives us a very simple definition of surreal cuts as
 `Concept Surreal Surreal (⬝ < ⬝)`. However, we've attempted to provide a thin wrapper for all
