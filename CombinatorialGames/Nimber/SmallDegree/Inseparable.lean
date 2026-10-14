@@ -171,14 +171,8 @@ theorem fieldClosure_succ_pow_two_pow_succ_pow_two (n : Nat) :
     of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1)) ^ 2 =
       of (val (fieldClosure (succ t)) ^ 2 ^ n) := by
   have hf := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  have hnt := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top (n + 1)
   have ih := leastNoRoots_fieldClosure_succ_pow_two_pow_succ n
-  have hrt := hf.isRoot_leastNoRoots hnt
-  rw! [ih, WithTop.untop_coe, ← CharTwo.sub_eq_add] at hrt
-  calc
-    _ = _ := by simp
-    _ = _ := congr(_ + $(IsRoot.def.1 hrt))
-    _ = _ := add_zero _
+  simpa [CharTwo.add_eq_zero] using hf.isRoot_leastNoRoots_of_eq ih
 termination_by (n + 1, 4)
 
 private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
