@@ -129,7 +129,7 @@ private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat)
   | succ n =>
     rw! [ih n rfl, WithTop.untop_coe]
     compute_degree!
-termination_by (n, 4)
+termination_by (n, 3)
 decreasing_by grind
 
 theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
