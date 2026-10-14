@@ -83,13 +83,8 @@ theorem leastNoRoots_fieldClosure_succ :
       (ht.sqrt_lt hz).trans <| (lt_succ t).trans_le (le_fieldClosure (succ t))
 
 theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
-  have hrt := (IsField.fieldClosure (succ t)).isRoot_leastNoRoots
-    (by rw [ht.leastNoRoots_fieldClosure_succ]; simp)
-  rw! [ht.leastNoRoots_fieldClosure_succ, WithTop.untop_coe, ← CharTwo.sub_eq_add] at hrt
-  calc
-    _ = _ := by simp
-    _ = _ := congr(_ + $(IsRoot.def.1 hrt))
-    _ = _ := add_zero _
+  simpa [CharTwo.add_eq_zero] using
+    (IsField.fieldClosure _).isRoot_leastNoRoots_of_eq ht.leastNoRoots_fieldClosure_succ
 
 -- false positive due to the `mutual` block
 -- see https://leanprover.zulipchat.com/#narrow/channel/270676-lean4/topic/unused.20variables.20linter.20false.20positive/near/631476579
