@@ -118,6 +118,16 @@ theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.to
   h.toAddSubgroup.closure_eq
 
 @[simp]
+theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup ≤ hy.toAddSubgroup ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
+
+@[simp]
 theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
   ne_zero := one_ne_zero
@@ -330,6 +340,16 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
 
+@[simp]
+theorem IsRing.toSubfield_le_toSubfield (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toSubfield_lt_toSubfield (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring < hy.toSubring ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
+
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
   toIsGroup := .sSup (fun x hx => (H x hx).toIsGroup) ne bdd
@@ -448,6 +468,16 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
+
+@[simp]
+theorem IsField.toSubfield_le_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield ≤ hy.toSubfield ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsField.toSubfield_lt_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield < hy.toSubfield ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsField (sSup s) where
