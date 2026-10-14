@@ -89,6 +89,10 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
 alias IsGroup.pos := IsGroup.zero_lt
 
+theorem IsGroup.one_le (h : IsGroup x) : 1 ≤ x := by
+  rw [Nimber.one_le_iff_ne_zero]
+  exact h.ne_zero
+
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
@@ -99,6 +103,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     apply h.add_lt <;> simp_all
 
 /-- `Iio x` as a subgroup of `Nimber`. -/
+@[implicit_reducible]
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
   zero_mem' := h.zero_lt
@@ -292,8 +297,11 @@ theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
 
-theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
-    y ^ n < x := by
+theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
+  rw [← succ_one, succ_le_iff]
+  exact h.one_lt
+
+theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
   induction n with
   | zero =>
     rw [pow_zero]
@@ -309,6 +317,7 @@ theorem IsRing.two : IsRing (∗2) where
   __ := IsGroup.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
@@ -428,6 +437,7 @@ theorem IsField.two : IsField (∗2) where
   __ := IsRing.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt

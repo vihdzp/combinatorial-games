@@ -74,9 +74,8 @@ theorem mul_def (a b : Nimber) :
 private theorem mul_nonempty (a b : Nimber.{u}) :
     {x | ∃ a' < a, ∃ b' < b, a' * b + a * b' + a' * b' = x}ᶜ.Nonempty := by
   convert nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
-    ((fun x ↦ x.1 * b + a * x.2 + x.1 * x.2) '' Set.Iio a ×ˢ Set.Iio b)
-  ext
-  simp_rw [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
+    ((fun x ↦ x.1 * b + a * x.2 + x.1 * x.2) '' Set.Iio a ×ˢ Set.Iio b) with x
+  simp_rw [Set.mem_eq_mem, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
   tauto
 
 theorem exists_of_lt_mul (h : c < a * b) : ∃ a' < a, ∃ b' < b, a' * b + a * b' + a' * b' = c := by

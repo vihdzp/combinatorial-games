@@ -152,7 +152,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   choose s hs₁ hs₂ hs using H _ _ hxy
   simp_rw [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
-  refine ⟨⟨fun p ↦ range (inclusion (hs p)), ?_⟩, ?_, ?_⟩
+  refine ⟨⟨fun p ↦ range (inclusion (t := {x : LGame × LGame | r x.1 x.2}) (hs p)), ?_⟩, ?_, ?_⟩
   · have this (p) : Small.{u} (s p) := small_subset (s := moves p x ×ˢ moves p y) fun z hz ↦
       ⟨(hs₁ p z.1).1 ⟨_, hz⟩, (hs₂ p z.2).1 ⟨_, hz⟩⟩
     rintro (_ | _) <;> infer_instance
@@ -198,8 +198,10 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
     GameFunctor (Shrink (Subtype (Reachable mov init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨fun
-    | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
-    | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
+    | left => equivShrink _ '' range (inclusion (t := {x | Reachable mov init x})
+        fun _y hy ↦ .trans (.single (.inl hy)) hx)
+    | right => equivShrink _ '' range (inclusion (t := {x | Reachable mov init x})
+        fun _y hy ↦ .trans (.single (.inr hy)) hx),
     by
       rintro (_|_) <;>
       · apply @small_image ..
@@ -227,9 +229,10 @@ def corec : LGame.{u} :=
   corec' mov init ⟨_, .refl⟩
 
 set_option backward.isDefEq.respectTransparency false in
-private theorem corec'_trans {x} (hx : Reachable mov init x)
-  (y : Subtype (Reachable mov x)) :
-    corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
+private theorem corec'_trans {x} (hx : Reachable mov init x) (y : Subtype (Reachable mov x)) :
+    corec' _ x y = corec' _ init
+      (inclusion (s := {y | Reachable mov x y}) (t := {y | Reachable mov init y})
+        (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
