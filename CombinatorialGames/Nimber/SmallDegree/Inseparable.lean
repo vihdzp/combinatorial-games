@@ -151,20 +151,9 @@ theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
         ← RingEquiv.coe_toEquiv_symm, RingEquiv.coe_toEquiv, Nimber.sqrt_symm_apply, hrr,
         Set.mem_Iio] at hr
       exact hr.false
-  · apply le_leastNoRoots_of_exists_isRoot
-    rw [show X ^ 2 + C (of (val (succ t).fieldClosure ^ 2 ^ n)) =
-      C 1 * X ^ 2 + C 0 * X + C (of (val (succ t).fieldClosure ^ 2 ^ n)) by simp,
-      Lex.forall_lt_quadratic]
-    refine ⟨fun c hc _ _ => ?_, fun _ => not_lt_zero.elim, fun a ha b c hd hc => ?_⟩
-    · refine ⟨c.sqrt, ?_, by simp⟩
-      rw [← Set.mem_Iio, ← him]
-      exact Set.mem_image_of_mem Nimber.sqrt hc
-    · rw [lt_one_iff.1 ha] at hd ⊢
-      obtain rfl | hb := eq_or_ne b 0
-      · absurd hd
-        simpa using degree_C_le
-      exact ⟨b⁻¹ * c, hf.mul_lt (hf.inv_lt (by simpa using hc 1)) (by simpa using hc 0),
-        by simp [hb]⟩
+  · refine hf.X_sq_add_C_le_leastNoRoots _ fun z hz ↦ ?_
+    rw [← Set.mem_Iio, ← him]
+    exact Set.mem_image_of_mem Nimber.sqrt hz
 termination_by (n + 1, 2)
 
 theorem fieldClosure_succ_pow_two_pow_succ_pow_two (n : Nat) :
