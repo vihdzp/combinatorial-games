@@ -158,7 +158,7 @@ theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
     (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
     !{s | t} = z := by
   by_contra hz
-  exact (birthday_ofSets_lt_of_mem hL hR hz).not_ge <|
+  exact (birthday_ofSets_lt_of_btwn hL hR hz).not_ge <|
     h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
