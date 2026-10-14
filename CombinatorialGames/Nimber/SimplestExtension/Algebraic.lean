@@ -166,8 +166,7 @@ proof_wanted leastNoRoots_omega0 : leastNoRoots (∗ω) = .some (X ^ 3 + C (∗2
 /-! ### Algebraically closed fields -/
 
 /-- A nimber `x` is algebraically closed when `IsRing x`, and every non-constant polynomial in the
-nimbers with coefficients less than `x` has a root that's less than `x`. Note that `0` and `1` are
-algebraically closed under this definition.
+nimbers with coefficients less than `x` has a root that's less than `x`.
 
 For simplicity, the constructor takes a `0 < p.degree` assumption. The theorem
 `IsAlgClosed.exists_root` proves that this theorem applies (vacuously) when `p = 0` as well. -/
@@ -618,6 +617,7 @@ theorem sqrt_one : √1 = 1 := map_one _
 theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
 theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
 theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
+theorem sqrt_symm_apply {x : Nimber} : sqrt.symm x = x ^ 2 := by rfl
 
 @[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
 @[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
@@ -643,6 +643,21 @@ theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
   apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
   use 1
   aesop
+
+theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x := by
+  apply h.toIsField.sqrt_lt hy
+  rw [h.leastNoRoots_eq_top]
+  exact WithTop.coe_lt_top _
+
+theorem IsField.X_sq_add_C_lt_leastNoRoots {x : Nimber} (h : IsField x) (y : Nimber)
+    (hy : ∀ z < y, z.sqrt < x) : .some (X ^ 2 + C y) ≤ leastNoRoots x := by
+  apply h.le_leastNoRoots_of_exists_isRoot
+  rw [show X ^ 2 + C y = C 1 * X ^ 2 + C 0 * X + C y by simp, Lex.forall_lt_quadratic]
+  refine ⟨fun c hc hc' _ ↦ ⟨_, hy c hc, ?_⟩, fun _ ↦ not_lt_zero.elim, fun a ha b c hd hc ↦ ?_⟩
+  · simp
+  · obtain rfl := lt_one_iff.1 ha
+    contrapose! hd
+    simpa using degree_linear_le
 
 end Nimber
 end
