@@ -229,9 +229,10 @@ def corec : LGame.{u} :=
   corec' mov init ⟨_, .refl⟩
 
 set_option backward.isDefEq.respectTransparency false in
-private theorem corec'_trans {x} (hx : Reachable mov init x)
-  (y : Subtype (Reachable mov x)) :
-    corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
+private theorem corec'_trans {x} (hx : Reachable mov init x) (y : Subtype (Reachable mov x)) :
+    corec' _ x y = corec' _ init
+      (inclusion (s := {y | Reachable mov x y}) (t := {y | Reachable mov init y})
+        (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
