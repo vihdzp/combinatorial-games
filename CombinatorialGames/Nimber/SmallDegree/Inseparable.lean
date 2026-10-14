@@ -77,8 +77,7 @@ theorem leastNoRoots_fieldClosure_succ :
       rw [Polynomial.map_add, Polynomial.map_pow, Polynomial.map_X, Polynomial.map_C,
         IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf'
       apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
-      apply_fun WithZero.log at hrf'
-      apply_fun Even at hrf'
+      apply_fun Even ∘ WithZero.log at hrf
       simp [herr] at hrf'
   · apply le_leastNoRoots_of_exists_isRoot
     rw [show X ^ 2 + C t = C 1 * X ^ 2 + C 0 * X + C t by simp, Lex.forall_lt_quadratic]
