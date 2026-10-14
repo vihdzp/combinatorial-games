@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Real
 public import Mathlib.Algebra.Ring.Subring.Defs
+
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Algebra.InfiniteSum.Order
@@ -61,7 +62,7 @@ theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr]
-  apply birthday_ofSets_le_of_mem <;> simp_all
+  apply birthday_ofSets_le_of_btwn <;> simp_all
 
 theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
