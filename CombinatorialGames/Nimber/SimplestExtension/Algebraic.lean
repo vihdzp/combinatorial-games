@@ -464,7 +464,7 @@ private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k
   simpa using congrFun h k
 
 /-- The set of roots of polynomials with coefficients less than `x`. -/
-private def rootSet (x : Nimber) : Set Nimber :=
+private noncomputable def rootSet (x : Nimber) : Set Nimber :=
   ⋃ p : {p : Nimber[X] // ∀ k, p.coeff k < x}, p.1.roots.toFinset
 
 private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=

@@ -549,8 +549,7 @@ theorem finite_setOfPred_subposition (x : IGame) [Short x] : {y | Subposition y 
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
-  ext
-  rw [Set.mem_ofPred, subposition_iff_exists]
+  rw [Set.mem_eq_mem, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y | Subposition y x} :=
