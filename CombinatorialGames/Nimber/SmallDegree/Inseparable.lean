@@ -11,7 +11,7 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.RingTheory.DedekindDomain.AdicValuation
 
 /-!
-# Inseparable Nimber extensions
+# Inseparable nimber extensions
 
 Let `t` be an algebraically closed nimber, and let `t(t)` denote the smallest nimber field
 larger than `t`. Then the next few fields after `t(t)` are `t(t) ^ 2 ^ n` as `n` ranges over `ℕ`,
