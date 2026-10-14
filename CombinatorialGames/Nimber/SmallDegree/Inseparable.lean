@@ -79,19 +79,8 @@ theorem leastNoRoots_fieldClosure_succ :
       apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
       apply_fun Even ∘ WithZero.log at hrf'
       simp [herr] at hrf'
-  · apply le_leastNoRoots_of_exists_isRoot
-    rw [show X ^ 2 + C t = C 1 * X ^ 2 + C 0 * X + C t by simp, Lex.forall_lt_quadratic]
-    refine ⟨fun c hc _ _ => ?_, fun _ => not_lt_zero.elim, fun a ha b c hd hc => ?_⟩
-    · obtain ⟨r, hrt, hrr⟩ := ht.exists_root (Eq.trans_ne (by compute_degree!) two_ne_zero)
-        (ht.coeff_add_lt (coeff_X_pow_lt 2 ht.one_lt) (coeff_C_lt hc))
-      exact ⟨r, hrt.trans ((lt_succ t).trans_le (le_fieldClosure _)), by simpa using hrr⟩
-    · rw [lt_one_iff.1 ha] at hd ⊢
-      obtain rfl | hb := eq_or_ne b 0
-      · absurd hd
-        simpa using degree_C_le
-      exact ⟨b⁻¹ * c, (IsField.fieldClosure _).mul_lt
-        ((IsField.fieldClosure _).inv_lt (by simpa using hc 1)) (by simpa using hc 0),
-        by simp [hb]⟩
+  · exact (IsField.fieldClosure _).X_sq_add_C_lt_leastNoRoots _ fun z hz ↦
+      (ht.sqrt_lt hz).trans <| (lt_succ t).trans_le (le_fieldClosure (succ t))
 
 theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
   have hrt := (IsField.fieldClosure (succ t)).isRoot_leastNoRoots
