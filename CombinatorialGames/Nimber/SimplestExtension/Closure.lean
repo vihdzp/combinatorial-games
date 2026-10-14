@@ -155,6 +155,9 @@ noncomputable section
 namespace Nimber
 open Set
 
+instance : IsRegularCardinalOrder Nimber :=
+  inferInstanceAs (IsRegularCardinalOrder Ordinal)
+
 /-! ### Groups -/
 
 section AddSubgroup
@@ -281,6 +284,53 @@ theorem exists_isGroup_between {x : Nimber} (hx : x ≠ 0) :
     ∃ l, IsGroup l ∧ ∃ u, IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z :=
   isClub_ofPred_isGroup.exists_between ⟨1, by simpa⟩
 
+/-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
+def enumGroup : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ Order.enum _ isClub_ofPred_isGroup.isCofinal (of x)) fun _ ↦ by simp
+
+theorem enumGroup_def (x : Ordinal) :
+    enumGroup x = Order.enum _ isClub_ofPred_isGroup.isCofinal (of x) :=
+  (rfl)
+
+theorem enumGroup_def' (x : Ordinal) :
+    enumGroup x = of (Order.enum {x | IsGroup (∗x)}
+      (by exact isClub_ofPred_isGroup.isCofinal) x) :=
+  (rfl)
+
+@[simp]
+theorem range_enumGroup : range enumGroup = ofPred IsGroup := by
+  erw [enumGroup, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
+  exact Subtype.range_val
+
+theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ range enumGroup ↔ IsGroup x :=
+  Set.ext_iff.1 range_enumGroup _
+
+theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
+  mem_range_enumGroup_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
+  isClub_ofPred_isGroup.isNormal_enum
+
+theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
+  rw [enumGroup_def', of.eq_iff_eq]
+  have : {x | (of x).IsGroup} = range fun y : Ordinal ↦ 2 ^ y := by
+    ext; simp [isGroup_iff_mem_range_two_opow]
+  rw! [this, Order.enum_range]
+  · rfl
+  · intro a b h
+    rwa [Ordinal.opow_lt_opow_iff_right one_lt_two]
+
+@[simp]
+theorem enumGroup_zero : enumGroup 0 = 1 := by
+  simp [enumGroup_eq_two_opow]
+
+@[simp]
+theorem enumGroup_one : enumGroup 1 = ∗2 := by
+  simp [enumGroup_eq_two_opow]
+
+theorem enumGroup_natCast (n : ℕ) : enumGroup n = ∗(2 ^ n) := by
+  simp [enumGroup_eq_two_opow]
+
 end AddSubgroup
 
 /-! ### Rings -/
@@ -402,6 +452,42 @@ theorem exists_isRing_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsRing l ∧ ∃ u, IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z :=
   isClub_ofPred_isRing.exists_between ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
 
+/-- The normal enumerator function for rings. -/
+def enumRing : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ Order.enum _ isClub_ofPred_isRing.isCofinal (of x)) fun _ ↦ by simp
+
+theorem enumRing_def (x : Ordinal) :
+    enumRing x = Order.enum _ isClub_ofPred_isRing.isCofinal (of x) :=
+  (rfl)
+
+theorem enumRing_def' (x : Ordinal) :
+    enumRing x = of (Order.enum {x | IsRing (∗x)}
+      (by exact isClub_ofPred_isRing.isCofinal) x) :=
+  (rfl)
+
+@[simp]
+theorem range_enumRing : range enumRing = ofPred IsRing := by
+  erw [enumRing, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
+  exact Subtype.range_val
+
+theorem mem_range_enumRing_iff {x : Nimber} : x ∈ range enumRing ↔ IsRing x :=
+  Set.ext_iff.1 range_enumRing _
+
+theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
+  mem_range_enumRing_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumRing : Order.IsNormal enumRing :=
+  isClub_ofPred_isRing.isNormal_enum
+
+@[simp]
+theorem enumRing_zero : enumRing 0 = ∗2 := by
+  rw [enumRing_def, of_zero, ← bot_eq_zero, Order.enum_bot]
+  apply le_antisymm
+  · exact csInf_le' IsRing.two
+  · rw [le_csInf_iff']
+    · exact fun _ ↦ IsRing.two_le
+    · exact ⟨_, IsRing.two⟩
+
 end Subring
 
 /-! ### Fields -/
@@ -428,12 +514,9 @@ theorem isLowerSet_subfieldClosure {s : Set Nimber} (hs : IsLowerSet s) :
   by_contra! hy'
   exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
 
-instance small_subfieldClosure (s : Set Nimber) [Small.{u} s] : Small.{u} (closure s) :=
-  inferInstance
-
 theorem subfieldClosure_Iio_eq_Iio (x : Nimber) : ∃ y, (closure (Iio x) : Set Nimber) = Iio y := by
   refine (isLowerSet_subfieldClosure (isLowerSet_Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
-  have H : Small (_ : Set _) := small_subfieldClosure (Iio x)
+  have H := Subfield.small_closure' (Iio x)
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
 
@@ -523,6 +606,42 @@ theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
 theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
   isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
+/-- The normal enumerator function for fields. -/
+def enumField : Ordinal ↪o Nimber :=
+  .ofStrictMono (fun x ↦ Order.enum _ isClub_ofPred_isField.isCofinal (of x)) fun _ ↦ by simp
+
+theorem enumField_def (x : Ordinal) :
+    enumField x = Order.enum _ isClub_ofPred_isField.isCofinal (of x) :=
+  (rfl)
+
+theorem enumField_def' (x : Ordinal) :
+    enumField x = of (Order.enum {x | IsField (∗x)}
+      (by exact isClub_ofPred_isField.isCofinal) x) :=
+  (rfl)
+
+@[simp]
+theorem range_enumField : range enumField = ofPred IsField := by
+  erw [enumField, OrderEmbedding.coe_ofStrictMono, EquivLike.range_comp]
+  exact Subtype.range_val
+
+theorem mem_range_enumField_iff {x : Nimber} : x ∈ range enumField ↔ IsField x :=
+  Set.ext_iff.1 range_enumField _
+
+theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
+  mem_range_enumField_iff.1 ⟨x, rfl⟩
+
+theorem isNormal_enumField : Order.IsNormal enumField :=
+  isClub_ofPred_isField.isNormal_enum
+
+@[simp]
+theorem enumField_zero : enumField 0 = ∗2 := by
+  rw [enumField_def, of_zero, ← bot_eq_zero, Order.enum_bot]
+  apply le_antisymm
+  · exact csInf_le' IsField.two
+  · rw [le_csInf_iff']
+    · exact fun _ h ↦ h.two_le
+    · exact ⟨_, IsField.two⟩
 
 end Subfield
 end Nimber
