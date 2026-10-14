@@ -134,7 +134,7 @@ theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric 
   exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
     he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
 
-theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+theorem birthday_ofSets_le_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
     (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
   rw [ofSets_eq_mk, ← out_eq z]
@@ -142,7 +142,7 @@ theorem birthday_ofSets_le_of_mem {s t : Set Surreal.{u}} {z : Surreal}
   apply IGame.Fits.surrealBirthday_le
   simp_all [IGame.Fits]
 
-theorem birthday_ofSets_lt_of_mem {s t : Set Surreal.{u}} {z : Surreal}
+theorem birthday_ofSets_lt_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
     (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
     !{s | t}.birthday < z.birthday := by
