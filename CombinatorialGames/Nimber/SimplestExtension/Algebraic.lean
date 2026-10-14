@@ -23,6 +23,22 @@ open Order Ordinal Polynomial Set
 
 public section
 
+section ForMathlib
+namespace Polynomial
+variable {R : Type*} [Semiring R] {p : R[X]}
+
+-- mathlib PR #44795
+theorem coe_coeffs_subset_iff {s : Set R} :
+    (p.coeffs : Set R) ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
+  grind [mem_coeffs_iff]
+
+theorem coeffs_subset_iff {s : Finset R} :
+    p.coeffs ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
+  simpa using coe_coeffs_subset_iff (s := (s : Set R))
+
+end Polynomial
+end ForMathlib
+
 namespace Nimber
 
 /-! ### Lemmas relating rings to `leastNoRoots` -/
@@ -353,11 +369,8 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     rw [Algebra.adjoin_singleton_eq_range_aeval, AlgHom.mem_range]
     obtain ⟨p, hpn, hpc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hc
     refine ⟨p.toSubring h.toSubring ?_, ?_⟩
-    · apply id
-      intro u hu
-      rw [SetLike.mem_coe, mem_coeffs_iff] at hu
-      obtain ⟨c, -, rfl⟩ := hu
-      exact hpc c
+    · rw [coe_coeffs_subset_iff]
+      simp [hpc]
     rw [aeval_def, eval₂_eq_eval_map]
     refine congr(eval x $(p.map_toSubring h.toSubring _)).trans ?_
     refine h.eval_eq_of_lt ?_ hpn hpc
