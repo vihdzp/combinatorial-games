@@ -617,12 +617,12 @@ theorem sqrt_one : √1 = 1 := map_one _
 theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
 theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
 theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
-theorem sqrt_symm_apply {x : Nimber} : sqrt.symm x = x ^ 2 := by rfl
 
 @[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
 @[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
 @[simp] theorem sqrt_self_mul_self (x : Nimber) : √(x * x) = x := by rw [← pow_two, sqrt_sq]
 @[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
+@[simp] theorem sqrt_symm_apply (x : Nimber) : sqrt.symm x = x ^ 2 := by rfl
 
 theorem sqrt_eq_iff {x y : Nimber} : √y = x ↔ x ^ 2 = y := by
   conv_rhs => rw [← sq_sqrt y, CharTwo.sq_inj, eq_comm]
