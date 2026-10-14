@@ -285,8 +285,7 @@ instance : MulZeroClass NatOrdinal where
 
 private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
   rw [mul_def]
-  convert csInf_Ici using 2
-  ext b
+  convert csInf_Ici with x
   refine ⟨fun H ↦ le_of_forall_lt (a := a) fun c hc ↦ ?_, fun ha c hc ↦ ?_⟩
   · simpa [mul_one' c] using H c hc
   · simpa [mul_one' c] using hc.trans_le ha
