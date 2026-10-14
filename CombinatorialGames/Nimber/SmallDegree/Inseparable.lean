@@ -240,7 +240,7 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     · gcongr
       grw [← Set.subset_union_left]
       intro x hx
-      exact Subfield.mem_closure_of_mem ⟨x.sqrt, ht.sqrt_lt, by simp⟩
+      exact Subfield.mem_closure_of_mem ⟨x.sqrt, ht.sqrt_lt hx, by simp⟩
     · rw [Subfield.closure_le, Set.union_subset_iff, SetLike.coe_subset_coe,
         Subfield.closure_le, Set.union_subset_iff, Set.singleton_subset_iff,
         Set.singleton_subset_iff, Set.image_subset_iff]
