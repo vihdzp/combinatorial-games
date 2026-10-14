@@ -173,7 +173,7 @@ theorem fieldClosure_succ_pow_two_pow_succ_pow_two (n : Nat) :
   have hf := isField_fieldClosure_succ_pow_two_pow (n + 1)
   have ih := leastNoRoots_fieldClosure_succ_pow_two_pow_succ n
   simpa [CharTwo.add_eq_zero] using hf.isRoot_leastNoRoots_of_eq ih
-termination_by (n + 1, 4)
+termination_by (n + 1, 3)
 
 private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     Nimber.sqrt '' Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
