@@ -104,6 +104,8 @@ theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
     _ = _ := congr(_ + $(IsRoot.def.1 hrt))
     _ = _ := add_zero _
 
+-- false positive due to the `mutual` block
+-- see https://leanprover.zulipchat.com/#narrow/channel/270676-lean4/topic/unused.20variables.20linter.20false.20positive/near/631476579
 set_option linter.unusedSectionVars false in
 mutual
 
