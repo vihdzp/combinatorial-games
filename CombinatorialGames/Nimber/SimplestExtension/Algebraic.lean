@@ -548,6 +548,7 @@ theorem sqrt_one : √1 = 1 := map_one _
 theorem sqrt_add (x y : Nimber) : √(x + y) = √x + √y := map_add ..
 theorem sqrt_mul (x y : Nimber) : √(x * y) = √x * √y := map_mul ..
 theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
+theorem sqrt_symm_apply {x : Nimber} : sqrt.symm x = x ^ 2 := by rfl
 
 @[simp] theorem sqrt_sq (x : Nimber) : √(x ^ 2) = x := by simp [sqrt]
 @[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
