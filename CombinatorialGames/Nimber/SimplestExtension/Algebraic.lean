@@ -655,7 +655,7 @@ theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : �
   rw [h.leastNoRoots_eq_top]
   exact WithTop.coe_lt_top _
 
-theorem IsField.X_sq_add_C_lt_leastNoRoots {x : Nimber} (h : IsField x) (y : Nimber)
+theorem IsField.X_sq_add_C_le_leastNoRoots {x : Nimber} (h : IsField x) (y : Nimber)
     (hy : ∀ z < y, z.sqrt < x) : .some (X ^ 2 + C y) ≤ leastNoRoots x := by
   apply h.le_leastNoRoots_of_exists_isRoot
   rw [show X ^ 2 + C y = C 1 * X ^ 2 + C 0 * X + C y by simp, Lex.forall_lt_quadratic]
