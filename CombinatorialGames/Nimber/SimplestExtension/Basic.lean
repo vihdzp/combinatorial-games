@@ -89,6 +89,10 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
 alias IsGroup.pos := IsGroup.zero_lt
 
+theorem IsGroup.one_le (h : IsGroup x) : 1 ≤ x := by
+  rw [Nimber.one_le_iff_ne_zero]
+  exact h.ne_zero
+
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
@@ -99,6 +103,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     apply h.add_lt <;> simp_all
 
 /-- `Iio x` as a subgroup of `Nimber`. -/
+@[implicit_reducible]
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
   zero_mem' := h.zero_lt
@@ -111,6 +116,16 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
 
 theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.toAddSubgroup :=
   h.toAddSubgroup.closure_eq
+
+@[simp]
+theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup ≤ hy.toAddSubgroup ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 @[simp]
 theorem IsGroup.one : IsGroup 1 where
@@ -292,8 +307,11 @@ theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
 
-theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
-    y ^ n < x := by
+theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
+  rw [← succ_one, succ_le_iff]
+  exact h.one_lt
+
+theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
   induction n with
   | zero =>
     rw [pow_zero]
@@ -309,6 +327,7 @@ theorem IsRing.two : IsRing (∗2) where
   __ := IsGroup.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
@@ -320,6 +339,16 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
+
+@[simp]
+theorem IsRing.toSubfield_le_toSubfield (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toSubfield_lt_toSubfield (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring < hy.toSubring ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
@@ -428,6 +457,7 @@ theorem IsField.two : IsField (∗2) where
   __ := IsRing.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
@@ -438,6 +468,16 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
+
+@[simp]
+theorem IsField.toSubfield_le_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield ≤ hy.toSubfield ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsField.toSubfield_lt_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield < hy.toSubfield ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsField (sSup s) where
