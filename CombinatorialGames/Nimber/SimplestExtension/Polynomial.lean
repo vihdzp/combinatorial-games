@@ -819,7 +819,7 @@ theorem natDegree_leastNoRoots_pos {x : Nimber} (ht) :
     0 < (x.leastNoRoots.untop ht).natDegree :=
   natDegree_pos_iff_degree_pos.2 (degree_leastNoRoots_pos ht)
 
-theorem one_le_degree_leastNoRoots_pos {x : Nimber} (ht) :
+theorem one_le_degree_leastNoRoots {x : Nimber} (ht) :
     1 ≤ (x.leastNoRoots.untop ht).degree := by
   rw [WithBot.one_le_iff_pos]
   exact degree_leastNoRoots_pos ht
@@ -1000,13 +1000,24 @@ theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
   rw [WithTop.eq_untop hy'] at hy
   generalize_proofs ht at hy
   obtain ⟨a, ha, b, hp⟩ := natDegree_eq_one.1 <| natDegree_eq_of_degree_eq_some <|
-    hy.eq_of_not_lt (by simp [one_le_degree_leastNoRoots_pos])
+    hy.eq_of_not_lt (by simp [one_le_degree_leastNoRoots])
   apply hp ▸ not_isRoot_leastNoRoots_of_lt ht (r := b / a) (h.div_lt ..)
   · simp [mul_div_cancel₀, ha]
   · convert hp ▸ coeff_leastNoRoots_lt ht 0
     simp
   · convert hp ▸ coeff_leastNoRoots_lt ht 1
     simp
+
+theorem IsField.one_lt_degree_leastNoRoots {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
+    1 < ((leastNoRoots x).untop ht).degree := by
+  rw [← Order.succ_le_iff, ← WithBot.coe_one, WithBot.orderSucc_coe,
+    ← WithBot.natCast_eq_coe, ← Lex.X_pow_le_iff, Nat.succ_eq_succ, WithTop.le_untop_iff]
+  exact (h.X_sq_lt_leastNoRoots).le
+
+theorem IsField.one_lt_natDegree_leastNoRoots
+    {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
+    1 < ((leastNoRoots x).untop ht).natDegree :=
+  Polynomial.coe_lt_degree.1 (h.one_lt_degree_leastNoRoots ht)
 
 theorem IsRing.toIsField_of_X_sq_lt_leastNoRoots {x : Nimber} (h : IsRing x)
     (h' : .some (X ^ 2) ≤ leastNoRoots x) : IsField x := by

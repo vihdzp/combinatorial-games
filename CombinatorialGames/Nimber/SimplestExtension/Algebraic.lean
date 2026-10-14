@@ -23,6 +23,34 @@ open Order Ordinal Polynomial Set
 
 public section
 
+section ForMathlib
+namespace Polynomial
+variable {R : Type*} [Semiring R] {p : R[X]}
+
+-- mathlib PR #44795
+theorem coe_coeffs_subset_iff {s : Set R} :
+    (p.coeffs : Set R) ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
+  grind [mem_coeffs_iff]
+
+theorem coeffs_subset_iff {s : Finset R} :
+    p.coeffs ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
+  simpa using coe_coeffs_subset_iff (s := (s : Set R))
+
+end Polynomial
+
+namespace Polynomial
+
+variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S] {p : R[X]} {T : Subring R}
+    (hp : (p.coeffs : Set R) ⊆ T) (x : S)
+
+theorem aeval_toSubring : aeval x (p.toSubring T hp) = aeval x p := by
+  rw [aeval_def, IsScalarTower.algebraMap_eq T R S, ← eval₂_map,
+    Algebra.algebraMap_ofSubring, p.map_toSubring, ← aeval_def]
+
+end Polynomial
+
+end ForMathlib
+
 namespace Nimber
 
 /-! ### Lemmas relating rings to `leastNoRoots` -/
@@ -342,6 +370,48 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       rw [map_add, map_mul, hs] at hi
       simpa using! congrArg hxr.toSubring.subtype hi
 
+theorem IsField.fieldAdjoin_simple_self {x : Nimber} (h : IsField x) :
+    (IntermediateField.adjoin h.toSubfield {x}).toSubfield =
+      (IsField.fieldClosure (succ x)).toSubfield := by
+  apply SetLike.ext'
+  rw [IntermediateField.adjoin_toSubfield, union_singleton,
+    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
+    coe_subfieldClosure_Iio, coe_toSubfield]
+
+theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (ht) {n : ℕ}
+    (hn : (x.leastNoRoots.untop ht).degree = n) :
+    (h.pow_degree_leastNoRoots ht hn).toSubfield =
+      (IntermediateField.adjoin h.toSubfield {x}).toSubfield := by
+  apply le_antisymm
+  · intro c hc
+    rw [mem_toSubfield_iff] at hc
+    apply IntermediateField.algebra_adjoin_le_adjoin
+    rw [Algebra.adjoin_singleton_eq_range_aeval, AlgHom.mem_range]
+    obtain ⟨p, hpn, hpc, rfl⟩ := eq_oeval_of_lt_pow h.ne_zero hc
+    refine ⟨p.toSubring h.toSubring ?_, ?_⟩
+    · rw [coe_coeffs_subset_iff]
+      simp [hpc]
+    erw [aeval_toSubring]
+    rw [coe_aeval_eq_eval]
+    refine h.eval_eq_of_lt ?_ hpn hpc
+    exact (X_pow_lt_leastNoRoots_of_le_degree ht hn.ge).le
+  · rw [IntermediateField.adjoin_toSubfield, Subfield.closure_le, Set.union_subset_iff,
+      Subfield.algebraMap_ofSubfield, Subfield.coe_subtype, Subtype.range_coe,
+      coe_toSubfield, coe_toSubfield, Set.singleton_subset_iff, Set.Iio_subset_Iio_iff,
+      Set.mem_Iio, and_iff_right_of_imp le_of_lt, ← val_lt_iff]
+    apply lt_self_pow₀ (one_lt_val.2 h.one_lt)
+    rw [← WithBot.coe_lt_coe, WithBot.coe_one, ← WithBot.natCast_eq_coe, ← hn]
+    exact h.one_lt_degree_leastNoRoots ht
+
+theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : IsField x)
+    (ht) {n : ℕ} (hn : (x.leastNoRoots.untop ht).degree = n) :
+    fieldClosure (succ x) = of (val x ^ n) := by
+  have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
+  rw [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
+    coe_toSubfield, Set.Iio_inj] at hs
+  exact hs.symm
+
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
@@ -382,15 +452,6 @@ theorem algebraAdjoin_simple_self :
     Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
     coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
 
-theorem fieldAdjoin_simple_self :
-    (IntermediateField.adjoin ht.toSubfield {t}).toSubfield =
-      (IsField.fieldClosure (succ t)).toSubfield := by
-  apply SetLike.ext'
-  rw [IntermediateField.adjoin_toSubfield, union_singleton,
-    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
-    coe_subfieldClosure_Iio, coe_toSubfield]
-
 end IsAlgClosed
 
 /-! ### Nimbers are algebraically closed -/
@@ -413,7 +474,6 @@ private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
 noncomputable def algClosure (x : Nimber) : Nimber :=
   sSup (succ '' rootSet x.fieldClosure)
 
-set_option backward.isDefEq.respectTransparency false in
 mutual
 
 private theorem isAlgebraic_of_not_isField {x y : Nimber} (h : y ≤ algClosure x)
