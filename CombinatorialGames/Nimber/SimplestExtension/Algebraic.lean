@@ -308,6 +308,12 @@ theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
   · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
     simp [h.ne_zero]
 
+theorem IsRing.isRoot_leastNoRoots_of_eq {x : Nimber} (h : IsRing x) {p : Nimber[X]}
+    (hp : x.leastNoRoots = p) : p.IsRoot x := by
+  have := h.isRoot_leastNoRoots (by simp [hp])
+  rw! [hp, WithTop.untop_coe] at this
+  exact this
+
 theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
