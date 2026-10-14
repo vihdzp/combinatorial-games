@@ -404,6 +404,14 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     rw [← WithBot.coe_lt_coe, WithBot.coe_one, ← WithBot.natCast_eq_coe, ← hn]
     exact h.one_lt_degree_leastNoRoots ht
 
+theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : IsField x)
+    (ht) {n : ℕ} (hn : (x.leastNoRoots.untop ht).degree = n) :
+    fieldClosure (succ x) = of (val x ^ n) := by
+  have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
+  rw [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
+    coe_toSubfield, Set.Iio_inj] at hs
+  exact hs.symm
+
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
@@ -443,15 +451,6 @@ theorem algebraAdjoin_simple_self :
     Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
     Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
     coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
-
-theorem fieldAdjoin_simple_self :
-    (IntermediateField.adjoin ht.toSubfield {t}).toSubfield =
-      (IsField.fieldClosure (succ t)).toSubfield := by
-  apply SetLike.ext'
-  rw [IntermediateField.adjoin_toSubfield, union_singleton,
-    Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, coe_toSubfield, Set.Iio_insert, ← Iio_succ,
-    coe_subfieldClosure_Iio, coe_toSubfield]
 
 end IsAlgClosed
 
