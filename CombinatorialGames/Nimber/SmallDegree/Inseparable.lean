@@ -79,7 +79,7 @@ theorem leastNoRoots_fieldClosure_succ :
       apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
       apply_fun Even ∘ WithZero.log at hrf'
       simp [herr] at hrf'
-  · exact (IsField.fieldClosure _).X_sq_add_C_lt_leastNoRoots _ fun z hz ↦
+  · exact (IsField.fieldClosure _).X_sq_add_C_le_leastNoRoots _ fun z hz ↦
       (ht.sqrt_lt hz).trans <| (lt_succ t).trans_le (le_fieldClosure (succ t))
 
 theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
