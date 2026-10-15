@@ -248,15 +248,12 @@ theorem groupClosure_zero : groupClosure 0 = 1 := by
   rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
   simp
 
-@[simp]
 theorem groupClosure_one : groupClosure 1 = 1 :=
   IsGroup.one.groupClosure_eq
 
-@[simp]
 theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
   IsGroup.two.groupClosure_eq
 
-@[simp]
 theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
   (IsGroup.two_opow x).groupClosure_eq
 
@@ -449,7 +446,6 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
   · rw [← ringClosure_zero]
     exact ringClosure_mono zero_le_one
 
-@[simp]
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
   IsRing.two.ringClosure_eq
 
@@ -618,7 +614,6 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
   · rw [← fieldClosure_zero]
     exact fieldClosure_mono zero_le_one
 
-@[simp]
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
   IsField.two.fieldClosure_eq
 

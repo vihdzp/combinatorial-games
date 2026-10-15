@@ -26,6 +26,7 @@ open Cardinal Order Ordinal Set
 /-! ### For Mathlib -/
 
 set_option backward.isDefEq.respectTransparency.types false in
+/-- Restrict an order isomorphism to an initial segment. -/
 def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃o β) (x : α) :
     Iio x ≤i β where
   toFun x := e x
