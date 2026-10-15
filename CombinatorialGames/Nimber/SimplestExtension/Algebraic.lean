@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Mathlib.IsAlgebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
