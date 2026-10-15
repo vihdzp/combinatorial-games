@@ -103,8 +103,7 @@ theorem isField_fieldClosure_succ_pow_two_pow (n : Nat) :
 termination_by (n, 0)
 
 private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat) :
-    ∃ (hc : leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n)) ≠ ⊤),
-    ((leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n))).untop hc).degree = 2 := by
+    ∃ hc, ((leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n))).untop hc).degree = 2 := by
   have ih (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_succ m
   cases n with
   | zero =>
