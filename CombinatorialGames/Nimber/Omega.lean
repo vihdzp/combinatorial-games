@@ -207,7 +207,7 @@ theorem IsRing.omega {x : Ordinal} (hx : x ≠ 0) : IsRing (∗ω_ x) :=
 
 theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) := by
   obtain rfl | hx := eq_or_ne x 0
-  · simpa using IsGroup.two_opow ω
+  · simp
   · exact (IsAlgClosed.omega hx).toIsGroup
 
 end Nimber
