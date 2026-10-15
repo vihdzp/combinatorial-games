@@ -18,8 +18,6 @@ larger than `t`. Then the next few fields after `t(t)` are `t(t) ^ 2 ^ n` as `n`
 and these are all purely inseparable extensions over `t(t)` obtained by adjoining
 the `2 ^ n`-th root of `t`. After these then `t(t) ^ ω` is a perfect field and so
 all further extensions are too until the next algebraically closed nimber.
-
-TODO: prove these are all of the inseparable nimber extensions
 -/
 
 universe u
