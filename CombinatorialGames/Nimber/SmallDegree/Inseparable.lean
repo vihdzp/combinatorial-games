@@ -57,7 +57,7 @@ theorem leastNoRoots_fieldClosure_succ :
         (@RingEquiv.subfieldCongr Nimber _ (IntermediateField.toSubfield _) _
           ht.fieldAdjoin_simple_self)
       have hrf' : (p.map e.symm).IsRoot (e.symm rr) :=
-        hrf.map -- `IsRoot.map` should take the ringhom explicity
+        hrf.map -- `IsRoot.map` should take the ringhom explicity, see mathlib PR #44884
       have herr : e.symm ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩ = .X := by
         rw [RingEquiv.symm_apply_eq]
         unfold e
