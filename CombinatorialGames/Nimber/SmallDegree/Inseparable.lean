@@ -73,7 +73,10 @@ theorem leastNoRoots_fieldClosure_succ :
           --   ht.fieldAdjoin_simple_self]
           apply RingEquiv.coe_subfieldCongr_apply
         simp
-      unfold p at hrf'
+      let tt : hf.toSubfield := ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
+      have hrf : ((X ^ 2 + C tt).map e.symm).IsRoot (e.symm rr) := by
+        apply IsRoot.map
+        simpa [rr, Subtype.ext_iff] using hrr
       rw [Polynomial.map_add, Polynomial.map_pow, Polynomial.map_X, Polynomial.map_C,
         IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf'
       apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
