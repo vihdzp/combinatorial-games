@@ -236,17 +236,19 @@ theorem sqrt_fieldClosure_succ_pow_two_pow (n : Nat) :
       of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1)) := by
   rw [← ht.fieldClosure_succ_pow_two_pow_succ_pow_two, Nimber.sqrt_sq]
 
+omit ht in
+private theorem isNormal_val_fieldClosure_succ_pow_two_pow : IsNormal fun o : Ordinal =>
+    val (fieldClosure (succ t)) ^ (Nat.cast 2 : Ordinal) ^ o :=
+  ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
+    (Ordinal.isNormal_opow one_lt_two))
+
 theorem isField_fieldClosure_succ_pow_omega0 :
     IsField (of (val (fieldClosure (succ t)) ^ ω)) := by
-  refine (congrArg IsField ?_).mp <| IsField.iSup ht.isField_fieldClosure_succ_pow_two_pow
-  rw [← of.map_ciSup Ordinal.bddAbove_of_small, ← Ordinal.natCast_opow_omega0 one_lt_two]
-  simp_rw [← opow_natCast, natCast_pow, ← opow_natCast, Nat.cast_ofNat]
-  apply congrArg of
-  let f (i : Ordinal) : Ordinal := val (fieldClosure (succ t)) ^ (2 : Ordinal) ^ i
-  change ⨆ i : ℕ, f i = f ω
-  apply Ordinal.apply_omega0_of_isNormal
-  exact (Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
-    (Ordinal.isNormal_opow one_lt_two)
+  rw [← Ordinal.natCast_opow_omega0 one_lt_two,
+    ← Ordinal.apply_omega0_of_isNormal isNormal_val_fieldClosure_succ_pow_two_pow,
+    of.map_ciSup Ordinal.bddAbove_of_small]
+  simp_rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast]
+  exact IsField.iSup ht.isField_fieldClosure_succ_pow_two_pow
 
 theorem perfectField_fieldClosure_succ_pow_omega0 :
     PerfectField ht.isField_fieldClosure_succ_pow_omega0.toSubfield := by
@@ -261,9 +263,12 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
     of.isNormal.comp
       ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
         (Ordinal.isNormal_opow one_lt_two))
-  obtain ⟨n, hno, hn⟩ := (hN.lt_iff_exists_lt isSuccLimit_omega0).mp hx
+  obtain ⟨n, hno, hn⟩ :=
+    ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
+      isSuccLimit_omega0).mp hx
   obtain ⟨n, rfl⟩ := lt_omega0.1 hno
   refine lt_trans ?_ (hN.strictMono (natCast_lt_omega0 (n + 1)))
+  rw [Function.comp_apply] at hn
   rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast] at hn ⊢
   rw [← mem_toSubfield_iff (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)),
     ← ht.sqrt_map_fieldClosure_succ_pow_two_pow_succ, Subfield.mem_map]
@@ -337,15 +342,12 @@ theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x)
       exact (val.le_iff_le.2 <| le_fieldClosure _).trans (Ordinal.left_le_opow _ omega0_pos)
     · refine ⟨t, ht, ?_⟩
       rw [← natCast_opow_omega0 one_lt_two] at hlt
-      have hN : IsNormal fun o : Ordinal =>
-          of (val (fieldClosure (succ t)) ^ (Nat.cast 2 : Ordinal) ^ o) :=
-        of.isNormal.comp
-          ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
-            (Ordinal.isNormal_opow one_lt_two))
-      obtain ⟨n, hno, hn⟩ := (hN.lt_iff_exists_lt isSuccLimit_omega0).mp hlt
+      obtain ⟨n, hno, hn⟩ :=
+        ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
+          isSuccLimit_omega0).mp hlt
       obtain ⟨n, rfl⟩ := lt_omega0.1 hno
       clear hno
-      rw [opow_natCast, ← natCast_pow, opow_natCast] at hn
+      rw [Function.comp_apply, opow_natCast, ← natCast_pow, opow_natCast] at hn
       induction n with
       | zero =>
         rw [pow_zero, pow_one, of_val, hx.lt_fieldClosure_iff, lt_succ_iff] at hn
