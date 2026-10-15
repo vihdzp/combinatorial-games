@@ -50,17 +50,15 @@ theorem leastNoRoots_fieldClosure_succ :
         X ^ 2 + C ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
       let rr : hf.toSubfield := ⟨r, hr⟩
       have hrf : p.IsRoot rr := by simpa [p, rr, Subtype.ext_iff] using hrr
-      set_option backward.isDefEq.respectTransparency false in
       let e := (RatFunc.algEquivOfTranscendental t ht.transcendental).toRingEquiv.trans
         -- (.subfieldCongr ht.fieldAdjoin_simple_self)
         -- -- `IntermediateField.adjoin` shouldn't be exposed
         (@RingEquiv.subfieldCongr Nimber _ (IntermediateField.toSubfield _) _
           ht.fieldAdjoin_simple_self)
-      have hrf' : (p.map e.symm).IsRoot (e.symm rr) :=
-        hrf.map -- `IsRoot.map` should take the ringhom explicity, see mathlib PR #44884
-      have herr : e.symm ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩ = .X := by
+      let tt : hf.toSubfield := ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
+      have herr : e.symm tt = .X := by
         rw [RingEquiv.symm_apply_eq]
-        unfold e
+        unfold e tt
         apply Subtype.ext
         rw [RingEquiv.trans_apply]
         conv =>
@@ -73,15 +71,14 @@ theorem leastNoRoots_fieldClosure_succ :
           --   ht.fieldAdjoin_simple_self]
           apply RingEquiv.coe_subfieldCongr_apply
         simp
-      let tt : hf.toSubfield := ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
       have hrf : ((X ^ 2 + C tt).map e.symm).IsRoot (e.symm rr) := by
         apply IsRoot.map
         simpa [rr, Subtype.ext_iff] using hrr
       rw [Polynomial.map_add, Polynomial.map_pow, Polynomial.map_X, Polynomial.map_C,
-        IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf'
-      apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
-      apply_fun Even ∘ WithZero.log at hrf'
-      simp [herr] at hrf'
+        IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf
+      apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf
+      apply_fun Even ∘ WithZero.log at hrf
+      simp [herr] at hrf
   · exact (IsField.fieldClosure _).X_sq_add_C_le_leastNoRoots _ fun z hz ↦
       (ht.sqrt_lt hz).trans <| (lt_succ t).trans_le (le_fieldClosure (succ t))
 
