@@ -52,7 +52,7 @@ theorem Order.enum_le_of_strictMono {α : Type*} [LinearOrder α] [WellFoundedLT
   InitialSeg.le_of_strictMono ((Order.enum s hs).restrictIio x) hf ⟨y, hy⟩
 
 open Notation in
-theorem Ordinal.enum_lt_of_lt_cof_ord {s : Set Ordinal} (hs : IsCofinal s) {x y : Ordinal}
+theorem Ordinal.enum_lt_of_lt_ord_cof {s : Set Ordinal} (hs : IsCofinal s) {x y : Ordinal}
     (hx : ∀ a < x, ∃ b ∈ s, b ∈ Ico a x) (hy : y < x.cof.ord) : Order.enum s hs y < x := by
   let f : Iio x.cof.ord ≤i Iio x ↓∩ s := by
     apply (Ordinal.type_le_iff.1 _).some
@@ -63,6 +63,14 @@ theorem Ordinal.enum_lt_of_lt_cof_ord {s : Set Ordinal} (hs : IsCofinal s) {x y 
   let g (a : Iio x.cof.ord) : s := ⟨f a, (f a).2⟩
   have hg : StrictMono g := fun _ ↦ by simp [g]
   exact (Subtype.coe_le_coe.2 <| enum_le_of_strictMono hs hg hy).trans_lt (f _).1.2
+
+theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
+    (hx : ∀ a < x, ∃ b ∈ s, b ∈ Ico a x) (hx' : IsSuccLimit x) :
+    Order.enum s hs.isCofinal x.cof.ord ≤ x := by
+  apply (hs.isNormal_enum.le_iff_forall_le _).2
+  · exact fun y hy ↦ (Ordinal.enum_lt_of_lt_ord_cof _ hx hy).le
+  · apply isSuccLimit_ord
+    rwa [aleph0_le_cof_iff, one_lt_cof_iff]
 
 @[simp]
 theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
@@ -155,21 +163,17 @@ theorem card_groupClosure_le (x : Nimber) : (groupClosure x).val.card ≤ max �
     · rfl
 
 theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_ x) = ∗ω_ x := by
-  induction x using SuccOrder.limitRecOn with
-  | isMin => simp_all
-  | succ x =>
+  induction x using Ordinal.limitRecOn with
+  | zero => contradiction
+  | add_one x =>
     apply (of_le_enumAlgClosed _).antisymm'
-    rw [isNormal_enumAlgClosed.le_iff_forall_le (Cardinal.isSuccLimit_omega _)]
-    intro y hy
-    rw [enumAlgClosed_def', of.le_iff_le]
-    apply (Ordinal.enum_lt_of_lt_cof_ord ..).le
-    · intro z hz
-      rw [succ_eq_add_one, ← Cardinal.card_le_aleph_iff] at hz
-      refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
-      grw [succ_eq_add_one, ← Cardinal.card_le_aleph_iff, card_algClosure_le, val_of]
-      simpa
-    · simpa
-  | isSuccLimit x hx IH =>
+    conv_lhs => rw [← ord_aleph, ← cof_omega_add_one, enumAlgClosed_def]
+    refine Ordinal.enum_ord_cof_le isClub_ofPred_isAlgClosed (fun z hz ↦ ?_) (isSuccLimit_omega _)
+    rw [← Cardinal.card_le_aleph_iff] at hz
+    refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
+    grw [← Cardinal.card_le_aleph_iff, card_algClosure_le, val_of]
+    simpa
+  | limit x hx IH =>
     have := hx.nonempty_Iio.to_subtype
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [isNormal_omega.apply_of_isSuccLimit hx]
