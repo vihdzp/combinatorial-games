@@ -80,7 +80,7 @@ theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω 
 
 namespace Nimber
 
-/-! ### Uncountable initial ordinals are algebraically closed -/
+/-! ### Cardinality of closures -/
 
 theorem card_fieldClosure {x : Nimber} (hx : ∗ω ≤ x) : (fieldClosure x).val.card = x.val.card := by
   have h1x : 1 < x := (of.lt_iff_lt.2 one_lt_omega0).trans_le hx
