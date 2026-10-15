@@ -208,9 +208,9 @@ theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
 
 theorem IsAlgClosed.isAlgClosed {x : Nimber} (h : IsAlgClosed x) :
     _root_.IsAlgClosed h.toSubfield :=
-  .of_exists_root h.toSubfield fun _ _ irred =>
+  .of_exists_root _ fun _ _ irred =>
     h.exists_root_subfield (Polynomial.degree_pos_of_irreducible irred).ne'
-        ((WithTop.coe_lt_top _).trans_eq h.leastNoRoots_eq_top.symm)
+      ((WithTop.coe_lt_top _).trans_eq h.leastNoRoots_eq_top.symm)
 
 protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsAlgClosed (sSup s) := by
