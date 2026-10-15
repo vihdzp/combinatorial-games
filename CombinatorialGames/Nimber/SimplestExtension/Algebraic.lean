@@ -25,20 +25,6 @@ public noncomputable section
 
 section ForMathlib
 namespace Polynomial
-variable {R : Type*} [Semiring R] {p : R[X]}
-
--- mathlib PR #44795
-theorem coe_coeffs_subset_iff {s : Set R} :
-    (p.coeffs : Set R) ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
-  grind [mem_coeffs_iff]
-
-theorem coeffs_subset_iff {s : Finset R} :
-    p.coeffs ⊆ s ↔ ∀ n, p.coeff n ≠ 0 → p.coeff n ∈ s := by
-  simpa using coe_coeffs_subset_iff (s := (s : Set R))
-
-end Polynomial
-
-namespace Polynomial
 
 variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S] {p : R[X]} {T : Subring R}
     (hp : (p.coeffs : Set R) ⊆ T) (x : S)
