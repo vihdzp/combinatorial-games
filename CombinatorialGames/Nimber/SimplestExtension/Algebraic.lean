@@ -206,6 +206,12 @@ theorem isAlgClosed_iff_leastNoRoots_eq_top {x : Nimber} (h : IsRing x) :
   mpr hx := { toIsRing := h, exists_root' _p hp₀ hpk :=
     exists_root_of_lt_leastNoRoots hp₀.ne' hpk (hx ▸ WithTop.coe_lt_top _) }
 
+theorem IsAlgClosed.isAlgClosed {x : Nimber} (h : IsAlgClosed x) :
+    _root_.IsAlgClosed h.toSubfield :=
+  .of_exists_root h.toSubfield fun _ _ irred =>
+    h.exists_root_subfield (Polynomial.degree_pos_of_irreducible irred).ne'
+        ((WithTop.coe_lt_top _).trans_eq h.leastNoRoots_eq_top.symm)
+
 protected theorem IsAlgClosed.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsAlgClosed x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsAlgClosed (sSup s) := by
   rw [isAlgClosed_iff_leastNoRoots_eq_top, ← top_le_iff]
@@ -549,6 +555,12 @@ theorem lt_algClosure_iff_isAlgebraic {x y : Nimber} :
   refine lt_csSup_of_lt (bddAbove_of_small _) (mem_image_of_mem _ ?_) (lt_succ y)
   apply mem_iUnion_of_mem ⟨p.map (Subfield.subtype _), by simp⟩
   simp [hp0, ← Subfield.algebraMap_ofSubfield, hpr]
+
+theorem IsField.lt_algClosure_iff_isAlgebraic {x y : Nimber} (hx : IsField x) :
+    y < algClosure x ↔ IsAlgebraic hx.toSubfield y := by
+  rw [Nimber.lt_algClosure_iff_isAlgebraic]
+  rw! [hx.fieldClosure_eq]
+  rfl
 
 @[simp]
 theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
