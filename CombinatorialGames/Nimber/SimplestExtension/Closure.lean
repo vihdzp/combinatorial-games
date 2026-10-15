@@ -575,8 +575,11 @@ theorem fieldClosure_mono : Monotone fieldClosure := by
 
 @[simp]
 theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by
-  rw [← Iio_inj, ← coe_subfieldClosure_Iio]
-  simp
+  apply le_antisymm
+  · rw [IsField.two.fieldClosure_le_iff]
+    apply zero_le
+  · rw [← ringClosure_zero, (IsField.fieldClosure 0).ringClosure_le_iff]
+    apply zero_le
 
 @[simp]
 theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
