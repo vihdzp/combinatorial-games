@@ -309,9 +309,9 @@ theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x)
       intro alg tower
       constructor
       intro c
-      rw [← isAlgebraic_algebraMap_iff (A := Nimber)
-          ((Subfield.algebraMap_ofSubfield hx.toSubfield).symm ▸ Subfield.subtype_injective _)]
-      rw [Subfield.algebraMap_ofSubfield, Subfield.subtype_apply, ← lt_algClosure_iff_isAlgebraic]
+      rw [← isAlgebraic_algebraMap_iff
+        ((Subfield.algebraMap_ofSubfield hx.toSubfield).symm ▸ Subfield.subtype_injective _),
+        Subfield.algebraMap_ofSubfield, Subfield.subtype_apply, ← lt_algClosure_iff_isAlgebraic]
       exact c.2.trans halg
     obtain ⟨t, ht, u, hu, htx, hxu, hbtwn⟩ := exists_isAlgClosed_between htr
     obtain hperf | hlt := le_or_gt (of (val (fieldClosure (succ t)) ^ ω)) x
