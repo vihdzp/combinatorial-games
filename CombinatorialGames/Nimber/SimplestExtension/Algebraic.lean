@@ -579,6 +579,7 @@ theorem IsAlgClosed.algClosure_eq {x : Nimber} (h : IsAlgClosed x) : algClosure 
   apply (le_algClosure x).antisymm'
   rw [h.algClosure_le_iff]
 
+@[gcongr]
 theorem algClosure_mono : Monotone algClosure := by
   intro x y
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
@@ -653,6 +654,16 @@ theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
 
 theorem of_le_enumAlgClosed (x : Ordinal) : ∗x ≤ enumAlgClosed x :=
   isNormal_enumAlgClosed.strictMono.le_apply
+
+theorem enumField_le_enumAlgClosed (x : Ordinal) : enumField x ≤ enumAlgClosed x := by
+  rw [enumField_def]
+  exact Order.enum_anti fun _ ↦ IsAlgClosed.toIsField
+
+theorem enumRing_le_enumAlgClosed (x : Ordinal) : enumRing x ≤ enumAlgClosed x :=
+  (enumRing_le_enumField x).trans (enumField_le_enumAlgClosed x)
+
+theorem enumGroup_le_enumAlgClosed (x : Ordinal) : enumGroup x ≤ enumAlgClosed x :=
+  (enumGroup_le_enumField x).trans (enumField_le_enumAlgClosed x)
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/

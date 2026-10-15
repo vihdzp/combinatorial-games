@@ -237,6 +237,7 @@ theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = 
   apply (le_groupClosure x).antisymm'
   rw [h.groupClosure_le_iff]
 
+@[gcongr]
 theorem groupClosure_mono : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
@@ -429,6 +430,7 @@ theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x :=
   apply (le_ringClosure x).antisymm'
   rw [h.ringClosure_le_iff]
 
+@[gcongr]
 theorem ringClosure_mono : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
@@ -503,6 +505,9 @@ theorem isNormal_enumRing : Order.IsNormal enumRing :=
 
 theorem of_le_enumRing (x : Ordinal) : ∗x ≤ enumRing x :=
   isNormal_enumRing.strictMono.le_apply
+
+theorem enumGroup_le_enumRing (x : Ordinal) : enumGroup x ≤ enumRing x :=
+  Order.enum_anti fun _ ↦ IsRing.toIsGroup
 
 @[simp]
 theorem enumRing_zero : enumRing 0 = ∗2 := by
@@ -594,6 +599,7 @@ theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = 
   apply (le_fieldClosure x).antisymm'
   rw [h.fieldClosure_le_iff]
 
+@[gcongr]
 theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
@@ -672,6 +678,12 @@ theorem isNormal_enumField : Order.IsNormal enumField :=
 
 theorem of_le_enumField (x : Ordinal) : ∗x ≤ enumField x :=
   isNormal_enumField.strictMono.le_apply
+
+theorem enumRing_le_enumField (x : Ordinal) : enumRing x ≤ enumField x :=
+  Order.enum_anti fun _ ↦ IsField.toIsRing
+
+theorem enumGroup_le_enumField (x : Ordinal) : enumGroup x ≤ enumField x :=
+  (enumGroup_le_enumRing x).trans (enumRing_le_enumField x)
 
 @[simp]
 theorem enumField_zero : enumField 0 = ∗2 := by

@@ -1,15 +1,27 @@
+/-
+Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Violeta Hernández Palacios
+-/
 module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+public import CombinatorialGames.Mathlib.IsAlgebraic
+
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
+# Omega numbers are algebraically closed
+
+We prove that for `x ≠ 0`, the nimbers `∗ω_ x` are algebraically closed, and that there are `ω_ x`
+algebraically closed nimbers below `∗ω_ x`.
 -/
 
 public section
 
 universe u v
 
-open Order Ordinal Set Notation
+open Cardinal Order Ordinal Set
 
 /-! ### For Mathlib -/
 
@@ -20,9 +32,8 @@ def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃
   inj' _ := by simp [Subtype.coe_inj]
   map_rel_iff' := by simp
   mem_range_of_rel' y z h := by
-    refine ⟨⟨e.symm z, ?_⟩, ?_⟩
-    · apply y.2.trans'
-      simpa [e.symm_apply_lt]
+    refine ⟨⟨e.symm z, y.2.trans' ?_⟩, ?_⟩
+    · simpa [e.symm_apply_lt]
     · simp
 
 theorem InitialSeg.le_of_strictMono {α β : Type*} [LinearOrder α] [LinearOrder β] [WellFoundedLT α]
@@ -39,11 +50,12 @@ theorem Order.enum_le_of_strictMono {α : Type*} [LinearOrder α] [WellFoundedLT
     {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, mem_Iio.2 hy⟩ :=
   InitialSeg.le_of_strictMono ((Order.enum s hs).restrictIio x) hf ⟨y, hy⟩
 
+open Notation in
 theorem Ordinal.enum_lt_of_lt_cof_ord {s : Set Ordinal} (hs : IsCofinal s) {x y : Ordinal}
     (hx : ∀ a < x, ∃ b ∈ s, b ∈ Ico a x) (hy : y < x.cof.ord) : Order.enum s hs y < x := by
   let f : Iio x.cof.ord ≤i Iio x ↓∩ s := by
     apply (Ordinal.type_le_iff.1 _).some
-    rw [type_lt_Iio, Cardinal.lift_ord, lift_cof, Cardinal.ord_le, card_type, ← cof_Iio]
+    rw [type_lt_Iio, lift_ord, lift_cof, ord_le, card_type, ← cof_Iio]
     refine cof_le fun ⟨a, ha⟩ ↦ ?_
     obtain ⟨b, hb, ⟨hab, hbx⟩⟩ := hx a ha
     exact ⟨⟨b, hbx⟩, hb, hab⟩
@@ -59,12 +71,18 @@ theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 �
 theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
   simpa using Ordinal.lift_le (a := ω)
 
+theorem Cardinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
+  rw [card_le_iff, succ_aleph, ord_aleph]
+
+@[simp]
+theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 namespace Nimber
 
 /-! ### Uncountable initial ordinals are algebraically closed -/
 
-theorem card_fieldClosure {x : Nimber.{u}} (hx : ∗ω ≤ x) :
-    (fieldClosure x).val.card = x.val.card := by
+theorem card_fieldClosure {x : Nimber} (hx : ∗ω ≤ x) : (fieldClosure x).val.card = x.val.card := by
   have h1x : 1 < x := (of.lt_iff_lt.2 one_lt_omega0).trans_le hx
   apply (card_monotone (by simp)).antisymm'
   obtain ⟨l, hl, hlx, hxl⟩ := exists_isField_between' h1x
@@ -74,20 +92,24 @@ theorem card_fieldClosure {x : Nimber.{u}} (hx : ∗ω ≤ x) :
     rw [← succ_le_iff] at hlx
     apply (fieldClosure_mono hlx).antisymm'
     simpa using fieldClosure_mono hxl.le
-  rw [hxl', ← Cardinal.lift_le.{u + 1}, ← cardinalMk_Iio, ← coe_toSubfield (IsField.fieldClosure _),
+  rw [hxl', ← Cardinal.lift_le, ← cardinalMk_Iio, ← coe_toSubfield (IsField.fieldClosure _),
     ← IsField.fieldAdjoin_simple_self hl]
   apply (IntermediateField.cardinalMk_adjoin_le ..).trans
-  rw [max_le_iff, max_le_iff]
-  refine ⟨⟨?_, ?_⟩, ?_⟩
-  · apply (cardinalMk_Iio _).trans_le
-    rw [Cardinal.lift_le]
+  apply max_le (max_le ((cardinalMk_Iio _).trans_le _) _) _
+  · rw [Cardinal.lift_le]
     apply card_monotone
     simpa
   · simpa using h1x.le
   · simpa
 
 theorem card_algClosure {x : Nimber} (hx : ∗ω ≤ x) : (algClosure x).val.card = x.val.card := by
-  sorry
+  apply (card_monotone (by simp)).antisymm'
+  rw [← Cardinal.lift_le, ← cardinalMk_Iio, ← Iio_def]
+  simp_rw [lt_algClosure_iff_isAlgebraic]
+  apply mk_setOfPred_isIntegral_le.trans (max_le _ _)
+  · simpa
+  · apply (cardinalMk_Iio _).trans_le
+    rw [card_fieldClosure hx]
 
 theorem card_ringClosure {x : Nimber} (hx : ∗ω ≤ x) : (ringClosure x).val.card = x.val.card := by
   apply (card_monotone (by simp)).antisymm'
@@ -99,6 +121,38 @@ theorem card_groupClosure {x : Nimber} (hx : ∗ω ≤ x) : (groupClosure x).val
   rw [← card_fieldClosure hx]
   exact card_monotone (by simp)
 
+theorem card_algClosure_le (x : Nimber) : (algClosure x).val.card ≤ max ℵ₀ x.val.card := by
+  obtain hx | hx := le_or_gt (∗ω) x
+  · rw [card_algClosure hx]
+    exact le_max_right ..
+  · grw [hx, card_algClosure]
+    · simp
+    · rfl
+
+theorem card_fieldClosure_le (x : Nimber) : (fieldClosure x).val.card ≤ max ℵ₀ x.val.card := by
+  obtain hx | hx := le_or_gt (∗ω) x
+  · rw [card_fieldClosure hx]
+    exact le_max_right ..
+  · grw [hx, card_fieldClosure]
+    · simp
+    · rfl
+
+theorem card_ringClosure_le (x : Nimber) : (ringClosure x).val.card ≤ max ℵ₀ x.val.card := by
+  obtain hx | hx := le_or_gt (∗ω) x
+  · rw [card_ringClosure hx]
+    exact le_max_right ..
+  · grw [hx, card_ringClosure]
+    · simp
+    · rfl
+
+theorem card_groupClosure_le (x : Nimber) : (groupClosure x).val.card ≤ max ℵ₀ x.val.card := by
+  obtain hx | hx := le_or_gt (∗ω) x
+  · rw [card_groupClosure hx]
+    exact le_max_right ..
+  · grw [hx, card_groupClosure]
+    · simp
+    · rfl
+
 theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_ x) = ∗ω_ x := by
   induction x using SuccOrder.limitRecOn with
   | isMin => simp_all
@@ -108,25 +162,52 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     intro y hy
     rw [enumAlgClosed_def', of.le_iff_le]
     apply (Ordinal.enum_lt_of_lt_cof_ord ..).le
-    · sorry
+    · intro z hz
+      rw [succ_eq_add_one, ← Cardinal.card_le_aleph_iff] at hz
+      refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
+      grw [succ_eq_add_one, ← Cardinal.card_le_aleph_iff, card_algClosure_le, val_of]
+      simpa
     · simpa
   | isSuccLimit x hx IH =>
     have := hx.nonempty_Iio.to_subtype
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [isNormal_omega.apply_of_isSuccLimit hx]
     rw [isNormal_enumAlgClosed.map_iSup Ordinal.bddAbove_of_small]
-    apply ciSup_le'
-    intro ⟨y, hy⟩
+    refine ciSup_le' fun ⟨y, hy⟩ ↦ ?_
     obtain rfl | hy₀ := eq_or_ne y 0
-    · trans enumAlgClosed (ω_ 1)
-      · exact (omega.comp enumAlgClosed).monotone zero_le_one
-      · rw [IH 1 (one_lt_of_isSuccLimit hx) one_ne_zero]
-        simpa [Order.one_le_iff_ne_zero]
+    · grw [Subtype.coe_mk, zero_le_one]
+      simpa [IH 1 (one_lt_of_isSuccLimit hx), Order.one_le_iff_ne_zero]
     · rw [IH y hy hy₀]
       simpa using hy.le
 
+theorem enumField_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumField (ω_ x) = ∗ω_ x := by
+  apply (of_le_enumField _).antisymm'
+  grw [← enumAlgClosed_omega hx₀, enumField_le_enumAlgClosed]
 
-#exit
+theorem enumRing_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumRing (ω_ x) = ∗ω_ x := by
+  apply (of_le_enumRing _).antisymm'
+  grw [← enumAlgClosed_omega hx₀, enumRing_le_enumAlgClosed]
+
+theorem enumGroup_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumGroup (ω_ x) = ∗ω_ x := by
+  apply (of_le_enumGroup _).antisymm'
+  grw [← enumAlgClosed_omega hx₀, enumGroup_le_enumAlgClosed]
+
+theorem IsAlgClosed.omega {x : Ordinal} (hx : x ≠ 0) : IsAlgClosed (∗ω_ x) := by
+  rw [← enumAlgClosed_omega hx]
+  exact IsAlgClosed.enumAlgClosed _
+
+-- TODO: this doesn't need `x ≠ 0`.
+theorem IsField.omega {x : Ordinal} (hx : x ≠ 0) : IsField (∗ω_ x) :=
+  (IsAlgClosed.omega hx).toIsField
+
+-- TODO: this doesn't need `x ≠ 0`.
+theorem IsRing.omega {x : Ordinal} (hx : x ≠ 0) : IsRing (∗ω_ x) :=
+  (IsAlgClosed.omega hx).toIsRing
+
+theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simpa using IsGroup.two_opow ω
+  · exact (IsAlgClosed.omega hx).toIsGroup
 
 end Nimber
 end
