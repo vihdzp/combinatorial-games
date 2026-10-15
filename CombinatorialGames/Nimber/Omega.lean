@@ -171,7 +171,7 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     refine Ordinal.enum_ord_cof_le isClub_ofPred_isAlgClosed (fun z hz ↦ ?_) (isSuccLimit_omega _)
     rw [← Cardinal.card_le_aleph_iff] at hz
     refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
-    grw [← Cardinal.card_le_aleph_iff, card_algClosure_le, val_of]
+    grw [← Cardinal.card_le_aleph_iff, card_algClosure_le]
     simpa
   | limit x hx IH =>
     have := hx.nonempty_Iio.to_subtype
