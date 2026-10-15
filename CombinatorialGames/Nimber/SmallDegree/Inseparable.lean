@@ -250,11 +250,9 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
     PerfectField ht.isField_fieldClosure_succ_pow_omega0.toSubfield := by
   suffices _ : PerfectRing ht.isField_fieldClosure_succ_pow_omega0.toSubfield 2 from
     PerfectRing.toPerfectField _ 2
-  constructor
-  constructor
-  · apply frobenius_inj
+  refine .ofSurjective _ 2 ?_
   intro ⟨x, hx⟩
-  refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff]⟩
+  refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
   rw [mem_toSubfield_iff, ← Ordinal.natCast_opow_omega0 one_lt_two] at hx ⊢
   have hN : IsNormal fun o : Ordinal =>
       of (val (fieldClosure (succ t)) ^ (Nat.cast 2 : Ordinal) ^ o) :=
