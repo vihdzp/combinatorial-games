@@ -188,12 +188,11 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     · rw [Subfield.closure_le, Set.union_subset_iff, SetLike.coe_subset_coe,
         Subfield.closure_le, Set.union_subset_iff, Set.singleton_subset_iff,
         Set.singleton_subset_iff, Set.image_subset_iff]
-      refine ⟨⟨?_, ?_⟩, ?_⟩
-      · intro x hx
-        grw [← Set.subset_union_left]
+      refine ⟨⟨fun x hx => ?_, pow_mem ?_ 2⟩, ?_⟩
+      · grw [← Set.subset_union_left]
         rw [Set.mem_preimage, Nimber.sqrt_symm_apply, Subfield.closure_eq]
         exact pow_mem hx 2
-      · refine pow_mem (Subfield.mem_closure_of_mem ?_) 2
+      · apply Subfield.mem_closure_of_mem
         simp
       · apply Subfield.mem_closure_of_mem
         simp
