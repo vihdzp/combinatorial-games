@@ -230,7 +230,7 @@ theorem sqrt_map_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
   SetLike.coe_injective (ht.sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n)
 
 theorem sqrt_fieldClosure_succ_pow_two_pow (n : Nat) :
-    Nimber.sqrt (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
+    sqrt (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
       of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1)) := by
   rw [← ht.fieldClosure_succ_pow_two_pow_succ_pow_two, Nimber.sqrt_sq]
 
