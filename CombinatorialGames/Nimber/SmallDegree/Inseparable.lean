@@ -155,12 +155,10 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
       Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) := by
   have hf0 := isField_fieldClosure_succ_pow_two_pow n
   have hf1 := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  -- have hf0t := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n
   have hf0td := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
   have hp2 (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
   have hfm (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
   have ih (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
-  -- have hf1t (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top m
   have hf1td (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
   rw [pow_succ, pow_mul] at hf1 ⊢
   rw [← coe_toSubfield hf0, ← coe_toSubfield hf1, ← RingEquiv.coe_toRingHom,
