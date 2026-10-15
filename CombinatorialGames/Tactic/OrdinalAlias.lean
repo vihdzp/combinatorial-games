@@ -200,6 +200,11 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
 
+@[simp]
+theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
+    Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
+  Cardinal.mk_Iio_ordinal _
+
 end $Alias
 end
 
