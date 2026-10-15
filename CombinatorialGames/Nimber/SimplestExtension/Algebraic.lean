@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.Mathlib.IsAlgebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
@@ -549,7 +550,8 @@ theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
   le_of_forall_lt fun c hc => lt_algClosure_iff_isAlgebraic.2 <|
     isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨c, hc.trans_le (le_fieldClosure x)⟩
 
-theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
+@[simp]
+protected theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
   __ := Classical.byContradiction fun h => lt_irrefl x.algClosure
     (lt_algClosure_iff_isAlgebraic.2 (isAlgebraic_of_not_isField le_rfl h))
   exists_root' p hd hp := by
@@ -572,18 +574,26 @@ theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
     x < y.algClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
 
+@[simp]
+theorem IsAlgClosed.algClosure_eq {x : Nimber} (h : IsAlgClosed x) : algClosure x = x := by
+  apply (le_algClosure x).antisymm'
+  rw [h.algClosure_le_iff]
+
 theorem algClosure_mono : Monotone algClosure := by
   intro x y
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
   exact (le_algClosure y).trans'
 
+@[simp]
 theorem fieldClosure_le_algClosure (x : Nimber) : fieldClosure x ≤ algClosure x := by
   rw [(IsAlgClosed.algClosure x).fieldClosure_le_iff]
   exact le_algClosure x
 
+@[simp]
 theorem ringClosure_le_algClosure (x : Nimber) : ringClosure x ≤ algClosure x :=
   (ringClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
+@[simp]
 theorem groupClosure_le_algClosure (x : Nimber) : groupClosure x ≤ algClosure x :=
   (groupClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
@@ -605,6 +615,14 @@ theorem isClub_ofPred_isAlgClosed : IsClub (ofPred IsAlgClosed) where
 theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
     ∃ l, IsAlgClosed l ∧ ∃ u, IsAlgClosed u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsAlgClosed z → l < z → u ≤ z :=
   isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
+
+theorem exists_isAlgClosed_between' {x : Nimber} (hx : algClosure 0 ≤ x) :
+    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isAlgClosed_between hx
+  refine ⟨l, hl, hlx, ?_⟩
+  apply hxu.trans_le (H _ (IsAlgClosed.algClosure _) _)
+  rw [← Order.succ_le_iff]
+  exact le_algClosure _
 
 /-- The normal enumerator function for algebraically closed fields. -/
 def enumAlgClosed : Ordinal ↪o Nimber :=
@@ -632,6 +650,9 @@ theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) 
 
 theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
   isClub_ofPred_isAlgClosed.isNormal_enum
+
+theorem of_le_enumAlgClosed (x : Ordinal) : ∗x ≤ enumAlgClosed x :=
+  isNormal_enumAlgClosed.strictMono.le_apply
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
