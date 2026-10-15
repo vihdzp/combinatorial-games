@@ -111,7 +111,7 @@ private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat) 
   cases n with
   | zero =>
     rw! [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ, WithTop.untop_coe]
-    exact ⟨by simp, by compute_degree!⟩
+    exact ⟨WithTop.coe_ne_top, degree_X_pow_add_C two_pos _⟩
   | succ n =>
     rw! [ih n rfl, WithTop.untop_coe]
     exact ⟨by simp, by compute_degree!⟩
@@ -130,7 +130,7 @@ theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
       · exact coeff_X_pow_lt 2 hf.one_lt
       · exact coeff_C_lt (of.strictMono (pow_lt_pow_right₀
           (one_lt_val.2 (IsField.fieldClosure _).one_lt)
-          (Nat.pow_lt_pow_right (by decide) (Nat.lt_add_one n))))
+          (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n))))
     · intro r hr hrr
       rw [IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrr
       rw [← Set.mem_Iio, ← him, ← RingEquiv.coe_toEquiv, Set.mem_image_equiv,
