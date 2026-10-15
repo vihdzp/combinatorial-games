@@ -58,17 +58,15 @@ theorem leastNoRoots_fieldClosure_succ :
         X ^ 2 + C ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
       let rr : hf.toSubfield := ⟨r, hr⟩
       have hrf : p.IsRoot rr := by simpa [p, rr, Subtype.ext_iff] using hrr
-      set_option backward.isDefEq.respectTransparency false in
       let e := (RatFunc.algEquivOfTranscendental t ht.transcendental).toRingEquiv.trans
         -- (.subfieldCongr ht.fieldAdjoin_simple_self)
         -- -- `IntermediateField.adjoin` shouldn't be exposed
         (@RingEquiv.subfieldCongr Nimber _ (IntermediateField.toSubfield _) _
           ht.fieldAdjoin_simple_self)
-      have hrf' : (p.map e.symm).IsRoot (e.symm rr) :=
-        hrf.map -- `IsRoot.map` should take the ringhom explicity
-      have herr : e.symm ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩ = .X := by
+      let tt : hf.toSubfield := ⟨t, (lt_succ t).trans_le (le_fieldClosure (succ t))⟩
+      have herr : e.symm tt = .X := by
         rw [RingEquiv.symm_apply_eq]
-        unfold e
+        unfold e tt
         apply Subtype.ext
         rw [RingEquiv.trans_apply]
         conv =>
@@ -81,12 +79,14 @@ theorem leastNoRoots_fieldClosure_succ :
           --   ht.fieldAdjoin_simple_self]
           apply RingEquiv.coe_subfieldCongr_apply
         simp
-      unfold p at hrf'
+      have hrf : ((X ^ 2 + C tt).map e.symm).IsRoot (e.symm rr) := by
+        apply IsRoot.map
+        simpa [rr, Subtype.ext_iff] using hrr
       rw [Polynomial.map_add, Polynomial.map_pow, Polynomial.map_X, Polynomial.map_C,
-        IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf'
-      apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf'
-      apply_fun Even ∘ WithZero.log at hrf'
-      simp [herr] at hrf'
+        IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrf
+      apply_fun (Polynomial.idealX ht.toSubfield).valuation (RatFunc ht.toSubfield) at hrf
+      apply_fun Even ∘ WithZero.log at hrf
+      simp [herr] at hrf
   · exact (IsField.fieldClosure _).X_sq_add_C_le_leastNoRoots _ fun z hz ↦
       (ht.sqrt_lt hz).trans <| (lt_succ t).trans_le (le_fieldClosure (succ t))
 
@@ -166,12 +166,10 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
       Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) := by
   have hf0 := isField_fieldClosure_succ_pow_two_pow n
   have hf1 := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  -- have hf0t := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top n
   have hf0td := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
   have hp2 (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
   have hfm (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
   have ih (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
-  -- have hf1t (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_ne_top m
   have hf1td (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
   rw [pow_succ, pow_mul] at hf1 ⊢
   rw [← coe_toSubfield hf0, ← coe_toSubfield hf1, ← RingEquiv.coe_toRingHom,
