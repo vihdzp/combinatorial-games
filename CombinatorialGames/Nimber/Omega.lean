@@ -6,8 +6,8 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
-public import CombinatorialGames.Mathlib.IsAlgebraic
 
+import Mathlib.Algebra.AlgebraicCard
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
@@ -107,10 +107,10 @@ theorem card_algClosure {x : Nimber} (hx : ∗ω ≤ x) : (algClosure x).val.car
   apply (card_monotone (by simp)).antisymm'
   rw [← Cardinal.lift_le, ← cardinalMk_Iio, ← Iio_def]
   simp_rw [lt_algClosure_iff_isAlgebraic]
-  apply mk_setOfPred_isIntegral_le.trans (max_le _ _)
-  · simpa
+  apply (Algebraic.cardinalMk_le_max ..).trans (max_le ..)
   · apply (cardinalMk_Iio _).trans_le
     rw [card_fieldClosure hx]
+  · simpa
 
 theorem card_ringClosure {x : Nimber} (hx : ∗ω ≤ x) : (ringClosure x).val.card = x.val.card := by
   apply (card_monotone (by simp)).antisymm'
