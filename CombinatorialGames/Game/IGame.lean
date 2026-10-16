@@ -364,6 +364,8 @@ theorem zero_def : (0 : IGame) = !{fun _ ↦ ∅} := rfl
 
 @[simp, game_cmp] theorem moves_zero (p : Player) : moves p 0 = ∅ := moves_ofSets ..
 
+theorem zero_eq : (0 : IGame) = !{∅ | ∅} := ofSets_eq_ofSets_cases ..
+
 instance : Inhabited IGame := ⟨0⟩
 
 /-- The game `1 = !{{0} | ∅}`. -/
@@ -1341,8 +1343,9 @@ instance : RatCast IGame where
 
 theorem ratCast_def (q : ℚ) : (q : IGame) = q.num / q.den := rfl
 
-@[simp] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
-@[simp] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by simp [ratCast_def]
+@[simp, norm_cast] theorem ratCast_zero : ((0 : ℚ) : IGame) = 0 := by simp [ratCast_def]
+@[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : IGame) = -(q : IGame) := by
+  simp [ratCast_def]
 
 end IGame
 end
