@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+public import Mathlib.Algebra.CharP.Subring
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 /-!
@@ -710,6 +711,31 @@ theorem IsField.X_sq_add_C_le_leastNoRoots {x : Nimber} (h : IsField x) (y : Nim
   · obtain rfl := lt_one_iff.1 ha
     contrapose! hd
     simpa using degree_linear_le
+
+theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
+    PerfectField h.toSubfield ↔ .some (X ^ 2 + X) ≤ leastNoRoots x := by
+  constructor
+  · intro
+    apply h.le_leastNoRoots_of_exists_isRoot
+    rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
+    refine ⟨by simp, fun b hb c _ hc => ?_, fun a ha _ _ hdeg => ?_⟩
+    · obtain rfl : b = 0 := lt_one_iff.1 hb
+      rw [map_one, map_zero, one_mul, zero_mul, add_zero]
+      let cc : h.toSubfield := ⟨c, by simpa using hc 0⟩
+      refine ⟨_, ((frobeniusEquiv h.toSubfield 2).symm cc).2, ?_⟩
+      have hcc := (frobeniusEquiv h.toSubfield 2).apply_symm_apply cc
+      rw [frobeniusEquiv_def, ← CharTwo.add_eq_zero, Subtype.ext_iff,
+        Subfield.coe_zero, Subfield.coe_add, SubmonoidClass.coe_pow] at hcc
+      simpa using hcc
+    · obtain rfl : a = 0 := lt_one_iff.1 ha
+      absurd hdeg.not_ge
+      rw [map_zero, zero_mul, zero_add]
+      exact degree_linear_le
+  · intro hrt
+    suffices _ : PerfectRing h.toSubfield 2 from PerfectRing.toPerfectField _ 2
+    refine .ofSurjective _ _ ?_
+    intro ⟨c, hc⟩
+    exact ⟨⟨sqrt c, h.sqrt_lt' hc hrt⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
 
 end Nimber
 end
