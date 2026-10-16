@@ -24,6 +24,11 @@ open Order Ordinal Polynomial Set
 public noncomputable section
 
 section ForMathlib
+
+@[simp]
+theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
+    {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
+
 namespace Polynomial
 variable {R : Type*} [Semiring R] {p : R[X]}
 

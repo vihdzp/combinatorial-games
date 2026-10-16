@@ -24,10 +24,6 @@ universe u
 
 public section
 
-@[simp]
-theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
-    {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
-
 namespace Nimber.IsAlgClosed
 open Order Polynomial
 
