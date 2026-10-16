@@ -236,7 +236,8 @@ theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = 
   apply (le_groupClosure x).antisymm'
   rw [h.groupClosure_le_iff]
 
-theorem groupClosure_mono : Monotone groupClosure := by
+@[gcongr]
+theorem groupClosure_monotone : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
@@ -416,7 +417,8 @@ theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x :=
   apply (le_ringClosure x).antisymm'
   rw [h.ringClosure_le_iff]
 
-theorem ringClosure_mono : Monotone ringClosure := by
+@[gcongr]
+theorem ringClosure_monotone : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
@@ -432,7 +434,7 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
   · rw [IsRing.two.ringClosure_le_iff]
     simp
   · rw [← ringClosure_zero]
-    exact ringClosure_mono zero_le_one
+    exact ringClosure_monotone zero_le_one
 
 @[simp]
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
@@ -568,7 +570,8 @@ theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = 
   apply (le_fieldClosure x).antisymm'
   rw [h.fieldClosure_le_iff]
 
-theorem fieldClosure_mono : Monotone fieldClosure := by
+@[gcongr]
+theorem fieldClosure_monotone : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
@@ -584,7 +587,7 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
   · rw [IsField.two.fieldClosure_le_iff]
     simp
   · rw [← fieldClosure_zero]
-    exact fieldClosure_mono zero_le_one
+    exact fieldClosure_monotone zero_le_one
 
 @[simp]
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
