@@ -248,11 +248,9 @@ theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
   intro s x hs₀ hs
   have hbdd := groupClosure_mono.map_bddAbove hs.bddAbove
   have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
-  refine ⟨?_, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
-  · rintro _ ⟨y, hy, rfl⟩
-    exact groupClosure_mono (hs.1 hy)
-  · rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
-    exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+  refine ⟨groupClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem groupClosure_zero : groupClosure 0 = 1 := by
@@ -438,11 +436,9 @@ theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
   intro s x hs₀ hs
   have hbdd := ringClosure_mono.map_bddAbove hs.bddAbove
   have Hs := IsRing.sSup (by simp) (by simpa) hbdd
-  refine ⟨?_, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
-  · rintro _ ⟨y, hy, rfl⟩
-    exact ringClosure_mono (hs.1 hy)
-  · rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
-    exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+  refine ⟨ringClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem ringClosure_zero : ringClosure 0 = ∗2 := by
@@ -600,11 +596,9 @@ theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
   intro s x hs₀ hs
   have hbdd := fieldClosure_mono.map_bddAbove hs.bddAbove
   have Hs := IsField.sSup (by simp) (by simpa) hbdd
-  refine ⟨?_, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
-  · rintro _ ⟨y, hy, rfl⟩
-    exact fieldClosure_mono (hs.1 hy)
-  · rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
-    exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+  refine ⟨fieldClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by
