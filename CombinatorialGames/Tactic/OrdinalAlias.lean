@@ -34,7 +34,7 @@ meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 
 /-! ### Macros -/
 
--- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure.
+/-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 @[expose] public section
 
@@ -133,7 +133,7 @@ end $Alias
 end
 )
 
--- Declare a type alias of `Ordinal`, preserving the order structure.
+/-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 alias! $doc $Alias Ordinal
