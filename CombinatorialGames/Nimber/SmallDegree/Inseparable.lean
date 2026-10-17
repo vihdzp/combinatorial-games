@@ -247,17 +247,13 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
   intro ⟨x, hx⟩
   refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
   rw [mem_toSubfield_iff, ← Ordinal.natCast_opow_omega0 one_lt_two] at hx ⊢
-  have hN : IsNormal fun o : Ordinal =>
-      of (val (fieldClosure (succ t)) ^ (Nat.cast 2 : Ordinal) ^ o) :=
-    of.isNormal.comp
-      ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
-        (Ordinal.isNormal_opow one_lt_two))
   obtain ⟨n, hno, hn⟩ :=
     ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
       isSuccLimit_omega0).mp hx
   obtain ⟨n, rfl⟩ := lt_omega0.1 hno
-  refine lt_trans ?_ (hN.strictMono (natCast_lt_omega0 (n + 1)))
-  rw [Function.comp_apply] at hn
+  refine lt_trans ?_ ((of.isNormal.comp
+    isNormal_val_fieldClosure_succ_pow_two_pow).strictMono (natCast_lt_omega0 (n + 1)))
+  rw [Function.comp_apply] at hn ⊢
   rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast] at hn ⊢
   rw [← mem_toSubfield_iff (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)),
     ← ht.sqrt_map_fieldClosure_succ_pow_two_pow_succ, Subfield.mem_map]
