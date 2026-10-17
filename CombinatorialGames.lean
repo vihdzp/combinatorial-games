@@ -39,6 +39,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.Nimber.SmallDegree.Inseparable
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
+public import CombinatorialGames.SignExpansion.Surreal
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut
