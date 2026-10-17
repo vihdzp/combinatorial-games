@@ -239,6 +239,32 @@ theorem isField_fieldClosure_succ_pow_omega0 :
   simp_rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast]
   exact IsField.iSup ht.isField_fieldClosure_succ_pow_two_pow
 
+theorem exists_fieldClosure_succ_pow_two_pow_eq_of_isField_of_btwn {x : Nimber} (hx : IsField x)
+    (htx : fieldClosure (succ t) ≤ x) (hxt : x < of (val (fieldClosure (succ t)) ^ ω)) :
+    ∃ n, of (val (fieldClosure (succ t)) ^ 2 ^ n) = x := by
+  rw [← natCast_opow_omega0 one_lt_two] at hxt
+  obtain ⟨n, hno, hn⟩ :=
+    ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
+      isSuccLimit_omega0).mp hxt
+  obtain ⟨n, rfl⟩ := lt_omega0.1 hno
+  clear hno
+  rw [Function.comp_apply, opow_natCast, ← natCast_pow, opow_natCast] at hn
+  induction n with
+  | zero =>
+    absurd htx.not_gt
+    rwa [pow_zero, pow_one, of_val] at hn
+  | succ n ih =>
+    obtain hb | hs := lt_or_ge x (of (val (fieldClosure (succ t)) ^ 2 ^ n))
+    · exact ih hb
+    refine ⟨n, le_antisymm hs ?_⟩
+    rw [← lt_succ_iff, ← hx.lt_fieldClosure_iff]
+    refine hn.trans_eq (Eq.symm ?_)
+    rw [pow_succ, pow_mul]
+    exact
+      (ht.isField_fieldClosure_succ_pow_two_pow n).fieldClosure_succ_eq_pow_degree_leastNoRoots
+        (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).1
+        (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).2
+
 theorem perfectField_fieldClosure_succ_pow_omega0 :
     PerfectField ht.isField_fieldClosure_succ_pow_omega0.toSubfield := by
   suffices _ : PerfectRing ht.isField_fieldClosure_succ_pow_omega0.toSubfield 2 from
@@ -280,7 +306,7 @@ theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
     absurd c.2
     simp [hc]
 
-omit t ht in
+omit ht in
 theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x) :
    ¬PerfectField hx.toSubfield ↔ ∃ t, IsAlgClosed t ∧
       ∃ n, of (val (fieldClosure (succ t)) ^ 2 ^ n) = x := by
@@ -297,32 +323,12 @@ theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x)
       refine hbtwn _ (IsAlgClosed.algClosure _) (lt_of_lt_of_le ?_ (le_algClosure _))
       rw [← Order.succ_le_iff, ← val_le_iff]
       exact (val.le_iff_le.2 <| le_fieldClosure _).trans (Ordinal.left_le_opow _ omega0_pos)
-    · refine ⟨t, ht, ?_⟩
-      rw [← natCast_opow_omega0 one_lt_two] at hlt
-      obtain ⟨n, hno, hn⟩ :=
-        ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
-          isSuccLimit_omega0).mp hlt
-      obtain ⟨n, rfl⟩ := lt_omega0.1 hno
-      clear hno
-      rw [Function.comp_apply, opow_natCast, ← natCast_pow, opow_natCast] at hn
-      induction n with
-      | zero =>
-        rw [pow_zero, pow_one, of_val, hx.lt_fieldClosure_iff, lt_succ_iff] at hn
-        absurd h
-        obtain rfl := le_antisymm htx hn
-        have := ht.isAlgClosed
-        infer_instance
-      | succ n ih =>
-        obtain hb | hs := lt_or_ge x (of (val (fieldClosure (succ t)) ^ 2 ^ n))
-        · exact ih hb
-        refine ⟨n, le_antisymm hs ?_⟩
-        rw [← lt_succ_iff, ← hx.lt_fieldClosure_iff]
-        refine hn.trans_eq (Eq.symm ?_)
-        rw [pow_succ, pow_mul]
-        exact
-          (ht.isField_fieldClosure_succ_pow_two_pow n).fieldClosure_succ_eq_pow_degree_leastNoRoots
-            (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).1
-            (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).2
+    obtain htn | htp := lt_or_ge x (fieldClosure (succ t))
+    · absurd h
+      rw [hx.lt_fieldClosure_iff, lt_succ_iff] at htn
+      rw! [← le_antisymm htx htn]
+      exact ht.isAlgClosed.perfectField
+    exact ⟨t, ht, ht.exists_fieldClosure_succ_pow_two_pow_eq_of_isField_of_btwn hx htp hlt⟩
   · rintro ⟨t, ht, n, rfl⟩
     exact ht.not_perfectField_fieldClosure_succ_pow_two_pow n
 
