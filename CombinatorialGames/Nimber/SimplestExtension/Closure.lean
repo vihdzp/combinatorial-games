@@ -442,6 +442,12 @@ theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosur
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
 
+theorem ringClosure_groupClosure (x : Nimber) : ringClosure (groupClosure x) = ringClosure x := by
+  apply le_antisymm
+  · rw [(IsRing.ringClosure x).ringClosure_le_iff]
+    exact groupClosure_le_ringClosure x
+  · exact ringClosure_mono (le_groupClosure x)
+
 theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
   isCofinal a := ⟨_, .ringClosure _, le_ringClosure a⟩
   dirSupClosed s hs hs₀ _ a ha := by
@@ -599,6 +605,16 @@ theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosur
 
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
+
+theorem fieldClosure_ringClosure (x : Nimber) : fieldClosure (ringClosure x) = fieldClosure x := by
+  apply le_antisymm
+  · rw [(IsField.fieldClosure x).fieldClosure_le_iff]
+    exact ringClosure_le_fieldClosure x
+  · exact fieldClosure_mono (le_ringClosure x)
+
+theorem fieldClosure_groupClosure (x : Nimber) :
+    fieldClosure (groupClosure x) = fieldClosure x := by
+  rw [← fieldClosure_ringClosure, ringClosure_groupClosure, fieldClosure_ringClosure]
 
 theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
   isCofinal a := ⟨_, .fieldClosure _, le_fieldClosure a⟩

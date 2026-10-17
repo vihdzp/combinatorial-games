@@ -10,6 +10,9 @@ public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import Mathlib.Algebra.CharP.Subring
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
+import Mathlib.Algebra.Algebra.ZMod
+import Mathlib.FieldTheory.PrimeField
+
 /-!
 # Nimbers are algebraically closed
 
@@ -25,6 +28,16 @@ open Order Ordinal Polynomial Set
 public noncomputable section
 
 section ForMathlib
+
+-- mathlib PR #44924
+instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
+  fail_if_success infer_instance
+  obtain charzero | ⟨p, hp, charp⟩ := CharP.exists' K
+  · infer_instance
+  · -- todo: remove `Algebra (ZMod p) K` assumption from `Subfield.botEquivZMod`
+    have := ZMod.algebra K p
+    exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
+
 namespace Polynomial
 variable {R : Type*} [Semiring R] {p : R[X]}
 
@@ -606,6 +619,18 @@ theorem ringClosure_le_algClosure (x : Nimber) : ringClosure x ≤ algClosure x 
 theorem groupClosure_le_algClosure (x : Nimber) : groupClosure x ≤ algClosure x :=
   (groupClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
+theorem algClosure_fieldClosure (x : Nimber) : algClosure (fieldClosure x) = algClosure x := by
+  apply le_antisymm
+  · rw [(IsAlgClosed.algClosure x).algClosure_le_iff]
+    exact fieldClosure_le_algClosure x
+  · exact algClosure_mono (le_fieldClosure x)
+
+theorem algClosure_ringClosure (x : Nimber) : algClosure (ringClosure x) = algClosure x := by
+  rw [← algClosure_fieldClosure, fieldClosure_ringClosure, algClosure_fieldClosure]
+
+theorem algClosure_groupClosure (x : Nimber) : algClosure (groupClosure x) = algClosure x := by
+  rw [← algClosure_ringClosure, ringClosure_groupClosure, algClosure_ringClosure]
+
 /-- The nimbers are an algebraically closed field. -/
 instance : _root_.IsAlgClosed Nimber := by
   refine .of_exists_root Nimber fun p _ hp ↦ ?_
@@ -736,6 +761,28 @@ theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     refine .ofSurjective _ _ ?_
     intro ⟨c, hc⟩
     exact ⟨⟨sqrt c, h.sqrt_lt' hc hrt⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+
+theorem IsField.perfectField_of_btwn {x y : Nimber} (hx : IsField x) (hy : IsField y)
+    (perf : PerfectField hx.toSubfield) (hxy : x ≤ y) (hyx : y ≤ algClosure x) :
+    PerfectField hy.toSubfield :=
+  let : Algebra hx.toSubfield hy.toSubfield :=
+    (Subfield.inclusion ((IsField.toSubfield_le_toSubfield hx hy).mpr hxy)).toAlgebra
+  have : IsScalarTower hx.toSubfield hy.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc _ _ _⟩
+  have : Algebra.IsAlgebraic hx.toSubfield hy.toSubfield := by
+    constructor
+    intro c
+    rw [← isAlgebraic_algebraMap_iff
+        ((Subfield.algebraMap_ofSubfield hy.toSubfield).symm ▸ Subfield.subtype_injective _),
+      ← hx.lt_algClosure_iff_isAlgebraic, Subfield.algebraMap_ofSubfield, Subfield.subtype_apply]
+    exact c.2.trans_le hyx
+  Algebra.IsAlgebraic.perfectField hx.toSubfield
+
+theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
+    (hx : x ≤ algClosure 0) : PerfectField h.toSubfield := by
+  refine IsField.perfectField_of_btwn IsField.two h ?_ h.two_le ?_
+  · rw [← subfieldBot_eq]
+    infer_instance
+  · rwa [← fieldClosure_zero, algClosure_fieldClosure]
 
 end Nimber
 end

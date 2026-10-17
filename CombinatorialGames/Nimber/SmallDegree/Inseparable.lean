@@ -7,8 +7,6 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
-import Mathlib.Algebra.Algebra.ZMod
-import Mathlib.FieldTheory.PrimeField
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.RingTheory.DedekindDomain.AdicValuation
 import Mathlib.SetTheory.Ordinal.Principal
@@ -30,15 +28,6 @@ public section
 @[simp]
 theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
     {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
-
--- mathlib PR #44924
-instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
-  fail_if_success infer_instance
-  obtain charzero | ⟨p, hp, charp⟩ := CharP.exists' K
-  · infer_instance
-  · -- todo: remove `Algebra (ZMod p) K` assumption from `Subfield.botEquivZMod`
-    have := ZMod.algebra K p
-    exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
 
 namespace Nimber.IsAlgClosed
 open Order Polynomial Ordinal
@@ -301,42 +290,14 @@ theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x)
       ∃ n, of (val (fieldClosure (succ t)) ^ 2 ^ n) = x := by
   constructor
   · intro h
-    obtain halg | htr := lt_or_ge x (Nimber.algClosure 0)
+    obtain halg | htr := le_total x (Nimber.algClosure 0)
     · absurd h
-      let alg : Algebra (⊥ : Subfield Nimber) hx.toSubfield :=
-        (Subfield.inclusion bot_le).toAlgebra
-      have tower : IsScalarTower (⊥ : Subfield Nimber) hx.toSubfield Nimber :=
-        ⟨fun _ _ _ => mul_assoc _ _ _⟩
-      suffices algebraic : Algebra.IsAlgebraic (⊥ : Subfield Nimber) hx.toSubfield from
-        algebraic.perfectField
-      revert alg tower
-      rw! [subfieldBot_eq, ← fieldClosure_zero]
-      intro alg tower
-      constructor
-      intro c
-      rw [← isAlgebraic_algebraMap_iff
-        ((Subfield.algebraMap_ofSubfield hx.toSubfield).symm ▸ Subfield.subtype_injective _),
-        Subfield.algebraMap_ofSubfield, Subfield.subtype_apply, ← lt_algClosure_iff_isAlgebraic]
-      exact c.2.trans halg
+      exact hx.perfectField_of_le_algClosure_zero halg
     obtain ⟨t, ht, u, hu, htx, hxu, hbtwn⟩ := exists_isAlgClosed_between htr
     obtain hperf | hlt := le_or_gt (of (val (fieldClosure (succ t)) ^ ω)) x
     · absurd h
-      let alg : Algebra ht.isField_fieldClosure_succ_pow_omega0.toSubfield hx.toSubfield :=
-        (Subfield.inclusion ((IsField.toSubfield_le_toSubfield _ _).2 hperf)).toAlgebra
-      have tower : IsScalarTower ht.isField_fieldClosure_succ_pow_omega0.toSubfield
-          hx.toSubfield Nimber :=
-        ⟨fun _ _ _ => mul_assoc _ _ _⟩
-      suffices algebraic :
-          Algebra.IsAlgebraic ht.isField_fieldClosure_succ_pow_omega0.toSubfield hx.toSubfield from
-        have := ht.perfectField_fieldClosure_succ_pow_omega0
-        algebraic.perfectField
-      constructor
-      intro c
-      rw [← isAlgebraic_algebraMap_iff (A := Nimber)
-          ((Subfield.algebraMap_ofSubfield hx.toSubfield).symm ▸ Subfield.subtype_injective _)]
-      rw [Subfield.algebraMap_ofSubfield, Subfield.subtype_apply,
-        ← ht.isField_fieldClosure_succ_pow_omega0.lt_algClosure_iff_isAlgebraic]
-      refine (c.2.trans hxu).trans_le ?_
+      refine IsField.perfectField_of_btwn ht.isField_fieldClosure_succ_pow_omega0 hx
+        ht.perfectField_fieldClosure_succ_pow_omega0 hperf (hxu.le.trans ?_)
       refine hbtwn _ (IsAlgClosed.algClosure _) (lt_of_lt_of_le ?_ (le_algClosure _))
       rw [← Order.succ_le_iff, ← val_le_iff]
       exact (val.le_iff_le.2 <| le_fieldClosure _).trans (Ordinal.left_le_opow _ omega0_pos)
