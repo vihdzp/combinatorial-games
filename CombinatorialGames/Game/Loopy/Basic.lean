@@ -839,10 +839,7 @@ theorem movesSingle_comp_prodMap
   rintro ⟨p', x⟩
   ext
   simp_rw [Player.cases, mem_image, Prod.exists, Prod.map_apply, id_eq]
-  cases p <;> cases p'
-  all_goals
-    simp only [mem_union, mem_prod]
-    grind
+  cases p <;> cases p' <;> aesop
 
 variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 

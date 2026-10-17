@@ -271,7 +271,7 @@ theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x �
     rw [of_eq_iff] at hy
     rw [hy, val.lt_iff_lt]
     apply (le_groupClosure x).lt_of_ne
-    contrapose! h
+    contrapose h
     exact h ▸ IsGroup.groupClosure x
 
 theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where

@@ -34,7 +34,7 @@ meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 
 /-! ### Macros -/
 
-/-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
+-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure.
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 @[expose] public section
 
@@ -57,11 +57,13 @@ noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
 
 theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
-$(mkDocComment s!" The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
+-- $(mkDocComment s!" The identity function between `{Source.getId}` and \
+-- `{Alias.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `of) : $Source ≃o $Alias := .refl _
 
-$(mkDocComment s!" The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
+-- $(mkDocComment s!" The identity function between `{Alias.getId}` and \
+-- `{Source.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
@@ -117,13 +119,13 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
 
 theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
+-- $(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
     ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
   $(mkIdent `of) ($(mkVal Alias) a)
 
-$(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
+-- $(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
 
@@ -131,7 +133,7 @@ end $Alias
 end
 )
 
-/-- Declare a type alias of `Ordinal`, preserving the order structure. -/
+-- Declare a type alias of `Ordinal`, preserving the order structure.
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
 alias! $doc $Alias Ordinal
