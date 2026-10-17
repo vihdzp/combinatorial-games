@@ -294,6 +294,12 @@ theorem IsRing.isRoot_leastNoRoots {x : Nimber} (h : IsRing x) (ht) :
   · rw [(WithTop.untop_eq_iff ht).2 (h.leastNoRoots_eq_of_not_isField hf)]
     simp [h.ne_zero]
 
+theorem IsRing.isRoot_leastNoRoots_of_eq {x : Nimber} (h : IsRing x) {p : Nimber[X]}
+    (hp : x.leastNoRoots = p) : p.IsRoot x := by
+  have := h.isRoot_leastNoRoots (by simp [hp])
+  rw! [hp, WithTop.untop_coe] at this
+  exact this
+
 theorem IsRing.pow_degree_leastNoRoots {x : Nimber} (h : IsRing x) (ht) {n : ℕ}
     (hn : (x.leastNoRoots.untop ht).degree = n) : IsRing (of (val x ^ n)) := by
   obtain rfl | hn1 := eq_or_ne n 1
@@ -642,6 +648,7 @@ theorem sqrt_inj {x y : Nimber} : √x = √y ↔ x = y := sqrt.apply_eq_iff_eq
 @[simp] theorem sq_sqrt (x : Nimber) : √x ^ 2 = x := by simp [sqrt]
 @[simp] theorem sqrt_self_mul_self (x : Nimber) : √(x * x) = x := by rw [← pow_two, sqrt_sq]
 @[simp] theorem sqrt_mul_sqrt_self (x : Nimber) : √x * √x = x := by rw [← pow_two, sq_sqrt]
+@[simp] theorem sqrt_symm_apply (x : Nimber) : sqrt.symm x = x ^ 2 := by rfl
 
 theorem sqrt_eq_iff {x y : Nimber} : √y = x ↔ x ^ 2 = y := by
   conv_rhs => rw [← sq_sqrt y, CharTwo.sq_inj, eq_comm]
@@ -662,6 +669,21 @@ theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
   apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
   use 1
   aesop
+
+theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x := by
+  apply h.toIsField.sqrt_lt hy
+  rw [h.leastNoRoots_eq_top]
+  exact WithTop.coe_lt_top _
+
+theorem IsField.X_sq_add_C_le_leastNoRoots {x : Nimber} (h : IsField x) (y : Nimber)
+    (hy : ∀ z < y, √z < x) : .some (X ^ 2 + C y) ≤ leastNoRoots x := by
+  apply h.le_leastNoRoots_of_exists_isRoot
+  rw [show X ^ 2 + C y = C 1 * X ^ 2 + C 0 * X + C y by simp, Lex.forall_lt_quadratic]
+  refine ⟨fun c hc hc' _ ↦ ⟨_, hy c hc, ?_⟩, fun _ ↦ not_lt_zero.elim, fun a ha b c hd hc ↦ ?_⟩
+  · simp
+  · obtain rfl := lt_one_iff.1 ha
+    contrapose! hd
+    simpa using degree_linear_le
 
 end Nimber
 end
