@@ -5,8 +5,9 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 module
 
-public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import Mathlib.Order.OrdContinuous
+public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 
 import Mathlib.Algebra.Field.ZMod
 import Mathlib.SetTheory.Cardinal.Subfield
@@ -17,6 +18,8 @@ import Mathlib.Algebra.CharP.Algebra
 
 We define `groupClosure`, `ringClosure`, and `fieldClosure`, which represent the smallest nimber
 equal or greater to another, which satisfies `IsGroup`, `IsRing`, or `IsField`.
+
+The analogous `algClosure` is defined in `Nimber.SimplestExtension.Algebraic`.
 -/
 
 universe u
@@ -176,6 +179,14 @@ theorem groupClosure_mono : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
+
+theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
+  intro s x hs₀ hs
+  have hbdd := groupClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
+  refine ⟨groupClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem groupClosure_zero : groupClosure 0 = 1 := by
@@ -357,6 +368,14 @@ theorem ringClosure_mono : Monotone ringClosure := by
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
 
+theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
+  intro s x hs₀ hs
+  have hbdd := ringClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsRing.sSup (by simp) (by simpa) hbdd
+  refine ⟨ringClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+
 @[simp]
 theorem ringClosure_zero : ringClosure 0 = ∗2 := by
   rw [← Iio_inj, ← coe_subringClosure_Iio]
@@ -508,6 +527,14 @@ theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
+
+theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
+  intro s x hs₀ hs
+  have hbdd := fieldClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsField.sSup (by simp) (by simpa) hbdd
+  refine ⟨fieldClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by

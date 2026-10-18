@@ -541,6 +541,7 @@ theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
   le_of_forall_lt fun c hc => lt_algClosure_iff_isAlgebraic.2 <|
     isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨c, hc.trans_le (le_fieldClosure x)⟩
 
+@[simp]
 theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
   __ := Classical.byContradiction fun h => lt_irrefl x.algClosure
     (lt_algClosure_iff_isAlgebraic.2 (isAlgebraic_of_not_isField le_rfl h))
@@ -568,6 +569,14 @@ theorem algClosure_mono : Monotone algClosure := by
   intro x y
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
   exact (le_algClosure y).trans'
+
+theorem leftOrdContinuous_algClosure : LeftOrdContinuous algClosure := by
+  intro s x hs₀ hs
+  have hbdd := algClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsAlgClosed.sSup (by simp) (by simpa) hbdd
+  refine ⟨algClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.algClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_algClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 theorem fieldClosure_le_algClosure (x : Nimber) : fieldClosure x ≤ algClosure x := by
   rw [(IsAlgClosed.algClosure x).fieldClosure_le_iff]
