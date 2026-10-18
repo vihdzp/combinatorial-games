@@ -397,6 +397,7 @@ theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosur
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
 
+@[simp]
 theorem ringClosure_groupClosure (x : Nimber) : ringClosure (groupClosure x) = ringClosure x := by
   apply le_antisymm
   · rw [(IsRing.ringClosure x).ringClosure_le_iff]
@@ -569,12 +570,14 @@ theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosur
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
 
+@[simp]
 theorem fieldClosure_ringClosure (x : Nimber) : fieldClosure (ringClosure x) = fieldClosure x := by
   apply le_antisymm
   · rw [(IsField.fieldClosure x).fieldClosure_le_iff]
     exact ringClosure_le_fieldClosure x
   · exact fieldClosure_mono (le_ringClosure x)
 
+@[simp]
 theorem fieldClosure_groupClosure (x : Nimber) :
     fieldClosure (groupClosure x) = fieldClosure x := by
   rw [← fieldClosure_ringClosure, ringClosure_groupClosure, fieldClosure_ringClosure]

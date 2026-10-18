@@ -614,15 +614,18 @@ theorem ringClosure_le_algClosure (x : Nimber) : ringClosure x ≤ algClosure x 
 theorem groupClosure_le_algClosure (x : Nimber) : groupClosure x ≤ algClosure x :=
   (groupClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
+@[simp]
 theorem algClosure_fieldClosure (x : Nimber) : algClosure (fieldClosure x) = algClosure x := by
   apply le_antisymm
   · rw [(IsAlgClosed.algClosure x).algClosure_le_iff]
     exact fieldClosure_le_algClosure x
   · exact algClosure_mono (le_fieldClosure x)
 
+@[simp]
 theorem algClosure_ringClosure (x : Nimber) : algClosure (ringClosure x) = algClosure x := by
   rw [← algClosure_fieldClosure, fieldClosure_ringClosure, algClosure_fieldClosure]
 
+@[simp]
 theorem algClosure_groupClosure (x : Nimber) : algClosure (groupClosure x) = algClosure x := by
   rw [← algClosure_ringClosure, ringClosure_groupClosure, algClosure_ringClosure]
 
