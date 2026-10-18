@@ -5,8 +5,9 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 module
 
-public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import Mathlib.Order.OrdContinuous
+public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 
 import Mathlib.Algebra.Field.ZMod
 import Mathlib.SetTheory.Cardinal.Subfield
@@ -17,6 +18,8 @@ import Mathlib.Algebra.CharP.Algebra
 
 We define `groupClosure`, `ringClosure`, and `fieldClosure`, which represent the smallest nimber
 equal or greater to another, which satisfies `IsGroup`, `IsRing`, or `IsField`.
+
+The analogous `algClosure` is defined in `Nimber.SimplestExtension.Algebraic`.
 -/
 
 universe u
@@ -84,70 +87,6 @@ instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
 
--- #44793
-theorem Order.IsNormal.of_dirSupClosed_range {α β : Type*} {f : α → β}
-    [LinearOrder α] [LinearOrder β] [WellFoundedLT β]
-    (hf : StrictMono f) (hf' : DirSupClosed (.range f)) : IsNormal f := by
-  refine isNormal_iff.2 ⟨hf, fun x hx y hy ↦ ?_⟩
-  have : Nonempty α := ⟨x⟩
-  have : Nonempty β := ⟨f x⟩
-  have := WellFoundedLT.toOrderBot β
-  let := WellFoundedLT.conditionallyCompleteLinearOrderBot β
-  have hfb : BddAbove (f '' Set.Iio x) := by
-    use f x
-    rintro _ ⟨y, hy, rfl⟩
-    exact (hf hy).le
-  obtain ⟨z, hz⟩ : ⨆ b : Set.Iio x, f b ∈ Set.range f := by
-    apply hf' (d := f '' Set.Iio x) _ _ (DirectedOn.of_linearOrder _)
-    · rw [← sSup_image']
-      exact isLUB_csSup' hfb
-    · simp
-    · simpa using hx.not_isMin
-  trans f z
-  · apply hf.monotone
-    by_contra! hzx
-    have ⟨w, hzw, hwx⟩ := hx.lt_iff_nonempty_Ioo.1 hzx
-    apply (hf hzw).not_ge
-    rw [hz]
-    refine le_ciSup (f := fun b : Set.Iio x ↦ f b) ?_ ⟨w, hwx⟩
-    rwa [← Set.image_eq_range]
-  · rw [hz]
-    apply ciSup_le'
-    simpa
-
-theorem IsClub.isNormal_subtypeVal {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {s : Set α} (hs : IsClub s) : Order.IsNormal (Subtype.val (p := (· ∈ s))) := by
-  apply Order.IsNormal.of_dirSupClosed_range s.strictMono_coe
-  rw [Subtype.range_coe_subtype]
-  exact hs.dirSupClosed
-
-theorem IsCofinal.noMaxOrder {α : Type*} [LinearOrder α] [NoMaxOrder α]
-    {s : Set α} (hs : IsCofinal s) : NoMaxOrder s where
-  exists_gt x := by
-    obtain ⟨y, hxy⟩ := exists_gt x.1
-    obtain ⟨z, hz, hyz⟩ := hs y
-    exact ⟨⟨z, hz⟩, hxy.trans_le hyz⟩
-
-theorem IsClub.exists_between {α : Type*} [LinearOrder α] [WellFoundedLT α] [NoMaxOrder α]
-    {s : Set α} (hs : IsClub s) {x : α} (hx : ∃ y ∈ s, y ≤ x) :
-    ∃ l ∈ s, ∃ r ∈ s, l ≤ x ∧ x < r ∧ ∀ z ∈ s, l < z → r ≤ z := by
-  have : Nonempty α := ⟨x⟩
-  have := hs.nonempty.to_subtype
-  have := WellFoundedLT.toOrderBot s
-  have := SuccOrder.ofLinearWellFoundedLT s
-  have := hs.isCofinal.noMaxOrder
-  have hbx : (⊥ : s) ≤ x := by
-    obtain ⟨y, hy, hyx⟩ := hx
-    apply hyx.trans'
-    exact bot_le (α := s) (a := ⟨y, hy⟩)
-  have ⟨⟨l, hl⟩, hlx, hxr⟩ :=
-    Order.IsNormal.exists_map_le_lt_map_succ_of_exists_ge hs.isNormal_subtypeVal ?_ hbx
-  · refine ⟨l, hl, _, Subtype.prop _, hlx, hxr, fun z hz hlz ↦ ?_⟩
-    change _ ≤ (⟨z, hz⟩ : s)
-    rwa [Order.succ_le_iff]
-  · obtain ⟨y, hy, hxy⟩ := hs.isCofinal x
-    exact ⟨⟨y, hy⟩, hxy⟩
-
 end
 
 noncomputable section
@@ -190,7 +129,7 @@ instance small_addSubgroupClosure (s : Set Nimber) [Small.{u} s] : Small.{u} (cl
 
 theorem addSubgroupClosure_Iio_eq_Iio (x : Nimber) :
     ∃ y, (closure (Iio x) : Set Nimber) = Iio y := by
-  refine (isLowerSet_addSubgroupClosure (isLowerSet_Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
+  refine (isLowerSet_addSubgroupClosure (.Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
   have H : Small (_ : Set _) := small_addSubgroupClosure (Iio x)
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
@@ -241,6 +180,14 @@ theorem groupClosure_mono : Monotone groupClosure := by
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
 
+theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
+  intro s x hs₀ hs
+  have hbdd := groupClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
+  refine ⟨groupClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+
 @[simp]
 theorem groupClosure_zero : groupClosure 0 = 1 := by
   rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
@@ -271,7 +218,7 @@ theorem groupClosure_of_not_isGroup {x : Nimber} (h : ¬ IsGroup x) (hx₀ : x �
     rw [of_eq_iff] at hy
     rw [hy, val.lt_iff_lt]
     apply (le_groupClosure x).lt_of_ne
-    contrapose! h
+    contrapose h
     exact h ▸ IsGroup.groupClosure x
 
 theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where
@@ -366,7 +313,7 @@ instance small_subringClosure (s : Set Nimber) [Small.{u} s] : Small.{u} (closur
   simp
 
 theorem subringClosure_Iio_eq_Iio (x : Nimber) : ∃ y, (closure (Iio x) : Set Nimber) = Iio y := by
-  refine (isLowerSet_subringClosure (isLowerSet_Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
+  refine (isLowerSet_subringClosure (.Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
   have H : Small (_ : Set _) := small_subringClosure (Iio x)
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
@@ -420,6 +367,14 @@ theorem ringClosure_mono : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
+
+theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
+  intro s x hs₀ hs
+  have hbdd := ringClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsRing.sSup (by simp) (by simpa) hbdd
+  refine ⟨ringClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem ringClosure_zero : ringClosure 0 = ∗2 := by
@@ -521,7 +476,7 @@ theorem isLowerSet_subfieldClosure {s : Set Nimber} (hs : IsLowerSet s) :
   exact csInf_mem (s := _ᶜ) ⟨b, hb⟩ (mem_closure_of_mem (hs hy' hy))
 
 theorem subfieldClosure_Iio_eq_Iio (x : Nimber) : ∃ y, (closure (Iio x) : Set Nimber) = Iio y := by
-  refine (isLowerSet_subfieldClosure (isLowerSet_Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
+  refine (isLowerSet_subfieldClosure (.Iio x)).eq_univ_or_Iio.resolve_left fun hx ↦ ?_
   have H := Subfield.small_closure' (Iio x)
   rw [hx, small_univ_iff] at H
   cases not_small_nimber H
@@ -578,6 +533,14 @@ theorem fieldClosure_mono : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
+
+theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
+  intro s x hs₀ hs
+  have hbdd := fieldClosure_mono.map_bddAbove hs.bddAbove
+  have Hs := IsField.sSup (by simp) (by simpa) hbdd
+  refine ⟨fieldClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by
