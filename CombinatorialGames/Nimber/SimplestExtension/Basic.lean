@@ -271,7 +271,7 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   · rw [of_lt_iff]
     apply (opow_log_le_self _ hx').lt_of_ne
     rw [ne_eq, ← of_eq_iff]
-    contrapose! hx
+    contrapose hx
     exact ⟨_, hx⟩
   · exact mod_opow_log_lt_self _ hx'
 

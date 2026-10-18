@@ -907,7 +907,7 @@ theorem exists_root_of_lt_leastNoRoots {x : Nimber} {p : Nimber[X]}
   exact leastNoRoots_le_of_not_isRoot hp₀ hpk hpn
 
 theorem le_leastNoRoots_of_exists_isRoot {x : Nimber} {p : Nimber[X]}
-    (hp : ∀ c < p, 0 < c.degree → (∀ k, c.coeff k < x) → ∃ r < x, c.IsRoot r) :
+    (hp : ∀ q < p, 0 < q.degree → (∀ k, q.coeff k < x) → ∃ r < x, q.IsRoot r) :
     p ≤ leastNoRoots x := by
   refine le_of_not_gt fun h => ?_
   have ht : x.leastNoRoots ≠ ⊤ := ne_top_of_lt h
@@ -991,22 +991,23 @@ theorem IsRing.leastNoRoots_eq_of_not_isField {x : Nimber} (h : IsRing x) (h' : 
           simpa [← ht] using degree_leastNoRoots_pos ht'
         simp [← ht, mul_div_cancel₀, hy₀]
 
+theorem IsField.le_leastNoRoots_of_exists_isRoot {x : Nimber} (h : IsField x) {p : Nimber[X]}
+    (hp : ∀ q < p, 1 < q.degree → (∀ k, q.coeff k < x) → ∃ r < x, q.IsRoot r) :
+    p ≤ leastNoRoots x := by
+  refine Nimber.le_leastNoRoots_of_exists_isRoot fun q hq hq' hqx ↦ ?_
+  rw [← WithBot.one_le_iff_pos] at hq'
+  refine (hq'.eq_or_lt').elim (fun hq' ↦ ⟨q.coeff 0 / q.leadingCoeff, ?_, ?_⟩) (hp q hq · hqx)
+  · exact h.div_lt (hqx _) (hqx _)
+  · have : q.leadingCoeff ≠ 0 := by aesop
+    nth_rw 1 [eq_X_add_C_of_degree_eq_one hq']
+    simp [mul_div_cancel₀ _ this]
+
 theorem IsField.X_sq_lt_leastNoRoots {x : Nimber} (h : IsField x) :
     .some (X ^ 2) < leastNoRoots x := by
-  apply (le_of_forall_lt_imp_ne ..).lt_of_ne (leastNoRoots_ne_X_pow x 2).symm
-  simp_rw [WithTop.forall_lt_coe, Lex.lt_X_pow_iff, Nat.cast_ofNat, ← WithBot.succ_one',
-    Order.lt_succ_iff]
-  intro y hy hy'
-  rw [WithTop.eq_untop hy'] at hy
-  generalize_proofs ht at hy
-  obtain ⟨a, ha, b, hp⟩ := natDegree_eq_one.1 <| natDegree_eq_of_degree_eq_some <|
-    hy.eq_of_not_lt (by simp [one_le_degree_leastNoRoots])
-  apply hp ▸ not_isRoot_leastNoRoots_of_lt ht (r := b / a) (h.div_lt ..)
-  · simp [mul_div_cancel₀, ha]
-  · convert hp ▸ coeff_leastNoRoots_lt ht 0
-    simp
-  · convert hp ▸ coeff_leastNoRoots_lt ht 1
-    simp
+  rw [← (leastNoRoots_ne_X_pow x 2).symm.le_iff_lt]
+  refine h.le_leastNoRoots_of_exists_isRoot fun c hc hc' ↦ (hc'.not_ge ?_).elim
+  rw [Lex.lt_X_pow_iff, Nat.cast_ofNat, ← WithBot.succ_one', lt_succ_iff] at hc
+  cases hc.not_gt hc'
 
 theorem IsField.one_lt_degree_leastNoRoots {x : Nimber} (h : IsField x) (ht : leastNoRoots x ≠ ⊤) :
     1 < ((leastNoRoots x).untop ht).degree := by
@@ -1027,7 +1028,7 @@ theorem IsRing.toIsField_of_X_sq_lt_leastNoRoots {x : Nimber} (h : IsRing x)
 
 theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     Monic (x.leastNoRoots.untop ht) := by
-  by_contra! hm
+  by_contra hm
   let c := (x.leastNoRoots.untop ht).leadingCoeff
   have hm' : 1 < c := by
     rw [← not_le, le_one_iff]
