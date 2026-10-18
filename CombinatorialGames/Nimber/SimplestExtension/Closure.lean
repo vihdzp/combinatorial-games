@@ -247,6 +247,15 @@ theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
 theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
   isClub_ofPred_isGroup.isNormal_enum
 
+theorem enumGroup_add_one (x : Ordinal) :
+    enumGroup (x + 1) = groupClosure (Order.succ (enumGroup x)) := by
+  apply le_antisymm
+  · rw [enumGroup_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsGroup.groupClosure _)
+    rw [← enumGroup_def, (IsGroup.enumGroup _).lt_groupClosure_iff, Order.lt_succ_iff]
+  · rw [(IsGroup.enumGroup _).groupClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumGroup.strictMono (lt_add_one x)
+
 theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
   rw [enumGroup_def', of.eq_iff_eq]
   have : {x | (of x).IsGroup} = range fun y : Ordinal ↦ 2 ^ y := by
@@ -415,6 +424,15 @@ theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
 theorem isNormal_enumRing : Order.IsNormal enumRing :=
   isClub_ofPred_isRing.isNormal_enum
 
+theorem enumRing_add_one (x : Ordinal) :
+    enumRing (x + 1) = ringClosure (Order.succ (enumRing x)) := by
+  apply le_antisymm
+  · rw [enumRing_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsRing.ringClosure _)
+    rw [← enumRing_def, (IsRing.enumRing _).lt_ringClosure_iff, Order.lt_succ_iff]
+  · rw [(IsRing.enumRing _).ringClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumRing.strictMono (lt_add_one x)
+
 @[simp]
 theorem enumRing_zero : enumRing 0 = ∗2 := by
   rw [enumRing_def, of_zero, ← bot_eq_zero, Order.enum_bot]
@@ -569,6 +587,15 @@ theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
 
 theorem isNormal_enumField : Order.IsNormal enumField :=
   isClub_ofPred_isField.isNormal_enum
+
+theorem enumField_add_one (x : Ordinal) :
+    enumField (x + 1) = fieldClosure (Order.succ (enumField x)) := by
+  apply le_antisymm
+  · rw [enumField_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsField.fieldClosure _)
+    rw [← enumField_def, (IsField.enumField _).lt_fieldClosure_iff, Order.lt_succ_iff]
+  · rw [(IsField.enumField _).fieldClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumField.strictMono (lt_add_one x)
 
 @[simp]
 theorem enumField_zero : enumField 0 = ∗2 := by
