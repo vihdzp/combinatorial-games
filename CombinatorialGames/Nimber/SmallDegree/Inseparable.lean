@@ -85,7 +85,7 @@ theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
   simpa [CharTwo.add_eq_zero] using
     (IsField.fieldClosure _).isRoot_leastNoRoots_of_eq ht.leastNoRoots_fieldClosure_succ
 
-theorem sqrt_eq : Nimber.sqrt t = fieldClosure (succ t) := by
+theorem sqrt_eq : √t = fieldClosure (succ t) := by
   rw [← Nimber.sqrt.eq_symm_apply, Nimber.sqrt_symm_apply, ht.fieldClosure_succ_pow_two]
 
 -- false positive due to the `mutual` block
