@@ -231,6 +231,8 @@ private theorem isNormal_val_fieldClosure_succ_pow_two_pow : IsNormal fun o : Or
   ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
     (Ordinal.isNormal_opow one_lt_two))
 
+-- todo: generalize from `fieldClosure (succ t)` to
+-- arbitrary fields which are not algebraically closed
 theorem isField_fieldClosure_succ_pow_omega0 :
     IsField (of (val (fieldClosure (succ t)) ^ ω)) := by
   rw [← Ordinal.natCast_opow_omega0 one_lt_two,
@@ -265,6 +267,8 @@ theorem exists_fieldClosure_succ_pow_two_pow_eq_of_isField_of_btwn {x : Nimber} 
         (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).1
         (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).2
 
+-- todo: generalize from `fieldClosure (succ t)` to
+-- arbitrary fields which are not algebraically closed
 theorem perfectField_fieldClosure_succ_pow_omega0 :
     PerfectField ht.isField_fieldClosure_succ_pow_omega0.toSubfield := by
   suffices _ : PerfectRing ht.isField_fieldClosure_succ_pow_omega0.toSubfield 2 from
