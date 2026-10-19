@@ -8,7 +8,8 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
-import Mathlib.RingTheory.DedekindDomain.AdicValuation
+import Mathlib.RingTheory.DedekindDomain.AdicValuation.Valuation
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Inseparable nimber extensions
@@ -25,7 +26,7 @@ universe u
 public section
 
 namespace Nimber.IsAlgClosed
-open Order Polynomial
+open Order Polynomial Ordinal
 
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
@@ -79,6 +80,9 @@ theorem leastNoRoots_fieldClosure_succ :
 theorem fieldClosure_succ_pow_two : fieldClosure (succ t) ^ 2 = t := by
   simpa [CharTwo.add_eq_zero] using
     (IsField.fieldClosure _).isRoot_leastNoRoots_of_eq ht.leastNoRoots_fieldClosure_succ
+
+theorem sqrt_eq : √t = fieldClosure (succ t) := by
+  rw [← Nimber.sqrt.eq_symm_apply, Nimber.sqrt_symm_apply, ht.fieldClosure_succ_pow_two]
 
 -- false positive due to the `mutual` block
 -- see https://leanprover.zulipchat.com/#narrow/channel/270676-lean4/topic/unused.20variables.20linter.20false.20positive/near/631476579
@@ -211,5 +215,121 @@ theorem sqrt_map_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
     (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield.map Nimber.sqrt.toRingHom =
       (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)).toSubfield :=
   SetLike.coe_injective (ht.sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n)
+
+theorem sqrt_fieldClosure_succ_pow_two_pow (n : Nat) :
+    sqrt (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
+      of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1)) := by
+  rw [← ht.fieldClosure_succ_pow_two_pow_succ_pow_two, Nimber.sqrt_sq]
+
+omit ht in
+private theorem isNormal_val_fieldClosure_succ_pow_two_pow : IsNormal fun o : Ordinal =>
+    val (fieldClosure (succ t)) ^ (Nat.cast 2 : Ordinal) ^ o :=
+  ((Ordinal.isNormal_opow (one_lt_val.2 (IsField.fieldClosure _).one_lt)).comp
+    (Ordinal.isNormal_opow one_lt_two))
+
+-- todo: generalize from `fieldClosure (succ t)` to
+-- arbitrary fields which are not algebraically closed
+theorem isField_fieldClosure_succ_pow_omega0 :
+    IsField (of (val (fieldClosure (succ t)) ^ ω)) := by
+  rw [← Ordinal.natCast_opow_omega0 one_lt_two,
+    ← Ordinal.apply_omega0_of_isNormal isNormal_val_fieldClosure_succ_pow_two_pow,
+    of.map_ciSup Ordinal.bddAbove_of_small]
+  simp_rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast]
+  exact IsField.iSup ht.isField_fieldClosure_succ_pow_two_pow
+
+theorem exists_fieldClosure_succ_pow_two_pow_eq_of_isField_of_btwn {x : Nimber} (hx : IsField x)
+    (htx : fieldClosure (succ t) ≤ x) (hxt : x < of (val (fieldClosure (succ t)) ^ ω)) :
+    ∃ n, of (val (fieldClosure (succ t)) ^ 2 ^ n) = x := by
+  rw [← natCast_opow_omega0 one_lt_two] at hxt
+  obtain ⟨n, hno, hn⟩ :=
+    ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
+      isSuccLimit_omega0).mp hxt
+  obtain ⟨n, rfl⟩ := lt_omega0.1 hno
+  clear hno
+  rw [Function.comp_apply, opow_natCast, ← natCast_pow, opow_natCast] at hn
+  induction n with
+  | zero =>
+    absurd htx.not_gt
+    rwa [pow_zero, pow_one, of_val] at hn
+  | succ n ih =>
+    obtain hb | hs := lt_or_ge x (of (val (fieldClosure (succ t)) ^ 2 ^ n))
+    · exact ih hb
+    refine ⟨n, le_antisymm hs ?_⟩
+    rw [← lt_succ_iff, ← hx.lt_fieldClosure_iff]
+    refine hn.trans_eq (Eq.symm ?_)
+    rw [pow_succ, pow_mul]
+    exact
+      (ht.isField_fieldClosure_succ_pow_two_pow n).fieldClosure_succ_eq_pow_degree_leastNoRoots
+        (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).1
+        (ht.degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n).2
+
+-- todo: generalize from `fieldClosure (succ t)` to
+-- arbitrary fields which are not algebraically closed
+theorem perfectField_fieldClosure_succ_pow_omega0 :
+    PerfectField ht.isField_fieldClosure_succ_pow_omega0.toSubfield := by
+  suffices _ : PerfectRing ht.isField_fieldClosure_succ_pow_omega0.toSubfield 2 from
+    PerfectRing.toPerfectField _ 2
+  refine .ofSurjective _ 2 ?_
+  intro ⟨x, hx⟩
+  refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+  rw [mem_toSubfield_iff, ← Ordinal.natCast_opow_omega0 one_lt_two] at hx ⊢
+  obtain ⟨n, hno, hn⟩ :=
+    ((of.isNormal.comp isNormal_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
+      isSuccLimit_omega0).mp hx
+  obtain ⟨n, rfl⟩ := lt_omega0.1 hno
+  refine lt_trans ?_ ((of.isNormal.comp
+    isNormal_val_fieldClosure_succ_pow_two_pow).strictMono (natCast_lt_omega0 (n + 1)))
+  rw [Function.comp_apply] at hn ⊢
+  rw [Ordinal.opow_natCast, ← Ordinal.natCast_pow, Ordinal.opow_natCast] at hn ⊢
+  rw [← mem_toSubfield_iff (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)),
+    ← ht.sqrt_map_fieldClosure_succ_pow_two_pow_succ, Subfield.mem_map]
+  exact ⟨x, hn, rfl⟩
+
+theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
+    ¬PerfectField (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield := by
+  intro
+  absurd bijective_frobenius (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield 2
+  intro hbij
+  cases n with
+  | zero =>
+    obtain ⟨c, hc⟩ := hbij.surjective ⟨t, by simp [← Order.succ_le_iff]⟩
+    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
+      RingEquiv.symm_apply_eq, ht.sqrt_eq] at hc
+    absurd c.2
+    simp [hc]
+  | succ n =>
+    obtain ⟨c, hc⟩ := hbij.surjective ⟨of (val (fieldClosure (succ t)) ^ 2 ^ n),
+      of.strictMono (pow_lt_pow_right₀ (one_lt_val.2 (IsField.fieldClosure _).one_lt)
+        (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n)))⟩
+    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
+      RingEquiv.symm_apply_eq, ht.sqrt_fieldClosure_succ_pow_two_pow] at hc
+    absurd c.2
+    simp [hc]
+
+omit ht in
+theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x) :
+   ¬PerfectField hx.toSubfield ↔ ∃ t, IsAlgClosed t ∧
+      ∃ n, of (val (fieldClosure (succ t)) ^ 2 ^ n) = x := by
+  constructor
+  · intro h
+    obtain halg | htr := le_total x (Nimber.algClosure 0)
+    · absurd h
+      exact hx.perfectField_of_le_algClosure_zero halg
+    obtain ⟨t, ht, u, hu, htx, hxu, hbtwn⟩ := exists_isAlgClosed_between htr
+    obtain hperf | hlt := le_or_gt (of (val (fieldClosure (succ t)) ^ ω)) x
+    · absurd h
+      refine IsField.perfectField_of_btwn ht.isField_fieldClosure_succ_pow_omega0 hx
+        ht.perfectField_fieldClosure_succ_pow_omega0 hperf (hxu.le.trans ?_)
+      refine hbtwn _ (IsAlgClosed.algClosure _) (lt_of_lt_of_le ?_ (le_algClosure _))
+      rw [← Order.succ_le_iff, ← val_le_iff]
+      exact (val.le_iff_le.2 <| le_fieldClosure _).trans (Ordinal.left_le_opow _ omega0_pos)
+    obtain htn | htp := lt_or_ge x (fieldClosure (succ t))
+    · absurd h
+      rw [hx.lt_fieldClosure_iff, lt_succ_iff] at htn
+      rw! [← le_antisymm htx htn]
+      exact ht.isAlgClosed.perfectField
+    exact ⟨t, ht, ht.exists_fieldClosure_succ_pow_two_pow_eq_of_isField_of_btwn hx htp hlt⟩
+  · rintro ⟨t, ht, n, rfl⟩
+    exact ht.not_perfectField_fieldClosure_succ_pow_two_pow n
 
 end Nimber.IsAlgClosed

@@ -135,6 +135,9 @@ theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
   ne_zero := one_ne_zero
 
+theorem addSubgroupBot_eq : ⊥ = IsGroup.one.toAddSubgroup := by
+  ext; simp
+
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
   add_lt := IsPrincipal.sSup (fun x hx ↦ (H x hx).add_lt)
@@ -270,7 +273,7 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   · rw [of_lt_iff]
     apply (opow_log_le_self _ hx').lt_of_ne
     rw [ne_eq, ← of_eq_iff]
-    contrapose! hx
+    contrapose hx
     exact ⟨_, hx⟩
   · exact mod_opow_log_lt_self _ hx'
 
@@ -339,6 +342,10 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 @[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
 @[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
 @[simp] theorem coe_toSubring (h : IsRing x) : h.toSubring = Set.Iio x := rfl
+
+theorem subringBot_eq : ⊥ = IsRing.two.toSubring := by
+  rw [← SetLike.coe_set_eq, Subring.coe_bot, CharTwo.range_intCast]
+  simp
 
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
@@ -468,6 +475,11 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 @[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
 @[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
 @[simp] theorem coe_toSubfield (h : IsField x) : h.toSubfield = Set.Iio x := rfl
+
+theorem subfieldBot_eq : ⊥ = IsField.two.toSubfield := by
+  rw [eq_comm, eq_bot_iff, ← SetLike.coe_subset_coe, coe_toSubfield, ← coe_toSubring IsRing.two,
+    ← subringBot_eq, ← Subfield.coe_toSubring, SetLike.coe_subset_coe]
+  apply bot_le
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq

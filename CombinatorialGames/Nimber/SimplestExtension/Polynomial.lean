@@ -1033,7 +1033,7 @@ theorem IsRing.toIsField_of_X_sq_lt_leastNoRoots {x : Nimber} (h : IsRing x)
 
 theorem IsField.monic_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
     Monic (x.leastNoRoots.untop ht) := by
-  by_contra! hm
+  by_contra hm
   let c := (x.leastNoRoots.untop ht).leadingCoeff
   have hm' : 1 < c := by
     rw [← not_le, le_one_iff]
