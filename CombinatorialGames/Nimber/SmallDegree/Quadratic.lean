@@ -19,9 +19,11 @@ import Mathlib.RingTheory.Valuation.Integral
 TODO: write module docstring
 -/
 
-public noncomputable section
+universe u
 
-theorem Order.IsNormal.leftOrdContinuous {α β : Type*} [LinearOrder α] [LinearOrder β]
+noncomputable section
+
+public theorem Order.IsNormal.leftOrdContinuous {α β : Type*} [LinearOrder α] [LinearOrder β]
     {f : α → β} (hf : Order.IsNormal f) : LeftOrdContinuous f := by
   intro s x hs hx
   exact hf.map_isLUB hx hs
@@ -30,10 +32,10 @@ namespace Nimber
 open Order Polynomial Set
 
 @[expose]
-def quadraticIrreducibles : Set Nimber :=
+public def quadraticIrreducibles : Set Nimber :=
   {x | IsGroup x ∧ ∀ y < fieldClosure (succ x), x ≤ y ^ 2 - y - x}
 
-theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) :
+public theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) :
     t ∈ quadraticIrreducibles := by
   classical
   refine ⟨ht.toIsGroup, fun y hyt => ?_⟩
@@ -130,52 +132,94 @@ theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) 
       grw [Subring.coe_mul, Valuation.map_mul, hm, hn]
       decide
 
-theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles :=
+public theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles :=
   fun x => ⟨algClosure x, (IsAlgClosed.algClosure x).mem_quadraticIrreducibles, le_algClosure x⟩
 
-def quadraticLower (x : Nimber) : Ordinal :=
-  ⨆ (i : ↥(quadraticIrreducibles ∩ (fun y => y ^ 2 - y) '' Iio (fieldClosure x))),
+def quadraticAux (s : Set Nimber.{u}) : Ordinal :=
+  ⨆ (i : ↥(quadraticIrreducibles ∩ s)),
     val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩)
 
+theorem quadraticAux_monotone (s t : Set Nimber.{u})
+    [Small.{u} s] [Small.{u} t] (hst : s ⊆ t) : quadraticAux s ≤ quadraticAux t := by
+  unfold quadraticAux
+  rw [Ordinal.iSup_le_iff]
+  intro i
+  exact Ordinal.le_iSup
+    (fun i : ↥(quadraticIrreducibles ∩ t) =>
+      val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩))
+    ⟨i.1, i.2.1, hst i.2.2⟩
+
+theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
+    (hs : Small.{u} s) (ht : ∀ t : s, Small.{u} t) :
+    quadraticAux (sUnion s) = ⨆ t : s, quadraticAux t := by
+  apply le_antisymm
+  · rw [quadraticAux, Ordinal.iSup_le_iff]
+    intro ⟨i, hiq, ⟨t, hts, hit⟩⟩
+    refine le_trans ?_ (Ordinal.le_iSup (fun t : s => quadraticAux t) ⟨t, hts⟩)
+    rw [quadraticAux]
+    have : Small t := ‹∀ t : s, Small t› ⟨t, hts⟩
+    exact Ordinal.le_iSup
+      (fun i : ↥(quadraticIrreducibles ∩ t) =>
+        val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩))
+      ⟨i, hiq, hit⟩
+  · rw [Ordinal.iSup_le_iff]
+    intro t
+    exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.2)
+
+public section
+
+def quadraticLower (x : Nimber) : Ordinal :=
+  quadraticAux ((fun y => y ^ 2 - y) '' Iio (fieldClosure x))
+
 def quadraticUpper (x : Nimber) : Ordinal :=
-  ⨆ (i : ↥(quadraticIrreducibles ∩ Iio (fieldClosure x))),
-    val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩)
+  quadraticAux (Iio (fieldClosure x))
 
 theorem quadraticLower_eq_quadraticLower_fieldClosure (x : Nimber) :
     quadraticLower x = quadraticLower (fieldClosure x) := by
   unfold quadraticLower
-  rw! (castMode := .all) [(IsField.fieldClosure x).fieldClosure_eq]
-  rfl
+  rw [(IsField.fieldClosure x).fieldClosure_eq]
 
 theorem quadraticUpper_eq_quadraticUpper_fieldClosure (x : Nimber) :
     quadraticUpper x = quadraticUpper (fieldClosure x) := by
   unfold quadraticUpper
-  rw! (castMode := .all) [(IsField.fieldClosure x).fieldClosure_eq]
-  rfl
+  rw [(IsField.fieldClosure x).fieldClosure_eq]
 
 theorem quadraticLower_monotone : Monotone quadraticLower := by
   intro x y hxy
   unfold quadraticLower
-  rw [Ordinal.iSup_le_iff]
-  intro i
-  refine Ordinal.le_iSup
-    (fun i : ↥(quadraticIrreducibles ∩ (fun y ↦ y ^ 2 - y) '' Iio y.fieldClosure) =>
-      val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩))
-      ⟨i.1, i.2.1, ?_⟩
-  grw [← hxy]
-  exact i.2.2
+  apply quadraticAux_monotone
+  gcongr
 
--- theorem leftOrdContinuous_quadraticLower : LeftOrdContinuous quadraticLower := by
---   intro s x hs hx
---   constructor
---   · exact quadraticLower_monotone.mem_upperBounds_image hx.1
---   · intro c hc
---     unfold quadraticLower
---     rw [Ordinal.iSup_le_iff]
---     intro ⟨i, hi, hix⟩
---     obtain ⟨r, hrx, rfl⟩ := (mem_image _ _ _).1 hix
---     stop
---     obtain ⟨y, hy⟩ := hx.exists_between hrx
---     sorry
+theorem quadraticUpper_monotone : Monotone quadraticUpper := by
+  intro x y hxy
+  unfold quadraticUpper
+  apply quadraticAux_monotone
+  gcongr
+
+theorem leftOrdContinuous_quadraticLower : LeftOrdContinuous quadraticLower.{u} := by
+  intro s x hs hx
+  have h : IsLUB (fieldClosure '' s) (fieldClosure x) := leftOrdContinuous_fieldClosure hs hx
+  unfold quadraticLower
+  rw [← h.biUnion_Iio_eq, Set.image_iUnion₂, ← sUnion_image, Set.image_image]
+  have hss : Small.{u} s := Ordinal.bddAbove_iff_small.1 hx.bddAbove
+  have hst : ∀ t : (fun x ↦ (fun y ↦ y ^ 2 - y) '' Iio x.fieldClosure) '' s, Small.{u} t := by
+    simp_rw [Subtype.forall, forall_mem_image]
+    infer_instance
+  rw [leftOrdContinuous_quadraticAux _ inferInstance hst, ← sSup_image', Set.image_image]
+  exact isLUB_csSup' Ordinal.bddAbove_of_small
+
+theorem leftOrdContinuous_quadraticUpper : LeftOrdContinuous quadraticUpper.{u} := by
+  intro s x hs hx
+  have h : IsLUB (fieldClosure '' s) (fieldClosure x) := leftOrdContinuous_fieldClosure hs hx
+  unfold quadraticUpper
+  rw [← h.biUnion_Iio_eq, ← sUnion_image, Set.image_image]
+  have hss : Small.{u} s := Ordinal.bddAbove_iff_small.1 hx.bddAbove
+  have hst : ∀ t : (fun x ↦ Iio x.fieldClosure) '' s, Small.{u} t := by
+    simp_rw [Subtype.forall, forall_mem_image]
+    infer_instance
+  rw [leftOrdContinuous_quadraticAux _ inferInstance hst, ← sSup_image', Set.image_image]
+  exact isLUB_csSup' Ordinal.bddAbove_of_small
+
+end
 
 end Nimber
