@@ -183,9 +183,9 @@ theorem groupClosure_monotone : Monotone groupClosure := by
 
 theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
   intro s x hs₀ hs
-  have hbdd := groupClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := groupClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
-  refine ⟨groupClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨groupClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -372,9 +372,9 @@ theorem ringClosure_monotone : Monotone ringClosure := by
 
 theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
   intro s x hs₀ hs
-  have hbdd := ringClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := ringClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsRing.sSup (by simp) (by simpa) hbdd
-  refine ⟨ringClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨ringClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -404,7 +404,7 @@ theorem ringClosure_groupClosure (x : Nimber) : ringClosure (groupClosure x) = r
   apply le_antisymm
   · rw [(IsRing.ringClosure x).ringClosure_le_iff]
     exact groupClosure_le_ringClosure x
-  · exact ringClosure_mono (le_groupClosure x)
+  · exact ringClosure_monotone (le_groupClosure x)
 
 theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
   isCofinal a := ⟨_, .ringClosure _, le_ringClosure a⟩
@@ -540,9 +540,9 @@ theorem fieldClosure_monotone : Monotone fieldClosure := by
 
 theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
   intro s x hs₀ hs
-  have hbdd := fieldClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := fieldClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsField.sSup (by simp) (by simpa) hbdd
-  refine ⟨fieldClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨fieldClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -578,7 +578,7 @@ theorem fieldClosure_ringClosure (x : Nimber) : fieldClosure (ringClosure x) = f
   apply le_antisymm
   · rw [(IsField.fieldClosure x).fieldClosure_le_iff]
     exact ringClosure_le_fieldClosure x
-  · exact fieldClosure_mono (le_ringClosure x)
+  · exact fieldClosure_monotone (le_ringClosure x)
 
 @[simp]
 theorem fieldClosure_groupClosure (x : Nimber) :

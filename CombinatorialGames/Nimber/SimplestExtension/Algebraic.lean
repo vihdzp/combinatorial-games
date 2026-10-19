@@ -603,9 +603,9 @@ theorem algClosure_monotone : Monotone algClosure := by
 
 theorem leftOrdContinuous_algClosure : LeftOrdContinuous algClosure := by
   intro s x hs₀ hs
-  have hbdd := algClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := algClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsAlgClosed.sSup (by simp) (by simpa) hbdd
-  refine ⟨algClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨algClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.algClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_algClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -624,7 +624,7 @@ theorem algClosure_fieldClosure (x : Nimber) : algClosure (fieldClosure x) = alg
   apply le_antisymm
   · rw [(IsAlgClosed.algClosure x).algClosure_le_iff]
     exact fieldClosure_le_algClosure x
-  · exact algClosure_mono (le_fieldClosure x)
+  · exact algClosure_monotone (le_fieldClosure x)
 
 @[simp]
 theorem algClosure_ringClosure (x : Nimber) : algClosure (ringClosure x) = algClosure x := by
