@@ -34,11 +34,6 @@ open Ordinal in
 theorem Ordinal.ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
   natCast_opow_omega0 Nat.AtLeastTwo.one_lt
 
-@[simp, norm_cast]
-theorem Ordinal.ofNat_pow (m n : ℕ) [m.AtLeastTwo] :
-    ↑(ofNat(m) ^ n : ℕ) = (ofNat(m) ^ n : Ordinal) :=
-  natCast_pow m n
-
 namespace Nimber.IsAlgClosed
 open Order Polynomial Ordinal
 
@@ -266,7 +261,7 @@ theorem enumField_add_omega0 {x : Ordinal} (hx : enumField x = t) :
     exact isNormal_enumField.comp (isNormal_add_right _)
   rw [← one_add_omega0, ← apply_omega0_of_isNormal hf]
   simp_rw [← Nat.cast_one_add, add_comm, Nat.cast_add_one, ← add_assoc, enumField_add_natCast ht hx,
-    ← opow_natCast, ofNat_pow, ← opow_natCast]
+    ← opow_natCast, natCast_pow, Nat.cast_ofNat, ← opow_natCast]
   rw [apply_omega0_of_isNormal isNormal_of_val_fieldClosure_succ_pow_two_pow,
     opow_omega0 one_lt_two (natCast_lt_omega0 2), one_add_omega0]
 
@@ -308,7 +303,7 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
   obtain ⟨n, rfl⟩ := lt_omega0.1 hno
   refine lt_trans ?_ ((
     isNormal_of_val_fieldClosure_succ_pow_two_pow).strictMono (natCast_lt_omega0 (n + 1)))
-  rw [opow_natCast, ← ofNat_pow, opow_natCast] at hn ⊢
+  rw [opow_natCast, ← Nat.cast_ofNat, ← natCast_pow, opow_natCast] at hn ⊢
   rw [← mem_toSubfield_iff (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)),
     ← ht.sqrt_map_fieldClosure_succ_pow_two_pow_succ, Subfield.mem_map]
   exact ⟨x, hn, rfl⟩
