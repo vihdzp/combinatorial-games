@@ -80,16 +80,19 @@ theorem neg_toLGame (h : c.moves left = c.moves right) (a : α) : -c.toLGame a =
 
 /-- A game graph is well-founded if from every position
 there is no infinite sequence of (not necessarily alternating) left and right moves. -/
-protected class IsWellFounded (c : GameGraph α) where
-  wf (c) : IsWellFounded α fun a b => ∃ p, a ∈ c.moves p b
+protected class WellFounded (c : GameGraph α) where
+  wf (c) : WellFounded fun a b => ∃ p, a ∈ c.moves p b
+
+attribute [instance] WellFounded.wf
 
 omit Hl Hr in
-theorem IsWellFounded.of_subrelation (r : α → α → Prop) [IsWellFounded α r]
-    (hr : ∀ a b p, a ∈ c.moves p b → r a b) : c.IsWellFounded := by
-  refine ⟨Subrelation.isWellFounded (r := r) ?_⟩
+theorem WellFounded.of_subrelation (r : α → α → Prop) [WellFounded r]
+    (hr : ∀ a b p, a ∈ c.moves p b → r a b) : c.WellFounded := by
+  constructor
+  refine Subrelation.isWellFounded (r := r) ?_
   simpa only [Subrelation, forall_exists_index]
 
-variable [c.IsWellFounded]
+variable [c.WellFounded]
 
 variable (c) in
 /-- **Conway recursion**: build data for a game by recursively building it on its
@@ -98,13 +101,13 @@ left and right sets. -/
 def moveRecOn {motive : α → Sort*} (x)
     (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     motive x :=
-  (IsWellFounded.wf c).fix _ (fun x IH ↦ ind x fun _ _ h ↦ IH _ ⟨_, h⟩) x
+  (WellFounded.wf c).fix (fun x IH ↦ ind x fun _ _ h ↦ IH _ ⟨_, h⟩) x
 
 omit Hl Hr in
 theorem moveRecOn_eq {motive : α → Sort*} (x)
     (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     c.moveRecOn x ind = ind x fun _ y _ ↦ c.moveRecOn y ind := by
-  rw [moveRecOn, IsWellFounded.fix_eq]
+  rw [moveRecOn, WellFounded.fix_eq]
   rfl
 
 variable (c) in
