@@ -198,6 +198,18 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
 
+theorem $(mkIdent `of_iSup) {ι : Sort*} {f : ι → Ordinal} :
+    $(mkOf Alias) (iSup f) = ⨆ i, $(mkOf Alias) (f i) :=
+  rfl
+
+theorem $(mkIdent `val_iSup) {ι : Sort*} {f : ι → $Alias} :
+    $(mkVal Alias) (iSup f) = ⨆ i, $(mkVal Alias) (f i) :=
+  rfl
+
+theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
+    (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=
+  Ordinal.apply_omega0_of_isNormal hf
+
 end $Alias
 end
 
