@@ -29,6 +29,7 @@ public section
 theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
     {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
 
+-- #44989
 open Ordinal in
 @[simp]
 theorem Ordinal.ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
