@@ -33,7 +33,7 @@ theorem coeff_lt {b : Ordinal} (hb : 1 < b) (o e : Ordinal) : coeff b o e < b :=
     exact hb.pos
 
 theorem support_coeff_subset {b o x : Ordinal} (hx : x < b ^ o) :
-    SetLike.coe (coeff b x).support ⊆ Set.Iio o := by
+    ((coeff b x).support : Set _) ⊆ Set.Iio o := by
   obtain rfl | hb := eq_zero_or_pos b
   · have := hx.trans_le (zero_opow_le _)
     simp_all
@@ -69,12 +69,12 @@ open Finsupp Ordinal Set
 @[pp_nodot]
 def toFinsupp (x : Nimber) : Ordinal →₀ hb.toSubfield :=
   (CNF.coeff b.val x.val).mapRange
-    (fun z ↦ if h : z < b.val then ⟨z, h⟩ else 0) (dif_pos hb.pos)
+    (fun z ↦ if h : z < b.val then ⟨z, h⟩ else 0) (dite_eq_left hb.pos)
 
 @[simp]
 private theorem toFinsupp_apply (x : Nimber) (e : Ordinal) :
     toFinsupp b hb x e = ⟨∗(CNF.coeff b.val x.val e), CNF.coeff_lt hb.one_lt _ e⟩ :=
-  dif_pos ..
+  dite_eq_left ..
 
 @[simp]
 theorem toFinsupp_zero : toFinsupp b hb 0 = 0 := by
@@ -88,11 +88,11 @@ theorem support_toFinsupp_subset {o : Ordinal} {x : Nimber} (hx : x < ∗(b.val 
 of `Ordinal.CNF.eval`. -/
 @[pp_nodot]
 def ofFinsupp (x : Ordinal →₀ hb.toSubfield) : Nimber :=
-  ∗(CNF.eval b.val (x.mapRange (fun e ↦ e.1.val) rfl))
+  ∗(CNF.eval b.val (x.mapRange (fun e ↦ e.1.val) (show _ by simp)))
 
 @[simp]
 theorem ofFinsupp_zero : ofFinsupp b hb 0 = 0 := by
-  simp [ofFinsupp]
+  simp [ofFinsupp];
 
 theorem ofFinsupp_lt {o : Ordinal} {x : Ordinal →₀ hb.toSubfield}
     (hf : SetLike.coe x.support ⊆ Iio o) : ofFinsupp b hb x < ∗(b.val ^ o) := by
@@ -127,6 +127,7 @@ theorem toFinsupp_inj {x y} : toFinsupp b hb x = toFinsupp b hb y ↔ x = y :=
 theorem ofFinsupp_inj {x y} : ofFinsupp b hb x = ofFinsupp b hb y ↔ x = y :=
   (ofFinsupp_injective b hb).eq_iff
 
+set_option backward.isDefEq.respectTransparency.types false in
 theorem ofFinsupp_def (x) :
     ofFinsupp b hb x = x.linearCombination hb.toSubfield fun o ↦ ∗(val b ^ o) := by
   induction x using induction_on_max with
@@ -154,7 +155,7 @@ theorem toFinsupp_opow_mul (o : Ordinal) {x : Nimber} (hx : x < b) :
 
 @[simp]
 theorem toFinsupp_opow (o : Ordinal) : toFinsupp b hb (∗(b.val ^ o)) = single o 1 := by
-  simpa using toFinsupp_opow_mul b hb o hb.one_lt
+  simpa using! toFinsupp_opow_mul b hb o hb.one_lt
 
 @[simp]
 theorem toFinsupp_one : toFinsupp b hb 1 = single 0 1 := by
