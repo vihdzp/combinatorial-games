@@ -675,6 +675,15 @@ theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) 
 theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
   isClub_ofPred_isAlgClosed.isNormal_enum
 
+theorem enumAlgClosed_add_one (x : Ordinal) :
+    enumAlgClosed (x + 1) = algClosure (succ (enumAlgClosed x)) := by
+  apply le_antisymm
+  · rw [enumAlgClosed_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsAlgClosed.algClosure _)
+    rw [← enumAlgClosed_def, (IsAlgClosed.enumAlgClosed _).lt_algClosure_iff, Order.lt_succ_iff]
+  · rw [(IsAlgClosed.enumAlgClosed _).algClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumAlgClosed.strictMono (lt_add_one x)
+
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
