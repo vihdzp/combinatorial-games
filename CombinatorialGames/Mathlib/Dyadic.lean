@@ -5,10 +5,16 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Algebra.Order.Field.Basic
-public import Mathlib.Algebra.Order.Ring.Defs
-public import Mathlib.Analysis.Normed.Field.Lemmas
+public import Mathlib.Algebra.Group.Submonoid.Membership
+public import Mathlib.Algebra.Order.Archimedean.Defs
+public import Mathlib.Algebra.Ring.Parity
+public import Mathlib.Algebra.Ring.Rat
 public import Mathlib.Data.Nat.Log
+
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Dyadic numbers
@@ -75,6 +81,25 @@ theorem den_mem_powers (x : Dyadic) : x.den ∈ Submonoid.powers 2 := by
   | case3 => exact one_mem _ -- integer
   | case2 => apply pow_mem; exact Submonoid.mem_powers 2 -- dyadic rational
 
+theorem den_eq_two_pow_toNat_precision (x : Dyadic) :
+    x.den = 2 ^ (x.precision.getD 0).toNat := by
+  cases x with
+  | zero => rfl
+  | ofOdd n k hn =>
+    cases k with
+    | ofNat k => rfl
+    | negSucc k => rfl
+
+theorem precision_eq_none {x : Dyadic} : x.precision = none ↔ x = 0 := by
+  cases x <;> simp
+
+theorem isSome_precision_eq_true {x : Dyadic} : x.precision.isSome = true ↔ x ≠ 0 :=
+  Option.isSome_iff_ne_none.trans Dyadic.precision_eq_none.not
+
+theorem isSome_precision_eq_true_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
+    x.precision.isSome = true :=
+  x.isSome_precision_eq_true.mpr (mt (by rintro rfl; rfl) hx)
+
 @[simp]
 theorem den_le_one_iff_eq_one {x : Dyadic} : x.den ≤ 1 ↔ x.den = 1 := by
   simp_rw [Nat.le_one_iff_eq_zero_or_eq_one, x.den_ne_zero, false_or]
@@ -134,7 +159,7 @@ instance : Inhabited Dyadic := ⟨0⟩
 @[simp] theorem zero_le_coe {x : Dyadic} : 0 ≤ x.toRat ↔ 0 ≤ x := by norm_cast
 @[simp] theorem coe_lt_zero {x : Dyadic} : x.toRat < 0 ↔ x < 0 := by norm_cast
 @[simp] theorem coe_le_zero {x : Dyadic} : x.toRat ≤ 0 ↔ x ≤ 0 := by norm_cast
-@[simp] theorem coe_eq_zero {x : Dyadic} : x.toRat = 0 ↔ x = 0 := by norm_cast
+alias coe_eq_zero := toRat_eq_zero_iff
 @[simp] theorem zero_eq_coe {x : Dyadic} : 0 = x.toRat ↔ 0 = x := by norm_cast
 
 @[simp, norm_cast] theorem coe_one : (1 : Dyadic).toRat = 1 := rfl
@@ -163,13 +188,13 @@ instance : Nontrivial Dyadic where
 instance : SMul Nat Dyadic where
   smul x y := x * y
 
-@[simp, norm_cast] theorem coe_nsmul (x : ℕ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
+@[norm_cast] theorem coe_nsmul (x : ℕ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (coe_mul x y).trans (by simp)
 
 instance : SMul Int Dyadic where
   smul x y := x * y
 
-@[simp, norm_cast] theorem coe_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
+@[norm_cast] theorem coe_zsmul (x : ℤ) (y : Dyadic) : (x • y).toRat = x • y.toRat :=
   (coe_mul x y).trans (by simp)
 
 /-- The dyadic number ½. -/
@@ -247,11 +272,11 @@ instance : CommRing Dyadic where
     rw [← coe_inj, coe_intCast, coe_neg, coe_natCast, ← Int.cast_natCast,
       ← Rat.intCast_neg, Int.neg_ofNat_succ]
   nsmul n x := n • x
-  nsmul_zero x := by ext; simp
-  nsmul_succ n x := by ext; simp [add_one_mul]
+  nsmul_zero x := by ext; simp [coe_nsmul]
+  nsmul_succ n x := by ext; simp [add_one_mul, coe_nsmul]
   zsmul n x := n • x
-  zsmul_zero' x := by ext; simp
-  zsmul_succ' n x := by ext; simp [add_one_mul]
+  zsmul_zero' x := by ext; simp [coe_zsmul]
+  zsmul_succ' n x := by ext; simp [add_one_mul, coe_zsmul]
   zsmul_neg' n x := by
     change _ * _ = -(_ * _)
     rw [← neg_mul, ← coe_inj, coe_mul, coe_mul, coe_intCast, coe_neg, coe_intCast,

@@ -10,7 +10,6 @@ public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.Algebra.Order.Hom.Monoid
 
 import CombinatorialGames.Tactic.GameCmp
-import Mathlib.Algebra.Order.Hom.Monoid
 import Mathlib.Data.Set.Finite.Lattice
 
 /-!
@@ -134,7 +133,7 @@ theorem not_toIGame_fuzzy (a b : NatOrdinal) : ¬ toIGame a ‖ toIGame b := by
 
 @[simp]
 theorem toIGame_nonneg (a : NatOrdinal) : 0 ≤ a.toIGame := by
-  simpa using toIGame.monotone (NatOrdinal.zero_le a)
+  simpa using toIGame.monotone zero_le
 
 /-! ### `NatOrdinal` to `Game` -/
 
@@ -249,7 +248,7 @@ theorem Short.lt_omega0 (x : IGame) [Short x] : x < ω := by
   apply hn.trans
   grw [← toIGame_natCast_equiv n]
   rw [toIGame.lt_iff_lt, ← NatOrdinal.of_natCast n]
-  exact Ordinal.nat_lt_omega0 n
+  exact Ordinal.natCast_lt_omega0 n
 
 theorem Short.neg_omega0_lt (x : IGame) [Short x] : -ω < x := by
   rw [IGame.neg_lt]
