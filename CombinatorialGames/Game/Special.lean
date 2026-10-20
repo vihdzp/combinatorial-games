@@ -18,7 +18,10 @@ This file defines some simple yet notable combinatorial games:
 * `⋆ = {0 | 0}`
 * `½ = {0 | 1}`
 * `↑ = {0 | ⋆}`
-* `↓ = {⋆ | 0}`.
+* `↓ = {⋆ | 0}`
+* `⧾x = {0 | {0 | -x}}`
+* `⧿x = {{x | 0} | 0}`
+* `±x = {x | -x}`.
 -/
 
 universe u
@@ -44,6 +47,8 @@ theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 theorem star_fuzzy_zero : ⋆ ‖ 0 := ⟨zero_lf_star, star_lf_zero⟩
 theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 
+@[simp] theorem star_ne_zero : ⋆ ≠ 0 := star_fuzzy_zero.ne
+@[simp] theorem zero_ne_star : 0 ≠ ⋆ := zero_fuzzy_star.ne
 @[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
 @[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
@@ -54,6 +59,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
 protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
+@[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
 /-! ### Half -/
 
@@ -87,8 +93,13 @@ recommended_spelling "up" for "↑" in [«term↑»]
 @[simp, game_cmp] theorem rightMoves_up : ↑ᴿ = {⋆} := rightMoves_ofSets ..
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
+theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
+theorem star_lt_up_add_up : ⋆ < ↑ + ↑ := by game_cmp
+
+/-- The upstart equality. -/
+@[simp] theorem ofSets_zero_up : !{{0} | {↑}} ≈ ↑ + ↑ + ⋆ := by game_cmp
 
 protected instance Dicotic.up : Dicotic ↑ := by rw [dicotic_def]; simp
 protected instance Short.up : Short ↑ := by rw [short_def]; simp
@@ -131,6 +142,8 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
+@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
   trans Dicotic !{{0} | {-x}}
@@ -149,6 +162,24 @@ theorem short_tiny_iff {x : IGame} : Short (⧾x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
 
+theorem tiny_antitone : Antitone tiny := by
+  intro x y hxy
+  apply IGame.le_of_forall_moves_left_lf
+  · rw [leftMoves_tiny, Set.forall_mem_singleton]
+    exact left_lf (by simp)
+  · rw [rightMoves_tiny, Set.forall_mem_singleton, rightMoves_tiny, Set.exists_mem_singleton]
+    apply IGame.le_of_forall_moves_left_lf
+    · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+      exact left_lf (by simp)
+    · rw [rightMoves_ofSets, Set.forall_mem_singleton, rightMoves_ofSets, Set.exists_mem_singleton]
+      exact IGame.neg_le_neg_iff.2 hxy
+
+theorem tiny_congr {x y : IGame} (hxy : x ≈ y) : ⧾x ≈ ⧾y :=
+  ⟨tiny_antitone hxy.ge, tiny_antitone hxy.le⟩
+
+theorem tiny_tiny_tiny_equiv (x : IGame) : ⧾⧾⧾x ≈ ↑ := by
+  game_cmp
+
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
   !{{!{{x} | {0}}} | {0}}
@@ -163,6 +194,8 @@ theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
 @[simp, game_cmp]
 theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
   rightMoves_ofSets ..
+
+@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
@@ -188,6 +221,14 @@ instance (x : IGame) [Short x] : Short (⧿x) := by
 
 @[simp, game_cmp] theorem tiny_pos (x : IGame) : 0 < ⧾x := by game_cmp
 @[simp, game_cmp] theorem miny_neg (x : IGame) : ⧿x < 0 := by game_cmp
+
+theorem miny_monotone : Monotone miny := by
+  intro x y hxy
+  rw [← neg_tiny, ← neg_tiny, IGame.neg_le_neg_iff]
+  exact tiny_antitone hxy
+
+theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
+  ⟨miny_monotone hxy.le, miny_monotone hxy.ge⟩
 
 /-! ### Switches -/
 
@@ -228,6 +269,33 @@ theorem short_switch_iff {x : IGame} : Short (±x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (±x) := by
   rwa [short_switch_iff]
+
+theorem switch_equiv_zero_iff {x : IGame} : ±x ≈ 0 ↔ ¬0 ≤ x := by
+  refine ⟨fun h ↦ left_lf_of_le h.le ?_, fun h ↦ ⟨le_zero.2 ?_, zero_le.2 ?_⟩⟩
+  · simp
+  · simpa using h
+  · simpa using h
+
+alias ⟨_, switch_equiv_zero⟩ := switch_equiv_zero_iff
+
+theorem switch_fuzzy_zero_iff {x : IGame} : ±x ‖ 0 ↔ 0 ≤ x := by
+  rw [← not_iff_not, ← switch_equiv_zero_iff]
+  exact not_fuzzy_iff_of_neg_equiv
+    (neg_switch x).antisymmRel neg_zero.antisymmRel
+
+alias ⟨_, switch_fuzzy_zero⟩ := switch_fuzzy_zero_iff
+
+theorem switch_fuzzy_self_iff {x : IGame} : ±x ‖ x ↔ ¬x < 0 := by
+  by_cases h0x : 0 ≤ x
+  · refine iff_of_true ⟨left_lf ?_, fun h ↦ ?_⟩ h0x.not_gt
+    · simp
+    · absurd h0x.trans_lt (lt_of_le_not_ge h (left_lf (by simp)))
+      exact not_lt_of_neg_equiv neg_zero.antisymmRel (neg_switch x).antisymmRel
+  · rw [lt_iff_le_not_ge, and_iff_left h0x]
+    exact ⟨fun hx => mt (switch_equiv_zero h0x).ge.trans' hx.2,
+      fun hx0 => (switch_equiv_zero h0x).trans_incompRel ⟨h0x, hx0⟩⟩
+
+alias ⟨_, switch_fuzzy_self⟩ := switch_fuzzy_self_iff
 
 end IGame
 end

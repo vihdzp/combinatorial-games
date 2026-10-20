@@ -5,7 +5,8 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.SetTheory.Ordinal.Family
+public import Mathlib.Algebra.Order.GroupWithZero.Canonical
+public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Tactic.Abel
@@ -65,9 +66,6 @@ to normal ordinal addition, it is commutative.
 Natural addition can equivalently be characterized as the ordinal resulting from adding up
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
 @[no_expose] instance : Add NatOrdinal := ⟨add⟩
-
-/-- Add two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:65 x:65 "+ₒ" y:66 => of (val x + val y)
 
 theorem add_def (a b : NatOrdinal) :
     a + b = max (⨆ x : Iio a, succ (x.1 + b)) (⨆ x : Iio b, succ (a + x.1)) := by
@@ -145,7 +143,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · repeat rw [← NatOrdinal.le_zero]
+  · repeat rw [← le_zero_iff]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
@@ -223,13 +221,13 @@ theorem val_add_natCast (a : NatOrdinal) (n : ℕ) : val (a + n) = val a + n :=
 theorem oadd_le_add' (a b : Ordinal) : a + b ≤ val (of a + of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [← add_assoc] using add_le_add_left IH 1
+  | add_one c IH => simpa [← add_assoc] using add_le_add_left IH 1
   | limit c hc IH =>
     rw [(Ordinal.isNormal_add_right a).apply_of_isSuccLimit hc, Ordinal.iSup_le_iff]
     rintro ⟨i, hi⟩
     exact (IH i hi).trans (add_le_add_right hi.le (of a))
 
-theorem oadd_le_add (a b : NatOrdinal) : a +ₒ b ≤ a + b :=
+theorem oadd_le_add (a b : NatOrdinal) : of (a.val + b.val) ≤ a + b :=
   oadd_le_add' ..
 
 /-! ### Natural multiplication -/
@@ -247,9 +245,6 @@ Natural multiplication can equivalently be characterized as the ordinal resultin
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
 @[no_expose] instance : Mul NatOrdinal := ⟨mul⟩
-
-/-- Multiply two `NatOrdinal`s as ordinal numbers. -/
-scoped notation:70 x:70 "*ₒ" y:71 => of (val x * val y)
 
 theorem mul_def (a b : NatOrdinal) :
     a * b = sInf {c | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'} := by
@@ -297,7 +292,7 @@ instance : CommMagma NatOrdinal where
   mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
-  rw [← NatOrdinal.le_zero, mul_le_iff]
+  rw [← le_zero_iff, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where
@@ -306,8 +301,7 @@ instance : MulZeroClass NatOrdinal where
 
 private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
   rw [mul_def]
-  convert csInf_Ici
-  ext b
+  convert csInf_Ici with x
   refine ⟨fun H ↦ le_of_forall_lt (a := a) fun c hc ↦ ?_, fun ha c hc ↦ ?_⟩
   · simpa [mul_one' c] using H c hc
   · simpa [mul_one' c] using hc.trans_le ha
@@ -326,7 +320,7 @@ instance : MulPosStrictMono NatOrdinal where
 instance : MulLeftMono NatOrdinal where
   elim a b c h := by
     obtain rfl | h₁ := h.eq_or_lt; · simp
-    obtain rfl | h₂ := NatOrdinal.eq_zero_or_pos a; · simp
+    obtain rfl | h₂ := eq_zero_or_pos a; · simp
     exact (mul_lt_mul_of_pos_left h₁ h₂).le
 
 instance : MulRightMono NatOrdinal where
@@ -422,12 +416,13 @@ instance : CommSemiring NatOrdinal where
   mul_assoc := private mul_assoc
 
 instance : IsStrictOrderedRing NatOrdinal where
+instance : LinearOrderedCommMonoidWithZero NatOrdinal where
 
 /-- A version of `omul_le_mul` stated in terms of `Ordinal`. -/
 theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
   induction b using Ordinal.limitRecOn with
   | zero => simp
-  | succ c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add ..)
+  | add_one c IH => simpa [mul_add_one] using (add_left_mono IH).trans (oadd_le_add' ..)
   | limit c hc IH =>
     obtain rfl | ha := eq_zero_or_pos a
     · simp
@@ -435,7 +430,7 @@ theorem omul_le_mul' (a b : Ordinal) : a * b ≤ val (of a * of b) := by
       rintro ⟨i, hi⟩
       exact (IH i hi).trans (mul_le_mul_right hi.le (of a))
 
-theorem omul_le_mul (a b : NatOrdinal) : a *ₒ b ≤ a * b :=
+theorem omul_le_mul (a b : NatOrdinal) : of (a.val * b.val) ≤ a * b :=
   omul_le_mul' ..
 
 end NatOrdinal
