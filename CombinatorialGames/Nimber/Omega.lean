@@ -185,15 +185,20 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     · rw [IH y hy hy₀]
       simpa using hy.le
 
+-- TODO: this doesn't need `x ≠ 0`
 theorem enumField_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumField (ω_ x) = ∗ω_ x := by
   apply (of_le_enumField _).antisymm'
   grw [← enumAlgClosed_omega hx₀, enumField_le_enumAlgClosed]
 
+-- TODO: this doesn't need `x ≠ 0`
 theorem enumRing_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumRing (ω_ x) = ∗ω_ x := by
   apply (of_le_enumRing _).antisymm'
   grw [← enumAlgClosed_omega hx₀, enumRing_le_enumAlgClosed]
 
-theorem enumGroup_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumGroup (ω_ x) = ∗ω_ x := by
+@[simp]
+theorem enumGroup_omega (x : Ordinal) : enumGroup (ω_ x) = ∗ω_ x := by
+  obtain rfl | hx₀ := eq_or_ne x 0
+  · simp [enumGroup_eq_two_opow]
   apply (of_le_enumGroup _).antisymm'
   grw [← enumAlgClosed_omega hx₀, enumGroup_le_enumAlgClosed]
 
