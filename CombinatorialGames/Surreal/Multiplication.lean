@@ -160,11 +160,9 @@ repeatedly removing a game from `a₂` and adding back one or two options of the
 See also `WellFounded.CutExpand`. -/
 def ArgsRel := InvImage (TransGen <| CutExpand fun x y => ∃ p, x ∈ y.moves p) Args.toMultiset
 
-/-- `ArgsRel` is well-founded. -/
-lemma argsRel_wf : WellFounded ArgsRel :=
+instance wellFounded_argsRel : WellFounded ArgsRel :=
   InvImage.wf _ (Subrelation.wf (fun h => h.elim fun _ => Subposition.of_mem_moves)
-    subposition_wf).cutExpand.transGen
-instance : IsWellFounded _ ArgsRel := ⟨argsRel_wf⟩
+    wellFounded_subposition).cutExpand.transGen
 
 /-- The property that all arguments are numeric is leftward-closed under `ArgsRel`. -/
 lemma ArgsRel.numeric_closed {a' a} : ArgsRel a' a → a.Numeric → a'.Numeric :=
@@ -271,11 +269,11 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   · simp_rw [forall_leftMoves_mul', forall_rightMoves_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
-    · simpa [mulOption_comm] using mulOption_lt ihyx ihxy hb ha hd hc
+    · simpa [mulOption_comm, ← mk_lt_mk] using mulOption_lt ihyx ihxy hb ha hd hc
     · rw [← neg_neg x] at hc
-      simpa [mulOption_comm] using mulOption_lt ihyxn ihxyn hb ha hd hc
+      simpa [mulOption_comm, ← mk_lt_mk] using mulOption_lt ihyxn ihxyn hb ha hd hc
     · rw [← neg_neg y] at hd
-      simpa using mulOption_lt ihxyn ihyxn ha hb hc hd
+      simpa [← mk_lt_mk] using mulOption_lt ihxyn ihyxn ha hb hc hd
   · intro p
     simp only [moves_mul, moves_mul, mulOption, Set.mem_image, Prod.exists,
       forall_exists_index, and_imp]
@@ -428,7 +426,7 @@ lemma P4_of_IH (IH : ∀ a, ArgsRel a (.P24 x₁ x₂ y) → P124 a) : P4 x₁ x
 
 /-- We tie everything together to complete the induction. -/
 theorem main (a : Args) : a.Numeric → P124 a := by
-  apply argsRel_wf.induction a
+  apply wellFounded_argsRel.induction a
   intro a IH ha
   replace ih : ∀ a', ArgsRel a' a → P124 a' := fun a' hr ↦ IH a' hr (hr.numeric_closed ha)
   cases a with
@@ -488,7 +486,7 @@ theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
   (mul_congr_left hx).trans (mul_congr_right hy)
 
 protected theorem mul_pos [Numeric x₁] [Numeric x₂] (h₁ : 0 < x₁) (h₂ : 0 < x₂) : 0 < x₁ * x₂ := by
-  simpa [P3] using P3_of_lt_of_lt h₁ h₂
+  simpa [P3, ← mk_lt_mk] using P3_of_lt_of_lt h₁ h₂
 
 end IGame.Numeric
 
