@@ -69,6 +69,11 @@ def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 @[simp] theorem $(mkIdent `of_val) (a) : $(mkOf Alias) ($(mkVal Alias) a) = a := rfl
 @[simp] theorem $(mkIdent `val_of) (a) : $(mkVal Alias) ($(mkOf Alias) a) = a := rfl
 
+theorem $(mkIdent `of_preimage) (s : Set $Alias) : $(mkOf Alias) ⁻¹' s = $(mkVal Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
+theorem $(mkIdent `val_preimage) (s : Set $Source) : $(mkVal Alias) ⁻¹' s = $(mkOf Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
+
 theorem $(mkIdent `val_le_iff) {a b} : $(mkVal Alias) a ≤ b ↔ a ≤ $(mkOf Alias) b := .rfl
 theorem $(mkIdent `val_lt_iff) {a b} : $(mkVal Alias) a < b ↔ a < $(mkOf Alias) b := .rfl
 theorem $(mkIdent `val_eq_iff) {a b} : $(mkVal Alias) a = b ↔ a = $(mkOf Alias) b := .rfl
@@ -124,6 +129,34 @@ protected def $(mkIdent `ind) {motive : $Alias → Sort*}
 $(mkMarkdownDocComment s!"Well-founded induction for `{Alias.getId}`."):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
+
+theorem $(mkIdent `of_sInf) (s : Set $Source) :
+    $(mkOf Alias) (sInf s) = sInf ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `of_sSup) (s : Set $Source) :
+    $(mkOf Alias) (sSup s) = sSup ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `val_sInf) (s : Set $Alias) :
+    $(mkVal Alias) (sInf s) = sInf ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `val_sSup) (s : Set $Alias) :
+    $(mkVal Alias) (sSup s) = sSup ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `of_iInf) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iInf f) = ⨅ i, $(mkOf Alias) (f i) :=
+  rfl
+theorem $(mkIdent `of_iSup) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iSup f) = ⨆ i, $(mkOf Alias) (f i) :=
+  rfl
+
+theorem $(mkIdent `val_iInf) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iInf f) = ⨅ i, $(mkVal Alias) (f i) :=
+  rfl
+theorem $(mkIdent `val_iSup) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iSup f) = ⨆ i, $(mkVal Alias) (f i) :=
+  rfl
 
 end $Alias
 end
