@@ -272,7 +272,6 @@ theorem IsField.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt
     (h2 : leastNoRoots x < .some (X ^ 3)) :
     enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x)) < x := by
   have ihc := @hx.mem_image_of_lt_quadraticLower
-  rw [hx.perfectField_iff_leastNoRoots] at perf
   contrapose! h2
   apply hx.le_leastNoRoots_of_exists_isRoot
   intro q hq hqd hc
@@ -290,8 +289,7 @@ theorem IsField.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt
     simpa [pos_iff_ne_zero] using coeff_ne_zero_of_eq_degree (le_antisymm hq hqd)
   obtain rfl | hb := eq_or_ne b 0
   · refine ⟨√(c / a), ?_, by simp [div_pow, mul_div_cancel₀ c ha0.ne']⟩
-    refine hx.sqrt_lt' (hx.div_lt hcx hax) ?_
-    assumption
+    exact hx.sqrt_lt' (hx.div_lt hcx hax) perf
   · obtain ⟨r, hrx, hr⟩ :=
       ihc (lt_of_lt_of_le (hx.div_lt (hx.mul_lt hax hcx) (hx.mul_lt hbx hbx)) h2)
     refine ⟨r * (b / a), hx.mul_lt hrx (hx.div_lt hbx hax), ?_⟩
@@ -333,9 +331,7 @@ theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_l
       rw [IsRoot.def, eval_add, eval_add, map_one, one_mul, one_mul, eval_X_pow, eval_X, eval_C,
         CharTwo.add_eq_zero, ← CharTwo.sub_eq_add]
     · obtain rfl := lt_one_iff.1 hb
-      refine ⟨√c, ?_, by simp⟩
-      apply hx.sqrt_lt' (by simpa using hc 0)
-      rwa [← hx.perfectField_iff_leastNoRoots]
+      exact ⟨√c, hx.sqrt_lt' (by simpa using hc 0) perf, by simp⟩
     · absurd hd.not_ge
       rw [lt_one_iff.1 ha]
       simp [degree_linear_le]
