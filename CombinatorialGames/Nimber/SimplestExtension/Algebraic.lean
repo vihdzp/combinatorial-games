@@ -592,16 +592,17 @@ theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
     x < y.algClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
 
-theorem algClosure_mono : Monotone algClosure := by
+@[gcongr]
+theorem algClosure_monotone : Monotone algClosure := by
   intro x y
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
   exact (le_algClosure y).trans'
 
 theorem leftOrdContinuous_algClosure : LeftOrdContinuous algClosure := by
   intro s x hs₀ hs
-  have hbdd := algClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := algClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsAlgClosed.sSup (by simp) (by simpa) hbdd
-  refine ⟨algClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨algClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.algClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_algClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -620,7 +621,7 @@ theorem algClosure_fieldClosure (x : Nimber) : algClosure (fieldClosure x) = alg
   apply le_antisymm
   · rw [(IsAlgClosed.algClosure x).algClosure_le_iff]
     exact fieldClosure_le_algClosure x
-  · exact algClosure_mono (le_fieldClosure x)
+  · exact algClosure_monotone (le_fieldClosure x)
 
 @[simp]
 theorem algClosure_ringClosure (x : Nimber) : algClosure (ringClosure x) = algClosure x := by
@@ -727,10 +728,11 @@ theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
       simp
 
 theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
-    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
-  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
-  use 1
-  aesop
+    (hx : PerfectField h.toSubfield) : √y < x := by
+  let yx : h.toSubfield := ⟨y, hy⟩
+  obtain ⟨⟨c, hcx⟩, hc⟩ := (frobeniusEquiv h.toSubfield 2).surjective yx
+  simp_rw [frobeniusEquiv_def, Subtype.ext_iff, SubmonoidClass.coe_pow, yx] at hc
+  rwa [← mem_toSubfield_iff h, ← hc, sqrt_sq]
 
 theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x := by
   apply h.toIsField.sqrt_lt hy
@@ -750,18 +752,12 @@ theorem IsField.X_sq_add_C_le_leastNoRoots {x : Nimber} (h : IsField x) (y : Nim
 theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     PerfectField h.toSubfield ↔ .some (X ^ 2 + X) ≤ leastNoRoots x := by
   constructor
-  · intro
+  · intro perf
     apply h.le_leastNoRoots_of_exists_isRoot
     rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
     refine ⟨by simp, fun b hb c _ hc => ?_, fun a ha _ _ hdeg => ?_⟩
     · obtain rfl : b = 0 := lt_one_iff.1 hb
-      rw [map_one, map_zero, one_mul, zero_mul, add_zero]
-      let cc : h.toSubfield := ⟨c, by simpa using hc 0⟩
-      refine ⟨_, ((frobeniusEquiv h.toSubfield 2).symm cc).2, ?_⟩
-      have hcc := (frobeniusEquiv h.toSubfield 2).apply_symm_apply cc
-      rw [frobeniusEquiv_def, ← CharTwo.add_eq_zero, Subtype.ext_iff,
-        Subfield.coe_zero, Subfield.coe_add, SubmonoidClass.coe_pow] at hcc
-      simpa using hcc
+      exact ⟨√c, h.sqrt_lt' (by simpa using hc 0) perf, by simp⟩
     · obtain rfl : a = 0 := lt_one_iff.1 ha
       absurd hdeg.not_ge
       rw [map_zero, zero_mul, zero_add]
@@ -770,7 +766,11 @@ theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     suffices _ : PerfectRing h.toSubfield 2 from PerfectRing.toPerfectField _ 2
     refine .ofSurjective _ _ ?_
     intro ⟨c, hc⟩
-    exact ⟨⟨sqrt c, h.sqrt_lt' hc hrt⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    refine ⟨⟨sqrt c, h.sqrt_lt hc (hrt.trans_lt' ?_)⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    rw [WithTop.coe_lt_coe, show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp]
+    apply (@exists_eq_right _ (· < _) _).mp
+    rw [Lex.exists_lt_quadratic]
+    exact .inr (.inl ⟨0, zero_lt_one, c, by simp⟩)
 
 theorem IsField.perfectField_of_btwn {x y : Nimber} (hx : IsField x) (hy : IsField y)
     (perf : PerfectField hx.toSubfield) (hxy : x ≤ y) (hyx : y ≤ algClosure x) :
