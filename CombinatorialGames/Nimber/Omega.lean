@@ -79,10 +79,6 @@ theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 �
 theorem Cardinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
 
-@[simp]
-theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
-  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
-
 namespace Nimber
 
 /-! ### Cardinality of closures -/
