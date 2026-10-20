@@ -232,6 +232,20 @@ theorem IsField.notMem_image_of_quadraticLower_le {x : Nimber} (hx : IsField x)
   intro hyi
   exact (Order.lt_succ _).not_ge (hy ⟨y.1, y.2, hx.fieldClosure_eq.symm ▸ hyi⟩)
 
+theorem IsField.leastNoRoots_lt_of_quadraticLower_lt
+    {x : Nimber} (hx : IsField x)
+    (hlt : enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x)) < x) :
+    leastNoRoots x < .some (X ^ 3) := by
+  by_contra! h2
+  apply hx.notMem_image_of_quadraticLower_le le_rfl
+  obtain ⟨r, hr, hrr⟩ := exists_root_of_lt_leastNoRoots
+    (two_pos.trans_eq (.symm (by compute_degree!))).ne'
+    (hx.coeff_sub_lt
+      (hx.coeff_sub_lt (coeff_X_pow_lt 2 hx.one_lt) (coeff_X_lt hx.one_lt))
+      (coeff_C_lt hlt))
+    (lt_of_lt_of_le (WithTop.coe_lt_coe.2 (Lex.lt_X_pow_iff.2 (by compute_degree!))) h2)
+  exact ⟨r, hr, by simpa [sub_eq_zero] using hrr⟩
+
 mutual
 
 theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y : Nimber}
@@ -251,6 +265,8 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber
   rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
   sorry
 
+-- actually, this is still true without the `perf` assumption,
+-- by the classification of imperfect nimber fields
 theorem IsField.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt
     {x : Nimber} (hx : IsField x) (perf : PerfectField hx.toSubfield)
     (h2 : leastNoRoots x < .some (X ^ 3)) :
@@ -338,6 +354,10 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
     compute_degree!
   have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
     hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+  have hrt := hx.isRoot_leastNoRoots hnt
+  rw! [ih] at hrt
+  rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
+    sub_eq_zero] at hrt
   apply le_antisymm
   · rw [quadraticLower, quadraticAux]
     apply Ordinal.iSup_le
@@ -356,10 +376,6 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
         (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))) +
         (b ^ 2 - b)) := by
       rw [← hr, CharTwo.add_sq, mul_pow]
-      have hrt := hx.isRoot_leastNoRoots hnt
-      rw! [ih] at hrt
-      rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
-        sub_eq_zero] at hrt
       calc
         _ = _ := by ring
         _ = _ := congr(a ^ 2 * $hrt + (a ^ 2 - a) * x + b ^ 2 - b)
@@ -397,7 +413,13 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
         ← CharTwo.add_eq_iff_eq_add, add_comm, ← CharTwo.sub_eq_add] at hrr
       rw [← Subtype.coe_le_coe, ← hrr]
       exact ihs hc.le hbx
-  · sorry
+  · rw [Order.add_one_le_iff]
+    apply lt_of_le_of_ne
+    · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
+    intro heq
+    apply (IsField.fieldClosure (succ x)).notMem_image_of_quadraticLower_le
+      (OrderIso.monotone _ heq.ge)
+    exact ⟨x, (lt_succ x).trans_le (le_fieldClosure (succ x)), hrt⟩
 
 theorem IsField.quadraticLower_fieldClosure_succ_of_le_leastNoRoots {x : Nimber} (hx : IsField x)
     (h2 : .some (X ^ 3) ≤ leastNoRoots x) :
