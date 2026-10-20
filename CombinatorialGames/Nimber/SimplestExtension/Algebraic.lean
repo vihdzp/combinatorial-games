@@ -38,6 +38,10 @@ instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
     have := ZMod.algebra K p
     exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
 
+@[simp]
+theorem Ordinal.ofNat_lt_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) < ω :=
+  natCast_lt_omega0 n
+
 namespace Polynomial
 
 variable {R S : Type*} [CommRing R] [Ring S] [Algebra R S] {p : R[X]} {T : Subring R}
@@ -420,9 +424,22 @@ theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : I
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
 
+private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
+      intro ht
+      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
+      have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
+      rw [← Cardinal.aleph0_le_mk_iff] at this
+      change _ ≤ Cardinal.mk (Iio _) at this
+      simp at this
+    rw [Nat.cast_add_one, enumField_add_one]
+
 -- TODO: prove this as a corollary of the classification of quadratic extensions.
 theorem IsField.omega0 : IsField (∗ω) := by
-  
+
   sorry
 
 #exit
