@@ -21,7 +21,7 @@ This file proves the last part of the simplest extension theorem (see
 are algebraically closed.
 -/
 
-universe u
+universe u v
 
 open Order Ordinal Polynomial Set
 
@@ -41,6 +41,10 @@ instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
 @[simp]
 theorem Ordinal.ofNat_lt_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) < ω :=
   natCast_lt_omega0 n
+
+@[simp]
+theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
+  simpa using Ordinal.lift_le (a := ω)
 
 namespace Polynomial
 
@@ -424,6 +428,14 @@ theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : I
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
 
+theorem IsField.fieldClosure_succ_eq_pow_natDegree_leastNoRoots {x : Nimber} (h : IsField x)
+    (ht) : fieldClosure (succ x) = ∗(val x ^ (x.leastNoRoots.untop ht).natDegree) := by
+  rw [h.fieldClosure_succ_eq_pow_degree_leastNoRoots ht (degree_eq_natDegree _)]
+  simp
+
+-- TODO: prove this as a corollary of the classification of quadratic extensions.
+section omega0
+
 private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
   induction n with
   | zero => simp
@@ -432,15 +444,25 @@ private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := b
       intro ht
       rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
       have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
-      rw [← Cardinal.aleph0_le_mk_iff] at this
-      change _ ≤ Cardinal.mk (Iio _) at this
-      simp at this
-    rw [Nat.cast_add_one, enumField_add_one]
+      rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card,
+        omega0_le_lift, ← of_le_iff] at this
+      exact IH.not_ge this
+    rw [Nat.cast_add_one, enumField_add_one,
+      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
+    rw [← val_lt_iff] at IH
+    obtain ⟨m, hm⟩ := lt_omega0.1 IH
+    rw [hm, ← natCast_pow]
+    exact natCast_lt_omega0 _
 
--- TODO: prove this as a corollary of the classification of quadratic extensions.
+theorem enumField_omega0 : enumField ω = ∗ω := by
+  apply le_antisymm
+  · apply enumField
+
 theorem IsField.omega0 : IsField (∗ω) := by
 
   sorry
+
+end omega0
 
 #exit
 namespace IsAlgClosed
