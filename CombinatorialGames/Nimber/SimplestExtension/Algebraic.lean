@@ -716,10 +716,11 @@ theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
       simp
 
 theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
-    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
-  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
-  use 1
-  aesop
+    (hx : PerfectField h.toSubfield) : √y < x := by
+  let yx : h.toSubfield := ⟨y, hy⟩
+  obtain ⟨⟨c, hcx⟩, hc⟩ := (frobeniusEquiv h.toSubfield 2).surjective yx
+  simp_rw [frobeniusEquiv_def, Subtype.ext_iff, SubmonoidClass.coe_pow, yx] at hc
+  rwa [← mem_toSubfield_iff h, ← hc, sqrt_sq]
 
 theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x := by
   apply h.toIsField.sqrt_lt hy
@@ -759,7 +760,11 @@ theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     suffices _ : PerfectRing h.toSubfield 2 from PerfectRing.toPerfectField _ 2
     refine .ofSurjective _ _ ?_
     intro ⟨c, hc⟩
-    exact ⟨⟨sqrt c, h.sqrt_lt' hc hrt⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    refine ⟨⟨sqrt c, h.sqrt_lt hc (hrt.trans_lt' ?_)⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    rw [WithTop.coe_lt_coe, show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp]
+    apply (@exists_eq_right _ (· < _) _).mp
+    rw [Lex.exists_lt_quadratic]
+    exact .inr (.inl ⟨0, zero_lt_one, c, by simp⟩)
 
 theorem IsField.perfectField_of_btwn {x y : Nimber} (hx : IsField x) (hy : IsField y)
     (perf : PerfectField hx.toSubfield) (hxy : x ≤ y) (hyx : y ≤ algClosure x) :
