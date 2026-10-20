@@ -32,6 +32,11 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 
 @[expose] public section
 
+theorem Ordinal.opow_le_one {x : Ordinal} (hx : x ≤ 1) (y : Ordinal) : x ^ y ≤ 1 := by
+  obtain rfl | rfl := Order.le_one_iff.1 hx
+  · exact zero_opow_le y
+  · simp
+
 open Ordinal
 
 /-- A typeclass for the the `ω^` notation. -/
@@ -175,15 +180,11 @@ theorem of_omega0_opow_add_omega0_opow {x y : Ordinal} (h : x ≤ y) :
 theorem of_natCast_opow_mul_natCast_add_of_lt {x y : Ordinal} {m : ℕ} (hy : y < m ^ x * ω) (n : ℕ) :
     of (m ^ x * n + y) = of (m ^ x) * n + of y := by
   obtain hm | hm := le_or_gt m 1
-  · obtain rfl | rfl := Nat.le_one_iff_eq_zero_or_eq_one.1 hm
-    · obtain rfl | hx := eq_or_ne x 0
-      · rw [opow_zero, one_mul] at hy
-        obtain ⟨m, rfl⟩ := Ordinal.lt_omega0.1 hy
-        simp
-      · simp [hx]
-    · rw [Nat.cast_one, one_opow, one_mul] at hy
-      obtain ⟨m, rfl⟩ := Ordinal.lt_omega0.1 hy
-      simp
+  · have hk₁ := opow_le_one (x := m) (mod_cast hm) x
+    grw [hk₁, one_mul] at hy
+    obtain ⟨y, rfl⟩ := Ordinal.lt_omega0.1 hy
+    obtain ⟨k, hk⟩ := Ordinal.lt_omega0.1 <| hk₁.trans_lt one_lt_omega0
+    simp [hk, ← natCast_mul]
   · obtain ⟨k, hk⟩ := Ordinal.lt_omega0.1 (mod_lt x omega0_ne_zero)
     rw [← div_add_mod x ω, opow_add, opow_mul, natCast_opow_omega0 hm, hk,
       mul_assoc, opow_natCast, ← natCast_pow] at hy ⊢
