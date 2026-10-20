@@ -420,6 +420,12 @@ theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : I
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
 
+-- TODO: prove this as a corollary of the classification of quadratic extensions.
+theorem IsField.omega0 : IsField (∗ω) := by
+  
+  sorry
+
+#exit
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
