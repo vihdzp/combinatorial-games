@@ -420,7 +420,22 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
 theorem IsField.quadraticLower_fieldClosure_succ_of_le_leastNoRoots {x : Nimber} (hx : IsField x)
     (h2 : .some (X ^ 3) ≤ leastNoRoots x) :
     quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
-  sorry
+  apply le_antisymm
+  · rw [quadraticLower, quadraticAux, ciSup_le_iff' Ordinal.bddAbove_of_small]
+    intro ⟨c, hcq, hcx⟩
+    rw [Order.add_one_le_iff, val_lt_iff, OrderIso.symm_apply_lt]
+    simp_rw [← Subtype.coe_lt_coe]
+    refine lt_of_lt_of_le ?_ <| not_lt.1 <| mt hx.leastNoRoots_lt_of_quadraticLower_lt h2.not_gt
+    by_contra! hxc
+    obtain ⟨r, hr, rfl⟩ := hcx
+    rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio] at hr
+    apply hcq.1.pos.not_ge
+    rw [← sub_self (r ^ 2 - r)]
+    apply hcq.2
+    apply hr.trans_le
+    rw [(IsField.fieldClosure _).fieldClosure_le_iff]
+    exact (succ_mono hxc).trans (le_fieldClosure _)
+  · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
 
 end
 
