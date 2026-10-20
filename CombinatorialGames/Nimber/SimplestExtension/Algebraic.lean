@@ -414,8 +414,9 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     exact h.one_lt_degree_leastNoRoots ht
 
 theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : IsField x)
-    (ht) {n : ℕ} (hn : (x.leastNoRoots.untop ht).degree = n) :
+    (n : ℕ) (hn : ∃ ht, (x.leastNoRoots.untop ht).degree = n) :
     fieldClosure (succ x) = ∗(val x ^ n) := by
+  cases hn with | intro ht hn
   have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
@@ -669,6 +670,8 @@ theorem range_enumAlgClosed : range enumAlgClosed = ofPred IsAlgClosed := by
 
 theorem mem_range_enumAlgClosed_iff {x : Nimber} : x ∈ range enumAlgClosed ↔ IsAlgClosed x :=
   Set.ext_iff.1 range_enumAlgClosed _
+
+alias ⟨_, IsAlgClosed.mem_range_enumAlgClosed⟩ := mem_range_enumAlgClosed_iff
 
 theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) :=
   mem_range_enumAlgClosed_iff.1 ⟨x, rfl⟩
