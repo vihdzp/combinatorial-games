@@ -21,7 +21,7 @@ This file proves the last part of the simplest extension theorem (see
 are algebraically closed.
 -/
 
-universe u
+universe u v
 
 open Order Ordinal Polynomial Set
 
@@ -37,6 +37,14 @@ instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
   · -- todo: remove `Algebra (ZMod p) K` assumption from `Subfield.botEquivZMod`
     have := ZMod.algebra K p
     exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
+
+@[simp]
+theorem Ordinal.ofNat_lt_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) < ω :=
+  natCast_lt_omega0 n
+
+@[simp]
+theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
+  simpa using Ordinal.lift_le (a := ω)
 
 namespace Polynomial
 
@@ -420,6 +428,46 @@ theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : I
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
 
+theorem IsField.fieldClosure_succ_eq_pow_natDegree_leastNoRoots {x : Nimber} (h : IsField x)
+    (ht) : fieldClosure (succ x) = ∗(val x ^ (x.leastNoRoots.untop ht).natDegree) := by
+  rw [h.fieldClosure_succ_eq_pow_degree_leastNoRoots ht (degree_eq_natDegree _)]
+  simp
+
+-- TODO: prove this as a corollary of the classification of quadratic extensions.
+section omega0
+
+private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
+      intro ht
+      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
+      have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
+      rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card,
+        omega0_le_lift, ← of_le_iff] at this
+      exact IH.not_ge this
+    rw [Nat.cast_add_one, enumField_add_one,
+      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
+    rw [← val_lt_iff] at IH
+    obtain ⟨m, hm⟩ := lt_omega0.1 IH
+    rw [hm, ← natCast_pow]
+    exact natCast_lt_omega0 _
+
+@[simp]
+theorem enumField_omega0 : enumField ω = ∗ω := by
+  apply (of_le_enumField _).antisymm'
+  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
+  rintro _ ⟨n, rfl⟩
+  exact (enumField_natCast_lt_omega0 n).le
+
+@[simp]
+theorem IsField.omega0 : IsField (∗ω) := by
+  rw [← enumField_omega0]
+  exact IsField.enumField _
+
+end omega0
+
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
@@ -568,7 +616,7 @@ theorem le_algClosure (x : Nimber) : x ≤ algClosure x :=
     isAlgebraic_algebraMap (R := IsField.toSubfield _) ⟨c, hc.trans_le (le_fieldClosure x)⟩
 
 @[simp]
-theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
+protected theorem IsAlgClosed.algClosure (x : Nimber) : (algClosure x).IsAlgClosed where
   __ := Classical.byContradiction fun h => lt_irrefl x.algClosure
     (lt_algClosure_iff_isAlgebraic.2 (isAlgebraic_of_not_isField le_rfl h))
   exists_root' p hd hp := by
@@ -591,6 +639,11 @@ theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
     x < y.algClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
 
+@[simp]
+theorem IsAlgClosed.algClosure_eq {x : Nimber} (h : IsAlgClosed x) : algClosure x = x := by
+  apply (le_algClosure x).antisymm'
+  rw [h.algClosure_le_iff]
+
 @[gcongr]
 theorem algClosure_monotone : Monotone algClosure := by
   intro x y
@@ -605,13 +658,16 @@ theorem leftOrdContinuous_algClosure : LeftOrdContinuous algClosure := by
   rw [Hs.algClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_algClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
+@[simp]
 theorem fieldClosure_le_algClosure (x : Nimber) : fieldClosure x ≤ algClosure x := by
   rw [(IsAlgClosed.algClosure x).fieldClosure_le_iff]
   exact le_algClosure x
 
+@[simp]
 theorem ringClosure_le_algClosure (x : Nimber) : ringClosure x ≤ algClosure x :=
   (ringClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
+@[simp]
 theorem groupClosure_le_algClosure (x : Nimber) : groupClosure x ≤ algClosure x :=
   (groupClosure_le_fieldClosure x).trans (fieldClosure_le_algClosure x)
 
@@ -649,6 +705,14 @@ theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
     ∃ l, IsAlgClosed l ∧ ∃ u, IsAlgClosed u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsAlgClosed z → l < z → u ≤ z :=
   isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
 
+theorem exists_isAlgClosed_between' {x : Nimber} (hx : algClosure 0 ≤ x) :
+    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isAlgClosed_between hx
+  refine ⟨l, hl, hlx, ?_⟩
+  apply hxu.trans_le (H _ (IsAlgClosed.algClosure _) _)
+  rw [← Order.succ_le_iff]
+  exact le_algClosure _
+
 /-- The normal enumerator function for algebraically closed fields. -/
 def enumAlgClosed : Ordinal ↪o Nimber :=
   .ofStrictMono (fun x ↦ Order.enum _ isClub_ofPred_isAlgClosed.isCofinal (of x)) fun _ ↦ by simp
@@ -675,6 +739,28 @@ theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) 
 
 theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
   isClub_ofPred_isAlgClosed.isNormal_enum
+
+theorem enumAlgClosed_add_one (x : Ordinal) :
+    enumAlgClosed (x + 1) = algClosure (succ (enumAlgClosed x)) := by
+  apply le_antisymm
+  · rw [enumAlgClosed_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsAlgClosed.algClosure _)
+    rw [← enumAlgClosed_def, (IsAlgClosed.enumAlgClosed _).lt_algClosure_iff, Order.lt_succ_iff]
+  · rw [(IsAlgClosed.enumAlgClosed _).algClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumAlgClosed.strictMono (lt_add_one x)
+
+theorem of_le_enumAlgClosed (x : Ordinal) : ∗x ≤ enumAlgClosed x :=
+  isNormal_enumAlgClosed.strictMono.le_apply
+
+theorem enumField_le_enumAlgClosed (x : Ordinal) : enumField x ≤ enumAlgClosed x := by
+  rw [enumField_def]
+  exact Order.enum_anti fun _ ↦ IsAlgClosed.toIsField
+
+theorem enumRing_le_enumAlgClosed (x : Ordinal) : enumRing x ≤ enumAlgClosed x :=
+  (enumRing_le_enumField x).trans (enumField_le_enumAlgClosed x)
+
+theorem enumGroup_le_enumAlgClosed (x : Ordinal) : enumGroup x ≤ enumAlgClosed x :=
+  (enumGroup_le_enumField x).trans (enumField_le_enumAlgClosed x)
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
