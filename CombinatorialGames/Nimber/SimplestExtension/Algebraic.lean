@@ -783,5 +783,54 @@ theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
     infer_instance
   · rwa [← fieldClosure_zero, algClosure_fieldClosure]
 
+theorem IsField.sq_lt_self_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) : x ^ 2 < x := by
+  rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
+  have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
+  have hc := coeff_leastNoRoots_lt ht
+  have hrt := hx.isRoot_leastNoRoots ht
+  have hdeg := hx.one_lt_degree_leastNoRoots ht
+  rw [← WithTop.untop_lt_iff ht] at perf
+  generalize x.leastNoRoots.untop ht = p at perf hc hrt hdeg
+  revert p perf hc hrt hdeg
+  rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
+  refine ⟨by simp, fun b hb c hc hrt hdeg => ?_, fun a ha _ _ _ _ hdeg => ?_⟩
+  · obtain rfl := lt_one_iff.1 hb
+    have hcx : x ^ 2 = c := by simpa [CharTwo.add_eq_zero] using hrt
+    simpa [hcx] using hc 0
+  · obtain rfl := lt_one_iff.1 ha
+    absurd hdeg.not_ge
+    rw [map_zero, zero_mul, zero_add]
+    exact degree_linear_le
+
+theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y < x ^ 2) : √y < x := by
+  apply hx.sqrt_lt (hy.trans (hx.sq_lt_self_of_not_perfectField perf))
+  rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
+  have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
+  have hrt := hx.isRoot_leastNoRoots ht
+  have hdeg := hx.one_lt_degree_leastNoRoots ht
+  rw [← WithTop.lt_untop_iff ht]
+  rw [← WithTop.untop_lt_iff ht] at perf
+  generalize x.leastNoRoots.untop ht = p at perf hrt hdeg
+  revert p perf hrt hdeg
+  rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
+  refine ⟨by simp, fun b hb c hrt hdeg => ?_, fun a ha _ _ _ hdeg => ?_⟩
+  · obtain rfl := lt_one_iff.1 hb
+    have hcx : x ^ 2 = c := by simpa [CharTwo.add_eq_zero] using hrt
+    rw [hcx] at hy
+    apply (@exists_eq_right _ (· < _) _).mp
+    rw [Lex.exists_lt_quadratic]
+    exact .inl ⟨y, hy, by simp⟩
+  · obtain rfl := lt_one_iff.1 ha
+    absurd hdeg.not_ge
+    rw [map_zero, zero_mul, zero_add]
+    exact degree_linear_le
+
+theorem IsField.sqrt_le_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y ≤ x ^ 2) : √y ≤ x := by
+  obtain rfl | hy := hy.eq_or_lt; · simp
+  exact (hx.sqrt_lt_of_not_perfectField perf hy).le
+
 end Nimber
 end
