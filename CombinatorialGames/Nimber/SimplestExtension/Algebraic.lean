@@ -472,7 +472,7 @@ namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
 
--- todo: generalize to `IsField t`, and prove `IsField (of (val t ^ ω))` when `¬IsAlgClosed t`
+/-- See `IsRing.opow_omega0` for a more general theorem. -/
 theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
   toIsGroup := ht.toIsGroup.opow _
   ne_one := ne_of_gt (by simp [ht.one_lt])
