@@ -11,6 +11,7 @@ public import Mathlib.Order.OrdContinuous
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.FieldTheory.RatFunc.Valuation
 import Mathlib.RingTheory.Polynomial.Eisenstein.Criterion
+import Mathlib.RingTheory.Polynomial.SmallDegreeVieta
 import Mathlib.RingTheory.Valuation.Integral
 
 /-!
@@ -137,7 +138,7 @@ public theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles
 
 def quadraticAux (s : Set Nimber.{u}) : Ordinal :=
   ⨆ (i : ↥(quadraticIrreducibles ∩ s)),
-    val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩)
+    val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩) + 1
 
 theorem quadraticAux_monotone (s t : Set Nimber.{u})
     [Small.{u} s] [Small.{u} t] (hst : s ⊆ t) : quadraticAux s ≤ quadraticAux t := by
@@ -146,7 +147,8 @@ theorem quadraticAux_monotone (s t : Set Nimber.{u})
   intro i
   exact Ordinal.le_iSup
     (fun i : ↥(quadraticIrreducibles ∩ t) =>
-      val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩))
+      val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
+        ⟨i.1, i.2.1⟩) + 1)
     ⟨i.1, i.2.1, hst i.2.2⟩
 
 theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
@@ -160,7 +162,8 @@ theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     have : Small t := ‹∀ t : s, Small t› ⟨t, hts⟩
     exact Ordinal.le_iSup
       (fun i : ↥(quadraticIrreducibles ∩ t) =>
-        val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩))
+        val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
+          ⟨i.1, i.2.1⟩) + 1)
       ⟨i, hiq, hit⟩
   · rw [Ordinal.iSup_le_iff]
     intro t
@@ -219,6 +222,122 @@ theorem leftOrdContinuous_quadraticUpper : LeftOrdContinuous quadraticUpper.{u} 
     infer_instance
   rw [leftOrdContinuous_quadraticAux _ inferInstance hst, ← sSup_image', Set.image_image]
   exact isLUB_csSup' Ordinal.bddAbove_of_small
+
+theorem IsField.notMem_image_of_quadraticLower_le {x : Nimber} (hx : IsField x)
+    {y : quadraticIrreducibles}
+    (hy : enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x)) ≤ y) :
+    y.1 ∉ (fun z => z ^ 2 - z) '' Iio x := by
+  unfold quadraticLower quadraticAux at hy
+  rw [← OrderIso.le_symm_apply, of_le_iff, ciSup_le_iff' Ordinal.bddAbove_of_small] at hy
+  intro hyi
+  exact (Order.lt_succ _).not_ge (hy ⟨y.1, y.2, hx.fieldClosure_eq.symm ▸ hyi⟩)
+
+mutual
+
+theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y : Nimber}
+    (hy : y < enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))) :
+    y ∈ (fun z => z ^ 2 - z) '' Iio x := by
+  sorry
+
+theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) :
+    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
+  rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
+  sorry
+
+theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_lt
+    {x : Nimber} (hx : IsField x) (perf : PerfectField hx.toSubfield)
+    (h2 : leastNoRoots x < .some (X ^ 3)) :
+    leastNoRoots x = .some (X ^ 2 - X -
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
+        (of (quadraticLower x))).1) := by
+  have ihc := @hx.mem_image_of_lt_quadraticLower
+  rw [hx.perfectField_iff_leastNoRoots] at perf
+  apply le_antisymm
+  · apply leastNoRoots_le_of_not_isRoot
+    · refine zero_lt_two.trans_eq (Eq.symm ?_)
+      compute_degree!
+    · apply hx.coeff_sub_lt (hx.coeff_sub_lt (coeff_X_pow_lt 2 hx.one_lt) (coeff_X_lt hx.one_lt))
+      apply coeff_C_lt
+      contrapose! h2
+      apply hx.le_leastNoRoots_of_exists_isRoot
+      intro q hq hqd hc
+      rw [Lex.lt_X_pow_iff, show Nat.cast 3 = Order.succ (2 : WithBot Nat) from rfl,
+        lt_succ_iff] at hq
+      rw [← succ_le_iff, WithBot.succ_one'] at hqd
+      obtain ⟨a, b, c, rfl⟩ : ∃ a b c, q = C a * X ^ 2 + C b * X + C c :=
+        ⟨_, _, _, Polynomial.eq_quadratic_of_degree_le_two hq⟩
+      have hax : a < x := by simpa using hc 2
+      have hbx : b < x := by simpa using hc 1
+      have hcx : c < x := by simpa using hc 0
+      have ha0 : 0 < a := by
+        simpa [pos_iff_ne_zero] using coeff_ne_zero_of_eq_degree (le_antisymm hq hqd)
+      obtain rfl | hb := eq_or_ne b 0
+      · obtain ⟨r, hrx, hrr⟩ := exists_root_of_lt_leastNoRoots
+          (two_pos.trans_eq (.symm (by compute_degree!))).ne'
+          (hx.coeff_add_lt (hx.coeff_add_lt
+            (hx.coeff_mul_lt (coeff_C_lt hx.one_lt) (coeff_X_pow_lt 2 hx.one_lt))
+            (hx.coeff_mul_lt (coeff_C_lt hx.zero_lt) (coeff_X_lt hx.one_lt)))
+            (coeff_C_lt (hx.div_lt hcx hax)))
+          ((WithTop.coe_lt_coe.2 ((@exists_eq_right _ (· < _) _).mp
+            (by
+              rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp,
+                Lex.exists_lt_quadratic]
+              exact .inr (.inl ⟨0, one_pos, c / a, rfl⟩)))).trans_le perf)
+        refine ⟨r, hrx, ?_⟩
+        rw [IsRoot.def, map_zero, zero_mul, add_zero, eval_add,
+          eval_C, eval_C_mul, eval_X_pow] at hrr ⊢
+        rw [← mul_zero a, ← hrr]
+        field
+      · obtain ⟨r, hrx, hr⟩ :=
+          ihc (lt_of_lt_of_le (hx.div_lt (hx.mul_lt hax hcx) (hx.mul_lt hbx hbx)) h2)
+        refine ⟨r * (b / a), hx.mul_lt hrx (hx.div_lt hbx hax), ?_⟩
+        rw [IsRoot.def, eval_add, eval_add, eval_C, eval_C_mul, eval_C_mul, eval_X_pow, eval_X,
+          ← CharTwo.sub_eq_add, ← CharTwo.sub_eq_add]
+        calc
+          _ = _ := by field
+          _ = _ := congr(b * b / a * $hr - c)
+          _ = _ := by field
+    · intro r hr hrr
+      rw [IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C, sub_eq_zero] at hrr
+      apply hx.notMem_image_of_quadraticLower_le le_rfl
+      rw [← hrr]
+      exact Set.mem_image_of_mem (fun z => z ^ 2 - z) hr
+  · apply hx.le_leastNoRoots_of_exists_isRoot
+    rw [show X ^ 2 - X -
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 =
+      C 1 * X ^ 2 + C 1 * X +
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 by
+        simp [CharTwo.sub_eq_add], Lex.forall_lt_quadratic]
+    refine ⟨fun c hc _ _ => ?_, fun b hb c hd hc => ?_, fun a ha _ _ hd => ?_⟩
+    · obtain ⟨r, hr, rfl⟩ := ihc hc
+      refine ⟨r, hr, ?_⟩
+      rw [IsRoot.def, eval_add, eval_add, map_one, one_mul, one_mul, eval_X_pow, eval_X, eval_C,
+        CharTwo.add_eq_zero, ← CharTwo.sub_eq_add]
+    · obtain rfl := lt_one_iff.1 hb
+      refine exists_root_of_lt_leastNoRoots (zero_lt_one.trans hd).ne' hc (lt_of_lt_of_le ?_ perf)
+      rw [WithTop.coe_lt_coe, show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp]
+      apply (@exists_eq_right _ (· < _) _).mp
+      rw [Lex.exists_lt_quadratic]
+      exact .inr (.inl ⟨0, zero_lt_one, c, rfl⟩)
+    · absurd hd.not_ge
+      rw [lt_one_iff.1 ha]
+      simp [degree_linear_le]
+
+theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots_lt
+    {x : Nimber} (hx : IsField x) (perf : PerfectField hx.toSubfield)
+    (h2 : leastNoRoots x < .some (X ^ 3)) :
+    quadraticLower (fieldClosure (succ x)) = quadraticLower x + 1 := by
+  have := hx.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_lt perf h2
+  rw [hx.perfectField_iff_leastNoRoots] at perf
+  sorry
+
+theorem IsField.quadraticLower_fieldClosure_succ_of_le_leastNoRoots {x : Nimber} (hx : IsField x)
+    (h2 : .some (X ^ 3) ≤ leastNoRoots x) :
+    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
+  sorry
+
+end
 
 end
 
