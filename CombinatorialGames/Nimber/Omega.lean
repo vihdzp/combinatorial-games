@@ -99,8 +99,8 @@ theorem card_fieldClosure {x : Nimber} (hx : ∗ω ≤ x) : (fieldClosure x).val
   · rw [hl.fieldClosure_eq]
   have hxl' : x.fieldClosure = (succ l).fieldClosure := by
     rw [← succ_le_iff] at hlx
-    apply (fieldClosure_mono hlx).antisymm'
-    simpa using fieldClosure_mono hxl.le
+    apply (fieldClosure_monotone hlx).antisymm'
+    simpa using fieldClosure_monotone hxl.le
   rw [hxl', ← Cardinal.lift_le, ← cardinalMk_Iio, ← coe_toSubfield (IsField.fieldClosure _),
     ← IsField.fieldAdjoin_simple_self hl]
   apply (IntermediateField.cardinalMk_adjoin_le ..).trans
