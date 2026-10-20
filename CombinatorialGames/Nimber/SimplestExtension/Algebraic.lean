@@ -416,7 +416,7 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
 theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : IsField x)
     (n : ℕ) (hn : ∃ ht, (x.leastNoRoots.untop ht).degree = n) :
     fieldClosure (succ x) = ∗(val x ^ n) := by
-  obtain ⟨ht, hn⟩ := hn
+  cases hn with | intro ht hn
   have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
