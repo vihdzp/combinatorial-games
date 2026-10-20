@@ -5,8 +5,9 @@ Authors: Violeta Hernández Palacios, Daniel Weber
 -/
 module
 
-public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import Mathlib.Order.OrdContinuous
+public import Mathlib.SetTheory.Cardinal.Cofinality.Club
 
 import Mathlib.Algebra.Field.ZMod
 import Mathlib.SetTheory.Cardinal.Subfield
@@ -17,6 +18,8 @@ import Mathlib.Algebra.CharP.Algebra
 
 We define `groupClosure`, `ringClosure`, and `fieldClosure`, which represent the smallest nimber
 equal or greater to another, which satisfies `IsGroup`, `IsRing`, or `IsField`.
+
+The analogous `algClosure` is defined in `Nimber.SimplestExtension.Algebraic`.
 -/
 
 universe u
@@ -172,10 +175,19 @@ theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = 
   apply (le_groupClosure x).antisymm'
   rw [h.groupClosure_le_iff]
 
-theorem groupClosure_mono : Monotone groupClosure := by
+@[gcongr]
+theorem groupClosure_monotone : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
+
+theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
+  intro s x hs₀ hs
+  have hbdd := groupClosure_monotone.map_bddAbove hs.bddAbove
+  have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
+  refine ⟨groupClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem groupClosure_zero : groupClosure 0 = 1 := by
@@ -361,10 +373,19 @@ theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x :=
   apply (le_ringClosure x).antisymm'
   rw [h.ringClosure_le_iff]
 
-theorem ringClosure_mono : Monotone ringClosure := by
+@[gcongr]
+theorem ringClosure_monotone : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
+
+theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
+  intro s x hs₀ hs
+  have hbdd := ringClosure_monotone.map_bddAbove hs.bddAbove
+  have Hs := IsRing.sSup (by simp) (by simpa) hbdd
+  refine ⟨ringClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
 @[simp]
 theorem ringClosure_zero : ringClosure 0 = ∗2 := by
@@ -377,7 +398,7 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
   · rw [IsRing.two.ringClosure_le_iff]
     simp
   · rw [← ringClosure_zero]
-    exact ringClosure_mono zero_le_one
+    exact ringClosure_monotone zero_le_one
 
 @[simp]
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
@@ -386,6 +407,13 @@ theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
+
+@[simp]
+theorem ringClosure_groupClosure (x : Nimber) : ringClosure (groupClosure x) = ringClosure x := by
+  apply le_antisymm
+  · rw [(IsRing.ringClosure x).ringClosure_le_iff]
+    exact groupClosure_le_ringClosure x
+  · exact ringClosure_monotone (le_groupClosure x)
 
 theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
   isCofinal a := ⟨_, .ringClosure _, le_ringClosure a⟩
@@ -522,15 +550,27 @@ theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = 
   apply (le_fieldClosure x).antisymm'
   rw [h.fieldClosure_le_iff]
 
-theorem fieldClosure_mono : Monotone fieldClosure := by
+@[gcongr]
+theorem fieldClosure_monotone : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
 
+theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
+  intro s x hs₀ hs
+  have hbdd := fieldClosure_monotone.map_bddAbove hs.bddAbove
+  have Hs := IsField.sSup (by simp) (by simpa) hbdd
+  refine ⟨fieldClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
+  exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
+
 @[simp]
 theorem fieldClosure_zero : fieldClosure 0 = ∗2 := by
-  rw [← Iio_inj, ← coe_subfieldClosure_Iio]
-  simp
+  apply le_antisymm
+  · rw [IsField.two.fieldClosure_le_iff]
+    apply zero_le
+  · rw [← ringClosure_zero, (IsField.fieldClosure 0).ringClosure_le_iff]
+    apply zero_le
 
 @[simp]
 theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
@@ -538,7 +578,7 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
   · rw [IsField.two.fieldClosure_le_iff]
     simp
   · rw [← fieldClosure_zero]
-    exact fieldClosure_mono zero_le_one
+    exact fieldClosure_monotone zero_le_one
 
 @[simp]
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
@@ -550,6 +590,18 @@ theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosur
 
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
+
+@[simp]
+theorem fieldClosure_ringClosure (x : Nimber) : fieldClosure (ringClosure x) = fieldClosure x := by
+  apply le_antisymm
+  · rw [(IsField.fieldClosure x).fieldClosure_le_iff]
+    exact ringClosure_le_fieldClosure x
+  · exact fieldClosure_monotone (le_ringClosure x)
+
+@[simp]
+theorem fieldClosure_groupClosure (x : Nimber) :
+    fieldClosure (groupClosure x) = fieldClosure x := by
+  rw [← fieldClosure_ringClosure, ringClosure_groupClosure, fieldClosure_ringClosure]
 
 theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
   isCofinal a := ⟨_, .fieldClosure _, le_fieldClosure a⟩
