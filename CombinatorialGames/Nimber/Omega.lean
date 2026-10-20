@@ -76,10 +76,6 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
 theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
-@[simp]
-theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
-  simpa using Ordinal.lift_le (a := ω)
-
 theorem Cardinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
 
@@ -185,34 +181,36 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     · rw [IH y hy hy₀]
       simpa using hy.le
 
-theorem enumField_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumField (ω_ x) = ∗ω_ x := by
-  apply (of_le_enumField _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumField_le_enumAlgClosed]
+@[simp]
+theorem enumField_omega (x : Ordinal) : enumField (ω_ x) = ∗ω_ x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simp
+  · apply (of_le_enumField _).antisymm'
+    grw [← enumAlgClosed_omega hx, enumField_le_enumAlgClosed]
 
-theorem enumRing_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumRing (ω_ x) = ∗ω_ x := by
+@[simp]
+theorem enumRing_omega (x : Ordinal) : enumRing (ω_ x) = ∗ω_ x := by
   apply (of_le_enumRing _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumRing_le_enumAlgClosed]
+  grw [← enumField_omega, enumRing_le_enumField]
 
-theorem enumGroup_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumGroup (ω_ x) = ∗ω_ x := by
+@[simp]
+theorem enumGroup_omega (x : Ordinal) : enumGroup (ω_ x) = ∗ω_ x := by
   apply (of_le_enumGroup _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumGroup_le_enumAlgClosed]
+  grw [← enumRing_omega, enumGroup_le_enumRing]
 
 theorem IsAlgClosed.omega {x : Ordinal} (hx : x ≠ 0) : IsAlgClosed (∗ω_ x) := by
   rw [← enumAlgClosed_omega hx]
   exact IsAlgClosed.enumAlgClosed _
 
--- TODO: this doesn't need `x ≠ 0`.
-theorem IsField.omega {x : Ordinal} (hx : x ≠ 0) : IsField (∗ω_ x) :=
-  (IsAlgClosed.omega hx).toIsField
+theorem IsField.omega (x : Ordinal) : IsField (∗ω_ x) := by
+  rw [← enumField_omega x]
+  exact IsField.enumField _
 
--- TODO: this doesn't need `x ≠ 0`.
-theorem IsRing.omega {x : Ordinal} (hx : x ≠ 0) : IsRing (∗ω_ x) :=
-  (IsAlgClosed.omega hx).toIsRing
+theorem IsRing.omega (x : Ordinal) : IsRing (∗ω_ x) :=
+  (IsField.omega x).toIsRing
 
-theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) := by
-  obtain rfl | hx := eq_or_ne x 0
-  · simp
-  · exact (IsAlgClosed.omega hx).toIsGroup
+theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) :=
+  (IsRing.omega x).toIsGroup
 
 end Nimber
 end

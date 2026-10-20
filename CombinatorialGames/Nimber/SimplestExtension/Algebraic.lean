@@ -454,19 +454,20 @@ private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := b
     rw [hm, ← natCast_pow]
     exact natCast_lt_omega0 _
 
+@[simp]
 theorem enumField_omega0 : enumField ω = ∗ω := by
   apply (of_le_enumField _).antisymm'
-  rw [apply_omega0_of_isNormal]
-  · sorry
-  · apply of_le_enumField
+  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
+  rintro _ ⟨n, rfl⟩
+  exact (enumField_natCast_lt_omega0 n).le
 
+@[simp]
 theorem IsField.omega0 : IsField (∗ω) := by
-
-  sorry
+  rw [← enumField_omega0]
+  exact IsField.enumField _
 
 end omega0
 
-#exit
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
