@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.NatOrdinal.Pow
-public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -52,8 +52,6 @@ theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdi
   add_le_nadd' ..
 
 /-! ### Multiplication -/
-
-theorem IsField.omega0 : IsField (∗ω) := sorry
 
 theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
     ∗(ω ^ x * n + y) = ∗ω ^ x * ∗n + ∗y := by

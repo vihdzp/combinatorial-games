@@ -236,6 +236,10 @@ theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
     Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
   Cardinal.mk_Iio_ordinal _
 
+theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
+    (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=
+  Ordinal.apply_omega0_of_isNormal hf
+
 end $Alias
 end
 
