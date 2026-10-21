@@ -857,6 +857,7 @@ theorem IsField.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoR
   rw! [hl] at hrt
   rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
     sub_eq_zero] at hrt
+  have hxs : x < fieldClosure (succ x) := (lt_succ _).trans_le (le_fieldClosure _)
   apply subset_antisymm
   · rw [Set.image_subset_iff]
     intro ⟨c, hcq⟩ ⟨hxc, hcx⟩
@@ -880,7 +881,6 @@ theorem IsField.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoR
     rw [Ordinal.opow_add, of_eq_iff.1 hox, hm, mul_comm] at hoc
     simp_rw [← hoc]
     apply Set.mem_image_of_mem
-    have hxs : x < fieldClosure (succ x) := (lt_succ _).trans_le (le_fieldClosure _)
     have hle (y : Nimber) (hy : y < x) :
         of (2 ^ oc) ≤ y ^ 2 - y - of (2 ^ oc) := by
       have hlc := hcq.2 (y * x)
@@ -901,7 +901,53 @@ theorem IsField.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoR
     obtain ⟨r, hr, hrr⟩ := hx.mem_image_of_lt_quadraticLower hcx hle
     refine ⟨r, hr, (IsGroup.two_opow oc).pos.trans_le' ?_⟩
     rw [← hrr, sub_self]
-  · sorry
+  · rw [Set.image_image, Set.image_subset_iff]
+    intro ⟨c, hcq⟩ ⟨hxc, hcx⟩
+    rw [Set.mem_preimage]
+    rw [hx.lt_quadraticUpper_iff] at hcx
+    have hcxx : c * x < fieldClosure (succ x) := (IsField.fieldClosure _).mul_lt (hcx.trans hxs) hxs
+    suffices hle : ∀ y < fieldClosure (succ x), c * x ≤ y ^ 2 - y - c * x by
+      have hoq : c * x ∈ quadraticIrreducibles := by
+        refine ⟨?_, fun y hy => hle y (hy.trans_le ?_)⟩
+        · rw [mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl hcx]
+          exact hx.toIsGroup.omul hcq.1
+        · rw [(IsField.fieldClosure _).fieldClosure_le_iff, succ_le_iff]
+          exact hcxx
+      refine ⟨⟨c * x, hoq⟩, ⟨hx.quadraticUpper_le_iff.2 ?_,
+        (IsField.fieldClosure _).lt_quadraticUpper_iff.2 hcxx⟩, rfl⟩
+      dsimp only
+      rw [mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl hcx, ← val_le_iff]
+      apply Ordinal.le_mul_left
+      exact val_pos.2 hcq.1.pos
+    intro y hy
+    rw [hfs] at hy
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
+    obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hy
+    rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
+    rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
+    obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
+      ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
+    rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
+    have hrr : y ^ 2 - y = (a ^ 2 - a) * x + (a ^ 2 *
+        (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))) +
+        (b ^ 2 - b)) := by
+      rw [← hr, CharTwo.add_sq, mul_pow]
+      calc
+        _ = _ := by ring
+        _ = _ := congr(a ^ 2 * $hrt + (a ^ 2 - a) * x + b ^ 2 - b)
+        _ = _ := by ring
+    have hax : a < x := by simpa using hpc 1
+    have hbx : b < x := by simpa using hpc 0
+    rw [hrr, add_sub_right_comm, ← sub_mul, mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl hcx,
+      mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl
+        (hx.sub_lt (hx.sub_lt (hx.pow_lt hax) hax) hcx),
+      ← hx.mul_add_eq_of_lt (hx.add_lt (hx.mul_lt (hx.pow_lt hax)
+        (hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2))
+        (hx.sub_lt (hx.pow_lt hbx) hbx)), of.le_iff_le]
+    apply le_add_right
+    apply mul_le_mul_right
+    apply val.monotone
+    exact hx.le_of_quadraticLower_le hxc hax
 
 end quadraticUpper
 
