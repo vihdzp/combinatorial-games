@@ -8,8 +8,6 @@ module
 public import Mathlib.Logic.Small.Defs
 
 import Mathlib.Logic.Small.Set
-import Mathlib.Logic.Relation
-import Mathlib.Order.SetNotation
 
 /-!
 # Tree with small sets of branches is small
@@ -41,6 +39,7 @@ private theorem small_sUnion_level (x : α) : Small.{u} (⋃₀ range (level r x
   · simp [small_level]
 
 instance small_transGen (x : α) : Small.{u} {y // Relation.TransGen r x y} := by
+  rw [← coe_ofPred]
   refine @small_subset _ _ _ (fun y hy ↦ ?_) (small_sUnion_level r x)
   simp_rw [mem_sUnion, mem_range, exists_exists_eq_and]
   induction hy with
@@ -58,8 +57,9 @@ instance small_transGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
   infer_instance
 
 instance small_reflTransGen (x : α) : Small.{u} {y // Relation.ReflTransGen r x y} := by
+  have : Small.{u} {y | Relation.TransGen r x y} := small_transGen r x
   simp_rw [Relation.reflTransGen_iff_eq_or_transGen]
-  exact @small_insert _ _ _ (small_transGen ..)
+  exact @small_insert _ x _ this
 
 instance small_reflTransGen' [∀ x, Small.{u} {y // r y x}] (x : α) :
     Small.{u} {y // Relation.ReflTransGen r y x} := by

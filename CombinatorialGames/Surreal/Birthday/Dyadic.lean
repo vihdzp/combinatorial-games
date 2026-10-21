@@ -9,6 +9,11 @@ public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Dyadic
 
 import CombinatorialGames.Surreal.Birthday.Cut
+import Mathlib.Algebra.Ring.CharZero
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Birthday of dyadic rationals
@@ -102,7 +107,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
     intro k hkl hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_sub_le _ 1))
     rw [le_antisymm hkr (Int.natAbs_sub_le _ 1), ← Int.natCast_dvd]
-    contrapose! hxl
+    contrapose hxl
     obtain ⟨e, he⟩ := hxl
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hle
     rw [Dyadic.den, hle, Rat.den_intCast]
@@ -112,7 +117,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
     rw [← Int.sub_add_cancel x.num 1] at hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_add_le _ 1))
     rw [le_antisymm hkr (Int.natAbs_add_le _ 1), Int.sub_add_cancel, ← Int.natCast_dvd]
-    contrapose! hd
+    contrapose hd
     obtain ⟨e, he⟩ := hd
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hcd
     rw [Dyadic.den, ← hcd, Rat.den_intCast]

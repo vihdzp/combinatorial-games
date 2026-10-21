@@ -6,8 +6,15 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
-public import Mathlib.Algebra.Order.Archimedean.Defs
+public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
+public import Mathlib.Algebra.Order.Module.Defs
+public import Mathlib.Basic.Real.Basic
+
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Real numbers as games
@@ -88,14 +95,14 @@ theorem mem_rightMoves_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q.toRat) :
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
-def toIGameEmbedding : ℝ ↪o IGame := by
-  refine .ofStrictMono toIGame fun x y h ↦ ?_
-  obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
-  trans (q : IGame)
-  · apply Numeric.lt_right
-    simpa [toIGame]
-  · apply Numeric.left_lt
-    simpa [toIGame]
+def toIGameEmbedding : ℝ ↪o IGame :=
+  .ofStrictMono toIGame fun x y h ↦ by
+    obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
+    trans (q : IGame)
+    · apply Numeric.lt_right
+      simpa [toIGame]
+    · apply Numeric.left_lt
+      simpa [toIGame]
 
 @[simp, norm_cast]
 theorem toIGame_le_iff {x y : ℝ} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -625,6 +632,25 @@ def toSurrealRingHom : ℝ →+*o Surreal where
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
   monotone' := toSurrealEmbedding.monotone
+
+instance : Algebra ℝ Surreal :=
+  Real.toSurrealRingHom.toAlgebra
+
+instance : IsOrderedModule ℝ Surreal where
+  smul_le_smul_of_nonneg_left _ hr _ _ hxy :=
+    mul_le_mul_of_nonneg_left hxy (Real.toSurreal_nonneg_iff.mpr hr)
+  smul_le_smul_of_nonneg_right _ hx _ _ hrs :=
+    mul_le_mul_of_nonneg_right (Real.toSurreal_le_iff.mpr hrs) hx
+
+@[simp]
+theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
+  rfl
+
+@[simp]
+theorem algebraMap_def : algebraMap ℝ Surreal = toSurrealRingHom :=
+  rfl
+
+theorem algebraMap_apply (r : ℝ) : algebraMap ℝ Surreal r = r := rfl
 
 @[simp, norm_cast]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=

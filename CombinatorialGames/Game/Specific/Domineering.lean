@@ -8,9 +8,9 @@ module
 public import CombinatorialGames.Game.Graph
 public import Mathlib.Algebra.Group.Int.Defs
 public import Mathlib.Algebra.Group.Units.Equiv
-public import Mathlib.Algebra.Order.Group.Nat
 public import Mathlib.Data.Finset.Sort
 
+import Mathlib.Algebra.Order.Group.Nat
 import Mathlib.Algebra.Order.Sub.Unbundled.Basic
 import Mathlib.Algebra.Ring.Basic
 import Mathlib.Algebra.Ring.Int.Defs

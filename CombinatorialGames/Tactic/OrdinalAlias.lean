@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-module
+module -- shake: keep-all
 
 public import Mathlib.SetTheory.Ordinal.Family
 
@@ -19,10 +19,6 @@ API between both stays consistent.
 open Lean
 
 /-! ### Auxiliary defs -/
-
-/-- Doc-comment allowing antiquotation. -/
-meta def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
-  .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
 
 /-- `Alias.of` -/
 meta def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
@@ -57,11 +53,13 @@ noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
 
 theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
-$(mkDocComment s!" The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
+$(mkMarkdownDocComment
+  s!"The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `of) : $Source ≃o $Alias := .refl _
 
-$(mkDocComment s!" The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
+$(mkMarkdownDocComment
+  s!"The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
@@ -70,6 +68,11 @@ def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
 @[simp] theorem $(mkIdent `of_val) (a) : $(mkOf Alias) ($(mkVal Alias) a) = a := rfl
 @[simp] theorem $(mkIdent `val_of) (a) : $(mkVal Alias) ($(mkOf Alias) a) = a := rfl
+
+theorem $(mkIdent `of_preimage) (s : Set $Alias) : $(mkOf Alias) ⁻¹' s = $(mkVal Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
+theorem $(mkIdent `val_preimage) (s : Set $Source) : $(mkVal Alias) ⁻¹' s = $(mkOf Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
 
 theorem $(mkIdent `val_le_iff) {a b} : $(mkVal Alias) a ≤ b ↔ a ≤ $(mkOf Alias) b := .rfl
 theorem $(mkIdent `val_lt_iff) {a b} : $(mkVal Alias) a < b ↔ a < $(mkOf Alias) b := .rfl
@@ -117,15 +120,43 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
 
 theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
+$(mkMarkdownDocComment s!"A recursor for `{Alias.getId}`. Use as `cases x`."):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
     ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
   $(mkIdent `of) ($(mkVal Alias) a)
 
-$(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
+$(mkMarkdownDocComment s!"Well-founded induction for `{Alias.getId}`."):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
+
+theorem $(mkIdent `of_sInf) (s : Set $Source) :
+    $(mkOf Alias) (sInf s) = sInf ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `of_sSup) (s : Set $Source) :
+    $(mkOf Alias) (sSup s) = sSup ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `val_sInf) (s : Set $Alias) :
+    $(mkVal Alias) (sInf s) = sInf ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `val_sSup) (s : Set $Alias) :
+    $(mkVal Alias) (sSup s) = sSup ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `of_iInf) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iInf f) = ⨅ i, $(mkOf Alias) (f i) :=
+  rfl
+theorem $(mkIdent `of_iSup) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iSup f) = ⨆ i, $(mkOf Alias) (f i) :=
+  rfl
+
+theorem $(mkIdent `val_iInf) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iInf f) = ⨅ i, $(mkVal Alias) (f i) :=
+  rfl
+theorem $(mkIdent `val_iSup) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iSup f) = ⨆ i, $(mkVal Alias) (f i) :=
+  rfl
 
 end $Alias
 end
@@ -199,6 +230,15 @@ theorem $(mkIdent `lt_iSup_iff) {ι : Type*} [Small.{u} ι] (f : ι → $Alias.{
 theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Alias.{u}} :
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
+
+@[simp]
+theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
+    Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
+  Cardinal.mk_Iio_ordinal _
+
+theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
+    (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=
+  Ordinal.apply_omega0_of_isNormal hf
 
 end $Alias
 end
