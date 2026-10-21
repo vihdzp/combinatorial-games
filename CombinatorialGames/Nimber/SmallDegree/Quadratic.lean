@@ -364,12 +364,8 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
     (hy : y < enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))) :
     y ∈ (fun z => z ^ 2 - z) '' Iio x := by
   have ihx (z : Nimber) (hz : IsField z) (hzx : z < x) := @hz.mem_image_of_lt_quadraticLower
-  have ihnp (z : Nimber) (hz : IsField z) (hzx : z < x) :=
-    hz.quadraticLower_fieldClosure_succ_of_not_perfectField
   have ihqs (z : Nimber) (hz : IsField z) (hzx : z < x) :=
     hz.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots_lt
-  have ihcp (z : Nimber) (hz : IsField z) (hzx : z < x) :=
-    hz.quadraticLower_fieldClosure_succ_of_le_leastNoRoots
   have ihl (z : Nimber) (hz : IsField z) (hzx : z < x) :=
     @hz.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_lt
   induction y using WellFoundedLT.induction with | ind y ihy
@@ -423,17 +419,16 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
   by_cases! hcl : y < enum quadraticIrreducibles isCofinal_quadraticIrreducibles
       (of (quadraticLower (Nimber.enumField o)))
   · grw [← hox, ← le_fieldClosure, ← le_succ]
-    refine ihx (Nimber.enumField o) (IsField.enumField o)
-      (((lt_succ _).trans_le (le_fieldClosure _)).trans_eq hox) ?_ hcl
+    refine ihx (Nimber.enumField o) (IsField.enumField o) hxe ?_ hcl
     change yq.1 < _
     apply (IsField.enumField o).lt_of_lt_quadraticUpper
     grw [← Subtype.coe_lt_coe, ← quadraticLower_le_quadraticUpper, ← hcl]
   have perf : PerfectField (IsField.enumField o).toSubfield := by
     contrapose! hcl
-    rwa [← ihnp (Nimber.enumField o) (IsField.enumField o) hxe hcl, hox]
+    rwa [← (IsField.enumField o).quadraticLower_fieldClosure_succ_of_not_perfectField hcl, hox]
   have h2 : leastNoRoots (Nimber.enumField o) < .some (X ^ 3) := by
     contrapose! hcl
-    rwa [← ihcp (Nimber.enumField o) (IsField.enumField o) hxe hcl, hox]
+    rwa [← (IsField.enumField o).quadraticLower_fieldClosure_succ_of_le_leastNoRoots hcl, hox]
   change yq.1 < _ at hy
   rw [← hox, ihqs (Nimber.enumField o) (IsField.enumField o) hxe perf h2,
     Subtype.coe_lt_coe, ← OrderIso.symm_apply_lt, ← val_lt_iff, lt_add_one_iff,
