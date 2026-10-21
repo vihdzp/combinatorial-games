@@ -142,7 +142,7 @@ instance : Nontrivial Cut :=
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
   rw [← not_le, ← left_subset_left_iff, ← sdiff_nonempty, sdiff_eq_compl_inter, compl_left]
 
-instance : Neg Cut where
+noncomputable instance : Neg Cut where
   neg x := {
     extent := -x.intent
     intent := -x.extent
@@ -159,7 +159,7 @@ instance : Neg Cut where
 @[simp] theorem left_neg (x : Cut) : (-x).left = -x.right := rfl
 @[simp] theorem right_neg (x : Cut) : (-x).right = -x.left := rfl
 
-instance : InvolutiveNeg Cut where
+noncomputable instance : InvolutiveNeg Cut where
   neg_neg x := by ext; simp
 
 @[simp] theorem neg_bot : -(⊥ : Cut) = ⊤ := by ext; simp

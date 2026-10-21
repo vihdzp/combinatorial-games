@@ -8,6 +8,8 @@ module
 public import CombinatorialGames.NatOrdinal.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
+import Mathlib.SetTheory.Ordinal.Principal
+
 /-!
 # Natural operations on `ω ^ x`
 
@@ -29,6 +31,11 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 -/
 
 @[expose] public section
+
+theorem Ordinal.opow_le_one {x : Ordinal} (hx : x ≤ 1) (y : Ordinal) : x ^ y ≤ 1 := by
+  obtain rfl | rfl := Order.le_one_iff.1 hx
+  · exact zero_opow_le y
+  · simp
 
 open Ordinal
 
@@ -115,17 +122,22 @@ termination_by (x, n, y)
 theorem add_lt_wpow (hx : x < ω^ z) (hy : y < ω^ z) : x + y < ω^ z :=
   (wpow_mul_natCast_add_of_lt_aux hy 0).1 x hx
 
-/-- See `wpow_mul_natCast_add_of_lt` for a stronger version. -/
-theorem wpow_mul_natCast_add_of_lt' (hy : y < ω^ x) (n : ℕ) :
-    ω^ x * n + y = of (ω ^ x.val * n + y.val) :=
-  (wpow_mul_natCast_add_of_lt_aux hy n).2
+/-- See `of_omega0_opow_mul_natCast_add` for a stronger version. -/
+theorem of_omega0_opow_mul_natCast_add' {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
+    of (ω ^ x * n + y) = ω^ of x * n + of y :=
+  (wpow_mul_natCast_add_of_lt_aux hy n).2.symm
 
-/-- See `wpow_add_of_lt` for a stronger version. -/
-theorem wpow_add_of_lt' (hy : y < ω^ x) : ω^ x + y = of (ω ^ x.val + y.val) := by
-  simpa using wpow_mul_natCast_add_of_lt' hy 1
+/-- See `of_omega0_opow_add` for a stronger version. -/
+theorem of_omega0_opow_add' {x y : Ordinal} (hy : y < ω ^ x) :
+    of (ω ^ x + y) = ω^ of x + of y := by
+  simpa using of_omega0_opow_mul_natCast_add' hy 1
+
+@[simp]
+theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : of (ω ^ x * n) = ω^ of x * n := by
+  simpa using of_omega0_opow_mul_natCast_add' (opow_pos _ omega0_pos) n
 
 theorem wpow_mul_natCast (x : NatOrdinal) (n : ℕ) : ω^ x * n = of (ω ^ x.val * n) := by
-  simpa using wpow_mul_natCast_add_of_lt' (wpow_pos _) n
+  simp
 
 theorem wpow_mul_natCast_lt (h : x < y) (n : ℕ) : ω^ x * n < ω^ y := by
   rw [wpow_mul_natCast]
@@ -154,25 +166,61 @@ theorem wpow_add_one_le_iff : ω^ (x + 1) ≤ y ↔ ∀ n : ℕ, ω^ x * n ≤ y
   rw [← not_lt, lt_wpow_add_one_iff]
   simp
 
-theorem wpow_mul_natCast_add_of_lt (hy : y < ω^ (x + 1)) (n : ℕ) :
-    ω^ x * n + y = of (ω ^ x.val * n + y.val) := by
-  obtain ⟨z, hz, m, rfl⟩ : ∃ z < ω^ x, ∃ m : ℕ, y = ω^ x * m + z := by
-    rw [wpow_def, ← val_lt_iff, val_add_one, opow_add, opow_one, Ordinal.lt_mul_iff_div_lt] at hy
-    · obtain ⟨m, hm⟩ := Ordinal.lt_omega0.1 hy
-      have hx : of (y.val % ω ^ x.val) < ω^ x := mod_lt _ (wpow_ne_zero _)
-      use of (y.val % ω ^ x.val), hx, m
-      rw [wpow_mul_natCast_add_of_lt' hx, ← hm]
-      exact (div_add_mod ..).symm
-    · exact wpow_ne_zero _
-  simp_rw [← add_assoc, wpow_mul_natCast_add_of_lt' hz, val_of, ← add_assoc, ← mul_add,
-    ← Nat.cast_add, wpow_mul_natCast_add_of_lt' hz]
+theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ (x + 1)) (n : ℕ) :
+    of (ω ^ x * n + y) = ω^ of x * n + of y := by
+  simp_rw [opow_add_one, Ordinal.lt_mul_iff, Ordinal.lt_omega0] at hy
+  obtain ⟨_, ⟨m, rfl⟩, ⟨r, hr, rfl⟩⟩ := hy
+  rw [of_omega0_opow_mul_natCast_add' hr]
+  simp_rw [← add_assoc, ← mul_add, ← Nat.cast_add, of_omega0_opow_mul_natCast_add' hr]
 
-theorem wpow_add_of_lt (hy : y < ω^ (x + 1)) : ω^ x + y = of (ω ^ x.val + y.val) := by
-  simpa using wpow_mul_natCast_add_of_lt hy 1
+theorem of_omega0_opow_add {x y : Ordinal} (hy : y < ω ^ (x + 1)) :
+    of (ω ^ x + y) = ω^ of x + of y := by
+  simpa using of_omega0_opow_mul_natCast_add hy 1
 
-theorem wpow_add_wpow (h : x ≤ y) : ω^ y + ω^ x = of (ω ^ y.val + ω ^ x.val) := by
-  rw [wpow_add_of_lt, val_wpow]
-  simpa using Order.lt_succ_of_le h
+theorem of_omega0_opow_add_omega0_opow {x y : Ordinal} (h : x ≤ y) :
+    of (ω ^ y + ω ^ x) = ω^ of y + ω^ of x := by
+  rw [of_omega0_opow_add, of_omega0_opow]
+  rwa [opow_lt_opow_iff_right one_lt_omega0, Order.lt_add_one_iff]
+
+theorem of_natCast_opow_mul_natCast_add_of_lt {x y : Ordinal} {m : ℕ} (hy : y < m ^ x * ω) (n : ℕ) :
+    of (m ^ x * n + y) = of (m ^ x) * n + of y := by
+  obtain hm | hm := le_or_gt m 1
+  · have hk₁ := opow_le_one (x := m) (mod_cast hm) x
+    grw [hk₁, one_mul] at hy
+    obtain ⟨y, rfl⟩ := Ordinal.lt_omega0.1 hy
+    obtain ⟨k, hk⟩ := Ordinal.lt_omega0.1 <| hk₁.trans_lt one_lt_omega0
+    simp [hk, ← natCast_mul]
+  · obtain ⟨k, hk⟩ := Ordinal.lt_omega0.1 (mod_lt x omega0_ne_zero)
+    rw [← div_add_mod x ω, opow_add, opow_mul, natCast_opow_omega0 hm, hk,
+      mul_assoc, opow_natCast, ← natCast_pow] at hy ⊢
+    rw [← natCast_mul, of_omega0_opow_mul_natCast_add, of_omega0_opow_mul_natCast,
+      Nat.cast_mul, mul_assoc]
+    apply hy.trans_eq
+    rw [opow_add_one, natCast_mul_omega0 (Nat.pow_pos hm.pos)]
+
+/-- See `of_natCast_opow_mul_natCast_add_of_lt` for a stronger version. -/
+theorem of_natCast_opow_mul_natCast_add_of_lt' {x y : Ordinal} {m : ℕ} (hy : y < m ^ x) (n : ℕ) :
+    of (m ^ x * n + y) = of (m ^ x) * n + of y :=
+  of_natCast_opow_mul_natCast_add_of_lt (hy.trans_le <| Ordinal.le_mul_left _ omega0_pos) n
+
+theorem of_natCast_opow_add_of_lt {x y : Ordinal} {m : ℕ} (hy : y < m ^ x * ω) :
+    of (m ^ x + y) = of (m ^ x) + of y := by
+  simpa using of_natCast_opow_mul_natCast_add_of_lt hy 1
+
+/-- See `of_natCast_opow_add_of_lt` for a stronger version. -/
+theorem of_natCast_opow_add_of_lt' {x y : Ordinal} {m : ℕ} (hy : y < m ^ x) :
+    of (m ^ x + y) = of (m ^ x) + of y := by
+  simpa using of_natCast_opow_mul_natCast_add_of_lt' hy 1
+
+@[simp]
+theorem of_natCast_opow_mul_natCast {x : Ordinal} (m n : ℕ) : of (m ^ x * n) = of (m ^ x) * n := by
+  cases m with
+  | zero =>
+    obtain rfl | hx := eq_or_ne x 0
+    · simp
+    · simp [hx]
+  | succ m => simpa using
+      of_natCast_opow_mul_natCast_add_of_lt' (opow_pos x m.cast_add_one_pos) n (m := m + 1)
 
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
   obtain rfl | hx := eq_or_ne x 0; · simp

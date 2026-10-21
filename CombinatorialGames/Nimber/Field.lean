@@ -57,11 +57,10 @@ private def mul (a b : Nimber.{u}) : Nimber.{u} :=
     Nimber.mul a' b + Nimber.mul a b' + Nimber.mul a' b' = x}ᶜ
 termination_by (a, b)
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber multiplication is recursively defined so that `a * b` is the smallest nimber not equal to
 `a' * b + a * b' + a' * b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-noncomputable instance : Mul Nimber :=
+instance : Mul Nimber :=
   ⟨Nimber.mul⟩
 
 theorem mul_def (a b : Nimber) :
@@ -75,9 +74,8 @@ theorem mul_def (a b : Nimber) :
 private theorem mul_nonempty (a b : Nimber.{u}) :
     {x | ∃ a' < a, ∃ b' < b, a' * b + a * b' + a' * b' = x}ᶜ.Nonempty := by
   convert nonempty_of_not_bddAbove <| not_bddAbove_compl_of_small
-    ((fun x ↦ x.1 * b + a * x.2 + x.1 * x.2) '' Set.Iio a ×ˢ Set.Iio b)
-  ext
-  simp_rw [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
+    ((fun x ↦ x.1 * b + a * x.2 + x.1 * x.2) '' Set.Iio a ×ˢ Set.Iio b) with x
+  simp_rw [Set.mem_eq_mem, Set.mem_image, Set.mem_prod, Set.mem_Iio, Prod.exists]
   tauto
 
 theorem exists_of_lt_mul (h : c < a * b) : ∃ a' < a, ∃ b' < b, a' * b + a * b' + a' * b' = c := by
