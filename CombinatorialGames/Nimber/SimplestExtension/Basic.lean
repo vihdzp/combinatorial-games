@@ -123,7 +123,7 @@ theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y)
   simp [← SetLike.coe_subset_coe]
 
 @[simp]
-theorem IsRing.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+theorem IsGroup.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
     hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
   simp [← SetLike.coe_ssubset_coe]
 
@@ -348,12 +348,12 @@ theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubrin
   h.toSubring.closure_eq
 
 @[simp]
-theorem IsRing.toSubfield_le_toSubfield (hx : IsRing x) (hy : IsRing y) :
+theorem IsRing.toSubring_le_toSubring (hx : IsRing x) (hy : IsRing y) :
     hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
   simp [← SetLike.coe_subset_coe]
 
 @[simp]
-theorem IsRing.toSubfield_lt_toSubfield (hx : IsRing x) (hy : IsRing y) :
+theorem IsRing.toSubring_lt_toSubring (hx : IsRing x) (hy : IsRing y) :
     hx.toSubring < hy.toSubring ↔ x < y := by
   simp [← SetLike.coe_ssubset_coe]
 
