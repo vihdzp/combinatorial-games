@@ -23,12 +23,16 @@ open ArchimedeanClass Order Set SurrealHahnSeries
 
 /-! ### Addition -/
 
+section Addition
+variable {x y : Surreal} (h : x.support ⊆ Ioi y.wlog)
+include h
+
+open PartialSum
+
 namespace PartialSum
 
-variable {x y : Surreal} (h : x.support ⊆ Ioi y.wlog)
-
 variable (x y) in
-/-- `x` as a partial sum of `x + y`. -/
+/-- `x` as a partial sum of `x + y`, whenever `y.support < x.support` pairwise. -/
 def ofAdd : PartialSum (x + y) where
   carrier := x.toHahnSeries
   term_eq_leadingTerm_sub {j} hj := by
@@ -37,72 +41,193 @@ def ofAdd : PartialSum (x + y) where
     rw [add_sub_right_comm, leadingTerm_add_eq_left]
     nth_rw 1 [← toSurreal_toHahnSeries x]
     rw [vlt_def, ← mk_leadingTerm, leadingTerm_sub_truncIdx, mk_term hj, ← vlt_def,
-        ← wlog_lt_wlog_iff hy' (wpow_ne_zero _), wlog_wpow]
+      ← wlog_lt_wlog_iff hy' (wpow_ne_zero _), wlog_wpow]
     apply h
     simp
 
 @[simp] theorem carrier_ofAdd : (ofAdd x y h).carrier = x.toHahnSeries := rfl
 @[simp] theorem length_ofAdd : (ofAdd x y h).length = x.length := rfl
 
-theorem truncIdx_top_add_length {x y : Surreal}
-    (h : x.support ⊆ Ioi y.wlog) : (⊤ : PartialSum (x + y)).truncIdx x.length = ofAdd x y h :=
+theorem truncIdx_top_add_length : (⊤ : PartialSum (x + y)).truncIdx x.length = ofAdd x y h :=
   PartialSum.truncIdx_length_of_le (y := ofAdd x y h) le_top
 
 @[simp]
-theorem term_succ_ofAdd_length {x y : Surreal} (h : x.support ⊆ Ioi y.wlog) :
-    (succ (ofAdd x y h)).carrier.term x.length = y.leadingTerm := by
-  rw [← length_ofAdd h, term_succ_length, carrier_ofAdd,
-    toSurreal_toHahnSeries, add_sub_cancel_left]
+theorem term_succ_ofAdd_length : (succ (ofAdd x y h)).carrier.term x.length = y.leadingTerm := by
+  rw [← length_ofAdd h, term_succ_length, carrier_ofAdd, toSurreal_toHahnSeries,
+    add_sub_cancel_left]
 
 end PartialSum
 
-private theorem truncIdx_add_length_of_subset {x y : Surreal}
-    (hx : x.support ⊆ Ioi y.wlog) : (x + y).toHahnSeries.truncIdx x.length = x := by
-  have := congrArg PartialSum.carrier (PartialSum.truncIdx_top_add_length hx)
+private theorem truncIdx_add_length_of_subset : (x + y).toHahnSeries.truncIdx x.length = x := by
+  have := congrArg PartialSum.carrier (PartialSum.truncIdx_top_add_length h)
   aesop
 
-private theorem le_length_add_of_subset {x y : Surreal}
-    (hx : x.support ⊆ Ioi y.wlog) : x.length ≤ (x + y).length := by
-  conv_lhs => rw [← truncIdx_add_length_of_subset hx]
+private theorem le_length_add_of_subset : x.length ≤ (x + y).length := by
+  conv_lhs => rw [← truncIdx_add_length_of_subset h]
   simp
 
 open PartialSum in
-private theorem lt_length_add_of_subset {x y : Surreal}
-    (hx : x.support ⊆ Ioi y.wlog) (hy' : y ≠ 0) : x.length < (x + y).length := by
-  apply (le_length_add_of_subset hx).lt_of_ne
-  change (ofAdd x y hx).length ≠ PartialSum.length ⊤
+private theorem lt_length_add_of_subset (hy' : y ≠ 0) : x.length < (x + y).length := by
+  apply (le_length_add_of_subset h).lt_of_ne
+  change (ofAdd x y h).length ≠ PartialSum.length ⊤
   rw [ne_eq, length_inj]
   apply_fun carrier
   simpa
 
+-- AI
+private theorem term_add_length_of_subset (hy : y ≠ 0) :
+    (x + y).toHahnSeries.term x.length = y.leadingTerm := by
+  have hl := lt_length_add_of_subset h hy
+  have htop : x.length < (⊤ : PartialSum (x + y)).length := by
+    simpa using hl
+  have hbase : PartialSum.ofAdd x y h < (⊤ : PartialSum (x + y)) := by
+    rw [← PartialSum.length_lt_length, PartialSum.length_ofAdd,
+      PartialSum.length_top]
+    exact hl
+  have hs : x.length < (succ (PartialSum.ofAdd x y h)).length := by
+    rw [← PartialSum.length_ofAdd h]
+    exact lt_succ_of_not_isMax hbase.not_isMax
+  calc
+    (x + y).toHahnSeries.term x.length =
+        (⊤ : PartialSum (x + y)).carrier.term x.length :=
+      congrArg (fun q : SurrealHahnSeries ↦ q.term x.length)
+        (PartialSum.carrier_top (x + y)).symm
+    _ = (succ (PartialSum.ofAdd x y h)).carrier.term x.length :=
+      PartialSum.term_congr htop hs
+    _ = y.leadingTerm := PartialSum.term_succ_ofAdd_length h
+
+-- AI
+private theorem exp_add_length_of_subset (hy : y ≠ 0) :
+    ↑((x + y).toHahnSeries.exp ⟨x.length, by
+      simpa using lt_length_add_of_subset h hy⟩) = y.wlog := by
+  rw [← SurrealHahnSeries.wlog_term, term_add_length_of_subset h hy, wlog_leadingTerm]
+  exact lt_length_add_of_subset h hy
+
+omit h
+
+-- AI
 open PartialSum in
 private theorem trunc_add_of_subset {x y i : Surreal}
     (hx : x.support ⊆ Ioi i) (hy : y ≤ᵥ ω^ i) : (x + y).trunc i = x := by
   obtain rfl | hy' := eq_or_ne y 0
-  · rw [add_zero, trunc_eq_self]
-    simpa
-  have hy'' : y.wlog ≤ i := by simpa using wlog_le_wlog_of_vle hy' hy
+  · rw [add_zero]
+    exact trunc_eq_self hx
+  have hy'' : y.wlog ≤ i := by
+    simpa using wlog_le_wlog_of_vle hy' hy
   have hx' : x.support ⊆ Ioi y.wlog := hx.trans (by simpa)
-  · have hl := lt_length_add_of_subset hx' hy'
-    conv_rhs => rw [← truncIdx_add_length_of_subset hx']
-    rw [truncIdx_of_lt hl]
-    · apply (trunc_eq_trunc (hy''.trans_eq' _) _).symm
-      · convert! PartialSum.exp_congr (y := succ (.ofAdd x y hx')) _ _
-        · rw [← wlog_term, term_succ_ofAdd_length, wlog_leadingTerm]
-        · rw [← PartialSum.length_ofAdd hx'] at hl ⊢
-          exact lt_succ_of_not_isMax (hl.not_isMax (α := PartialSum _))
-      · sorry
+  have hl := lt_length_add_of_subset hx' hy'
+  have hl' : x.length < (x + y).toHahnSeries.length := by
+    simpa using hl
+  conv_rhs => rw [← truncIdx_add_length_of_subset hx']
+  rw [truncIdx_of_lt hl']
+  rw [SurrealHahnSeries.toSurreal_trunc]
+  rw [toSurreal_toHahnSeries]
+  let e : Surreal := ↑((x + y).toHahnSeries.exp ⟨x.length, hl'⟩)
+  have he : e = y.wlog := by
+    exact exp_add_length_of_subset hx' hy'
+  apply (trunc_eq_trunc (he.le.trans hy'') _).symm
+  intro k hek hki
+  apply notMem_support_iff.mp
+  intro hk
+  have hkTrunc : k ∈ ((x + y).trunc e).support := by
+    rw [support_trunc]
+    exact ⟨hk, hek⟩
+  have htrunc : (x + y).trunc e = x := by
+    nth_rw 1 [← toSurreal_toHahnSeries (x + y)]
+    rw [← SurrealHahnSeries.toSurreal_trunc, ← truncIdx_of_lt hl',
+      truncIdx_add_length_of_subset hx']
+  have hkx : k ∈ x.support := by
+    rwa [htrunc] at hkTrunc
+  exact (not_lt_of_ge hki) (hx hkx)
 
+-- AI
 private theorem coeff_add_of_subset {x y i : Surreal}
     (hx : x.support ⊆ Ioi i) (hy : y ≤ᵥ ω^ i) :
     (x + y).coeff i = stdPart (y / ω^ i) := by
-  sorry
+  obtain rfl | hy' := eq_or_ne y 0
+  · simp only [add_zero, zero_div, stdPart_zero]
+    apply notMem_support_iff.mp
+    intro hi
+    exact (lt_irrefl i) (hx hi)
+  have hylog : y.wlog ≤ i := by
+    simpa using wlog_le_wlog_of_vle hy' hy
+  obtain heq | hlt := hylog.eq_or_lt
+  · subst i
+    have hexp := exp_add_length_of_subset hx hy'
+    rw [← coeff_toHahnSeries, ← hexp, SurrealHahnSeries.coeff_exp,
+      ← SurrealHahnSeries.leadingCoeff_term,
+      term_add_length_of_subset hx hy', leadingCoeff_leadingTerm, leadingCoeff,
+      hexp]
+  · have hxlog : x.support ⊆ Ioi y.wlog := fun _ hk ↦ hlt.trans (hx hk)
+    have htrunc : (x + y).trunc y.wlog = x :=
+      trunc_add_of_subset hxlog (wpow_wlog_veq hy').symm.1
+    have hcoeff : (x + y).coeff i = 0 := by
+      apply notMem_support_iff.mp
+      intro hi
+      have hiTrunc : i ∈ ((x + y).trunc y.wlog).support := by
+        rw [support_trunc]
+        exact ⟨hi, hlt⟩
+      rw [htrunc] at hiTrunc
+      exact (lt_irrefl i) (hx hiTrunc)
+    rw [hcoeff]
+    symm
+    rw [stdPart_eq_zero]
+    apply ne_of_gt
+    rw [ArchimedeanClass.mk_div, LinearOrderedAddCommGroupWithTop.sub_pos]
+    left
+    apply vlt_def.mp
+    rw [← wlog_lt_wlog_iff hy' (wpow_ne_zero _), wlog_wpow]
+    exact hlt
 
-theorem coeff_eq_stdPart {x i : Surreal} : x.coeff i = stdPart ((x - x.trunc i) / ω^ i) := by
+-- AI
+private theorem sub_trunc_vle_wpow (x i : Surreal) : x - x.trunc i ≤ᵥ ω^ i := by
+  let s := x.toHahnSeries
+  obtain ⟨j, hj⟩ := SurrealHahnSeries.trunc_mem_range_truncIdx s i
+  have hsx : s.toSurreal = x := by
+    simp [s]
+  have htr : (s.trunc i).toSurreal = x.trunc i := by
+    rw [SurrealHahnSeries.toSurreal_trunc, hsx]
+  have hlead : (x - x.trunc i).leadingTerm = s.term j := by
+    calc
+      (x - x.trunc i).leadingTerm =
+          (s.toSurreal - (s.truncIdx j).toSurreal).leadingTerm := by
+        rw [hsx, hj, htr]
+      _ = s.term j := SurrealHahnSeries.leadingTerm_sub_truncIdx
+  obtain hjlen | hjlen := lt_or_ge j s.length
+  · have hexpLe : ↑(s.exp ⟨j, hjlen⟩) ≤ i := by
+      by_contra hle
+      have hiExp : i < ↑(s.exp ⟨j, hjlen⟩) := lt_of_not_ge hle
+      have hmem : ↑(s.exp ⟨j, hjlen⟩) ∈ (s.trunc i).support := by
+        rw [SurrealHahnSeries.support_trunc]
+        exact ⟨(s.exp ⟨j, hjlen⟩).2, hiExp⟩
+      rw [← hj, SurrealHahnSeries.support_truncIdx, dif_pos hjlen] at hmem
+      have hfalse : ↑(s.exp ⟨j, hjlen⟩) < ↑(s.exp ⟨j, hjlen⟩) := by
+        simpa using hmem.2
+      exact (lt_irrefl _) hfalse
+    have hrem : x - x.trunc i ≠ 0 := by
+      intro hzero
+      have htermNe : s.term j ≠ 0 := by
+        rw [ne_eq, SurrealHahnSeries.term_eq_zero, not_le]
+        exact hjlen
+      apply htermNe
+      rw [← hlead, hzero, leadingTerm_zero]
+    rw [← wlog_le_wlog_iff hrem (wpow_ne_zero _), wlog_wpow,
+      ← wlog_leadingTerm, hlead, SurrealHahnSeries.wlog_term hjlen]
+    exact hexpLe
+  · have hzero : x - x.trunc i = 0 := by
+      rw [← leadingTerm_eq_zero, hlead, SurrealHahnSeries.term_of_ge hjlen]
+    simp [hzero]
+
+/-- A Conway coefficient is the standard part of the remainder after truncation, divided by its
+corresponding monomial. -/
+theorem coeff_eq_stdPart {x i : Surreal} :
+    x.coeff i = stdPart ((x - x.trunc i) / ω^ i) := by
   conv_lhs => rw [← add_sub_cancel (x.trunc i) x]
   apply coeff_add_of_subset
   · simp
-  · sorry
+  · exact sub_trunc_vle_wpow x i
+
+omit h
 
 theorem support_subset_of_round_eq {x y : Surreal} (hx : x.round y = x) (hy : 0 < y) :
     support x ⊆ Ici y.wlog := by
@@ -132,13 +257,26 @@ theorem support_subset_of_round_wpow_eq {x y : Surreal} (h : x.round (ω^ y) = x
 theorem IsOmnific.support_subset {x : Surreal} (h : IsOmnific x) : support x ⊆ Ici 0 := by
   simpa using support_subset_of_round_eq h
 
-theorem eq_round_of_support_subset {x y : Surreal}
-    (hx : x.support ⊆ Ioi y.wlog) (hz : 0 < y) : x.round y = x := by
+-- AI
+include h in
+theorem eq_round_of_support_subset (hy : 0 < y) : x.round y = x := by
   apply round_eq_of_forall_birthday_le
   · simpa
   · intro w hw
-    convert birthday_trunc_le w.toHahnSeries y
-    · sorry
+    convert SurrealHahnSeries.birthday_trunc_le w.toHahnSeries y.wlog
+    · symm
+      rw [SurrealHahnSeries.toSurreal_trunc, toSurreal_toHahnSeries]
+      calc
+        w.trunc y.wlog = (x + (w - x)).trunc y.wlog := by
+          congr 2
+          abel
+        _ = x := trunc_add_of_subset h <| by
+          have habs : |w - x| < y := by
+            rw [abs_lt]
+            constructor <;> linarith [hw.1, hw.2]
+          apply ValuativeRel.vle_trans _ (wpow_wlog_veq hy.ne').symm.1
+          rw [vle_def]
+          exact ArchimedeanClass.mk_le_mk_of_abs (by simpa [abs_of_pos hy] using habs.le)
     · exact (toSurreal_toHahnSeries w).symm
 
 theorem eq_round_wpow_of_support_subset {x y : Surreal} (hx : x.support ⊆ Ioi y) :
@@ -146,7 +284,7 @@ theorem eq_round_wpow_of_support_subset {x y : Surreal} (hx : x.support ⊆ Ioi 
   eq_round_of_support_subset (by simpa) (by simp)
 
 /-- This is a special case of `support_add_subset`. -/
-private theorem support_add_subset_Ioi {x y z : Surreal}
+private theorem support_add_subset_Ioi {z : Surreal}
     (hx : x.support ⊆ Ioi z) (hy : y.support ⊆ Ioi z) : (x + y).support ⊆ Ioi z := by
   apply (support_subset_of_round_wpow_eq (y := !{{z} | x.support ∪ y.support}) _).trans
   · aesop
@@ -155,19 +293,30 @@ private theorem support_add_subset_Ioi {x y z : Surreal}
       refine eq_round_wpow_of_support_subset fun w hw ↦ ?_
       aesop
 
+-- AI
 @[simp, norm_cast]
 theorem toHahnSeries_add (x y : Surreal) :
     (x + y).toHahnSeries = x.toHahnSeries + y.toHahnSeries := by
   ext i
-  rw [coeff_toHahnSeries, coeff_add_apply]
-  trans ((x.trunc i + y.trunc i) + ((x - x.trunc i) + (y - y.trunc i))).coeff i
+  rw [coeff_toHahnSeries, SurrealHahnSeries.coeff_add_apply]
+  trans ((x.trunc i + y.trunc i) +
+      ((x - x.trunc i) + (y - y.trunc i))).coeff i
   · abel_nf
   · rw [coeff_add_of_subset, add_div, stdPart_add]
-    · simp [coeff_eq_stdPart]
-    · sorry
-    · sorry
+    · rw [coeff_toHahnSeries x, coeff_toHahnSeries y, coeff_eq_stdPart,
+        coeff_eq_stdPart]
+    · rw [ArchimedeanClass.mk_div]
+      obtain heq | hlt := (vle_def.mp (sub_trunc_vle_wpow x i)).eq_or_lt
+      · rw [heq]
+        exact LinearOrderedAddCommGroupWithTop.sub_self_nonneg
+      · exact (LinearOrderedAddCommGroupWithTop.sub_pos.mpr (Or.inl hlt)).le
+    · rw [ArchimedeanClass.mk_div]
+      obtain heq | hlt := (vle_def.mp (sub_trunc_vle_wpow y i)).eq_or_lt
+      · rw [heq]
+        exact LinearOrderedAddCommGroupWithTop.sub_self_nonneg
+      · exact (LinearOrderedAddCommGroupWithTop.sub_pos.mpr (Or.inl hlt)).le
     · apply support_add_subset_Ioi <;> simp
-    · apply ValuativeRel.vle_add <;> sorry
+    · apply ValuativeRel.vle_add <;> exact sub_trunc_vle_wpow _ _
 
 @[simps!]
 def toHahnSeriesMonoidIso : Surreal ≃+o SurrealHahnSeries where
@@ -198,4 +347,5 @@ theorem _root_.SurrealHahnSeries.toSurreal_sub (x y : SurrealHahnSeries) :
     (x - y).toSurreal = x.toSurreal - y.toSurreal :=
   map_sub toHahnSeriesMonoidIso.symm x y
 
+end Addition
 end Surreal

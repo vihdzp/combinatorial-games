@@ -695,7 +695,7 @@ theorem birthday_truncIdx_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.le
   grw [← toIGame_equiv, toIGame_equiv_toIGame_iff]
   exact (truncIdx_ne h).symm
 
-theorem birthday_truncIdx_mono (x : SurrealHahnSeries) :
+theorem birthday_truncIdx_monotone (x : SurrealHahnSeries) :
     Monotone fun i ↦ Surreal.birthday (truncIdx x i) := by
   intro i j h
   convert birthday_truncIdx_le (x.truncIdx j) i using 3
@@ -714,7 +714,7 @@ theorem birthday_trunc_le (x : SurrealHahnSeries) (i : Surreal) :
   rw [← hj]
   exact birthday_truncIdx_le ..
 
-theorem birthday_trunc_anti (x : SurrealHahnSeries) :
+theorem birthday_trunc_antitone (x : SurrealHahnSeries) :
     Antitone fun i ↦ Surreal.birthday (trunc x i) := by
   intro i j h
   dsimp
@@ -761,14 +761,11 @@ theorem carrier_bot : carrier (⊥ : PartialSum x) = 0 :=
   rfl
 
 /-- The length of the carrier. -/
--- TODO: I probably want to get rid of this.
-@[reducible, expose]
-def length (y : PartialSum x) : Ordinal :=
+abbrev length (y : PartialSum x) : Ordinal :=
   y.carrier.length
 
-@[simp]
 theorem length_bot : length (⊥ : PartialSum x) = 0 := by
-  simp [length]
+  simp
 
 instance : Preorder (PartialSum x) :=
   .lift length
@@ -1011,6 +1008,7 @@ theorem wlog_sub_lt {y : PartialSum x} (h : x ≠ y.carrier) (i) :
   rw [← wlog_term hi, term_eq_leadingTerm_sub _ hi, ← carrier_truncIdx, wlog_leadingTerm]
   exact wlog_lt_wlog_of_vlt (by simpa [sub_eq_zero]) (vlt_def.2 <| mk_sub_strictMono hy)
 
+/-- An explicit formula for the successor of a partial sum. -/
 private def succ' (y : PartialSum x) : PartialSum x where
   carrier := y.carrier + single (x - y.carrier).wlog (x - y.carrier).leadingCoeff
   term_eq_leadingTerm_sub {j} hj := by

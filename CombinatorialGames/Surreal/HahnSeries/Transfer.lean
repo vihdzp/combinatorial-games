@@ -3,7 +3,9 @@ Copyright (c) 2026 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Surreal.HahnSeries.Surreal
+module
+
+public import CombinatorialGames.Surreal.HahnSeries.Surreal
 
 /-!
 # Transfer Hahn series definitions to surreals
@@ -16,7 +18,7 @@ and `SurrealHahnSeries` respects arithmetic. As such, a lot of theorems about th
 proven later down the import chain.
 -/
 
-noncomputable section
+public noncomputable section
 
 universe u
 
@@ -26,14 +28,15 @@ open Set
 /-! ### `coeff` -/
 
 /-- Returns the coefficient for `ω^ i` in the Conway normal form. -/
+@[expose]
 def coeff (x : Surreal) : Surreal → ℝ :=
   x.toHahnSeries.coeff
+
+@[simp] theorem coeff_toHahnSeries (x : Surreal) : x.toHahnSeries.coeff = x.coeff := rfl
 
 @[simp] theorem coeff_zero : coeff 0 = 0 := by simp [coeff]
 @[simp] theorem coeff_one : coeff 1 = Pi.single 0 1 := by simp [coeff]
 @[simp] theorem coeff_wpow (x : Surreal) : coeff (ω^ x) = Pi.single x 1 := by simp [coeff]
-
-@[simp] theorem coeff_toHahnSeries (x : Surreal) : x.toHahnSeries.coeff = x.coeff := rfl
 
 @[simp]
 theorem _root_.SurrealHahnSeries.coeff_toSurreal (x : SurrealHahnSeries) :
@@ -43,10 +46,12 @@ theorem _root_.SurrealHahnSeries.coeff_toSurreal (x : SurrealHahnSeries) :
 /-! ### `support` -/
 
 /-- The support of a surreal's Conway normal form. -/
+@[expose]
 def support (x : Surreal) : Set Surreal :=
   x.toHahnSeries.support
 
 @[simp] theorem support_coeff (x : Surreal) : x.coeff.support = x.support := rfl
+@[simp] theorem support_toHahnSeries (x : Surreal) : x.toHahnSeries.support = x.support := rfl
 
 @[simp] theorem support_zero : support 0 = ∅ := by simp [support]
 @[simp] theorem support_one : support 1 = {0} := by simp [support]
@@ -54,16 +59,12 @@ def support (x : Surreal) : Set Surreal :=
 
 @[simp]
 theorem support_eq_empty {x : Surreal} : x.support = ∅ ↔ x = 0 := by
-  simp [support]
-
-@[simp]
-theorem support_toHahnSeries (x : Surreal) : x.toHahnSeries.support = x.support :=
-  rfl
+  simp [← support_toHahnSeries]
 
 @[simp]
 theorem _root_.SurrealHahnSeries.support_toSurreal (x : SurrealHahnSeries) :
     x.toSurreal.support = x.support := by
-  simp [support]
+  simp [← support_toHahnSeries]
 
 theorem wellFoundedOn_support (x : Surreal) : x.support.WellFoundedOn (· > ·) :=
   x.toHahnSeries.wellFoundedOn_support
@@ -80,7 +81,10 @@ instance (x : Surreal) : WellFoundedGT x.support :=
 
 This is not to be confused with the length of its sign expansion, which is given by
 `Surreal.birthday`. -/
+@[expose]
 def length (x : Surreal) : Ordinal := x.toHahnSeries.length
+
+@[simp] theorem length_toHahnSeries (x : Surreal) : x.toHahnSeries.length = x.length := rfl
 
 @[simp] theorem length_zero : length 0 = 0 := by simp [length]
 @[simp] theorem length_one : length 1 = 1 := by simp [length]
@@ -93,14 +97,14 @@ theorem mem_support_iff {x i : Surreal} : i ∈ x.support ↔ x.coeff i ≠ 0 :=
 theorem notMem_support_iff {x i : Surreal} : i ∉ x.support ↔ x.coeff i = 0 :=
   mem_support_iff.not_left
 
-@[simp] theorem PartialSum.length_top (x : Surreal) : (⊤ : PartialSum x).length = x.length := rfl
+@[simp]
+theorem PartialSum.length_top (x : Surreal) : (⊤ : PartialSum x).length = x.length := by
+  rw [length, carrier_top, length_toHahnSeries]
 
 @[simp]
 theorem type_support (x : Surreal.{u}) :
     @Ordinal.type x.support (· > ·) _ = Ordinal.lift.{u + 1} x.length :=
   SurrealHahnSeries.type_support _
-
-@[simp] theorem length_toHahnSeries (x : Surreal) : x.toHahnSeries.length = x.length := rfl
 
 @[simp]
 theorem _root_.SurrealHahnSeries.length_toSurreal (x : SurrealHahnSeries) :
@@ -113,6 +117,7 @@ theorem _root_.SurrealHahnSeries.length_toSurreal (x : SurrealHahnSeries) :
 
 In particular, the purely infinite and finite parts of `x` are given by `x.trunc 0` and
 `x - x.trunc 0` respectively. -/
+@[expose]
 def trunc (x i : Surreal) : Surreal :=
   x.toHahnSeries.trunc i
 

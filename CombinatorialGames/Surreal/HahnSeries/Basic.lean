@@ -466,12 +466,12 @@ theorem coeffIdx_eq_zero_iff {x : SurrealHahnSeries} {i : Ordinal} :
 /-- Truncates the series at the `i`-th largest exponent, or returns it unchanged if no such
 coefficient exists. -/
 def truncIdx (x : SurrealHahnSeries) (i : Ordinal.{u}) : SurrealHahnSeries :=
-  if h : i < x.length then x.trunc (x.exp ⟨i, h⟩) else x
+  if h : i < x.length then x.trunc (x.exp ⟨i, mem_Iio.2 h⟩) else x
 
 @[aesop simp]
 theorem support_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     (truncIdx x i).support =
-      if hi : i < x.length then x.support ∩ Ioi (x.exp ⟨i, hi⟩) else x.support := by
+      if hi : i < x.length then x.support ∩ Ioi (x.exp ⟨i, mem_Iio.2 hi⟩) else x.support := by
   unfold truncIdx
   aesop
 
