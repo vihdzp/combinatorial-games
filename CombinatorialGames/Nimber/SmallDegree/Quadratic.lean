@@ -243,6 +243,16 @@ theorem IsField.lt_of_lt_quadraticUpper {x : Nimber} (hx : IsField x) {y : quadr
   rw [lt_add_one_iff, val.le_iff_le, OrderIso.le_iff_le, ← Subtype.coe_le_coe] at hi
   exact hi.trans_lt i.2.2
 
+theorem le_quadraticUpper {x : Nimber} :
+    x ≤ enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)) := by
+  by_contra! h
+  apply (Ordinal.le_iSup (fun i : ↥(quadraticIrreducibles ∩ Iio (fieldClosure x)) =>
+    val ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i, i.2.1⟩) + 1)
+    ⟨_, (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).2,
+      lt_of_lt_of_le h (le_fieldClosure x)⟩).not_gt
+  rw [← quadraticAux, ← quadraticUpper]
+  simp
+
 theorem quadraticLower_two : quadraticLower (of 2) = 0 := by
   unfold quadraticLower
   rw [fieldClosure_two, Iio_two, Set.image_insert_eq, Set.image_singleton,
