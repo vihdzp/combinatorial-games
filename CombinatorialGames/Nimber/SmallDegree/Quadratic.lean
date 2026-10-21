@@ -22,9 +22,9 @@ TODO: write module docstring
 
 universe u
 
-noncomputable section
+public noncomputable section
 
-public theorem Order.IsNormal.leftOrdContinuous {α β : Type*} [LinearOrder α] [LinearOrder β]
+theorem Order.IsNormal.leftOrdContinuous {α β : Type*} [LinearOrder α] [LinearOrder β]
     {f : α → β} (hf : Order.IsNormal f) : LeftOrdContinuous f := by
   intro s x hs hx
   exact hf.map_isLUB hx hs
@@ -33,10 +33,10 @@ namespace Nimber
 open Order Polynomial Set
 
 @[expose]
-public def quadraticIrreducibles : Set Nimber :=
+def quadraticIrreducibles : Set Nimber :=
   {x | IsGroup x ∧ ∀ y < fieldClosure (succ x), x ≤ y ^ 2 - y - x}
 
-public theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) :
+theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) :
     t ∈ quadraticIrreducibles := by
   classical
   refine ⟨ht.toIsGroup, fun y hyt => ?_⟩
@@ -135,14 +135,14 @@ public theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClo
       grw [Subring.coe_mul, Valuation.map_mul, hm, hn]
       decide
 
-public theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles :=
+theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles :=
   fun x => ⟨algClosure x, (IsAlgClosed.algClosure x).mem_quadraticIrreducibles, le_algClosure x⟩
 
-def quadraticAux (s : Set Nimber.{u}) : Ordinal :=
+private def quadraticAux (s : Set Nimber.{u}) : Ordinal :=
   ⨆ (i : ↥(quadraticIrreducibles ∩ s)),
     val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩) + 1
 
-theorem quadraticAux_monotone (s t : Set Nimber.{u})
+private theorem quadraticAux_monotone (s t : Set Nimber.{u})
     [Small.{u} s] [Small.{u} t] (hst : s ⊆ t) : quadraticAux s ≤ quadraticAux t := by
   unfold quadraticAux
   rw [Ordinal.iSup_le_iff]
@@ -153,7 +153,7 @@ theorem quadraticAux_monotone (s t : Set Nimber.{u})
         ⟨i.1, i.2.1⟩) + 1)
     ⟨i.1, i.2.1, hst i.2.2⟩
 
-theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
+private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     (hs : Small.{u} s) (ht : ∀ t : s, Small.{u} t) :
     quadraticAux (sUnion s) = ⨆ t : s, quadraticAux t := by
   apply le_antisymm
@@ -170,8 +170,6 @@ theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
   · rw [Ordinal.iSup_le_iff]
     intro t
     exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.2)
-
-public section
 
 def quadraticLower (x : Nimber) : Ordinal :=
   quadraticAux ((fun y => y ^ 2 - y) '' Iio (fieldClosure x))
@@ -252,6 +250,8 @@ theorem le_quadraticUpper (x : Nimber) :
       lt_of_lt_of_le h (le_fieldClosure x)⟩).not_gt
   rw [← quadraticAux, ← quadraticUpper]
   simp
+
+section quadraticLower
 
 theorem quadraticLower_two : quadraticLower (of 2) = 0 := by
   unfold quadraticLower
@@ -764,6 +764,8 @@ theorem le_of_quadraticLower_le (x : Nimber) {y : quadraticIrreducibles}
   · rwa [← quadraticLower_eq_quadraticLower_fieldClosure]
   · exact hz.trans_le (le_fieldClosure x)
 
+end quadraticLower
+
 -- in fact this still holds without the `perf` assumption,
 -- by the classification of imperfect nimber fields
 theorem IsField.quadraticLower_eq_quadraticUpper_iff_of_perfectField {x : Nimber} (hx : IsField x)
@@ -779,6 +781,43 @@ theorem IsField.quadraticLower_eq_quadraticUpper_iff_of_perfectField {x : Nimber
     grw [← Subtype.coe_lt_coe, ← le_quadraticUpper]
     exact hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2
 
-end
+section quadraticUpper
+
+theorem IsField.quadraticUpper_fieldClosure_succ_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) :
+    quadraticUpper (fieldClosure (succ x)) = quadraticUpper x := by
+  have hl := hx.leastNoRoots_eq_of_not_perfectField perf
+  have hnt : leastNoRoots x ≠ ⊤ := by simp [hl]
+  have hld : ((leastNoRoots x).untop hnt).degree = 2 := by
+    rw! [hl]
+    rw [WithTop.untop_coe]
+    compute_degree!
+  have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+  apply le_antisymm
+  · rw [← of.le_iff_le, ← (enum quadraticIrreducibles isCofinal_quadraticIrreducibles).le_iff_le]
+    by_contra! hlt
+    apply (IsField.fieldClosure (succ x)).lt_of_lt_quadraticUpper at hlt
+    rw [hfs] at hlt
+    have hgt := le_quadraticUpper x
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
+    obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hlt
+    rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
+    rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
+    obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
+      ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
+    rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
+    apply ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).2.2
+      (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)))
+      ((lt_succ _).trans_le (le_fieldClosure _))).not_gt
+    grw [← hgt]
+    rw [← hr, CharTwo.add_sq, sub_sub, CharTwo.add_self_eq_zero, sub_zero, mul_pow]
+    have hax : a < x := by simpa using hpc 1
+    have hbx : b < x := by simpa using hpc 0
+    exact hx.add_lt (hx.mul_lt (hx.pow_lt hax)
+      (hx.sq_lt_self_of_not_perfectField perf)) (hx.pow_lt hbx)
+  · exact quadraticUpper_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
+
+end quadraticUpper
 
 end Nimber
