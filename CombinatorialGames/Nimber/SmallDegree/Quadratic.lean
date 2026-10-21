@@ -40,6 +40,26 @@ theorem Ordinal.mul_le_mul_add_iff_of_lt
     · rw [Ordinal.mul_div_cancel c hex.ne_zero]
     · rw [Ordinal.mul_add_div d hex.ne_zero, Ordinal.div_eq_zero_of_lt hex, add_zero]
 
+open Ordinal in
+theorem Ordinal.type_lt_Ico (a b : Ordinal.{u}) : typeLT (Set.Ico a b) = lift.{u + 1} (b - a) := by
+  by_cases! hab : b < a
+  · rw [Set.Ico_eq_empty hab.not_gt, Ordinal.sub_eq_zero_iff_le.2 hab.le,
+      /- why is `type_empty` something different -/ Ordinal.type_eq_zero_of_empty, lift_zero]
+  rw [le_iff_exists_add] at hab
+  obtain ⟨b, rfl⟩ := hab
+  rw [Ordinal.add_sub_cancel, ← type_lt_Iio]
+  refine ((Set.orderIsoOfEq _ _ ?_).trans
+    ((add_right_strictMono.strictMonoOn _).orderIso (a + ·) (Set.Iio b)).symm).ordinalType_congr
+  -- `Set.image_const_add_Ico` requires commutativity :(
+  apply subset_antisymm
+  · intro x hx
+    obtain ⟨x, rfl⟩ := exists_add_of_le hx.1
+    apply Set.mem_image_of_mem
+    exact lt_of_add_lt_add_left hx.2
+  · rw [Set.image_subset_iff]
+    intro x hx
+    exact ⟨le_self_add, add_lt_add_right hx a⟩
+
 namespace Nimber
 open Order Polynomial Set
 
@@ -949,6 +969,37 @@ theorem IsField.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoR
     apply mul_le_mul_right
     apply val.monotone
     exact hx.le_of_quadraticLower_le hxc hax
+
+open Ordinal in
+theorem IsField.quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoRoots_le {x : Nimber}
+    (hx : IsField x) (perf : PerfectField hx.toSubfield) (h2 : leastNoRoots x < .some (X ^ 3)) :
+    quadraticUpper (fieldClosure (succ x)) =
+      quadraticUpper x + (quadraticUpper x - quadraticLower x) := by
+  rw [← Ordinal.add_sub_cancel_of_le
+    (quadraticUpper_monotone ((le_succ _).trans (le_fieldClosure _))), add_right_inj]
+  have h := hx.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoRoots_le perf h2
+  simp_rw [← OrderIso.image_Ico] at h
+  replace h := (Set.orderIsoOfEq _ _ h).ordinalType_congr
+  have hf : StrictMonoOn (· * x) <|
+      (↑) '' (Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles) ''
+        of '' Ico (quadraticLower x) (quadraticUpper x) := by
+    intro u hu v hv huv
+    simp_rw [OrderIso.image_Ico] at hu hv
+    obtain ⟨u, hu, rfl⟩ := hu
+    obtain ⟨v, hv, rfl⟩ := hv
+    beta_reduce
+    rw [← mul_comm x, ← hx.mul_eq_of_lt hx.toIsRing le_rfl (hx.lt_quadraticUpper_iff.1 hu.2),
+      ← mul_comm x, ← hx.mul_eq_of_lt hx.toIsRing le_rfl (hx.lt_quadraticUpper_iff.1 hv.2)]
+    exact of.strictMono (mul_lt_mul_of_pos_left (val.strictMono huv) (val_pos.2 hx.pos))
+  rwa [← hf.orderIso.ordinalType_congr,
+    ← ((Subtype.strictMono_coe _).strictMonoOn _).orderIso.ordinalType_congr,
+    ← ((OrderIso.strictMono _).strictMonoOn _).orderIso.ordinalType_congr,
+    ← ((OrderIso.strictMono _).strictMonoOn _).orderIso.ordinalType_congr,
+    type_lt_Ico,
+    ← ((Subtype.strictMono_coe _).strictMonoOn _).orderIso.ordinalType_congr,
+    ← ((OrderIso.strictMono _).strictMonoOn _).orderIso.ordinalType_congr,
+    ← ((OrderIso.strictMono _).strictMonoOn _).orderIso.ordinalType_congr,
+    type_lt_Ico, lift_inj] at h
 
 end quadraticUpper
 
