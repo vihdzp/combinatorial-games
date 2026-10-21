@@ -197,7 +197,7 @@ def single (x : Surreal) (r : ℝ) : SurrealHahnSeries :=
   mk (Pi.single x r) (small_subset Pi.support_single_subset)
     (WellFoundedOn.subset wellFoundedOn_singleton Pi.support_single_subset)
 
-@[aesop simp]
+@[simp]
 theorem coeff_single (x : Surreal) (r : ℝ) : (single x r).coeff = Pi.single x r := (rfl)
 
 @[simp, grind =]
@@ -248,16 +248,6 @@ theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
 
 theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
   fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
-
-@[simp]
-theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
-    (x.trunc i).coeff j = x.coeff j :=
-  ite_eq_left h
-
-@[simp]
-theorem coeff_trunc_of_ge {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
-    (x.trunc i).coeff j = 0 :=
-  ite_eq_right h.not_gt
 
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by

@@ -729,8 +729,8 @@ namespace Surreal
 
 /-- An auxiliary type containing the truncations of `x.toHahnSeries`.
 
-We'll show that this type, ordered by length, forms a complete linear order, whose supremum
-satisfies `toSurreal ⊤ = x`. -/
+We show that this type, ordered by length, forms a complete linear order, whose supremum satisfies
+`toSurreal ⊤ = x`. -/
 @[ext]
 structure PartialSum (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
@@ -1053,7 +1053,7 @@ instance : SuccOrder (PartialSum x) :=
     intro y hy z
     rw [isMax_iff_eq_top] at hy
     rw [← length_lt_length, ← length_le_length, length_succ'_of_ne, Order.add_one_le_iff]
-    contrapose! hy
+    contrapose hy
     rwa [← carrier_inj, ← toSurreal_inj, coe_carrier_top, eq_comm]
   ) (by simp [succ', coe_carrier_top])
 

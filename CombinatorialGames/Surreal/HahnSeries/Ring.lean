@@ -87,7 +87,7 @@ private theorem trunc_add_of_subset {x y i : Surreal}
     conv_rhs => rw [← truncIdx_add_length_of_subset hx']
     rw [truncIdx_of_lt hl]
     · apply (trunc_eq_trunc (hy''.trans_eq' _) _).symm
-      · convert PartialSum.exp_congr (y := succ (.ofAdd x y hx')) _ _
+      · convert! PartialSum.exp_congr (y := succ (.ofAdd x y hx')) _ _
         · rw [← wlog_term, term_succ_ofAdd_length, wlog_leadingTerm]
         · rw [← PartialSum.length_ofAdd hx'] at hl ⊢
           exact lt_succ_of_not_isMax (hl.not_isMax (α := PartialSum _))
