@@ -568,15 +568,13 @@ theorem self_mem_range_truncIdx (x : SurrealHahnSeries) : x ∈ range x.truncIdx
 theorem range_truncIdx_eq_range_trunc (x : SurrealHahnSeries) :
     range x.truncIdx = range x.trunc := by
   ext y
-  constructor
-  · rintro ⟨i, rfl⟩
-    obtain h | h := lt_or_ge i x.length
+  constructor <;> rintro ⟨i, rfl⟩
+  · obtain h | h := lt_or_ge i x.length
     · rw [truncIdx_of_lt h]
       exact mem_range_self _
     · rw [truncIdx_of_ge h]
       exact self_mem_range_trunc x
-  · rintro ⟨i, rfl⟩
-    by_cases! hx : ∀ j ∈ x.support, i < j
+  · by_cases! hx : ∀ j ∈ x.support, i < j
     · rw [trunc_eq_self_iff.2 hx]
       use x.length
       simp
