@@ -6,7 +6,6 @@ Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Specific.Nim
-public import CombinatorialGames.Nimber.Basic
 
 /-!
 # Grundy value

@@ -8,10 +8,17 @@ module
 public import CombinatorialGames.Surreal.Leading
 public import Mathlib.Order.Shrink
 public import Mathlib.RingTheory.HahnSeries.Lex
+public import CombinatorialGames.Surreal.Pow
+public import Mathlib.Order.PiLex
 
 import Mathlib.Algebra.Field.Subfield.Basic
 import Mathlib.Algebra.Ring.Subring.Order
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
 import Mathlib.RingTheory.HahnSeries.Cardinal
+import Mathlib.RingTheory.HahnSeries.Lex
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Surreal Hahn series
@@ -241,6 +248,16 @@ theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
 
 theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
   fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
+
+@[simp]
+theorem coeff_trunc_of_lt {x : SurrealHahnSeries} {i j : Surreal} (h : i < j) :
+    (x.trunc i).coeff j = x.coeff j :=
+  ite_eq_left h
+
+@[simp]
+theorem coeff_trunc_of_ge {x : SurrealHahnSeries} {i j : Surreal} (h : j ≤ i) :
+    (x.trunc i).coeff j = 0 :=
+  ite_eq_right h.not_gt
 
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by
