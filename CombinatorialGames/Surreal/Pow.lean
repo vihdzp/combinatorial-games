@@ -834,12 +834,20 @@ theorem wlog_le_wlog_of_vle (hx : x ≠ 0) (h : x ≤ᵥ y) : wlog x ≤ wlog y 
   obtain rfl | hy := eq_or_ne y 0; · simp_all
   rwa [wlog_le_wlog_iff hx hy]
 
+@[simp]
+theorem wlog_le_iff (h : x ≠ 0) : wlog x ≤ y ↔ x ≤ᵥ ω^ y := by
+  rw [← wlog_le_wlog_iff h (wpow_ne_zero _), wlog_wpow]
+
 theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x < wlog y ↔ x <ᵥ y := by
   rw [← not_le, wlog_le_wlog_iff hy hx, ValuativeRel.not_vle]
 
 theorem wlog_lt_wlog_of_vlt (hx : x ≠ 0) (h : x <ᵥ y) : wlog x < wlog y := by
   obtain rfl | hy := eq_or_ne y 0; · simp at h
   rwa [wlog_lt_wlog_iff hx hy]
+
+@[simp]
+theorem wlog_lt_iff (h : x ≠ 0) : wlog x < y ↔ x <ᵥ ω^ y := by
+  rw [← wlog_lt_wlog_iff h (wpow_ne_zero _), wlog_wpow]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by

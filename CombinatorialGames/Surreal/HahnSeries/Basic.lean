@@ -475,6 +475,10 @@ theorem support_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
   unfold truncIdx
   aesop
 
+theorem exp_notMem_support_truncIdx (x : SurrealHahnSeries) (i : Iio x.length) :
+    (x.exp i).1 ∉ (x.truncIdx i).support := by
+  aesop (add safe tactic (by order))
+
 theorem truncIdx_of_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
     x.truncIdx i = x.trunc (x.exp ⟨i, mem_Iio.2 h⟩) := by
   rwa [truncIdx, dite_eq_left]

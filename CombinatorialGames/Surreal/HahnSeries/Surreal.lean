@@ -655,16 +655,16 @@ theorem toSurreal_of_length_le_add_one {x : SurrealHahnSeries} {i : Ordinal}
   · rw [Order.lt_add_one_iff] at hi
     rw [truncIdx_of_ge hi, term_of_ge hi, add_zero]
 
-theorem toSurreal_eq' (x : SurrealHahnSeries) :
+theorem toSurreal_def' (x : SurrealHahnSeries) :
     toSurreal x = .mk !{toIGame '' truncLT x | toIGame '' truncGT x} :=
   Surreal.mk_eq <| toIGame_equiv x
 
-theorem toSurreal_eq (x : SurrealHahnSeries) :
+theorem toSurreal_def (x : SurrealHahnSeries) :
     toSurreal x = !{toSurreal '' truncLT x | toSurreal '' truncGT x}'(by
       rintro _ ⟨i, hi, rfl⟩ _ ⟨j, hj, rfl⟩
       exact_mod_cast (lt_of_truncLT hi).trans (gt_of_truncGT hj)
     ) := by
-  rw [toSurreal_eq', Surreal.mk_ofSets]
+  rw [toSurreal_def', Surreal.mk_ofSets]
   congr <;> aesop
 
 theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
@@ -685,12 +685,12 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by
-  conv_lhs => rw [toSurreal_eq']
+  conv_lhs => rw [toSurreal_def']
   exact (fits_ofSets_truncLT_truncGT ..).surrealBirthday_le
 
 theorem birthday_truncIdx_lt {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
     Surreal.birthday (x.truncIdx i) < Surreal.birthday x := by
-  conv_lhs => rw [toSurreal_eq']
+  conv_lhs => rw [toSurreal_def']
   apply (fits_ofSets_truncLT_truncGT ..).surrealBirthday_lt
   grw [← toIGame_equiv, toIGame_equiv_toIGame_iff]
   exact (truncIdx_ne h).symm
@@ -729,8 +729,8 @@ namespace Surreal
 
 /-- An auxiliary type containing the truncations of `x.toHahnSeries`.
 
-We show that this type, ordered by length, forms a complete linear order, whose supremum satisfies
-`toSurreal ⊤ = x`. -/
+We show that this type, ordered by length, forms a complete linear order. In particular, it has a
+supremum, which will satisfy `toSurreal ⊤ = x`. -/
 @[ext]
 structure PartialSum (x : Surreal) : Type _ where
   /-- The underlying `SurrealHahnSeries`. -/
@@ -873,7 +873,7 @@ theorem birthday_strictMono : StrictMono fun y : PartialSum x ↦ birthday y.car
 
 theorem birthday_le (y : PartialSum x) : birthday y.carrier ≤ birthday x := by
   cases x with | mk z
-  rw [toSurreal_eq']
+  rw [toSurreal_def']
   apply Fits.surrealBirthday_le
   unfold truncLT truncGT
   constructor
@@ -1124,8 +1124,12 @@ theorem toHahnSeries_inj : toHahnSeries x = toHahnSeries y ↔ x = y :=
   toHahnSeries_strictMono.injective.eq_iff
 
 theorem toHahnSeries_eq {x : Surreal} {y : SurrealHahnSeries}
-    (h : y.toSurreal = x) : toHahnSeries x = y := by
+    (h : y.toSurreal = x) : x.toHahnSeries = y := by
   rw [← h, y.toHahnSeries_toSurreal]
+
+theorem _root_.SurrealHahnSeries.toSurreal_eq {x : SurrealHahnSeries} {y : Surreal}
+    (h : y.toHahnSeries = x) : x.toSurreal = y := by
+  rw [← h, y.toSurreal_toHahnSeries]
 
 @[simp, norm_cast]
 theorem toHahnSeries_realCast (r : ℝ) : toHahnSeries r = .single 0 r :=
