@@ -284,6 +284,79 @@ theorem IsField.leastNoRoots_lt_of_quadraticLower_lt
     (lt_of_lt_of_le (WithTop.coe_lt_coe.2 (Lex.lt_X_pow_iff.2 (by compute_degree!))) h2)
   exact ⟨r, hr, by simpa [sub_eq_zero] using hrr⟩
 
+theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) :
+    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
+  have hl := hx.leastNoRoots_eq_of_not_perfectField perf
+  have hnt : leastNoRoots x ≠ ⊤ := by simp [hl]
+  have hld : ((leastNoRoots x).untop hnt).degree = 2 := by
+    rw! [hl]
+    rw [WithTop.untop_coe]
+    compute_degree!
+  have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+  apply le_antisymm
+  · rw [quadraticLower, quadraticAux]
+    apply Ordinal.iSup_le
+    intro ⟨c, hcq, hci⟩
+    obtain ⟨r, hrx, rfl⟩ := hci
+    rw [add_one_le_iff]
+    set c : quadraticIrreducibles := ⟨r ^ 2 - r, hcq⟩
+    rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio, hfs] at hrx
+    obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hrx
+    rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
+    rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
+    obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
+      ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
+    rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
+    have hrr : r ^ 2 - r = -a * x + (a ^ 2 * x ^ 2 + (b ^ 2 - b)) := by
+      rw [← hr, CharTwo.add_sq]
+      ring
+    replace hrx : r ^ 2 - r < x := by
+      by_contra! hxr
+      apply (hx.pos.trans_le hxr).not_ge
+      rw [← sub_self (r ^ 2 - r)]
+      apply hcq.2
+      exact (hrx.trans_eq hfs.symm).trans_le (fieldClosure_monotone (Order.succ_mono hxr))
+    have hax : a < x := by simpa using hpc 1
+    have hbx : b < x := by simpa using hpc 0
+    have haax : -a * x < x := by
+      rw [← sub_eq_iff_eq_add] at hrr
+      rw [← hrr]
+      apply hx.sub_lt hrx
+      exact hx.add_lt (hx.mul_lt (hx.pow_lt hax) (hx.sq_lt_self_of_not_perfectField perf))
+        (hx.sub_lt (hx.pow_lt hbx) hbx)
+    rw [CharTwo.neg_eq, mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl hax, of_lt_iff] at haax
+    obtain rfl : a = 0 := by
+      contrapose! haax
+      apply Ordinal.le_mul_left
+      exact val_pos.2 (pos_of_ne_zero haax)
+    rw [val_lt_iff, OrderIso.symm_apply_lt]
+    by_contra! hc
+    apply hx.notMem_image_of_quadraticLower_le hc
+    exact ⟨b, hbx, by simpa [c] using hrr.symm⟩
+  · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
+
+theorem IsField.quadraticLower_fieldClosure_succ_of_le_leastNoRoots {x : Nimber} (hx : IsField x)
+    (h2 : .some (X ^ 3) ≤ leastNoRoots x) :
+    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
+  apply le_antisymm
+  · rw [quadraticLower, quadraticAux, ciSup_le_iff' Ordinal.bddAbove_of_small]
+    intro ⟨c, hcq, hcx⟩
+    rw [Order.add_one_le_iff, val_lt_iff, OrderIso.symm_apply_lt]
+    simp_rw [← Subtype.coe_lt_coe]
+    refine lt_of_lt_of_le ?_ <| not_lt.1 <| mt hx.leastNoRoots_lt_of_quadraticLower_lt h2.not_gt
+    by_contra! hxc
+    obtain ⟨r, hr, rfl⟩ := hcx
+    rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio] at hr
+    apply hcq.1.pos.not_ge
+    rw [← sub_self (r ^ 2 - r)]
+    apply hcq.2
+    apply hr.trans_le
+    rw [(IsField.fieldClosure _).fieldClosure_le_iff]
+    exact (succ_mono hxc).trans (le_fieldClosure _)
+  · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
+
 mutual
 
 theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y : Nimber}
@@ -376,17 +449,12 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
     {z : Nimber} (hz : z < x) :
     y ≤ z ^ 2 - z - y := by
   have ihx (w : Nimber) (hw : IsField w) (hwx : w < x) := @hw.le_of_quadraticLower_le
-  have ihnp (w : Nimber) (hw : IsField w) (hwx : w < x) :=
-    hw.quadraticLower_fieldClosure_succ_of_not_perfectField
   have ihqs (w : Nimber) (hw : IsField w) (hwx : w < x) :=
     hw.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots_lt
-  have ihcp (w : Nimber) (hw : IsField w) (hwx : w < x) :=
-    hw.quadraticLower_fieldClosure_succ_of_le_leastNoRoots
   have ihl (w : Nimber) (hw : IsField w) (hwx : w < x) :=
     @hw.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_lt
   have ihm (w : Nimber) (hw : IsField w) (hwx : w < x) :=
     hw.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt
-  induction y using WellFoundedLT.induction generalizing z with | ind y ihy
   obtain ⟨o, hox⟩ := mem_range_enumField_iff.2 hx
   by_cases ho0 : o = 0
   · rw [ho0, enumField_zero] at hox
@@ -519,60 +587,6 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
       apply Ordinal.le_mul_left
       simpa [pos_iff_ne_zero, mul_sub, sq] using ha0
 termination_by (x, 0)
-
-theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber} (hx : IsField x)
-    (perf : ¬PerfectField hx.toSubfield) :
-    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
-  have hl := hx.leastNoRoots_eq_of_not_perfectField perf
-  have hnt : leastNoRoots x ≠ ⊤ := by simp [hl]
-  have hld : ((leastNoRoots x).untop hnt).degree = 2 := by
-    rw! [hl]
-    rw [WithTop.untop_coe]
-    compute_degree!
-  have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
-    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
-  apply le_antisymm
-  · rw [quadraticLower, quadraticAux]
-    apply Ordinal.iSup_le
-    intro ⟨c, hcq, hci⟩
-    obtain ⟨r, hrx, rfl⟩ := hci
-    rw [add_one_le_iff]
-    set c : quadraticIrreducibles := ⟨r ^ 2 - r, hcq⟩
-    rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio, hfs] at hrx
-    obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hrx
-    rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
-    rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
-    obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
-      ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
-    rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
-    have hrr : r ^ 2 - r = -a * x + (a ^ 2 * x ^ 2 + (b ^ 2 - b)) := by
-      rw [← hr, CharTwo.add_sq]
-      ring
-    replace hrx : r ^ 2 - r < x := by
-      by_contra! hxr
-      apply (hx.pos.trans_le hxr).not_ge
-      rw [← sub_self (r ^ 2 - r)]
-      apply hcq.2
-      exact (hrx.trans_eq hfs.symm).trans_le (fieldClosure_monotone (Order.succ_mono hxr))
-    have hax : a < x := by simpa using hpc 1
-    have hbx : b < x := by simpa using hpc 0
-    have haax : -a * x < x := by
-      rw [← sub_eq_iff_eq_add] at hrr
-      rw [← hrr]
-      apply hx.sub_lt hrx
-      exact hx.add_lt (hx.mul_lt (hx.pow_lt hax) (hx.sq_lt_self_of_not_perfectField perf))
-        (hx.sub_lt (hx.pow_lt hbx) hbx)
-    rw [CharTwo.neg_eq, mul_comm, ← hx.mul_eq_of_lt hx.toIsRing le_rfl hax, of_lt_iff] at haax
-    obtain rfl : a = 0 := by
-      contrapose! haax
-      apply Ordinal.le_mul_left
-      exact val_pos.2 (pos_of_ne_zero haax)
-    rw [val_lt_iff, OrderIso.symm_apply_lt]
-    by_contra! hc
-    apply hx.notMem_image_of_quadraticLower_le hc
-    exact ⟨b, hbx, by simpa [c] using hrr.symm⟩
-  · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
-termination_by (x, 1)
 
 -- actually, this is still true without the `perf` assumption,
 -- by the classification of imperfect nimber fields
@@ -728,27 +742,6 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
       (OrderIso.monotone _ heq.ge)
     exact ⟨x, (lt_succ x).trans_le (le_fieldClosure (succ x)), hrt⟩
 termination_by (x, 3)
-
-theorem IsField.quadraticLower_fieldClosure_succ_of_le_leastNoRoots {x : Nimber} (hx : IsField x)
-    (h2 : .some (X ^ 3) ≤ leastNoRoots x) :
-    quadraticLower (fieldClosure (succ x)) = quadraticLower x := by
-  apply le_antisymm
-  · rw [quadraticLower, quadraticAux, ciSup_le_iff' Ordinal.bddAbove_of_small]
-    intro ⟨c, hcq, hcx⟩
-    rw [Order.add_one_le_iff, val_lt_iff, OrderIso.symm_apply_lt]
-    simp_rw [← Subtype.coe_lt_coe]
-    refine lt_of_lt_of_le ?_ <| not_lt.1 <| mt hx.leastNoRoots_lt_of_quadraticLower_lt h2.not_gt
-    by_contra! hxc
-    obtain ⟨r, hr, rfl⟩ := hcx
-    rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio] at hr
-    apply hcq.1.pos.not_ge
-    rw [← sub_self (r ^ 2 - r)]
-    apply hcq.2
-    apply hr.trans_le
-    rw [(IsField.fieldClosure _).fieldClosure_le_iff]
-    exact (succ_mono hxc).trans (le_fieldClosure _)
-  · exact quadraticLower_monotone ((le_succ x).trans (le_fieldClosure (succ x)))
-termination_by (x, 0)
 
 end
 
