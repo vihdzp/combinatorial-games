@@ -243,7 +243,7 @@ theorem IsField.lt_of_lt_quadraticUpper {x : Nimber} (hx : IsField x) {y : quadr
   rw [lt_add_one_iff, val.le_iff_le, OrderIso.le_iff_le, ← Subtype.coe_le_coe] at hi
   exact hi.trans_lt i.2.2
 
-theorem le_quadraticUpper {x : Nimber} :
+theorem le_quadraticUpper (x : Nimber) :
     x ≤ enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)) := by
   by_contra! h
   apply (Ordinal.le_iSup (fun i : ↥(quadraticIrreducibles ∩ Iio (fieldClosure x)) =>
@@ -763,6 +763,21 @@ theorem le_of_quadraticLower_le (x : Nimber) {y : quadraticIrreducibles}
   apply (IsField.fieldClosure x).le_of_quadraticLower_le
   · rwa [← quadraticLower_eq_quadraticLower_fieldClosure]
   · exact hz.trans_le (le_fieldClosure x)
+
+-- in fact this still holds without the `perf` assumption,
+-- by the classification of imperfect nimber fields
+theorem IsField.quadraticLower_eq_quadraticUpper_iff_of_perfectField {x : Nimber} (hx : IsField x)
+    (perf : PerfectField hx.toSubfield) :
+    quadraticLower x = quadraticUpper x ↔ .some (X ^ 3) ≤ leastNoRoots x := by
+  rw [le_antisymm_iff, and_iff_right (quadraticLower_le_quadraticUpper x), le_iff_le_iff_lt_iff_lt,
+    ← of.lt_iff_lt, ← (enum quadraticIrreducibles isCofinal_quadraticIrreducibles).lt_iff_lt]
+  constructor
+  · intro hlt
+    apply hx.leastNoRoots_lt_of_quadraticLower_lt
+    exact hx.lt_of_lt_quadraticUpper hlt
+  · intro h2
+    grw [← Subtype.coe_lt_coe, ← le_quadraticUpper]
+    exact hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2
 
 end
 
