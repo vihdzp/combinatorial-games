@@ -171,6 +171,7 @@ theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
     x < y.groupClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
+@[simp]
 theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = x := by
   apply (le_groupClosure x).antisymm'
   rw [h.groupClosure_le_iff]
@@ -194,15 +195,12 @@ theorem groupClosure_zero : groupClosure 0 = 1 := by
   rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
   simp
 
-@[simp]
 theorem groupClosure_one : groupClosure 1 = 1 :=
   IsGroup.one.groupClosure_eq
 
-@[simp]
 theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
   IsGroup.two.groupClosure_eq
 
-@[simp]
 theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
   (IsGroup.two_opow x).groupClosure_eq
 
@@ -231,6 +229,14 @@ theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where
 theorem exists_isGroup_between {x : Nimber} (hx : x ≠ 0) :
     ∃ l, IsGroup l ∧ ∃ u, IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z :=
   isClub_ofPred_isGroup.exists_between ⟨1, by simpa⟩
+
+theorem exists_isGroup_between' {x : Nimber} (hx : x ≠ 0) :
+    ∃ l, IsGroup l ∧ l ≤ x ∧ x < groupClosure (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isGroup_between hx
+  refine ⟨l, hl, hlx, ?_⟩
+  apply hxu.trans_le (H _ (IsGroup.groupClosure _) _)
+  rw [← Order.succ_le_iff]
+  exact le_groupClosure _
 
 /-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
 def enumGroup : Ordinal ↪o Nimber :=
@@ -267,6 +273,9 @@ theorem enumGroup_add_one (x : Ordinal) :
     rw [← enumGroup_def, (IsGroup.enumGroup _).lt_groupClosure_iff, Order.lt_succ_iff]
   · rw [(IsGroup.enumGroup _).groupClosure_le_iff, Order.succ_le_iff]
     exact isNormal_enumGroup.strictMono (lt_add_one x)
+
+theorem of_le_enumGroup (x : Ordinal) : ∗x ≤ enumGroup x :=
+  isNormal_enumGroup.strictMono.le_apply
 
 theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
   rw [enumGroup_def', of.eq_iff_eq]
@@ -369,6 +378,7 @@ theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
     x < y.ringClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
+@[simp]
 theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x := by
   apply (le_ringClosure x).antisymm'
   rw [h.ringClosure_le_iff]
@@ -400,10 +410,10 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
   · rw [← ringClosure_zero]
     exact ringClosure_monotone zero_le_one
 
-@[simp]
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
   IsRing.two.ringClosure_eq
 
+@[simp]
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
@@ -424,6 +434,14 @@ theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
 theorem exists_isRing_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsRing l ∧ ∃ u, IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z :=
   isClub_ofPred_isRing.exists_between ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
+theorem exists_isRing_between' {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsRing l ∧ l ≤ x ∧ x < ringClosure (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isRing_between hx
+  refine ⟨l, hl, hlx, ?_⟩
+  apply hxu.trans_le (H _ (IsRing.ringClosure _) _)
+  rw [← Order.succ_le_iff]
+  exact le_ringClosure _
 
 /-- The normal enumerator function for rings. -/
 def enumRing : Ordinal ↪o Nimber :=
@@ -460,6 +478,12 @@ theorem enumRing_add_one (x : Ordinal) :
     rw [← enumRing_def, (IsRing.enumRing _).lt_ringClosure_iff, Order.lt_succ_iff]
   · rw [(IsRing.enumRing _).ringClosure_le_iff, Order.succ_le_iff]
     exact isNormal_enumRing.strictMono (lt_add_one x)
+
+theorem of_le_enumRing (x : Ordinal) : ∗x ≤ enumRing x :=
+  isNormal_enumRing.strictMono.le_apply
+
+theorem enumGroup_le_enumRing (x : Ordinal) : enumGroup x ≤ enumRing x :=
+  Order.enum_anti fun _ ↦ IsRing.toIsGroup
 
 @[simp]
 theorem enumRing_zero : enumRing 0 = ∗2 := by
@@ -546,6 +570,7 @@ theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
     x < y.fieldClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
 
+@[simp]
 theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = x := by
   apply (le_fieldClosure x).antisymm'
   rw [h.fieldClosure_le_iff]
@@ -580,14 +605,15 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
   · rw [← fieldClosure_zero]
     exact fieldClosure_monotone zero_le_one
 
-@[simp]
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
   IsField.two.fieldClosure_eq
 
+@[simp]
 theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
   rw [(IsField.fieldClosure x).ringClosure_le_iff]
   exact le_fieldClosure x
 
+@[simp]
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
 
@@ -612,6 +638,14 @@ theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
 theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
   isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
+theorem exists_isField_between' {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsField l ∧ l ≤ x ∧ x < fieldClosure (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isField_between hx
+  refine ⟨l, hl, hlx, ?_⟩
+  apply hxu.trans_le (H _ (IsField.fieldClosure _) _)
+  rw [← Order.succ_le_iff]
+  exact le_fieldClosure _
 
 /-- The normal enumerator function for fields. -/
 def enumField : Ordinal ↪o Nimber :=
@@ -648,6 +682,15 @@ theorem enumField_add_one (x : Ordinal) :
     rw [← enumField_def, (IsField.enumField _).lt_fieldClosure_iff, Order.lt_succ_iff]
   · rw [(IsField.enumField _).fieldClosure_le_iff, Order.succ_le_iff]
     exact isNormal_enumField.strictMono (lt_add_one x)
+
+theorem of_le_enumField (x : Ordinal) : ∗x ≤ enumField x :=
+  isNormal_enumField.strictMono.le_apply
+
+theorem enumRing_le_enumField (x : Ordinal) : enumRing x ≤ enumField x :=
+  Order.enum_anti fun _ ↦ IsField.toIsRing
+
+theorem enumGroup_le_enumField (x : Ordinal) : enumGroup x ≤ enumField x :=
+  (enumGroup_le_enumRing x).trans (enumRing_le_enumField x)
 
 @[simp]
 theorem enumField_zero : enumField 0 = ∗2 := by

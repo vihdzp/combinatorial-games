@@ -60,6 +60,7 @@ theorem wpow_def (x : NatOrdinal) : ω^ x = of (ω ^ x.val) := rfl
 @[simp] theorem wpow_zero : ω^ (0 : NatOrdinal) = 1 := by simp [wpow_def]
 @[simp] theorem wpow_pos (x : NatOrdinal) : 0 < ω^ x := opow_pos _ omega0_pos
 @[simp] theorem wpow_ne_zero (x : NatOrdinal) : ω^ x ≠ 0 := (wpow_pos x).ne'
+@[simp] theorem wpow_one : ω^ (1 : NatOrdinal) = of ω := by simp [wpow_def]
 
 theorem isNormal_wpow : Order.IsNormal (ω^ · : NatOrdinal → NatOrdinal) :=
   Ordinal.isNormal_opow one_lt_omega0
@@ -217,6 +218,11 @@ theorem of_natCast_opow_mul_natCast {x : Ordinal} (m n : ℕ) : of (m ^ x * n) =
   | succ m => simpa using
       of_natCast_opow_mul_natCast_add_of_lt' (opow_pos x m.cast_add_one_pos) n (m := m + 1)
 
+theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) :
+    of (2 ^ log 2 o) + of (o % 2 ^ log 2 o) = of o := by
+  conv_rhs => rw [← Ordinal.two_opow_log_add ho]
+  exact (of_natCast_opow_add_of_lt' (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm
+
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
   obtain rfl | hx := eq_or_ne x 0; · simp
   obtain rfl | hy := eq_or_ne y 0; · simp
@@ -238,6 +244,23 @@ theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
       rw [← mul_assoc, ← wpow_add]
       exact wpow_mul_natCast_lt (add_lt_add_right hb x) m
 termination_by (x, y)
+
+theorem mul_lt_wpow_wpow (hx : x < ω^ ω^ z) (hy : y < ω^ ω^ z) : x * y < ω^ ω^ z := by
+  cases x with | of x
+  cases y with | of y
+  obtain rfl | hz := eq_or_ne z 0
+  · simp_rw [wpow_zero, wpow_one, of.lt_iff_lt, Ordinal.lt_omega0] at hx hy
+    obtain ⟨m, rfl⟩ := hx
+    obtain ⟨n, rfl⟩ := hy
+    simpa [← Nat.cast_mul] using Ordinal.natCast_lt_omega0 (m * n)
+  · rw [← val_ne_zero] at hz
+    rw [wpow_def, of.lt_iff_lt, val_wpow, lt_omega0_omega0_opow hz] at hx hy
+    obtain ⟨a, ha, m, hm⟩ := hx
+    obtain ⟨b, hb, n, hn⟩ := hy
+    rw [← of.lt_iff_lt] at hm hn
+    apply (mul_le_mul' hm.le hn.le).trans_lt
+    rw [← of_lt_iff] at ha hb
+    simpa [← wpow_add] using add_lt_wpow (wpow_mul_natCast_lt ha m) (wpow_mul_natCast_lt hb n)
 
 end NatOrdinal
 end

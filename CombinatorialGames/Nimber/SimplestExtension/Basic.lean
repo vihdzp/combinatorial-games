@@ -9,6 +9,7 @@ public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
+import CombinatorialGames.NatOrdinal.Pow
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
@@ -49,6 +50,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 /-! #### Ordinal lemmas -/
 
 namespace Ordinal
+
+@[simp]
+theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
 
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
@@ -241,6 +246,10 @@ termination_by x
 theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
+
+@[simp]
+theorem IsGroup.omega0 : IsGroup (∗ω) := by
+  simpa using IsGroup.omega0_opow 1
 
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
