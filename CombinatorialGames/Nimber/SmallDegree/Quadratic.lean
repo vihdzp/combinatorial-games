@@ -63,6 +63,9 @@ theorem Ordinal.type_lt_Ico (a b : Ordinal.{u}) : typeLT (Set.Ico a b) = lift.{u
 namespace Nimber
 open Order Polynomial Set
 
+/-- A nimber is called a quadratic irreducible if it cannot be expressed as a finite sum of
+smaller quadratic irreducibles and elements of the form `y ^ 2 - y`
+for `y` in the smallest nimber field containing `x`. -/
 @[expose]
 def quadraticIrreducibles : Set Nimber :=
   {x | IsGroup x ∧ ∀ y < fieldClosure (succ x), x ≤ y ^ 2 - y - x}
@@ -202,9 +205,18 @@ private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     intro t
     exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.2)
 
+/-- For `x` a field, `quadraticLower x` is the ordinal index into `quadraticIrreducibles` giving
+the smallest element of `quadraticIrreducibles` which is still irreducible in `x`, meaning,
+it cannot be expressed as a finite sum of smaller quadratic irreducibles and
+elements of the form `y ^ 2 - y` for `y < x`.
+For `x` not a field, `quadraticLower x = quadraticLower (fieldClosure x)`. -/
 def quadraticLower (x : Nimber) : Ordinal :=
   quadraticAux ((fun y => y ^ 2 - y) '' Iio (fieldClosure x))
 
+/-- For `x` a field, `quadraticUpper x` is the ordinal index into `quadraticIrreducibles` giving
+the unique element `y` of `quadraticIrreducibles` satisfying
+`y ≤ z ↔ x ≤ z` for `z ∈ quadraticIrreducibles`.
+For `x` not a field, `quadraticUpper x = quadraticUpper (fieldClosure x)`. -/
 def quadraticUpper (x : Nimber) : Ordinal :=
   quadraticAux (Iio (fieldClosure x))
 
