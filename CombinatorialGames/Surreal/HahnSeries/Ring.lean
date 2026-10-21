@@ -12,27 +12,23 @@ import CombinatorialGames.Surreal.Omnific.Basic
 We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as ordered rings.
 
 Conway omits this proof entirely. This file is loosely based on pages 429-431 of Siegel.
-
-## Addition
-
-For this proof, we reuse the `PartialSeq` API that we created in order to show the equivalence
-between surreals and Hahn sequences. We notice that if `y.support < x.support` pairwise, then `x` is
-a partial sum for `x + y`. This lets us relate the Hahn series of both.
-
-
-
-TODO: finish writing
 -/
 
 universe u
 
 noncomputable section
 
+@[simp]
 lemma LinearOrderedAddCommGroupWithTop.sub_nonneg {α} [LinearOrderedAddCommGroupWithTop α]
     {a b : α} : 0 ≤ a - b ↔ b ≤ a ∨ b = ⊤ := by
   obtain rfl | hb := eq_or_ne b ⊤
   · simp
   · simp [← sub_self_eq_zero_of_ne_top hb, hb]
+
+lemma LinearOrderedAddCommGroupWithTop.sub_nonneg_of_le {α} [LinearOrderedAddCommGroupWithTop α]
+    {a b : α} (h : b ≤ a) : 0 ≤ a - b := by
+  rw [sub_nonneg]
+  exact .inl h
 
 namespace Surreal
 open ArchimedeanClass Order Set SurrealHahnSeries
@@ -66,11 +62,6 @@ def ofAdd : PartialSum (x + y) where
 
 theorem truncIdx_top_add_length : (⊤ : PartialSum (x + y)).truncIdx x.length = ofAdd x y h :=
   truncIdx_length_of_le (y := ofAdd x y h) le_top
-
-@[simp]
-theorem term_succ_ofAdd_length : (succ (ofAdd x y h)).carrier.term x.length = y.leadingTerm := by
-  rw [← length_ofAdd h, term_succ_length, carrier_ofAdd, toSurreal_toHahnSeries,
-    add_sub_cancel_left]
 
 end PartialSum
 
@@ -119,12 +110,12 @@ private theorem trunc_add_of_subset {i : Surreal} (hx : x.support ⊆ Ioi i) (hy
   have hl := truncIdx_of_lt <| lt_length_add_of_subset hx' hy₀
   rw [exp_add_length_of_subset hx' hy₀] at hl
   conv_rhs => rw [← truncIdx_add_length_of_subset hx']
-  rw [hl, SurrealHahnSeries.toSurreal_trunc, toSurreal_toHahnSeries]
+  rw [hl, toSurreal_trunc, toSurreal_toHahnSeries]
   refine (trunc_eq_trunc hy fun k hek hki ↦ ?_).symm
   contrapose! hki
   apply hx
-  rw [← truncIdx_add_length_of_subset hx', hl, SurrealHahnSeries.toSurreal_trunc,
-    toSurreal_toHahnSeries, support_trunc]
+  rw [← truncIdx_add_length_of_subset hx', hl, toSurreal_trunc, toSurreal_toHahnSeries,
+    support_trunc]
   exact ⟨hki, hek⟩
 
 private theorem coeff_add_of_subset {i : Surreal} (hx : x.support ⊆ Ioi i) (hy : y ≤ᵥ ω^ i) :
@@ -148,6 +139,7 @@ private theorem coeff_add_of_subset {i : Surreal} (hx : x.support ⊆ Ioi i) (hy
         ← wlog_lt_iff hy₀]
       exact .inl hy
 
+@[simp]
 theorem sub_trunc_vle_wpow (x i : Surreal) : x - x.trunc i ≤ᵥ ω^ i := by
   obtain ⟨j, hj⟩ := trunc_mem_range_truncIdx x.toHahnSeries i
   obtain hsub | hsub := eq_or_ne (x - x.trunc i) 0; · simp [hsub]
@@ -162,18 +154,21 @@ theorem sub_trunc_vle_wpow (x i : Surreal) : x - x.trunc i ≤ᵥ ω^ i := by
     rw [hj]
     simpa
 
-private theorem mk_sub_trunc_div_wpow_nonneg {x i : Surreal} :
-    0 ≤ ArchimedeanClass.mk ((x - x.trunc i) / ω^ i) := by
-  rw [ArchimedeanClass.mk_div, LinearOrderedAddCommGroupWithTop.sub_nonneg, ← vle_def]
-  exact .inl (sub_trunc_vle_wpow x i)
+@[simp]
+theorem trunc_sub_vle_wpow (x i : Surreal) : x.trunc i - x ≤ᵥ ω^ i := by
+  rw [← neg_vle, neg_sub]
+  exact sub_trunc_vle_wpow x i
 
-theorem coeff_eq_stdPart {x i : Surreal} : x.coeff i = stdPart ((x - x.trunc i) / ω^ i) := by
+private theorem mk_sub_trunc_div_wpow_nonneg {i : Surreal} :
+    0 ≤ ArchimedeanClass.mk ((x - x.trunc i) / ω^ i) := by
+  simp [← vle_def]
+
+theorem coeff_eq_stdPart {i : Surreal} : x.coeff i = stdPart ((x - x.trunc i) / ω^ i) := by
   conv_lhs => rw [← add_sub_cancel (x.trunc i) x]
   apply coeff_add_of_subset _ (sub_trunc_vle_wpow x i)
   simp
 
-theorem support_subset_of_round_eq {x y : Surreal} (hx : x.round y = x) (hy : 0 < y) :
-    support x ⊆ Ici y.wlog := by
+theorem support_subset_of_round_eq (hx : x.round y = x) (hy : 0 < y) : support x ⊆ Ici y.wlog := by
   intro z hzy
   rw [mem_Ici]
   contrapose! hzy
@@ -182,49 +177,33 @@ theorem support_subset_of_round_eq {x y : Surreal} (hx : x.round y = x) (hy : 0 
   have H : ArchimedeanClass.mk y < .mk (x - x.toHahnSeries.truncIdx i) := by
     nth_rw 1 [← toSurreal_toHahnSeries x]
     conv_rhs => rw [← mk_leadingTerm, leadingTerm_sub_truncIdx, mk_term i.2]
-    rw [← vlt_def, ← wlog_lt_wlog_iff (by simp) hy.ne']
-    simpa
+    rwa [← vlt_def, ← lt_wlog_iff hy.ne']
   refine (@birthday_round_le x (x.toHahnSeries.truncIdx i) y ⟨?_, ?_⟩).not_gt ?_
   · rw [sub_lt_comm]
     exact lt_of_mk_lt_mk_of_nonneg H hy.le
   · rw [← sub_lt_iff_lt_add']
     apply lt_of_mk_lt_mk_of_nonneg _ hy.le
     rwa [mk_sub_comm]
-  · apply (birthday_truncIdx_lt i.2).trans_eq
-    simp [hx]
+  · grw [birthday_truncIdx_lt i.2, hx, toSurreal_toHahnSeries]
 
-theorem support_subset_of_round_wpow_eq {x y : Surreal} (h : x.round (ω^ y) = x) :
-    support x ⊆ Ici y := by
+theorem support_subset_of_round_wpow_eq (h : x.round (ω^ y) = x) : support x ⊆ Ici y := by
   simpa using support_subset_of_round_eq h
 
 /-- Omnific integers have no infinitesimal part. -/
 theorem IsOmnific.support_subset {x : Surreal} (h : IsOmnific x) : support x ⊆ Ici 0 := by
   simpa using support_subset_of_round_eq h
 
--- AI
 include h in
 theorem eq_round_of_support_subset (hy : 0 < y) : x.round y = x := by
-  apply round_eq_of_forall_birthday_le
-  · simpa
-  · intro w hw
-    convert SurrealHahnSeries.birthday_trunc_le w.toHahnSeries y.wlog
-    · symm
-      rw [SurrealHahnSeries.toSurreal_trunc, toSurreal_toHahnSeries]
-      calc
-        w.trunc y.wlog = (x + (w - x)).trunc y.wlog := by
-          congr 2
-          abel
-        _ = x := trunc_add_of_subset h <| by
-          have habs : |w - x| < y := by
-            rw [abs_lt]
-            constructor <;> linarith [hw.1, hw.2]
-          apply ValuativeRel.vle_trans _ (wpow_wlog_veq hy.ne').symm.1
-          rw [vle_def]
-          exact ArchimedeanClass.mk_le_mk_of_abs (by simpa [abs_of_pos hy] using habs.le)
-    · exact (toSurreal_toHahnSeries w).symm
+  refine round_eq_of_forall_birthday_le (by simpa) fun w hw ↦ ?_
+  rw [← toSurreal_toHahnSeries w]
+  convert ← birthday_trunc_le _ y.wlog
+  rw [SurrealHahnSeries.toSurreal_trunc, toSurreal_toHahnSeries, ← add_sub_cancel x w]
+  apply trunc_add_of_subset h <| ValuativeRel.vle_trans _ (wpow_wlog_veq hy.ne').ge
+  apply ArchimedeanClass.mk_le_mk_of_abs
+  grind
 
-theorem eq_round_wpow_of_support_subset {x y : Surreal} (hx : x.support ⊆ Ioi y) :
-    x.round (ω^ y) = x :=
+theorem eq_round_wpow_of_support_subset (hx : x.support ⊆ Ioi y) : x.round (ω^ y) = x :=
   eq_round_of_support_subset (by simpa) (by simp)
 
 /-- This is a special case of `support_add_subset`. -/
@@ -237,20 +216,20 @@ private theorem support_add_subset_Ioi {z : Surreal}
       refine eq_round_wpow_of_support_subset fun w hw ↦ ?_
       aesop
 
--- AI
 @[simp, norm_cast]
 theorem toHahnSeries_add (x y : Surreal) :
     (x + y).toHahnSeries = x.toHahnSeries + y.toHahnSeries := by
   ext i
-  rw [coeff_toHahnSeries, SurrealHahnSeries.coeff_add_apply]
+  rw [coeff_toHahnSeries, coeff_add_apply]
   trans ((x.trunc i + y.trunc i) + ((x - x.trunc i) + (y - y.trunc i))).coeff i
   · abel_nf
   · rw [coeff_add_of_subset, add_div,
-      stdPart_add mk_sub_trunc_div_wpow_nonneg mk_sub_trunc_div_wpow_nonneg]
-    · rw [coeff_toHahnSeries x, coeff_toHahnSeries y, coeff_eq_stdPart, coeff_eq_stdPart]
+      stdPart_add mk_sub_trunc_div_wpow_nonneg mk_sub_trunc_div_wpow_nonneg,
+      coeff_toHahnSeries, coeff_toHahnSeries, coeff_eq_stdPart, coeff_eq_stdPart]
     · apply support_add_subset_Ioi <;> simp
     · apply ValuativeRel.vle_add <;> exact sub_trunc_vle_wpow _ _
 
+/-- `Surreal.toHahnSeries` as an `OrderAddMonoidIso`. -/
 @[simps!]
 def toHahnSeriesMonoidIso : Surreal ≃+o SurrealHahnSeries where
   map_add' := toHahnSeries_add
