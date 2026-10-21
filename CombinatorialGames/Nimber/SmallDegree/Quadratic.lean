@@ -384,6 +384,8 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
     hw.quadraticLower_fieldClosure_succ_of_le_leastNoRoots
   have ihl (w : Nimber) (hw : IsField w) (hwx : w < x) :=
     @hw.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_lt
+  have ihm (w : Nimber) (hw : IsField w) (hwx : w < x) :=
+    hw.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt
   induction y using WellFoundedLT.induction generalizing z with | ind y ihy
   obtain ⟨o, hox⟩ := mem_range_enumField_iff.2 hx
   by_cases ho0 : o = 0
@@ -505,11 +507,10 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
       rw [← sub_add_cancel (z ^ 2 - z) y, ← sub_eq_sub_iff_add_eq_add, eq_sub_iff_add_eq] at hzr
       have haao : (a ^ 2 - a) * Nimber.enumField o < Nimber.enumField o := by
         rw [← hzr]
-        stop
         exact (IsField.enumField o).add_lt ((IsField.enumField o).sub_lt hcx
           ((IsField.enumField o).add_lt
             ((IsField.enumField o).mul_lt ((IsField.enumField o).pow_lt hax)
-              ((IsField.enumField o).sq_lt_self_of_not_perfectField perf))
+              (ihm (Nimber.enumField o) (IsField.enumField o) hxe perf h2))
             ((IsField.enumField o).sub_lt ((IsField.enumField o).pow_lt hbx) hbx))) hlt
       apply haao.not_ge
       rw [mul_comm, ← (IsField.enumField o).mul_eq_of_lt (IsField.enumField o).toIsRing le_rfl
