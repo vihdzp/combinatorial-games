@@ -87,7 +87,7 @@ theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) 
     rw [CharTwo.add_sq, ← CharTwo.sub_eq_add, ← CharTwo.sub_eq_add, ← neg_zero, ← hcr]
     ring
   -- todo: figure out how to reduce code duplication with
-  -- the other lemma `IsAlgClosed.leastNoRoots_fieldClosure_succ` in `Quadratic.lean`
+  -- the other lemma `IsAlgClosed.leastNoRoots_fieldClosure_succ` in `Inseparable.lean`
   let e := (RatFunc.algEquivOfTranscendental t ht.transcendental).toRingEquiv.trans
     -- (.subfieldCongr ht.fieldAdjoin_simple_self)
     -- -- `IntermediateField.adjoin` shouldn't be exposed
