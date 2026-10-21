@@ -55,6 +55,8 @@ public theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClo
     simp_rw [Subtype.ext_iff, Subfield.coe_sub, Subfield.coe_zero, SubmonoidClass.coe_pow, tt, rr]
     rw [CharTwo.add_sq, ← CharTwo.sub_eq_add, ← CharTwo.sub_eq_add, ← neg_zero, ← hcr]
     ring
+  -- todo: figure out how to reduce code duplication with
+  -- the other lemma `IsAlgClosed.leastNoRoots_fieldClosure_succ` in `Quadratic.lean`
   let e := (RatFunc.algEquivOfTranscendental t ht.transcendental).toRingEquiv.trans
     -- (.subfieldCongr ht.fieldAdjoin_simple_self)
     -- -- `IntermediateField.adjoin` shouldn't be exposed
@@ -303,6 +305,7 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber
     rw [add_one_le_iff]
     set c : quadraticIrreducibles := ⟨r ^ 2 - r, hcq⟩
     rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio, hfs] at hrx
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
     obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hrx
     rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
     rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
@@ -481,6 +484,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
     have hfs : fieldClosure (succ (Nimber.enumField o)) = of (val (Nimber.enumField o) ^ 2) :=
       (IsField.enumField o).fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
     rw [← hox, hfs] at hz
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
     obtain ⟨p, hpd, hpc, hz⟩ := eq_oeval_of_lt_pow (IsField.enumField o).ne_zero hz
     rw [← (IsField.enumField o).eval_eq_of_lt
       (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hz
@@ -527,6 +531,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
     rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
       sub_eq_zero] at hrt
     rw [← hox, hfs] at hz
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
     obtain ⟨p, hpd, hpc, hz⟩ := eq_oeval_of_lt_pow (IsField.enumField o).ne_zero hz
     rw [← (IsField.enumField o).eval_eq_of_lt
       (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hz
@@ -682,6 +687,7 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
     apply add_left_mono
     set c : quadraticIrreducibles := ⟨r ^ 2 - r, hcq⟩
     rw [(IsField.fieldClosure _).fieldClosure_eq, mem_Iio, hfs] at hrx
+    -- todo: figure out how to reduce code duplication with the other theorems in this file
     obtain ⟨p, hpd, hpc, hr⟩ := eq_oeval_of_lt_pow hx.ne_zero hrx
     rw [← hx.eval_eq_of_lt (X_pow_lt_leastNoRoots_of_le_degree hnt hld.ge).le hpd hpc] at hr
     rw [show Nat.cast 2 = Order.succ (1 : WithBot Nat) from rfl, lt_succ_iff] at hpd
