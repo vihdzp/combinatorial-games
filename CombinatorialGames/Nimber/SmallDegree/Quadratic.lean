@@ -17,7 +17,8 @@ import Mathlib.RingTheory.Valuation.Integral
 /-!
 # Separable quadratic nimber extensions
 
-TODO: write module docstring
+todo: write module docstring
+todo: prove `quadraticLower` is surjective
 -/
 
 universe u
