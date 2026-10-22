@@ -70,14 +70,14 @@ theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr]
-  apply birthday_ofSets_le_of_mem <;> simp_all
+  apply birthday_ofSets_le_of_btwn <;> simp_all
 
 theorem birthday_round_lt {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) (hy : x.round r ≠ y) :
     (x.round r).birthday < y.birthday := by
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr] at hy ⊢
-  apply birthday_ofSets_lt_of_mem <;> simp_all
+  apply birthday_ofSets_lt_of_btwn <;> simp_all
 
 theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
@@ -215,6 +215,7 @@ private def omnificSubring : Subring Surreal where
 def Omnific : Type _ := omnificSubring
 deriving CommRing, LinearOrder, IsStrictOrderedRing
 
+/-- The coercion from omnific integers into surreals. -/
 @[coe] def Omnific.coe (x : Omnific) : Surreal := x.1
 instance : Coe Omnific Surreal := ⟨Omnific.coe⟩
 
@@ -250,7 +251,6 @@ theorem Omnific.coe_add_one (x : Omnific) : ((x + 1 : Omnific) : Surreal) = x + 
 @[ext] theorem Omnific.ext {x y : Omnific} (h : x.coe = y.coe) : x = y := Subtype.ext h
 
 /-- Cast an ordinal to an omnific integer. -/
-@[expose, simps!]
 def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   toFun x := Omnific.mk x (IsOmnific.natOrdinal x)
   map_zero' := by ext; simp
@@ -258,6 +258,8 @@ def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   map_add' _ _ := by ext; simp
   map_mul' _ _ := by ext; simp
   monotone' _ := by simp [← Omnific.coe_le_coe]
+
+@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := (rfl)
 
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
