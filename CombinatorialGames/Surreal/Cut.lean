@@ -493,6 +493,14 @@ noncomputable instance : AddAction Surreal Cut where
   add_vadd a b x := by ext; simp [sub_sub]
 
 @[simp]
+theorem vadd_bot (a : Surreal) : a +ᵥ (⊥ : Cut) = ⊥ := by
+  ext; simp
+
+@[simp]
+theorem vadd_top (a : Surreal) : a +ᵥ (⊤ : Cut) = ⊤ := by
+  ext; simp
+
+@[simp]
 theorem vadd_leftGame (a : Surreal) (x : Game) : a +ᵥ leftGame x = leftGame (a.toGame + x) := by
   ext; simp [le_sub_iff_add_le']
 
@@ -510,14 +518,6 @@ theorem vadd_rightSurreal (a x : Surreal) : a +ᵥ rightSurreal x = rightSurreal
 
 theorem neg_vadd (a : Surreal) (x : Cut) : -(a +ᵥ x) = -a +ᵥ -x := by
   ext; simp [sub_eq_add_neg, add_comm]
-
-@[simp]
-theorem vadd_bot (a : Surreal) : a +ᵥ (⊥ : Cut) = ⊥ := by
-  ext; simp
-
-@[simp]
-theorem vadd_top (a : Surreal) : a +ᵥ (⊤ : Cut) = ⊤ := by
-  ext; simp
 
 /-! ### Calculating cuts -/
 
