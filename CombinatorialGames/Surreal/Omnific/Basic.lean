@@ -196,6 +196,12 @@ theorem IsOmnific.birthday_le_of_mem_Ioo {x y : Surreal} (h : IsOmnific x)
     (hy : y ∈ Ioo (x - 1) (x + 1)) : x.birthday ≤ y.birthday :=
   h ▸ birthday_round_le hy
 
+theorem IsOmnific.natOrdinal (x : NatOrdinal) : IsOmnific x := by
+  refine round_eq_of_forall_birthday_le (by simp) fun z ⟨hz, ?_⟩ ↦ ?_
+  grw [sub_lt_iff_lt_add, le_toSurreal_birthday z] at hz
+  rwa [← NatOrdinal.toSurreal_one, ← NatOrdinal.toSurreal_add, NatOrdinal.toSurreal.lt_iff_lt,
+    Order.lt_add_one_iff, ← birthday_toSurreal x] at hz
+
 /-- The subring of `IsOmnific` surreal numbers. -/
 private def omnificSubring : Subring Surreal where
   carrier := {x | IsOmnific x}
@@ -242,6 +248,16 @@ theorem Omnific.coe_add_one (x : Omnific) : ((x + 1 : Omnific) : Surreal) = x + 
     (x : Surreal) = y ↔ x = y := Subtype.coe_inj
 
 @[ext] theorem Omnific.ext {x y : Omnific} (h : x.coe = y.coe) : x = y := Subtype.ext h
+
+/-- Cast an ordinal to an omnific integer. -/
+@[expose, simps!]
+def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
+  toFun x := Omnific.mk x (IsOmnific.natOrdinal x)
+  map_zero' := by ext; simp
+  map_one' := by ext; simp
+  map_add' _ _ := by ext; simp
+  map_mul' _ _ := by ext; simp
+  monotone' _ := by simp [← Omnific.coe_le_coe]
 
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
@@ -291,6 +307,17 @@ instance : SuccOrder Omnific :=
 
 instance : SuccAddOrder Omnific where
   succ_eq_add_one x := by rfl
+
+@[no_expose]
+instance : PredOrder Omnific :=
+  .ofCore (fun x ↦ x - 1) (by
+    refine @fun x _ y ↦ ⟨fun h ↦ ?_, (sub_one_lt x).trans_le'⟩
+    rwa [le_sub_comm, ← Omnific.coe_le_coe, Omnific.coe_one,
+      (Omnific.prop _).one_le_iff_pos, Omnific.coe_sub, lt_sub_iff_add_lt, zero_add]
+  ) (by simp)
+
+instance : PredSubOrder Omnific where
+  pred_eq_sub_one x := by rfl
 
 end Surreal
 end
