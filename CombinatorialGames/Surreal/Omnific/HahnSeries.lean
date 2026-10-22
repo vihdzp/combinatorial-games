@@ -9,6 +9,9 @@ public import CombinatorialGames.Surreal.HahnSeries.Ring
 
 /-!
 # Characterization of omnific integers by Hahn series
+
+We show that omnific integers are exactly those whose support is contained in the nonnegative
+surreals, and whose zero coefficient is an integer.
 -/
 
 public noncomputable section
@@ -18,7 +21,6 @@ open Set
 namespace Surreal
 variable {x y : Surreal}
 
-/-- Omnific integers have no infinitesimal part. -/
 theorem IsOmnific.support_subset (h : IsOmnific x) : support x ⊆ Ici 0 := by
   simpa using support_subset_of_round_eq h
 
@@ -59,6 +61,11 @@ theorem isOmnific_iff_subset_and_mem_range :
     · apply support_sub_subset.trans (union_subset hx <| support_realCast_subset.trans _)
       simp
     · simp
+
+@[simp]
+theorem isOmnific_wpow_iff : IsOmnific (ω^ x) ↔ 0 ≤ x := by
+  rw [isOmnific_iff_subset_and_mem_range]
+  aesop
 
 end Surreal
 end
