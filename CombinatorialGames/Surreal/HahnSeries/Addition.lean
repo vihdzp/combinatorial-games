@@ -222,7 +222,7 @@ theorem toHahnSeries_add (x y : Surreal) :
       stdPart_add mk_sub_trunc_div_wpow_nonneg mk_sub_trunc_div_wpow_nonneg,
       coeff_toHahnSeries, coeff_toHahnSeries, coeff_eq_stdPart, coeff_eq_stdPart]
     · apply support_add_subset_Ioi <;> simp
-    · apply ValuativeRel.vle_add <;> exact sub_trunc_vle_wpow _ _
+    · apply ValuativeRel.vle_add <;> exact sub_trunc_vle_wpow _ i
 
 /-- `Surreal.toHahnSeries` as an `OrderAddMonoidIso`. -/
 @[expose, simps!]

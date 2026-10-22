@@ -671,7 +671,7 @@ theorem toSurreal_def (x : SurrealHahnSeries) :
   rw [toSurreal_def', Surreal.mk_ofSets]
   congr <;> aesop
 
-theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
+theorem leadingTerm_sub_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.leadingTerm (x - x.truncIdx i) = x.term i := by
   obtain hi | hi := le_or_gt x.length i
   · rw [term_of_ge hi, truncIdx_of_ge hi, sub_self, Surreal.leadingTerm_zero]
@@ -686,6 +686,20 @@ theorem leadingTerm_sub_truncIdx {x : SurrealHahnSeries} {i : Ordinal} :
       refine ⟨fun j hj ↦ ?_, ?_⟩
       · rw [coeff_truncIdx_of_lt hi hj, coeff_single_of_ne hj.ne, add_zero]
       · rwa [coeff_truncIdx_of_ge hi le_rfl, zero_add]
+
+theorem leadingCoeff_sub_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
+    Surreal.leadingCoeff (x - x.truncIdx i) = x.coeffIdx i := by
+  rw [← Surreal.leadingCoeff_leadingTerm, leadingTerm_sub_truncIdx, leadingCoeff_term]
+
+/-- This proves the characterization of `leadingTerm`. -/
+theorem leadingTerm_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.leadingTerm = x.term 0 := by
+  simpa using leadingTerm_sub_truncIdx x 0
+
+/-- This proves the characterization of `leadingCoeff`. -/
+theorem leadingCoeff_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.leadingCoeff = x.coeffIdx 0 := by
+  simpa using leadingCoeff_sub_truncIdx x 0
 
 theorem birthday_truncIdx_le (x : SurrealHahnSeries) (i : Ordinal) :
     Surreal.birthday (x.truncIdx i) ≤ Surreal.birthday x := by

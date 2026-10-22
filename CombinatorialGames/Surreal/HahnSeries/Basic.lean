@@ -6,19 +6,9 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Leading
-public import Mathlib.Order.Shrink
-public import Mathlib.RingTheory.HahnSeries.Lex
-public import CombinatorialGames.Surreal.Pow
-public import Mathlib.Order.PiLex
 
-import Mathlib.Algebra.Field.Subfield.Basic
-import Mathlib.Algebra.Ring.Subring.Order
-import Mathlib.Analysis.Normed.Group.Basic
-import Mathlib.Data.EReal.Operations
 import Mathlib.RingTheory.HahnSeries.Cardinal
 import Mathlib.RingTheory.HahnSeries.Lex
-import Mathlib.Topology.Algebra.InfiniteSum.Order
-import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Surreal Hahn series
@@ -110,6 +100,10 @@ def mk (f : Surreal.{u} → ℝ) (small : Small.{u} (Function.support f))
 def coeff (x : SurrealHahnSeries) (i : Surreal) : ℝ :=
   x.1.coeff <| OrderDual.toDual i
 
+@[ext]
+theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
+  Subtype.ext <| HahnSeries.ext h
+
 @[simp, grind =] theorem coeff_mk (f small wf) : coeff (mk f small wf) = f := (rfl)
 @[simp, grind =] theorem coeff_zero : coeff 0 = 0 := (rfl)
 @[simp, grind =] theorem coeff_one : coeff 1 = Pi.single 0 1 := by
@@ -129,10 +123,6 @@ theorem coeff_add_apply (x y : SurrealHahnSeries) (i : Surreal) :
 
 theorem coeff_sub_apply (x y : SurrealHahnSeries) (i : Surreal) :
     (x - y).coeff i = x.coeff i - y.coeff i := (rfl)
-
-@[ext]
-theorem ext {x y : SurrealHahnSeries} (h : x.coeff = y.coeff) : x = y :=
-  Subtype.ext <| HahnSeries.ext h
 
 /-! #### `support` -/
 
@@ -179,8 +169,7 @@ theorem wellFoundedOn_support (x : SurrealHahnSeries) : x.support.WellFoundedOn 
 instance (x : SurrealHahnSeries) : WellFoundedGT x.support :=
   x.1.isWF_support.to_subtype
 
-instance (x : SurrealHahnSeries) :
-    IsWellOrder { y // y ∈ x.support } (Subrel (· > ·) (· ∈ x.support)) :=
+instance (x : SurrealHahnSeries) : IsWellOrder x.support (Subrel (· > ·) (· ∈ x.support)) :=
   inferInstanceAs (IsWellOrder x.support (· > ·))
 
 instance small_support (x : SurrealHahnSeries.{u}) : Small.{u} x.support := by
@@ -193,6 +182,32 @@ theorem mk_coeff (x : SurrealHahnSeries) : mk x.coeff x.small_support x.wellFoun
 
 theorem lt_def {x y : SurrealHahnSeries} : x < y ↔ toColex x.coeff < toColex y.coeff := .rfl
 theorem le_def {x y : SurrealHahnSeries} : x ≤ y ↔ toColex x.coeff ≤ toColex y.coeff := .rfl
+
+/-- `SurrealHahnSeries.antidiagonal x y i` is the set of all pairs in the supports of `x` and `y`
+that add to `i`. By the well-ordering condition, this is a finite set. -/
+def antidiagonal (x y : SurrealHahnSeries) (i : Surreal) : Finset (Surreal × Surreal) :=
+  (Finset.antidiagonal x.1.isWF_support.isPWO y.1.isWF_support.isPWO (OrderDual.toDual i) :)
+
+@[simp]
+theorem mem_antidiagonal {x y} {i j} : j ∈ antidiagonal x y i ↔
+    j.1 ∈ x.support ∧ j.2 ∈ y.support ∧ j.1 + j.2 = i :=
+  Finset.mem_antidiagonal ..
+
+theorem coeff_mul (x y : SurrealHahnSeries) (i : Surreal) :
+    (x * y).coeff i = ∑ ij ∈ antidiagonal x y i, x.coeff ij.1 * y.coeff ij.2 :=
+  (rfl)
+
+@[simp]
+theorem antidiagonal_zero_left (x i) : antidiagonal 0 x i = ∅ := by
+  ext; simp
+
+@[simp]
+theorem antidiagonal_zero_right (x i) : antidiagonal x 0 i = ∅ := by
+  ext; simp
+
+open Pointwise in
+theorem support_mul_subset {x y : SurrealHahnSeries} : (x * y).support ⊆ x.support + y.support :=
+  HahnSeries.support_mul_subset (x := x.1)
 
 /-! #### `single` -/
 
@@ -217,6 +232,32 @@ theorem coeff_single_of_ne {x y : Surreal} (h : x ≠ y) (r : ℝ) : (single x r
 
 theorem support_single_subset {x : Surreal} {r : ℝ} : support (single x r) ⊆ {x} := by
   aesop
+
+theorem support_single_of_ne {x : Surreal} {r : ℝ} (hr : r ≠ 0) : (single x r).support = {x} :=
+  Pi.support_single_of_ne hr
+
+open Classical in
+private theorem antidiagonal_single_left {r i x j} (hr : r ≠ 0) :
+    antidiagonal (single i r) x j = if j - i ∈ x.support then {(i, j - i)} else ∅ := by
+  aesop
+
+theorem coeff_single_mul_add {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
+    (single j r * x).coeff (i + j) = r * x.coeff i := by
+  obtain rfl | hr := eq_or_ne r 0; · simp
+  rw [coeff_mul, antidiagonal_single_left hr]
+  aesop
+
+theorem coeff_mul_single_add {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
+    (x * single j r).coeff (i + j) = x.coeff i * r := by
+  rw [mul_comm, coeff_single_mul_add, mul_comm]
+
+theorem coeff_single_mul {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
+    (single j r * x).coeff i = r * x.coeff (i - j) := by
+  simpa using coeff_single_mul_add (i := i - j) (j := j)
+
+theorem coeff_mul_single {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
+    (x * single j r).coeff i = x.coeff (i - j) * r := by
+  simpa using coeff_mul_single_add (i := i - j) (j := j)
 
 /-! #### `trunc` -/
 
@@ -500,7 +541,7 @@ theorem truncIdx_of_ge {x : SurrealHahnSeries} {i : Ordinal} (h : x.length ≤ i
   rw [truncIdx, dite_eq_right h.not_gt]
 
 @[simp]
-theorem truncIdx_zero : truncIdx 0 = 0 := by
+theorem truncIdx_zero_left : truncIdx 0 = 0 := by
   ext j; simp [truncIdx]
 
 @[simp, grind =]
@@ -540,6 +581,10 @@ theorem length_truncIdx (x : SurrealHahnSeries) (i : Ordinal) :
         aesop
     · simpa using hi.le
   · rw [truncIdx_of_ge hi, min_eq_right hi]
+
+@[simp]
+theorem truncIdx_zero_right (x : SurrealHahnSeries) : x.truncIdx 0 = 0 := by
+  rw [← length_eq_zero, length_truncIdx, zero_min]
 
 theorem length_trunc_lt {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x.support) :
     (x.trunc i).length < x.length := by
@@ -632,7 +677,7 @@ theorem trunc_mem_range_truncIdx (x : SurrealHahnSeries) (i : Surreal) :
 /-- Returns the `i`-th largest term of the sum, or `0` if it doesn't exist. -/
 @[expose]
 def term (x : SurrealHahnSeries) (i : Ordinal) : Surreal :=
-  if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, hi⟩).1 else 0
+  if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, mem_Iio.2 hi⟩).1 else 0
 
 theorem term_of_lt {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     x.term i = x.coeffIdx i * ω^ (x.exp ⟨i, mem_Iio.2 hi⟩).1 :=
