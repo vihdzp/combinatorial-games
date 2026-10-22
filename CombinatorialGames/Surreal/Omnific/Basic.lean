@@ -215,6 +215,7 @@ private def omnificSubring : Subring Surreal where
 def Omnific : Type _ := omnificSubring
 deriving CommRing, LinearOrder, IsStrictOrderedRing
 
+/-- The coercion from omnific integers into surreals. -/
 @[coe] def Omnific.coe (x : Omnific) : Surreal := x.1
 instance : Coe Omnific Surreal := ⟨Omnific.coe⟩
 
