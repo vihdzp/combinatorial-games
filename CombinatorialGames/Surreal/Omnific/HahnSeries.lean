@@ -72,6 +72,20 @@ theorem isOmnific_wpow_iff : IsOmnific (ω^ x) ↔ 0 ≤ x := by
   rw [isOmnific_iff_subset_and_mem_range]
   aesop
 
+/-- Auxiliary declaration for `Omnific.residue`. -/
+private def residueFun (x : Omnific) : ℤ :=
+  x.prop.coeff_zero_mem_range_intCast.choose
+
+private theorem intCast_residueFun (x : Omnific) : residueFun x = x.coe.coeff 0 :=
+  Classical.choose_spec x.prop.coeff_zero_mem_range_intCast
+
+-- TODO: PROVE THIS PRESERVES MULTIPLICATION
+/-- The function which returns the real part of an omnific integer. -/
+def Omnific.residue : Omnific →+ ℤ where
+  toFun := residueFun
+  map_zero' := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
+  map_add' x y := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
+
 /-! ### Floor and ceiling -/
 
 open scoped Classical in
