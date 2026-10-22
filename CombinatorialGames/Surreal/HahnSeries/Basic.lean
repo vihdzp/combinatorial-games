@@ -291,6 +291,14 @@ theorem trunc_single_of_lt {i j : Surreal} {r : ℝ} (h : j < i) :
   aesop (add safe tactic (by order))
 
 @[simp]
+theorem trunc_one_of_ge {i : Surreal} (h : 0 ≤ i) : trunc 1 i = 0 := by
+  rw [← single_one, trunc_single_of_ge h]
+
+@[simp]
+theorem trunc_one_of_lt {i : Surreal} (h : i < 0) : trunc 1 i = 1 := by
+  rw [← single_one, trunc_single_of_lt h]
+
+@[simp]
 theorem trunc_trunc (x : SurrealHahnSeries) (i j : Surreal) :
     (x.trunc i).trunc j = x.trunc (max i j) := by
   ext k

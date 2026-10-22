@@ -51,6 +51,15 @@ theorem coeff_ext {x y : Surreal} (H : ∀ i, x.coeff i = y.coeff i) : x = y := 
   ext i
   exact H i
 
+theorem coeff_strictMono : StrictMono (toColex ∘ coeff) := by
+  intro x y h
+  rwa [← toHahnSeries_lt_toHahnSeries_iff, SurrealHahnSeries.lt_def] at h
+
+theorem lt_iff_coeff {x y : Surreal} : x < y ↔ toColex x.coeff < toColex y.coeff :=
+  coeff_strictMono.lt_iff_lt.symm
+theorem le_iff_coeff {x y : Surreal} : x ≤ y ↔ toColex x.coeff ≤ toColex y.coeff :=
+  coeff_strictMono.le_iff_le.symm
+
 /-! ### `support` -/
 
 /-- The support of a surreal's Conway normal form. -/
@@ -128,9 +137,26 @@ In particular, the purely infinite and finite parts of `x` are given by `x.trunc
 def trunc (x i : Surreal) : Surreal :=
   x.toHahnSeries.trunc i
 
-@[simp]
-theorem trunc_zero (i : Surreal) : trunc 0 i = 0 := by
-  simp [trunc]
+@[simp] theorem trunc_zero (i : Surreal) : trunc 0 i = 0 := by simp [trunc]
+@[simp] theorem trunc_one_of_ge {i : Surreal} (h : 0 ≤ i) : trunc 1 i = 0 := by simp [h, trunc]
+@[simp] theorem trunc_one_of_lt {i : Surreal} (h : i < 0) : trunc 1 i = 1 := by simp [h, trunc]
+
+@[simp] theorem trunc_realCast_of_ge (r : ℝ) {i : Surreal} (h : 0 ≤ i) : trunc r i = 0 := by
+  simp [h, trunc]
+@[simp] theorem trunc_realCast_of_lt (r : ℝ) {i : Surreal} (h : i < 0) : trunc r i = r := by
+  simp [h, trunc]
+@[simp] theorem trunc_ratCast_of_ge (q : ℚ) {i : Surreal} (h : 0 ≤ i) : trunc q i = 0 := by
+  simp [h, trunc]
+@[simp] theorem trunc_ratCast_of_lt (q : ℚ) {i : Surreal} (h : i < 0) : trunc q i = q := by
+  simp [h, trunc]
+@[simp] theorem trunc_intCast_of_ge (n : ℤ) {i : Surreal} (h : 0 ≤ i) : trunc n i = 0 := by
+  simp [h, trunc]
+@[simp] theorem trunc_intCast_of_lt (n : ℤ) {i : Surreal} (h : i < 0) : trunc n i = n := by
+  simp [h, trunc]
+@[simp] theorem trunc_natCast_of_ge (n : ℕ) {i : Surreal} (h : 0 ≤ i) : trunc n i = 0 := by
+  simp [h, trunc]
+@[simp] theorem trunc_natCast_of_lt (n : ℕ) {i : Surreal} (h : i < 0) : trunc n i = n := by
+  simp [h, trunc]
 
 @[simp]
 theorem toHahnSeries_trunc (x i : Surreal) : (x.trunc i).toHahnSeries = x.toHahnSeries.trunc i := by
@@ -148,14 +174,14 @@ theorem coeff_trunc (x i : Surreal) :
   aesop
 
 @[simp]
+theorem coeff_trunc_of_ge {x i j : Surreal} (h : j ≤ i) : (x.trunc i).coeff j = 0 := by
+  rw [coeff_trunc]
+  exact ite_eq_right h.not_gt
+
+@[simp]
 theorem coeff_trunc_of_lt {x i j : Surreal} (h : i < j) : (x.trunc i).coeff j = x.coeff j := by
   rw [coeff_trunc]
   exact ite_eq_left h
-
-@[simp]
-theorem coeff_trunc_of_le {x i j : Surreal} (h : j ≤ i) : (x.trunc i).coeff j = 0 := by
-  rw [coeff_trunc]
-  exact ite_eq_right h.not_gt
 
 @[simp, grind =]
 theorem support_trunc (x i : Surreal) : (x.trunc i).support = x.support ∩ Ioi i := by
@@ -186,13 +212,21 @@ theorem trunc_eq_trunc {x i j : Surreal} (h : i ≤ j)
     (H : ∀ k, i < k → k ≤ j → x.coeff k = 0) : x.trunc i = x.trunc j := by
   simpa [← toHahnSeries_trunc] using x.toHahnSeries.trunc_eq_trunc h H
 
--- Do I need this one?
-open SurrealHahnSeries in
-theorem PartialSum.mem_range_trunc {x : Surreal} (y : PartialSum x) :
-    y.1.toSurreal ∈ range x.trunc := by
-  rw [← truncIdx_length_of_le (y := y) le_top, carrier_truncIdx, carrier_top]
-  obtain ⟨z, hz⟩ := truncIdx_mem_range_trunc x.toHahnSeries y.length
-  rw [← hz]
-  simp
+@[simp]
+theorem trunc_trunc (x i j : Surreal) : (x.trunc i).trunc j = x.trunc (max i j) := by
+  rw [trunc]; simp
+
+/-! ### Infinitesimal part -/
+
+/-- The infinitesimal part of a surreal is obtained by chopping off the nonnegative part of the
+Conway normal form. -/
+@[expose] def infPart (x : Surreal) : Surreal := x - x.trunc 0 - x.coeff 0
+
+@[simp] theorem infPart_realCast (r : ℝ) : infPart r = 0 := by simp [infPart]
+@[simp] theorem infPart_ratCast (q : ℚ) : infPart q = 0 := mod_cast infPart_realCast q
+@[simp] theorem infPart_intCast (n : ℤ) : infPart n = 0 := mod_cast infPart_realCast n
+@[simp] theorem infPart_natCast (n : ℤ) : infPart n = 0 := mod_cast infPart_realCast n
+@[simp] theorem infPart_zero : infPart 0 = 0 := mod_cast infPart_realCast 0
+@[simp] theorem infPart_one : infPart 1 = 0 := mod_cast infPart_realCast 1
 
 end Surreal

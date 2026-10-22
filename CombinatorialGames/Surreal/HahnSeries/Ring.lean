@@ -270,18 +270,49 @@ theorem support_sub_subset {x y : Surreal} : support (x - y) ⊆ support x ∪ s
   simpa [sub_eq_add_neg] using support_add_subset (y := -y)
 
 @[simp]
-theorem coeff_neg (x z : Surreal) : (-x).coeff z = -x.coeff z := by
-  rw [coeff, toHahnSeries_neg, SurrealHahnSeries.coeff_neg]
-  rfl
+theorem coeff_neg (x i : Surreal) : (-x).coeff i = -x.coeff i := by
+  rw [coeff]; simp
 
 @[simp]
-theorem coeff_add (x y z : Surreal) : (x + y).coeff z = x.coeff z + y.coeff z := by
-  rw [coeff, toHahnSeries_add, SurrealHahnSeries.coeff_add]
-  rfl
+theorem coeff_add (x y i : Surreal) : (x + y).coeff i = x.coeff i + y.coeff i := by
+  rw [coeff]; simp
 
 @[simp]
-theorem coeff_sub (x y z : Surreal) : (x - y).coeff z = x.coeff z - y.coeff z := by
+theorem coeff_sub (x y i : Surreal) : (x - y).coeff i = x.coeff i - y.coeff i := by
+  rw [coeff]; simp
+
+@[simp]
+theorem trunc_neg (x i : Surreal) : (-x).trunc i = -x.trunc i := by
+  rw [trunc]; simp
+
+@[simp]
+theorem trunc_add (x y i : Surreal) : (x + y).trunc i = x.trunc i + y.trunc i := by
+  rw [trunc]; simp
+
+@[simp]
+theorem trunc_sub (x y i : Surreal) : (x - y).trunc i = x.trunc i - y.trunc i := by
+  rw [trunc]; simp
+
+@[simp]
+theorem infPart_neg (x : Surreal) : infPart (-x) = -infPart x := by
+  simp [infPart]; abel
+
+@[simp]
+theorem infPart_add (x y : Surreal) : infPart (x + y) = infPart x + infPart y := by
+  simp [infPart]; abel
+
+@[simp]
+theorem infPart_sub (x y : Surreal) : infPart (x - y) = infPart x - infPart y := by
   simp [sub_eq_add_neg]
+
+theorem infPart_vlt_one (x : Surreal) : infPart x <ᵥ 1 := by
+  rw [infPart, coeff_eq_stdPart, wpow_zero, div_one]
+  apply sub_stdPart_vlt_one
+  rw [← wpow_zero]
+  exact sub_trunc_vle_wpow x 0
+
+theorem archimedeanClassMk_infPart_pos (x : Surreal) : 0 < ArchimedeanClass.mk (infPart x) :=
+  vlt_def.1 (infPart_vlt_one x)
 
 end Addition
 end Surreal

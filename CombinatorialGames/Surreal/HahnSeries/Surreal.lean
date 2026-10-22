@@ -645,6 +645,10 @@ theorem toSurreal_succ {x : SurrealHahnSeries}
 theorem toSurreal_single (i : Surreal) (r : ℝ) : toSurreal (single i r) = r * ω^ i := by
   rw [← zero_add (single i r), toSurreal_succ] <;> simp
 
+@[simp]
+theorem toSurreal_one : toSurreal 1 = 1 := by
+  simpa using toSurreal_single 0 1
+
 theorem toSurreal_of_length_le_add_one {x : SurrealHahnSeries} {i : Ordinal}
     (hi : x.length ≤ i + 1) : toSurreal x = toSurreal (x.truncIdx i) + x.term i := by
   obtain hi | hi := hi.eq_or_lt
