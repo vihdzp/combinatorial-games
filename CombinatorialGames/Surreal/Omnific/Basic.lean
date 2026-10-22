@@ -70,14 +70,14 @@ theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr]
-  apply birthday_ofSets_le_of_mem <;> simp_all
+  apply birthday_ofSets_le_of_btwn <;> simp_all
 
 theorem birthday_round_lt {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) (hy : x.round r ≠ y) :
     (x.round r).birthday < y.birthday := by
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr] at hy ⊢
-  apply birthday_ofSets_lt_of_mem <;> simp_all
+  apply birthday_ofSets_lt_of_btwn <;> simp_all
 
 theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
