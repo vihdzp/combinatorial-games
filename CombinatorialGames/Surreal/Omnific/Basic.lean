@@ -250,7 +250,6 @@ theorem Omnific.coe_add_one (x : Omnific) : ((x + 1 : Omnific) : Surreal) = x + 
 @[ext] theorem Omnific.ext {x y : Omnific} (h : x.coe = y.coe) : x = y := Subtype.ext h
 
 /-- Cast an ordinal to an omnific integer. -/
-@[expose, simps!]
 def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   toFun x := Omnific.mk x (IsOmnific.natOrdinal x)
   map_zero' := by ext; simp
@@ -258,6 +257,8 @@ def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   map_add' _ _ := by ext; simp
   map_mul' _ _ := by ext; simp
   monotone' _ := by simp [← Omnific.coe_le_coe]
+
+@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := (rfl)
 
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
