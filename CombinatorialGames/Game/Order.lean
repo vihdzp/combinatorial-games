@@ -17,26 +17,37 @@ universe u
 
 namespace IGame
 
-theorem tiny_lf_aux {x a : IGame} (hx : 0 ⧏ x) (ha : ∀ y ∈ xᴿ, -y ≤ a) : ⧾a ⧏ x := by
+public section
+
+theorem tiny_lf_of_not_nonpos_of_forall_neg_le
+    {x a : IGame} (hx : 0 ⧏ x) (ha : ∀ y ∈ xᴿ, -y ≤ a) : ⧾a ⧏ x := by
   refine lf_of_right_le ?_ (rightMoves_tiny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   exact ⟨by simpa using hx, fun z hz => lf_of_right_le (IGame.neg_le.1 (ha z hz)) (by simp)⟩
 
-theorem tiny_le_aux {x a : IGame} (hx : 0 < x)
+theorem tiny_le_of_pos_of_forall_neg_le {x a : IGame} (hx : 0 < x)
     (ha : ∀ y ∈ xᴿ, ∀ z ∈ yᴿ, -z ≤ a) : ⧾a ≤ x := by
   rw [le_iff_forall_lf]
   constructor
   · simpa using hx.not_ge
-  · exact fun y hy ↦ tiny_lf_aux (lf_right_of_le hx.le hy) (ha y hy)
+  · exact fun y hy ↦ tiny_lf_of_not_nonpos_of_forall_neg_le (lf_right_of_le hx.le hy) (ha y hy)
 
-public section
+theorem lf_miny_of_not_nonneg_of_forall_le
+    {x a : IGame} (hx : x ⧏ 0) (ha : ∀ y ∈ xᴸ, y ≤ a) : x ⧏ ⧿a := by
+  simpa using mt IGame.neg_le.1 <| tiny_lf_of_not_nonpos_of_forall_neg_le (mt neg_le_zero.1 hx)
+    fun y hy => by simpa using ha (-y) (by simpa using hy)
+
+theorem le_miny_of_neg_of_forall_le_neg
+    {x a : IGame} (hx : x < 0) (ha : ∀ y ∈ xᴸ, ∀ z ∈ yᴸ, z ≤ a) : x ≤ ⧿a := by
+  simpa using IGame.le_neg.1 <| tiny_le_of_pos_of_forall_neg_le (zero_lt_neg.2 hx)
+    fun y hy z hz => by simpa using ha (-y) (by simpa using hy) (-z) (by simpa using hz)
 
 theorem tiny_toIGame_birthday_lt {x : IGame.{u}} (hx : 0 < x) : ⧾x.birthday.toIGame < x := by
   apply lt_of_le_not_ge
-  · refine tiny_le_aux hx fun y hy z hz =>
+  · refine tiny_le_of_pos_of_forall_neg_le hx fun y hy z hz =>
       (le_toIGame_birthday _).trans (NatOrdinal.toIGame.monotone ?_)
     grw [birthday_neg, birthday_lt_of_mem_moves hz, birthday_lt_of_mem_moves hy]
-  · refine tiny_lf_aux hx.not_ge fun y hy =>
+  · refine tiny_lf_of_not_nonpos_of_forall_neg_le hx.not_ge fun y hy =>
       (le_toIGame_birthday _).trans (NatOrdinal.toIGame.monotone ?_)
     grw [birthday_neg, birthday_lt_of_mem_moves hy]
 
@@ -47,7 +58,7 @@ theorem tiny_lt_of_toIGame_birthday_le {x : IGame.{u}} (hx : 0 < x)
 theorem fuzzy_tiny_of_birthday_le {x : IGame.{u}} (hx : x ‖ 0)
     {o : IGame.{u}} (ho : x.birthday ≤ o) : x ‖ ⧾o := by
   constructor
-  · refine tiny_lf_aux hx.not_le fun y hy =>
+  · refine tiny_lf_of_not_nonpos_of_forall_neg_le hx.not_le fun y hy =>
       (le_toIGame_birthday _).trans ?_
     grw [birthday_neg, birthday_lt_of_mem_moves hy, ho]
   · exact fun h => hx.not_ge ((tiny_pos _).le.trans h)
