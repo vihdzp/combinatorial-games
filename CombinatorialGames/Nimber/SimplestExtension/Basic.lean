@@ -118,9 +118,22 @@ theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.to
   h.toAddSubgroup.closure_eq
 
 @[simp]
+theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup ≤ hy.toAddSubgroup ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsGroup.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
+
+@[simp]
 theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
   ne_zero := one_ne_zero
+
+theorem addSubgroupBot_eq : ⊥ = IsGroup.one.toAddSubgroup := by
+  ext; simp
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
@@ -257,7 +270,7 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   · rw [of_lt_iff]
     apply (opow_log_le_self _ hx').lt_of_ne
     rw [ne_eq, ← of_eq_iff]
-    contrapose! hx
+    contrapose hx
     exact ⟨_, hx⟩
   · exact mod_opow_log_lt_self _ hx'
 
@@ -274,6 +287,17 @@ theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := b
 /-- A version of `IsGroup.opow` stated in terms of `Ordinal`. -/
 theorem IsGroup.opow' {x : Ordinal} (h : IsGroup (∗x)) (a : Ordinal) : IsGroup (∗x ^ a) :=
   h.opow a
+
+theorem IsGroup.omul (hx : IsGroup x) (hy : IsGroup y) : IsGroup (∗(x.val * y.val)) := by
+  rw [isGroup_iff_mem_range_two_opow] at hx hy
+  obtain ⟨b, hb, rfl⟩ := hx
+  obtain ⟨c, hc, rfl⟩ := hy
+  simp [← opow_add]
+
+/-- A version of `IsGroup.omul` stated in terms of `Ordinal`. -/
+theorem IsGroup.omul' {x y : Ordinal} (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) :
+    IsGroup (∗(x * y)) :=
+  hx.omul hy
 
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
@@ -327,8 +351,22 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 @[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
 @[simp] theorem coe_toSubring (h : IsRing x) : h.toSubring = Set.Iio x := rfl
 
+theorem subringBot_eq : ⊥ = IsRing.two.toSubring := by
+  rw [← SetLike.coe_set_eq, Subring.coe_bot, CharTwo.range_intCast]
+  simp
+
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
+
+@[simp]
+theorem IsRing.toSubring_le_toSubring (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toSubring_lt_toSubring (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring < hy.toSubring ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
@@ -446,8 +484,23 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
 @[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
 @[simp] theorem coe_toSubfield (h : IsField x) : h.toSubfield = Set.Iio x := rfl
 
+theorem subfieldBot_eq : ⊥ = IsField.two.toSubfield := by
+  rw [eq_comm, eq_bot_iff, ← SetLike.coe_subset_coe, coe_toSubfield, ← coe_toSubring IsRing.two,
+    ← subringBot_eq, ← Subfield.coe_toSubring, SetLike.coe_subset_coe]
+  apply bot_le
+
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
+
+@[simp]
+theorem IsField.toSubfield_le_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield ≤ hy.toSubfield ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsField.toSubfield_lt_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield < hy.toSubfield ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsField (sSup s) where
