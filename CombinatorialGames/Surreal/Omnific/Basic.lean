@@ -129,6 +129,7 @@ theorem round_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.round r = x) (hy :
 
 /-- An omnific integer is one such that `x = {x - 1 | x + 1}`. These are an analog of the integers
 to the surreals. -/
+@[expose]
 def IsOmnific (x : Surreal) : Prop :=
   x.round 1 = x
 
@@ -187,6 +188,23 @@ def omnific : Subring Surreal where
 @[simp] theorem mem_omnific_iff {x : Surreal} : x ∈ omnific ↔ IsOmnific x := .rfl
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).2
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).2
+
+theorem isOmnific_add_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x + y) ↔ IsOmnific x where
+  mp h := by simpa using h.sub hy
+  mpr h := h.add hy
+
+theorem isOmnific_add_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x + y) ↔ IsOmnific y := by
+  rw [add_comm, isOmnific_add_iff_left hx]
+
+theorem isOmnific_sub_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x - y) ↔ IsOmnific x := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_left hy.neg]
+
+theorem isOmnific_sub_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x - y) ↔ IsOmnific y := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_right hx, isOmnific_neg_iff]
 
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where

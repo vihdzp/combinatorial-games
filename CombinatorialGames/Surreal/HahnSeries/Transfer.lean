@@ -33,15 +33,23 @@ def coeff (x : Surreal) : Surreal → ℝ :=
   x.toHahnSeries.coeff
 
 @[simp] theorem coeff_toHahnSeries (x : Surreal) : x.toHahnSeries.coeff = x.coeff := rfl
+@[simp] theorem _root_.SurrealHahnSeries.coeff_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.coeff = x.coeff := by simp [coeff]
 
 @[simp] theorem coeff_zero : coeff 0 = 0 := by simp [coeff]
 @[simp] theorem coeff_one : coeff 1 = Pi.single 0 1 := by simp [coeff]
 @[simp] theorem coeff_wpow (x : Surreal) : coeff (ω^ x) = Pi.single x 1 := by simp [coeff]
 
-@[simp]
-theorem _root_.SurrealHahnSeries.coeff_toSurreal (x : SurrealHahnSeries) :
-    x.toSurreal.coeff = x.coeff := by
-  simp [coeff]
+@[simp] theorem coeff_realCast (r : ℝ) : coeff r = Pi.single 0 r := by simp [coeff]
+@[simp] theorem coeff_ratCast (q : ℚ) : coeff q = Pi.single 0 q := mod_cast coeff_realCast q
+@[simp] theorem coeff_intCast (n : ℤ) : coeff n = Pi.single 0 n := mod_cast coeff_realCast n
+@[simp] theorem coeff_natCast (n : ℕ) : coeff n = Pi.single 0 n := mod_cast coeff_realCast n
+
+@[ext]
+theorem coeff_ext {x y : Surreal} (H : ∀ i, x.coeff i = y.coeff i) : x = y := by
+  rw [← toHahnSeries_inj]
+  ext i
+  exact H i
 
 /-! ### `support` -/
 
@@ -52,18 +60,20 @@ def support (x : Surreal) : Set Surreal :=
 
 @[simp] theorem support_coeff (x : Surreal) : x.coeff.support = x.support := rfl
 @[simp] theorem support_toHahnSeries (x : Surreal) : x.toHahnSeries.support = x.support := rfl
+@[simp] theorem _root_.SurrealHahnSeries.support_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.support = x.support := by simp [← support_toHahnSeries]
 
 @[simp] theorem support_zero : support 0 = ∅ := by simp [support]
 @[simp] theorem support_one : support 1 = {0} := by simp [support]
 @[simp] theorem support_wpow (x : Surreal) : support (ω^ x) = {x} := by aesop (add simp [support])
 
-@[simp]
-theorem support_eq_empty {x : Surreal} : x.support = ∅ ↔ x = 0 := by
-  simp [← support_toHahnSeries]
+theorem support_realCast_subset {r : ℝ} : support r ⊆ {0} := by unfold support; aesop
+theorem support_ratCast_subset {q : ℚ} : support q ⊆ {0} := mod_cast @support_realCast_subset q
+theorem support_intCast_subset {n : ℤ} : support n ⊆ {0} := mod_cast @support_realCast_subset n
+theorem support_natCast_subset {n : ℕ} : support n ⊆ {0} := mod_cast @support_realCast_subset n
 
 @[simp]
-theorem _root_.SurrealHahnSeries.support_toSurreal (x : SurrealHahnSeries) :
-    x.toSurreal.support = x.support := by
+theorem support_eq_empty {x : Surreal} : x.support = ∅ ↔ x = 0 := by
   simp [← support_toHahnSeries]
 
 theorem wellFoundedOn_support (x : Surreal) : x.support.WellFoundedOn (· > ·) :=
@@ -85,6 +95,8 @@ This is not to be confused with the length of its sign expansion, which is given
 def length (x : Surreal) : Ordinal := x.toHahnSeries.length
 
 @[simp] theorem length_toHahnSeries (x : Surreal) : x.toHahnSeries.length = x.length := rfl
+@[simp] theorem _root_.SurrealHahnSeries.length_toSurreal (x : SurrealHahnSeries) :
+    x.toSurreal.length = x.length := by simp [length]
 
 @[simp] theorem length_zero : length 0 = 0 := by simp [length]
 @[simp] theorem length_one : length 1 = 1 := by simp [length]
@@ -105,11 +117,6 @@ theorem PartialSum.length_top (x : Surreal) : (⊤ : PartialSum x).length = x.le
 theorem type_support (x : Surreal.{u}) :
     @Ordinal.type x.support (· > ·) _ = Ordinal.lift.{u + 1} x.length :=
   SurrealHahnSeries.type_support _
-
-@[simp]
-theorem _root_.SurrealHahnSeries.length_toSurreal (x : SurrealHahnSeries) :
-    x.toSurreal.length = x.length := by
-  simp [length]
 
 /-! ### `trunc` -/
 

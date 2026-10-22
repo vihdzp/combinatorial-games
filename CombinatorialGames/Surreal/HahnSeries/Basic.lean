@@ -166,6 +166,10 @@ theorem support_zero : support 0 = ∅ :=
 theorem support_one : support 1 = {0} := by
   simp [support]
 
+@[simp]
+theorem support_neg {x : SurrealHahnSeries} : support (-x) = support x :=
+  Function.support_neg _
+
 theorem support_add_subset {x y : SurrealHahnSeries} : (x + y).support ⊆ x.support ∪ y.support :=
   Function.support_add ..
 
