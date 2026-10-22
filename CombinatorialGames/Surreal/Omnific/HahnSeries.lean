@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.HahnSeries.Ring
+public import CombinatorialGames.Surreal.HahnSeries.Addition
 
 /-!
 # Characterization of omnific integers by Hahn series

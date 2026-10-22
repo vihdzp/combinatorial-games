@@ -9,11 +9,11 @@ public import CombinatorialGames.Surreal.HahnSeries.Transfer
 public import CombinatorialGames.Surreal.Omnific.Basic
 
 /-!
-# Ring isomorphism between surreals and Hahn series
+# Group isomorphism between surreals and Hahn series
 
-We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as ordered rings.
+We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as ordered groups.
 
-Conway omits this proof entirely. This file is loosely based on pages 429-431 of Siegel.
+Conway omits this proof entirely. This file is loosely based on pages 429-430 of Siegel.
 -/
 
 public noncomputable section
@@ -33,9 +33,6 @@ lemma LinearOrderedAddCommGroupWithTop.sub_nonneg_of_le {α} [LinearOrderedAddCo
 namespace Surreal
 open ArchimedeanClass Order Set SurrealHahnSeries
 
-/-! ### Addition -/
-
-section Addition
 variable {x y : Surreal} (h : x.support ⊆ Ioi y.wlog)
 include h
 
@@ -314,5 +311,4 @@ theorem infPart_vlt_one (x : Surreal) : infPart x <ᵥ 1 := by
 theorem archimedeanClassMk_infPart_pos (x : Surreal) : 0 < ArchimedeanClass.mk (infPart x) :=
   vlt_def.1 (infPart_vlt_one x)
 
-end Addition
 end Surreal
