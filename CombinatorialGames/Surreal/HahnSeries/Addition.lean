@@ -311,4 +311,137 @@ theorem infPart_vlt_one (x : Surreal) : infPart x <ᵥ 1 := by
 theorem archimedeanClassMk_infPart_pos (x : Surreal) : 0 < ArchimedeanClass.mk (infPart x) :=
   vlt_def.1 (infPart_vlt_one x)
 
+@[simp]
+theorem leadingTerm_sub_trunc_of_mem_support {x i : Surreal} (hi : i ∈ x.support) :
+    (x - x.trunc i).leadingTerm = x.coeff i * ω^ i := by
+  rw [← toSurreal_toHahnSeries (_ - _), SurrealHahnSeries.leadingTerm_toSurreal,
+    toHahnSeries_sub, term_zero_of_isGreatest i]
+  · simp
+  · refine ⟨?_, fun _ ↦ ?_⟩
+    · simpa
+    · aesop
+
 end Surreal
+
+namespace SurrealHahnSeries
+open Surreal
+
+@[simp]
+theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
+    (single i r * x).toSurreal = r * ω^ i * x.toSurreal := by
+  induction x using SurrealHahnSeries.lengthRecOn with
+  | succ x j s hj hs IH => simp [mul_add, IH]; ring
+  | limit x hx IH =>
+    obtain rfl | hr := eq_or_ne r 0; · simp
+    cases i with | mk i
+    rw [toSurreal_def', ← mk_wpow, ← mk_real_toIGame, ← mk_mul, ← mk_toIGame, ← mk_mul,
+      eq_comm, mk_eq_mk]
+    have He := IGame.Numeric.realCast_mul_wpow_equiv r i
+    apply IGame.Fits.equiv_of_forall_moves_of_equiv _ (IGame.Numeric.mul_congr_left He (y := x))
+    · constructor
+      all_goals
+      · simp_rw [IGame.moves_ofSets, Player.cases, Set.forall_mem_image]
+        first | rw [forall_mem_truncLT] | rw [forall_mem_truncGT]
+        simp_rw [support_single_mul hr, coeff_single_mul, trunc_single_mul, IGame.Numeric.not_le]
+        intro j hj s hs
+        rw [← mk_lt_mk, mk_toIGame, toSurreal_add, IH _ (length_trunc_lt hj)]
+        simp_rw [toSurreal_trunc, toSurreal_single, mk_mul, mk_real_toIGame, mk_wpow, mk_toIGame]
+        first | rw [← lt_sub_iff_add_lt'] | rw [← sub_lt_iff_lt_add']
+        rw [mul_assoc, mul_assoc, ← mul_sub, ← mul_sub, mul_comm _ (_ - _)]
+        apply leadingTerm_mono.reflect_lt
+        simp_all [mul_assoc]
+        simpa [← mul_assoc, ← Real.toSurreal_mul]
+    · simp_rw [IGame.forall_moves_mul, Player.mul_left, IGame.leftMoves_ofSets,
+        Set.exists_mem_image, exists_mem_truncLT, coeff_single_mul, support_single_mul hr]
+      intro p a ha b hb
+      rw [IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at ha
+      obtain ⟨s, hs, rfl⟩ := ha
+      rw [toIGame_limit hx, IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at hb
+      obtain ⟨j, hj, t, H, rfl⟩ : ∃ j ∈ x.support, ∃ t : ℝ,
+          s * x.coeff j - s * t + r * t < r * x.coeff j ∧
+          (x.trunc j + single j t).toIGame = b := by
+        cases p
+        all_goals
+        · dsimp [Player.cases] at hb hs
+          first | rw [exists_mem_truncLT] at hb | rw [exists_mem_truncGT] at hb
+          first | rw [Set.mem_Iio] at hs | rw [Set.mem_Ioi] at hs
+          obtain ⟨j, hj, t, ht, rfl⟩ := hb
+          refine ⟨j, hj, t, ?_, rfl⟩
+          rw [← sub_pos] at hs ht ⊢
+          convert mul_pos hs ht
+          ring
+      obtain ⟨k, hk, hk'⟩ := exists_between H
+      refine ⟨j + .mk i, (by simpa), k, (by simpa), le_of_lt ?_⟩
+      rw [← Surreal.mk_lt_mk, mk_mulOption, ← mk_eq He]
+      have : s * (x - x.trunc j).toSurreal < ω^ j * (s * t - r * t + k :) := by
+        apply leadingTerm_mono.reflect_lt
+        rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
+          leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
+          coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
+          mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
+        linarith
+      simp [IH _ (length_trunc_lt hj)] at this ⊢
+      linarith [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+    · simp_rw [IGame.forall_moves_mul, Player.mul_right, IGame.rightMoves_ofSets,
+        Set.exists_mem_image, exists_mem_truncGT, coeff_single_mul, support_single_mul hr]
+      intro p a ha b hb
+      rw [IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at ha
+      obtain ⟨s, hs, rfl⟩ := ha
+      rw [toIGame_limit hx, IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at hb
+      obtain ⟨j, hj, t, H, rfl⟩ : ∃ j ∈ x.support, ∃ t : ℝ,
+          r * x.coeff j < s * x.coeff j - s * t + r * t ∧
+          (x.trunc j + single j t).toIGame = b := by
+        cases p
+        all_goals
+        · dsimp [Player.cases] at hb hs
+          first | rw [exists_mem_truncLT] at hb | rw [exists_mem_truncGT] at hb
+          first | rw [Set.mem_Iio] at hs | rw [Set.mem_Ioi] at hs
+          obtain ⟨j, hj, t, ht, rfl⟩ := hb
+          refine ⟨j, hj, t, ?_, rfl⟩
+          rw [← sub_pos] at hs ht ⊢
+          convert mul_pos hs ht
+          ring
+      obtain ⟨k, hk, hk'⟩ := exists_between H
+      refine ⟨j + .mk i, (by simpa), k, (by simpa), le_of_lt ?_⟩
+      rw [← Surreal.mk_lt_mk, mk_mulOption, ← mk_eq He]
+      have : ω^ j * (s * t - r * t + k :) < s * (x - x.trunc j).toSurreal := by
+        apply leadingTerm_mono.reflect_lt
+        rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
+          leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
+          coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
+          mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
+        linarith
+      simp [IH _ (length_trunc_lt hj)] at this ⊢
+      linarith [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+
+@[simp]
+theorem toSurreal_mul_single (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
+    (x * single i r).toSurreal = r * ω^ i * x := by
+  rw [mul_comm, toSurreal_single_mul]
+
+@[simp]
+theorem toSurreal_mul (x y : SurrealHahnSeries) :
+    (x * y).toSurreal = x.toSurreal * y.toSurreal := by
+  induction x using SurrealHahnSeries.lengthRecOn with
+  | succ x i r _ _ IH => simpa [add_mul]
+  | limit x IH => sorry
+  /-rw [← mk_toIGame, toSurreal_def', toSurreal_def', ← mk_mul, mk_eq_mk]
+  apply IGame.Fits.equiv_of_forall_moves_of_equiv _ (toIGame_equiv _)
+  · sorry
+  · simp_rw [IGame.moves_ofSets, Player.cases, forall_mem_image, IGame.exists_moves_mul,
+      Player.mul_left, forall_mem_truncLT, SurrealHahnSeries.mem_support_iff]
+    intro i hi r hr
+    obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hi
+    refine ⟨.left, x.trunc a - single a 1, ?_, y.trunc b - single b 1, ?_, ?_⟩
+    · simp [exists_mem_truncLT]
+      sorry
+    · simp [exists_mem_truncLT]
+      sorry
+    · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
+        Surreal.mk_sub, mk_toIGame, sub_mul, mul_sub, toSurreal_single, Real.toSurreal_one, one_mul]
+      iterate 3 rw [← toSurreal_mul]-/
+
+termination_by (x, y)
+decreasing_by all_goals sorry
+
+end SurrealHahnSeries

@@ -362,9 +362,21 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     convert Surreal.mk_le_mk.2
       (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (s := (s - t)) _ (left_lt hy)).le <;> simp_all
 
+instance (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    Numeric !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
+  apply Numeric.mk
+  · aesop (add safe tactic (by order))
+  · aesop (add safe tactic (by infer_instance))
+
 theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
   simpa [mul_comm] using realCast_mul_wpow_equiv r x
+
+instance (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    Numeric !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
+  apply Numeric.mk
+  · aesop (add safe tactic (by order))
+  · aesop (add safe tactic (by infer_instance))
 
 private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)

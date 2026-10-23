@@ -251,13 +251,29 @@ theorem coeff_mul_single_add {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
     (x * single j r).coeff (i + j) = x.coeff i * r := by
   rw [mul_comm, coeff_single_mul_add, mul_comm]
 
+@[simp]
 theorem coeff_single_mul {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
     (single j r * x).coeff i = r * x.coeff (i - j) := by
   simpa using coeff_single_mul_add (i := i - j) (j := j)
 
+@[simp]
 theorem coeff_mul_single {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
     (x * single j r).coeff i = x.coeff (i - j) * r := by
   simpa using coeff_mul_single_add (i := i - j) (j := j)
+
+@[simp]
+theorem single_mul_single (i r j s) : single i r * single j s = single (i + j) (r * s) := by
+  aesop
+
+@[simp]
+theorem support_single_mul {r : ℝ} (hr : r ≠ 0) {x : SurrealHahnSeries} {i : Surreal} :
+    support (single i r * x) = (· - i) ⁻¹' x.support := by
+  ext; simp [hr]
+
+@[simp]
+theorem support_mul_single {r : ℝ} (hr : r ≠ 0) {x : SurrealHahnSeries} {i : Surreal} :
+    support (x * single i r) = (· - i) ⁻¹' x.support := by
+  rw [mul_comm, support_single_mul hr]
 
 /-! #### `trunc` -/
 
@@ -382,6 +398,16 @@ theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lower
   have := @hi j
   aesop (add simp [le_iff_lt_or_eq'])
 
+@[simp]
+theorem trunc_single_mul {x : SurrealHahnSeries} {i j : Surreal} {r : ℝ} :
+    (single i r * x).trunc j = single i r * x.trunc (j - i) := by
+  aesop
+
+@[simp]
+theorem trunc_mul_single {x : SurrealHahnSeries} {i j : Surreal} {r : ℝ} :
+    (x * single i r).trunc j = x.trunc (j - i) * single i r := by
+  rw [mul_comm, trunc_single_mul, mul_comm]
+
 /-! ### Indexing the support by ordinals -/
 
 open Ordinal
@@ -467,6 +493,13 @@ theorem eq_exp_of_mem_support {x : SurrealHahnSeries} {i : Surreal} (h : i ∈ x
 theorem exp_congr {x y : SurrealHahnSeries} (h : x = y) (i : Iio x.length) :
     (x.exp i).1 = (y.exp ⟨i.1, h ▸ i.2⟩).1 := by
   congr!
+
+theorem exp_zero_of_isGreatest {x : SurrealHahnSeries} (i : Surreal) (hi : IsGreatest x.support i) :
+    x.exp ⟨0, by contrapose hi; simp_all [IsGreatest]⟩ = i := by
+  obtain ⟨j, rfl⟩ := eq_exp_of_mem_support hi.1
+  apply (hi.2 (Subtype.prop _)).antisymm
+  rw [Subtype.coe_le_coe, exp_le_exp_iff]
+  exact zero_le (a := j.1)
 
 @[simp]
 theorem typein_support {x : SurrealHahnSeries.{u}} (i : x.support) :
@@ -710,6 +743,15 @@ theorem mk_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, mem_Iio.2 hi⟩)) := by
   rw [term]
   aesop
+
+theorem term_zero_of_isGreatest {x : SurrealHahnSeries} (i : Surreal)
+    (hi : IsGreatest x.support i) : x.term 0 = x.coeff i * ω^ i := by
+  have hx : 0 < x.length := by contrapose hi; simp_all [IsGreatest]
+  rw [term_of_lt hx, coeffIdx_of_lt hx, exp_zero_of_isGreatest i hi]
+
+theorem coeffIdx_zero_of_isGreatest {x : SurrealHahnSeries} (i : Surreal)
+    (hi : IsGreatest x.support i) : x.coeffIdx 0 = x.coeff i := by
+  rw [← leadingCoeff_term, term_zero_of_isGreatest i hi]; simp
 
 /-! ### Assemble Hahn series from sequences -/
 
