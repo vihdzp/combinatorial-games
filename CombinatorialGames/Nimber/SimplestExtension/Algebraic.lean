@@ -796,7 +796,7 @@ theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
   · rwa [← fieldClosure_zero, algClosure_fieldClosure]
 
 theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x)
-    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 - C (x ^ 2)) := by
+    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 + C (x ^ 2)) := by
   rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
   have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
   have hc := coeff_leastNoRoots_lt ht
@@ -807,31 +807,23 @@ theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x
   generalize x.leastNoRoots.untop ht = p at perf hc hrt hdeg
   revert p perf hc hrt hdeg
   rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
-  refine ⟨by simp, fun b hb c hc hrt hdeg => ?_, fun a ha _ _ _ _ hdeg => ?_⟩
-  · obtain rfl := lt_one_iff.1 hb
-    have hcx : x ^ 2 = c := by simpa [CharTwo.add_eq_zero] using hrt
-    simp [hcx, CharTwo.sub_eq_add]
-  · obtain rfl := lt_one_iff.1 ha
-    absurd hdeg.not_ge
-    rw [map_zero, zero_mul, zero_add]
-    exact degree_linear_le
+  aesop (add simp [CharTwo.add_eq_zero, degree_linear_le])
 
 theorem IsField.sq_lt_self_of_not_perfectField {x : Nimber} (hx : IsField x)
     (perf : ¬PerfectField hx.toSubfield) : x ^ 2 < x := by
   have hl := hx.leastNoRoots_eq_of_not_perfectField perf
   have hc := coeff_leastNoRoots_lt (hl.trans_ne WithTop.coe_ne_top) 0
   rw! [hl] at hc
-  rw [WithTop.untop_coe, coeff_sub, coeff_X_pow, coeff_C] at hc
+  rw [WithTop.untop_coe, coeff_add, coeff_X_pow, coeff_C] at hc
   simpa using hc
 
 theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
     (perf : ¬PerfectField hx.toSubfield) (hy : y < x ^ 2) : √y < x := by
   apply hx.sqrt_lt (hy.trans (hx.sq_lt_self_of_not_perfectField perf))
   rw [hx.leastNoRoots_eq_of_not_perfectField perf, WithTop.coe_lt_coe]
-  apply (@exists_eq_right _ (· < _) _).mp
-  rw [show (X : Nimber[X]) ^ 2 - C (x ^ 2) =
-    C 1 * X ^ 2 + C 0 * X + C (x ^ 2) by simp [CharTwo.sub_eq_add], Lex.exists_lt_quadratic]
-  exact .inl ⟨y, hy, by simp⟩
+  use 0
+  generalize x ^ 2 = c at hy ⊢
+  aesop
 
 theorem IsField.sqrt_le_of_not_perfectField {x y : Nimber} (hx : IsField x)
     (perf : ¬PerfectField hx.toSubfield) (hy : y ≤ x ^ 2) : √y ≤ x := by
