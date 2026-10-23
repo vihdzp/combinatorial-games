@@ -7,7 +7,7 @@ module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Real
-public import Mathlib.Algebra.Ring.Subring.Defs
+public import Mathlib.Algebra.Ring.Subring.Order
 
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Algebra.Ring.Subring.Order
@@ -226,6 +226,16 @@ theorem Omnific.prop (x : Omnific) : IsOmnific x := x.2
 def Omnific.mk (x : Surreal) (hx : IsOmnific x) : Omnific := ⟨x, hx⟩
 
 @[simp, norm_cast] theorem Omnific.coe_mk (x hx) : Omnific.mk x hx = x := (rfl)
+
+/-- The coercion from `Omnific` integers into `Surreal` as an `OrderRingHom`. -/
+@[expose, simps!]
+def Omnific.coeOrderRingHom : Omnific →+*o Surreal where
+  toFun x := x
+  map_zero' := by rfl
+  map_one' := by rfl
+  map_add' x y := by rfl
+  map_mul' x y := by rfl
+  monotone' _ _ h := by exact h
 
 @[simp, norm_cast] theorem Omnific.coe_zero : ((0 : Omnific) : Surreal) = 0 := (rfl)
 @[simp, norm_cast] theorem Omnific.coe_one : ((1 : Omnific) : Surreal) = 1 := (rfl)
