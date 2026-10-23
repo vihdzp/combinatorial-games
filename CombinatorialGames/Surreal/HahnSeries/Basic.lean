@@ -163,6 +163,17 @@ theorem support_neg {x : SurrealHahnSeries} : support (-x) = support x :=
 theorem support_add_subset {x y : SurrealHahnSeries} : (x + y).support ⊆ x.support ∪ y.support :=
   Function.support_add ..
 
+theorem support_add_subset_of_subset {x y : SurrealHahnSeries} {s : Set Surreal}
+    (hx : x.support ⊆ s) (hy : y.support ⊆ s) : (x + y).support ⊆ s := by
+  grw [support_add_subset, hx, hy, union_self]
+
+theorem support_sub_subset {x y : SurrealHahnSeries} : (x - y).support ⊆ x.support ∪ y.support :=
+  Function.support_sub ..
+
+theorem support_sub_subset_of_subset {x y : SurrealHahnSeries} {s : Set Surreal}
+    (hx : x.support ⊆ s) (hy : y.support ⊆ s) : (x - y).support ⊆ s := by
+  grw [support_sub_subset, hx, hy, union_self]
+
 theorem wellFoundedOn_support (x : SurrealHahnSeries) : x.support.WellFoundedOn (· > ·) :=
   x.1.isWF_support
 
@@ -188,7 +199,7 @@ that add to `i`. By the well-ordering condition, this is a finite set. -/
 def antidiagonal (x y : SurrealHahnSeries) (i : Surreal) : Finset (Surreal × Surreal) :=
   (Finset.antidiagonal x.1.isWF_support.isPWO y.1.isWF_support.isPWO (OrderDual.toDual i) :)
 
-@[simp]
+@[simp, grind =]
 theorem mem_antidiagonal {x y} {i j} : j ∈ antidiagonal x y i ↔
     j.1 ∈ x.support ∧ j.2 ∈ y.support ∧ j.1 + j.2 = i :=
   Finset.mem_antidiagonal ..
@@ -196,6 +207,22 @@ theorem mem_antidiagonal {x y} {i j} : j ∈ antidiagonal x y i ↔
 theorem coeff_mul (x y : SurrealHahnSeries) (i : Surreal) :
     (x * y).coeff i = ∑ ij ∈ antidiagonal x y i, x.coeff ij.1 * y.coeff ij.2 :=
   (rfl)
+
+theorem antidiagonal_add_subset_singleton {x y : SurrealHahnSeries} {i j : Surreal}
+    (hx : x.support ⊆ Iic i) (hy : y.support ⊆ Iic j) :
+    antidiagonal x y (i + j) ⊆ {(i, j)} := by
+  grind
+
+theorem coeff_mul_add_of_support_subset {x y : SurrealHahnSeries} {i j : Surreal}
+    (hx : x.support ⊆ Iic i) (hy : y.support ⊆ Iic j) :
+    (x * y).coeff (i + j) = x.coeff i * y.coeff j := by
+  rw [coeff_mul]
+  obtain h | h := Finset.subset_singleton_iff.1 (antidiagonal_add_subset_singleton hx hy)
+  · rw [h]
+    contrapose! h
+    use (i, j)
+    simp_all
+  · simp [h]
 
 @[simp]
 theorem antidiagonal_zero_left (x i) : antidiagonal 0 x i = ∅ := by
@@ -261,6 +288,14 @@ theorem coeff_mul_single {r : ℝ} {x : SurrealHahnSeries} {i j : Surreal} :
     (x * single j r).coeff i = x.coeff (i - j) * r := by
   simpa using coeff_mul_single_add (i := i - j) (j := j)
 
+theorem lt_of_support_subset_of_lt {x y : SurrealHahnSeries} (i : Surreal)
+    (hx : x.support ⊆ Iic i) (hy : y.support ⊆ Iic i) (h : x.coeff i < y.coeff i) : x < y := by
+  rw [lt_def]
+  refine ⟨i, fun j hj ↦ ?_, by aesop⟩
+  iterate 2 rw [Pi.toColex_apply, notMem_support_iff.1]
+  all_goals refine fun hj' ↦ hj.not_ge ?_
+  exacts [hy hj', hx hj']
+
 @[simp]
 theorem single_mul_single (i r j s) : single i r * single j s = single (i + j) (r * s) := by
   aesop
@@ -274,6 +309,16 @@ theorem support_single_mul {r : ℝ} (hr : r ≠ 0) {x : SurrealHahnSeries} {i :
 theorem support_mul_single {r : ℝ} (hr : r ≠ 0) {x : SurrealHahnSeries} {i : Surreal} :
     support (x * single i r) = (· - i) ⁻¹' x.support := by
   rw [mul_comm, support_single_mul hr]
+
+theorem support_single_mul_subset {r : ℝ} {x : SurrealHahnSeries} {i : Surreal} :
+    support (single i r * x) ⊆ (· - i) ⁻¹' x.support := by
+  obtain rfl | hr := eq_or_ne r 0
+  · simp
+  · rw [support_single_mul hr]
+
+theorem support_mul_single_subset {r : ℝ} {x : SurrealHahnSeries} {i : Surreal} :
+    support (x * single i r) ⊆ (· - i) ⁻¹' x.support := by
+  grw [mul_comm, support_single_mul_subset]
 
 /-! #### `trunc` -/
 
@@ -309,6 +354,10 @@ theorem support_trunc_subset (x : SurrealHahnSeries) (i : Surreal) :
 
 theorem support_trunc_anti {x : SurrealHahnSeries} : Antitone fun i ↦ (trunc x i).support :=
   fun _ _ _ _ ↦ by aesop (add safe tactic (by order))
+
+theorem support_sub_trunc {x : SurrealHahnSeries} {i : Surreal} :
+    (x - x.trunc i).support ⊆ Iic i := by
+  intro; aesop
 
 theorem coeff_trunc_eq_zero {x : SurrealHahnSeries} {i j : Surreal} (h : x.coeff i = 0) :
     (x.trunc j).coeff i = 0 := by

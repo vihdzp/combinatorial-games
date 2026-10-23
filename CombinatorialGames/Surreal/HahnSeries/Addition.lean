@@ -8,6 +8,8 @@ module
 public import CombinatorialGames.Surreal.HahnSeries.Transfer
 public import CombinatorialGames.Surreal.Omnific.Basic
 
+import Mathlib.Algebra.Order.Group.Pointwise.Interval
+
 /-!
 # Group isomorphism between surreals and Hahn series
 
@@ -442,10 +444,11 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
     · sorry
     · simp_rw [IGame.moves_ofSets, Player.cases, Set.forall_mem_image, IGame.exists_moves_mul,
         Player.mul_left, forall_mem_truncLT, mem_support_iff]
-      intro i hi r hr
-      obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hi
-      let p : ℝ := sorry
-      let q : ℝ := sorry
+      intro i hab r hr
+      obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
+      obtain ⟨p, q, hpq⟩ :
+          ∃ p q : ℝ, (x.coeff a + p) * (y.coeff b + q) < (x * y).coeff (a + b) - r := by
+        sorry
       refine ⟨.left, x.trunc a - single a p, ?_, y.trunc b - single b q, ?_, ?_⟩
       · simp [exists_mem_truncLT]
         sorry
@@ -464,7 +467,20 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
             (x - x.trunc a) * single b q + single a p * (y - y.trunc b) +
             (single (a + b) (p * q) + single (a + b) r) ≤ x * y - (x * y).trunc (a + b) := by
           rw [← single_add]
-          sorry
+          apply le_of_lt
+          apply lt_of_support_subset_of_lt (a + b)
+          · apply_rules [support_add_subset_of_subset, support_sub_subset_of_subset]
+            · grw [support_mul_subset, support_sub_trunc, support_sub_trunc, Set.Iic_add_Iic_subset]
+            · grw [support_mul_single_subset, support_sub_trunc]
+              intro
+              simp
+            · grw [support_single_mul_subset, support_sub_trunc]
+              intro
+              simp [add_comm]
+            · exact support_single_subset.trans (by simp)
+          · exact support_sub_trunc
+          · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+            linarith only [hpq]
         linarith only [this]
     · sorry
 termination_by (x, y)
