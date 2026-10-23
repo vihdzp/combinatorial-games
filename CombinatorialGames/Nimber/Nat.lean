@@ -3,7 +3,13 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public import Mathlib.Order.Lattice.Nat
+public import Mathlib.Order.SuccPred.Nat
+
 import CombinatorialGames.Nimber.Basic
+import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
 # Finite nimber arithmetic
@@ -33,10 +39,12 @@ theorem le_one_iff {a : NatNimber} : a ≤ 1 ↔ a = 0 ∨ a = 1 := Nat.le_one_i
 def toNimber : NatNimber ↪o Nimber where
   toFun x := .of x.val
   inj' x y := by simp
-  map_rel_iff' := by simp
+  map_rel_iff' := by generalize_proofs; simp
+
+theorem toNimber_def (x : NatNimber) : toNimber x = .of x.val := rfl
 
 @[simp] theorem toNimber_zero : toNimber 0 = 0 := rfl
-@[simp] theorem toNimber_one : toNimber 1 = 1 := by simp [toNimber]
+@[simp] theorem toNimber_one : toNimber 1 = 1 := by simp [toNimber_def]
 @[simp] theorem toNimber_of (n : ℕ) : toNimber (of n) = Nimber.of n := rfl
 
 instance : Neg NatNimber where

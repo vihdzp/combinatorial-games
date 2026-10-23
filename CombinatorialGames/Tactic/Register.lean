@@ -3,6 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
+module
+
+public meta import Lean.Meta.Tactic.Simp.Simproc
+meta import Lean.Meta.Tactic.Simp.Attr
 import Lean.Meta.Tactic.Simp.RegisterCommand
 
 /-!

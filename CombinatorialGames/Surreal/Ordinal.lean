@@ -3,9 +3,10 @@ Copyright (c) 2022 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Surreal.Multiplication
-import Mathlib.Algebra.Order.Hom.Ring
+module
+
+public import CombinatorialGames.Surreal.Multiplication
+public import Mathlib.Algebra.Order.Hom.Ring
 
 /-!
 # Ordinals as surreals
@@ -15,7 +16,7 @@ We define the canonical map `NatOrdinal → Surreal` in terms of the map `NatOrd
 
 open IGame Set Surreal
 
-noncomputable section
+@[expose] public noncomputable section
 
 /-- Ordinal games are numeric. -/
 instance IGame.Numeric.toIGame (o : NatOrdinal) : Numeric o.toIGame := by
