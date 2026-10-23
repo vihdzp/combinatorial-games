@@ -189,12 +189,13 @@ noncomputable instance : Coe Dyadic IGame := ⟨toIGame⟩
 theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.num := by
   rw [toIGame, dite_eq_left hx]
 
-@[simp] theorem toIGame_intCast (n : ℤ) : ((n : Dyadic) : IGame) = n := by
+@[simp, norm_cast] theorem toIGame_intCast (n : ℤ) : ((n : Dyadic) : IGame) = n := by
   simpa using toIGame_of_den_eq_one (Dyadic.den_intCast n)
-@[simp] theorem toIGame_natCast (n : ℕ) : ((n : Dyadic) : IGame) = n := toIGame_intCast n
+@[simp, norm_cast] theorem toIGame_natCast (n : ℕ) : ((n : Dyadic) : IGame) = n := toIGame_intCast n
 
-@[simp] theorem toIGame_zero : ((0 : Dyadic) : IGame) = 0 := toIGame_natCast 0
-@[simp] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by simpa using toIGame_natCast 1
+@[simp, norm_cast] theorem toIGame_zero : ((0 : Dyadic) : IGame) = 0 := toIGame_natCast 0
+@[simp, norm_cast] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by
+  simpa using toIGame_natCast 1
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
@@ -208,7 +209,7 @@ theorem toIGame_half : half = ½ := by
   rw [← Dyadic.coe_inj, upper, Dyadic.coe_mkRat]
   rfl
 
-@[simp]
+@[simp, norm_cast]
 theorem toIGame_neg (x : Dyadic) : (-x : Dyadic) = -(x : IGame) := by
   unfold toIGame
   rw [den_neg]
