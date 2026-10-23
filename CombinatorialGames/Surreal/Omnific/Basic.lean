@@ -7,9 +7,10 @@ module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Real
-public import Mathlib.Algebra.Ring.Subring.Defs
+public import Mathlib.Algebra.Ring.Subring.Order
 
 import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Algebra.Ring.Subring.Order
 import Mathlib.Data.EReal.Operations
 import Mathlib.Topology.Algebra.InfiniteSum.Order
 import Mathlib.Topology.MetricSpace.Bounded
@@ -57,12 +58,26 @@ theorem round_mk_of_pos {x r : IGame} (hr : 0 < r) [x.Numeric] [r.Numeric] :
   rw [round_of_pos hr, mk_ofSets]
   congr <;> aesop
 
+theorem round_mem_Ioo {x r : Surreal} (hr : 0 < r) : round x r ∈ Ioo (x - r) (x + r) := by
+  rw [round_of_pos hr]
+  exact ⟨lt_ofSets_of_mem_left (mem_singleton _), ofSets_lt_of_mem_right (mem_singleton _)⟩
+
+theorem sub_lt_round {x r : Surreal} (hr : 0 < r) : x - r < round x r := (round_mem_Ioo hr).1
+theorem round_lt_add {x r : Surreal} (hr : 0 < r) : round x r < x + r := (round_mem_Ioo hr).2
+
 theorem birthday_round_le {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) :
     (x.round r).birthday ≤ y.birthday := by
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
   cases h
   rw [round_of_pos hr]
   apply birthday_ofSets_le_of_btwn <;> simp_all
+
+theorem birthday_round_lt {x y r : Surreal} (h : y ∈ Ioo (x - r) (x + r)) (hy : x.round r ≠ y) :
+    (x.round r).birthday < y.birthday := by
+  have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
+  cases h
+  rw [round_of_pos hr] at hy ⊢
+  apply birthday_ofSets_lt_of_btwn <;> simp_all
 
 theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
@@ -131,6 +146,7 @@ theorem round_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.round r = x) (hy :
 
 /-- An omnific integer is one such that `x = {x - 1 | x + 1}`. These are an analog of the integers
 to the surreals. -/
+@[expose]
 def IsOmnific (x : Surreal) : Prop :=
   x.round 1 = x
 
@@ -177,8 +193,18 @@ theorem IsOmnific.lt_one_iff_nonpos {x : Surreal} (h : IsOmnific x) : x < 1 ↔ 
   rw [← not_iff_not]
   simpa using h.one_le_iff_pos
 
+theorem IsOmnific.birthday_le_of_mem_Ioo {x y : Surreal} (h : IsOmnific x)
+    (hy : y ∈ Ioo (x - 1) (x + 1)) : x.birthday ≤ y.birthday :=
+  h ▸ birthday_round_le hy
+
+theorem IsOmnific.natOrdinal (x : NatOrdinal) : IsOmnific x := by
+  refine round_eq_of_forall_birthday_le (by simp) fun z ⟨hz, ?_⟩ ↦ ?_
+  grw [sub_lt_iff_lt_add, le_toSurreal_birthday z] at hz
+  rwa [← NatOrdinal.toSurreal_one, ← NatOrdinal.toSurreal_add, NatOrdinal.toSurreal.lt_iff_lt,
+    Order.lt_add_one_iff, ← birthday_toSurreal x] at hz
+
 /-- The subring of `IsOmnific` surreal numbers. -/
-def omnific : Subring Surreal where
+private def omnificSubring : Subring Surreal where
   carrier := {x | IsOmnific x}
   zero_mem' := .zero
   one_mem' := .one
@@ -186,9 +212,85 @@ def omnific : Subring Surreal where
   add_mem' := .add
   mul_mem' := .mul
 
-@[simp] theorem mem_omnific_iff {x : Surreal} : x ∈ omnific ↔ IsOmnific x := .rfl
-@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).2
-@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).2
+/-- The ring of `IsOmnific` surreal numbers. -/
+def Omnific : Type _ := omnificSubring
+deriving CommRing, LinearOrder, IsStrictOrderedRing
+
+/-- The coercion from omnific integers into surreals. -/
+@[coe] def Omnific.coe (x : Omnific) : Surreal := x.1
+instance : Coe Omnific Surreal := ⟨Omnific.coe⟩
+
+theorem Omnific.prop (x : Omnific) : IsOmnific x := x.2
+
+/-- Construct an omnific integer from a surreal. -/
+def Omnific.mk (x : Surreal) (hx : IsOmnific x) : Omnific := ⟨x, hx⟩
+
+@[simp, norm_cast] theorem Omnific.coe_mk (x hx) : Omnific.mk x hx = x := (rfl)
+
+/-- The coercion from `Omnific` integers into `Surreal` as an `OrderRingHom`. -/
+@[expose, simps!]
+def Omnific.coeOrderRingHom : Omnific →+*o Surreal where
+  toFun x := x
+  map_zero' := by rfl
+  map_one' := by rfl
+  map_add' x y := by rfl
+  map_mul' x y := by rfl
+  monotone' _ _ h := by exact h
+
+@[simp, norm_cast] theorem Omnific.coe_zero : ((0 : Omnific) : Surreal) = 0 := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_one : ((1 : Omnific) : Surreal) = 1 := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_natCast (n : ℕ) : ((n : Omnific) : Surreal) = n := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_intCast (n : ℤ) : ((n : Omnific) : Surreal) = n := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_neg (x : Omnific) : ((-x : Omnific) : Surreal) = -x := (rfl)
+
+@[simp, norm_cast] theorem Omnific.coe_add (x y : Omnific) :
+    ((x + y : Omnific) : Surreal) = x + y := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_sub (x y : Omnific) :
+    ((x - y : Omnific) : Surreal) = x - y := (rfl)
+@[simp, norm_cast] theorem Omnific.coe_mul (x y : Omnific) :
+    ((x * y : Omnific) : Surreal) = x * y := (rfl)
+
+theorem Omnific.coe_add_one (x : Omnific) : ((x + 1 : Omnific) : Surreal) = x + 1 := (rfl)
+
+@[simp, norm_cast, gcongr] theorem Omnific.coe_le_coe {x y : Omnific} :
+    (x : Surreal) ≤ y ↔ x ≤ y := .rfl
+@[simp, norm_cast, gcongr] theorem Omnific.coe_lt_coe {x y : Omnific} :
+    (x : Surreal) < y ↔ x < y := .rfl
+@[simp, norm_cast, gcongr] theorem Omnific.coe_inj {x y : Omnific} :
+    (x : Surreal) = y ↔ x = y := Subtype.coe_inj
+
+@[ext] theorem Omnific.ext {x y : Omnific} (h : x.coe = y.coe) : x = y := Subtype.ext h
+
+/-- Cast an ordinal to an omnific integer. -/
+def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
+  toFun x := Omnific.mk x (IsOmnific.natOrdinal x)
+  map_zero' := by ext; simp
+  map_one' := by ext; simp
+  map_add' _ _ := by ext; simp
+  map_mul' _ _ := by ext; simp
+  monotone' _ := by simp [← Omnific.coe_le_coe]
+
+@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := (rfl)
+
+@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
+@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
+
+theorem isOmnific_add_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x + y) ↔ IsOmnific x where
+  mp h := by simpa using h.sub hy
+  mpr h := h.add hy
+
+theorem isOmnific_add_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x + y) ↔ IsOmnific y := by
+  rw [add_comm, isOmnific_add_iff_left hx]
+
+theorem isOmnific_sub_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x - y) ↔ IsOmnific x := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_left hy.neg]
+
+theorem isOmnific_sub_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x - y) ↔ IsOmnific y := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_right hx, isOmnific_neg_iff]
 
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where
@@ -208,10 +310,27 @@ theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : �
   refine exists_congr fun _ ↦ ?_
   norm_cast
 
-/-- This seemingly innocuous theorem seems to require the result that any surreal is at distance at
-most 1 from an omnific integer, which itself seems to require the characterization in the module
-docstring. -/
-proof_wanted IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific
+@[no_expose]
+instance : SuccOrder Omnific :=
+  .ofCore (fun x ↦ x + 1) (by
+    refine @fun x _ y ↦ ⟨fun h ↦ ?_, (lt_add_one x).trans_le⟩
+    rwa [← le_sub_iff_add_le', ← Omnific.coe_le_coe, Omnific.coe_one,
+      (Omnific.prop _).one_le_iff_pos, Omnific.coe_sub, lt_sub_iff_add_lt, zero_add]
+  ) (by simp)
+
+instance : SuccAddOrder Omnific where
+  succ_eq_add_one x := by rfl
+
+@[no_expose]
+instance : PredOrder Omnific :=
+  .ofCore (fun x ↦ x - 1) (by
+    refine @fun x _ y ↦ ⟨fun h ↦ ?_, (sub_one_lt x).trans_le'⟩
+    rwa [le_sub_comm, ← Omnific.coe_le_coe, Omnific.coe_one,
+      (Omnific.prop _).one_le_iff_pos, Omnific.coe_sub, lt_sub_iff_add_lt, zero_add]
+  ) (by simp)
+
+instance : PredSubOrder Omnific where
+  pred_eq_sub_one x := by rfl
 
 end Surreal
 end
