@@ -833,6 +833,76 @@ theorem IsField.quadraticLower_eq_quadraticUpper_iff_of_perfectField {x : Nimber
     grw [← Subtype.coe_lt_coe, ← le_quadraticUpper]
     exact hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2
 
+theorem IsAlgClosed.quadraticUpper_eq {t : Nimber} (ht : IsAlgClosed t) :
+    enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper t)) =
+      ⟨t, ht.mem_quadraticIrreducibles⟩ := by
+  apply le_antisymm
+  · rw [ht.quadraticUpper_le_iff]
+  · rw [← Subtype.coe_le_coe]
+    exact le_quadraticUpper t
+
+theorem IsAlgClosed.quadraticLower_eq {t : Nimber} (ht : IsAlgClosed t) :
+    enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower t)) =
+      ⟨t, ht.mem_quadraticIrreducibles⟩ := by
+  have := ht.isAlgClosed
+  rw [← ht.quadraticUpper_eq, OrderIso.apply_eq_iff_eq, OrderIso.apply_eq_iff_eq,
+    ht.quadraticLower_eq_quadraticUpper_iff_of_perfectField inferInstance, ht.leastNoRoots_eq_top]
+  apply le_top
+
+theorem quadraticLower_surjective : quadraticLower.Surjective := by
+  intro o
+  induction o using SuccOrder.limitRecOn with
+  | isMin o ho =>
+    obtain rfl : o = 0 := by simpa using ho
+    exact ⟨of 2, quadraticLower_two⟩
+  | isSuccLimit o ho ih =>
+    choose c hc using ih
+    let s := range fun i : Iio o => c i.1 (id i.2)
+    refine ⟨sSup s, ?_⟩
+    have hne : s.Nonempty := ⟨_, mem_range_self ⟨0, ho.pos⟩⟩
+    rw [leftOrdContinuous_quadraticLower.map_csSup hne (bddAbove_of_small _), ← Set.range_comp']
+    simp_rw [hc]
+    rw [Subtype.range_coe, ho.sSup_Iio]
+  | succ o hm ho =>
+    obtain ⟨x, rfl⟩ := ho
+    obtain ⟨t, htf, ht⟩ : ∃ t, IsField t ∧ quadraticLower x < quadraticLower t := by
+      refine ⟨algClosure (succ (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
+        (of (quadraticLower x)))), (IsAlgClosed.algClosure _).toIsField, ?_⟩
+      rw [← of.lt_iff_lt, ← (enum quadraticIrreducibles isCofinal_quadraticIrreducibles).lt_iff_lt,
+        (IsAlgClosed.algClosure _).quadraticLower_eq, ← Subtype.coe_lt_coe]
+      exact (lt_succ _).trans_le (le_algClosure _)
+    rw [← mem_range_enumField_iff] at htf
+    obtain ⟨o, rfl⟩ := htf
+    induction o using SuccOrder.limitRecOn with
+    | isMin o ho =>
+      obtain rfl : o = 0 := by simpa using ho
+      simp [quadraticLower_two] at ht
+    | isSuccLimit o ho ih =>
+      rw [← ho.sSup_Iio] at ht
+      have hne : (Iio o).Nonempty := ⟨0, ho.pos⟩
+      replace ht := ht.trans_eq <| (leftOrdContinuous_quadraticLower.comp
+        isNormal_enumField.leftOrdContinuous).map_csSup hne Ordinal.bddAbove_of_small
+      rw [lt_csSup_iff Ordinal.bddAbove_of_small (hne.image _),
+        Function.comp_def, exists_mem_image] at ht
+      obtain ⟨o', ho', ht⟩ := ht
+      exact ih o' ho' ht
+    | succ o _ ih =>
+      rw [succ_eq_add_one, enumField_add_one] at ht
+      by_cases! perf : ¬PerfectField (IsField.enumField o).toSubfield
+      · rw [(IsField.enumField o).quadraticLower_fieldClosure_succ_of_not_perfectField perf] at ht
+        exact ih ht
+      by_cases! h2 : .some (X ^ 3) ≤ leastNoRoots (enumField o)
+      · rw [(IsField.enumField o).quadraticLower_fieldClosure_succ_of_le_leastNoRoots h2] at ht
+        exact ih ht
+      · have hf :=
+          (IsField.enumField o).quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots_lt
+            perf h2
+        rw [hf, lt_add_one_iff, le_iff_lt_or_eq] at ht
+        obtain ht | ht := ht
+        · exact ih ht
+        · rw [ht]
+          exact ⟨fieldClosure (succ (enumField o)), hf⟩
+
 section quadraticUpper
 
 theorem IsField.quadraticUpper_fieldClosure_succ_of_not_perfectField {x : Nimber} (hx : IsField x)
