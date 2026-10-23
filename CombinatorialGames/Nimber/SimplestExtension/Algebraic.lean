@@ -29,6 +29,10 @@ public noncomputable section
 
 section ForMathlib
 
+@[simp]
+theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
+    {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
+
 -- mathlib PR #44924
 instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
   fail_if_success infer_instance
