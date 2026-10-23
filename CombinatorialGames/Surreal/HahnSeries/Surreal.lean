@@ -645,6 +645,9 @@ theorem toSurreal_succ {x : SurrealHahnSeries}
 theorem toSurreal_single (i : Surreal) (r : ℝ) : toSurreal (single i r) = r * ω^ i := by
   rw [← zero_add (single i r), toSurreal_succ] <;> simp
 
+theorem toSurreal_single_one (i : Surreal) : toSurreal (single i 1) = ω^ i := by
+  simp
+
 @[simp]
 theorem toSurreal_one : toSurreal 1 = 1 := by
   simpa using toSurreal_single 0 1

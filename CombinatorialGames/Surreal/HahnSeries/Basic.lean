@@ -398,6 +398,9 @@ theorem trunc_add_single {x : SurrealHahnSeries} {i : Surreal} (hi : i ∈ lower
   have := @hi j
   aesop (add simp [le_iff_lt_or_eq'])
 
+theorem single_add {i : Surreal} {r s : ℝ} : single i (r + s) = single i r + single i s := by
+  aesop
+
 @[simp]
 theorem trunc_single_mul {x : SurrealHahnSeries} {i j : Surreal} {r : ℝ} :
     (single i r * x).trunc j = single i r * x.trunc (j - i) := by

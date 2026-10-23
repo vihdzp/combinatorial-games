@@ -321,13 +321,18 @@ theorem leadingTerm_sub_trunc_of_mem_support {x i : Surreal} (hi : i ∈ x.suppo
     · simpa
     · aesop
 
+@[simp]
+theorem leadingCoeff_sub_trunc_of_mem_support {x i : Surreal} (hi : i ∈ x.support) :
+    (x - x.trunc i).leadingCoeff = x.coeff i := by
+  rw [← leadingCoeff_leadingTerm, leadingTerm_sub_trunc_of_mem_support hi]
+  simp
+
 end Surreal
 
 namespace SurrealHahnSeries
 open Surreal
 
-@[simp]
-theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
+private theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
     (single i r * x).toSurreal = r * ω^ i * x.toSurreal := by
   induction x using SurrealHahnSeries.lengthRecOn with
   | succ x j s hj hs IH => simp [mul_add, IH]; ring
@@ -373,15 +378,15 @@ theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
       obtain ⟨k, hk, hk'⟩ := exists_between H
       refine ⟨j + .mk i, (by simpa), k, (by simpa), le_of_lt ?_⟩
       rw [← Surreal.mk_lt_mk, mk_mulOption, ← mk_eq He]
-      have : s * (x - x.trunc j).toSurreal < ω^ j * (s * t - r * t + k :) := by
-        apply leadingTerm_mono.reflect_lt
-        rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
-          leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
-          coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
-          mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
-        linarith
-      simp [IH _ (length_trunc_lt hj)] at this ⊢
-      linarith [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+      suffices s * (x - x.trunc j).toSurreal < ω^ j * (s * t - r * t + k :) by
+        simp [IH _ (length_trunc_lt hj)] at this ⊢
+        linarith only [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+      apply leadingTerm_mono.reflect_lt
+      rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
+        leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
+        coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
+        mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
+      linarith
     · simp_rw [IGame.forall_moves_mul, Player.mul_right, IGame.rightMoves_ofSets,
         Set.exists_mem_image, exists_mem_truncGT, coeff_single_mul, support_single_mul hr]
       intro p a ha b hb
@@ -404,43 +409,64 @@ theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
       obtain ⟨k, hk, hk'⟩ := exists_between H
       refine ⟨j + .mk i, (by simpa), k, (by simpa), le_of_lt ?_⟩
       rw [← Surreal.mk_lt_mk, mk_mulOption, ← mk_eq He]
-      have : ω^ j * (s * t - r * t + k :) < s * (x - x.trunc j).toSurreal := by
-        apply leadingTerm_mono.reflect_lt
-        rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
-          leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
-          coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
-          mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
-        linarith
-      simp [IH _ (length_trunc_lt hj)] at this ⊢
-      linarith [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+      suffices ω^ j * (s * t - r * t + k :) < s * (x - x.trunc j).toSurreal by
+        simp [IH _ (length_trunc_lt hj)] at this ⊢
+        linarith only [mul_lt_mul_of_pos_left this (wpow_pos (.mk i))]
+      apply leadingTerm_mono.reflect_lt
+      rw [toSurreal_sub, toSurreal_trunc, leadingTerm_mul, leadingTerm_mul,
+        leadingTerm_realCast, leadingTerm_sub_trunc_of_mem_support (by simpa),
+        coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
+        mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
+      linarith
 
-@[simp]
-theorem toSurreal_mul_single (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
-    (x * single i r).toSurreal = r * ω^ i * x := by
-  rw [mul_comm, toSurreal_single_mul]
+private theorem toSurreal_single_mul' (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
+    (single i r * x).toSurreal = r * (ω^ i * x.toSurreal) := by
+  rw [toSurreal_single_mul, mul_assoc]
+
+private theorem toSurreal_single_one_mul (i : Surreal) (x : SurrealHahnSeries) :
+    (single i 1 * x).toSurreal = ω^ i * x.toSurreal := by
+  rw [toSurreal_single_mul, Real.toSurreal_one, one_mul]
+
+private theorem toSurreal_single_one_mul' (i : Surreal) (x : SurrealHahnSeries) :
+    (single i 1 * x).toSurreal = x.toSurreal * ω^ i := by
+  rw [toSurreal_single_one_mul, mul_comm]
 
 @[simp]
 theorem toSurreal_mul (x y : SurrealHahnSeries) :
     (x * y).toSurreal = x.toSurreal * y.toSurreal := by
   induction x using SurrealHahnSeries.lengthRecOn with
-  | succ x i r _ _ IH => simpa [add_mul]
-  | limit x IH => sorry
-  /-rw [← mk_toIGame, toSurreal_def', toSurreal_def', ← mk_mul, mk_eq_mk]
-  apply IGame.Fits.equiv_of_forall_moves_of_equiv _ (toIGame_equiv _)
-  · sorry
-  · simp_rw [IGame.moves_ofSets, Player.cases, forall_mem_image, IGame.exists_moves_mul,
-      Player.mul_left, forall_mem_truncLT, SurrealHahnSeries.mem_support_iff]
-    intro i hi r hr
-    obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hi
-    refine ⟨.left, x.trunc a - single a 1, ?_, y.trunc b - single b 1, ?_, ?_⟩
-    · simp [exists_mem_truncLT]
-      sorry
-    · simp [exists_mem_truncLT]
-      sorry
-    · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
-        Surreal.mk_sub, mk_toIGame, sub_mul, mul_sub, toSurreal_single, Real.toSurreal_one, one_mul]
-      iterate 3 rw [← toSurreal_mul]-/
-
+  | succ x i r _ _ IH => simpa [add_mul, toSurreal_single_mul]
+  | limit x IH =>
+    rw [← mk_toIGame, toSurreal_def', toSurreal_def', ← mk_mul, mk_eq_mk]
+    apply IGame.Fits.equiv_of_forall_moves_of_equiv _ (toIGame_equiv _)
+    · sorry
+    · simp_rw [IGame.moves_ofSets, Player.cases, Set.forall_mem_image, IGame.exists_moves_mul,
+        Player.mul_left, forall_mem_truncLT, mem_support_iff]
+      intro i hi r hr
+      obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hi
+      let p : ℝ := sorry
+      let q : ℝ := sorry
+      refine ⟨.left, x.trunc a - single a p, ?_, y.trunc b - single b q, ?_, ?_⟩
+      · simp [exists_mem_truncLT]
+        sorry
+      · simp [exists_mem_truncLT]
+        sorry
+      · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
+          Surreal.mk_sub, mk_toIGame, sub_mul, mul_sub, toSurreal_single]
+        repeat rw [← toSurreal_mul]
+        rw [← toSurreal_single_mul, ← toSurreal_single_mul, mul_rotate' x.toSurreal,
+          ← toSurreal_single_mul', mul_rotate', ← toSurreal_single_mul', mul_mul_mul_comm,
+          ← Real.toSurreal_mul, ← wpow_add]
+        simp only [← toSurreal_single, ← toSurreal_add, ← toSurreal_sub]
+        rw [toSurreal_le_toSurreal_iff]
+        ring_nf
+        have : (x - x.trunc a) * (y - y.trunc b) +
+            (x - x.trunc a) * single b q + single a p * (y - y.trunc b) +
+            (single (a + b) (p * q) + single (a + b) r) ≤ x * y - (x * y).trunc (a + b) := by
+          rw [← single_add]
+          sorry
+        linarith only [this]
+    · sorry
 termination_by (x, y)
 decreasing_by all_goals sorry
 
