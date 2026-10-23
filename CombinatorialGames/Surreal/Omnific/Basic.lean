@@ -83,9 +83,10 @@ theorem round_eq_of_forall_birthday_le {x y r : Surreal}
     (h : y ∈ Ioo (x - r) (x + r)) (hz : ∀ z, z ∈ Ioo (x - r) (x + r) → y.birthday ≤ z.birthday) :
     x.round r = y := by
   have hr : 0 < r := by simpa using nonempty_Ioo.1 ⟨y, h⟩
-  cases h
-  rw [round_of_pos hr, ofSets_eq_of_forall_birthday_le]
-  · simp_all
+  cases h with | intro hl
+  rw [round_of_pos hr]
+  apply ofSets_eq_of_forall_birthday_le
+  · simpa using hl
   · simpa
   · simpa using hz
 
