@@ -27,7 +27,8 @@ open Set
 
 public noncomputable section
 
-namespace Surreal.Cut
+namespace Surreal
+namespace Cut
 
 /-! ### Birthday of cuts -/
 
@@ -377,5 +378,6 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
         apply hvb
 
-end Surreal.Cut
+end Cut
+end Surreal
 end

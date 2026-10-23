@@ -9,6 +9,7 @@ public import CombinatorialGames.Surreal.Basic
 
 import Mathlib.Logic.Hydra
 import Mathlib.Tactic.Abel
+import Mathlib.Tactic.Ring
 
 /-!
 # Surreal multiplication
@@ -481,6 +482,7 @@ theorem mul_congr_left [Numeric x₁] [Numeric x₂] [Numeric y] (he : x₁ ≈ 
 theorem mul_congr_right [Numeric x] [Numeric y₁] [Numeric y₂] (he : y₁ ≈ y₂) : x * y₁ ≈ x * y₂ := by
   rw [mul_comm, mul_comm x]; exact Numeric.mul_congr_left he
 
+@[gcongr]
 theorem mul_congr [Numeric x₁] [Numeric x₂] [Numeric y₁] [Numeric y₂]
     (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
@@ -509,6 +511,10 @@ instance : IsStrictOrderedRing Surreal :=
 @[simp]
 theorem mk_mul (x y : IGame) [Numeric x] [Numeric y] :
     Surreal.mk (x * y) = Surreal.mk x * Surreal.mk y :=
+  rfl
+
+theorem mk_mulOption (x y a b : IGame) [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
+    Surreal.mk (mulOption x y a b) = .mk a * .mk y + .mk x * .mk b - .mk a * .mk b :=
   rfl
 
 end Surreal
@@ -615,25 +621,35 @@ theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
 
+@[gcongr]
 theorem mulOption_congr₁ {x₁ x₂ y a b : IGame}
     [Numeric x₁] [Numeric x₂] [Numeric y] [Numeric a] [Numeric b] (he : x₁ ≈ x₂) :
     mulOption x₁ y a b ≈ mulOption x₂ y a b := by
   simp_all [← Surreal.mk_eq_mk, mulOption]
 
+@[gcongr]
 theorem mulOption_congr₂ {x y₁ y₂ a b : IGame}
     [Numeric x] [Numeric y₁] [Numeric y₂] [Numeric a] [Numeric b] (he : y₁ ≈ y₂) :
     mulOption x y₁ a b ≈ mulOption x y₂ a b := by
   simp_all [← Surreal.mk_eq_mk, mulOption]
 
+@[gcongr]
 theorem mulOption_congr₃ {x y a₁ a₂ b : IGame}
     [Numeric x] [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
     mulOption x y a₁ b ≈ mulOption x y a₂ b := by
   simp_all [← Surreal.mk_eq_mk, mulOption]
 
+@[gcongr]
 theorem mulOption_congr₄ {x y a b₁ b₂ : IGame}
     [Numeric x] [Numeric y] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
     mulOption x y a b₁ ≈ mulOption x y a b₂ := by
   simp_all [← Surreal.mk_eq_mk, mulOption]
+
+theorem mulOption_equiv {x y a b : IGame} [Numeric x] [Numeric y] [Numeric a] [Numeric b] :
+    mulOption x y a b ≈ x * y - (x - a) * (y - b) := by
+  rw [IGame.mulOption, ← Surreal.mk_eq_mk]
+  simp
+  ring
 
 end IGame.Numeric
 end
