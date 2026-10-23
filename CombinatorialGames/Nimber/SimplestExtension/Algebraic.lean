@@ -792,7 +792,7 @@ theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
   · rwa [← fieldClosure_zero, algClosure_fieldClosure]
 
 theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x)
-    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 - C (x ^ 2)) := by
+    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 + C (x ^ 2)) := by
   rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
   have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
   have hc := coeff_leastNoRoots_lt ht
