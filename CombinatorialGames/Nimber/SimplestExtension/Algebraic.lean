@@ -806,7 +806,7 @@ theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x
   refine ⟨by simp, fun b hb c hc hrt hdeg => ?_, fun a ha _ _ _ _ hdeg => ?_⟩
   · obtain rfl := lt_one_iff.1 hb
     have hcx : x ^ 2 = c := by simpa [CharTwo.add_eq_zero] using hrt
-    simp [hcx, CharTwo.sub_eq_add]
+    simp [hcx]
   · obtain rfl := lt_one_iff.1 ha
     absurd hdeg.not_ge
     rw [map_zero, zero_mul, zero_add]
@@ -817,7 +817,7 @@ theorem IsField.sq_lt_self_of_not_perfectField {x : Nimber} (hx : IsField x)
   have hl := hx.leastNoRoots_eq_of_not_perfectField perf
   have hc := coeff_leastNoRoots_lt (hl.trans_ne WithTop.coe_ne_top) 0
   rw! [hl] at hc
-  rw [WithTop.untop_coe, coeff_sub, coeff_X_pow, coeff_C] at hc
+  rw [WithTop.untop_coe, coeff_add, coeff_X_pow, coeff_C] at hc
   simpa using hc
 
 theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
@@ -825,8 +825,8 @@ theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
   apply hx.sqrt_lt (hy.trans (hx.sq_lt_self_of_not_perfectField perf))
   rw [hx.leastNoRoots_eq_of_not_perfectField perf, WithTop.coe_lt_coe]
   apply (@exists_eq_right _ (· < _) _).mp
-  rw [show (X : Nimber[X]) ^ 2 - C (x ^ 2) =
-    C 1 * X ^ 2 + C 0 * X + C (x ^ 2) by simp [CharTwo.sub_eq_add], Lex.exists_lt_quadratic]
+  rw [show (X : Nimber[X]) ^ 2 + C (x ^ 2) =
+    C 1 * X ^ 2 + C 0 * X + C (x ^ 2) by simp, Lex.exists_lt_quadratic]
   exact .inl ⟨y, hy, by simp⟩
 
 theorem IsField.sqrt_le_of_not_perfectField {x y : Nimber} (hx : IsField x)
