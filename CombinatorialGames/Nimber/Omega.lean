@@ -25,7 +25,7 @@ open Cardinal Order Ordinal Set
 
 /-! ### For Mathlib -/
 
-set_option backward.isDefEq.respectTransparency.types false in
+attribute [local implicit_reducible] Function.Injective in
 /-- Restrict an order isomorphism to an initial segment. -/
 def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃o β) (x : α) :
     Iio x ≤i β where
@@ -85,6 +85,17 @@ theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω 
 
 namespace Nimber
 
+/-! ### ω is a field -/
+
+theorem IsAlgClosed.omega0_le {x : Nimber} (hx : IsAlgClosed x) : ∗ω ≤ x := by
+  contrapose! hx
+  simp_rw [← val_lt_iff, lt_omega0, val_eq_iff] at hx
+  obtain ⟨n, rfl⟩ := hx
+  intro hn
+  have hi : Infinite (Iio _) := hn.isAlgClosed.instInfinite
+  rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card, omega0_le_lift] at hi
+  simpa using hi.not_gt
+
 -- TODO: prove this as a corollary of the classification of quadratic extensions.
 private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
   induction n with
@@ -93,10 +104,7 @@ private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := b
     have ht : (enumField n).leastNoRoots ≠ ⊤ := by
       intro ht
       rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
-      have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
-      rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card,
-        omega0_le_lift, ← of_le_iff] at this
-      exact IH.not_ge this
+      exact ht.omega0_le.not_gt IH
     rw [Nat.cast_add_one, enumField_add_one,
       (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
     rw [← val_lt_iff] at IH
@@ -112,9 +120,23 @@ theorem enumField_omega0 : enumField ω = ∗ω := by
   exact (enumField_natCast_lt_omega0 n).le
 
 @[simp]
+theorem enumRing_omega0 : enumRing ω = ∗ω := by
+  apply (of_le_enumRing _).antisymm'
+  grw [← enumField_omega0, enumRing_le_enumField]
+
+@[simp]
+theorem enumGroup_omega0 : enumGroup ω = ∗ω := by
+  apply (of_le_enumGroup _).antisymm'
+  grw [← enumRing_omega0, enumGroup_le_enumRing]
+
+@[simp]
 theorem IsField.omega0 : IsField (∗ω) := by
   rw [← enumField_omega0]
   exact IsField.enumField _
+
+@[simp]
+theorem IsRing.omega0 : IsRing (∗ω) :=
+  IsField.omega0.toIsRing
 
 /-! ### Cardinality of closures -/
 
@@ -166,28 +188,13 @@ theorem card_algClosure_le (x : Nimber) : (algClosure x).val.card ≤ max ℵ₀
     · rfl
 
 theorem card_fieldClosure_le (x : Nimber) : (fieldClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_fieldClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_fieldClosure]
-    · simp
-    · rfl
+  grw [fieldClosure_le_algClosure, card_algClosure_le]
 
 theorem card_ringClosure_le (x : Nimber) : (ringClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_ringClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_ringClosure]
-    · simp
-    · rfl
+  grw [ringClosure_le_fieldClosure, card_fieldClosure_le]
 
 theorem card_groupClosure_le (x : Nimber) : (groupClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_groupClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_groupClosure]
-    · simp
-    · rfl
+  grw [groupClosure_le_ringClosure, card_ringClosure_le]
 
 theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_ x) = ∗ω_ x := by
   induction x using Ordinal.limitRecOn with
