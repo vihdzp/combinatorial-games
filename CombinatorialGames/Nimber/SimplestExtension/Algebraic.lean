@@ -433,41 +433,6 @@ theorem IsField.fieldClosure_succ_eq_pow_natDegree_leastNoRoots {x : Nimber} (h 
   rw [h.fieldClosure_succ_eq_pow_degree_leastNoRoots ht (degree_eq_natDegree _)]
   simp
 
--- TODO: prove this as a corollary of the classification of quadratic extensions.
-section omega0
-
-private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
-  induction n with
-  | zero => simp
-  | succ n IH =>
-    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
-      intro ht
-      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
-      have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
-      rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card,
-        omega0_le_lift, ← of_le_iff] at this
-      exact IH.not_ge this
-    rw [Nat.cast_add_one, enumField_add_one,
-      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
-    rw [← val_lt_iff] at IH
-    obtain ⟨m, hm⟩ := lt_omega0.1 IH
-    rw [hm, ← natCast_pow]
-    exact natCast_lt_omega0 _
-
-@[simp]
-theorem enumField_omega0 : enumField ω = ∗ω := by
-  apply (of_le_enumField _).antisymm'
-  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
-  rintro _ ⟨n, rfl⟩
-  exact (enumField_natCast_lt_omega0 n).le
-
-@[simp]
-theorem IsField.omega0 : IsField (∗ω) := by
-  rw [← enumField_omega0]
-  exact IsField.enumField _
-
-end omega0
-
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
