@@ -229,7 +229,7 @@ theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
 namespace Lex
 
 /-- The colexicographic ordering on nimber polynomials. -/
-noncomputable instance : LinearOrder (Nimber[X]) where
+noncomputable instance : LinearOrder Nimber[X] where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
     (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff)
@@ -239,17 +239,16 @@ theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
-instance : WellFoundedLT (Nimber[X]) :=
+instance : WellFoundedLT Nimber[X] :=
   InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
 
-noncomputable instance : OrderBot (Nimber[X]) where
-  bot := 0
-  bot_le p := by rw [← not_lt, lt_def]; simp
+instance : IsBotZeroClass Nimber[X] where
+  isBot_zero p := by rw [← not_lt, lt_def]; simp
 
-@[simp] theorem bot_eq_zero : (⊥ : Nimber[X]) = 0 := rfl
-@[simp] theorem le_zero_iff {p : Nimber[X]} : p ≤ 0 ↔ p = 0 := le_bot_iff
+noncomputable instance : OrderBot Nimber[X] :=
+  IsBotZeroClass.toOrderBot _
 
-noncomputable instance : ConditionallyCompleteLinearOrderBot (Nimber[X]) :=
+noncomputable instance : ConditionallyCompleteLinearOrderBot Nimber[X] :=
   WellFoundedLT.conditionallyCompleteLinearOrderBot _
 
 theorem forall_lt_quadratic {P : Nimber[X] → Prop} {x y z : Nimber} :
@@ -455,12 +454,12 @@ theorem mul_leadingCoeff_inv_le (p : Nimber[X]) :
   by_cases h₁ : p.leadingCoeff = 1; · simp [h₁]
   exact (mul_leadingCoeff_inv_lt h₀ h₁).le
 
-instance : NoMaxOrder (Nimber[X]) where
+instance : NoMaxOrder Nimber[X] where
   exists_gt p := by
     use X ^ (p.natDegree + 1)
     simpa using degree_le_natDegree
 
-noncomputable instance : SuccOrder (Nimber.{u}[X]) := by
+noncomputable instance : SuccOrder Nimber.{u}[X] := by
   refine .ofCore (fun p ↦ .ofFinsupp ⟨(p.toFinsupp.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
