@@ -591,16 +591,17 @@ theorem IsAlgClosed.lt_algClosure_iff {x y : Nimber} (h : IsAlgClosed x) :
     x < y.algClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.algClosure_le_iff
 
-theorem algClosure_mono : Monotone algClosure := by
+@[gcongr]
+theorem algClosure_monotone : Monotone algClosure := by
   intro x y
   rw [(IsAlgClosed.algClosure y).algClosure_le_iff]
   exact (le_algClosure y).trans'
 
 theorem leftOrdContinuous_algClosure : LeftOrdContinuous algClosure := by
   intro s x hs₀ hs
-  have hbdd := algClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := algClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsAlgClosed.sSup (by simp) (by simpa) hbdd
-  refine ⟨algClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨algClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.algClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_algClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -619,7 +620,7 @@ theorem algClosure_fieldClosure (x : Nimber) : algClosure (fieldClosure x) = alg
   apply le_antisymm
   · rw [(IsAlgClosed.algClosure x).algClosure_le_iff]
     exact fieldClosure_le_algClosure x
-  · exact algClosure_mono (le_fieldClosure x)
+  · exact algClosure_monotone (le_fieldClosure x)
 
 @[simp]
 theorem algClosure_ringClosure (x : Nimber) : algClosure (ringClosure x) = algClosure x := by
@@ -675,6 +676,15 @@ theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) 
 theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
   isClub_ofPred_isAlgClosed.isNormal_enum
 
+theorem enumAlgClosed_add_one (x : Ordinal) :
+    enumAlgClosed (x + 1) = algClosure (succ (enumAlgClosed x)) := by
+  apply le_antisymm
+  · rw [enumAlgClosed_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsAlgClosed.algClosure _)
+    rw [← enumAlgClosed_def, (IsAlgClosed.enumAlgClosed _).lt_algClosure_iff, Order.lt_succ_iff]
+  · rw [(IsAlgClosed.enumAlgClosed _).algClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumAlgClosed.strictMono (lt_add_one x)
+
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/
 proof_wanted algClosure_zero : algClosure 0 = ∗(ω ^ ω ^ ω)
@@ -715,10 +725,11 @@ theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
       simp
 
 theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)
-    (hx : .some (X ^ 2 + X) ≤ leastNoRoots x) : √y < x := by
-  apply h.sqrt_lt hy (hx.trans_lt' <| WithTop.coe_lt_coe.2 _)
-  use 1
-  aesop
+    (hx : PerfectField h.toSubfield) : √y < x := by
+  let yx : h.toSubfield := ⟨y, hy⟩
+  obtain ⟨⟨c, hcx⟩, hc⟩ := (frobeniusEquiv h.toSubfield 2).surjective yx
+  simp_rw [frobeniusEquiv_def, Subtype.ext_iff, SubmonoidClass.coe_pow, yx] at hc
+  rwa [← mem_toSubfield_iff h, ← hc, sqrt_sq]
 
 theorem IsAlgClosed.sqrt_lt {x y : Nimber} (h : IsAlgClosed x) (hy : y < x) : √y < x := by
   apply h.toIsField.sqrt_lt hy
@@ -738,18 +749,12 @@ theorem IsField.X_sq_add_C_le_leastNoRoots {x : Nimber} (h : IsField x) (y : Nim
 theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     PerfectField h.toSubfield ↔ .some (X ^ 2 + X) ≤ leastNoRoots x := by
   constructor
-  · intro
+  · intro perf
     apply h.le_leastNoRoots_of_exists_isRoot
     rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
     refine ⟨by simp, fun b hb c _ hc => ?_, fun a ha _ _ hdeg => ?_⟩
     · obtain rfl : b = 0 := lt_one_iff.1 hb
-      rw [map_one, map_zero, one_mul, zero_mul, add_zero]
-      let cc : h.toSubfield := ⟨c, by simpa using hc 0⟩
-      refine ⟨_, ((frobeniusEquiv h.toSubfield 2).symm cc).2, ?_⟩
-      have hcc := (frobeniusEquiv h.toSubfield 2).apply_symm_apply cc
-      rw [frobeniusEquiv_def, ← CharTwo.add_eq_zero, Subtype.ext_iff,
-        Subfield.coe_zero, Subfield.coe_add, SubmonoidClass.coe_pow] at hcc
-      simpa using hcc
+      exact ⟨√c, h.sqrt_lt' (by simpa using hc 0) perf, by simp⟩
     · obtain rfl : a = 0 := lt_one_iff.1 ha
       absurd hdeg.not_ge
       rw [map_zero, zero_mul, zero_add]
@@ -758,7 +763,11 @@ theorem IsField.perfectField_iff_leastNoRoots {x : Nimber} (h : IsField x) :
     suffices _ : PerfectRing h.toSubfield 2 from PerfectRing.toPerfectField _ 2
     refine .ofSurjective _ _ ?_
     intro ⟨c, hc⟩
-    exact ⟨⟨sqrt c, h.sqrt_lt' hc hrt⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    refine ⟨⟨sqrt c, h.sqrt_lt hc (hrt.trans_lt' ?_)⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
+    rw [WithTop.coe_lt_coe, show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp]
+    apply (@exists_eq_right _ (· < _) _).mp
+    rw [Lex.exists_lt_quadratic]
+    exact .inr (.inl ⟨0, zero_lt_one, c, by simp⟩)
 
 theorem IsField.perfectField_of_btwn {x y : Nimber} (hx : IsField x) (hy : IsField y)
     (perf : PerfectField hx.toSubfield) (hxy : x ≤ y) (hyx : y ≤ algClosure x) :
@@ -781,6 +790,41 @@ theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
   · rw [← subfieldBot_eq]
     infer_instance
   · rwa [← fieldClosure_zero, algClosure_fieldClosure]
+
+theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 + C (x ^ 2)) := by
+  rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
+  have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
+  have hc := coeff_leastNoRoots_lt ht
+  have hrt := hx.isRoot_leastNoRoots ht
+  have hdeg := hx.one_lt_degree_leastNoRoots ht
+  rw [← WithTop.untop_lt_iff ht] at perf
+  rw [← WithTop.untop_eq_iff ht]
+  generalize x.leastNoRoots.untop ht = p at perf hc hrt hdeg
+  revert p perf hc hrt hdeg
+  rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
+  aesop (add simp [CharTwo.add_eq_zero, degree_linear_le])
+
+theorem IsField.sq_lt_self_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) : x ^ 2 < x := by
+  have hl := hx.leastNoRoots_eq_of_not_perfectField perf
+  have hc := coeff_leastNoRoots_lt (hl.trans_ne WithTop.coe_ne_top) 0
+  rw! [hl] at hc
+  rw [WithTop.untop_coe, coeff_add, coeff_X_pow, coeff_C] at hc
+  simpa using hc
+
+theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y < x ^ 2) : √y < x := by
+  apply hx.sqrt_lt (hy.trans (hx.sq_lt_self_of_not_perfectField perf))
+  rw [hx.leastNoRoots_eq_of_not_perfectField perf, WithTop.coe_lt_coe]
+  use 0
+  generalize x ^ 2 = c at hy ⊢
+  aesop
+
+theorem IsField.sqrt_le_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y ≤ x ^ 2) : √y ≤ x := by
+  obtain rfl | hy := hy.eq_or_lt; · simp
+  exact (hx.sqrt_lt_of_not_perfectField perf hy).le
 
 end Nimber
 end
