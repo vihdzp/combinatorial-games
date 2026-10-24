@@ -148,8 +148,8 @@ theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.coeff.sum fun o y 
   induction x using induction_on_max with
   | zero => simp
   | single_add o n f hf hn IH =>
-    rw [ofAddMonoidAlgebra, mapRange_single_add (by contrapose! hf; use o),
-      equivMapDomain_add, equivMapDomain_single, CNF.eval_single_add', ← val_of (CNF.eval ..),
+    rw [ofAddMonoidAlgebra, mapRange_add (by simp), mapRange_single, equivMapDomain_add,
+      equivMapDomain_single, CNF.eval_single_add', ← val_of (CNF.eval ..),
       of_omega0_opow_mul_natCast_add']
     · rw [coeff_ofCoeff, sum_add_index, ← IH, Finsupp.sum_single_index (by simp), mul_comm]
       simp [ofAddMonoidAlgebra]
