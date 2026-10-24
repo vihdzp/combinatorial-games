@@ -24,6 +24,7 @@ universe u
 
 /-! ### Players -/
 
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Either the Left or Right player. -/
 @[aesop safe cases, grind cases]
 inductive Player where
@@ -31,7 +32,7 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Fintype, Inhabited
+deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
 
@@ -118,6 +119,7 @@ end Player
 
 /-! ### Outcomes -/
 
+set_option backward.isDefEq.respectTransparency.types false in
 /-- The three possible outcomes of a game.
 
 We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
@@ -133,11 +135,12 @@ deriving DecidableEq, Fintype, Inhabited
 namespace Outcome
 
 /-- An auxiliary definition for the `LinearOrder` instance on `Outcome`. -/
-def toNat : Outcome → ℕ
+private def toNat : Outcome → ℕ
   | loss => 0
   | draw => 1
   | win => 2
 
+@[no_expose]
 instance : LinearOrder Outcome :=
   LinearOrder.lift' toNat (by decide)
 
