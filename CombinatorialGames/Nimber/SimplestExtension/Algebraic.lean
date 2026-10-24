@@ -21,7 +21,7 @@ This file proves the last part of the simplest extension theorem (see
 are algebraically closed.
 -/
 
-universe u
+universe u v
 
 open Order Ordinal Polynomial Set
 
@@ -37,6 +37,14 @@ instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
   · -- todo: remove `Algebra (ZMod p) K` assumption from `Subfield.botEquivZMod`
     have := ZMod.algebra K p
     exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
+
+@[simp]
+theorem Ordinal.ofNat_lt_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) < ω :=
+  natCast_lt_omega0 n
+
+@[simp]
+theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
+  simpa using Ordinal.lift_le (a := ω)
 
 namespace Polynomial
 
@@ -420,6 +428,11 @@ theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : I
   have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
+
+theorem IsField.fieldClosure_succ_eq_pow_natDegree_leastNoRoots {x : Nimber} (h : IsField x)
+    (ht) : fieldClosure (succ x) = ∗(val x ^ (x.leastNoRoots.untop ht).natDegree) :=
+  h.fieldClosure_succ_eq_pow_degree_leastNoRoots _
+    ⟨ht, degree_eq_natDegree (leastNoRoots_ne_zero' _)⟩
 
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)

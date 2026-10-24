@@ -25,7 +25,7 @@ open Cardinal Order Ordinal Set
 
 /-! ### For Mathlib -/
 
-set_option backward.isDefEq.respectTransparency.types false in
+attribute [local implicit_reducible] Function.Injective in
 /-- Restrict an order isomorphism to an initial segment. -/
 def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃o β) (x : α) :
     Iio x ≤i β where
@@ -76,10 +76,6 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
 theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
-@[simp]
-theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
-  simpa using Ordinal.lift_le (a := ω)
-
 theorem Ordinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
 
@@ -88,6 +84,59 @@ theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω 
   natCast_opow_omega0 Nat.AtLeastTwo.one_lt
 
 namespace Nimber
+
+/-! ### ω is a field -/
+
+theorem IsAlgClosed.omega0_le {x : Nimber} (hx : IsAlgClosed x) : ∗ω ≤ x := by
+  contrapose! hx
+  simp_rw [← val_lt_iff, lt_omega0, val_eq_iff] at hx
+  obtain ⟨n, rfl⟩ := hx
+  intro hn
+  have hi : Infinite (Iio _) := hn.isAlgClosed.instInfinite
+  rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card, omega0_le_lift] at hi
+  simpa using hi.not_gt
+
+-- TODO: prove this as a corollary of the classification of quadratic extensions.
+private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
+      intro ht
+      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
+      exact ht.omega0_le.not_gt IH
+    rw [Nat.cast_add_one, enumField_add_one,
+      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
+    rw [← val_lt_iff] at IH
+    obtain ⟨m, hm⟩ := lt_omega0.1 IH
+    rw [hm, ← natCast_pow]
+    exact natCast_lt_omega0 _
+
+@[simp]
+theorem enumField_omega0 : enumField ω = ∗ω := by
+  apply (of_le_enumField _).antisymm'
+  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
+  rintro _ ⟨n, rfl⟩
+  exact (enumField_natCast_lt_omega0 n).le
+
+@[simp]
+theorem enumRing_omega0 : enumRing ω = ∗ω := by
+  apply (of_le_enumRing _).antisymm'
+  grw [← enumField_omega0, enumRing_le_enumField]
+
+@[simp]
+theorem enumGroup_omega0 : enumGroup ω = ∗ω := by
+  apply (of_le_enumGroup _).antisymm'
+  grw [← enumRing_omega0, enumGroup_le_enumRing]
+
+@[simp]
+theorem IsField.omega0 : IsField (∗ω) := by
+  rw [← enumField_omega0]
+  exact IsField.enumField _
+
+@[simp]
+theorem IsRing.omega0 : IsRing (∗ω) :=
+  IsField.omega0.toIsRing
 
 /-! ### Cardinality of closures -/
 
@@ -139,28 +188,13 @@ theorem card_algClosure_le (x : Nimber) : (algClosure x).val.card ≤ max ℵ₀
     · rfl
 
 theorem card_fieldClosure_le (x : Nimber) : (fieldClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_fieldClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_fieldClosure]
-    · simp
-    · rfl
+  grw [fieldClosure_le_algClosure, card_algClosure_le]
 
 theorem card_ringClosure_le (x : Nimber) : (ringClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_ringClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_ringClosure]
-    · simp
-    · rfl
+  grw [ringClosure_le_fieldClosure, card_fieldClosure_le]
 
 theorem card_groupClosure_le (x : Nimber) : (groupClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_groupClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_groupClosure]
-    · simp
-    · rfl
+  grw [groupClosure_le_ringClosure, card_ringClosure_le]
 
 theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_ x) = ∗ω_ x := by
   induction x using Ordinal.limitRecOn with
@@ -185,39 +219,36 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     · rw [IH y hy hy₀]
       simpa using hy.le
 
--- TODO: this doesn't need `x ≠ 0`
-theorem enumField_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumField (ω_ x) = ∗ω_ x := by
-  apply (of_le_enumField _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumField_le_enumAlgClosed]
+@[simp]
+theorem enumField_omega (x : Ordinal) : enumField (ω_ x) = ∗ω_ x := by
+  obtain rfl | hx := eq_or_ne x 0
+  · simp
+  · apply (of_le_enumField _).antisymm'
+    grw [← enumAlgClosed_omega hx, enumField_le_enumAlgClosed]
 
--- TODO: this doesn't need `x ≠ 0`
-theorem enumRing_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumRing (ω_ x) = ∗ω_ x := by
+@[simp]
+theorem enumRing_omega (x : Ordinal) : enumRing (ω_ x) = ∗ω_ x := by
   apply (of_le_enumRing _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumRing_le_enumAlgClosed]
+  grw [← enumField_omega, enumRing_le_enumField]
 
 @[simp]
 theorem enumGroup_omega (x : Ordinal) : enumGroup (ω_ x) = ∗ω_ x := by
-  obtain rfl | hx₀ := eq_or_ne x 0
-  · simp [enumGroup_eq_two_opow]
   apply (of_le_enumGroup _).antisymm'
-  grw [← enumAlgClosed_omega hx₀, enumGroup_le_enumAlgClosed]
+  grw [← enumRing_omega, enumGroup_le_enumRing]
 
 theorem IsAlgClosed.omega {x : Ordinal} (hx : x ≠ 0) : IsAlgClosed (∗ω_ x) := by
   rw [← enumAlgClosed_omega hx]
   exact IsAlgClosed.enumAlgClosed _
 
--- TODO: this doesn't need `x ≠ 0`.
-theorem IsField.omega {x : Ordinal} (hx : x ≠ 0) : IsField (∗ω_ x) :=
-  (IsAlgClosed.omega hx).toIsField
+theorem IsField.omega (x : Ordinal) : IsField (∗ω_ x) := by
+  rw [← enumField_omega x]
+  exact IsField.enumField _
 
--- TODO: this doesn't need `x ≠ 0`.
-theorem IsRing.omega {x : Ordinal} (hx : x ≠ 0) : IsRing (∗ω_ x) :=
-  (IsAlgClosed.omega hx).toIsRing
+theorem IsRing.omega (x : Ordinal) : IsRing (∗ω_ x) :=
+  (IsField.omega x).toIsRing
 
-theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) := by
-  obtain rfl | hx := eq_or_ne x 0
-  · simp
-  · exact (IsAlgClosed.omega hx).toIsGroup
+theorem IsGroup.omega (x : Ordinal) : IsGroup (∗ω_ x) :=
+  (IsRing.omega x).toIsGroup
 
 end Nimber
 end
