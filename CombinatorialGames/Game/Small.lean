@@ -173,14 +173,11 @@ protected instance tiny (x : IGame) [Small x] : Small (⧾x) :=
 protected instance miny (x : IGame) [Small x] : Small (⧿x) :=
   .of_forall_of_nonempty (by simp) (by simp)
 
-protected theorem tiny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧾x) := by
-  refine of_between 0 (↑) ⟨(tiny_pos _).le, ?_⟩
-  rw [← tiny_zero]
-  exact tiny_antitone hx
+protected theorem tiny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧾x) :=
+  of_between 0 (⧾0) ⟨(tiny_pos _).le, tiny_antitone hx⟩
 
-protected theorem miny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧿x) := by
-  rw [← neg_tiny, Small.neg_iff]
-  exact .tiny_of_nonneg hx
+protected theorem miny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧿x) :=
+  of_between (⧿0) 0 ⟨miny_monotone hx, (miny_neg _).le⟩
 
 end Small
 end IGame
