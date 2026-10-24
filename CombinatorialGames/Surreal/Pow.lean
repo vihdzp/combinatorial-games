@@ -73,9 +73,8 @@ private def wpow (x : IGame.{u}) : IGame.{u} :=
 termination_by x
 decreasing_by igame_wf
 
-#adaptation_note /-- noncomputable is now needed -/ in
 @[no_expose]
-noncomputable instance : Wpow IGame where
+instance : Wpow IGame where
   wpow := wpow
 
 theorem wpow_def (x : IGame.{u}) : ω^ x =
@@ -239,22 +238,34 @@ theorem wpow_lt_mul_wpow' {r : Dyadic} (hr : 0 < r) (h : x < y) : ω^ x < r * ω
   have hr : (0 : ℝ) < r := by simpa
   simpa [← Surreal.mk_lt_mk] using wpow_lt_mul_wpow hr h
 
-theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
+theorem mul_wpow_lt_mul_wpow_of_pos (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) :
+    r * ω^ x < s * ω^ y := by
   rw [← Numeric.div_lt_iff' (mod_cast hs), ← Surreal.mk_lt_mk]
   dsimp
   rw [div_eq_mul_inv, mul_comm, ← mul_assoc, ← Real.toSurreal_inv, ← Real.toSurreal_mul]
   exact mul_wpow_lt_wpow _ h
 
-/-- A version of `mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
-theorem mul_wpow_lt_mul_wpow' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
+/-- A version of `mul_wpow_lt_mul_wpow_of_pos` stated using dyadic rationals. -/
+theorem mul_wpow_lt_mul_wpow_of_pos' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
   have hs : (0 : ℝ) < s := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow r hs h
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos r hs h
+
+theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x) :
+    r * ω^ x < s * ω^ y := by
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos (-s) (Left.neg_pos_iff.2 hr) h
+
+/-- A version of `mul_wpow_lt_mul_wpow_of_neg` stated using dyadic rationals. -/
+theorem mul_wpow_lt_mul_wpow_of_neg' (r : Dyadic) {s : Dyadic} (hr : r < 0) (h : y < x) :
+    r * ω^ x < s * ω^ y := by
+  have hr : r < (0 : ℝ) := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_neg s hr h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
   have h : 0 < t / 2 := by simpa
-  apply (add_lt_add (mul_wpow_lt_mul_wpow r h hx) (mul_wpow_lt_mul_wpow s h hy)).trans_le
+  apply (add_lt_add
+    (mul_wpow_lt_mul_wpow_of_pos r h hx) (mul_wpow_lt_mul_wpow_of_pos s h hy)).trans_le
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_add_mul_wpow_lt_mul_wpow` stated using dyadic rationals. -/
@@ -265,7 +276,8 @@ theorem mul_wpow_add_mul_wpow_lt_mul_wpow' (r s : Dyadic) {t : Dyadic} (ht : 0 <
 
 theorem mul_wpow_lt_mul_wpow_add_mul_wpow (r : ℝ) {s t : ℝ} (hs : 0 < s) (ht : 0 < t)
     (hx : x < y) (hy : x < z) : r * ω^ x < s * ω^ y + t * ω^ z := by
-  apply (add_lt_add (mul_wpow_lt_mul_wpow (r/2) hs hx) (mul_wpow_lt_mul_wpow (r/2) ht hy)).trans_le'
+  apply (add_lt_add
+    (mul_wpow_lt_mul_wpow_of_pos (r/2) hs hx) (mul_wpow_lt_mul_wpow_of_pos (r/2) ht hy)).trans_le'
   simp [← Surreal.mk_le_mk, ← add_mul]
 
 /-- A version of `mul_wpow_lt_mul_wpow_add_mul_wpow` stated using dyadic rationals. -/
@@ -289,6 +301,61 @@ theorem wpow_le_wpow : ω^ x ≤ ω^ y ↔ x ≤ y := by
 
 theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
   simpa [AntisymmRel] using h
+
+theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    r * ω^ x ≈ !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
+  apply Fits.equiv_of_forall_moves
+  · simp [Fits]
+  all_goals
+    simp only [forall_moves_mul, Player.mul_left, Player.mul_right,
+      moves_ofSets, Player.cases, exists_mem_image]
+    rintro (_ | _) a ha b hb
+  · rw [Real.leftMoves_toIGame] at ha
+    rw [leftMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
+    numeric
+    obtain ⟨t, ht, ht'⟩ := exists_between hs
+    use t, ht'
+    have := (mul_wpow_lt_mul_wpow_of_pos ((r - s) * a) (sub_pos.2 ht) (left_lt hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
+  · rw [Real.rightMoves_toIGame] at ha
+    rw [rightMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain ⟨a, ha, y, hy, rfl⟩ := hb
+    numeric
+    obtain ⟨t, ht⟩ := exists_lt r
+    use t, ht
+    have hsr : 0 < (s - r) * a := by simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos (s - t) hsr (lt_right hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
+  · rw [Real.leftMoves_toIGame] at ha
+    rw [Player.neg_left, rightMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain ⟨a, ha, y, hy, rfl⟩ := hb
+    numeric
+    obtain ⟨t, ht⟩ := exists_gt r
+    use t, ht
+    have hrs : 0 < (r - s) * a := by simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos (t - s) hrs (lt_right hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
+  · rw [Real.rightMoves_toIGame] at ha
+    rw [Player.neg_right, leftMoves_wpow] at hb
+    obtain ⟨s, hs, rfl⟩ := ha
+    obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
+    numeric
+    obtain ⟨t, ht, ht'⟩ := exists_between hs
+    use t, ht
+    have := (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (sub_pos.2 ht') (left_lt hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
+
+theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
+  simpa [mul_comm] using realCast_mul_wpow_equiv r x
 
 private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
@@ -474,13 +541,18 @@ theorem wpow_sub : ∀ x y : Surreal, ω^ (x - y) = ω^ x / ω^ y := by
   exact mk_eq (Numeric.wpow_sub_equiv x y)
 
 theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
-  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_wpow r h
+  cases x; cases y; exact Numeric.mul_wpow_lt_wpow r h
 
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
-  cases x; cases y; exact IGame.Numeric.wpow_lt_mul_wpow hr h
+  cases x; cases y; exact Numeric.wpow_lt_mul_wpow hr h
 
-theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
-  cases x; cases y; exact IGame.Numeric.mul_wpow_lt_mul_wpow r hs h
+theorem mul_wpow_lt_mul_wpow_of_pos (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) :
+    r * ω^ x < s * ω^ y := by
+  cases x; cases y; exact Numeric.mul_wpow_lt_mul_wpow_of_pos r hs h
+
+theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x) :
+    r * ω^ x < s * ω^ y := by
+  cases x; cases y; exact Numeric.mul_wpow_lt_mul_wpow_of_neg s hr h
 
 /-! ### Archimedean classes -/
 

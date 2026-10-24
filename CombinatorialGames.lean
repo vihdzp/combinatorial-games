@@ -27,6 +27,7 @@ public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
+public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 public import CombinatorialGames.NatOrdinal.Basic
 public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
@@ -36,6 +37,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+public import CombinatorialGames.Nimber.SmallDegree.Inseparable
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.Surreal.Basic
