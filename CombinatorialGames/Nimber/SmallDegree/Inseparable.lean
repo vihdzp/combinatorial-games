@@ -173,9 +173,9 @@ private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
   have hfp (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
   have hd := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
   have hdp (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
-  have hs := hf.fieldClosure_succ_eq_pow_degree_leastNoRoots hd.1 hd.2
+  have hs := hf.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 hd
   have hsp (m : Nat) (hm : m + 1 = n) :=
-    (hfp m hm).fieldClosure_succ_eq_pow_degree_leastNoRoots (hdp m hm).1 (hdp m hm).2
+    (hfp m hm).fieldClosure_succ_eq_pow_degree_leastNoRoots 2 (hdp m hm)
   have hsq (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
   have ih (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
   simp_rw [val_of] at hs hsp
