@@ -253,6 +253,8 @@ theorem range_enumGroup : range enumGroup = ofPred IsGroup := by
 theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ range enumGroup ↔ IsGroup x :=
   Set.ext_iff.1 range_enumGroup _
 
+alias ⟨_, IsGroup.mem_range_enumGroup⟩ := mem_range_enumGroup_iff
+
 theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
   mem_range_enumGroup_iff.1 ⟨x, rfl⟩
 
@@ -446,6 +448,8 @@ theorem range_enumRing : range enumRing = ofPred IsRing := by
 theorem mem_range_enumRing_iff {x : Nimber} : x ∈ range enumRing ↔ IsRing x :=
   Set.ext_iff.1 range_enumRing _
 
+alias ⟨_, IsRing.mem_range_enumRing⟩ := mem_range_enumRing_iff
+
 theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
   mem_range_enumRing_iff.1 ⟨x, rfl⟩
 
@@ -633,6 +637,8 @@ theorem range_enumField : range enumField = ofPred IsField := by
 
 theorem mem_range_enumField_iff {x : Nimber} : x ∈ range enumField ↔ IsField x :=
   Set.ext_iff.1 range_enumField _
+
+alias ⟨_, IsField.mem_range_enumField⟩ := mem_range_enumField_iff
 
 theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
   mem_range_enumField_iff.1 ⟨x, rfl⟩
