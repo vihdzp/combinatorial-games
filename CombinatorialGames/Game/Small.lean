@@ -19,6 +19,10 @@ small games, such as the nimbers.
 
 We prove that every dicotic game, and hence every impartial game is small. The former of these
 results is known as the lawnmower theorem.
+
+## TODO
+
+Prove that every small game lies between two dicotic games.
 -/
 
 public section
@@ -34,7 +38,7 @@ class Small (x : IGame) : Prop where
 
 namespace Small
 
-protected instance zero : Small 0 := ⟨le_of_lt, le_of_lt⟩
+@[simp] protected instance zero : Small 0 := ⟨le_of_lt, le_of_lt⟩
 
 theorem lt_numeric_of_pos (x : IGame) {y : IGame} [Small x] [Numeric y] (h : 0 < y) : x < y := by
   have h' : 0 < Surreal.mk y := by simpa
@@ -107,52 +111,77 @@ protected instance add (x y : IGame) [Small x] [Small y] : Small (x + y) where
 protected instance sub (x y : IGame) [Small x] [Small y] : Small (x - y) :=
   .add ..
 
+/-- A game between two small games is small. -/
 theorem of_between (x y) {z} [Small x] [Small y] (h : z ∈ Set.Icc x y) : Small z where
-  le_numeric_of_pos hw := h.2.trans (le_numeric_of_pos hw)
-  numeric_le_of_neg hw := (numeric_le_of_neg hw).trans h.1
+  le_numeric_of_pos hw := h.2.trans (le_numeric_of_pos y hw)
+  numeric_le_of_neg hw := (numeric_le_of_neg x hw).trans h.1
 
-end Small
-
-namespace Dicotic
-
-private theorem lt_numeric_of_pos {x} [Dicotic x] {y} [Numeric y] (hy : 0 < y) : x < y := by
+theorem lt_numeric_of_pos_of_forall_of_nonempty {x y : IGame} (hy : 0 < y) [Numeric y]
+    (h : ∀ p, ∀ y ∈ x.moves p, Small y) (hn : xᴿ.Nonempty) : x < y := by
   rw [lt_iff_le_not_ge, le_iff_forall_lf]
   refine ⟨⟨fun z hz ↦ ?_, fun z hz ↦ ?_⟩, ?_⟩
-  · dicotic
-    exact (lt_numeric_of_pos hy).not_ge
+  · have := h _ _ hz
+    exact (lt_numeric_of_pos z hy).not_ge
   · numeric
-    obtain (h | h) := Numeric.le_or_gt z 0
-    · cases ((Numeric.lt_right hz).trans_le h).not_gt hy
-    · exact (lt_numeric_of_pos h).not_ge
-  · obtain rfl | h := eq_or_ne x 0
-    · exact hy.not_ge
-    · simp_rw [Dicotic.ne_zero_iff, ← Set.nonempty_iff_ne_empty] at h
-      obtain ⟨z, hz⟩ := h right
-      dicotic
-      exact lf_of_right_le (lt_numeric_of_pos hy).le hz
-termination_by (x, y)
+    exact (lt_numeric_of_pos_of_forall_of_nonempty (hy.trans (Numeric.lt_right hz)) h hn).not_ge
+  · obtain ⟨z, hz⟩ := hn
+    have := h _ _ hz
+    exact lf_of_right_le (le_numeric_of_pos _ hy) hz
+termination_by y
 decreasing_by igame_wf
 
-/-- The **lawnmower theorem**: every dicotic game is small. -/
-instance toSmall (x) [Dicotic x] : Small x where
-  le_numeric_of_pos hy := (lt_numeric_of_pos hy).le
-  numeric_le_of_neg hy := IGame.neg_le_neg_iff.1 (lt_numeric_of_pos (IGame.zero_lt_neg.2 hy)).le
+theorem numeric_lt_of_neg_of_forall_of_nonempty {x y : IGame} (hy : y < 0) [Numeric y]
+    (h : ∀ p, ∀ y ∈ x.moves p, Small y) (hn : xᴸ.Nonempty) : y < x := by
+  rw [← IGame.neg_lt_neg_iff]
+  apply lt_numeric_of_pos_of_forall_of_nonempty
+  · simpa
+  · simpa [and_comm] using h
+  · simpa
 
-end Dicotic
+theorem of_forall_of_nonempty {x : IGame}
+    (h : ∀ p, ∀ y ∈ x.moves p, Small y) (hn : ∀ p, (x.moves p).Nonempty) : Small x where
+  le_numeric_of_pos hy := (lt_numeric_of_pos_of_forall_of_nonempty hy h (hn _)).le
+  numeric_le_of_neg hy := (numeric_lt_of_neg_of_forall_of_nonempty hy h (hn _)).le
+
+/-- The **lawnmower theorem**: every dicotic game is small. -/
+instance _root_.IGame.Dicotic.toSmall (x) [Dicotic x] : Small x := by
+  obtain rfl | hx := eq_or_ne x 0; · infer_instance
+  refine Small.of_forall_of_nonempty (fun p y hy ↦ ?_) (Dicotic.ne_zero_iff'.1 hx)
+  dicotic
+  exact Dicotic.toSmall y
+termination_by x
+decreasing_by igame_wf
 
 -- TODO: a game is dicotic iff every non-strict subposition is small.
 
-instance Impartial.toSmall (x) [Impartial x] : Small x :=
-  .of_equiv (nim_grundy_equiv x)
+instance _root_.IGame.Impartial.toSmall (x) [Impartial x] : Small x :=
+  .of_equiv (Impartial.nim_grundy_equiv x)
 
-protected theorem Small.tiny {x : IGame} (hx : 0 ≤ x) : Small (⧾x) := by
+@[simp]
+protected instance ofSets_zero_left (x : IGame) [Small x] : !{{0} | {x}}.Small :=
+  .of_forall_of_nonempty (by simpa) (by simp)
+
+@[simp]
+protected instance ofSets_zero_right (x : IGame) [Small x] : !{{x} | {0}}.Small :=
+  .of_forall_of_nonempty (by simpa) (by simp)
+
+@[simp]
+protected instance tiny (x : IGame) [Small x] : Small (⧾x) :=
+  .of_forall_of_nonempty (by simp) (by simp)
+
+@[simp]
+protected instance miny (x : IGame) [Small x] : Small (⧿x) :=
+  .of_forall_of_nonempty (by simp) (by simp)
+
+protected theorem tiny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧾x) := by
   refine of_between 0 (↑) ⟨(tiny_pos _).le, ?_⟩
   rw [← tiny_zero]
   exact tiny_antitone hx
 
-protected theorem Small.miny {x : IGame} (hx : 0 ≤ x) : Small (⧿x) := by
+protected theorem miny_of_nonneg {x : IGame} (hx : 0 ≤ x) : Small (⧿x) := by
   rw [← neg_tiny, Small.neg_iff]
-  exact .tiny hx
+  exact .tiny_of_nonneg hx
 
+end Small
 end IGame
 end
