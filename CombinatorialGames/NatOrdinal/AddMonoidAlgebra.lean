@@ -13,7 +13,13 @@ import Mathlib.SetTheory.Ordinal.CantorNormalForm
 /-!
 # Cantor normal form for `NatOrdinal`
 
-We prove that `NatOrdinal` is isomorphic to `ℕ[NatOrdinal]` via Cantor normal forms.
+We prove that `NatOrdinal` is isomorphic to `ℕ[NatOrdinal]` via Cantor normal forms. This formalizes
+the standard definition of natural operations as "polynomial operations on the Cantor normal form".
+
+## Main declarations
+
+- `toAddMonoidAlgebraIso`: the isomorphism `NatOrdinal ≃+* ℕ[NatOrdinal]`.
+- `ofAddMonoidAlgebra_def`: an explicit characterization of the map `ℕ[NatOrdinal] → NatOrdinal`.
 -/
 
 /-! ### For Mathlib -/
@@ -70,18 +76,13 @@ theorem equivMapDomain_add {f : α ≃ N} {g₁ g₂ : α →₀ M} :
 
 end Finsupp
 
-@[simp]
-theorem OrderIso.toEquiv_eq {α β : Type*} [Preorder α] [Preorder β] (f : α ≃o β) :
-    EquivLike.toEquiv f = f.toEquiv :=
-  rfl
-
 public noncomputable section
 
 namespace NatOrdinal
 open AddMonoidAlgebra Ordinal
 
-/-- `toAddMonoidAlgebra x e` returns the coefficient of `ω^ e` in `x`. This is a specialization of
-`Ordinal.CNF.coeff`. -/
+/-- `(toAddMonoidAlgebra x).coeff e` returns the coefficient of `ω^ e` in `x`. This is a
+specialization of `Ordinal.CNF.coeff`. -/
 def toAddMonoidAlgebra (x : NatOrdinal) : ℕ[NatOrdinal] :=
   .ofCoeff <| ((CNF.coeff ω x.val).mapRange toNat toNat_zero).equivMapDomain of
 
@@ -108,7 +109,7 @@ theorem ofAddMonoidAlgebra_zero : ofAddMonoidAlgebra 0 = 0 := by
 theorem toAddMonoidAlgebra_ofAddMonoidAlgebra (x) :
     toAddMonoidAlgebra (ofAddMonoidAlgebra x) = x := by
   ext e
-  simp only [ofAddMonoidAlgebra, OrderIso.toEquiv_eq, coeff_toAddMonoidAlgebra, val_of]
+  simp only [ofAddMonoidAlgebra, coeff_toAddMonoidAlgebra, val_of]
   rw [CNF.coeff_eval one_lt_omega0] <;> simp
 
 @[simp]
@@ -133,6 +134,14 @@ theorem toAddMonoidAlgebra_inj {x y} : toAddMonoidAlgebra x = toAddMonoidAlgebra
 theorem ofAddMonoidAlgebra_inj {x y} : ofAddMonoidAlgebra x = ofAddMonoidAlgebra y ↔ x = y :=
   ofAddMonoidAlgebra_injective.eq_iff
 
+private theorem sum_add_index (x y : NatOrdinal →₀ ℕ) :
+    (x + y).sum (fun o y ↦ y * ω^ o) = x.sum (fun o y ↦ y * ω^ o) + y.sum (fun o y ↦ y * ω^ o) :=
+  Finsupp.sum_add_index' (by simp) (by simp [add_mul])
+
+private theorem sum_sum_index (x : NatOrdinal →₀ ℕ) (f : NatOrdinal → ℕ → NatOrdinal →₀ ℕ) :
+    (x.sum f).sum (fun o y ↦ y * ω^ o) = x.sum fun a b ↦ (f a b).sum (fun o y ↦ y * ω^ o) :=
+  Finsupp.sum_sum_index (by simp) (by simp [add_mul])
+
 open Finsupp in
 theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.coeff.sum fun o y ↦ y * ω^ o := by
   cases x with | ofCoeff x
@@ -141,10 +150,9 @@ theorem ofAddMonoidAlgebra_def (x) : ofAddMonoidAlgebra x = x.coeff.sum fun o y 
   | single_add o n f hf hn IH =>
     rw [ofAddMonoidAlgebra, mapRange_single_add (by contrapose! hf; use o),
       equivMapDomain_add, equivMapDomain_single, CNF.eval_single_add', ← val_of (CNF.eval ..),
-      OrderIso.toEquiv_eq, RelIso.coe_fn_toEquiv, ← wpow_mul_natCast_add_of_lt']
-    · rw [sum_add_index' (by simp) (by simp [add_mul]), ← IH,
-        Finsupp.sum_single_index (by simp), mul_comm]
-      rfl
+      of_omega0_opow_mul_natCast_add']
+    · rw [coeff_ofCoeff, sum_add_index, ← IH, Finsupp.sum_single_index (by simp), mul_comm]
+      simp [ofAddMonoidAlgebra]
     · apply CNF.eval_lt
       · simp
       · simpa using! hf
@@ -168,19 +176,13 @@ def toAddMonoidAlgebraIso : NatOrdinal ≃+* ℕ[NatOrdinal] :=
     right_inv := ofAddMonoidAlgebra_toAddMonoidAlgebra
     map_add' x y := by
       simp_rw [ofAddMonoidAlgebra_def]
-      apply Finsupp.sum_add_index'
-      · simp
-      · simp [add_mul]
+      exact sum_add_index ..
     map_mul' x y := by
       simp_rw [ofAddMonoidAlgebra_def, Finsupp.sum_mul, AddMonoidAlgebra.mul_def, coeff_finsuppSum]
-      rw [Finsupp.sum_sum_index]
-      · congr!
-        rw [Finsupp.sum_sum_index]
-        · simp [Finsupp.mul_sum, wpow_add, ← mul_assoc, mul_comm]
-        · simp
-        · simp [add_mul]
-      · simp
-      · simp [add_mul]
+      rw [sum_sum_index]
+      congr!
+      rw [sum_sum_index]
+      simp [Finsupp.mul_sum, wpow_add, ← mul_assoc, mul_comm]
   }
 
 @[simp]
