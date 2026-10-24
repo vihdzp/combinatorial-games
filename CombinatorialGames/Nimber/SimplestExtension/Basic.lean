@@ -242,6 +242,10 @@ theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
 
+@[simp]
+theorem IsGroup.omega0 : IsGroup (∗ω) := by
+  simpa using IsGroup.omega0_opow 1
+
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
