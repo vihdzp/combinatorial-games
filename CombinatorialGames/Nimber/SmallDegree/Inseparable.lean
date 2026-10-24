@@ -291,24 +291,14 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
 
 theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
     ¬PerfectField (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield := by
-  intro
-  absurd bijective_frobenius (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield 2
-  intro hbij
+  rw [IsField.perfectField_iff_leastNoRoots, not_le]
   cases n with
   | zero =>
-    obtain ⟨c, hc⟩ := hbij.surjective ⟨t, by simp [← Order.succ_le_iff]⟩
-    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
-      RingEquiv.symm_apply_eq, ht.sqrt_eq] at hc
-    absurd c.2
-    simp [hc]
+    rw [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ, WithTop.coe_lt_coe]
+    use 1; aesop
   | succ n =>
-    obtain ⟨c, hc⟩ := hbij.surjective ⟨of (val (fieldClosure (succ t)) ^ 2 ^ n),
-      of.strictMono (pow_lt_pow_right₀ (one_lt_val.2 (IsField.fieldClosure _).one_lt)
-        (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n)))⟩
-    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
-      RingEquiv.symm_apply_eq, ht.sqrt_fieldClosure_succ_pow_two_pow] at hc
-    absurd c.2
-    simp [hc]
+    rw [ht.leastNoRoots_fieldClosure_succ_pow_two_pow_succ, WithTop.coe_lt_coe]
+    use 1; aesop
 
 omit ht in
 theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x) :
