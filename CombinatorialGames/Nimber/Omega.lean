@@ -76,7 +76,7 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
 theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
-theorem Cardinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
+theorem Ordinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
 
 @[simp]
@@ -203,9 +203,9 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [← ord_aleph, ← cof_omega_add_one, enumAlgClosed_def]
     refine Ordinal.enum_ord_cof_le isClub_ofPred_isAlgClosed (fun z hz ↦ ?_) (isSuccLimit_omega _)
-    rw [← Cardinal.card_le_aleph_iff] at hz
+    rw [← card_le_aleph_iff] at hz
     refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
-    grw [← Cardinal.card_le_aleph_iff, card_algClosure_le]
+    grw [← card_le_aleph_iff, card_algClosure_le]
     simpa
   | limit x hx IH =>
     have := hx.nonempty_Iio.to_subtype
