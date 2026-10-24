@@ -6,6 +6,7 @@ public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
 public import CombinatorialGames.Game.Canonical
 public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Confusion
 public import CombinatorialGames.Game.Functor
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Game.IGame
@@ -27,11 +28,13 @@ public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
+public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 public import CombinatorialGames.NatOrdinal.Basic
 public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
 public import CombinatorialGames.Nimber.Nat
+public import CombinatorialGames.Nimber.Omega
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
