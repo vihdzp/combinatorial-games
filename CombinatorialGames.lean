@@ -24,6 +24,7 @@ public import CombinatorialGames.Game.Special
 public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
+public import CombinatorialGames.Game.Stops
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.Small
@@ -34,6 +35,7 @@ public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
 public import CombinatorialGames.Nimber.Nat
+public import CombinatorialGames.Nimber.NatOrdinal
 public import CombinatorialGames.Nimber.Omega
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Basic

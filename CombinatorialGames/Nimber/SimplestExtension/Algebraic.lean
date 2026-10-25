@@ -7,10 +7,10 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
-public import Mathlib.Algebra.CharP.Subring
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 import Mathlib.Algebra.Algebra.ZMod
+import Mathlib.Algebra.CharP.Algebra
 import Mathlib.FieldTheory.PrimeField
 
 /-!
@@ -438,7 +438,8 @@ namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
 
--- todo: generalize to `IsField t`, and prove `IsField (of (val t ^ ω))` when `¬IsAlgClosed t`
+-- TODO: prove `IsField (of (val t ^ ω))` when `IsField t` but `¬IsAlgClosed t`.
+/-- See `IsRing.opow_omega0` for a more general theorem. -/
 theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
   toIsGroup := ht.toIsGroup.opow _
   ne_one := ne_of_gt (by simp [ht.one_lt])
@@ -672,12 +673,9 @@ theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
   isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
 
 theorem exists_isAlgClosed_between' {x : Nimber} (hx : algClosure 0 ≤ x) :
-    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) := by
-  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isAlgClosed_between hx
-  refine ⟨l, hl, hlx, ?_⟩
-  apply hxu.trans_le (H _ (IsAlgClosed.algClosure _) _)
-  rw [← Order.succ_le_iff]
-  exact le_algClosure _
+    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) :=
+  isClub_ofPred_isAlgClosed.exists_between_closure ⟨_, IsAlgClosed.algClosure 0, hx⟩
+    le_algClosure IsAlgClosed.algClosure
 
 /-- The normal enumerator function for algebraically closed fields. -/
 def enumAlgClosed : Ordinal ↪o Nimber :=

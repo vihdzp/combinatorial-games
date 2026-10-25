@@ -24,10 +24,6 @@ namespace NatNimber
 
 instance : LinearOrder NatNimber := Nat.instLinearOrder
 
-instance : Lean.ToExpr NatNimber where
-  toExpr x := .app (.const `NatNimber.of []) (Lean.toExpr x.val)
-  toTypeExpr := .const `NatNimber []
-
 instance : ToString NatNimber where
   toString x := "∗" ++ x.val.repr
 

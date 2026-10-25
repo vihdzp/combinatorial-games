@@ -87,6 +87,16 @@ instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
 
+/-- The intended use of this theorem is for `c` some kind of closure operator, e.g. the smallest
+element in the set that's `≥` than the input. -/
+theorem IsClub.exists_between_closure {α : Type*}
+    [LinearOrder α] [WellFoundedLT α] [NoMaxOrder α] [SuccOrder α]
+    {s : Set α} (hs : IsClub s) {x : α} (hx : ∃ y ∈ s, y ≤ x)
+    {c : α → α} (hc : ∀ x, x ≤ c x) (hc' : ∀ x, c x ∈ s) :
+    ∃ l ∈ s, l ≤ x ∧ x < c (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := hs.exists_between hx
+  exact ⟨l, hl, hlx, hxu.trans_le (H _ (hc' (Order.succ l)) (Order.succ_le_iff.1 (hc _)))⟩
+
 end
 
 noncomputable section
@@ -226,17 +236,17 @@ theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where
     rw [← ha.csSup_eq hs₀]
     exact IsGroup.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isGroup_le {x : Nimber} (hx : x ≠ 0) : ∃ y, IsGroup y ∧ y ≤ x :=
+  ⟨1, by simpa⟩
+
 theorem exists_isGroup_between {x : Nimber} (hx : x ≠ 0) :
     ∃ l, IsGroup l ∧ ∃ u, IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z :=
-  isClub_ofPred_isGroup.exists_between ⟨1, by simpa⟩
+  isClub_ofPred_isGroup.exists_between (exists_isGroup_le hx)
 
 theorem exists_isGroup_between' {x : Nimber} (hx : x ≠ 0) :
-    ∃ l, IsGroup l ∧ l ≤ x ∧ x < groupClosure (Order.succ l) := by
-  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isGroup_between hx
-  refine ⟨l, hl, hlx, ?_⟩
-  apply hxu.trans_le (H _ (IsGroup.groupClosure _) _)
-  rw [← Order.succ_le_iff]
-  exact le_groupClosure _
+    ∃ l, IsGroup l ∧ l ≤ x ∧ x < groupClosure (Order.succ l) :=
+  isClub_ofPred_isGroup.exists_between_closure (exists_isGroup_le hx)
+    le_groupClosure IsGroup.groupClosure
 
 /-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
 def enumGroup : Ordinal ↪o Nimber :=
@@ -433,17 +443,17 @@ theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
     rw [← ha.csSup_eq hs₀]
     exact IsRing.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isRing_le {x : Nimber} (hx : 1 < x) : ∃ y, IsRing y ∧ y ≤ x :=
+  ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
 theorem exists_isRing_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsRing l ∧ ∃ u, IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z :=
-  isClub_ofPred_isRing.exists_between ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+  isClub_ofPred_isRing.exists_between (exists_isRing_le hx)
 
 theorem exists_isRing_between' {x : Nimber} (hx : 1 < x) :
-    ∃ l, IsRing l ∧ l ≤ x ∧ x < ringClosure (Order.succ l) := by
-  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isRing_between hx
-  refine ⟨l, hl, hlx, ?_⟩
-  apply hxu.trans_le (H _ (IsRing.ringClosure _) _)
-  rw [← Order.succ_le_iff]
-  exact le_ringClosure _
+    ∃ l, IsRing l ∧ l ≤ x ∧ x < ringClosure (Order.succ l) :=
+  isClub_ofPred_isRing.exists_between_closure (exists_isRing_le hx)
+    le_ringClosure IsRing.ringClosure
 
 /-- The normal enumerator function for rings. -/
 def enumRing : Ordinal ↪o Nimber :=
@@ -639,17 +649,17 @@ theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
     rw [← ha.csSup_eq hs₀]
     exact IsField.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isField_le {x : Nimber} (hx : 1 < x) : ∃ y, IsField y ∧ y ≤ x :=
+  ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
 theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
-  isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+  isClub_ofPred_isField.exists_between (exists_isField_le hx)
 
 theorem exists_isField_between' {x : Nimber} (hx : 1 < x) :
-    ∃ l, IsField l ∧ l ≤ x ∧ x < fieldClosure (Order.succ l) := by
-  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isField_between hx
-  refine ⟨l, hl, hlx, ?_⟩
-  apply hxu.trans_le (H _ (IsField.fieldClosure _) _)
-  rw [← Order.succ_le_iff]
-  exact le_fieldClosure _
+    ∃ l, IsField l ∧ l ≤ x ∧ x < fieldClosure (Order.succ l) :=
+  isClub_ofPred_isField.exists_between_closure (exists_isField_le hx)
+    le_fieldClosure IsField.fieldClosure
 
 /-- The normal enumerator function for fields. -/
 def enumField : Ordinal ↪o Nimber :=

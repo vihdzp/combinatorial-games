@@ -8,8 +8,6 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
-import Mathlib.RingTheory.DedekindDomain.AdicValuation.Valuation
-import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Inseparable nimber extensions
@@ -28,12 +26,6 @@ public section
 @[simp]
 theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
     {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
-
--- #44989
-open Ordinal in
-@[simp]
-theorem Ordinal.ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
-  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
 
 namespace Subfield
 variable {K L : Type*} [DivisionRing K] [DivisionRing L] (s : Subfield K)
