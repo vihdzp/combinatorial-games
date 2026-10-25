@@ -11,9 +11,9 @@ public import CombinatorialGames.Surreal.Omnific.Basic
 import Mathlib.Algebra.Order.Group.Pointwise.Interval
 
 /-!
-# Group isomorphism between surreals and Hahn series
+# Ring isomorphism between surreals and Hahn series
 
-We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as ordered groups.
+We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as rings.
 
 Conway omits this proof entirely. This file is loosely based on pages 429-430 of Siegel.
 -/
@@ -31,6 +31,8 @@ lemma LinearOrderedAddCommGroupWithTop.sub_nonneg_of_le {α} [LinearOrderedAddCo
     {a b : α} (h : b ≤ a) : 0 ≤ a - b := by
   rw [sub_nonneg]
   exact .inl h
+
+/-! ### Addition -/
 
 namespace Surreal
 open ArchimedeanClass Order Set SurrealHahnSeries
@@ -331,6 +333,8 @@ theorem leadingCoeff_sub_trunc_of_mem_support {x i : Surreal} (hi : i ∈ x.supp
 
 end Surreal
 
+/-! ### Multiplication -/
+
 namespace SurrealHahnSeries
 open Surreal
 
@@ -421,21 +425,9 @@ private theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSer
         mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
       linarith only [hk']
 
-private theorem toSurreal_mul_single (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
-    (x * single i r).toSurreal = x.toSurreal * (r * ω^ i) := by
-  rw [mul_comm, toSurreal_single_mul, mul_comm]
-
 private theorem toSurreal_single_mul' (i : Surreal) (r : ℝ) (x : SurrealHahnSeries) :
     (single i r * x).toSurreal = r * (ω^ i * x.toSurreal) := by
   rw [toSurreal_single_mul, mul_assoc]
-
-private theorem toSurreal_single_one_mul (i : Surreal) (x : SurrealHahnSeries) :
-    (single i 1 * x).toSurreal = ω^ i * x.toSurreal := by
-  rw [toSurreal_single_mul, Real.toSurreal_one, one_mul]
-
-private theorem toSurreal_single_one_mul' (i : Surreal) (x : SurrealHahnSeries) :
-    (single i 1 * x).toSurreal = x.toSurreal * ω^ i := by
-  rw [toSurreal_single_one_mul, mul_comm]
 
 private theorem exists_sub_mul_sub_lt (a b : ℝ) {r : ℝ} (hr : 0 < r) :
     ∃ p < a, ∃ q < b, (a - p) * (b - q) < r := by
@@ -584,3 +576,44 @@ decreasing_by all_goals
   decreasing_tactic
 
 end SurrealHahnSeries
+
+namespace Surreal
+
+/-- `Surreal.toHahnSeries` as an `OrderRingIso`. -/
+@[expose, simps!]
+def toHahnSeriesRingIso : Surreal ≃+*o SurrealHahnSeries :=
+  .symm {
+    map_mul' := SurrealHahnSeries.toSurreal_mul
+    __ := toHahnSeriesMonoidIso.symm
+  }
+
+@[simp, norm_cast]
+theorem toHahnSeries_mul (x y : Surreal) : (x * y).toHahnSeries = x.toHahnSeries * y.toHahnSeries :=
+  map_mul toHahnSeriesRingIso x y
+
+@[simp, norm_cast]
+theorem toHahnSeries_inv (x : Surreal) : (x⁻¹).toHahnSeries = x.toHahnSeries⁻¹ :=
+  map_inv₀ toHahnSeriesRingIso x
+
+@[simp, norm_cast]
+theorem toHahnSeries_div (x y : Surreal) : (x / y).toHahnSeries = x.toHahnSeries / y.toHahnSeries :=
+  map_div₀ toHahnSeriesRingIso x y
+
+@[simp, norm_cast]
+theorem _root_.SurrealHahnSeries.toSurreal_inv (x : SurrealHahnSeries) :
+    (x⁻¹).toSurreal = x.toSurreal⁻¹ :=
+  map_inv₀ toHahnSeriesRingIso.symm x
+
+@[simp, norm_cast]
+theorem _root_.SurrealHahnSeries.toSurreal_div (x y : SurrealHahnSeries) :
+    (x / y).toSurreal = x.toSurreal / y.toSurreal :=
+  map_div₀ toHahnSeriesRingIso.symm x y
+
+open Pointwise in
+theorem support_mul_subset {x y : Surreal} : support (x * y) ⊆ support x + support y := by
+  conv_lhs => rw [← toSurreal_toHahnSeries x, ← toSurreal_toHahnSeries y,
+    ← SurrealHahnSeries.toSurreal_mul]
+  rw [SurrealHahnSeries.support_toSurreal]
+  exact SurrealHahnSeries.support_mul_subset
+
+end Surreal
