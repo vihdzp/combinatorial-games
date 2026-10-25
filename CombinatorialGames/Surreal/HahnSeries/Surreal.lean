@@ -133,19 +133,19 @@ private theorem truncAux_zero (R : ℝ → ℝ → Prop) : truncAux 0 R = ∅ :=
 @[simp] theorem truncLT_zero : truncLT 0 = ∅ := truncAux_zero _
 @[simp] theorem truncGT_zero : truncGT 0 = ∅ := truncAux_zero _
 
-private theorem trunc_add_single_truncAux {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+private theorem trunc_add_single_mem_truncAux {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     {R : ℝ → ℝ → Prop} (hi : i ∈ x.support) (hr : R r (x.coeff i)) :
     x.trunc i + single i r ∈ truncAux x R := by
   unfold truncAux
   aesop
 
-theorem trunc_add_single_truncLT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+theorem trunc_add_single_mem_truncLT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (hi : i ∈ x.support) (hr : r < x.coeff i) : x.trunc i + single i r ≺ x :=
-  trunc_add_single_truncAux hi hr
+  trunc_add_single_mem_truncAux hi hr
 
-theorem trunc_add_single_truncGT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
+theorem trunc_add_single_mem_truncGT {x : SurrealHahnSeries} {i : Surreal} {r : ℝ}
     (hi : i ∈ x.support) (hr : x.coeff i < r) : x.trunc i + single i r ≻ x :=
-  trunc_add_single_truncAux hi hr
+  trunc_add_single_mem_truncAux hi hr
 
 private instance small_truncAux (x : SurrealHahnSeries.{u}) (R : ℝ → ℝ → Prop) :
     Small.{u} (truncAux x R) :=

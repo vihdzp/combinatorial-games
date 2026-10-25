@@ -433,6 +433,24 @@ private theorem toSurreal_single_one_mul' (i : Surreal) (x : SurrealHahnSeries) 
     (single i 1 * x).toSurreal = x.toSurreal * ω^ i := by
   rw [toSurreal_single_one_mul, mul_comm]
 
+private theorem exists_sub_mul_sub_lt (a b : ℝ) {r : ℝ} (hr : 0 < r) :
+    ∃ p < a, ∃ q < b, (a - p) * (b - q) < r := by
+  obtain ⟨q, hbq, hqb⟩ := exists_between ((sub_lt_self_iff b).2 hr)
+  refine ⟨_, sub_one_lt a, q, hqb, ?_⟩
+  simpa [sub_lt_comm]
+
+private theorem exists_sub_mul_sub'_gt (a b : ℝ) {r : ℝ} (hr : r < 0) :
+    ∃ p < a, ∃ q > b, r < (a - p) * (b - q) := by
+  obtain ⟨q, hbq, hqb⟩ := exists_between (lt_add_of_pos_right b (neg_pos.2 hr))
+  refine ⟨_, sub_one_lt a, q, hbq, ?_⟩
+  simpa [lt_sub_iff_add_lt'] using hqb
+
+private theorem exists_sub'_mul_sub_gt (a b : ℝ) {r : ℝ} (hr : r < 0) :
+    ∃ p > a, ∃ q < b, r < (a - p) * (b - q) := by
+  obtain ⟨q, hq, p, hp, h⟩ := exists_sub_mul_sub'_gt b a hr
+  refine ⟨p, hp, q, hq, ?_⟩
+  rwa [mul_comm]
+
 @[simp]
 theorem toSurreal_mul (x y : SurrealHahnSeries) :
     (x * y).toSurreal = x.toSurreal * y.toSurreal := by
@@ -441,48 +459,79 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
   | limit x IH =>
     rw [← mk_toIGame, toSurreal_def', toSurreal_def', ← mk_mul, mk_eq_mk]
     apply IGame.Fits.equiv_of_forall_moves_of_equiv _ (toIGame_equiv _)
+    · constructor
+      · intro y hy
+        sorry
+      · sorry
     · sorry
-    · simp_rw [IGame.moves_ofSets, Player.cases, Set.forall_mem_image, IGame.exists_moves_mul,
+      /-simp_rw [IGame.leftMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
         Player.mul_left, forall_mem_truncLT, mem_support_iff]
       intro i hab r hr
       obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
-      obtain ⟨p, q, hpq⟩ :
-          ∃ p q : ℝ, (x.coeff a + p) * (y.coeff b + q) < (x * y).coeff (a + b) - r := by
-        sorry
-      refine ⟨.left, x.trunc a - single a p, ?_, y.trunc b - single b q, ?_, ?_⟩
-      · simp [exists_mem_truncLT]
-        sorry
-      · simp [exists_mem_truncLT]
-        sorry
+      obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub_mul_sub_lt (x.coeff a) (y.coeff b) (sub_pos.2 hr)
+      refine ⟨.left, (x.trunc a + single a p :), ?_, (y.trunc b + single b q :), ?_, ?_⟩
+      · rw [IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+        exact ⟨a, ha, _, hp, rfl⟩
+      · rw [IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+        exact ⟨b, hb, _, hq, rfl⟩
       · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
-          Surreal.mk_sub, mk_toIGame, sub_mul, mul_sub, toSurreal_single]
+          mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
         repeat rw [← toSurreal_mul]
         rw [← toSurreal_single_mul, ← toSurreal_single_mul, mul_rotate' x.toSurreal,
           ← toSurreal_single_mul', mul_rotate', ← toSurreal_single_mul', mul_mul_mul_comm,
           ← Real.toSurreal_mul, ← wpow_add]
         simp only [← toSurreal_single, ← toSurreal_add, ← toSurreal_sub]
         rw [toSurreal_le_toSurreal_iff]
-        ring_nf
-        have : (x - x.trunc a) * (y - y.trunc b) +
-            (x - x.trunc a) * single b q + single a p * (y - y.trunc b) +
-            (single (a + b) (p * q) + single (a + b) r) ≤ x * y - (x * y).trunc (a + b) := by
-          rw [← single_add]
-          apply le_of_lt
-          apply lt_of_support_subset_of_lt (a + b)
-          · apply_rules [support_add_subset_of_subset, support_sub_subset_of_subset]
-            · grw [support_mul_subset, support_sub_trunc, support_sub_trunc, Set.Iic_add_Iic_subset]
-            · grw [support_mul_single_subset, support_sub_trunc]
-              intro
-              simp
-            · grw [support_single_mul_subset, support_sub_trunc]
-              intro
-              simp [add_comm]
-            · exact support_single_subset.trans (by simp)
-          · exact support_sub_trunc
-          · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
-            linarith only [hpq]
-        linarith only [this]
+        suffices (x - x.trunc a) * (y - y.trunc b) -
+            (x - x.trunc a) * single b q - single a p * (y - y.trunc b) +
+            (single (a + b) (p * q) + single (a + b) r) ≤ x * y - (x * y).trunc (a + b) by
+          linarith only [this]
+        rw [← single_add]
+        apply (lt_of_support_subset_of_lt (a + b) _ support_sub_trunc _).le
+        · apply_rules [support_add_subset_of_subset, support_sub_subset_of_subset]
+          · grw [support_mul_subset, support_sub_trunc, support_sub_trunc, Set.Iic_add_Iic_subset]
+          · grw [support_mul_single_subset, support_sub_trunc]
+            simp
+          · grw [support_single_mul_subset, support_sub_trunc]
+            simp [add_comm]
+          · exact support_single_subset.trans (by simp)
+        · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+          linarith only [hpq]-/
     · sorry
+      /-simp_rw [IGame.rightMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
+        Player.mul_right, forall_mem_truncGT, mem_support_iff]
+      intro i hab r hr
+      obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
+      obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub'_mul_sub_gt (x.coeff a) (y.coeff b) (sub_neg.2 hr)
+      refine ⟨.right, (x.trunc a + single a p :), ?_, (y.trunc b + single b q :), ?_, ?_⟩
+      · rw [IGame.rightMoves_ofSets, Set.mem_image, exists_mem_truncGT]
+        exact ⟨a, ha, _, hp, rfl⟩
+      · rw [Player.neg_right, IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+        exact ⟨b, hb, _, hq, rfl⟩
+      · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
+          mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
+        repeat rw [← toSurreal_mul]
+        rw [← toSurreal_single_mul, ← toSurreal_single_mul, mul_rotate' x.toSurreal,
+          ← toSurreal_single_mul', mul_rotate', ← toSurreal_single_mul', mul_mul_mul_comm,
+          ← Real.toSurreal_mul, ← wpow_add]
+        simp only [← toSurreal_single, ← toSurreal_add, ← toSurreal_sub]
+        rw [toSurreal_le_toSurreal_iff]
+        suffices x * y - (x * y).trunc (a + b) ≤ (x - x.trunc a) * (y - y.trunc b) -
+            (x - x.trunc a) * single b q - single a p * (y - y.trunc b) +
+            (single (a + b) (p * q) + single (a + b) r) by
+          linarith only [this]
+        rw [← single_add]
+        apply (lt_of_support_subset_of_lt (a + b) support_sub_trunc _ _).le
+        -- This is the same as above.
+        · apply_rules [support_add_subset_of_subset, support_sub_subset_of_subset]
+          · grw [support_mul_subset, support_sub_trunc, support_sub_trunc, Set.Iic_add_Iic_subset]
+          · grw [support_mul_single_subset, support_sub_trunc]
+            simp
+          · grw [support_single_mul_subset, support_sub_trunc]
+            simp [add_comm]
+          · exact support_single_subset.trans (by simp)
+        · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+          linarith only [hpq]-/
 termination_by (x, y)
 decreasing_by all_goals sorry
 
