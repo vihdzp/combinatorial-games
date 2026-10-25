@@ -12,6 +12,10 @@ import Mathlib.Order.GameAdd
 
 /-!
 # Ordinal sum of games
+
+The ordinal sum of two games `x` and `y`, written `x : y`,
+is defined as `{xᴸ, x : yᴸ | xᴿ, x : yᴿ}`. Moving in `y` is done as in the ordinary sum,
+but a move in `x` destroys the other component `y` of the sum.
 -/
 
 public noncomputable section
@@ -19,6 +23,10 @@ open Set
 
 namespace IGame
 
+/--
+The ordinal sum of `x` and `y` is played like the ordinay sum, but making a move in `x`
+destroys the other component `y` of the sum.
+-/
 def ordinalSum (x y : IGame) : IGame :=
   !{fun p => x.moves p ∪ range fun z : y.moves p => ordinalSum x z}
 termination_by y
