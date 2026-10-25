@@ -1,64 +1,66 @@
-import CombinatorialGames.Counterexamples.Multiplication
-import CombinatorialGames.Counterexamples.TinyOrder
-import CombinatorialGames.Game.Basic
-import CombinatorialGames.Game.Birthday
-import CombinatorialGames.Game.Canonical
-import CombinatorialGames.Game.Classes
-import CombinatorialGames.Game.Confusion
-import CombinatorialGames.Game.Functor
-import CombinatorialGames.Game.Graph
-import CombinatorialGames.Game.IGame
-import CombinatorialGames.Game.Impartial.Grundy
-import CombinatorialGames.Game.Impartial.Multiplication
-import CombinatorialGames.Game.Loopy.Basic
-import CombinatorialGames.Game.Loopy.IGame
-import CombinatorialGames.Game.Loopy.Outcome
-import CombinatorialGames.Game.Loopy.StoppingTime
-import CombinatorialGames.Game.Order
-import CombinatorialGames.Game.Ordinal
-import CombinatorialGames.Game.Player
-import CombinatorialGames.Game.Small
-import CombinatorialGames.Game.Special
-import CombinatorialGames.Game.Specific.Domineering
-import CombinatorialGames.Game.Specific.Nim
-import CombinatorialGames.Game.Specific.Poset
-import CombinatorialGames.Game.Stops
-import CombinatorialGames.Mathlib.Dyadic
-import CombinatorialGames.Mathlib.EtaSet
-import CombinatorialGames.Mathlib.Small
-import CombinatorialGames.Mathlib.WithTop
-import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
-import CombinatorialGames.NatOrdinal.Basic
-import CombinatorialGames.NatOrdinal.Pow
-import CombinatorialGames.Nimber.Basic
-import CombinatorialGames.Nimber.Field
-import CombinatorialGames.Nimber.Finsupp
-import CombinatorialGames.Nimber.Nat
-import CombinatorialGames.Nimber.NatOrdinal
-import CombinatorialGames.Nimber.Omega
-import CombinatorialGames.Nimber.SimplestExtension.Algebraic
-import CombinatorialGames.Nimber.SimplestExtension.Basic
-import CombinatorialGames.Nimber.SimplestExtension.Closure
-import CombinatorialGames.Nimber.SimplestExtension.Polynomial
-import CombinatorialGames.Nimber.SmallDegree.Inseparable
-import CombinatorialGames.SignExpansion.Basic
-import CombinatorialGames.SignExpansion.Simplicity
-import CombinatorialGames.Surreal.Basic
-import CombinatorialGames.Surreal.Birthday.Basic
-import CombinatorialGames.Surreal.Birthday.Cut
-import CombinatorialGames.Surreal.Birthday.Dyadic
-import CombinatorialGames.Surreal.Cut
-import CombinatorialGames.Surreal.Division
-import CombinatorialGames.Surreal.Dyadic
-import CombinatorialGames.Surreal.HahnSeries.Basic
-import CombinatorialGames.Surreal.Leading
-import CombinatorialGames.Surreal.Multiplication
-import CombinatorialGames.Surreal.Omnific.Basic
-import CombinatorialGames.Surreal.Ordinal
-import CombinatorialGames.Surreal.Pow
-import CombinatorialGames.Surreal.Real
-import CombinatorialGames.Tactic.AddInstances
-import CombinatorialGames.Tactic.GameCmp
-import CombinatorialGames.Tactic.OrdinalAlias
-import CombinatorialGames.Tactic.Register
-import CombinatorialGames.Test.GameCmp
+module  -- shake: keep-all --deprecated_module: ignore
+
+public import CombinatorialGames.Counterexamples.Multiplication
+public import CombinatorialGames.Counterexamples.TinyOrder
+public import CombinatorialGames.Game.Basic
+public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Game.Canonical
+public import CombinatorialGames.Game.Classes
+public import CombinatorialGames.Game.Confusion
+public import CombinatorialGames.Game.Functor
+public import CombinatorialGames.Game.Graph
+public import CombinatorialGames.Game.IGame
+public import CombinatorialGames.Game.Impartial.Grundy
+public import CombinatorialGames.Game.Impartial.Multiplication
+public import CombinatorialGames.Game.Loopy.Basic
+public import CombinatorialGames.Game.Loopy.IGame
+public import CombinatorialGames.Game.Loopy.Outcome
+public import CombinatorialGames.Game.Loopy.StoppingTime
+public import CombinatorialGames.Game.Order
+public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.Player
+public import CombinatorialGames.Game.Small
+public import CombinatorialGames.Game.Special
+public import CombinatorialGames.Game.Specific.Domineering
+public import CombinatorialGames.Game.Specific.Nim
+public import CombinatorialGames.Game.Specific.Poset
+public import CombinatorialGames.Game.Stops
+public import CombinatorialGames.Mathlib.Dyadic
+public import CombinatorialGames.Mathlib.EtaSet
+public import CombinatorialGames.Mathlib.Small
+public import CombinatorialGames.Mathlib.WithTop
+public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
+public import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.NatOrdinal.Pow
+public import CombinatorialGames.Nimber.Basic
+public import CombinatorialGames.Nimber.Field
+public import CombinatorialGames.Nimber.Finsupp
+public import CombinatorialGames.Nimber.Nat
+public import CombinatorialGames.Nimber.NatOrdinal
+public import CombinatorialGames.Nimber.Omega
+public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+public import CombinatorialGames.Nimber.SimplestExtension.Closure
+public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
+public import CombinatorialGames.Nimber.SmallDegree.Inseparable
+public import CombinatorialGames.SignExpansion.Basic
+public import CombinatorialGames.SignExpansion.Simplicity
+public import CombinatorialGames.Surreal.Basic
+public import CombinatorialGames.Surreal.Birthday.Basic
+public import CombinatorialGames.Surreal.Birthday.Cut
+public import CombinatorialGames.Surreal.Birthday.Dyadic
+public import CombinatorialGames.Surreal.Cut
+public import CombinatorialGames.Surreal.Division
+public import CombinatorialGames.Surreal.Dyadic
+public import CombinatorialGames.Surreal.HahnSeries.Basic
+public import CombinatorialGames.Surreal.Leading
+public import CombinatorialGames.Surreal.Multiplication
+public import CombinatorialGames.Surreal.Omnific.Basic
+public import CombinatorialGames.Surreal.Ordinal
+public import CombinatorialGames.Surreal.Pow
+public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.Tactic.AddInstances
+public import CombinatorialGames.Tactic.GameCmp
+public import CombinatorialGames.Tactic.OrdinalAlias
+public import CombinatorialGames.Tactic.Register
+public import CombinatorialGames.Test.GameCmp
