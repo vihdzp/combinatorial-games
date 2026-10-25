@@ -439,21 +439,15 @@ private theorem toSurreal_single_one_mul' (i : Surreal) (x : SurrealHahnSeries) 
 
 private theorem exists_sub_mul_sub_lt (a b : ℝ) {r : ℝ} (hr : 0 < r) :
     ∃ p < a, ∃ q < b, (a - p) * (b - q) < r := by
-  obtain ⟨q, hbq, hqb⟩ := exists_between ((sub_lt_self_iff b).2 hr)
+  obtain ⟨q, hbq, hqb⟩ := exists_between (a₁ := b - r) (a₂ := b) (by simpa)
   refine ⟨_, sub_one_lt a, q, hqb, ?_⟩
   simpa [sub_lt_comm]
 
-private theorem exists_sub_mul_sub'_gt (a b : ℝ) {r : ℝ} (hr : r < 0) :
-    ∃ p < a, ∃ q > b, r < (a - p) * (b - q) := by
-  obtain ⟨q, hbq, hqb⟩ := exists_between (lt_add_of_pos_right b (neg_pos.2 hr))
-  refine ⟨_, sub_one_lt a, q, hbq, ?_⟩
-  simpa [lt_sub_iff_add_lt'] using hqb
-
-private theorem exists_sub'_mul_sub_gt (a b : ℝ) {r : ℝ} (hr : r < 0) :
+private theorem exists_sub_mul_sub_gt (a b : ℝ) {r : ℝ} (hr : r < 0) :
     ∃ p > a, ∃ q < b, r < (a - p) * (b - q) := by
-  obtain ⟨q, hq, p, hp, h⟩ := exists_sub_mul_sub'_gt b a hr
-  refine ⟨p, hp, q, hq, ?_⟩
-  rwa [mul_comm]
+  obtain ⟨p, hap, hpa⟩ := exists_between (a₁ := a) (a₂ := a + - r) (by simpa)
+  refine ⟨p, hap, _, sub_one_lt b, ?_⟩
+  simpa [lt_sub_iff_add_lt'] using hpa
 
 @[simp]
 theorem toSurreal_mul (x y : SurrealHahnSeries) :
@@ -463,8 +457,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
   · constructor
     · simp_rw [IGame.forall_moves_mul, Player.forall, IGame.moves_ofSets, Player.cases,
         Set.forall_mem_image, forall_mem_truncLT, forall_mem_truncGT]
-      -- Both branches are almost the same
-      constructor
+      constructor <;>
       · intro a ha p hp b hb q hq
         simp_rw [← Surreal.mk_le_mk, mk_toIGame, mk_mulOption, ← toSurreal_def',
           mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
@@ -490,60 +483,9 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
             simp
         · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
           linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
-      · intro a ha p hp b hb q hq
-        simp_rw [← Surreal.mk_le_mk, mk_toIGame, mk_mulOption, ← toSurreal_def',
-          mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
-        iterate 3 rw [← toSurreal_mul]
-        · rw [← toSurreal_single_mul, ← toSurreal_single_mul, mul_rotate' x.toSurreal,
-            ← toSurreal_single_mul', mul_rotate', ← toSurreal_single_mul', mul_mul_mul_comm,
-            ← Real.toSurreal_mul, ← wpow_add]
-          simp only [← toSurreal_single, ← toSurreal_add, ← toSurreal_sub]
-          rw [toSurreal_le_toSurreal_iff]
-          suffices (x - x.trunc a) * single b q + single a p * (y - y.trunc b) <
-              (x - x.trunc a) * (y - y.trunc b) + single (a + b) (p * q) by
-            linarith only [this]
-          apply lt_of_support_subset_of_lt (a + b)
-          · apply support_add_subset_of_subset
-            · grw [support_mul_single_subset, support_sub_trunc]
-              simp
-            · grw [support_single_mul_subset, support_sub_trunc]
-              simp [add_comm]
-          · apply support_add_subset_of_subset
-            · grw [support_mul_subset, support_sub_trunc, support_sub_trunc]
-              exact Set.Iic_add_Iic_subset a b
-            · grw [support_single_subset]
-              simp
-          · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
-            linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
     · simp_rw [IGame.forall_moves_mul, Player.forall, IGame.moves_ofSets, Player.cases,
         Set.forall_mem_image, forall_mem_truncLT, forall_mem_truncGT]
-      -- Both branches are almost the same
-      constructor
-      · intro a ha p hp b hb q hq
-        simp_rw [← Surreal.mk_le_mk, mk_toIGame, mk_mulOption, ← toSurreal_def',
-          mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
-        iterate 3 rw [← toSurreal_mul]
-        rw [← toSurreal_single_mul, ← toSurreal_single_mul, mul_rotate' x.toSurreal,
-          ← toSurreal_single_mul', mul_rotate', ← toSurreal_single_mul', mul_mul_mul_comm,
-          ← Real.toSurreal_mul, ← wpow_add]
-        simp only [← toSurreal_single, ← toSurreal_add, ← toSurreal_sub]
-        rw [toSurreal_le_toSurreal_iff]
-        suffices (x - x.trunc a) * (y - y.trunc b) + single (a + b) (p * q) <
-            (x - x.trunc a) * single b q + single a p * (y - y.trunc b) by
-          linarith only [this]
-        apply lt_of_support_subset_of_lt (a + b)
-        · apply support_add_subset_of_subset
-          · grw [support_mul_subset, support_sub_trunc, support_sub_trunc]
-            exact Set.Iic_add_Iic_subset a b
-          · grw [support_single_subset]
-            simp
-        · apply support_add_subset_of_subset
-          · grw [support_mul_single_subset, support_sub_trunc]
-            simp
-          · grw [support_single_mul_subset, support_sub_trunc]
-            simp [add_comm]
-        · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
-          linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
+      constructor <;>
       · intro a ha p hp b hb q hq
         simp_rw [← Surreal.mk_le_mk, mk_toIGame, mk_mulOption, ← toSurreal_def',
           mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
@@ -606,7 +548,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
       Player.mul_right, forall_mem_truncGT]
     intro i hab r hr
     obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
-    obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub'_mul_sub_gt (x.coeff a) (y.coeff b) (sub_neg.2 hr)
+    obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub_mul_sub_gt (x.coeff a) (y.coeff b) (sub_neg.2 hr)
     refine ⟨.right, (x.trunc a + single a p :), ?_, (y.trunc b + single b q :), ?_, ?_⟩
     · rw [IGame.rightMoves_ofSets, Set.mem_image, exists_mem_truncGT]
       exact ⟨a, ha, _, hp, rfl⟩
@@ -626,7 +568,6 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
         linarith only [this]
       rw [← single_add]
       apply (lt_of_support_subset_of_lt (a + b) support_sub_trunc _ _).le
-      -- This is the same as above.
       · apply_rules [support_add_subset_of_subset, support_sub_subset_of_subset]
         · grw [support_mul_subset, support_sub_trunc, support_sub_trunc, Set.Iic_add_Iic_subset]
         · grw [support_mul_single_subset, support_sub_trunc]
