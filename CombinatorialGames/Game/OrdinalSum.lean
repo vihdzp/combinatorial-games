@@ -79,13 +79,8 @@ theorem nim_ordinalSum_nim (o o' : Nimber) :
   induction o' using WellFoundedLT.induction with | ind o' ih
   refine IGame.ext fun p => ?_
   simp_rw [moves_ordinalSum, moves_nim, Set.image_image]
-  conv =>
-    enter [1, 2]
-    apply_congr
-    tactic =>
-      apply ih
-      assumption
-  rw [← Set.image_image nim (fun z => .of (o.val + z.val)) (Iio o'), ← Set.image_union]
+  rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
+    ← Set.image_image nim (fun z => .of (o.val + z.val)) (Iio o'), ← Set.image_union]
   refine congr(nim '' $(Set.ext fun x => ?_))
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← Nimber.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← Nimber.val.exists_congr_right]
@@ -96,13 +91,8 @@ theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
   induction o' using WellFoundedLT.induction with | ind o' ih
   refine IGame.ext fun p => p.casesOn ?_ (by simp [moves_ordinalSum])
   simp_rw [moves_ordinalSum, NatOrdinal.moves_left_toIGame, Set.image_image]
-  conv =>
-    enter [1, 2]
-    apply_congr
-    tactic =>
-      apply ih
-      assumption
-  rw [← Set.image_image NatOrdinal.toIGame (fun z => .of (o.val + z.val)) (Iio o'),
+  rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
+    ← Set.image_image NatOrdinal.toIGame (fun z => .of (o.val + z.val)) (Iio o'),
     ← Set.image_union]
   refine congr(NatOrdinal.toIGame '' $(Set.ext fun x => ?_))
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
