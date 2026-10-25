@@ -248,8 +248,8 @@ theorem mul_wpow_lt_mul_wpow_of_pos (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y)
 /-- A version of `mul_wpow_lt_mul_wpow_of_pos` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_of_pos' (r : Dyadic) {s : Dyadic} (hs : 0 < s) (h : x < y) :
     r * ω^ x < s * ω^ y := by
-  have hs : (0 : ℝ) < s.toRat := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos r.toRat hs h
+  have hs : (0 : ℝ) < s := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_pos r hs h
 
 theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x) :
     r * ω^ x < s * ω^ y := by
@@ -258,8 +258,8 @@ theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x)
 /-- A version of `mul_wpow_lt_mul_wpow_of_neg` stated using dyadic rationals. -/
 theorem mul_wpow_lt_mul_wpow_of_neg' (r : Dyadic) {s : Dyadic} (hr : r < 0) (h : y < x) :
     r * ω^ x < s * ω^ y := by
-  have hr : r.toRat < (0 : ℝ) := by simpa
-  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_neg s.toRat hr h
+  have hr : r < (0 : ℝ) := by simpa
+  simpa [← Surreal.mk_lt_mk] using mul_wpow_lt_mul_wpow_of_neg s hr h
 
 theorem mul_wpow_add_mul_wpow_lt_mul_wpow (r s : ℝ) {t : ℝ} (ht : 0 < t)
      (hx : x < z) (hy : y < z) : r * ω^ x + s * ω^ y < t * ω^ z := by
@@ -315,14 +315,11 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     obtain ⟨s, hs, rfl⟩ := ha
     obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
     numeric
-    obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+    obtain ⟨t, ht, ht'⟩ := exists_between hs
     use t, ht'
-    rw [← Surreal.mk_le_mk]
-    dsimp [mulOption]
-    rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
-      ← sub_le_iff_le_add, le_neg, neg_sub, ← sub_mul, ← mul_assoc]
-    convert Surreal.mk_le_mk.2
-      (mul_wpow_lt_mul_wpow_of_pos ((r - s) * a) (s := t - s) _ (left_lt hy)).le <;> simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos ((r - s) * a) (sub_pos.2 ht) (left_lt hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
   · rw [Real.rightMoves_toIGame] at ha
     rw [rightMoves_wpow] at hb
     obtain ⟨s, hs, rfl⟩ := ha
@@ -330,12 +327,10 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     numeric
     obtain ⟨t, ht⟩ := exists_lt r
     use t, ht
-    rw [← Surreal.mk_le_mk]
-    dsimp [mulOption]
-    rw [add_sub_assoc, ← sub_mul, ← le_sub_iff_add_le, sub_eq_add_neg, add_comm,
-      ← sub_le_iff_le_add, ← neg_mul, ← sub_mul, neg_sub, ← mul_assoc]
-    convert Surreal.mk_le_mk.2
-      (mul_wpow_lt_mul_wpow_of_pos (s - t) (s := (s - r) * a) _ (lt_right hy)).le <;> simp_all
+    have hsr : 0 < (s - r) * a := by simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos (s - t) hsr (lt_right hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
   · rw [Real.leftMoves_toIGame] at ha
     rw [Player.neg_left, rightMoves_wpow] at hb
     obtain ⟨s, hs, rfl⟩ := ha
@@ -343,24 +338,20 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     numeric
     obtain ⟨t, ht⟩ := exists_gt r
     use t, ht
-    rw [← Surreal.mk_le_mk]
-    dsimp [mulOption]
-    rw [add_sub_assoc, ← sub_mul, ← sub_le_iff_le_add', ← sub_mul, ← mul_assoc]
-    convert Surreal.mk_le_mk.2
-      (mul_wpow_lt_mul_wpow_of_pos (t - s) (s := (r - s) * a) _ (lt_right hy)).le <;> simp_all
+    have hrs : 0 < (r - s) * a := by simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos (t - s) hrs (lt_right hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
   · rw [Real.rightMoves_toIGame] at ha
     rw [Player.neg_right, leftMoves_wpow] at hb
     obtain ⟨s, hs, rfl⟩ := ha
     obtain (rfl | ⟨a, -, y, hy, rfl⟩) := hb; · aesop
     numeric
-    obtain ⟨t, ht, ht'⟩ := exists_between (α := ℝ) hs
+    obtain ⟨t, ht, ht'⟩ := exists_between hs
     use t, ht
-    rw [← Surreal.mk_le_mk]
-    dsimp [mulOption]
-    rw [add_sub_assoc, ← sub_mul, ← sub_le_iff_le_add', ← sub_mul, ← neg_le_neg_iff, ← neg_mul,
-      neg_sub, ← neg_mul, neg_sub, ← mul_assoc]
-    convert Surreal.mk_le_mk.2
-      (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (s := (s - t)) _ (left_lt hy)).le <;> simp_all
+    have := (mul_wpow_lt_mul_wpow_of_pos ((s - r) * a) (sub_pos.2 ht') (left_lt hy)).le
+    simp [← Surreal.mk_le_mk, mulOption] at this ⊢
+    linarith only [this]
 
 instance (r : ℝ) (x : IGame.{u}) [Numeric x] :
     Numeric !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
@@ -567,8 +558,13 @@ theorem mul_wpow_lt_wpow (r : ℝ) (h : x < y) : r * ω^ x < ω^ y := by
 theorem wpow_lt_mul_wpow {r : ℝ} (hr : 0 < r) (h : x < y) : ω^ x < r * ω^ y := by
   cases x; cases y; exact Numeric.wpow_lt_mul_wpow hr h
 
-theorem mul_wpow_lt_mul_wpow (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) : r * ω^ x < s * ω^ y := by
+theorem mul_wpow_lt_mul_wpow_of_pos (r : ℝ) {s : ℝ} (hs : 0 < s) (h : x < y) :
+    r * ω^ x < s * ω^ y := by
   cases x; cases y; exact Numeric.mul_wpow_lt_mul_wpow_of_pos r hs h
+
+theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x) :
+    r * ω^ x < s * ω^ y := by
+  cases x; cases y; exact Numeric.mul_wpow_lt_mul_wpow_of_neg s hr h
 
 /-! ### Archimedean classes -/
 
