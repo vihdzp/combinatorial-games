@@ -5,12 +5,13 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
 import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
+public import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
+public import Mathlib.SetTheory.Ordinal.Basic
 
 /-!
 # Nimbers

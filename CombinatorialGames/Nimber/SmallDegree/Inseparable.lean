@@ -8,8 +8,6 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
-import Mathlib.RingTheory.DedekindDomain.AdicValuation.Valuation
-import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Inseparable nimber extensions

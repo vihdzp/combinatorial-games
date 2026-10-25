@@ -9,7 +9,6 @@ public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.Algebra.AlgebraicCard
 import Mathlib.Order.Interval.Set.InitialSeg
-import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Omega numbers are algebraically closed

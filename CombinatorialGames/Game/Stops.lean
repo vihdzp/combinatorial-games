@@ -5,10 +5,12 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.Birthday.Cut
-public import CombinatorialGames.Surreal.Birthday.Dyadic
 
 import Mathlib.Analysis.Normed.Group.Basic
+public import CombinatorialGames.Surreal.Cut
+public import CombinatorialGames.Surreal.Dyadic
+import CombinatorialGames.Surreal.Birthday.Cut
+import CombinatorialGames.Surreal.Birthday.Dyadic
 
 /-!
 # Left and right stops

@@ -5,10 +5,12 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.NatOrdinal.Pow
-public import CombinatorialGames.Nimber.Omega
 
 import Mathlib.SetTheory.Ordinal.Principal
+public import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.Nimber.SimplestExtension.Basic
+import CombinatorialGames.NatOrdinal.Pow
+import CombinatorialGames.Nimber.Omega
 
 /-!
 # Bounds for nimber arithmetic
