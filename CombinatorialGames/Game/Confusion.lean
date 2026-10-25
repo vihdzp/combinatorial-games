@@ -86,9 +86,12 @@ namespace Game
 open Surreal Cut
 
 /-- The confusion interval of `x` is the set of surreals `y` with `x ‖ y`. -/
-@[expose]
 def confusionInterval (x : Game) : Set Surreal :=
   (rightGame x).right ∩ (leftGame x).left
+
+theorem confusionInterval_def (x : Game) :
+    confusionInterval x = (rightGame x).right ∩ (leftGame x).left :=
+  (rfl)
 
 @[simp]
 theorem mem_confusionInterval {x : Game} {y : Surreal} :

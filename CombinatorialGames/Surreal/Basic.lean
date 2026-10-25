@@ -41,7 +41,7 @@ namespace IGame
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
 the games are equivalent. In particular, a numeric game is equivalent to the game of the least
-birthday that fits in it -/
+birthday that fits in it. -/
 def Fits (x y : IGame) : Prop :=
   (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
 
@@ -81,6 +81,12 @@ theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
 theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
   ⟨le_of_forall_moves_right_lf hx.2 hl, le_of_forall_moves_left_lf hx.1 hr⟩
+
+/-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
+are easier to enumerate. -/
+theorem Fits.equiv_of_forall_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a) (hx : x.Fits y)
+    (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_moves (hx.congr h) hl hr
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
@@ -217,8 +223,13 @@ instance : IsOrderedAddMonoid Surreal where
 @[simp] theorem mk_nsmul (n : Nat) (x : IGame) [Numeric x] : mk (n • x) = n • mk x := rfl
 @[simp] theorem mk_zsmul (n : Int) (x : IGame) [Numeric x] : mk (n • x) = n • mk x := rfl
 
-@[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := Iff.rfl
-@[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := Iff.rfl
+@[simp] theorem mk_le_mk {x y : IGame} [Numeric x] [Numeric y] : mk x ≤ mk y ↔ x ≤ y := .rfl
+@[simp] theorem mk_lt_mk {x y : IGame} [Numeric x] [Numeric y] : mk x < mk y ↔ x < y := .rfl
+
+theorem out_strictMono : StrictMono out := fun _ ↦ by simp [← mk_lt_mk]
+@[simp] theorem out_le_out {x y : Surreal} : x.out ≤ y.out ↔ x ≤ y := out_strictMono.le_iff_le
+@[simp] theorem out_lt_out {x y : Surreal} : x.out < y.out ↔ x < y := out_strictMono.lt_iff_lt
+@[simp] theorem out_inj {x y : Surreal} : x.out = y.out ↔ x = y := out_strictMono.injective.eq_iff
 
 @[simp]
 theorem mk_natCast (n : ℕ) : mk n = n := rfl
@@ -286,12 +297,20 @@ Note that although this function is well-defined, this function isn't injective,
 classes in Surreal have a canonical representative. (Note however that every short numeric game has
 a unique "canonical" form!) -/
 instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
-  ofSets st H _ _ := by
-    refine @mk !{fun p ↦ out '' st p} (.mk ?_ (by simp))
-    rw [moves_ofSets, moves_ofSets]
-    rintro - ⟨x, hx, rfl⟩ - ⟨y, hy, rfl⟩
-    rw [← Surreal.mk_lt_mk, out_eq, out_eq]
-    exact H x hx y hy
+  ofSets st H _ _ := @mk !{fun p ↦ out '' st p} (.mk (by aesop) (by simp))
+
+theorem ofSets_eq_mk' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)]
+    {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    !{st} = @mk !{fun p ↦ out '' st p} (.mk (by aesop) (by simp)) :=
+  rfl
+
+theorem ofSets_eq_mk {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
+    {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
+    !{s | t} = @mk !{out '' s | out '' t} (.mk (by aesop) (by simp)) := by
+  rw [ofSets_eq_mk']
+  congr
+  grind
 
 theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
@@ -336,6 +355,18 @@ theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} 
     !{s | t} < x := by
   rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
   exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
+
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
+    {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z < !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} < z) := by
+  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_le_ofSets_iff]
+
+theorem ofSets_lt_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
+    {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
+    !{s₁ | t₁} < !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
+  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_lf_ofSets_iff]
 
 theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
 theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop

@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
@@ -58,31 +59,26 @@ theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
 namespace IGame
 open Surreal.Cut
 
+private theorem stop_aux₁ {x : Surreal.Cut} [x.Numeric] (hx : x.birthday < NatOrdinal.of ω) :
+    x.toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
+  rw [← Surreal.birthday_lt_omega0_iff]
+  apply (lt_add_one _).trans
+  rwa [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
+
+private theorem stop_aux₂ (x : IGame) [Short x] :
+    ((Game.mk x).birthday : WithTop NatOrdinal) + 1 < NatOrdinal.of ω := by
+  have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
+  · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
+    exact NatOrdinal.natCast_lt_omega0 _
+  · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
+
 /-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
 noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
-  have H : (leftGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
-    rw [← Surreal.birthday_lt_omega0_iff]
-    apply (lt_add_one _).trans
-    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
-    grw [birthday_leftGame_le]
-    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
-    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
-      exact NatOrdinal.natCast_lt_omega0 _
-    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
-  Classical.choose H
+  Classical.choose (stop_aux₁ ((birthday_leftGame_le _).trans_lt (stop_aux₂ x)))
 
 /-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
 noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
-  have H : (rightGame (.mk x)).toSurreal ∈ Set.range ((↑) : Dyadic → _) := by
-    rw [← Surreal.birthday_lt_omega0_iff]
-    apply (lt_add_one _).trans
-    rw [← WithTop.coe_lt_coe, WithTop.coe_add, WithTop.coe_one, ← birthday_of_numeric]
-    grw [birthday_rightGame_le]
-    have ⟨n, hn⟩ := (NatOrdinal.lt_omega0 (o := (Game.mk x).birthday)).1 ?_
-    · rw [hn, WithTop.coe_natCast, ← Nat.cast_add_one, ← WithTop.coe_natCast, WithTop.coe_lt_coe]
-      exact NatOrdinal.natCast_lt_omega0 _
-    · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
-  Classical.choose H
+  Classical.choose (stop_aux₁ ((birthday_rightGame_le _).trans_lt (stop_aux₂ x)))
 
 @[simp]
 theorem toSurreal_leftGame_mk_of_short (x : IGame) [Short x] :
@@ -159,6 +155,27 @@ theorem leftStop_neg (x : IGame) [Short x] : leftStop (-x) = -rightStop x := by
 theorem rightStop_neg (x : IGame) [Short x] : rightStop (-x) = -leftStop x := by
   simpa [neg_eq_iff_eq_neg] using (leftStop_neg (-x)).symm
 
+theorem rightStop_le_leftStop (x : IGame) [Short x] : rightStop x ≤ leftStop x := by
+  by_contra! h
+  obtain ⟨y, hl, hr⟩ := exists_between h
+  cases ((lt_of_leftStop_lt (mod_cast hl)).trans (lt_of_lt_rightStop (y := y) (mod_cast hr))).false
+
+/-- A short infinitesimal game is small. -/
+theorem Small.of_infinitesimal {x : IGame} [Short x]
+    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
+  le_numeric_of_pos {y} _ hy := by
+    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
+    rw [Dyadic.toIGame_le_zero]
+    contrapose! hr
+    obtain ⟨z, hz, hzx⟩ := exists_between hr
+    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
+  numeric_le_of_neg {y} _ hy := by
+    apply (lt_of_lt_rightStop (hy.trans_le _)).le
+    rw [Dyadic.zero_le_toIGame]
+    contrapose! hl
+    obtain ⟨z, hxz, hz⟩ := exists_between hl
+    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
+
 end IGame
 end Ordinal
 
@@ -218,7 +235,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
     intro k hkl hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_sub_le _ 1))
     rw [le_antisymm hkr (Int.natAbs_sub_le _ 1), ← Int.natCast_dvd]
-    contrapose! hxl
+    contrapose hxl
     obtain ⟨e, he⟩ := hxl
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hle
     rw [Dyadic.den, hle, Rat.den_intCast]
@@ -228,7 +245,7 @@ theorem Dyadic.natAbs_num_div_den_lower_eq_natAbs_num_div_den {x : Dyadic}
     rw [← Int.sub_add_cancel x.num 1] at hkr
     cases le_antisymm (Nat.add_one_le_of_lt hkl) (hkr.trans (Int.natAbs_add_le _ 1))
     rw [le_antisymm hkr (Int.natAbs_add_le _ 1), Int.sub_add_cancel, ← Int.natCast_dvd]
-    contrapose! hd
+    contrapose hd
     obtain ⟨e, he⟩ := hd
     rw [he, Int.cast_mul, Int.cast_natCast, mul_div_cancel_left₀ _ (by positivity)] at hcd
     rw [Dyadic.den, ← hcd, Rat.den_intCast]
