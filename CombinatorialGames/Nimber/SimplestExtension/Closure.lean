@@ -87,6 +87,16 @@ instance Subfield.small_closure' (s : Set R) [DivisionRing R] [Small.{u} s] :
     Small.{u} (Subfield.closure s : Set R) :=
   Subfield.small_closure s
 
+/-- The intended use of this theorem is for `c` some kind of closure operator, e.g. the smallest
+element in the set that's `≥` than the input. -/
+theorem IsClub.exists_between_closure {α : Type*}
+    [LinearOrder α] [WellFoundedLT α] [NoMaxOrder α] [SuccOrder α]
+    {s : Set α} (hs : IsClub s) {x : α} (hx : ∃ y ∈ s, y ≤ x)
+    {c : α → α} (hc : ∀ x, x ≤ c x) (hc' : ∀ x, c x ∈ s) :
+    ∃ l ∈ s, l ≤ x ∧ x < c (Order.succ l) := by
+  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := hs.exists_between hx
+  exact ⟨l, hl, hlx, hxu.trans_le (H _ (hc' (Order.succ l)) (Order.succ_le_iff.1 (hc _)))⟩
+
 end
 
 noncomputable section
@@ -171,20 +181,22 @@ theorem IsGroup.lt_groupClosure_iff {x y : Nimber} (h : IsGroup x) :
     x < y.groupClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.groupClosure_le_iff
 
+@[simp]
 theorem IsGroup.groupClosure_eq {x : Nimber} (h : IsGroup x) : groupClosure x = x := by
   apply (le_groupClosure x).antisymm'
   rw [h.groupClosure_le_iff]
 
-theorem groupClosure_mono : Monotone groupClosure := by
+@[gcongr]
+theorem groupClosure_monotone : Monotone groupClosure := by
   intro x y
   rw [(IsGroup.groupClosure y).groupClosure_le_iff]
   exact (le_groupClosure y).trans'
 
 theorem leftOrdContinuous_groupClosure : LeftOrdContinuous groupClosure := by
   intro s x hs₀ hs
-  have hbdd := groupClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := groupClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsGroup.sSup (by simp) (by simpa) hbdd
-  refine ⟨groupClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨groupClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.groupClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_groupClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -193,15 +205,12 @@ theorem groupClosure_zero : groupClosure 0 = 1 := by
   rw [← Iio_inj, ← coe_addSubgroupClosure_Iio]
   simp
 
-@[simp]
 theorem groupClosure_one : groupClosure 1 = 1 :=
   IsGroup.one.groupClosure_eq
 
-@[simp]
 theorem groupClosure_two : groupClosure (∗2) = ∗2 :=
   IsGroup.two.groupClosure_eq
 
-@[simp]
 theorem groupClosure.two_opow (x : Ordinal) : groupClosure (∗(2 ^ x)) = ∗(2 ^ x) :=
   (IsGroup.two_opow x).groupClosure_eq
 
@@ -227,9 +236,17 @@ theorem isClub_ofPred_isGroup : IsClub (ofPred IsGroup) where
     rw [← ha.csSup_eq hs₀]
     exact IsGroup.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isGroup_le {x : Nimber} (hx : x ≠ 0) : ∃ y, IsGroup y ∧ y ≤ x :=
+  ⟨1, by simpa⟩
+
 theorem exists_isGroup_between {x : Nimber} (hx : x ≠ 0) :
     ∃ l, IsGroup l ∧ ∃ u, IsGroup u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsGroup z → l < z → u ≤ z :=
-  isClub_ofPred_isGroup.exists_between ⟨1, by simpa⟩
+  isClub_ofPred_isGroup.exists_between (exists_isGroup_le hx)
+
+theorem exists_isGroup_between' {x : Nimber} (hx : x ≠ 0) :
+    ∃ l, IsGroup l ∧ l ≤ x ∧ x < groupClosure (Order.succ l) :=
+  isClub_ofPred_isGroup.exists_between_closure (exists_isGroup_le hx)
+    le_groupClosure IsGroup.groupClosure
 
 /-- The normal enumerator function for groups. (This is equal to `∗(2 ^ x)`.) -/
 def enumGroup : Ordinal ↪o Nimber :=
@@ -252,11 +269,25 @@ theorem range_enumGroup : range enumGroup = ofPred IsGroup := by
 theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ range enumGroup ↔ IsGroup x :=
   Set.ext_iff.1 range_enumGroup _
 
+alias ⟨_, IsGroup.mem_range_enumGroup⟩ := mem_range_enumGroup_iff
+
 theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
   mem_range_enumGroup_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
   isClub_ofPred_isGroup.isNormal_enum
+
+theorem of_le_enumGroup (x : Ordinal) : ∗x ≤ enumGroup x :=
+  isNormal_enumGroup.strictMono.le_apply
+
+theorem enumGroup_add_one (x : Ordinal) :
+    enumGroup (x + 1) = groupClosure (Order.succ (enumGroup x)) := by
+  apply le_antisymm
+  · rw [enumGroup_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsGroup.groupClosure _)
+    rw [← enumGroup_def, (IsGroup.enumGroup _).lt_groupClosure_iff, Order.lt_succ_iff]
+  · rw [(IsGroup.enumGroup _).groupClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumGroup.strictMono (lt_add_one x)
 
 theorem enumGroup_eq_two_opow (x : Ordinal) : enumGroup x = ∗(2 ^ x) := by
   rw [enumGroup_def', of.eq_iff_eq]
@@ -359,20 +390,22 @@ theorem IsRing.lt_ringClosure_iff {x y : Nimber} (h : IsRing x) :
     x < y.ringClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.ringClosure_le_iff
 
+@[simp]
 theorem IsRing.ringClosure_eq {x : Nimber} (h : IsRing x) : ringClosure x = x := by
   apply (le_ringClosure x).antisymm'
   rw [h.ringClosure_le_iff]
 
-theorem ringClosure_mono : Monotone ringClosure := by
+@[gcongr]
+theorem ringClosure_monotone : Monotone ringClosure := by
   intro x y
   rw [(IsRing.ringClosure y).ringClosure_le_iff]
   exact (le_ringClosure y).trans'
 
 theorem leftOrdContinuous_ringClosure : LeftOrdContinuous ringClosure := by
   intro s x hs₀ hs
-  have hbdd := ringClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := ringClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsRing.sSup (by simp) (by simpa) hbdd
-  refine ⟨ringClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨ringClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.ringClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_ringClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -387,12 +420,12 @@ theorem ringClosure_one : ringClosure 1 = ∗2 := by
   · rw [IsRing.two.ringClosure_le_iff]
     simp
   · rw [← ringClosure_zero]
-    exact ringClosure_mono zero_le_one
+    exact ringClosure_monotone zero_le_one
 
-@[simp]
 theorem ringClosure_two : ringClosure (∗2) = ∗2 :=
   IsRing.two.ringClosure_eq
 
+@[simp]
 theorem groupClosure_le_ringClosure (x : Nimber) : groupClosure x ≤ ringClosure x := by
   rw [(IsRing.ringClosure x).groupClosure_le_iff]
   exact le_ringClosure x
@@ -402,7 +435,7 @@ theorem ringClosure_groupClosure (x : Nimber) : ringClosure (groupClosure x) = r
   apply le_antisymm
   · rw [(IsRing.ringClosure x).ringClosure_le_iff]
     exact groupClosure_le_ringClosure x
-  · exact ringClosure_mono (le_groupClosure x)
+  · exact ringClosure_monotone (le_groupClosure x)
 
 theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
   isCofinal a := ⟨_, .ringClosure _, le_ringClosure a⟩
@@ -410,9 +443,17 @@ theorem isClub_ofPred_isRing : IsClub (ofPred IsRing) where
     rw [← ha.csSup_eq hs₀]
     exact IsRing.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isRing_le {x : Nimber} (hx : 1 < x) : ∃ y, IsRing y ∧ y ≤ x :=
+  ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
 theorem exists_isRing_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsRing l ∧ ∃ u, IsRing u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsRing z → l < z → u ≤ z :=
-  isClub_ofPred_isRing.exists_between ⟨∗2, IsRing.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+  isClub_ofPred_isRing.exists_between (exists_isRing_le hx)
+
+theorem exists_isRing_between' {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsRing l ∧ l ≤ x ∧ x < ringClosure (Order.succ l) :=
+  isClub_ofPred_isRing.exists_between_closure (exists_isRing_le hx)
+    le_ringClosure IsRing.ringClosure
 
 /-- The normal enumerator function for rings. -/
 def enumRing : Ordinal ↪o Nimber :=
@@ -435,11 +476,28 @@ theorem range_enumRing : range enumRing = ofPred IsRing := by
 theorem mem_range_enumRing_iff {x : Nimber} : x ∈ range enumRing ↔ IsRing x :=
   Set.ext_iff.1 range_enumRing _
 
+alias ⟨_, IsRing.mem_range_enumRing⟩ := mem_range_enumRing_iff
+
 theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
   mem_range_enumRing_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumRing : Order.IsNormal enumRing :=
   isClub_ofPred_isRing.isNormal_enum
+
+theorem of_le_enumRing (x : Ordinal) : ∗x ≤ enumRing x :=
+  isNormal_enumRing.strictMono.le_apply
+
+theorem enumGroup_le_enumRing (x : Ordinal) : enumGroup x ≤ enumRing x :=
+  Order.enum_anti fun _ ↦ IsRing.toIsGroup
+
+theorem enumRing_add_one (x : Ordinal) :
+    enumRing (x + 1) = ringClosure (Order.succ (enumRing x)) := by
+  apply le_antisymm
+  · rw [enumRing_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsRing.ringClosure _)
+    rw [← enumRing_def, (IsRing.enumRing _).lt_ringClosure_iff, Order.lt_succ_iff]
+  · rw [(IsRing.enumRing _).ringClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumRing.strictMono (lt_add_one x)
 
 @[simp]
 theorem enumRing_zero : enumRing 0 = ∗2 := by
@@ -526,20 +584,22 @@ theorem IsField.lt_fieldClosure_iff {x y : Nimber} (h : IsField x) :
     x < y.fieldClosure ↔ x < y :=
   le_iff_le_iff_lt_iff_lt.1 h.fieldClosure_le_iff
 
+@[simp]
 theorem IsField.fieldClosure_eq {x : Nimber} (h : IsField x) : fieldClosure x = x := by
   apply (le_fieldClosure x).antisymm'
   rw [h.fieldClosure_le_iff]
 
-theorem fieldClosure_mono : Monotone fieldClosure := by
+@[gcongr]
+theorem fieldClosure_monotone : Monotone fieldClosure := by
   intro x y
   rw [(IsField.fieldClosure y).fieldClosure_le_iff]
   exact (le_fieldClosure y).trans'
 
 theorem leftOrdContinuous_fieldClosure : LeftOrdContinuous fieldClosure := by
   intro s x hs₀ hs
-  have hbdd := fieldClosure_mono.map_bddAbove hs.bddAbove
+  have hbdd := fieldClosure_monotone.map_bddAbove hs.bddAbove
   have Hs := IsField.sSup (by simp) (by simpa) hbdd
-  refine ⟨fieldClosure_mono.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
+  refine ⟨fieldClosure_monotone.mem_upperBounds_image hs.1, fun y hy ↦ (csSup_le' hy).trans' ?_⟩
   rw [Hs.fieldClosure_le_iff, ← hs.csSup_eq hs₀]
   exact csSup_le' fun z hz ↦ (le_fieldClosure _).trans <| le_csSup hbdd (mem_image_of_mem _ hz)
 
@@ -557,16 +617,17 @@ theorem fieldClosure_one : fieldClosure 1 = ∗2 := by
   · rw [IsField.two.fieldClosure_le_iff]
     simp
   · rw [← fieldClosure_zero]
-    exact fieldClosure_mono zero_le_one
+    exact fieldClosure_monotone zero_le_one
 
-@[simp]
 theorem fieldClosure_two : fieldClosure (∗2) = ∗2 :=
   IsField.two.fieldClosure_eq
 
+@[simp]
 theorem ringClosure_le_fieldClosure (x : Nimber) : ringClosure x ≤ fieldClosure x := by
   rw [(IsField.fieldClosure x).ringClosure_le_iff]
   exact le_fieldClosure x
 
+@[simp]
 theorem groupClosure_le_fieldClosure (x : Nimber) : groupClosure x ≤ fieldClosure x :=
   (groupClosure_le_ringClosure x).trans (ringClosure_le_fieldClosure x)
 
@@ -575,7 +636,7 @@ theorem fieldClosure_ringClosure (x : Nimber) : fieldClosure (ringClosure x) = f
   apply le_antisymm
   · rw [(IsField.fieldClosure x).fieldClosure_le_iff]
     exact ringClosure_le_fieldClosure x
-  · exact fieldClosure_mono (le_ringClosure x)
+  · exact fieldClosure_monotone (le_ringClosure x)
 
 @[simp]
 theorem fieldClosure_groupClosure (x : Nimber) :
@@ -588,9 +649,17 @@ theorem isClub_ofPred_isField : IsClub (ofPred IsField) where
     rw [← ha.csSup_eq hs₀]
     exact IsField.sSup hs hs₀ ha.bddAbove
 
+private theorem exists_isField_le {x : Nimber} (hx : 1 < x) : ∃ y, IsField y ∧ y ≤ x :=
+  ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+
 theorem exists_isField_between {x : Nimber} (hx : 1 < x) :
     ∃ l, IsField l ∧ ∃ u, IsField u ∧ l ≤ x ∧ x < u ∧ ∀ z, IsField z → l < z → u ≤ z :=
-  isClub_ofPred_isField.exists_between ⟨∗2, IsField.two, by rwa [← succ_one, Order.succ_le_iff]⟩
+  isClub_ofPred_isField.exists_between (exists_isField_le hx)
+
+theorem exists_isField_between' {x : Nimber} (hx : 1 < x) :
+    ∃ l, IsField l ∧ l ≤ x ∧ x < fieldClosure (Order.succ l) :=
+  isClub_ofPred_isField.exists_between_closure (exists_isField_le hx)
+    le_fieldClosure IsField.fieldClosure
 
 /-- The normal enumerator function for fields. -/
 def enumField : Ordinal ↪o Nimber :=
@@ -613,11 +682,31 @@ theorem range_enumField : range enumField = ofPred IsField := by
 theorem mem_range_enumField_iff {x : Nimber} : x ∈ range enumField ↔ IsField x :=
   Set.ext_iff.1 range_enumField _
 
+alias ⟨_, IsField.mem_range_enumField⟩ := mem_range_enumField_iff
+
 theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
   mem_range_enumField_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumField : Order.IsNormal enumField :=
   isClub_ofPred_isField.isNormal_enum
+
+theorem of_le_enumField (x : Ordinal) : ∗x ≤ enumField x :=
+  isNormal_enumField.strictMono.le_apply
+
+theorem enumRing_le_enumField (x : Ordinal) : enumRing x ≤ enumField x :=
+  Order.enum_anti fun _ ↦ IsField.toIsRing
+
+theorem enumGroup_le_enumField (x : Ordinal) : enumGroup x ≤ enumField x :=
+  (enumGroup_le_enumRing x).trans (enumRing_le_enumField x)
+
+theorem enumField_add_one (x : Ordinal) :
+    enumField (x + 1) = fieldClosure (Order.succ (enumField x)) := by
+  apply le_antisymm
+  · rw [enumField_def, ← succ_of]
+    apply Order.enum_succ_le_of_lt (IsField.fieldClosure _)
+    rw [← enumField_def, (IsField.enumField _).lt_fieldClosure_iff, Order.lt_succ_iff]
+  · rw [(IsField.enumField _).fieldClosure_le_iff, Order.succ_le_iff]
+    exact isNormal_enumField.strictMono (lt_add_one x)
 
 @[simp]
 theorem enumField_zero : enumField 0 = ∗2 := by

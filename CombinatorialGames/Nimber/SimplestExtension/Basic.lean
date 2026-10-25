@@ -50,6 +50,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
+@[simp]
+theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -123,7 +127,7 @@ theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y)
   simp [← SetLike.coe_subset_coe]
 
 @[simp]
-theorem IsRing.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+theorem IsGroup.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
     hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
   simp [← SetLike.coe_ssubset_coe]
 
@@ -242,6 +246,10 @@ theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
 
+@[simp]
+theorem IsGroup.omega0 : IsGroup (∗ω) := by
+  simpa using IsGroup.omega0_opow 1
+
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
@@ -287,6 +295,17 @@ theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := b
 /-- A version of `IsGroup.opow` stated in terms of `Ordinal`. -/
 theorem IsGroup.opow' {x : Ordinal} (h : IsGroup (∗x)) (a : Ordinal) : IsGroup (∗x ^ a) :=
   h.opow a
+
+theorem IsGroup.omul (hx : IsGroup x) (hy : IsGroup y) : IsGroup (∗(x.val * y.val)) := by
+  rw [isGroup_iff_mem_range_two_opow] at hx hy
+  obtain ⟨b, hb, rfl⟩ := hx
+  obtain ⟨c, hc, rfl⟩ := hy
+  simp [← opow_add]
+
+/-- A version of `IsGroup.omul` stated in terms of `Ordinal`. -/
+theorem IsGroup.omul' {x y : Ordinal} (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) :
+    IsGroup (∗(x * y)) :=
+  hx.omul hy
 
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
@@ -348,12 +367,12 @@ theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubrin
   h.toSubring.closure_eq
 
 @[simp]
-theorem IsRing.toSubfield_le_toSubfield (hx : IsRing x) (hy : IsRing y) :
+theorem IsRing.toSubring_le_toSubring (hx : IsRing x) (hy : IsRing y) :
     hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
   simp [← SetLike.coe_subset_coe]
 
 @[simp]
-theorem IsRing.toSubfield_lt_toSubfield (hx : IsRing x) (hy : IsRing y) :
+theorem IsRing.toSubring_lt_toSubring (hx : IsRing x) (hy : IsRing y) :
     hx.toSubring < hy.toSubring ↔ x < y := by
   simp [← SetLike.coe_ssubset_coe]
 
