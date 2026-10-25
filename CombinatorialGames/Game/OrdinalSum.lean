@@ -25,7 +25,7 @@ open Set
 namespace IGame
 
 /--
-The ordinal sum of `x` and `y` is played like the ordinay sum, but making a move in `x`
+The ordinal sum of `x` and `y` is played like the ordinary sum, but making a move in `x`
 destroys the other component `y` of the sum.
 -/
 def ordinalSum (x y : IGame) : IGame :=
