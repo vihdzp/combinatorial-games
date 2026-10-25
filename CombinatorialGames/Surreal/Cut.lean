@@ -6,6 +6,7 @@ Authors: Aaron Liu, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
+public import Mathlib.Algebra.Group.Action.Defs
 public import Mathlib.Order.Concept
 
 import Mathlib.Algebra.Order.Group.OrderIso
@@ -244,15 +245,19 @@ def rightSurreal : Surreal ↪o Cut where
   inj' _ := by simp [Concept.copy, Ioi_inj]
   map_rel_iff' := Iic_subset_Iic
 
-@[simp] theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x}:= rfl
-@[simp] theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
-@[simp] theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
-@[simp] theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
+@[simp, grind =]
+theorem left_leftGame (x : Game) : (leftGame x).left = {y | y.toGame ⧏ x} := rfl
+@[simp, grind =]
+theorem right_leftGame (x : Game) : (leftGame x).right = {y | x ≤ y.toGame} := rfl
+@[simp, grind =]
+theorem left_rightGame (x : Game) : (rightGame x).left = {y | y.toGame ≤ x} := rfl
+@[simp, grind =]
+theorem right_rightGame (x : Game) : (rightGame x).right = {y | x ⧏ y.toGame} := rfl
 
-@[simp] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
-@[simp] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
-@[simp] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
-@[simp] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
+@[simp, grind =] theorem left_leftSurreal (x : Surreal) : (leftSurreal x).left = Iio x := rfl
+@[simp, grind =] theorem right_leftSurreal (x : Surreal) : (leftSurreal x).right = Ici x := rfl
+@[simp, grind =] theorem left_rightSurreal (x : Surreal) : (rightSurreal x).left = Iic x := rfl
+@[simp, grind =] theorem right_rightSurreal (x : Surreal) : (rightSurreal x).right = Ioi x := rfl
 
 theorem mem_left_leftGame {x y} : y ∈ (leftGame x).left ↔ y.toGame ⧏ x := .rfl
 theorem mem_right_leftGame {x y} : y ∈ (leftGame x).right ↔ x ≤ y.toGame := .rfl
@@ -264,11 +269,31 @@ theorem mem_right_leftSurreal {x y} : y ∈ (leftSurreal x).right ↔ x ≤ y :=
 theorem mem_left_rightSurreal {x y} : y ∈ (rightSurreal x).left ↔ y ≤ x := .rfl
 theorem mem_right_rightSurreal {x y} : y ∈ (rightSurreal x).right ↔ x < y := .rfl
 
-@[simp] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
+@[simp, grind =] theorem leftGame_toGame (x : Surreal) : leftGame x.toGame = leftSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
 
-@[simp] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
+@[simp, grind =] theorem rightGame_toGame (x : Surreal) : rightGame x.toGame = rightSurreal x := by
   apply Concept.copy_eq <;> simp <;> rfl
+
+@[simp, grind =]
+theorem leftGame_mk_of_numeric (x : IGame) [Numeric x] :
+    leftGame (.mk x) = leftSurreal (.mk x) := by
+  rw [← toGame_mk, leftGame_toGame]
+
+@[simp, grind =]
+theorem rightGame_mk_of_numeric (x : IGame) [Numeric x] :
+    rightGame (.mk x) = rightSurreal (.mk x) := by
+  rw [← toGame_mk, rightGame_toGame]
+
+@[simp, grind =]
+theorem leftGame_zero : leftGame 0 = leftSurreal 0 := by simpa using leftGame_toGame 0
+@[simp, grind =]
+theorem rightGame_zero : rightGame 0 = rightSurreal 0 := by simpa using rightGame_toGame 0
+
+@[simp, grind =]
+theorem leftGame_one : leftGame 1 = leftSurreal 1 := by simpa using leftGame_toGame 1
+@[simp, grind =]
+theorem rightGame_one : rightGame 1 = rightSurreal 1 := by simpa using rightGame_toGame 1
 
 @[simp, grind =] theorem leftGame_neg (x : Game) : leftGame (-x) = -rightGame x := by
   ext; simp [neg_le]
@@ -456,6 +481,67 @@ theorem rightSurreal_mem_of_sSup_eq {s : Set Cut} {x : Surreal} :
 theorem leftSurreal_mem_of_sSup_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s] :
     sSup s = leftSurreal x → leftSurreal x ∈ s := by
   simpa [← neg_sSup, ← neg_leftSurreal] using @rightSurreal_mem_of_sInf_eq (-s) (-x)
+
+/-! ### Group action by translation -/
+
+noncomputable instance : VAdd Surreal Cut where
+  vadd a x := {
+    extent := (· - a) ⁻¹' x.left
+    intent := (· - a) ⁻¹' x.right
+    upperPolar_extent := by
+      ext y
+      refine ⟨fun H ↦ ?_, fun hy z hz ↦ ?_⟩
+      · rw [mem_preimage, ← notMem_left_iff]
+        intro hy
+        exact (H hy).false
+      · simpa using left_lt_right hz hy
+    lowerPolar_intent := by
+      ext y
+      refine ⟨fun H ↦ ?_, fun hy z hz ↦ ?_⟩
+      · rw [mem_preimage, ← notMem_right_iff]
+        intro hy
+        exact (H hy).false
+      · simpa using left_lt_right hy hz
+  }
+
+@[simp] theorem left_vadd' (a : Surreal) (x : Cut) : (a +ᵥ x).left = (· - a) ⁻¹' x.left := rfl
+theorem left_vadd (a : Surreal) (x : Cut) : (a +ᵥ x).left = (· + a) '' x.left := by
+  simp [sub_eq_add_neg]
+
+@[simp] theorem right_vadd' (a : Surreal) (x : Cut) : (a +ᵥ x).right = (· - a) ⁻¹' x.right := rfl
+theorem right_vadd (a : Surreal) (x : Cut) : (a +ᵥ x).right = (· + a) '' x.right := by
+  simp [sub_eq_add_neg]
+
+noncomputable instance : AddAction Surreal Cut where
+  zero_vadd x := by ext; simp
+  add_vadd a b x := by ext; simp [sub_sub]
+
+@[simp]
+theorem vadd_bot (a : Surreal) : a +ᵥ (⊥ : Cut) = ⊥ := by
+  ext; simp
+
+@[simp]
+theorem vadd_top (a : Surreal) : a +ᵥ (⊤ : Cut) = ⊤ := by
+  ext; simp
+
+@[simp]
+theorem vadd_leftGame (a : Surreal) (x : Game) : a +ᵥ leftGame x = leftGame (a.toGame + x) := by
+  ext; simp [le_sub_iff_add_le']
+
+@[simp]
+theorem vadd_rightGame (a : Surreal) (x : Game) : a +ᵥ rightGame x = rightGame (a.toGame + x) := by
+  ext; simp [add_comm]
+
+@[simp]
+theorem vadd_leftSurreal (a x : Surreal) : a +ᵥ leftSurreal x = leftSurreal (a + x) := by
+  ext; simp [sub_lt_iff_lt_add']
+
+@[simp]
+theorem vadd_rightSurreal (a x : Surreal) : a +ᵥ rightSurreal x = rightSurreal (a + x) := by
+  ext; simp [add_comm]
+
+theorem neg_vadd (a : Surreal) (x : Cut) : -(a +ᵥ x) = -a +ᵥ -x := by
+  ext; simp [sub_eq_add_neg, add_comm]
 
 /-! ### Calculating cuts -/
 

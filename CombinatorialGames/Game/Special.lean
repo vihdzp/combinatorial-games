@@ -142,7 +142,7 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
-@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+@[simp, game_cmp] theorem tiny_zero : ⧾0 = ↑ := by aesop
 
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
@@ -195,7 +195,7 @@ theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
 theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
   rightMoves_ofSets ..
 
-@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
+@[simp, game_cmp] theorem miny_zero : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
@@ -232,7 +232,8 @@ theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
 
 /-! ### Switches -/
 
-/-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
+/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is just
+equal to 0. -/
 def switch (x : IGame) : IGame :=
   !{{x} | {-x}}
 

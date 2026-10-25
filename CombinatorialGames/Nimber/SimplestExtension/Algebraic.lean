@@ -422,51 +422,17 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     exact h.one_lt_degree_leastNoRoots ht
 
 theorem IsField.fieldClosure_succ_eq_pow_degree_leastNoRoots {x : Nimber} (h : IsField x)
-    (ht) {n : ℕ} (hn : (x.leastNoRoots.untop ht).degree = n) :
+    (n : ℕ) (hn : ∃ ht, (x.leastNoRoots.untop ht).degree = n) :
     fieldClosure (succ x) = ∗(val x ^ n) := by
+  cases hn with | intro ht hn
   have hs := h.pow_degree_leastNoRoots_eq_adjoin ht hn
   rwa [← SetLike.coe_injective.eq_iff, coe_toSubfield, h.fieldAdjoin_simple_self,
     coe_toSubfield, Iio_inj, eq_comm] at hs
 
 theorem IsField.fieldClosure_succ_eq_pow_natDegree_leastNoRoots {x : Nimber} (h : IsField x)
-    (ht) : fieldClosure (succ x) = ∗(val x ^ (x.leastNoRoots.untop ht).natDegree) := by
-  rw [h.fieldClosure_succ_eq_pow_degree_leastNoRoots ht (degree_eq_natDegree _)]
-  simp
-
--- TODO: prove this as a corollary of the classification of quadratic extensions.
-section omega0
-
-private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
-  induction n with
-  | zero => simp
-  | succ n IH =>
-    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
-      intro ht
-      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
-      have : Infinite (Iio _) := ht.isAlgClosed.instInfinite
-      rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card,
-        omega0_le_lift, ← of_le_iff] at this
-      exact IH.not_ge this
-    rw [Nat.cast_add_one, enumField_add_one,
-      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
-    rw [← val_lt_iff] at IH
-    obtain ⟨m, hm⟩ := lt_omega0.1 IH
-    rw [hm, ← natCast_pow]
-    exact natCast_lt_omega0 _
-
-@[simp]
-theorem enumField_omega0 : enumField ω = ∗ω := by
-  apply (of_le_enumField _).antisymm'
-  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
-  rintro _ ⟨n, rfl⟩
-  exact (enumField_natCast_lt_omega0 n).le
-
-@[simp]
-theorem IsField.omega0 : IsField (∗ω) := by
-  rw [← enumField_omega0]
-  exact IsField.enumField _
-
-end omega0
+    (ht) : fieldClosure (succ x) = ∗(val x ^ (x.leastNoRoots.untop ht).natDegree) :=
+  h.fieldClosure_succ_eq_pow_degree_leastNoRoots _
+    ⟨ht, degree_eq_natDegree (leastNoRoots_ne_zero' _)⟩
 
 namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
@@ -734,11 +700,26 @@ theorem range_enumAlgClosed : range enumAlgClosed = ofPred IsAlgClosed := by
 theorem mem_range_enumAlgClosed_iff {x : Nimber} : x ∈ range enumAlgClosed ↔ IsAlgClosed x :=
   Set.ext_iff.1 range_enumAlgClosed _
 
+alias ⟨_, IsAlgClosed.mem_range_enumAlgClosed⟩ := mem_range_enumAlgClosed_iff
+
 theorem IsAlgClosed.enumAlgClosed (x : Ordinal) : IsAlgClosed (enumAlgClosed x) :=
   mem_range_enumAlgClosed_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumAlgClosed : Order.IsNormal enumAlgClosed :=
   isClub_ofPred_isAlgClosed.isNormal_enum
+
+theorem of_le_enumAlgClosed (x : Ordinal) : ∗x ≤ enumAlgClosed x :=
+  isNormal_enumAlgClosed.strictMono.le_apply
+
+theorem enumField_le_enumAlgClosed (x : Ordinal) : enumField x ≤ enumAlgClosed x := by
+  rw [enumField_def]
+  exact Order.enum_anti fun _ ↦ IsAlgClosed.toIsField
+
+theorem enumRing_le_enumAlgClosed (x : Ordinal) : enumRing x ≤ enumAlgClosed x :=
+  (enumRing_le_enumField x).trans (enumField_le_enumAlgClosed x)
+
+theorem enumGroup_le_enumAlgClosed (x : Ordinal) : enumGroup x ≤ enumAlgClosed x :=
+  (enumGroup_le_enumField x).trans (enumField_le_enumAlgClosed x)
 
 theorem enumAlgClosed_add_one (x : Ordinal) :
     enumAlgClosed (x + 1) = algClosure (succ (enumAlgClosed x)) := by
@@ -867,6 +848,41 @@ theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)
   · rw [← subfieldBot_eq]
     infer_instance
   · rwa [← fieldClosure_zero, algClosure_fieldClosure]
+
+theorem IsField.leastNoRoots_eq_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) : leastNoRoots x = .some (X ^ 2 + C (x ^ 2)) := by
+  rw [hx.perfectField_iff_leastNoRoots, not_le] at perf
+  have ht : leastNoRoots x ≠ ⊤ := ne_top_of_lt perf
+  have hc := coeff_leastNoRoots_lt ht
+  have hrt := hx.isRoot_leastNoRoots ht
+  have hdeg := hx.one_lt_degree_leastNoRoots ht
+  rw [← WithTop.untop_lt_iff ht] at perf
+  rw [← WithTop.untop_eq_iff ht]
+  generalize x.leastNoRoots.untop ht = p at perf hc hrt hdeg
+  revert p perf hc hrt hdeg
+  rw [show (X : Nimber[X]) ^ 2 + X = C 1 * X ^ 2 + C 1 * X + C 0 by simp, Lex.forall_lt_quadratic]
+  aesop (add simp [CharTwo.add_eq_zero, degree_linear_le])
+
+theorem IsField.sq_lt_self_of_not_perfectField {x : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) : x ^ 2 < x := by
+  have hl := hx.leastNoRoots_eq_of_not_perfectField perf
+  have hc := coeff_leastNoRoots_lt (hl.trans_ne WithTop.coe_ne_top) 0
+  rw! [hl] at hc
+  rw [WithTop.untop_coe, coeff_add, coeff_X_pow, coeff_C] at hc
+  simpa using hc
+
+theorem IsField.sqrt_lt_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y < x ^ 2) : √y < x := by
+  apply hx.sqrt_lt (hy.trans (hx.sq_lt_self_of_not_perfectField perf))
+  rw [hx.leastNoRoots_eq_of_not_perfectField perf, WithTop.coe_lt_coe]
+  use 0
+  generalize x ^ 2 = c at hy ⊢
+  aesop
+
+theorem IsField.sqrt_le_of_not_perfectField {x y : Nimber} (hx : IsField x)
+    (perf : ¬PerfectField hx.toSubfield) (hy : y ≤ x ^ 2) : √y ≤ x := by
+  obtain rfl | hy := hy.eq_or_lt; · simp
+  exact (hx.sqrt_lt_of_not_perfectField perf hy).le
 
 end Nimber
 end

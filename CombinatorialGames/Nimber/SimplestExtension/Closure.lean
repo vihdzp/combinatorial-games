@@ -259,11 +259,16 @@ theorem range_enumGroup : range enumGroup = ofPred IsGroup := by
 theorem mem_range_enumGroup_iff {x : Nimber} : x ∈ range enumGroup ↔ IsGroup x :=
   Set.ext_iff.1 range_enumGroup _
 
+alias ⟨_, IsGroup.mem_range_enumGroup⟩ := mem_range_enumGroup_iff
+
 theorem IsGroup.enumGroup (x : Ordinal) : IsGroup (enumGroup x) :=
   mem_range_enumGroup_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumGroup : Order.IsNormal enumGroup :=
   isClub_ofPred_isGroup.isNormal_enum
+
+theorem of_le_enumGroup (x : Ordinal) : ∗x ≤ enumGroup x :=
+  isNormal_enumGroup.strictMono.le_apply
 
 theorem enumGroup_add_one (x : Ordinal) :
     enumGroup (x + 1) = groupClosure (Order.succ (enumGroup x)) := by
@@ -464,11 +469,19 @@ theorem range_enumRing : range enumRing = ofPred IsRing := by
 theorem mem_range_enumRing_iff {x : Nimber} : x ∈ range enumRing ↔ IsRing x :=
   Set.ext_iff.1 range_enumRing _
 
+alias ⟨_, IsRing.mem_range_enumRing⟩ := mem_range_enumRing_iff
+
 theorem IsRing.enumRing (x : Ordinal) : IsRing (enumRing x) :=
   mem_range_enumRing_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumRing : Order.IsNormal enumRing :=
   isClub_ofPred_isRing.isNormal_enum
+
+theorem of_le_enumRing (x : Ordinal) : ∗x ≤ enumRing x :=
+  isNormal_enumRing.strictMono.le_apply
+
+theorem enumGroup_le_enumRing (x : Ordinal) : enumGroup x ≤ enumRing x :=
+  Order.enum_anti fun _ ↦ IsRing.toIsGroup
 
 theorem enumRing_add_one (x : Ordinal) :
     enumRing (x + 1) = ringClosure (Order.succ (enumRing x)) := by
@@ -668,11 +681,22 @@ theorem range_enumField : range enumField = ofPred IsField := by
 theorem mem_range_enumField_iff {x : Nimber} : x ∈ range enumField ↔ IsField x :=
   Set.ext_iff.1 range_enumField _
 
+alias ⟨_, IsField.mem_range_enumField⟩ := mem_range_enumField_iff
+
 theorem IsField.enumField (x : Ordinal) : IsField (enumField x) :=
   mem_range_enumField_iff.1 ⟨x, rfl⟩
 
 theorem isNormal_enumField : Order.IsNormal enumField :=
   isClub_ofPred_isField.isNormal_enum
+
+theorem of_le_enumField (x : Ordinal) : ∗x ≤ enumField x :=
+  isNormal_enumField.strictMono.le_apply
+
+theorem enumRing_le_enumField (x : Ordinal) : enumRing x ≤ enumField x :=
+  Order.enum_anti fun _ ↦ IsField.toIsRing
+
+theorem enumGroup_le_enumField (x : Ordinal) : enumGroup x ≤ enumField x :=
+  (enumGroup_le_enumRing x).trans (enumRing_le_enumField x)
 
 theorem enumField_add_one (x : Ordinal) :
     enumField (x + 1) = fieldClosure (Order.succ (enumField x)) := by

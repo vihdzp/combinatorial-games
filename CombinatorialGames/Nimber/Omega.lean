@@ -25,7 +25,7 @@ open Cardinal Order Ordinal Set
 
 /-! ### For Mathlib -/
 
-set_option backward.isDefEq.respectTransparency.types false in
+attribute [local implicit_reducible] Function.Injective in
 /-- Restrict an order isomorphism to an initial segment. -/
 def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃o β) (x : α) :
     Iio x ≤i β where
@@ -76,10 +76,67 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
 theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
-theorem Cardinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
+theorem Ordinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
 
+@[simp]
+theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 namespace Nimber
+
+/-! ### ω is a field -/
+
+theorem IsAlgClosed.omega0_le {x : Nimber} (hx : IsAlgClosed x) : ∗ω ≤ x := by
+  contrapose! hx
+  simp_rw [← val_lt_iff, lt_omega0, val_eq_iff] at hx
+  obtain ⟨n, rfl⟩ := hx
+  intro hn
+  have hi : Infinite (Iio _) := hn.isAlgClosed.instInfinite
+  rw [← Cardinal.aleph0_le_mk_iff, cardinalMk_Iio, lift_card, aleph0_le_card, omega0_le_lift] at hi
+  simpa using hi.not_gt
+
+-- TODO: prove this as a corollary of the classification of quadratic extensions.
+private theorem enumField_natCast_lt_omega0 (n : ℕ) : enumField n < ∗ω := by
+  induction n with
+  | zero => simp
+  | succ n IH =>
+    have ht : (enumField n).leastNoRoots ≠ ⊤ := by
+      intro ht
+      rw [← isAlgClosed_iff_leastNoRoots_eq_top (IsField.enumField _).toIsRing] at ht
+      exact ht.omega0_le.not_gt IH
+    rw [Nat.cast_add_one, enumField_add_one,
+      (IsField.enumField _).fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.lt_iff_lt]
+    rw [← val_lt_iff] at IH
+    obtain ⟨m, hm⟩ := lt_omega0.1 IH
+    rw [hm, ← natCast_pow]
+    exact natCast_lt_omega0 _
+
+@[simp]
+theorem enumField_omega0 : enumField ω = ∗ω := by
+  apply (of_le_enumField _).antisymm'
+  simp_rw [isNormal_enumField.le_iff_forall_le isSuccLimit_omega0, lt_omega0]
+  rintro _ ⟨n, rfl⟩
+  exact (enumField_natCast_lt_omega0 n).le
+
+@[simp]
+theorem enumRing_omega0 : enumRing ω = ∗ω := by
+  apply (of_le_enumRing _).antisymm'
+  grw [← enumField_omega0, enumRing_le_enumField]
+
+@[simp]
+theorem enumGroup_omega0 : enumGroup ω = ∗ω := by
+  apply (of_le_enumGroup _).antisymm'
+  grw [← enumRing_omega0, enumGroup_le_enumRing]
+
+@[simp]
+theorem IsField.omega0 : IsField (∗ω) := by
+  rw [← enumField_omega0]
+  exact IsField.enumField _
+
+@[simp]
+theorem IsRing.omega0 : IsRing (∗ω) :=
+  IsField.omega0.toIsRing
 
 /-! ### Cardinality of closures -/
 
@@ -131,28 +188,13 @@ theorem card_algClosure_le (x : Nimber) : (algClosure x).val.card ≤ max ℵ₀
     · rfl
 
 theorem card_fieldClosure_le (x : Nimber) : (fieldClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_fieldClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_fieldClosure]
-    · simp
-    · rfl
+  grw [fieldClosure_le_algClosure, card_algClosure_le]
 
 theorem card_ringClosure_le (x : Nimber) : (ringClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_ringClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_ringClosure]
-    · simp
-    · rfl
+  grw [ringClosure_le_fieldClosure, card_fieldClosure_le]
 
 theorem card_groupClosure_le (x : Nimber) : (groupClosure x).val.card ≤ max ℵ₀ x.val.card := by
-  obtain hx | hx := le_or_gt (∗ω) x
-  · rw [card_groupClosure hx]
-    exact le_max_right ..
-  · grw [hx, card_groupClosure]
-    · simp
-    · rfl
+  grw [groupClosure_le_ringClosure, card_ringClosure_le]
 
 theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_ x) = ∗ω_ x := by
   induction x using Ordinal.limitRecOn with
@@ -161,9 +203,9 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [← ord_aleph, ← cof_omega_add_one, enumAlgClosed_def]
     refine Ordinal.enum_ord_cof_le isClub_ofPred_isAlgClosed (fun z hz ↦ ?_) (isSuccLimit_omega _)
-    rw [← Cardinal.card_le_aleph_iff] at hz
+    rw [← card_le_aleph_iff] at hz
     refine ⟨(algClosure (∗z)).val, IsAlgClosed.algClosure _, ⟨le_algClosure _, ?_⟩⟩
-    grw [← Cardinal.card_le_aleph_iff, card_algClosure_le]
+    grw [← card_le_aleph_iff, card_algClosure_le]
     simpa
   | limit x hx IH =>
     have := hx.nonempty_Iio.to_subtype
