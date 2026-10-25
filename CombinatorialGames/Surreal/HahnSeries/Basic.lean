@@ -765,7 +765,6 @@ theorem trunc_mem_range_truncIdx (x : SurrealHahnSeries) (i : Surreal) :
 /-! #### `term` -/
 
 /-- Returns the `i`-th largest term of the sum, or `0` if it doesn't exist. -/
-@[expose]
 def term (x : SurrealHahnSeries) (i : Ordinal) : Surreal :=
   if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, mem_Iio.2 hi⟩).1 else 0
 
