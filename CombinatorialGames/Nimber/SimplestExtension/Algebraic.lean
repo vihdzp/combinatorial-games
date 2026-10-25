@@ -10,8 +10,8 @@ public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 import Mathlib.Algebra.Algebra.ZMod
-import Mathlib.FieldTheory.PrimeField
 import Mathlib.Algebra.CharP.Algebra
+import Mathlib.FieldTheory.PrimeField
 
 /-!
 # Nimbers are algebraically closed
