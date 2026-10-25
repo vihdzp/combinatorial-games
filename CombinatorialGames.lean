@@ -18,6 +18,7 @@ public import CombinatorialGames.Game.Loopy.Outcome
 public import CombinatorialGames.Game.Loopy.StoppingTime
 public import CombinatorialGames.Game.Order
 public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.OrdinalSum
 public import CombinatorialGames.Game.Player
 public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Game.Special
