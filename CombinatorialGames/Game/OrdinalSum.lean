@@ -41,6 +41,14 @@ theorem moves_ordinalSum (p : Player) (x y : IGame) :
   rw [ordinalSum]
   ext; simp
 
+theorem forall_moves_ordinalSum {q : IGame → Prop} {p : Player} {x y : IGame} :
+    (∀ z ∈ (x ∶ y).moves p, q z) ↔ (∀ z ∈ x.moves p, q z) ∧ (∀ z ∈ y.moves p, q (x ∶ z)) := by
+  rw [moves_ordinalSum, forall_mem_union, forall_mem_image]
+
+theorem exists_moves_ordinalSum {q : IGame → Prop} {p : Player} {x y : IGame} :
+    (∃ z ∈ (x ∶ y).moves p, q z) ↔ (∃ z ∈ x.moves p, q z) ∨ (∃ z ∈ y.moves p, q (x ∶ z)) := by
+  rw [moves_ordinalSum, exists_mem_union, exists_mem_image]
+
 theorem neg_ordinalSum (x y : IGame) : -(x ∶ y) = (-x) ∶ (-y) := by
   induction y using IGame.moveRecOn with | ind y ih
   refine IGame.ext fun p => ?_
@@ -96,9 +104,8 @@ theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} : x ∶ y ≤ x ∶ z 
   -- todo: fix recursor argument names
   induction y, z using Sym2.GameAdd.recursion wellFounded_subposition with | IH y z ih
   rw [Sym2.eq_swap] at ih
-  rw [le_iff_forall_lf, le_iff_forall_lf]
-  simp_rw [moves_ordinalSum, forall_mem_union, forall_mem_image]
-  rw [and_and_and_comm,
+  rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum, forall_moves_ordinalSum,
+    and_and_and_comm,
     forall₂_congr fun c hc => (ih z c (.snd (.of_mem_moves hc))).not,
     forall₂_congr fun c hc => (ih c y (.fst (.of_mem_moves hc))).not]
   apply and_iff_right
@@ -123,7 +130,7 @@ mutual
 
 theorem ordinalSum_le_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ≤ z ↔ x ≤ z := by
-  rw [le_iff_forall_lf, le_iff_forall_lf, moves_ordinalSum, forall_mem_union, forall_mem_image,
+  rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum,
     forall₂_congr fun c hc => (le_ordinalSum_iff_of_forall_wsubposition h).not,
     forall₂_congr fun c hc => (le_ordinalSum_iff_of_forall_wsubposition
       fun u hu => h u (hu.trans (.of_mem_moves hc))).not,
@@ -137,7 +144,7 @@ decreasing_by igame_wf
 
 theorem le_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ≤ x ∶ y ↔ z ≤ x := by
-  rw [le_iff_forall_lf, le_iff_forall_lf, moves_ordinalSum, forall_mem_union, forall_mem_image,
+  rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum,
     forall₂_congr fun c hc => (ordinalSum_le_iff_of_forall_wsubposition h).not,
     forall₂_congr fun c hc => (ordinalSum_le_iff_of_forall_wsubposition
       fun u hu => h u (hu.trans (.of_mem_moves hc))).not,
