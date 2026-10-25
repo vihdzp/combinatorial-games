@@ -84,7 +84,7 @@ theorem birthday_le_of_wsubposition {x y : IGame} (hy : WSubposition y x) :
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  rw [birthday_eq_max, leftMoves_ofSets, rightMoves_ofSets]
+  rw [birthday_eq_max, moves_left_ofSets, moves_right_ofSets]
   simp [iSup, image_eq_range]
 
 theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
@@ -156,7 +156,7 @@ theorem equiv_ordinal_of_right_eq_empty {x : IGame} (hx : xᴿ = ∅) :
   apply equiv_of_forall_lf
   · exact fun a ha ha' ↦ left_lf ha <| ho.trans ha'
   · simp [hx]
-  · rw [forall_leftMoves_toIGame]
+  · rw [forall_mem_moves_left_toIGame]
     exact fun a ha ha' ↦ ho' _ ha' ha
   · simp
 

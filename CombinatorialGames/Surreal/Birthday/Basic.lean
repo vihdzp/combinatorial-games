@@ -210,8 +210,8 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         grw [mk_eq_mk.2 ⟨hxz, hzx⟩, birthday_mk_le, birthday_lt_of_mem_moves hzy, hyb, hy]
       have hzf : z.Fits !{{x} | {y}} := by
         constructor
-        · rwa [leftMoves_ofSets, Set.forall_mem_singleton]
-        · rw [rightMoves_ofSets, Set.forall_mem_singleton]
+        · rwa [moves_left_ofSets, Set.forall_mem_singleton]
+        · rw [moves_right_ofSets, Set.forall_mem_singleton]
           exact left_lf hzy
       obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
       apply hbxy
@@ -231,9 +231,9 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         grw [mk_eq_mk.2 ⟨hyz, hzy⟩, birthday_mk_le, birthday_lt_of_mem_moves hzx, hxb, hx]
       have hzf : z.Fits !{{x} | {y}} := by
         constructor
-        · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+        · rw [moves_left_ofSets, Set.forall_mem_singleton]
           exact lf_right hzx
-        · rwa [rightMoves_ofSets, Set.forall_mem_singleton]
+        · rwa [moves_right_ofSets, Set.forall_mem_singleton]
       obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
       apply hbxy
       have := Numeric.wsubposition hwz

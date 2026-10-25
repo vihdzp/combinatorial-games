@@ -745,15 +745,13 @@ theorem self_mem_range_truncIdx (x : SurrealHahnSeries) : x ∈ range x.truncIdx
 theorem range_truncIdx_eq_range_trunc (x : SurrealHahnSeries) :
     range x.truncIdx = range x.trunc := by
   ext y
-  constructor
-  · rintro ⟨i, rfl⟩
-    obtain h | h := lt_or_ge i x.length
+  constructor <;> rintro ⟨i, rfl⟩
+  · obtain h | h := lt_or_ge i x.length
     · rw [truncIdx_of_lt h]
       exact mem_range_self _
     · rw [truncIdx_of_ge h]
       exact self_mem_range_trunc x
-  · rintro ⟨i, rfl⟩
-    by_cases! hx : ∀ j ∈ x.support, i < j
+  · by_cases! hx : ∀ j ∈ x.support, i < j
     · rw [trunc_eq_self_iff.2 hx]
       use x.length
       simp
@@ -806,12 +804,12 @@ theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
 
 theorem wlog_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     (x.term i).wlog = x.exp ⟨i, mem_Iio.2 hi⟩ := by
-  rw [term]
+  rw [term_of_lt hi]
   aesop
 
 theorem mk_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, mem_Iio.2 hi⟩)) := by
-  rw [term]
+  rw [term_of_lt hi]
   aesop
 
 theorem term_zero_of_isGreatest {x : SurrealHahnSeries} (i : Surreal)
