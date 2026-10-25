@@ -50,6 +50,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
+@[simp]
+theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
