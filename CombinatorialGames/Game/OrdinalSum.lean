@@ -6,6 +6,7 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Specific.Nim
+public import CombinatorialGames.Tactic.GameCmp
 
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.Order.GameAdd
@@ -36,6 +37,7 @@ decreasing_by igame_wf
 
 recommended_spelling "ordinalSum" for "∶" in [ordinalSum, «term_∶_»]
 
+@[game_cmp]
 theorem moves_ordinalSum (p : Player) (x y : IGame) :
     (x ∶ y).moves p = x.moves p ∪ ordinalSum x '' y.moves p := by
   rw [ordinalSum]
