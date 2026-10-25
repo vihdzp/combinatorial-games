@@ -5,7 +5,8 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
+public import Mathlib.SetTheory.Ordinal.Basic
 
 import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
@@ -55,7 +56,7 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
-attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff
+attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff one_le_val
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
@@ -111,21 +112,6 @@ private theorem add_ne_of_lt (a b : Nimber) :
   have H := csInf_mem (add_nonempty a b)
   rw [← add_def] at H
   simpa using H
-
-/-- A version of `add_le_nadd` stated in terms of `Ordinal`. -/
-theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + NatOrdinal.of b).val := by
-  rw [val_le_iff]
-  apply add_le_of_forall_ne
-  all_goals
-    intro c hc
-    cases c with | of c
-    rw [← val_eq_iff.ne]
-    apply ((add_le_nadd' ..).trans_lt _).ne
-    simpa
-termination_by (a, b)
-
-theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
-  add_le_nadd' ..
 
 private theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]

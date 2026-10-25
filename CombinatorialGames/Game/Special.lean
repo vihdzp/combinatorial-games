@@ -92,6 +92,9 @@ recommended_spelling "up" for "↑" in [«term↑»]
 @[simp, game_cmp] theorem leftMoves_up : ↑ᴸ = {0} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_up : ↑ᴿ = {⋆} := rightMoves_ofSets ..
 
+theorem zero_mem_moves_left_up : 0 ∈ ↑ᴸ := by simp
+theorem star_mem_moves_right_up : ⋆ ∈ ↑ᴿ := by simp
+
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
 theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
@@ -113,6 +116,9 @@ recommended_spelling "down" for "↓" in [«term↓»]
 
 @[simp, game_cmp] theorem leftMoves_down : ↓ᴸ = {⋆} := leftMoves_ofSets ..
 @[simp, game_cmp] theorem rightMoves_down : ↓ᴿ = {0} := rightMoves_ofSets ..
+
+theorem star_mem_moves_left_down : ⋆ ∈ ↓ᴸ := by simp
+theorem zero_mem_moves_right_down : 0 ∈ ↓ᴿ := by simp
 
 @[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
 @[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
@@ -142,7 +148,7 @@ theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
 theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
   rightMoves_ofSets ..
 
-@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+@[simp, game_cmp] theorem tiny_zero : ⧾0 = ↑ := by aesop
 
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
@@ -195,7 +201,7 @@ theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
 theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
   rightMoves_ofSets ..
 
-@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
+@[simp, game_cmp] theorem miny_zero : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
@@ -232,7 +238,8 @@ theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
 
 /-! ### Switches -/
 
-/-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
+/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is equivalent
+to 0. -/
 def switch (x : IGame) : IGame :=
   !{{x} | {-x}}
 
