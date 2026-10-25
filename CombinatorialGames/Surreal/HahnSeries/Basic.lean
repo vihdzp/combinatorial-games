@@ -208,16 +208,34 @@ theorem coeff_mul (x y : SurrealHahnSeries) (i : Surreal) :
     (x * y).coeff i = ∑ ij ∈ antidiagonal x y i, x.coeff ij.1 * y.coeff ij.2 :=
   (rfl)
 
-theorem antidiagonal_add_subset_singleton {x y : SurrealHahnSeries} {i j : Surreal}
+theorem antidiagonal_add_subset_singleton_of_subset_Iic {x y : SurrealHahnSeries} {i j : Surreal}
     (hx : x.support ⊆ Iic i) (hy : y.support ⊆ Iic j) :
     antidiagonal x y (i + j) ⊆ {(i, j)} := by
   grind
 
-theorem coeff_mul_add_of_support_subset {x y : SurrealHahnSeries} {i j : Surreal}
+theorem antidiagonal_add_subset_singleton_of_subset_Ici {x y : SurrealHahnSeries} {i j : Surreal}
+    (hx : x.support ⊆ Ici i) (hy : y.support ⊆ Ici j) :
+    antidiagonal x y (i + j) ⊆ {(i, j)} := by
+  grind
+
+theorem coeff_mul_add_of_support_subset_Iic {x y : SurrealHahnSeries} {i j : Surreal}
     (hx : x.support ⊆ Iic i) (hy : y.support ⊆ Iic j) :
     (x * y).coeff (i + j) = x.coeff i * y.coeff j := by
   rw [coeff_mul]
-  obtain h | h := Finset.subset_singleton_iff.1 (antidiagonal_add_subset_singleton hx hy)
+  obtain h | h := Finset.subset_singleton_iff.1
+    (antidiagonal_add_subset_singleton_of_subset_Iic hx hy)
+  · rw [h]
+    contrapose! h
+    use (i, j)
+    simp_all
+  · simp [h]
+
+theorem coeff_mul_add_of_support_subset_Ici {x y : SurrealHahnSeries} {i j : Surreal}
+    (hx : x.support ⊆ Ici i) (hy : y.support ⊆ Ici j) :
+    (x * y).coeff (i + j) = x.coeff i * y.coeff j := by
+  rw [coeff_mul]
+  obtain h | h := Finset.subset_singleton_iff.1
+    (antidiagonal_add_subset_singleton_of_subset_Ici hx hy)
   · rw [h]
     contrapose! h
     use (i, j)

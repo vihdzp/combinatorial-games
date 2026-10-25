@@ -473,7 +473,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
             exact Set.Iic_add_Iic_subset a b
           · grw [support_single_subset]
             simp
-        · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+        · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
           linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
     · simp_rw [IGame.forall_moves_mul, Player.forall, IGame.moves_ofSets, Player.cases,
         Set.forall_mem_image, forall_mem_truncLT, forall_mem_truncGT]
@@ -501,7 +501,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
             simp
           · grw [support_single_mul_subset, support_sub_trunc]
             simp [add_comm]
-        · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+        · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
           linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
   · simp_rw [IGame.leftMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
       Player.mul_left, forall_mem_truncLT]
@@ -534,7 +534,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
         · grw [support_single_mul_subset, support_sub_trunc]
           simp [add_comm]
         · exact support_single_subset.trans (by simp)
-      · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+      · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
         linarith only [hpq]
   · simp_rw [IGame.rightMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
       Player.mul_right, forall_mem_truncGT]
@@ -567,7 +567,7 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
         · grw [support_single_mul_subset, support_sub_trunc]
           simp [add_comm]
         · exact support_single_subset.trans (by simp)
-      · simp [coeff_mul_add_of_support_subset, support_sub_trunc]
+      · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
         linarith only [hpq]
 termination_by (x.length, y.length)
 decreasing_by all_goals
@@ -615,5 +615,33 @@ theorem support_mul_subset {x y : Surreal} : support (x * y) ⊆ support x + sup
     ← SurrealHahnSeries.toSurreal_mul]
   rw [SurrealHahnSeries.support_toSurreal]
   exact SurrealHahnSeries.support_mul_subset
+
+/-- `Surreal.antidiagonal x y i` is the set of all pairs in the supports of `x` and `y`
+that add to `i`. By the well-ordering condition, this is a finite set. -/
+def antidiagonal (x y i : Surreal) : Finset (Surreal × Surreal) :=
+  SurrealHahnSeries.antidiagonal x.toHahnSeries y.toHahnSeries i
+
+@[simp, grind =]
+theorem mem_antidiagonal {x y} {i j} : j ∈ antidiagonal x y i ↔
+    j.1 ∈ x.support ∧ j.2 ∈ y.support ∧ j.1 + j.2 = i :=
+  SurrealHahnSeries.mem_antidiagonal ..
+
+theorem coeff_mul (x y i : Surreal) :
+    (x * y).coeff i = ∑ ij ∈ antidiagonal x y i, x.coeff ij.1 * y.coeff ij.2 := by
+  rw [← toSurreal_toHahnSeries x, ← toSurreal_toHahnSeries y, ← SurrealHahnSeries.toSurreal_mul,
+    Surreal.coeff, SurrealHahnSeries.toHahnSeries_toSurreal, SurrealHahnSeries.coeff_mul]
+  simp [antidiagonal]
+
+theorem coeff_mul_add_of_support_subset_Iic {x y i j : Surreal}
+    (hx : x.support ⊆ Set.Iic i) (hy : y.support ⊆ Set.Iic j) :
+    (x * y).coeff (i + j) = x.coeff i * y.coeff j := by
+  rw [coeff, toHahnSeries_mul]
+  exact SurrealHahnSeries.coeff_mul_add_of_support_subset_Iic hx hy
+
+theorem coeff_mul_add_of_support_subset_Ici {x y i j : Surreal}
+    (hx : x.support ⊆ Set.Ici i) (hy : y.support ⊆ Set.Ici j) :
+    (x * y).coeff (i + j) = x.coeff i * y.coeff j := by
+  rw [coeff, toHahnSeries_mul]
+  exact SurrealHahnSeries.coeff_mul_add_of_support_subset_Ici hx hy
 
 end Surreal

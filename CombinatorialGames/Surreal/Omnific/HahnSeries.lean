@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Surreal.HahnSeries.Addition
+public import CombinatorialGames.Surreal.HahnSeries.Ring
 
 /-!
 # Characterization of omnific integers by Hahn series
@@ -71,20 +71,6 @@ theorem isOmnific_iff_subset_and_mem_range :
 theorem isOmnific_wpow_iff : IsOmnific (ω^ x) ↔ 0 ≤ x := by
   rw [isOmnific_iff_subset_and_mem_range]
   aesop
-
-/-- Auxiliary declaration for `Omnific.residue`. -/
-private def residueFun (x : Omnific) : ℤ :=
-  x.prop.coeff_zero_mem_range_intCast.choose
-
-private theorem intCast_residueFun (x : Omnific) : residueFun x = x.coe.coeff 0 :=
-  Classical.choose_spec x.prop.coeff_zero_mem_range_intCast
-
--- TODO: PROVE THIS PRESERVES MULTIPLICATION
-/-- The function which returns the real part of an omnific integer. -/
-def Omnific.residue : Omnific →+ ℤ where
-  toFun := residueFun
-  map_zero' := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
-  map_add' x y := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
 
 /-! ### Floor and ceiling -/
 
@@ -267,6 +253,35 @@ theorem IsOmnific.round_one (x : Surreal) : IsOmnific (x.round 1) := by
       exact Omnific.prop _
     · apply (sub_lt_round zero_lt_one).trans_le'
       simp
+
+/-! ### Residue map -/
+
+/-- Auxiliary declaration for `Omnific.residue`. -/
+private def residueFun (x : Omnific) : ℤ :=
+  x.prop.coeff_zero_mem_range_intCast.choose
+
+private theorem intCast_residueFun (x : Omnific) : residueFun x = x.coe.coeff 0 :=
+  Classical.choose_spec x.prop.coeff_zero_mem_range_intCast
+
+theorem IsOmnific.coeff_mul_zero {x y : Surreal} (hx : IsOmnific x) (hy : IsOmnific y) :
+    (x * y).coeff 0 = x.coeff 0 * y.coeff 0 := by
+  conv_lhs => rw [← zero_add 0]
+  apply coeff_mul_add_of_support_subset_Ici hx.support_subset hy.support_subset
+
+/-- The function which returns the real part of an omnific integer. -/
+def Omnific.residue : Omnific →+* ℤ where
+  toFun := residueFun
+  map_zero' := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
+  map_one' := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
+  map_add' x y := by rw [← Int.cast_inj (α := ℝ)]; simp [intCast_residueFun]
+  map_mul' x y := by
+    rw [← Int.cast_inj (α := ℝ), Int.cast_mul]
+    simp_rw [intCast_residueFun, Omnific.coe_mul]
+    exact IsOmnific.coeff_mul_zero x.prop y.prop
+
+@[simp]
+theorem Omnific.intCast_residue (x : Omnific) : (x.residue : ℝ) = x.coe.coeff 0 :=
+  intCast_residueFun _
 
 end Surreal
 end
