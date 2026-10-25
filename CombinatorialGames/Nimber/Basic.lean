@@ -5,7 +5,8 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.SetTheory.Ordinal.Arithmetic
+public import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
+public import Mathlib.SetTheory.Ordinal.Basic
 
 import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias

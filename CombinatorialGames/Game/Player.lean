@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 
-import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.DeriveFintype -- shake: keep
 
 /-!
 # Type of players

@@ -7,10 +7,10 @@ module
 
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
-public import Mathlib.Algebra.CharP.Subring
 public import Mathlib.FieldTheory.IsAlgClosed.Basic
 
 import Mathlib.Algebra.Algebra.ZMod
+import Mathlib.Algebra.CharP.Algebra
 import Mathlib.FieldTheory.PrimeField
 
 /-!
