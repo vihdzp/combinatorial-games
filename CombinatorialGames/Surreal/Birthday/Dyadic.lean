@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Dyadic
 
@@ -159,22 +158,6 @@ theorem rightStop_le_leftStop (x : IGame) [Short x] : rightStop x ≤ leftStop x
   by_contra! h
   obtain ⟨y, hl, hr⟩ := exists_between h
   cases ((lt_of_leftStop_lt (mod_cast hl)).trans (lt_of_lt_rightStop (y := y) (mod_cast hr))).false
-
-/-- A short infinitesimal game is small. -/
-theorem Small.of_infinitesimal {x : IGame} [Short x]
-    (hl : ∀ y : Dyadic, y < 0 → y ≤ x) (hr : ∀ y : Dyadic, 0 < y → x ≤ y) : Small x where
-  le_numeric_of_pos {y} _ hy := by
-    apply (lt_of_leftStop_lt (hy.trans_le' _)).le
-    rw [Dyadic.toIGame_le_zero]
-    contrapose! hr
-    obtain ⟨z, hz, hzx⟩ := exists_between hr
-    exact ⟨z, hz, lf_of_lt_leftStop (mod_cast hzx)⟩
-  numeric_le_of_neg {y} _ hy := by
-    apply (lt_of_lt_rightStop (hy.trans_le _)).le
-    rw [Dyadic.zero_le_toIGame]
-    contrapose! hl
-    obtain ⟨z, hxz, hz⟩ := exists_between hl
-    exact ⟨z, hz, lf_of_rightStop_lt (mod_cast hxz)⟩
 
 end IGame
 end Ordinal

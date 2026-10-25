@@ -124,14 +124,14 @@ theorem leftGame_mk_cases (x : IGame) [Small x] :
   apply (em (x ≤ 0)).imp <;> intro hx <;> ext y
   · simp only [left_leftGame, Set.mem_ofPred_eq, left_leftSurreal, Set.mem_Iio]
     obtain hy | rfl | hy := lt_trichotomy y 0
-    · simpa [hy] using (surreal_lt_of_neg hy).not_ge
+    · simpa [hy] using (surreal_lt_of_neg x hy).not_ge
     · simpa
-    · simpa [hy.asymm] using (lt_surreal_of_pos hy).le
+    · simpa [hy.asymm] using (lt_surreal_of_pos x hy).le
   · simp only [left_leftGame, Set.mem_ofPred_eq, left_rightSurreal, Set.mem_Iic]
     obtain hy | rfl | hy := lt_trichotomy y 0
-    · simpa [hy.le] using (surreal_lt_of_neg hy).not_ge
+    · simpa [hy.le] using (surreal_lt_of_neg x hy).not_ge
     · simpa
-    · simpa [hy.not_ge] using (lt_surreal_of_pos hy).le
+    · simpa [hy.not_ge] using (lt_surreal_of_pos x hy).le
 
 theorem rightGame_mk_cases (x : IGame) [Small x] :
     rightGame (.mk x) = leftSurreal 0 ∨ rightGame (.mk x) = rightSurreal 0 := by
@@ -193,7 +193,7 @@ theorem of_infinitesimal {x : IGame} [Short x]
 
 theorem confusionInterval_subset_zero (x : IGame) [Small x] :
     Game.confusionInterval (.mk x) ⊆ {0} := by
-  rw [Game.confusionInterval]
+  rw [Game.confusionInterval_def]
   obtain hl | hl := leftGame_mk_cases x <;> obtain hr | hr := rightGame_mk_cases x <;> grind
 
 theorem lt_numeric_of_pos_of_forall_of_nonempty {x y : IGame} (hy : 0 < y) [Numeric y]
