@@ -15,7 +15,7 @@ import Mathlib.Algebra.Order.Group.Pointwise.Interval
 
 We prove here that `Surreal` and `SurrealHahnSeries` are isomorphic as rings.
 
-Conway omits this proof entirely. This file is loosely based on pages 429-430 of Siegel.
+Conway omits this proof entirely. This file is loosely based on pages 429-431 of Siegel.
 -/
 
 public noncomputable section
@@ -362,7 +362,7 @@ private theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSer
         apply leadingTerm_mono.reflect_lt
         simp_all [mul_assoc]
         simpa [← mul_assoc, ← Real.toSurreal_mul]
-    · simp_rw [IGame.forall_moves_mul, Player.mul_left, IGame.leftMoves_ofSets,
+    · simp_rw [IGame.forall_moves_mul, Player.mul_left, IGame.moves_left_ofSets,
         Set.exists_mem_image, exists_mem_truncLT, coeff_single_mul, support_single_mul hr]
       intro p a ha b hb
       rw [IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at ha
@@ -393,7 +393,7 @@ private theorem toSurreal_single_mul (i : Surreal) (r : ℝ) (x : SurrealHahnSer
         coeff_toSurreal, leadingTerm_wpow, leadingTerm_realCast, ← mul_rotate',
         mul_lt_mul_iff_of_pos_left (wpow_pos j), ← Real.toSurreal_mul, Real.toSurreal_lt_iff]
       linarith only [hk]
-    · simp_rw [IGame.forall_moves_mul, Player.mul_right, IGame.rightMoves_ofSets,
+    · simp_rw [IGame.forall_moves_mul, Player.mul_right, IGame.moves_right_ofSets,
         Set.exists_mem_image, exists_mem_truncGT, coeff_single_mul, support_single_mul hr]
       intro p a ha b hb
       rw [IGame.moves_ofSets, ← Player.apply_cases, Set.mem_image] at ha
@@ -503,15 +503,15 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
             simp [add_comm]
         · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
           linarith only [mul_pos (sub_pos.2 hp) (sub_pos.2 hq)]
-  · simp_rw [IGame.leftMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
+  · simp_rw [IGame.moves_left_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
       Player.mul_left, forall_mem_truncLT]
     intro i hab r hr
     obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
     obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub_mul_sub_lt (x.coeff a) (y.coeff b) (sub_pos.2 hr)
     refine ⟨.left, (x.trunc a + single a p :), ?_, (y.trunc b + single b q :), ?_, ?_⟩
-    · rw [IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+    · rw [IGame.moves_left_ofSets, Set.mem_image, exists_mem_truncLT]
       exact ⟨a, ha, _, hp, rfl⟩
-    · rw [IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+    · rw [IGame.moves_left_ofSets, Set.mem_image, exists_mem_truncLT]
       exact ⟨b, hb, _, hq, rfl⟩
     · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
         mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]
@@ -536,15 +536,15 @@ theorem toSurreal_mul (x y : SurrealHahnSeries) :
         · exact support_single_subset.trans (by simp)
       · simp [coeff_mul_add_of_support_subset_Iic, support_sub_trunc]
         linarith only [hpq]
-  · simp_rw [IGame.rightMoves_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
+  · simp_rw [IGame.moves_right_ofSets, Set.forall_mem_image, IGame.exists_moves_mul,
       Player.mul_right, forall_mem_truncGT]
     intro i hab r hr
     obtain ⟨a, ha, b, hb, rfl⟩ := support_mul_subset hab
     obtain ⟨p, hp, q, hq, hpq⟩ := exists_sub_mul_sub_gt (x.coeff a) (y.coeff b) (sub_neg.2 hr)
     refine ⟨.right, (x.trunc a + single a p :), ?_, (y.trunc b + single b q :), ?_, ?_⟩
-    · rw [IGame.rightMoves_ofSets, Set.mem_image, exists_mem_truncGT]
+    · rw [IGame.moves_right_ofSets, Set.mem_image, exists_mem_truncGT]
       exact ⟨a, ha, _, hp, rfl⟩
-    · rw [Player.neg_right, IGame.leftMoves_ofSets, Set.mem_image, exists_mem_truncLT]
+    · rw [Player.neg_right, IGame.moves_left_ofSets, Set.mem_image, exists_mem_truncLT]
       exact ⟨b, hb, _, hq, rfl⟩
     · simp_rw [← Surreal.mk_le_mk, mk_toIGame, Surreal.mk_mulOption, ← toSurreal_def',
         mk_toIGame, toSurreal_add, add_mul, mul_add, toSurreal_single]

@@ -305,11 +305,11 @@ theorem toIGame_zero : toIGame 0 = 0 := by
 
 theorem leftMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (toIGame x)ᴸ = toIGame '' truncLT x := by
-  rw [toIGame_limit hx, leftMoves_ofSets]
+  rw [toIGame_limit hx, moves_left_ofSets]
 
 theorem rightMoves_toIGame_limit {x : SurrealHahnSeries} (hx : IsSuccPrelimit x.length) :
     (toIGame x)ᴿ = toIGame '' truncGT x := by
-  rw [toIGame_limit hx, rightMoves_ofSets]
+  rw [toIGame_limit hx, moves_right_ofSets]
 
 private theorem toIGame_lt_toIGame_of_truncLT {x y : SurrealHahnSeries} (h : x ≺ y)
     [hy' : Numeric y] (IH : ∀ z, length z < y.length → Numeric z) :
