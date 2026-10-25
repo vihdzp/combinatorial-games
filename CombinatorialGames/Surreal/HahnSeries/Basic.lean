@@ -480,10 +480,7 @@ local instance (x : SurrealHahnSeries.{u}) : IsWellOrder (Shrink.{u} x.support) 
 /-! #### `length` -/
 
 /-- The length of a surreal Hahn series is the order type of its support. Note that this is an
-`Ordinal`, rather than a `NatOrdinal`.
-
-Reasoning about `Ordinal.type` directly is often quite tedious. To prove things about `length`, it's
-often easier to use `HahnSeries.ofSeqRecOn` and the `HahnSeries.ofSeq` API. -/
+`Ordinal`, rather than a `NatOrdinal`. -/
 def length (x : SurrealHahnSeries.{u}) : Ordinal.{u} :=
   type (α := Shrink.{u} x.support) (· > ·)
 
