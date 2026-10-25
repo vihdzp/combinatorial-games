@@ -128,6 +128,8 @@ theorem ordinalSum_right_congr (x : IGame) {y z : IGame} (h : y ≈ z) : x ∶ y
 
 mutual
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `x ∶ y ≤ z` exactly when `x ≤ z`. -/
 theorem ordinalSum_le_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ≤ z ↔ x ≤ z := by
   rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum,
@@ -142,6 +144,8 @@ theorem ordinalSum_le_iff_of_forall_wsubposition {x y z : IGame}
 termination_by (y, z)
 decreasing_by igame_wf
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `z ≤ x ∶ y` exactly when `z ≤ x`. -/
 theorem le_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ≤ x ∶ y ↔ z ≤ x := by
   rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum,
@@ -158,24 +162,47 @@ decreasing_by igame_wf
 
 end
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `x ∶ y ⧏ z` exactly when `x ⧏ z`. -/
 theorem ordinalSum_lf_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ⧏ z ↔ x ⧏ z :=
   (le_ordinalSum_iff_of_forall_wsubposition h).not
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `z ⧏ x ∶ y` exactly when `z ⧏ x`. -/
 theorem lf_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ⧏ x ∶ y ↔ z ⧏ x :=
   (ordinalSum_le_iff_of_forall_wsubposition h).not
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `x ∶ y < z` exactly when `x < z`. -/
 theorem ordinalSum_lt_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y < z ↔ x < z := by
   rw [lt_iff_le_not_ge, lt_iff_le_not_ge,
     ordinalSum_le_iff_of_forall_wsubposition h,
     ordinalSum_lf_iff_of_forall_wsubposition h]
 
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `z < x ∶ y` exactly when `z < x`. -/
 theorem lt_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : z < x ∶ y ↔ z < x := by
   rw [lt_iff_le_not_ge, lt_iff_le_not_ge,
     le_ordinalSum_iff_of_forall_wsubposition h,
     lf_ordinalSum_iff_of_forall_wsubposition h]
+
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `x ∶ y ‖ z` exactly when `x ‖ z`. -/
+theorem ordinalSum_fuzzy_iff_of_forall_wsubposition {x y z : IGame}
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ‖ z ↔ x ‖ z := by
+  unfold IncompRel
+  beta_reduce
+  rw [ordinalSum_le_iff_of_forall_wsubposition h,
+    ordinalSum_lf_iff_of_forall_wsubposition h]
+
+/-- Part of **Norton's Lemma**: if `z` does not have a game equivalent to `x` as a subposition,
+then `z ‖ x ∶ y` exactly when `z ‖ x`. -/
+theorem fuzzy_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ‖ x ∶ y ↔ z ‖ x := by
+  rw [incompRel_comm, ordinalSum_fuzzy_iff_of_forall_wsubposition h, incompRel_comm]
 
 end IGame
