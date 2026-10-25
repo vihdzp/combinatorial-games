@@ -159,4 +159,16 @@ theorem lf_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
     (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ⧏ x ∶ y ↔ z ⧏ x :=
   (ordinalSum_le_iff_of_forall_wsubposition h).not
 
+theorem ordinalSum_lt_iff_of_forall_wsubposition {x y z : IGame}
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y < z ↔ x < z := by
+  rw [lt_iff_le_not_ge, lt_iff_le_not_ge,
+    ordinalSum_le_iff_of_forall_wsubposition h,
+    ordinalSum_lf_iff_of_forall_wsubposition h]
+
+theorem lt_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z < x ∶ y ↔ z < x := by
+  rw [lt_iff_le_not_ge, lt_iff_le_not_ge,
+    le_ordinalSum_iff_of_forall_wsubposition h,
+    lf_ordinalSum_iff_of_forall_wsubposition h]
+
 end IGame
