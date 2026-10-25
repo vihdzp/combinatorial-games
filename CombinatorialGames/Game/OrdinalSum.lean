@@ -120,7 +120,6 @@ theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} : x ∶ y ≤ x ∶ z 
     apply lf_right
     simp [moves_ordinalSum, hc]
 
-@[simp]
 theorem ordinalSum_lf_ordinalSum_iff_left {x y z : IGame} : x ∶ y ⧏ x ∶ z ↔ y ⧏ z :=
   ordinalSum_le_ordinalSum_iff_left.not
 
