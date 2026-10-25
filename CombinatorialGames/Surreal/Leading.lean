@@ -23,7 +23,8 @@ We don't yet prove this characterization; rather, these functions are a key ingr
 the map from surreals into Hahn series.
 -/
 
-@[expose] public noncomputable section
+public noncomputable section
+
 namespace Surreal
 
 open ArchimedeanClass
@@ -31,6 +32,7 @@ open ArchimedeanClass
 /-! ### Leading coefficient -/
 
 /-- The leading coefficient of a surreal's Hahn series. -/
+@[expose]
 def leadingCoeff (x : Surreal) : ℝ :=
   stdPart (x / ω^ x.wlog)
 
@@ -171,6 +173,7 @@ theorem leadingCoeff_sub_eq_right {x y : Surreal} : y <ᵥ x →
 /-! ### Leading term -/
 
 /-- The leading term of a surreal's Hahn series. -/
+@[expose]
 def leadingTerm (x : Surreal) : Surreal :=
   x.leadingCoeff * ω^ x.wlog
 
@@ -310,6 +313,14 @@ theorem leadingTerm_sub_eq_left {x y : Surreal} : y <ᵥ x →
 theorem leadingTerm_sub_eq_right {x y : Surreal} : y <ᵥ x →
     leadingTerm (y - x) = -leadingTerm x := by
   simpa [sub_eq_add_neg] using @leadingTerm_add_eq_right (-x) y
+
+theorem sub_stdPart_vlt_one {x : Surreal} (hx : x ≤ᵥ 1) : x - stdPart x <ᵥ 1 := by
+  rw [vlt_def]
+  exact ArchimedeanClass.mk_sub_stdPart_pos Real.toSurrealRingHom hx
+
+theorem stdPart_sub_vlt_one {x : Surreal} (hx : x ≤ᵥ 1) : stdPart x - x <ᵥ 1 := by
+  rw [← neg_vlt, neg_sub]
+  exact sub_stdPart_vlt_one hx
 
 end Surreal
 end

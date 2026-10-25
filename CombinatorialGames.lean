@@ -52,9 +52,13 @@ public import CombinatorialGames.Surreal.Cut
 public import CombinatorialGames.Surreal.Division
 public import CombinatorialGames.Surreal.Dyadic
 public import CombinatorialGames.Surreal.HahnSeries.Basic
+public import CombinatorialGames.Surreal.HahnSeries.Ring
+public import CombinatorialGames.Surreal.HahnSeries.Surreal
+public import CombinatorialGames.Surreal.HahnSeries.Transfer
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
 public import CombinatorialGames.Surreal.Omnific.Basic
+public import CombinatorialGames.Surreal.Omnific.HahnSeries
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
