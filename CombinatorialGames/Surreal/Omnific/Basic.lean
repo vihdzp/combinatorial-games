@@ -30,6 +30,7 @@ public noncomputable section
 namespace Surreal
 open IGame Set
 
+-- This lets `aesop` automatically close goals about `round`.
 attribute [local simp] add_assoc sub_lt_iff_lt_add
 
 /-! ### Rounding operation -/
@@ -177,6 +178,23 @@ theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
   simpa [IsOmnific] using round_mul_of_eq zero_lt_one hx hy
 
+theorem isOmnific_add_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x + y) ↔ IsOmnific x where
+  mp h := by simpa using h.sub hy
+  mpr h := h.add hy
+
+theorem isOmnific_add_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x + y) ↔ IsOmnific y := by
+  rw [add_comm, isOmnific_add_iff_left hx]
+
+theorem isOmnific_sub_iff_left {x y : Surreal} (hy : IsOmnific y) :
+    IsOmnific (x - y) ↔ IsOmnific x := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_left hy.neg]
+
+theorem isOmnific_sub_iff_right {x y : Surreal} (hx : IsOmnific x) :
+    IsOmnific (x - y) ↔ IsOmnific y := by
+  rw [sub_eq_add_neg, isOmnific_add_iff_right hx, isOmnific_neg_iff]
+
 theorem IsOmnific.one_le_iff_pos {x : Surreal} (h : IsOmnific x) : 1 ≤ x ↔ 0 < x where
   mp := zero_lt_one.trans_le
   mpr hx := by
@@ -271,23 +289,6 @@ def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
 
-theorem isOmnific_add_iff_left {x y : Surreal} (hy : IsOmnific y) :
-    IsOmnific (x + y) ↔ IsOmnific x where
-  mp h := by simpa using h.sub hy
-  mpr h := h.add hy
-
-theorem isOmnific_add_iff_right {x y : Surreal} (hx : IsOmnific x) :
-    IsOmnific (x + y) ↔ IsOmnific y := by
-  rw [add_comm, isOmnific_add_iff_left hx]
-
-theorem isOmnific_sub_iff_left {x y : Surreal} (hy : IsOmnific y) :
-    IsOmnific (x - y) ↔ IsOmnific x := by
-  rw [sub_eq_add_neg, isOmnific_add_iff_left hy.neg]
-
-theorem isOmnific_sub_iff_right {x y : Surreal} (hx : IsOmnific x) :
-    IsOmnific (x - y) ↔ IsOmnific y := by
-  rw [sub_eq_add_neg, isOmnific_add_iff_right hx, isOmnific_neg_iff]
-
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where
   mpr := by rintro ⟨n, rfl⟩; simp
@@ -321,8 +322,7 @@ instance : SuccAddOrder Omnific where
 instance : PredOrder Omnific :=
   .ofCore (fun x ↦ x - 1) (by
     refine @fun x _ y ↦ ⟨fun h ↦ ?_, (sub_one_lt x).trans_le'⟩
-    rwa [le_sub_comm, ← Omnific.coe_le_coe, Omnific.coe_one,
-      (Omnific.prop _).one_le_iff_pos, Omnific.coe_sub, lt_sub_iff_add_lt, zero_add]
+    rwa [le_sub_comm, Order.one_le_iff_pos, sub_pos]
   ) (by simp)
 
 instance : PredSubOrder Omnific where
