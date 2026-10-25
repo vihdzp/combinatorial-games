@@ -54,7 +54,7 @@ theorem exists_moves_ordinalSum {q : IGame → Prop} {p : Player} {x y : IGame} 
 @[simp]
 theorem neg_ordinalSum (x y : IGame) : -(x ∶ y) = (-x) ∶ (-y) := by
   induction y using IGame.moveRecOn with | ind y ih
-  refine IGame.ext fun p => ?_
+  ext1 p
   simp only [moves_neg, moves_ordinalSum, ← Set.image_neg_eq_neg]
   rw [Set.image_union, Set.image_image, Set.image_image, Set.image_congr (ih (-p))]
 
@@ -65,24 +65,24 @@ theorem ordinalSum_zero (x : IGame) : x ∶ 0 = x :=
 @[simp, game_cmp]
 theorem zero_ordinalSum (x : IGame) : 0 ∶ x = x := by
   induction x using IGame.moveRecOn with | ind x ih
-  refine IGame.ext fun p => ?_
+  ext1 p
   rw [moves_ordinalSum, moves_zero, empty_union, Set.image_congr (ih p), Set.image_id']
 
 theorem ordinalSum_assoc (x y z : IGame) : (x ∶ y) ∶ z = x ∶ (y ∶ z) := by
   induction z using IGame.moveRecOn with | ind z ih
-  refine IGame.ext fun p => ?_
+  ext1 p
   simp_rw [moves_ordinalSum]
   rw [Set.image_union, Set.union_assoc, Set.image_image, Set.image_congr (ih p)]
 
 theorem nim_ordinalSum_nim (o o' : Nimber) :
     nim o ∶ nim o' = nim (.of (o.val + o'.val)) := by
   induction o' using WellFoundedLT.induction with | ind o' ih
-  refine IGame.ext fun p => ?_
+  ext1 p
   simp_rw [moves_ordinalSum, moves_nim, Set.image_image]
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
     ← Set.image_image nim (fun z => .of (o.val + z.val)) (Iio o'), ← Set.image_union]
   congr
-  ext x
+  ext1 x
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← Nimber.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← Nimber.val.exists_congr_right]
   simp_rw [Nimber.of_eq_iff, OrderIso.coe_toEquiv, Nimber.val.lt_iff_lt, eq_comm]
@@ -90,13 +90,14 @@ theorem nim_ordinalSum_nim (o o' : Nimber) :
 theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
     o.toIGame ∶ o'.toIGame = (NatOrdinal.of (o.val + o'.val)).toIGame := by
   induction o' using WellFoundedLT.induction with | ind o' ih
-  refine IGame.ext fun p => p.casesOn ?_ (by simp [moves_ordinalSum])
+  ext1 p
+  cases p with | right => simp [moves_ordinalSum] | left
   simp_rw [moves_ordinalSum, NatOrdinal.moves_left_toIGame, Set.image_image]
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
     ← Set.image_image NatOrdinal.toIGame (fun z => .of (o.val + z.val)) (Iio o'),
     ← Set.image_union]
   congr
-  ext x
+  ext1 x
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← NatOrdinal.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← NatOrdinal.val.exists_congr_right]
   simp_rw [NatOrdinal.of_eq_iff, OrderIso.coe_toEquiv, NatOrdinal.val.lt_iff_lt, eq_comm]
