@@ -74,27 +74,27 @@ theorem ordinalSum_assoc (x y z : IGame) : (x ∶ y) ∶ z = x ∶ (y ∶ z) := 
   simp_rw [moves_ordinalSum]
   rw [Set.image_union, Set.union_assoc, Set.image_image, Set.image_congr (ih p)]
 
-theorem nim_ordinalSum_nim (o o' : Nimber) :
-    nim o ∶ nim o' = nim (.of (o.val + o'.val)) := by
-  induction o' using WellFoundedLT.induction with | ind o' ih
+theorem nim_ordinalSum_nim (a b : Nimber) :
+    nim a ∶ nim b = nim (.of (a.val + b.val)) := by
+  induction b using WellFoundedLT.induction with | ind b ih
   ext1 p
   simp_rw [moves_ordinalSum, moves_nim, Set.image_image]
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
-    ← Set.image_image nim (fun z => .of (o.val + z.val)) (Iio o'), ← Set.image_union]
+    ← Set.image_image nim (fun z => .of (a.val + z.val)) (Iio b), ← Set.image_union]
   congr
   ext1 x
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← Nimber.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← Nimber.val.exists_congr_right]
   simp_rw [Nimber.of_eq_iff, OrderIso.coe_toEquiv, Nimber.val.lt_iff_lt, eq_comm]
 
-theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
-    o.toIGame ∶ o'.toIGame = (NatOrdinal.of (o.val + o'.val)).toIGame := by
-  induction o' using WellFoundedLT.induction with | ind o' ih
+theorem natOrdinal_ordinalSum_natOrdinal (a b : NatOrdinal) :
+    a.toIGame ∶ b.toIGame = (NatOrdinal.of (a.val + b.val)).toIGame := by
+  induction b using WellFoundedLT.induction with | ind b ih
   ext1 p
   cases p with | right => simp [moves_ordinalSum] | left
   simp_rw [moves_ordinalSum, NatOrdinal.moves_left_toIGame, Set.image_image]
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
-    ← Set.image_image NatOrdinal.toIGame (fun z => .of (o.val + z.val)) (Iio o'),
+    ← Set.image_image NatOrdinal.toIGame (fun z => .of (a.val + z.val)) (Iio b),
     ← Set.image_union]
   congr
   ext1 x
