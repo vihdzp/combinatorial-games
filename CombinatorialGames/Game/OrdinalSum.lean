@@ -65,6 +65,12 @@ theorem zero_ordinalSum (x : IGame) : 0 ∶ x = x := by
   refine IGame.ext fun p => ?_
   rw [moves_ordinalSum, moves_zero, empty_union, Set.image_congr (ih p), Set.image_id']
 
+theorem ordinalSum_assoc (x y z : IGame) : (x ∶ y) ∶ z = x ∶ (y ∶ z) := by
+  induction z using IGame.moveRecOn with | ind z ih
+  refine IGame.ext fun p => ?_
+  simp_rw [moves_ordinalSum]
+  rw [Set.image_union, Set.union_assoc, Set.image_image, Set.image_congr (ih p)]
+
 theorem nim_ordinalSum_nim (o o' : Nimber) :
     nim o ∶ nim o' = nim (.of (o.val + o'.val)) := by
   induction o' using WellFoundedLT.induction with | ind o' ih
