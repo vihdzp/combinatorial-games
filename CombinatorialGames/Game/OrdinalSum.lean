@@ -58,11 +58,11 @@ theorem neg_ordinalSum (x y : IGame) : -(x ∶ y) = (-x) ∶ (-y) := by
   simp only [moves_neg, moves_ordinalSum, ← Set.image_neg_eq_neg]
   rw [Set.image_union, Set.image_image, Set.image_image, Set.image_congr (ih (-p))]
 
-@[simp]
+@[simp, game_cmp]
 theorem ordinalSum_zero (x : IGame) : x ∶ 0 = x :=
   IGame.ext fun p => by simp [moves_ordinalSum]
 
-@[simp]
+@[simp, game_cmp]
 theorem zero_ordinalSum (x : IGame) : 0 ∶ x = x := by
   induction x using IGame.moveRecOn with | ind x ih
   refine IGame.ext fun p => ?_
