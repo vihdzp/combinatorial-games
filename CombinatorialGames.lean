@@ -36,6 +36,7 @@ public import CombinatorialGames.NatOrdinal.Basic
 public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
+public import CombinatorialGames.Nimber.Finsupp
 public import CombinatorialGames.Nimber.Nat
 public import CombinatorialGames.Nimber.NatOrdinal
 public import CombinatorialGames.Nimber.Omega
