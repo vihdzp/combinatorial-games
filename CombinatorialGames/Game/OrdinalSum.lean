@@ -6,8 +6,8 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Specific.Nim
-public import CombinatorialGames.Tactic.GameCmp
 
+import CombinatorialGames.Tactic.Register
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.Order.GameAdd
 
