@@ -32,29 +32,31 @@ def ordinalSum (x y : IGame) : IGame :=
 termination_by y
 decreasing_by igame_wf
 
+infixl:70 " ∶ " => ordinalSum
+
 theorem moves_ordinalSum (p : Player) (x y : IGame) :
-    (ordinalSum x y).moves p = x.moves p ∪ ordinalSum x '' y.moves p := by
+    (x ∶ y).moves p = x.moves p ∪ ordinalSum x '' y.moves p := by
   rw [ordinalSum]
   ext; simp
 
-theorem neg_ordinalSum (x y : IGame) : -ordinalSum x y = ordinalSum (-x) (-y) := by
+theorem neg_ordinalSum (x y : IGame) : -(x ∶ y) = (-x) ∶ (-y) := by
   induction y using IGame.moveRecOn with | ind y ih
   refine IGame.ext fun p => ?_
   simp only [moves_neg, moves_ordinalSum, ← Set.image_neg_eq_neg]
   rw [Set.image_union, Set.image_image, Set.image_image, Set.image_congr (ih (-p))]
 
 @[simp]
-theorem ordinalSum_zero (x : IGame) : ordinalSum x 0 = x :=
+theorem ordinalSum_zero (x : IGame) : x ∶ 0 = x :=
   IGame.ext fun p => by simp [moves_ordinalSum]
 
 @[simp]
-theorem zero_ordinalSum (x : IGame) : ordinalSum 0 x = x := by
+theorem zero_ordinalSum (x : IGame) : 0 ∶ x = x := by
   induction x using IGame.moveRecOn with | ind x ih
   refine IGame.ext fun p => ?_
   rw [moves_ordinalSum, moves_zero, empty_union, Set.image_congr (ih p), Set.image_id']
 
 theorem nim_ordinalSum_nim (o o' : Nimber) :
-    ordinalSum (nim o) (nim o') = nim (.of (o.val + o'.val)) := by
+    nim o ∶ nim o' = nim (.of (o.val + o'.val)) := by
   induction o' using WellFoundedLT.induction with | ind o' ih
   refine IGame.ext fun p => ?_
   simp_rw [moves_ordinalSum, moves_nim, Set.image_image]
@@ -71,7 +73,7 @@ theorem nim_ordinalSum_nim (o o' : Nimber) :
   simp_rw [Nimber.of_eq_iff, OrderIso.coe_toEquiv, Nimber.val.lt_iff_lt, eq_comm]
 
 theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
-    ordinalSum o.toIGame o'.toIGame = (NatOrdinal.of (o.val + o'.val)).toIGame := by
+    o.toIGame ∶ o'.toIGame = (NatOrdinal.of (o.val + o'.val)).toIGame := by
   induction o' using WellFoundedLT.induction with | ind o' ih
   refine IGame.ext fun p => p.casesOn ?_ (by simp [moves_ordinalSum])
   simp_rw [moves_ordinalSum, NatOrdinal.moves_left_toIGame, Set.image_image]
@@ -88,8 +90,7 @@ theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
   rw [← NatOrdinal.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← NatOrdinal.val.exists_congr_right]
   simp_rw [NatOrdinal.of_eq_iff, OrderIso.coe_toEquiv, NatOrdinal.val.lt_iff_lt, eq_comm]
 
-theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} :
-    ordinalSum x y ≤ ordinalSum x z ↔ y ≤ z := by
+theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} : x ∶ y ≤ x ∶ z ↔ y ≤ z := by
   -- todo: fix recursor argument names
   induction y, z using Sym2.GameAdd.recursion wellFounded_subposition with | IH y z ih
   rw [Sym2.eq_swap] at ih
@@ -107,22 +108,19 @@ theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} :
     apply lf_right
     simp [moves_ordinalSum, hc]
 
-theorem ordinalSum_le_ordinalSum_right (x : IGame) {y z : IGame} (h : y ≤ z) :
-    ordinalSum x y ≤ ordinalSum x z :=
+theorem ordinalSum_le_ordinalSum_right (x : IGame) {y z : IGame} (h : y ≤ z) : x ∶ y ≤ x ∶ z :=
   ordinalSum_le_ordinalSum_iff_left.2 h
 
-theorem ordinalSum_lf_ordinalSum_right (x : IGame) {y z : IGame} (h : y ⧏ z) :
-    ordinalSum x y ⧏ ordinalSum x z :=
+theorem ordinalSum_lf_ordinalSum_right (x : IGame) {y z : IGame} (h : y ⧏ z) : x ∶ y ⧏ x ∶ z :=
   mt ordinalSum_le_ordinalSum_iff_left.1 h
 
-theorem ordinalSum_right_congr (x : IGame) {y z : IGame} (h : y ≈ z) :
-    ordinalSum x y ≈ ordinalSum x z :=
+theorem ordinalSum_right_congr (x : IGame) {y z : IGame} (h : y ≈ z) : x ∶ y ≈ x ∶ z :=
   ⟨ordinalSum_le_ordinalSum_right x h.le, ordinalSum_le_ordinalSum_right x h.ge⟩
 
 mutual
 
 theorem ordinalSum_le_iff_of_forall_wsubposition {x y z : IGame}
-    (h : ∀ c, WSubposition c z → ¬x ≈ c) : ordinalSum x y ≤ z ↔ x ≤ z := by
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ≤ z ↔ x ≤ z := by
   rw [le_iff_forall_lf, le_iff_forall_lf, moves_ordinalSum, forall_mem_union, forall_mem_image,
     forall₂_congr fun c hc => (le_ordinalSum_iff_of_forall_wsubposition h).not,
     forall₂_congr fun c hc => (le_ordinalSum_iff_of_forall_wsubposition
@@ -136,7 +134,7 @@ termination_by (y, z)
 decreasing_by igame_wf
 
 theorem le_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
-    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ≤ ordinalSum x y ↔ z ≤ x := by
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ≤ x ∶ y ↔ z ≤ x := by
   rw [le_iff_forall_lf, le_iff_forall_lf, moves_ordinalSum, forall_mem_union, forall_mem_image,
     forall₂_congr fun c hc => (ordinalSum_le_iff_of_forall_wsubposition h).not,
     forall₂_congr fun c hc => (ordinalSum_le_iff_of_forall_wsubposition
@@ -152,11 +150,11 @@ decreasing_by igame_wf
 end
 
 theorem ordinalSum_lf_iff_of_forall_wsubposition {x y z : IGame}
-    (h : ∀ c, WSubposition c z → ¬x ≈ c) : ordinalSum x y ⧏ z ↔ x ⧏ z :=
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : x ∶ y ⧏ z ↔ x ⧏ z :=
   (le_ordinalSum_iff_of_forall_wsubposition h).not
 
 theorem lf_ordinalSum_iff_of_forall_wsubposition {x y z : IGame}
-    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ⧏ ordinalSum x y ↔ z ⧏ x :=
+    (h : ∀ c, WSubposition c z → ¬x ≈ c) : z ⧏ x ∶ y ↔ z ⧏ x :=
   (ordinalSum_le_iff_of_forall_wsubposition h).not
 
 end IGame
