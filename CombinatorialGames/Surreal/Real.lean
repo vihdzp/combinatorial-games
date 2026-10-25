@@ -6,8 +6,15 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Surreal.Dyadic
+public import Mathlib.Algebra.Algebra.Defs
 public import Mathlib.Algebra.Order.Hom.Ring
-public import Mathlib.Data.Real.Archimedean
+public import Mathlib.Algebra.Order.Module.Defs
+public import Mathlib.Basic.Real.Basic
+
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Real numbers as games
@@ -32,7 +39,7 @@ theorem exists_dyadic_btwn {K : Type*} [Field K] [LinearOrder K] [IsStrictOrdere
   obtain ⟨n, nh⟩ := exists_nat_gt (y - x)⁻¹
   have := nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self)
   obtain ⟨z, hz, hz'⟩ := exists_div_btwn h (nh.trans (Nat.cast_lt.2 Nat.lt_two_pow_self))
-  use .mkRat z ⟨n, rfl⟩
+  use .mkRat z ((Submonoid.mem_powers_iff ..).2 ⟨n, rfl⟩)
   simp_all [Rat.mkRat_eq_div]
 
 namespace Real
@@ -49,7 +56,7 @@ instance : Coe ℝ IGame := ⟨toIGame⟩
 instance Numeric.toIGame (x : ℝ) : Numeric x := by
   rw [Real.toIGame]
   apply Numeric.mk
-  · simp only [moves_left_ofSets, moves_right_ofSets, Set.forall_mem_image, Set.mem_setOf]
+  · simp only [moves_left_ofSets, moves_right_ofSets, Set.forall_mem_image, Set.mem_ofPred]
     intro x hx y hy
     simpa using hx.trans hy
   · aesop (add simp [Numeric.dyadic])
@@ -88,14 +95,14 @@ theorem mem_moves_right_toIGame_of_lt {q : Dyadic} {x : ℝ} (h : x < q.toRat) :
 
 /-- `Real.toIGame` as an `OrderEmbedding`. -/
 @[simps!]
-def toIGameEmbedding : ℝ ↪o IGame := by
-  refine .ofStrictMono toIGame fun x y h ↦ ?_
-  obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
-  trans (q : IGame)
-  · apply Numeric.lt_right
-    simpa [toIGame]
-  · apply Numeric.left_lt
-    simpa [toIGame]
+def toIGameEmbedding : ℝ ↪o IGame :=
+  .ofStrictMono toIGame fun x y h ↦ by
+    obtain ⟨q, hx, hy⟩ := exists_dyadic_btwn h
+    trans (q : IGame)
+    · apply Numeric.lt_right
+      simpa [toIGame]
+    · apply Numeric.left_lt
+      simpa [toIGame]
 
 @[simp, norm_cast]
 theorem toIGame_le_iff {x y : ℝ} : (x : IGame) ≤ y ↔ x ≤ y :=
@@ -254,19 +261,19 @@ theorem toIGame_add_equiv (x y : ℝ) : toIGame (x + y) ≈ x + y := by
     simpa
 
 theorem toIGame_sub_ratCast_equiv (x : ℝ) (q : ℚ) : toIGame (x - q) ≈ x - q := by
-  simpa using toIGame_add_ratCast_equiv x (-q)
+  simpa [sub_eq_add_neg] using toIGame_add_ratCast_equiv x (-q)
 
 theorem toIGame_ratCast_sub_equiv (q : ℚ) (x : ℝ) : toIGame (q - x) ≈ q - x := by
-  simpa using toIGame_ratCast_add_equiv q (-x)
+  simpa [sub_eq_add_neg] using toIGame_ratCast_add_equiv q (-x)
 
 theorem toIGame_sub_dyadic_equiv (x : ℝ) (q : Dyadic) : toIGame (x - q.toRat) ≈ x - q := by
-  simpa using toIGame_add_dyadic_equiv x (-q)
+  simpa [sub_eq_add_neg] using toIGame_add_dyadic_equiv x (-q)
 
 theorem toIGame_dyadic_sub_equiv (q : Dyadic) (x : ℝ) : toIGame (q.toRat - x) ≈ q - x := by
-  simpa using toIGame_dyadic_add_equiv q (-x)
+  simpa [sub_eq_add_neg] using toIGame_dyadic_add_equiv q (-x)
 
 theorem toIGame_sub_equiv (x y : ℝ) : toIGame (x - y) ≈ x - y := by
-  simpa using toIGame_add_equiv x (-y)
+  simpa [sub_eq_add_neg] using toIGame_add_equiv x (-y)
 
 /-! ### `ℝ` to `Game` -/
 
@@ -625,6 +632,25 @@ def toSurrealRingHom : ℝ →+*o Surreal where
   map_add' := toSurreal_add
   map_mul' := toSurreal_mul
   monotone' := toSurrealEmbedding.monotone
+
+instance : Algebra ℝ Surreal :=
+  Real.toSurrealRingHom.toAlgebra
+
+instance : IsOrderedModule ℝ Surreal where
+  smul_le_smul_of_nonneg_left _ hr _ _ hxy :=
+    mul_le_mul_of_nonneg_left hxy (Real.toSurreal_nonneg_iff.mpr hr)
+  smul_le_smul_of_nonneg_right _ hx _ _ hrs :=
+    mul_le_mul_of_nonneg_right (Real.toSurreal_le_iff.mpr hrs) hx
+
+@[simp]
+theorem real_smul_def (r : ℝ) (x : Surreal) : r • x = (r : Surreal) * x :=
+  rfl
+
+@[simp]
+theorem algebraMap_def : algebraMap ℝ Surreal = toSurrealRingHom :=
+  rfl
+
+theorem algebraMap_apply (r : ℝ) : algebraMap ℝ Surreal r = r := rfl
 
 @[simp, norm_cast]
 theorem toSurreal_inv (x : ℝ) : x⁻¹.toSurreal = x.toSurreal⁻¹ :=

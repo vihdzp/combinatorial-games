@@ -9,6 +9,7 @@ public import CombinatorialGames.Nimber.Field
 public import Mathlib.Algebra.Field.Subfield.Basic
 public import Mathlib.SetTheory.Ordinal.Exponential
 
+import Mathlib.Algebra.CharP.Two
 import Mathlib.Algebra.Order.Monoid.Canonical.Basic
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -49,6 +50,10 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
+@[simp]
+theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
+  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
+
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -88,6 +93,10 @@ theorem IsGroup.neZero (h : IsGroup x) : NeZero x where
 theorem IsGroup.zero_lt (h : IsGroup x) : 0 < x := bot_lt_iff_ne_bot.2 h.ne_zero
 alias IsGroup.pos := IsGroup.zero_lt
 
+theorem IsGroup.one_le (h : IsGroup x) : 1 ≤ x := by
+  rw [Nimber.one_le_iff_ne_zero]
+  exact h.ne_zero
+
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
@@ -98,6 +107,7 @@ theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     apply h.add_lt <;> simp_all
 
 /-- `Iio x` as a subgroup of `Nimber`. -/
+@[implicit_reducible]
 def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   carrier := Iio x
   zero_mem' := h.zero_lt
@@ -106,14 +116,28 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
 
 @[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
 @[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
+@[simp] theorem coe_toAddSubgroup (h : IsGroup x) : h.toAddSubgroup = Set.Iio x := rfl
 
 theorem IsGroup.closure_Iio (h : IsGroup x) : AddSubgroup.closure (Iio x) = h.toAddSubgroup :=
   h.toAddSubgroup.closure_eq
 
 @[simp]
+theorem IsGroup.toAddSubgroup_le_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup ≤ hy.toAddSubgroup ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsGroup.toAddSubgroup_lt_toAddSubgroup (hx : IsGroup x) (hy : IsGroup y) :
+    hx.toAddSubgroup < hy.toAddSubgroup ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
+
+@[simp]
 theorem IsGroup.one : IsGroup 1 where
   add_lt := by simp
   ne_zero := one_ne_zero
+
+theorem addSubgroupBot_eq : ⊥ = IsGroup.one.toAddSubgroup := by
+  ext; simp
 
 protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsGroup (sSup s) where
@@ -122,7 +146,7 @@ protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
     apply (H x hx).ne_zero
-    rw [← Nimber.le_zero, ← h]
+    rw [← le_zero_iff, ← h]
     exact lub.left hx
 
 protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
@@ -206,7 +230,7 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
     rw [← val.lt_iff_lt] at H' ⊢
     apply (add_right_strictMono H').trans_le
     dsimp
-    rwa [← Ordinal.mul_two, ← opow_succ, opow_le_opow_iff_right one_lt_two, succ_le_iff]
+    rwa [← Ordinal.mul_two, ← opow_add_one, opow_le_opow_iff_right one_lt_two, add_one_le_iff]
   obtain hyz | hyz | hyz := lt_trichotomy (log 2 y) (log 2 z)
   · rw [add_comm]
     exact H hyz hz'
@@ -221,6 +245,10 @@ termination_by x
 theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
+
+@[simp]
+theorem IsGroup.omega0 : IsGroup (∗ω) := by
+  simpa using IsGroup.omega0_opow 1
 
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
@@ -245,12 +273,14 @@ theorem isGroup_iff_mem_range_two_opow : IsGroup x ↔ x ∈ range fun y : Ordin
   refine ⟨?_, Set.forall_mem_range.2 .two_opow x⟩
   by_contra! H
   obtain ⟨h, hx⟩ := H
-  apply ((h.add_lt (x := ∗x) _ _).trans_eq (two_opow_log_add h.ne_zero).symm).false
-  · rw [of.lt_iff_lt]
-    apply (opow_log_le_self _ h.ne_zero).lt_of_ne
-    contrapose! hx
-    exact hx ▸ mem_range_self _
-  · exact mod_opow_log_lt_self _ h.ne_zero
+  have hx' := val_ne_zero.2 h.ne_zero
+  apply ((h.add_lt _ _).trans_eq (two_opow_log_add hx').symm).false
+  · rw [of_lt_iff]
+    apply (opow_log_le_self _ hx').lt_of_ne
+    rw [ne_eq, ← of_eq_iff]
+    contrapose hx
+    exact ⟨_, hx⟩
+  · exact mod_opow_log_lt_self _ hx'
 
 /-- A version of `isGroup_iff_zero_or_mem_range_two_opow` stated in terms of `Ordinal`. -/
 theorem isGroup_iff_zero_or_mem_range_two_opow' {x : Ordinal} :
@@ -265,6 +295,17 @@ theorem IsGroup.opow (h : IsGroup x) (a : Ordinal) : IsGroup (∗x.val ^ a) := b
 /-- A version of `IsGroup.opow` stated in terms of `Ordinal`. -/
 theorem IsGroup.opow' {x : Ordinal} (h : IsGroup (∗x)) (a : Ordinal) : IsGroup (∗x ^ a) :=
   h.opow a
+
+theorem IsGroup.omul (hx : IsGroup x) (hy : IsGroup y) : IsGroup (∗(x.val * y.val)) := by
+  rw [isGroup_iff_mem_range_two_opow] at hx hy
+  obtain ⟨b, hb, rfl⟩ := hx
+  obtain ⟨c, hc, rfl⟩ := hy
+  simp [← opow_add]
+
+/-- A version of `IsGroup.omul` stated in terms of `Ordinal`. -/
+theorem IsGroup.omul' {x y : Ordinal} (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) :
+    IsGroup (∗(x * y)) :=
+  hx.omul hy
 
 theorem IsGroup.pow (h : IsGroup x) (n : ℕ) : IsGroup (∗x.val ^ n) :=
   mod_cast h.opow n
@@ -288,8 +329,11 @@ theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
 
-theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) :
-    y ^ n < x := by
+theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
+  rw [← succ_one, succ_le_iff]
+  exact h.one_lt
+
+theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
   induction n with
   | zero =>
     rw [pow_zero]
@@ -305,6 +349,7 @@ theorem IsRing.two : IsRing (∗2) where
   __ := IsGroup.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   toAddSubgroup := h.toAddSubgroup
   one_mem' := h.one_lt
@@ -312,9 +357,24 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
 
 @[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
 @[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
+@[simp] theorem coe_toSubring (h : IsRing x) : h.toSubring = Set.Iio x := rfl
+
+theorem subringBot_eq : ⊥ = IsRing.two.toSubring := by
+  rw [← SetLike.coe_set_eq, Subring.coe_bot, CharTwo.range_intCast]
+  simp
 
 theorem IsRing.closure_Iio (h : IsRing x) : Subring.closure (Iio x) = h.toSubring :=
   h.toSubring.closure_eq
+
+@[simp]
+theorem IsRing.toSubring_le_toSubring (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring ≤ hy.toSubring ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsRing.toSubring_lt_toSubring (hx : IsRing x) (hy : IsRing y) :
+    hx.toSubring < hy.toSubring ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsRing.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsRing x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsRing (sSup s) where
@@ -365,7 +425,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
       of_val, ← mul_add]
     obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hwa)
-    · rw [← div_eq_iff hwa]
+    · rw [← _root_.div_eq_iff hwa]
       exact (H' hb (H _ (hy.add_lt hwy (ha.trans hwy)))).ne
   · rw [val_le_iff]
     refine mul_le_of_forall_ne fun a ha b hb ↦ ?_
@@ -423,15 +483,32 @@ theorem IsField.two : IsField (∗2) where
   __ := IsRing.two
 
 /-- `Iio x` as a subring of `Nimber`. -/
+@[implicit_reducible]
 def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
 
 @[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
 @[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
+@[simp] theorem coe_toSubfield (h : IsField x) : h.toSubfield = Set.Iio x := rfl
+
+theorem subfieldBot_eq : ⊥ = IsField.two.toSubfield := by
+  rw [eq_comm, eq_bot_iff, ← SetLike.coe_subset_coe, coe_toSubfield, ← coe_toSubring IsRing.two,
+    ← subringBot_eq, ← Subfield.coe_toSubring, SetLike.coe_subset_coe]
+  apply bot_le
 
 theorem IsField.closure_Iio (h : IsField x) : Subfield.closure (Iio x) = h.toSubfield :=
   h.toSubfield.closure_eq
+
+@[simp]
+theorem IsField.toSubfield_le_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield ≤ hy.toSubfield ↔ x ≤ y := by
+  simp [← SetLike.coe_subset_coe]
+
+@[simp]
+theorem IsField.toSubfield_lt_toSubfield (hx : IsField x) (hy : IsField y) :
+    hx.toSubfield < hy.toSubfield ↔ x < y := by
+  simp [← SetLike.coe_ssubset_coe]
 
 protected theorem IsField.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsField x)
     (ne : s.Nonempty) (bdd : BddAbove s) : IsField (sSup s) where
@@ -536,8 +613,8 @@ theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
         exact hx.one_lt
       rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
         ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
-      apply (opow_le_opow_right hx.pos hay.succ_le).trans_lt'
-      rw [opow_succ]
+      apply (opow_le_opow_right (of_pos.1 hx.pos) (add_one_le_of_lt hay)).trans_lt'
+      rw [opow_add_one]
       exact mul_lt_mul_of_pos_left hax (opow_pos _ hx.pos)
     · exact IH _ (mod_opow_log_lt_self _ ha') ((mod_le ..).trans_lt ha)
   · exact mod_lt _ (opow_ne_zero _ hz.ne_bot)
