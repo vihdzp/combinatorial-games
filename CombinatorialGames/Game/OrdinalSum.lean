@@ -49,6 +49,7 @@ theorem exists_moves_ordinalSum {q : IGame → Prop} {p : Player} {x y : IGame} 
     (∃ z ∈ (x ∶ y).moves p, q z) ↔ (∃ z ∈ x.moves p, q z) ∨ (∃ z ∈ y.moves p, q (x ∶ z)) := by
   rw [moves_ordinalSum, exists_mem_union, exists_mem_image]
 
+@[simp]
 theorem neg_ordinalSum (x y : IGame) : -(x ∶ y) = (-x) ∶ (-y) := by
   induction y using IGame.moveRecOn with | ind y ih
   refine IGame.ext fun p => ?_
