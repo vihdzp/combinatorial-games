@@ -9,11 +9,7 @@ public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Dyadic
 
 import CombinatorialGames.Surreal.Birthday.Cut
-import Mathlib.Algebra.Ring.CharZero
 import Mathlib.Analysis.Normed.Group.Basic
-import Mathlib.Data.EReal.Operations
-import Mathlib.Topology.Algebra.InfiniteSum.Order
-import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Birthday of dyadic rationals
@@ -21,8 +17,6 @@ import Mathlib.Topology.MetricSpace.Bounded
 We prove that a surreal number has a finite birthday iff it's a dyadic number,
 and give an explicit formula for the birthday of a dyadic number.
 -/
-
-public section
 
 theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d ∧ d ≤ b ∧ c ∣ d := by
   constructor
@@ -34,24 +28,33 @@ theorem Nat.div_lt_div_iff_exists {a b c : ℕ} : a / c < b / c ↔ ∃ d, a < d
     grw [← hb]
     exact Nat.div_lt_div_of_lt_of_dvd hc ha
 
-local notation "ω" => NatOrdinal.of Ordinal.omega0
+public section
+
+/-! ### Surreals to dyadics -/
+
+section Ordinal
+open Ordinal
 
 @[simp]
 theorem Game.birthday_ratCast (x : ℚ) : Game.birthday x = Surreal.birthday x := by
   rw [← Surreal.toGame_ratCast, Surreal.birthday_toGame]
 
-theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < ω := by
+theorem Surreal.birthday_dyadic_lt_omega0 (x : Dyadic) : Surreal.birthday x < .of ω := by
   rw [← Surreal.mk_dyadic]
   exact (Surreal.birthday_mk_le _).trans_lt (IGame.Short.birthday_lt_omega0 _)
 
 theorem Surreal.birthday_lt_omega0_iff {x : Surreal} :
-    x.birthday < ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
+    x.birthday < .of ω ↔ x ∈ Set.range ((↑) : Dyadic → _) := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · obtain ⟨x, _, rfl, hx⟩ := Surreal.birthday_eq_iGameBirthday x
     rw [← hx, ← IGame.short_iff_birthday_finite] at h
     exact ⟨_, ratCast_toDyadic _⟩
   · rintro ⟨q, rfl⟩
     exact Surreal.birthday_dyadic_lt_omega0 q
+
+end Ordinal
+
+/-! ### Explicit birthday of dyadic numbers -/
 
 /-- The birthday of a dyadic number can be computed explicitly. -/
 @[expose]
