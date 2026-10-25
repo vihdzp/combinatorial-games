@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.Algebra.AlgebraicCard
+import Mathlib.Order.Interval.Set.InitialSeg
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
@@ -25,18 +26,6 @@ open Cardinal Order Ordinal Set
 
 /-! ### For Mathlib -/
 
-attribute [local implicit_reducible] Function.Injective in
-/-- Restrict an order isomorphism to an initial segment. -/
-def OrderIso.restrictIio {α β : Type*} [Preorder α] [Preorder β] (e : α ≃o β) (x : α) :
-    Iio x ≤i β where
-  toFun x := e x
-  inj' _ := by simp [Subtype.coe_inj]
-  map_rel_iff' := by simp
-  mem_range_of_rel' y z h := by
-    refine ⟨⟨e.symm z, y.2.trans' ?_⟩, ?_⟩
-    · simpa [e.symm_apply_lt]
-    · simp
-
 theorem InitialSeg.le_of_strictMono {α β : Type*} [LinearOrder α] [LinearOrder β] [WellFoundedLT α]
     (f : α ≤i β) {g : α → β} (hg : StrictMono g) (x : α) : f x ≤ g x := by
   induction x using WellFoundedLT.induction with | ind x IH
@@ -49,7 +38,8 @@ theorem InitialSeg.le_of_strictMono {α β : Type*} [LinearOrder α] [LinearOrde
 theorem Order.enum_le_of_strictMono {α : Type*} [LinearOrder α] [WellFoundedLT α]
     [IsRegularCardinalOrder α] {s : Set α} (hs : IsCofinal s) {x y : α}
     {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, mem_Iio.2 hy⟩ :=
-  InitialSeg.le_of_strictMono ((Order.enum s hs).restrictIio x) hf ⟨y, hy⟩
+  InitialSeg.le_of_strictMono ((Set.principalSegIio x).transInitial (Order.enum s hs).toInitialSeg)
+    hf ⟨y, hy⟩
 
 open Notation in
 theorem Ordinal.enum_lt_of_lt_ord_cof {s : Set Ordinal} (hs : IsCofinal s) {x y : Ordinal}
@@ -73,15 +63,11 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
     rwa [aleph0_le_cof_iff, one_lt_cof_iff]
 
 @[simp]
-theorem Ordinal.one_le_lift {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
+theorem Ordinal.one_le_lift_iff {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
 theorem Ordinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
   rw [card_le_iff, succ_aleph, ord_aleph]
-
-@[simp]
-theorem Ordinal.ofNat_opow_omega0 {n : ℕ} [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
-  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
 
 namespace Nimber
 
@@ -137,6 +123,18 @@ theorem IsField.omega0 : IsField (∗ω) := by
 @[simp]
 theorem IsRing.omega0 : IsRing (∗ω) :=
   IsField.omega0.toIsRing
+
+theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
+    ∗(ω ^ x * n + y) = ∗ω ^ x * ∗n + ∗y := by
+  rw [(IsField.omega0.opow' _).mul_add_eq_of_lt' hy,
+    IsField.omega0.opow_mul_eq_of_lt' _ (natCast_lt_omega0 _), of_val]
+
+theorem of_omega0_opow_add {x y : Ordinal} (hy : y < ω ^ x) : ∗(ω ^ x + y) = ∗ω ^ x + ∗y := by
+  simpa using of_omega0_opow_mul_natCast_add hy 1
+
+@[simp]
+theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : ∗(ω ^ x * n) = ∗ω ^ x * ∗n := by
+  simpa using of_omega0_opow_mul_natCast_add (opow_pos x omega0_pos) n
 
 /-! ### Cardinality of closures -/
 

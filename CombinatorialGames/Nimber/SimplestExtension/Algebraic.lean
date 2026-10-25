@@ -438,6 +438,7 @@ namespace IsAlgClosed
 variable {t : Nimber} (ht : IsAlgClosed t)
 include ht
 
+-- TODO: prove `IsField (of (val t ^ ω))` when `IsField t` but `¬IsAlgClosed t`.
 /-- See `IsRing.opow_omega0` for a more general theorem. -/
 theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
   toIsGroup := ht.toIsGroup.opow _
@@ -672,12 +673,9 @@ theorem exists_isAlgClosed_between {x : Nimber} (hx : algClosure 0 ≤ x) :
   isClub_ofPred_isAlgClosed.exists_between ⟨_, IsAlgClosed.algClosure 0, hx⟩
 
 theorem exists_isAlgClosed_between' {x : Nimber} (hx : algClosure 0 ≤ x) :
-    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) := by
-  obtain ⟨l, hl, r, hr, hlx, hxu, H⟩ := exists_isAlgClosed_between hx
-  refine ⟨l, hl, hlx, ?_⟩
-  apply hxu.trans_le (H _ (IsAlgClosed.algClosure _) _)
-  rw [← Order.succ_le_iff]
-  exact le_algClosure _
+    ∃ l, IsAlgClosed l ∧ l ≤ x ∧ x < algClosure (Order.succ l) :=
+  isClub_ofPred_isAlgClosed.exists_between_closure ⟨_, IsAlgClosed.algClosure 0, hx⟩
+    le_algClosure IsAlgClosed.algClosure
 
 /-- The normal enumerator function for algebraically closed fields. -/
 def enumAlgClosed : Ordinal ↪o Nimber :=
@@ -729,19 +727,6 @@ theorem enumAlgClosed_add_one (x : Ordinal) :
     rw [← enumAlgClosed_def, (IsAlgClosed.enumAlgClosed _).lt_algClosure_iff, Order.lt_succ_iff]
   · rw [(IsAlgClosed.enumAlgClosed _).algClosure_le_iff, Order.succ_le_iff]
     exact isNormal_enumAlgClosed.strictMono (lt_add_one x)
-
-theorem of_le_enumAlgClosed (x : Ordinal) : ∗x ≤ enumAlgClosed x :=
-  isNormal_enumAlgClosed.strictMono.le_apply
-
-theorem enumField_le_enumAlgClosed (x : Ordinal) : enumField x ≤ enumAlgClosed x := by
-  rw [enumField_def]
-  exact Order.enum_anti fun _ ↦ IsAlgClosed.toIsField
-
-theorem enumRing_le_enumAlgClosed (x : Ordinal) : enumRing x ≤ enumAlgClosed x :=
-  (enumRing_le_enumField x).trans (enumField_le_enumAlgClosed x)
-
-theorem enumGroup_le_enumAlgClosed (x : Ordinal) : enumGroup x ≤ enumAlgClosed x :=
-  (enumGroup_le_enumField x).trans (enumField_le_enumAlgClosed x)
 
 /-- TODO: characterize the fields of nimbers below the first transcendental, get this as a
 corollary. -/

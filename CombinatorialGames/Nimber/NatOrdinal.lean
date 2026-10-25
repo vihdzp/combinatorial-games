@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.NatOrdinal.Pow
-public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
+public import CombinatorialGames.Nimber.Omega
 
 import Mathlib.SetTheory.Ordinal.Principal
 
@@ -14,6 +14,7 @@ import Mathlib.SetTheory.Ordinal.Principal
 # Bounds for nimber arithmetic
 
 We prove that the sum of two nimbers is bounded by their natural sum, and likewise for the product.
+As a corollary of these bounds, `∗(ω ^ ω ^ x)` is always a ring.
 -/
 
 public section
@@ -53,21 +54,15 @@ theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdi
 
 /-! ### Multiplication -/
 
-theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
-    ∗(ω ^ x * n + y) = ∗ω ^ x * ∗n + ∗y := by
-  rw [(IsField.omega0.opow' _).mul_add_eq_of_lt' hy,
-    IsField.omega0.opow_mul_eq_of_lt' _ (natCast_lt_omega0 _), of_val]
-
-theorem of_omega0_opow_add {x y : Ordinal} (hy : y < ω ^ x) : ∗(ω ^ x + y) = ∗ω ^ x + ∗y := by
-  simpa using of_omega0_opow_mul_natCast_add hy 1
-
-@[simp]
-theorem of_omega0_opow_mul_natCast (x : Ordinal) (n : ℕ) : ∗(ω ^ x * n) = ∗ω ^ x * ∗n := by
-  simpa using of_omega0_opow_mul_natCast_add (opow_pos x omega0_pos) n
-
 private theorem exists_of_natCast_mul_eq (m n : ℕ) : ∃ k : ℕ, ∗m * ∗n = ∗k := by
   simp_rw [← val_eq_iff, ← lt_omega0]
   apply IsField.omega0.mul_lt <;> simp
+
+private theorem two_opow_log_lt {a : Ordinal} (ha : a % 2 ^ log 2 a ≠ 0) :
+    2 ^ log 2 a < a := by
+  have ha₀ : a ≠ 0 := by rintro rfl; simp at ha
+  conv_rhs => rw [← Ordinal.two_opow_log_add ha₀]
+  rwa [lt_add_iff_pos_right, pos_iff_ne_zero]
 
 private theorem natCast_mul_natCast_le_nmul (m n : ℕ) :
     Nimber.val.{u} (∗m * ∗n) ≤ m * n := by
@@ -109,9 +104,7 @@ theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * 
     simp_rw [add_mul, val_le_iff]
     apply (add_le_nadd ..).trans
     rw [of.le_iff_le, NatOrdinal.val.le_iff_le]
-    have : 2 ^ log 2 a < a := by
-      conv_rhs => rw [← Ordinal.two_opow_log_add ha₀]
-      rwa [lt_add_iff_pos_right, pos_iff_ne_zero]
+    have := two_opow_log_lt ha
     have := mod_opow_log_lt_self 2 ha₀
     apply add_le_add <;> exact mul_le_nmul' ..
   by_cases! hb : b % 2 ^ log 2 b ≠ 0
@@ -119,9 +112,7 @@ theorem mul_le_nmul' (a b : Ordinal) : (∗a * ∗b).val ≤ (NatOrdinal.of a * 
     simp_rw [mul_add, val_le_iff]
     apply (add_le_nadd ..).trans
     rw [of.le_iff_le, NatOrdinal.val.le_iff_le]
-    have : 2 ^ log 2 b < b := by
-      conv_rhs => rw [← Ordinal.two_opow_log_add hb₀]
-      rwa [lt_add_iff_pos_right, pos_iff_ne_zero]
+    have := two_opow_log_lt hb
     have := mod_opow_log_lt_self 2 hb₀
     apply add_le_add <;> exact mul_le_nmul' ..
   rw [← two_opow_log_add ha₀, ← NatOrdinal.two_opow_log_add ha₀,
@@ -189,7 +180,7 @@ theorem mul_le_nmul (a b : Nimber) : a * b ≤ ∗(NatOrdinal.of a.val * NatOrdi
 
 theorem IsRing.omega0_omega0_opow (x : Ordinal) : IsRing (∗(ω ^ ω ^ x)) where
   ne_one := by
-    rw [of_ne_one, ← opow_zero omega0, ne_eq, opow_right_inj one_lt_omega0]
+    rw [of_ne_one, ← opow_zero ω, ne_eq, opow_right_inj one_lt_omega0]
     exact opow_ne_zero _ omega0_ne_zero
   mul_lt x y hx hy := (mul_le_nmul ..).trans_lt (NatOrdinal.mul_lt_wpow_wpow hx hy)
   __ := IsGroup.omega0_opow _
