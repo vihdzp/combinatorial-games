@@ -238,8 +238,8 @@ theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
 
 /-! ### Switches -/
 
-/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is just
-equal to 0. -/
+/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is equivalent
+to 0. -/
 def switch (x : IGame) : IGame :=
   !{{x} | {-x}}
 

@@ -37,11 +37,17 @@ private theorem stop_aux₂ (x : IGame) [Short x] :
     exact NatOrdinal.natCast_lt_omega0 _
   · grw [Game.birthday_mk_le, Short.birthday_lt_omega0]
 
-/-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`. -/
+/-- The left stop of a short game is the dyadic number which defines `leftGame (mk x)`.
+
+Every surreal `y` with `leftStop x < y` satisfies `x < y` (`lt_of_lt_rightStop`), and every surreal
+`y` with `y < leftStop x` satisfies `y ⧏ x` (`lf_of_lt_leftStop`). -/
 noncomputable def leftStop (x : IGame) [Short x] : Dyadic :=
   Classical.choose (stop_aux₁ ((birthday_leftGame_le _).trans_lt (stop_aux₂ x)))
 
-/-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`. -/
+/-- The right stop of a short game is the dyadic number which defines `rightGame (mk x)`.
+
+Every surreal `y` with `y < rightStop x` satisfies `y < x` (`lt_of_leftStop_lt`), and every surreal
+`y` with `rightStop x < y` satisfies `x ⧏ y` (`lf_of_rightStop_lt`). -/
 noncomputable def rightStop (x : IGame) [Short x] : Dyadic :=
   Classical.choose (stop_aux₁ ((birthday_rightGame_le _).trans_lt (stop_aux₂ x)))
 
@@ -67,8 +73,8 @@ theorem leftStop_of_numeric (x : IGame) [Short x] [Numeric x] : leftStop x = x.t
 theorem rightStop_of_numeric (x : IGame) [Short x] [Numeric x] : rightStop x = x.toDyadic := by
   simpa [← Surreal.ratCast_toDyadic] using (toSurreal_rightGame_mk_of_short x).symm
 
-theorem leftStop_dyadic (x : Dyadic) : leftStop x = x := by simp
-theorem rightStop_dyadic (x : Dyadic) : rightStop x = x := by simp
+theorem leftStop_toIGame (x : Dyadic) : leftStop x = x := by simp
+theorem rightStop_toIGame (x : Dyadic) : rightStop x = x := by simp
 theorem leftStop_zero : leftStop 0 = 0 := by simp
 theorem rightStop_zero : rightStop 0 = 0 := by simp
 theorem leftStop_one : leftStop 1 = 1 := by simp
@@ -100,9 +106,7 @@ theorem lf_of_rightStop_lt {x y : IGame} [Short x] [Numeric y] (h : rightStop x 
 
 @[simp]
 theorem leftStop_neg (x : IGame) [Short x] : leftStop (-x) = -rightStop x := by
-  have := toSurreal_leftGame_mk_of_short (-x)
-  simp at this
-  exact mod_cast this.symm
+  simpa [← Rat.cast_neg, ← Dyadic.toRat_neg] using (toSurreal_leftGame_mk_of_short (-x)).symm
 
 @[simp]
 theorem rightStop_neg (x : IGame) [Short x] : rightStop (-x) = -leftStop x := by

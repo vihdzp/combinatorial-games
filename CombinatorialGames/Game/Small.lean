@@ -161,8 +161,8 @@ theorem _root_.IGame.leftStop_of_small (x : IGame) [Small x] [Short x] : leftSto
 theorem _root_.IGame.rightStop_of_small (x : IGame) [Small x] [Short x] : rightStop x = 0 := by
   rw [← neg_eq_zero, ← leftStop_neg, leftStop_of_small]
 
-theorem of_leftStop_rightStop_eq_zero {x : IGame} [Short x]
-    (hl : leftStop x = 0) (hr : rightStop x = 0) : Small x where
+theorem of_stops_eq_zero {x : IGame} [Short x] (hl : leftStop x = 0) (hr : rightStop x = 0) :
+    Small x where
   le_numeric_of_pos {y} _ hy := by
     apply (lt_of_leftStop_lt _).le
     simp_all
@@ -170,10 +170,10 @@ theorem of_leftStop_rightStop_eq_zero {x : IGame} [Short x]
     apply (lt_of_lt_rightStop _).le
     simp_all
 
-theorem iff_leftStop_rightStop_eq_zero {x : IGame} [Short x] :
+theorem _root_IGame.small_iff_stops_eq_zero {x : IGame} [Short x] :
     Small x ↔ leftStop x = 0 ∧ rightStop x = 0 :=
   ⟨fun _ ↦ ⟨leftStop_of_small x, rightStop_of_small x⟩,
-    fun ⟨hl, hr⟩ ↦ of_leftStop_rightStop_eq_zero hl hr⟩
+    fun ⟨hl, hr⟩ ↦ of_stops_eq_zero hl hr⟩
 
 /-- A short infinitesimal game is in fact small. -/
 theorem of_infinitesimal {x : IGame} [Short x]

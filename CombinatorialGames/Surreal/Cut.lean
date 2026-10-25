@@ -692,6 +692,66 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-! ### Some explicit calculations with cuts -/
+
+@[simp, grind =] theorem supLeft_star : supLeft ⋆ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_star : infRight ⋆ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_star : leftGame (.mk ⋆) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_star]
+
+@[simp, grind =]
+theorem rightGame_star : rightGame (.mk ⋆) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_star]
+
+@[simp, grind =] theorem supLeft_up : supLeft ↑ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_up : infRight ↑ = rightSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_up : leftGame (.mk ↑) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_up]
+
+@[simp, grind =]
+theorem rightGame_up : rightGame (.mk ↑) = rightSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_up]
+
+@[simp, grind =] theorem supLeft_down : supLeft ↓ = leftSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_down : infRight ↓ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_down : leftGame (.mk ↓) = leftSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_down]
+
+@[simp, grind =]
+theorem rightGame_down : rightGame (.mk ↓) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_down]
+
+@[simp, grind =]
+theorem supLeft_switch (x : IGame) : supLeft (±x) = rightGame (.mk x) := by
+  simp [supLeft]
+
+@[simp, grind =]
+theorem infRight_switch (x : IGame) : infRight (±x) = -rightGame (.mk x) := by
+  rw [← IGame.neg_switch, infRight_neg, supLeft_switch]
+
+theorem infRight_switch_le_supLeft_switch {x : IGame} (h : 0 ≤ x) :
+    infRight (±x) ≤ supLeft (±x) := by
+  trans leftSurreal 0
+  · simpa
+  · apply le_of_lt
+    simpa
+
+theorem leftGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+    leftGame (.mk (±x)) = rightSurreal (.mk x) := by
+  rw [leftGame_eq_supLeft_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
+theorem rightGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+    rightGame (.mk (±x)) = -rightSurreal (.mk x) := by
+  rw [rightGame_eq_infRight_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
 /-! ### Numeric cuts -/
 
 /-- We say that a cut is numeric when it's either a left or right cut from a surreal. -/
