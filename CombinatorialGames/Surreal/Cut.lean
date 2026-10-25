@@ -196,7 +196,9 @@ protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
 /-! ### Cuts from games -/
 
 /-- The left stop $L(x)$ of a game `x` is such that its right set consists of surreals
-equal or larger to it. -/
+equal or larger to it.
+
+See also `IGame.leftStop` for a `Dyadic`-valued version. -/
 def leftGame : Game →o Cut where
   toFun x := {
     extent := {y | y.toGame ⧏ x}
@@ -212,7 +214,9 @@ def leftGame : Game →o Cut where
   monotone' x y hy z hz := mt hy.trans hz
 
 /-- The right stop $R(x)$ of a game `x` is such that its left set consists of surreals
-equal or lesser to it. -/
+equal or lesser to it.
+
+See also `IGame.rightStop` for a `Dyadic`-valued version. -/
 def rightGame : Game →o Cut where
   toFun x := {
     extent := {y | y.toGame ≤ x}

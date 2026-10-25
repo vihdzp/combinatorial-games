@@ -6,7 +6,7 @@ Authors: Tristan Figueroa-Reid
 module
 
 public import CombinatorialGames.Game.Confusion
-public import CombinatorialGames.Surreal.Birthday.Dyadic
+public import CombinatorialGames.Game.Stops
 
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.CharZero
