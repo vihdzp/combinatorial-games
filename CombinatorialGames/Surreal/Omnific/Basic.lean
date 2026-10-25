@@ -7,13 +7,9 @@ module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Real
-public import Mathlib.Algebra.Ring.Subring.Order
 
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.Algebra.Ring.Subring.Order
-import Mathlib.Data.EReal.Operations
-import Mathlib.Topology.Algebra.InfiniteSum.Order
-import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Omnific integers
