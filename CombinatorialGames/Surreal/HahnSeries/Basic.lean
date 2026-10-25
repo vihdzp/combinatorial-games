@@ -523,7 +523,7 @@ theorem truncIdx_ne {x : SurrealHahnSeries} {i : Ordinal} (h : i < x.length) :
   simpa
 
 @[simp]
-theorem truncIdx_eq_self {x : SurrealHahnSeries} {i : Ordinal} :
+theorem truncIdx_eq_self_iff {x : SurrealHahnSeries} {i : Ordinal} :
     x.truncIdx i = x ↔ x.length ≤ i where
   mp h := by
     contrapose! h
@@ -599,7 +599,6 @@ theorem trunc_mem_range_truncIdx (x : SurrealHahnSeries) (i : Surreal) :
 /-! #### `term` -/
 
 /-- Returns the `i`-th largest term of the sum, or `0` if it doesn't exist. -/
-@[expose]
 def term (x : SurrealHahnSeries) (i : Ordinal) : Surreal :=
   if hi : i < x.length then x.coeffIdx i * ω^ (x.exp ⟨i, mem_Iio.2 hi⟩).1 else 0
 
@@ -627,12 +626,12 @@ theorem leadingCoeff_term (x : SurrealHahnSeries) (i : Ordinal) :
 
 theorem wlog_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     (x.term i).wlog = x.exp ⟨i, mem_Iio.2 hi⟩ := by
-  rw [term]
+  rw [term_of_lt hi]
   aesop
 
 theorem mk_term {x : SurrealHahnSeries} {i : Ordinal} (hi : i < x.length) :
     ArchimedeanClass.mk (x.term i) = .mk (ω^ (x.exp ⟨i, mem_Iio.2 hi⟩)) := by
-  rw [term]
+  rw [term_of_lt hi]
   aesop
 
 /-! ### Assemble Hahn series from sequences -/
