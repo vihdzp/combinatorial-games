@@ -32,7 +32,9 @@ def ordinalSum (x y : IGame) : IGame :=
 termination_by y
 decreasing_by igame_wf
 
-infixl:70 " ∶ " => ordinalSum
+@[inherit_doc] infixl:70 " ∶ " => ordinalSum
+
+recommended_spelling "ordinalSum" for "∶" in [ordinalSum, «term_∶_»]
 
 theorem moves_ordinalSum (p : Player) (x y : IGame) :
     (x ∶ y).moves p = x.moves p ∪ ordinalSum x '' y.moves p := by
