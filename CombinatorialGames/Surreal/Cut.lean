@@ -196,7 +196,9 @@ protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
 /-! ### Cuts from games -/
 
 /-- The left stop $L(x)$ of a game `x` is such that its right set consists of surreals
-equal or larger to it. -/
+equal or larger to it.
+
+See also `IGame.leftStop` for a `Dyadic`-valued version. -/
 def leftGame : Game →o Cut where
   toFun x := {
     extent := {y | y.toGame ⧏ x}
@@ -212,7 +214,9 @@ def leftGame : Game →o Cut where
   monotone' x y hy z hz := mt hy.trans hz
 
 /-- The right stop $R(x)$ of a game `x` is such that its left set consists of surreals
-equal or lesser to it. -/
+equal or lesser to it.
+
+See also `IGame.rightStop` for a `Dyadic`-valued version. -/
 def rightGame : Game →o Cut where
   toFun x := {
     extent := {y | y.toGame ≤ x}
@@ -688,6 +692,66 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
 
+/-! ### Some explicit calculations with cuts -/
+
+@[simp, grind =] theorem supLeft_star : supLeft ⋆ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_star : infRight ⋆ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_star : leftGame (.mk ⋆) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_star]
+
+@[simp, grind =]
+theorem rightGame_star : rightGame (.mk ⋆) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_star]
+
+@[simp, grind =] theorem supLeft_up : supLeft ↑ = rightSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_up : infRight ↑ = rightSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_up : leftGame (.mk ↑) = rightSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_up]
+
+@[simp, grind =]
+theorem rightGame_up : rightGame (.mk ↑) = rightSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_up]
+
+@[simp, grind =] theorem supLeft_down : supLeft ↓ = leftSurreal 0 := by simp [supLeft]
+@[simp, grind =] theorem infRight_down : infRight ↓ = leftSurreal 0 := by simp [infRight]
+
+@[simp, grind =]
+theorem leftGame_down : leftGame (.mk ↓) = leftSurreal 0 := by
+  rw [leftGame_eq_supLeft_of_le (by simp), supLeft_down]
+
+@[simp, grind =]
+theorem rightGame_down : rightGame (.mk ↓) = leftSurreal 0 := by
+  rw [rightGame_eq_infRight_of_le (by simp), infRight_down]
+
+@[simp, grind =]
+theorem supLeft_switch (x : IGame) : supLeft (±x) = rightGame (.mk x) := by
+  simp [supLeft]
+
+@[simp, grind =]
+theorem infRight_switch (x : IGame) : infRight (±x) = -rightGame (.mk x) := by
+  rw [← IGame.neg_switch, infRight_neg, supLeft_switch]
+
+theorem infRight_switch_le_supLeft_switch {x : IGame} (h : 0 ≤ x) :
+    infRight (±x) ≤ supLeft (±x) := by
+  trans leftSurreal 0
+  · simpa
+  · apply le_of_lt
+    simpa
+
+theorem leftGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+    leftGame (.mk (±x)) = rightSurreal (.mk x) := by
+  rw [leftGame_eq_supLeft_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
+theorem rightGame_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+    rightGame (.mk (±x)) = -rightSurreal (.mk x) := by
+  rw [rightGame_eq_infRight_of_le (infRight_switch_le_supLeft_switch h)]
+  simp
+
 /-! ### Numeric cuts -/
 
 /-- We say that a cut is numeric when it's either a left or right cut from a surreal. -/
@@ -702,7 +766,10 @@ theorem numeric_def {x : Cut} : x.Numeric ↔ x ∈ Set.range leftSurreal ∪ Se
 
 namespace Numeric
 
-attribute [instance] Numeric.leftSurreal Numeric.rightSurreal
+attribute [simp, instance] Numeric.leftSurreal Numeric.rightSurreal
+
+instance (x : Cut) [hx : x.Numeric] : (-x).Numeric := by
+  cases hx <;> simp
 
 @[simp low]
 theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
@@ -810,6 +877,10 @@ theorem mem_left_of_lt_toSurreal (x : Cut) [hx : x.Numeric] {y : Surreal} (h : y
 theorem mem_right_of_toSurreal_lt (x : Cut) [hx : x.Numeric] {y : Surreal} (h : x.toSurreal < y) :
     y ∈ x.right := by
   induction hx <;> simp_all [le_iff_lt_or_eq]
+
+@[simp]
+theorem toSurreal_neg (x : Cut) [hx : x.Numeric] : (-x).toSurreal = -x.toSurreal := by
+  cases hx <;> simp
 
 end Cut
 end Surreal
