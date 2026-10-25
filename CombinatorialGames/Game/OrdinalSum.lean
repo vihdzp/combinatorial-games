@@ -13,8 +13,8 @@ import Mathlib.Order.GameAdd
 /-!
 # Ordinal sum of games
 
-The ordinal sum of two games `x` and `y`, written `x : y`,
-is defined as `{xᴸ, x : yᴸ | xᴿ, x : yᴿ}`. Moving in `y` is done as in the ordinary sum,
+The ordinal sum of two games `x` and `y`, written `x ∶ y`,
+is defined as `{xᴸ, x ∶ yᴸ | xᴿ, x ∶ yᴿ}`. Moving in `y` is done as in the ordinary sum,
 but a move in `x` destroys the other component `y` of the sum.
 -/
 
