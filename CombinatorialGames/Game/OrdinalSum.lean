@@ -81,7 +81,8 @@ theorem nim_ordinalSum_nim (o o' : Nimber) :
   simp_rw [moves_ordinalSum, moves_nim, Set.image_image]
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
     ← Set.image_image nim (fun z => .of (o.val + z.val)) (Iio o'), ← Set.image_union]
-  refine congr(nim '' $(Set.ext fun x => ?_))
+  congr
+  ext x
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← Nimber.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← Nimber.val.exists_congr_right]
   simp_rw [Nimber.of_eq_iff, OrderIso.coe_toEquiv, Nimber.val.lt_iff_lt, eq_comm]
@@ -94,7 +95,8 @@ theorem natOrdinal_ordinalSum_natOrdinal (o o' : NatOrdinal) :
   rw [Set.image_congr fun c hc => ih c (Set.mem_Iio.1 hc),
     ← Set.image_image NatOrdinal.toIGame (fun z => .of (o.val + z.val)) (Iio o'),
     ← Set.image_union]
-  refine congr(NatOrdinal.toIGame '' $(Set.ext fun x => ?_))
+  congr
+  ext x
   simp_rw [Set.mem_union, Set.mem_image, Set.mem_Iio]
   rw [← NatOrdinal.val_lt_iff, lt_add_iff_lt_left_or_exists_lt, ← NatOrdinal.val.exists_congr_right]
   simp_rw [NatOrdinal.of_eq_iff, OrderIso.coe_toEquiv, NatOrdinal.val.lt_iff_lt, eq_comm]
