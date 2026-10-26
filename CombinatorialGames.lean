@@ -32,6 +32,7 @@ public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 public import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.NatOrdinal.OrderType
 public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
