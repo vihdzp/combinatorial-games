@@ -12,7 +12,6 @@ public import Mathlib.Algebra.Group.Pointwise.Set.Small
 import CombinatorialGames.Game.Functor
 import CombinatorialGames.Mathlib.Small
 import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
-import Mathlib.Algebra.Ring.Defs
 import Mathlib.Basic.Countable.Small
 
 /-!
@@ -153,7 +152,7 @@ theorem eq_of_bisim (r : LGame → LGame → Prop)
   refine QPF.Cofix.bisim r (fun x y hxy ↦ ?_) x y hxy
   choose s hs₁ hs₂ hs using H _ _ hxy
   simp_rw [Set.ext_iff, mem_image, Prod.exists, exists_and_right, exists_eq_right] at *
-  refine ⟨⟨fun p ↦ range (inclusion (hs p)), ?_⟩, ?_, ?_⟩
+  refine ⟨⟨fun p ↦ range (inclusion (t := {x : LGame × LGame | r x.1 x.2}) (hs p)), ?_⟩, ?_, ?_⟩
   · have this (p) : Small.{u} (s p) := small_subset (s := moves p x ×ˢ moves p y) fun z hz ↦
       ⟨(hs₁ p z.1).1 ⟨_, hz⟩, (hs₂ p z.2).1 ⟨_, hz⟩⟩
     rintro (_ | _) <;> infer_instance
@@ -199,8 +198,10 @@ private def dest (x : Shrink (Subtype (Reachable mov init))) :
     GameFunctor (Shrink (Subtype (Reachable mov init))) :=
   have hx := ((equivShrink _).symm x).2
   ⟨fun
-    | left => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inl hy)) hx)
-    | right => equivShrink _ '' range (inclusion fun _y hy ↦ .trans (.single (.inr hy)) hx),
+    | left => equivShrink _ '' range (inclusion (t := {x | Reachable mov init x})
+        fun _y hy ↦ .trans (.single (.inl hy)) hx)
+    | right => equivShrink _ '' range (inclusion (t := {x | Reachable mov init x})
+        fun _y hy ↦ .trans (.single (.inr hy)) hx),
     by
       rintro (_|_) <;>
       · apply @small_image ..
@@ -228,9 +229,10 @@ def corec : LGame.{u} :=
   corec' mov init ⟨_, .refl⟩
 
 set_option backward.isDefEq.respectTransparency false in
-private theorem corec'_trans {x} (hx : Reachable mov init x)
-  (y : Subtype (Reachable mov x)) :
-    corec' _ x y = corec' _ init (inclusion (fun _z hz ↦ .trans hz hx) y) := by
+private theorem corec'_trans {x} (hx : Reachable mov init x) (y : Subtype (Reachable mov x)) :
+    corec' _ x y = corec' _ init
+      (inclusion (s := {y | Reachable mov x y}) (t := {y | Reachable mov init y})
+        (fun _z hz ↦ .trans hz hx) y) := by
   apply unique <;> ext _ p <;> cases p <;>
     simp [← range_comp, corec', QPF.Cofix.dest_corec, GameFunctor.map_def]
 
@@ -335,11 +337,11 @@ theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
-theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+theorem moves_left_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
     !{l | r}ᴸ = l :=
   moves_ofSets ..
 
-theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+theorem moves_right_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
     !{l | r}ᴿ = r :=
   moves_ofSets ..
 
@@ -359,14 +361,14 @@ instance : One LGame := ⟨!{{0} | ∅}⟩
 
 theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 
-@[simp] theorem leftMoves_one : 1ᴸ = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_one : 1ᴿ = ∅ := rightMoves_ofSets ..
+@[simp] theorem moves_left_one : 1ᴸ = {0} := moves_left_ofSets ..
+@[simp] theorem moves_right_one : 1ᴿ = ∅ := moves_right_ofSets ..
 
 /-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
-@[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
-@[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
+@[simp] theorem moves_left_on : onᴸ = {on} := by simp [on]
+@[simp] theorem moves_right_on : onᴿ = ∅ := by simp [on]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
@@ -379,8 +381,8 @@ theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
 /-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
-@[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
-@[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
+@[simp] theorem moves_left_off : offᴸ = ∅ := by simp [off]
+@[simp] theorem moves_right_off : offᴿ = {off} := by simp [off]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
@@ -408,12 +410,12 @@ def tis : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} �
 /-- The game `tisn = !{∅ | {tis}}`, where `tis = !{{tisn} | ∅}`. -/
 def tisn : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) false
 
-@[simp] theorem leftMoves_tis : tisᴸ = {tisn} := by simp [tis, tisn]
-@[simp] theorem rightMoves_tis : tisᴿ = ∅ := by simp [tis]
+@[simp] theorem moves_left_tis : tisᴸ = {tisn} := by simp [tis, tisn]
+@[simp] theorem moves_right_tis : tisᴿ = ∅ := by simp [tis]
 theorem tis_eq : tis = !{{tisn} | ∅} := by ext p; cases p <;> simp
 
-@[simp] theorem leftMoves_tisn : tisnᴸ = ∅ := by simp [tisn]
-@[simp] theorem rightMoves_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
+@[simp] theorem moves_left_tisn : tisnᴸ = ∅ := by simp [tisn]
+@[simp] theorem moves_right_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
 theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 
 /-! ### Negation -/
@@ -837,10 +839,7 @@ theorem movesSingle_comp_prodMap
   rintro ⟨p', x⟩
   ext
   simp_rw [Player.cases, mem_image, Prod.exists, Prod.map_apply, id_eq]
-  cases p <;> cases p'
-  all_goals
-    simp only [mem_union, mem_prod]
-    grind
+  cases p <;> cases p' <;> aesop
 
 variable [Hα₁ : DecidableEq α₁] [Hβ₁ : DecidableEq β₁] [Hα₂ : DecidableEq α₂] [Hβ₂ : DecidableEq β₂]
 

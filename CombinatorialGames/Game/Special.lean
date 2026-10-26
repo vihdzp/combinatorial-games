@@ -70,8 +70,8 @@ def half : IGame :=
 @[inherit_doc] notation "½" => half
 recommended_spelling "half" for "½" in [«term½»]
 
-@[simp, game_cmp] theorem leftMoves_half : ½ᴸ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_half : ½ᴿ = {1} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_half : ½ᴸ = {0} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_half : ½ᴿ = {1} := moves_right_ofSets ..
 
 theorem zero_lt_half : 0 < ½ := by game_cmp
 theorem half_lt_one : ½ < 1 := by game_cmp
@@ -89,8 +89,11 @@ def up : IGame :=
 @[inherit_doc] notation "↑" => up
 recommended_spelling "up" for "↑" in [«term↑»]
 
-@[simp, game_cmp] theorem leftMoves_up : ↑ᴸ = {0} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_up : ↑ᴿ = {⋆} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_up : ↑ᴸ = {0} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_up : ↑ᴿ = {⋆} := moves_right_ofSets ..
+
+theorem zero_mem_moves_left_up : 0 ∈ ↑ᴸ := by simp
+theorem star_mem_moves_right_up : ⋆ ∈ ↑ᴿ := by simp
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
 theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
@@ -111,8 +114,11 @@ def down : IGame :=
 @[inherit_doc] notation "↓" => down
 recommended_spelling "down" for "↓" in [«term↓»]
 
-@[simp, game_cmp] theorem leftMoves_down : ↓ᴸ = {⋆} := leftMoves_ofSets ..
-@[simp, game_cmp] theorem rightMoves_down : ↓ᴿ = {0} := rightMoves_ofSets ..
+@[simp, game_cmp] theorem moves_left_down : ↓ᴸ = {⋆} := moves_left_ofSets ..
+@[simp, game_cmp] theorem moves_right_down : ↓ᴿ = {0} := moves_right_ofSets ..
+
+theorem star_mem_moves_left_down : ⋆ ∈ ↓ᴸ := by simp
+theorem zero_mem_moves_right_down : 0 ∈ ↓ᴿ := by simp
 
 @[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
 @[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
@@ -135,14 +141,14 @@ def tiny (x : IGame) : IGame :=
 recommended_spelling "tiny" for "⧾" in [«term⧾_»]
 
 @[simp, game_cmp]
-theorem leftMoves_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
-  leftMoves_ofSets ..
+theorem moves_left_tiny (x : IGame) : (⧾x)ᴸ = {0} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
-  rightMoves_ofSets ..
+theorem moves_right_tiny (x : IGame) : (⧾x)ᴿ = {!{{0} | {-x}}} :=
+  moves_right_ofSets ..
 
-@[simp, game_cmp] theorem tiny_zero_eq_up : ⧾0 = ↑ := by aesop
+@[simp, game_cmp] theorem tiny_zero : ⧾0 = ↑ := by aesop
 
 @[simp]
 theorem dicotic_tiny_iff {x : IGame} : Dicotic (⧾x) ↔ Dicotic x := by
@@ -162,20 +168,24 @@ theorem short_tiny_iff {x : IGame} : Short (⧾x) ↔ Short x := by
 
 instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
 
+open Set in
 theorem tiny_antitone : Antitone tiny := by
   intro x y hxy
   apply IGame.le_of_forall_moves_left_lf
-  · rw [leftMoves_tiny, Set.forall_mem_singleton]
+  · rw [moves_left_tiny, forall_mem_singleton]
     exact left_lf (by simp)
-  · rw [rightMoves_tiny, Set.forall_mem_singleton, rightMoves_tiny, Set.exists_mem_singleton]
+  · rw [moves_right_tiny, forall_mem_singleton, moves_right_tiny, exists_mem_singleton]
     apply IGame.le_of_forall_moves_left_lf
-    · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+    · rw [moves_left_ofSets, forall_mem_singleton]
       exact left_lf (by simp)
-    · rw [rightMoves_ofSets, Set.forall_mem_singleton, rightMoves_ofSets, Set.exists_mem_singleton]
+    · rw [moves_right_ofSets, forall_mem_singleton, moves_right_ofSets, exists_mem_singleton]
       exact IGame.neg_le_neg_iff.2 hxy
 
 theorem tiny_congr {x y : IGame} (hxy : x ≈ y) : ⧾x ≈ ⧾y :=
   ⟨tiny_antitone hxy.ge, tiny_antitone hxy.le⟩
+
+theorem tiny_tiny_tiny_equiv (x : IGame) : ⧾⧾⧾x ≈ ↑ := by
+  game_cmp
 
 /-- A miny game `⧿x` is defined as `{{x | 0} | 0}`. -/
 def miny (x : IGame) : IGame :=
@@ -185,14 +195,14 @@ def miny (x : IGame) : IGame :=
 recommended_spelling "miny" for "⧿" in [«term⧿_»]
 
 @[simp, game_cmp]
-theorem leftMoves_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
-  leftMoves_ofSets ..
+theorem moves_left_miny (x : IGame) : (⧿x)ᴸ = {!{{x} | {0}}} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_miny (x : IGame) : (⧿x)ᴿ = {0} :=
-  rightMoves_ofSets ..
+theorem moves_right_miny (x : IGame) : (⧿x)ᴿ = {0} :=
+  moves_right_ofSets ..
 
-@[simp, game_cmp] theorem miny_zero_eq_down : ⧿0 = ↓ := by aesop
+@[simp, game_cmp] theorem miny_zero : ⧿0 = ↓ := by aesop
 
 @[simp, game_cmp]
 theorem neg_tiny (x : IGame) : -(⧾x) = ⧿x := by
@@ -229,7 +239,8 @@ theorem miny_congr {x y : IGame} (hxy : x ≈ y) : ⧿x ≈ ⧿y :=
 
 /-! ### Switches -/
 
-/-- A **switch** `±x` is defined as `{x | -x}`: switches are their own confusion interval! -/
+/-- A **switch** `±x` is defined as `{x | -x}`. Note that if `x ⧏ 0`, then this game is equivalent
+to 0. -/
 def switch (x : IGame) : IGame :=
   !{{x} | {-x}}
 
@@ -237,12 +248,12 @@ def switch (x : IGame) : IGame :=
 recommended_spelling "switch" for "±" in [«term±_»]
 
 @[simp, game_cmp]
-theorem leftMoves_switch (x : IGame) : (±x)ᴸ = {x} :=
-  leftMoves_ofSets ..
+theorem moves_left_switch (x : IGame) : (±x)ᴸ = {x} :=
+  moves_left_ofSets ..
 
 @[simp, game_cmp]
-theorem rightMoves_switch (x : IGame) : (±x)ᴿ = {-x} :=
-  rightMoves_ofSets ..
+theorem moves_right_switch (x : IGame) : (±x)ᴿ = {-x} :=
+  moves_right_ofSets ..
 
 @[simp]
 theorem neg_switch (x : IGame) : -±x = ±x := by

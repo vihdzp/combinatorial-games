@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import Mathlib.Order.WellQuasiOrder
 

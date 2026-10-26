@@ -3,11 +3,10 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-module
+module -- shake: keep-all
 
 public import CombinatorialGames.Game.IGame
-
-meta import CombinatorialGames.Tactic.Register
+public import CombinatorialGames.Tactic.Register
 
 /-!
 # Tactic for game inequalities
@@ -23,16 +22,16 @@ Tests for the tactic are found in the `CombinatorialGames.Test` file.
 This tactic works by repeatedly unfolding the definition of `≤` and applying `simp` lemmas tagged
 with `game_cmp` until the goal is solved. It is effective on any game whose moves can be
 "enumerated" by `simp`, in the sense that a quantifier over its moves can be written in a
-quantifier-less way. For instance, `∀ y ∈ leftMoves !{{0, 1} | {2, 3}}, P y` can be simplified into
+quantifier-less way. For instance, `∀ y ∈ !{{0, 1} | {2, 3}}ᴸ, P y` can be simplified into
 `P 0 ∧ P 1`.
 
 ## Which lemmas to tag
 
 Lemmas which are safe to tag with `game_cmp` are the following:
 
-* Lemmas of the form `(∀ y ∈ leftMoves (f x), P y) ↔ _` and analogous, as long as any quantifiers
+* Lemmas of the form `(∀ y ∈ moves p (f x), P y) ↔ _` and analogous, as long as any quantifiers
   in the simplified form are over left or right moves of simpler games.
-* Lemmas of the form `leftMoves (f x) = _` and analogous, as long as the simplified set is of the
+* Lemmas of the form `moves p (f x) = _` and analogous, as long as the simplified set is of the
   form `{x₁, x₂, …}`, listing out all elements explicitly.
 * Lemmas which directly replace games by other simpler games.
 
@@ -45,6 +44,8 @@ macro "game_cmp" : tactic =>
     repeat
       rw [IGame.le_iff_forall_lf]
       simp only [game_cmp]})
+
+register_hint 200 game_cmp
 
 /-! ### Extra tagged lemmas -/
 

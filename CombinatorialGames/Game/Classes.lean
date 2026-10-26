@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 module
 
 public import CombinatorialGames.Game.IGame
-public meta import CombinatorialGames.Tactic.AddInstances
+public import CombinatorialGames.Tactic.AddInstances
 
 import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
@@ -19,7 +19,7 @@ develop their theory elsewhere.
 
 ## Dicotic games
 
-A game is dicotic when every non-zero subposition has both left and right moves. The Lawnmower
+A game is dicotic when every non-zero subposition has both left and right moves. The lawnmower
 theorem (proven in `CombinatorialGames.Game.Small`) shows that every dicotic game is small.
 
 ## Impartial games
@@ -71,6 +71,9 @@ theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
 theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
   simpa using eq_zero_iff.not
 
+theorem ne_zero_iff' [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
+  simpa [Set.nonempty_iff_ne_empty] using ne_zero_iff
+
 theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
   Player.const_of_left_eq_right' (dicotic_def.1 hx).1
 
@@ -100,7 +103,7 @@ protected instance zero : Dicotic 0 := by
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   apply mk
-  · simp [moves_eq_empty_iff .left .right]
+  · simp [moves_eq_empty_iff left right]
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
     dicotic
@@ -112,6 +115,32 @@ decreasing_by igame_wf
 @[simp]
 theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
   ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
+
+protected instance add (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) := by
+  apply mk
+  · simp [moves_eq_empty_iff left right]
+  · intro p
+    rw [forall_moves_add]
+    refine ⟨?_, ?_⟩
+    all_goals
+      intro z hz
+      dicotic
+      exact Dicotic.add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) :=
+  .add ..
+
+protected instance nsmul (n : ℕ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
 
 end Dicotic
 
@@ -455,9 +484,18 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Numeric x] [Numeric y] : Numeric (x - y) :=
   .add ..
 
-protected instance natCast : ∀ n : ℕ, Numeric n
-  | 0 => inferInstanceAs (Numeric 0)
-  | n + 1 => have := Numeric.natCast n; inferInstanceAs (Numeric (n + 1))
+protected instance nsmul (n : ℕ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
+
+protected instance natCast (n : ℕ) : Numeric n := by
+  simpa using Numeric.nsmul n 1
 
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
@@ -465,16 +503,6 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
 protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
-
-protected instance nsmul (n : Nat) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n with
-  | zero => simp
-  | succ n ih => rw [succ_nsmul]; exact .add (n • x) x
-
-protected instance zsmul (n : Int) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n using Int.negInduction with
-  | nat n => rw [natCast_zsmul]; infer_instance
-  | neg ih n => rw [neg_zsmul]; infer_instance
 
 end Numeric
 
@@ -520,22 +548,21 @@ elab "short" : tactic =>
   addInstances <| .mk
     [``Short.of_mem_moves, ``Short.subposition, ``Short.wsubposition]
 
-theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
+theorem finite_setOfPred_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
-  ext
-  rw [Set.mem_ofPred, subposition_iff_exists]
+  rw [Set.mem_eq_mem, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
-instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
-  (Short.finite_setOf_subposition x).to_subtype
+instance (x : IGame) [Short x] : Finite {y | Subposition y x} :=
+  (Short.finite_setOfPred_subposition x).to_subtype
 
-theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
+theorem _root_.IGame.short_iff_finite_setOfPred_subposition {x : IGame} :
     Short x ↔ {y | Subposition y x}.Finite := by
-  refine ⟨@finite_setOf_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
+  refine ⟨@finite_setOfPred_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
   on_goal 1 => refine h.subset fun y hy ↦ ?_
-  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
+  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOfPred_subposition.2 <| h.subset fun z hz ↦ ?_
   all_goals igame_wf
 termination_by x
 decreasing_by igame_wf

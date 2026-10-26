@@ -5,10 +5,16 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Algebra.Order.Field.Basic
-public import Mathlib.Algebra.Order.Ring.Defs
-public import Mathlib.Analysis.Normed.Field.Lemmas
+public import Mathlib.Algebra.Group.Submonoid.Membership
+public import Mathlib.Algebra.Order.Archimedean.Defs
+public import Mathlib.Algebra.Ring.Parity
+public import Mathlib.Algebra.Ring.Rat
 public import Mathlib.Data.Nat.Log
+
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Dyadic numbers
@@ -59,7 +65,7 @@ instance : Coe Dyadic Rat where
 
 @[norm_cast] alias coe_le_coe := toRat_le_toRat_iff
 @[norm_cast] alias coe_lt_coe := toRat_lt_toRat_iff
-@[norm_cast] alias coe_inj := toRat_inj
+@[simp, norm_cast] alias coe_inj := toRat_inj
 
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.toRat.num
