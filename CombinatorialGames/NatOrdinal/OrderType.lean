@@ -15,9 +15,9 @@ This file is devoted to two theorems, which also serve as characterizations of t
 product. Let `α`, `β`, `γ` be well-orders.
 
 - Given the existence of a monotone, surjective map `f : α ⊕ β → γ`, the order type of `γ` is at
-  most the natural sum of the order types of `α` and `β`, and the inequality is strict.
+  most the natural sum of the order types of `α` and `β`, and the inequality is sharp.
 - Given the existence of a monotone, surjective map `f : α × β → γ`, the order type of `γ` is at
-  most the natural product of the order types of `α` and `β`, and the inequality is strict.
+  most the natural product of the order types of `α` and `β`, and the inequality is sharp.
 
 ## Main statements
 
@@ -83,12 +83,6 @@ def orderIsoInsert {s : Set α} [DecidablePred (· ∈ s)] {a : α} (ha : ∀ b 
   ⟩
 
 namespace Ordinal
-
--- #43588
-@[simp]
-theorem type_lt_sum_lex {α β : Type u} [LinearOrder α] [LinearOrder β]
-    [WellFoundedLT α] [WellFoundedLT β] : typeLT (α ⊕ₗ β) = typeLT α + typeLT β :=
-  rfl
 
 theorem type_insert {s : Set α} {a : α} (ha : ∀ b ∈ s, b < a) :
     typeLT (insert a s :) = typeLT s + 1 := by
@@ -207,11 +201,11 @@ theorem exists_sum_embedding (α β : Type u) [LinearOrder α] [LinearOrder β]
     · have hα' : of (typeLT α') < ω^ (of (log ω (typeLT α')) + 1) := by
         rw [of_lt_iff, val_wpow, val_add_one, val_of]
         exact lt_opow_succ_log_self one_lt_omega0 _
-      have hδ' : of (typeLT δ) < ω^ (of (log ω (typeLT α')) + 1) := (of.strictMono hδ).trans hα'
-      rwa [type_lt_sum_lex, hγ, ← val_of (log _ _), ← val_of (typeLT ε), ← wpow_add_of_lt,
-        ← hε, ← add_assoc, add_left_inj, wpow_add_of_lt, val_of, val_of, ← hγ,
-        ← e.ordinalType_congr, type_lt_sum_lex]
-      · rw [← hε]
+      have hδ' := (of.strictMono hδ).trans hα'
+      rw [type_lt_sum_lex, hγ, of_omega0_opow_add, ← hε, ← add_assoc, add_left_inj,
+        ← of_omega0_opow_add, ← hγ, ← e.ordinalType_congr, type_lt_sum_lex]
+      · rwa [of_lt_iff, val_wpow, val_add_one] at hδ'
+      · rw [← of.lt_iff_lt, ← hε, of_omega0_opow, of_add_one]
         exact add_lt_wpow hδ' ((of.monotone hle).trans_lt hα')
     · rintro (x | x) (y | y) (hxy | hxy)
       · unfold g
