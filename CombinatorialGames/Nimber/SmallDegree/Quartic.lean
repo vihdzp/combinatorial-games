@@ -59,9 +59,9 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       exact perf pr.toPerfectField
     exact ⟨X ^ 2 - C b, X_pow_sub_C_irreducible_of_prime Nat.prime_two hb,
       .inl (by compute_degree!)⟩
+  have splits := IsSplittingField.splits p.SplittingField p
+  have := Fact.mk splits
   have solv : Group.IsSolvable Gal(p.SplittingField/k) := by
-    have : Fact (map (algebraMap k p.SplittingField) p).Splits :=
-      ⟨Polynomial.IsSplittingField.splits p.SplittingField p⟩
     suffices _ : Group.IsSolvable (Equiv.Perm ↑(p.rootSet p.SplittingField)) from
       Group.isSolvable_of_isSolvable_injective
         -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
@@ -69,8 +69,6 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
     apply Equiv.Perm.isSolvable
     grw [Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
   have dvd : Nat.card Gal(p.SplittingField/k) ∣ 24 := by
-    have : Fact (map (algebraMap k p.SplittingField) p).Splits :=
-      ⟨Polynomial.IsSplittingField.splits p.SplittingField p⟩
     suffices hc : Nat.card (Equiv.Perm ↑(p.rootSet p.SplittingField)) ∣ 24 from
       (Subgroup.card_dvd_of_injective _
         -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
@@ -84,7 +82,6 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       or_iff_right (not_subsingleton p.SplittingField),
       ← Module.nonempty_algEquiv_iff_finrank_eq_one]
     intro ⟨eqv⟩
-    have splits := IsSplittingField.splits p.SplittingField p
     rw [← Algebra.toRingHom_ofId,
       Subsingleton.elim (Algebra.ofId k p.SplittingField) eqv.toAlgHom] at splits
     replace splits := splits.map eqv.symm.toRingHom
