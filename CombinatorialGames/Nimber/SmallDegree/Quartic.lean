@@ -175,8 +175,8 @@ theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
   contrapose! hl
   exact hx.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots hl
 
-theorem IsField.sq_of_pow_four {x : Nimber}
-    (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) : IsField (of (val x ^ 2)) := by
+theorem IsField.sq_of_pow_four {x : Nimber} (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) :
+    IsField (of (val x ^ 2)) := by
   obtain ⟨ht, hd₄⟩ := degree_leastNoRoots_le_of_isField_pow (by decide) hx hx4
   replace hd₄ := (natDegree_le_of_degree_le hd₄).lt_of_ne (hx.natDegree_leastNoRoots_ne_four ht)
   have hd₁ := hx.one_lt_natDegree_leastNoRoots ht
