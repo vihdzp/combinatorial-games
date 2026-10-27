@@ -77,19 +77,11 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
     rfl
   have gal : IsGalois k p.SplittingField := .of_separable_splitting_field hps
   have nt : Nontrivial Gal(p.SplittingField/k) := by
-    rw [← Finite.one_lt_card_iff_nontrivial, IsGalois.card_aut_eq_finrank, ← not_le,
-      Nat.le_one_iff_eq_zero_or_eq_one, Module.finrank_eq_zero_iff_of_free,
-      or_iff_right (not_subsingleton p.SplittingField),
-      ← Module.nonempty_algEquiv_iff_finrank_eq_one]
-    intro ⟨eqv⟩
-    rw [← Algebra.toRingHom_ofId,
-      Subsingleton.elim (Algebra.ofId k p.SplittingField) eqv.toAlgHom] at splits
-    replace splits := splits.map eqv.symm.toRingHom
-    rw [map_map, AlgEquiv.toRingHom_toAlgHom, RingEquiv.toRingHom_eq_coe,
-      ← RingEquiv.toRingHom_trans, AlgEquiv.symm_toRingEquiv, RingEquiv.self_trans_symm,
-      RingEquiv.toRingHom_refl, map_id] at splits
-    absurd splits.natDegree_eq_one_of_irreducible hp
-    simp [hpd]
+    rw [← Finite.one_lt_card_iff_nontrivial, IsGalois.card_aut_eq_finrank]
+    refine lt_of_lt_of_le ?_ (Nat.le_of_dvd ?_
+      (Polynomial.Irreducible.natDegree_dvd_finrank hp splits))
+    · simp [hpd]
+    · apply Module.finrank_pos
   obtain ⟨N, ⟨hN, hNt⟩, hM⟩ :=
     (Set.toFinite { N : Subgroup Gal(p.SplittingField/k) | N.Normal ∧ N ≠ ⊤ }).exists_maximal
       ⟨⊥, Subgroup.normal_bot, bot_ne_top⟩
