@@ -59,9 +59,9 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       exact perf pr.toPerfectField
     exact ⟨X ^ 2 - C b, X_pow_sub_C_irreducible_of_prime Nat.prime_two hb,
       .inl (by compute_degree!)⟩
+  have : Fact (map (algebraMap k p.SplittingField) p).Splits :=
+    ⟨Polynomial.IsSplittingField.splits p.SplittingField p⟩
   have solv : Group.IsSolvable Gal(p.SplittingField/k) := by
-    have : Fact (map (algebraMap k p.SplittingField) p).Splits :=
-      ⟨Polynomial.IsSplittingField.splits p.SplittingField p⟩
     suffices _ : Group.IsSolvable (Equiv.Perm ↑(p.rootSet p.SplittingField)) from
       Group.isSolvable_of_isSolvable_injective
         -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
@@ -69,12 +69,8 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
     apply Equiv.Perm.isSolvable
     grw [Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
   have dvd : Nat.card Gal(p.SplittingField/k) ∣ 24 := by
-    have : Fact (map (algebraMap k p.SplittingField) p).Splits :=
-      ⟨Polynomial.IsSplittingField.splits p.SplittingField p⟩
-    suffices hc : Nat.card (Equiv.Perm ↑(p.rootSet p.SplittingField)) ∣ 24 from
-      (Subgroup.card_dvd_of_injective _
-        -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
-        (Polynomial.Gal.galActionHom_injective p p.SplittingField)).trans hc
+    apply (Subgroup.card_dvd_of_injective _
+      (Polynomial.Gal.galActionHom_injective p p.SplittingField)).trans
     grw [Nat.card_perm, Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
     rfl
   have gal : IsGalois k p.SplittingField := .of_separable_splitting_field hps
@@ -129,12 +125,9 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
   rw [IntermediateField.finrank_top', IntermediateField.finrank_fixedField_eq_index,
     Subgroup.index_eq_card, he,
     IntermediateField.adjoin.finrank (Algebra.IsIntegral.isIntegral _)] at hr
-  refine ⟨minpoly k a, minpoly.irreducible (Algebra.IsIntegral.isIntegral _), ?_⟩
-  rcases heq with he | he
-  · left
-    rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
-  · right
-    rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
+  refine ⟨minpoly k a, minpoly.irreducible (Algebra.IsIntegral.isIntegral _), heq.imp ?_ ?_⟩ <;>
+  · intro he
+    rwa [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr]
 
 namespace Nimber
 open Polynomial
@@ -161,22 +154,20 @@ theorem IsField.degree_leastNoRoots_ne_four
   rw [ne_eq, ← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide)]
   rcases hpd with hd | hd <;> simp [hd]
 
+theorem IsField.natDegree_leastNoRoots_ne_four
+    {x : Nimber} (hx : IsField x) (ht : leastNoRoots x ≠ ⊤) :
+    ((leastNoRoots x).untop ht).natDegree ≠ 4 := by
+  rw [ne_eq, ← degree_eq_iff_natDegree_eq (leastNoRoots_ne_zero' ht)]
+  exact hx.degree_leastNoRoots_ne_four ht
+
 theorem IsField.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots
     {x : Nimber} (hx : IsField x) (hl : .some (X ^ 4) ≤ leastNoRoots x) :
     .some (X ^ 5) ≤ leastNoRoots x := by
   by_cases ht : leastNoRoots x = ⊤
   · simp [ht]
   rw [← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Lex.X_pow_le_iff] at hl ⊢
-  by_contra! h5
-  apply hx.degree_leastNoRoots_ne_four ht
-  generalize ((leastNoRoots x).untop ht).degree = c at hl h5 ⊢
-  cases c with
-  | bot => simp at hl
-  | coe c =>
-    rw [Nat.cast_withBot, WithBot.coe_le_coe] at hl
-    rw [Nat.cast_withBot, WithBot.coe_lt_coe] at h5
-    interval_cases c
-    rfl
+  rw [Nat.cast_ofNat, ← show Order.succ (4 : WithBot ℕ) = 5 by decide, Order.succ_le_iff]
+  apply hl.lt_of_ne' (hx.degree_leastNoRoots_ne_four ht)
 
 theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
     {x : Nimber} (hx : IsField x) (hl : leastNoRoots x < .some (X ^ 5)) :
@@ -184,9 +175,20 @@ theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
   contrapose! hl
   exact hx.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots hl
 
--- this needs that every field is an ordinal power of every earlier field
-proof_wanted IsField.isField_opow_two_of_isField_opow_four
-    {x : Nimber} (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) :
-    IsField (of (val x ^ 2))
+theorem IsField.isField_opow_two_of_isField_opow_four {x : Nimber}
+    (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) : IsField (of (val x ^ 2)) := by
+  obtain ⟨ht, hd₄⟩ := degree_leastNoRoots_le_of_isField_pow (by decide) hx hx4
+  replace hd₄ := (natDegree_le_of_degree_le hd₄).lt_of_ne (hx.natDegree_leastNoRoots_ne_four ht)
+  have hd₁ := hx.one_lt_natDegree_leastNoRoots ht
+  have hf := hx.pow_natDegree_leastNoRoots ht
+  interval_cases (x.leastNoRoots.untop ht).natDegree; · exact hf
+  absurd sq_le_fieldClosure_succ hf
+  rw [not_le, val_of, ← pow_mul]
+  apply lt_of_le_of_lt (b := of (val x ^ 4))
+  · rw [hx4.fieldClosure_le_iff, Order.succ_le_iff, of.lt_iff_lt]
+    exact pow_lt_pow_right₀ hx.one_lt_val hd₄
+  · rw [of.lt_iff_lt]
+    apply pow_lt_pow_right₀ hx.one_lt_val
+    decide
 
 end Nimber

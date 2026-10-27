@@ -329,6 +329,9 @@ theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
 
+theorem IsRing.one_lt_val (h : IsRing x) : 1 < x.val :=
+  h.one_lt
+
 theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
   rw [← succ_one, succ_le_iff]
   exact h.one_lt
