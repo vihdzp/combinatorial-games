@@ -158,7 +158,7 @@ theorem IsField.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots
   by_cases ht : leastNoRoots x = ⊤
   · simp [ht]
   rw [← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Lex.X_pow_le_iff] at hl ⊢
-  rw [Nat.cast_ofNat, ← show Order.succ (4 : WithBot ℕ) = 5 by decide, Order.succ_le_iff]
+  rw [Nat.cast_ofNat, ← show Order.succ (4 : WithBot ℕ) = 5 from rfl, Order.succ_le_iff]
   exact hl.lt_of_ne' (hx.degree_leastNoRoots_ne_four ht)
 
 theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
