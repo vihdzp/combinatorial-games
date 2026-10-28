@@ -180,7 +180,8 @@ theorem IsField.sq_of_pow_four {x : Nimber} (hx : IsField x) (hx4 : IsField (of 
   replace hd₄ := (natDegree_le_of_degree_le hd₄).lt_of_ne (hx.natDegree_leastNoRoots_ne_four ht)
   have hd₁ := hx.one_lt_natDegree_leastNoRoots ht
   have hf := hx.pow_natDegree_leastNoRoots ht
-  interval_cases (x.leastNoRoots.untop ht).natDegree; · exact hf
+  interval_cases (x.leastNoRoots.untop ht).natDegree
+  · exact hf
   absurd sq_le_fieldClosure_succ hf
   rw [not_le, val_of, ← pow_mul]
   apply lt_of_le_of_lt (b := of (val x ^ 4))
