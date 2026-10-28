@@ -484,7 +484,6 @@ end IsAlgClosed
 theorem IsField.degree_leastNoRoots_le_of_isField_pow {x : Nimber} {n : ℕ} (hn : n ≠ 1)
     (hx : IsField x) (hxn : IsField (∗(x.val ^ n))) :
     ∃ ht, ((leastNoRoots x).untop ht).degree ≤ n := by
-  have h₁ := hx.one_lt_val
   obtain hn | hn := hn.lt_or_gt
   · exact hxn.ne_one.elim (by simp [Nat.lt_one_iff.mp hn])
   have hfx : fieldClosure (succ x) ≤ ∗(x.val ^ n) := by
