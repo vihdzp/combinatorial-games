@@ -485,10 +485,11 @@ theorem IsField.degree_leastNoRoots_le_of_isField_pow {x : Nimber} {n : ℕ} (hn
     (hx : IsField x) (hxn : IsField (∗(x.val ^ n))) :
     ∃ ht, ((leastNoRoots x).untop ht).degree ≤ n := by
   have h₁ := hx.one_lt_val
-  obtain hn | hn := hn.lt_or_gt; · aesop
+  obtain hn | hn := hn.lt_or_gt
+  · exact hxn.ne_one.elim (by simp [Nat.lt_one_iff.mp hn])
   have hfx : fieldClosure (succ x) ≤ ∗(x.val ^ n) := by
-    rw [hxn.fieldClosure_le_iff, Order.succ_le_iff, ← val_lt_iff]
-    exact lt_self_pow₀ h₁ hn
+    rw [hxn.fieldClosure_le_iff, Order.succ_le_iff]
+    exact val_lt_iff.1 (lt_self_pow₀ hx.one_lt_val hn)
   have ht : leastNoRoots x ≠ ⊤ := by
     contrapose! hfx
     rw [← isAlgClosed_iff_leastNoRoots_eq_top hx.toIsRing] at hfx
