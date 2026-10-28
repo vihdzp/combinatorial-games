@@ -152,20 +152,21 @@ theorem IsField.degree_leastNoRoots_ne_four
   rw [ne_eq, ← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide)]
   rcases hpd with hd | hd <;> simp [hd]
 
-theorem IsField.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots
+theorem IsField.X_pow_five_lt_leastNoRoots_of_X_pow_four_le_leastNoRoots
     {x : Nimber} (hx : IsField x) (hl : .some (X ^ 4) ≤ leastNoRoots x) :
-    .some (X ^ 5) ≤ leastNoRoots x := by
+    .some (X ^ 5) < leastNoRoots x := by
+  apply lt_of_ne_of_le' (leastNoRoots_ne_X_pow x 5)
   by_cases ht : leastNoRoots x = ⊤
   · simp [ht]
   rw [← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Lex.X_pow_le_iff] at hl ⊢
   rw [Nat.cast_ofNat, ← show Order.succ (4 : WithBot ℕ) = 5 from rfl, Order.succ_le_iff]
   exact hl.lt_of_ne' (hx.degree_leastNoRoots_ne_four ht)
 
-theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
-    {x : Nimber} (hx : IsField x) (hl : leastNoRoots x < .some (X ^ 5)) :
+theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_le_X_pow_five
+    {x : Nimber} (hx : IsField x) (hl : leastNoRoots x ≤ .some (X ^ 5)) :
     leastNoRoots x < .some (X ^ 4) := by
   contrapose! hl
-  exact hx.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots hl
+  exact hx.X_pow_five_lt_leastNoRoots_of_X_pow_four_le_leastNoRoots hl
 
 -- this needs that every field is an ordinal power of every earlier field
 proof_wanted IsField.isField_opow_two_of_isField_opow_four
