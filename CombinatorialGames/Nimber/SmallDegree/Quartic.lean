@@ -16,7 +16,7 @@ import Mathlib.Tactic.Simproc.Factors
 /-!
 # Quartic nimber extensions
 
-We prove there are no quartic nimber extensions.
+We prove that the extension between two adjacent nimber fields cannot be of degree 4.
 -/
 
 public section
