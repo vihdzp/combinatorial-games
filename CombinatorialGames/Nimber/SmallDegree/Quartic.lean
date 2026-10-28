@@ -158,16 +158,8 @@ theorem IsField.X_pow_five_le_leastNoRoots_of_X_pow_four_le_leastNoRoots
   by_cases ht : leastNoRoots x = ⊤
   · simp [ht]
   rw [← WithTop.coe_untop _ ht, WithTop.coe_le_coe, Lex.X_pow_le_iff] at hl ⊢
-  by_contra! h5
-  apply hx.degree_leastNoRoots_ne_four ht
-  generalize ((leastNoRoots x).untop ht).degree = c at hl h5 ⊢
-  cases c with
-  | bot => simp at hl
-  | coe c =>
-    rw [Nat.cast_withBot, WithBot.coe_le_coe] at hl
-    rw [Nat.cast_withBot, WithBot.coe_lt_coe] at h5
-    interval_cases c
-    rfl
+  rw [Nat.cast_ofNat, ← show Order.succ (4 : WithBot ℕ) = 5 by decide, Order.succ_le_iff]
+  exact hl.lt_of_ne' (hx.degree_leastNoRoots_ne_four ht)
 
 theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_lt_X_pow_five
     {x : Nimber} (hx : IsField x) (hl : leastNoRoots x < .some (X ^ 5)) :
