@@ -494,10 +494,9 @@ theorem IsField.degree_leastNoRoots_le_of_isField_pow {x : Nimber} {n : ℕ} (hn
     have := (ringClosure_le_fieldClosure _).trans hfx
     rw [ht.ringClosure_eq, of.le_iff_le, ← opow_natCast, opow_le_opow_iff_right h₁] at this
     simp [← not_lt] at this
-  · use ht
-    rw [hx.fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.le_iff_le,
-      pow_le_pow_iff_right₀ h₁] at hfx
-    exact degree_le_of_natDegree_le hfx
+  · refine ⟨ht, degree_le_of_natDegree_le ?_⟩
+    rwa [hx.fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.le_iff_le,
+      pow_le_pow_iff_right₀ hx.one_lt_val] at hfx
 
 theorem IsField.sq_le_fieldClosure_succ {x : Nimber} (h : IsField x) :
     ∗(x.val ^ 2) ≤ fieldClosure (succ x) := by
