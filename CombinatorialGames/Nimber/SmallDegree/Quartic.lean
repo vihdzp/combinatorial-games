@@ -29,6 +29,12 @@ theorem IntermediateField.finrank_fixedField_eq_index
   rw [Module.finrank_mul_finrank, IntermediateField.finrank_fixedField_eq_card, H.index_mul_card]
   exact (IsGalois.card_aut_eq_finrank F E).symm
 
+@[to_additive]
+theorem IsSimpleGroup.isMulCommutative_iff_isSolvable {G : Type*} [Group G] [IsSimpleGroup G] :
+    IsMulCommutative G ↔ Group.IsSolvable G := by
+  rw [← IsSimpleGroup.comm_iff_isSolvable]
+  exact ⟨fun h => mul_comm', fun h => ⟨⟨h⟩⟩⟩
+
 theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
     {k : Type*} [Field k] (p : Polynomial k) (hp : Irreducible p) (hpd : p.degree = 4) :
     ∃ q : Polynomial k, Irreducible q ∧ (q.degree = 2 ∨ q.degree = 3) := by
@@ -100,12 +106,8 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       · rwa [← Subgroup.comap_top (QuotientGroup.mk' N),
           (Subgroup.comap_injective (QuotientGroup.mk'_surjective N)).ne_iff]
       · grw [← Subgroup.ker_le_comap, QuotientGroup.ker_mk']
-  have comm : IsMulCommutative (Gal(p.SplittingField/k) ⧸ N) := by
-    constructor
-    constructor
-    -- todo: restate this lemma directly with `IsMulCommutative`
-    rw [IsSimpleGroup.comm_iff_isSolvable]
-    infer_instance
+  have comm : IsMulCommutative (Gal(p.SplittingField/k) ⧸ N) :=
+    IsSimpleGroup.isMulCommutative_iff_isSolvable.2 inferInstance
   rw [/- todo: rename -/ Group.is_simple_iff_prime_card] at simpl
   have hdvd := N.card_quotient_dvd_card.trans dvd
   set e := Nat.card (Gal(p.SplittingField/k) ⧸ N) with ← he
