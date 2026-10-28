@@ -105,7 +105,7 @@ theorem natOrdinal_ordinalSum_natOrdinal (a b : NatOrdinal) :
 @[simp]
 theorem ordinalSum_le_ordinalSum_iff_left {x y z : IGame} : x ∶ y ≤ x ∶ z ↔ y ≤ z := by
   -- mathlib PR #45285
-  induction y, z using Sym2.GameAdd.recursion wellFounded_subposition with | IH y z ih
+  induction y, z using Sym2.GameAdd.recursion wellFounded_subposition with | ind y z ih
   rw [Sym2.eq_swap] at ih
   rw [le_iff_forall_lf, le_iff_forall_lf, forall_moves_ordinalSum, forall_moves_ordinalSum,
     and_and_and_comm,
