@@ -184,10 +184,8 @@ theorem IsField.sq_of_pow_four {x : Nimber} (hx : IsField x) (hx4 : IsField (of 
   absurd sq_le_fieldClosure_succ hf
   rw [not_le, val_of, ← pow_mul]
   apply lt_of_le_of_lt (b := of (val x ^ 4))
-  · rw [hx4.fieldClosure_le_iff, Order.succ_le_iff, of.lt_iff_lt]
-    exact pow_lt_pow_right₀ hx.one_lt_val hd₄
-  · rw [of.lt_iff_lt]
-    apply pow_lt_pow_right₀ hx.one_lt_val
-    decide
+  · rw [hx4.fieldClosure_le_iff, Order.succ_le_iff]
+    exact of.strictMono (pow_lt_pow_right₀ hx.one_lt_val hd₄)
+  · exact of.strictMono (pow_lt_pow_right₀ hx.one_lt_val (by decide))
 
 end Nimber
