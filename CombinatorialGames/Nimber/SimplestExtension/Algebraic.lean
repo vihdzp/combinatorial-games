@@ -489,11 +489,11 @@ theorem IsField.degree_leastNoRoots_le_of_isField_pow {x : Nimber} {n : ℕ} (hn
   have hfx : fieldClosure (succ x) ≤ ∗(x.val ^ n) := by
     rw [hxn.fieldClosure_le_iff, Order.succ_le_iff, ← val_lt_iff]
     exact lt_self_pow₀ h₁ hn
-  by_cases ht : leastNoRoots x = ⊤
-  · rw [← isAlgClosed_iff_leastNoRoots_eq_top hx.toIsRing] at ht
-    have := (ringClosure_le_fieldClosure _).trans hfx
-    rw [ht.ringClosure_eq, of.le_iff_le, ← opow_natCast, opow_le_opow_iff_right h₁] at this
-    simp [← not_lt] at this
+  have ht : leastNoRoots x ≠ ⊤ := by
+    contrapose! hfx
+    rw [← isAlgClosed_iff_leastNoRoots_eq_top hx.toIsRing] at hfx
+    grw [← ringClosure_le_fieldClosure, hfx.ringClosure_eq, ← opow_natCast]
+    exact of.strictMono ((opow_lt_opow_iff_right hx.one_lt_val).2 (natCast_lt_omega0 n))
   · refine ⟨ht, degree_le_of_natDegree_le ?_⟩
     rwa [hx.fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.le_iff_le,
       pow_le_pow_iff_right₀ hx.one_lt_val] at hfx
