@@ -65,67 +65,67 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       exact perf pr.toPerfectField
     exact ⟨X ^ 2 - C b, X_pow_sub_C_irreducible_of_prime Nat.prime_two hb,
       .inl (by compute_degree!)⟩
-  have splits := IsSplittingField.splits p.SplittingField p
-  have := Fact.mk splits
-  have solv : Group.IsSolvable Gal(p.SplittingField/k) := by
-    suffices _ : Group.IsSolvable (Equiv.Perm ↑(p.rootSet p.SplittingField)) from
-      Group.isSolvable_of_isSolvable_injective
-        -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
-        (Polynomial.Gal.galActionHom_injective p p.SplittingField)
-    apply Equiv.Perm.isSolvable
-    grw [Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
-  have dvd : Nat.card Gal(p.SplittingField/k) ∣ 24 := by
-    suffices hc : Nat.card (Equiv.Perm ↑(p.rootSet p.SplittingField)) ∣ 24 from
-      (Subgroup.card_dvd_of_injective _
-        -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
-        (Polynomial.Gal.galActionHom_injective p p.SplittingField)).trans hc
-    grw [Nat.card_perm, Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
-    rfl
-  have gal : IsGalois k p.SplittingField := .of_separable_splitting_field hps
-  have nt : Nontrivial Gal(p.SplittingField/k) := by
-    rw [← Finite.one_lt_card_iff_nontrivial, IsGalois.card_aut_eq_finrank]
-    refine lt_of_lt_of_le ?_ (Nat.le_of_dvd ?_
-      (Polynomial.Irreducible.natDegree_dvd_finrank hp splits))
-    · simp [hpd]
-    · apply Module.finrank_pos
-  obtain ⟨N, ⟨hN, hNt⟩, hM⟩ :=
-    (Set.toFinite { N : Subgroup Gal(p.SplittingField/k) | N.Normal ∧ N ≠ ⊤ }).exists_maximal
-      ⟨⊥, Subgroup.normal_bot, bot_ne_top⟩
-  simp_rw [Set.mem_ofPred, and_imp] at hM
-  have simpl : IsSimpleGroup (Gal(p.SplittingField/k) ⧸ N) := by
-    rw [isSimpleGroup_iff]
-    constructor
-    · rwa [QuotientGroup.nontrivial_iff]
-    · intro H hH
-      rw [or_iff_not_imp_right, ← le_bot_iff]
-      intro hHt
-      rw [← Subgroup.comap_le_comap_of_surjective (QuotientGroup.mk'_surjective N),
-        /- this was impossible to find, todo: rename -/ MonoidHom.comap_bot,
-        QuotientGroup.ker_mk']
-      apply hM inferInstance
-      · rwa [← Subgroup.comap_top (QuotientGroup.mk' N),
-          (Subgroup.comap_injective (QuotientGroup.mk'_surjective N)).ne_iff]
-      · grw [← Subgroup.ker_le_comap, QuotientGroup.ker_mk']
-  have comm : IsMulCommutative (Gal(p.SplittingField/k) ⧸ N) :=
-    IsSimpleGroup.isMulCommutative_iff_isSolvable.2 inferInstance
-  rw [/- todo: rename -/ Group.is_simple_iff_prime_card] at simpl
-  have hdvd := N.card_quotient_dvd_card.trans dvd
-  set e := Nat.card (Gal(p.SplittingField/k) ⧸ N) with ← he
-  have heq : e = 2 ∨ e = 3 := by
-    have factors := simpl.mem_primeFactors' hdvd
-    simp_rw [/- todo: rename -/ ← Nat.toFinset_factors, Nat.primeFactorsList_ofNat] at factors
-    simpa using factors
-  obtain ⟨a, ha⟩ := Field.exists_primitive_element k (IntermediateField.fixedField N)
-  have hr := congr(Module.finrank k $ha)
-  rw [IntermediateField.finrank_top', IntermediateField.finrank_fixedField_eq_index,
-    Subgroup.index_eq_card, he,
-    IntermediateField.adjoin.finrank (Algebra.IsIntegral.isIntegral _)] at hr
-  refine ⟨minpoly k a, minpoly.irreducible (Algebra.IsIntegral.isIntegral _), ?_⟩
-  rcases heq with he | he
-  · left
-    rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
-  · right
-    rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
+  · have splits := IsSplittingField.splits p.SplittingField p
+    have := Fact.mk splits
+    have solv : Group.IsSolvable Gal(p.SplittingField/k) := by
+      suffices _ : Group.IsSolvable (Equiv.Perm ↑(p.rootSet p.SplittingField)) from
+        Group.isSolvable_of_isSolvable_injective
+          -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
+          (Polynomial.Gal.galActionHom_injective p p.SplittingField)
+      apply Equiv.Perm.isSolvable
+      grw [Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
+    have dvd : Nat.card Gal(p.SplittingField/k) ∣ 24 := by
+      suffices hc : Nat.card (Equiv.Perm ↑(p.rootSet p.SplittingField)) ∣ 24 from
+        (Subgroup.card_dvd_of_injective _
+          -- is `Polynomial.Gal.galActionHom` even a good idea to have? it's noncanonical
+          (Polynomial.Gal.galActionHom_injective p p.SplittingField)).trans hc
+      grw [Nat.card_perm, Nat.card_coe_set_eq, ncard_rootSet_le, hpd]
+      rfl
+    have gal : IsGalois k p.SplittingField := .of_separable_splitting_field hps
+    have nt : Nontrivial Gal(p.SplittingField/k) := by
+      rw [← Finite.one_lt_card_iff_nontrivial, IsGalois.card_aut_eq_finrank]
+      refine lt_of_lt_of_le ?_ (Nat.le_of_dvd ?_
+        (Polynomial.Irreducible.natDegree_dvd_finrank hp splits))
+      · simp [hpd]
+      · apply Module.finrank_pos
+    obtain ⟨N, ⟨hN, hNt⟩, hM⟩ :=
+      (Set.toFinite { N : Subgroup Gal(p.SplittingField/k) | N.Normal ∧ N ≠ ⊤ }).exists_maximal
+        ⟨⊥, Subgroup.normal_bot, bot_ne_top⟩
+    simp_rw [Set.mem_ofPred, and_imp] at hM
+    have simpl : IsSimpleGroup (Gal(p.SplittingField/k) ⧸ N) := by
+      rw [isSimpleGroup_iff]
+      constructor
+      · rwa [QuotientGroup.nontrivial_iff]
+      · intro H hH
+        rw [or_iff_not_imp_right, ← le_bot_iff]
+        intro hHt
+        rw [← Subgroup.comap_le_comap_of_surjective (QuotientGroup.mk'_surjective N),
+          /- this was impossible to find, todo: rename -/ MonoidHom.comap_bot,
+          QuotientGroup.ker_mk']
+        apply hM inferInstance
+        · rwa [← Subgroup.comap_top (QuotientGroup.mk' N),
+            (Subgroup.comap_injective (QuotientGroup.mk'_surjective N)).ne_iff]
+        · grw [← Subgroup.ker_le_comap, QuotientGroup.ker_mk']
+    have comm : IsMulCommutative (Gal(p.SplittingField/k) ⧸ N) :=
+      IsSimpleGroup.isMulCommutative_iff_isSolvable.2 inferInstance
+    rw [/- todo: rename -/ Group.is_simple_iff_prime_card] at simpl
+    have hdvd := N.card_quotient_dvd_card.trans dvd
+    set e := Nat.card (Gal(p.SplittingField/k) ⧸ N) with ← he
+    have heq : e = 2 ∨ e = 3 := by
+      have factors := simpl.mem_primeFactors' hdvd
+      simp_rw [/- todo: rename -/ ← Nat.toFinset_factors, Nat.primeFactorsList_ofNat] at factors
+      simpa using factors
+    obtain ⟨a, ha⟩ := Field.exists_primitive_element k (IntermediateField.fixedField N)
+    have hr := congr(Module.finrank k $ha)
+    rw [IntermediateField.finrank_top', IntermediateField.finrank_fixedField_eq_index,
+      Subgroup.index_eq_card, he,
+      IntermediateField.adjoin.finrank (Algebra.IsIntegral.isIntegral _)] at hr
+    refine ⟨minpoly k a, minpoly.irreducible (Algebra.IsIntegral.isIntegral _), ?_⟩
+    rcases heq with he | he
+    · left
+      rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
+    · right
+      rw [← Nat.cast_ofNat, Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide), hr, he]
 
 namespace Nimber
 open Polynomial
