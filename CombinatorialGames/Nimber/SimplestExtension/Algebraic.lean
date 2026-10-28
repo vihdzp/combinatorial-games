@@ -389,6 +389,10 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       rw [map_add, map_mul, hs] at hi
       simpa using! congrArg hxr.toSubring.subtype hi
 
+theorem IsField.pow_natDegree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) :
+    IsField (of (val x ^ (x.leastNoRoots.untop ht).natDegree)) :=
+  hf.pow_degree_leastNoRoots ht <| degree_eq_natDegree (leastNoRoots_ne_zero' ht)
+
 theorem IsField.fieldAdjoin_simple_self {x : Nimber} (h : IsField x) :
     (IntermediateField.adjoin h.toSubfield {x}).toSubfield =
       (IsField.fieldClosure (succ x)).toSubfield := by
@@ -417,7 +421,7 @@ theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (
     exact (X_pow_lt_leastNoRoots_of_le_degree ht hn.ge).le
   · rw [h.fieldAdjoin_simple_self, toSubfield_le_toSubfield,
       (h.pow_degree_leastNoRoots ht hn).fieldClosure_le_iff, succ_le_iff]
-    apply lt_self_pow₀ (one_lt_val.2 h.one_lt)
+    apply lt_self_pow₀ h.one_lt_val
     rw [← WithBot.one_lt_coe, ← WithBot.natCast_eq_coe, ← hn]
     exact h.one_lt_degree_leastNoRoots ht
 
@@ -453,7 +457,7 @@ theorem isRing_opow_omega0 : IsRing (of (val t ^ ω)) where
 theorem ringClosure_eq : ringClosure (succ t) = of (val t ^ ω) := by
   apply le_antisymm
   · rw [ht.isRing_opow_omega0.ringClosure_le_iff, succ_le_iff]
-    exact val_lt_iff.1 (left_lt_opow (one_lt_val.2 ht.one_lt) one_lt_omega0)
+    exact val_lt_iff.1 (left_lt_opow ht.one_lt_val one_lt_omega0)
   · refine le_of_forall_lt fun c hc => ?_
     obtain ⟨p, hpc, hpr⟩ := eq_oeval_of_lt_opow_omega0 hc
     have htr := (lt_succ t).trans_le (le_ringClosure (succ t))
@@ -476,6 +480,33 @@ theorem algebraAdjoin_simple_self :
     coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
 
 end IsAlgClosed
+
+theorem IsField.degree_leastNoRoots_le_of_isField_pow {x : Nimber} {n : ℕ} (hn : n ≠ 1)
+    (hx : IsField x) (hxn : IsField (∗(x.val ^ n))) :
+    ∃ ht, ((leastNoRoots x).untop ht).degree ≤ n := by
+  obtain hn | hn := hn.lt_or_gt
+  · exact hxn.ne_one.elim (by simp [Nat.lt_one_iff.mp hn])
+  have hfx : fieldClosure (succ x) ≤ ∗(x.val ^ n) := by
+    rw [hxn.fieldClosure_le_iff, Order.succ_le_iff]
+    exact val_lt_iff.1 (lt_self_pow₀ hx.one_lt_val hn)
+  have ht : leastNoRoots x ≠ ⊤ := by
+    contrapose! hfx
+    rw [← isAlgClosed_iff_leastNoRoots_eq_top hx.toIsRing] at hfx
+    grw [← ringClosure_le_fieldClosure, hfx.ringClosure_eq, ← opow_natCast]
+    exact of.strictMono ((opow_lt_opow_iff_right hx.one_lt_val).2 (natCast_lt_omega0 n))
+  · refine ⟨ht, degree_le_of_natDegree_le ?_⟩
+    rwa [hx.fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.le_iff_le,
+      pow_le_pow_iff_right₀ hx.one_lt_val] at hfx
+
+theorem IsField.sq_le_fieldClosure_succ {x : Nimber} (h : IsField x) :
+    ∗(x.val ^ 2) ≤ fieldClosure (succ x) := by
+  have h₁ := h.one_lt_val
+  by_cases ht : leastNoRoots x = ⊤
+  · rw [← isAlgClosed_iff_leastNoRoots_eq_top h.toIsRing] at ht
+    grw [← ringClosure_le_fieldClosure, ht.ringClosure_eq, of.le_iff_le, ← opow_natCast]
+    exact opow_le_opow_right h₁.pos (ofNat_lt_omega0 2).le
+  · rw [h.fieldClosure_succ_eq_pow_natDegree_leastNoRoots ht, of.le_iff_le]
+    exact pow_le_pow_right₀ h₁.le (h.one_lt_natDegree_leastNoRoots ht)
 
 /-! ### Nimbers are algebraically closed -/
 

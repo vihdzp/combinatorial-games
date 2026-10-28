@@ -152,6 +152,12 @@ theorem IsField.degree_leastNoRoots_ne_four
   rw [ne_eq, ← Polynomial.degree_eq_iff_natDegree_eq_of_pos (by decide)]
   rcases hpd with hd | hd <;> simp [hd]
 
+theorem IsField.natDegree_leastNoRoots_ne_four
+    {x : Nimber} (hx : IsField x) (ht : leastNoRoots x ≠ ⊤) :
+    ((leastNoRoots x).untop ht).natDegree ≠ 4 := by
+  rw [ne_eq, ← degree_eq_iff_natDegree_eq (leastNoRoots_ne_zero' ht)]
+  exact hx.degree_leastNoRoots_ne_four ht
+
 theorem IsField.X_pow_five_lt_leastNoRoots_of_X_pow_four_le_leastNoRoots
     {x : Nimber} (hx : IsField x) (hl : .some (X ^ 4) ≤ leastNoRoots x) :
     .some (X ^ 5) < leastNoRoots x := by
@@ -168,9 +174,19 @@ theorem IsField.leastNoRoots_lt_X_pow_four_of_leastNoRoots_le_X_pow_five
   contrapose! hl
   exact hx.X_pow_five_lt_leastNoRoots_of_X_pow_four_le_leastNoRoots hl
 
--- this needs that every field is an ordinal power of every earlier field
-proof_wanted IsField.isField_opow_two_of_isField_opow_four
-    {x : Nimber} (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) :
-    IsField (of (val x ^ 2))
+theorem IsField.sq_of_pow_four {x : Nimber} (hx : IsField x) (hx4 : IsField (of (val x ^ 4))) :
+    IsField (of (val x ^ 2)) := by
+  obtain ⟨ht, hd₄⟩ := degree_leastNoRoots_le_of_isField_pow (by decide) hx hx4
+  replace hd₄ := (natDegree_le_of_degree_le hd₄).lt_of_ne (hx.natDegree_leastNoRoots_ne_four ht)
+  have hd₁ := hx.one_lt_natDegree_leastNoRoots ht
+  have hf := hx.pow_natDegree_leastNoRoots ht
+  interval_cases (x.leastNoRoots.untop ht).natDegree
+  · exact hf
+  absurd sq_le_fieldClosure_succ hf
+  rw [not_le, val_of, ← pow_mul]
+  apply lt_of_le_of_lt (b := of (val x ^ 4))
+  · rw [hx4.fieldClosure_le_iff, Order.succ_le_iff]
+    exact of.strictMono (pow_lt_pow_right₀ hx.one_lt_val hd₄)
+  · exact of.strictMono (pow_lt_pow_right₀ hx.one_lt_val (by decide))
 
 end Nimber
