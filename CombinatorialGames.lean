@@ -1,6 +1,7 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
 public import CombinatorialGames.Counterexamples.Multiplication
+public import CombinatorialGames.Counterexamples.OrdinalSum
 public import CombinatorialGames.Counterexamples.TinyOrder
 public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
@@ -43,6 +44,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.Nimber.SmallDegree.Inseparable
+public import CombinatorialGames.Nimber.SmallDegree.Quartic
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.Surreal.Basic
