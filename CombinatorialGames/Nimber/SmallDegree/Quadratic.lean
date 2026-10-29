@@ -845,7 +845,7 @@ theorem IsField.quadraticUpper_fieldClosure_succ_of_not_perfectField {x : Nimber
     rw [WithTop.untop_coe]
     compute_degree!
   have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
-    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
   apply le_antisymm
   · rw [← of.le_iff_le, ← (enum quadraticIrreducibles isCofinal_quadraticIrreducibles).le_iff_le,
       (IsField.fieldClosure (succ x)).quadraticUpper_le_iff, hfs]
@@ -885,7 +885,7 @@ theorem IsField.Ico_quadraticUpper_fieldClosure_succ_of_perfectField_of_leastNoR
     rw [WithTop.untop_coe]
     compute_degree!
   have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
-    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
   have hrt := hx.isRoot_leastNoRoots hnt
   rw! [hl] at hrt
   rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
