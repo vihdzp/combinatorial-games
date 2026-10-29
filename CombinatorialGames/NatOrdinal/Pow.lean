@@ -20,7 +20,7 @@ This file characterizes natural operations on powers of `ω`. In particular, we 
 
 These two results imply the validity of an algorithm to evaluate natural addition and
 multiplication: write down the base `ω` Cantor Normal Forms of both ordinals, and add/multiply them
-as polynomials.
+as polynomials. See `CombinatorialGames.NatOrdinal.AddMonoidAlgebra` for the explicit isomorphism.
 
 ## Implementation notes
 
@@ -30,12 +30,7 @@ notation `ω^ x` for `of (ω ^ x.val)`. This typeclass will get reused for `IGam
 `CombinatorialGames.Surreal.Pow`.
 -/
 
-@[expose] public section
-
-theorem Ordinal.opow_le_one {x : Ordinal} (hx : x ≤ 1) (y : Ordinal) : x ^ y ≤ 1 := by
-  obtain rfl | rfl := Order.le_one_iff.1 hx
-  · exact zero_opow_le y
-  · simp
+public section
 
 open Ordinal
 
@@ -181,7 +176,7 @@ theorem of_omega0_opow_add_omega0_opow {x y : Ordinal} (h : x ≤ y) :
 theorem of_natCast_opow_mul_natCast_add_of_lt {x y : Ordinal} {m : ℕ} (hy : y < m ^ x * ω) (n : ℕ) :
     of (m ^ x * n + y) = of (m ^ x) * n + of y := by
   obtain hm | hm := le_or_gt m 1
-  · have hk₁ := opow_le_one (x := m) (mod_cast hm) x
+  · have hk₁ := opow_le_one (a := m) (mod_cast hm) x
     grw [hk₁, one_mul] at hy
     obtain ⟨y, rfl⟩ := Ordinal.lt_omega0.1 hy
     obtain ⟨k, hk⟩ := Ordinal.lt_omega0.1 <| hk₁.trans_lt one_lt_omega0
@@ -217,6 +212,11 @@ theorem of_natCast_opow_mul_natCast {x : Ordinal} (m n : ℕ) : of (m ^ x * n) =
     · simp [hx]
   | succ m => simpa using
       of_natCast_opow_mul_natCast_add_of_lt' (opow_pos x m.cast_add_one_pos) n (m := m + 1)
+
+theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) :
+    of (2 ^ log 2 o) + of (o % 2 ^ log 2 o) = of o := by
+  conv_rhs => rw [← Ordinal.two_opow_log_add ho]
+  exact (of_natCast_opow_add_of_lt' (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm
 
 theorem wpow_add (x y : NatOrdinal) : ω^ (x + y) = ω^ x * ω^ y := by
   obtain rfl | hx := eq_or_ne x 0; · simp
