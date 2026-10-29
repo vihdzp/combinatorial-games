@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 
-import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.DeriveFintype -- shake: keep
 
 /-!
 # Type of players
@@ -116,6 +116,47 @@ instance : CommGroup Player where
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
 end Player
+
+/-! ### Outcomes -/
+
+set_option backward.isDefEq.respectTransparency.types false in
+/-- The three possible outcomes of a game.
+
+We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
+inductive Outcome : Type
+  /-- A given player loses in perfect play. -/
+  | loss
+  /-- A given player draws in perfect play. -/
+  | draw
+  /-- A given player wins in perfect play. -/
+  | win
+deriving DecidableEq, Fintype, Inhabited
+
+namespace Outcome
+
+/-- An auxiliary definition for the `LinearOrder` instance on `Outcome`. -/
+private def toNat : Outcome → ℕ
+  | loss => 0
+  | draw => 1
+  | win => 2
+
+@[no_expose]
+instance : LinearOrder Outcome :=
+  LinearOrder.lift' toNat (by decide)
+
+@[simp] theorem loss_le : ∀ x, loss ≤ x := by decide
+@[simp] theorem le_win : ∀ x, x ≤ win := by decide
+
+instance : BoundedOrder Outcome where
+  bot := loss
+  top := win
+  bot_le := loss_le
+  le_top := le_win
+
+@[simp] theorem bot_eq_loss : ⊥ = loss := rfl
+@[simp] theorem top_eq_win : ⊤ = win := rfl
+
+end Outcome
 
 open Player
 

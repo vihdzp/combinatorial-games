@@ -71,6 +71,9 @@ theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
 theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
   simpa using eq_zero_iff.not
 
+theorem ne_zero_iff' [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
+  simpa [Set.nonempty_iff_ne_empty] using ne_zero_iff
+
 theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
   Player.const_of_left_eq_right' (dicotic_def.1 hx).1
 

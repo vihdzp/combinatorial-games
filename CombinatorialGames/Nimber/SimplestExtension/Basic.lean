@@ -245,6 +245,10 @@ theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
 
+@[simp]
+theorem IsGroup.omega0 : IsGroup (∗ω) := by
+  simpa using IsGroup.omega0_opow 1
+
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
@@ -323,6 +327,9 @@ attribute [aesop forward safe] IsRing.toIsGroup
 theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
+
+theorem IsRing.one_lt_val (h : IsRing x) : 1 < x.val :=
+  h.one_lt
 
 theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
   rw [← succ_one, succ_le_iff]
