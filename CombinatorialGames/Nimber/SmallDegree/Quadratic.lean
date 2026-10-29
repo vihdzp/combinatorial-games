@@ -358,7 +358,7 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_not_perfectField {x : Nimber
     rw [WithTop.untop_coe]
     compute_degree!
   have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
-    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
   apply le_antisymm
   · rw [quadraticLower, quadraticAux]
     apply Ordinal.iSup_le
@@ -545,7 +545,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
       rw [WithTop.untop_coe]
       compute_degree!
     have hfs : fieldClosure (succ (Nimber.enumField o)) = of (val (Nimber.enumField o) ^ 2) :=
-      (IsField.enumField o).fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+      (IsField.enumField o).fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
     rw [← hox, hfs] at hz
     -- todo: figure out how to reduce code duplication with the other theorems in this file
     obtain ⟨p, hpd, hpc, hz⟩ := eq_oeval_of_lt_pow (IsField.enumField o).ne_zero hz
@@ -588,7 +588,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
       rw [WithTop.untop_coe]
       compute_degree!
     have hfs : fieldClosure (succ (Nimber.enumField o)) = of (val (Nimber.enumField o) ^ 2) :=
-      (IsField.enumField o).fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+      (IsField.enumField o).fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
     have hrt := (IsField.enumField o).isRoot_leastNoRoots hnt
     rw! [hlr] at hrt
     rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
@@ -737,7 +737,7 @@ theorem IsField.quadraticLower_fieldClosure_succ_of_perfectField_of_leastNoRoots
     rw [WithTop.untop_coe]
     compute_degree!
   have hfs : fieldClosure (succ x) = of (val x ^ 2) :=
-    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots hnt hld
+    hx.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 ⟨hnt, hld⟩
   have hrt := hx.isRoot_leastNoRoots hnt
   rw! [ih] at hrt
   rw [WithTop.untop_coe, IsRoot.def, eval_sub, eval_sub, eval_X_pow, eval_X, eval_C,
