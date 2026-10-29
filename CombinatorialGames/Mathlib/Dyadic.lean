@@ -65,7 +65,7 @@ instance : Coe Dyadic Rat where
 
 @[norm_cast] alias coe_le_coe := toRat_le_toRat_iff
 @[norm_cast] alias coe_lt_coe := toRat_lt_toRat_iff
-@[norm_cast] alias coe_inj := toRat_inj
+@[simp, norm_cast] alias coe_inj := toRat_inj
 
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.toRat.num
@@ -334,7 +334,7 @@ theorem odd_num {x : Dyadic} (hx : x.den ≠ 1) : Odd x.num := by
 theorem intCast_num_eq_self_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : x.num = x := by
   ext
   rw [coe_intCast]
-  exact Rat.coe_int_num_of_den_eq_one hx
+  exact Rat.intCast_num_of_den_eq_one hx
 
 theorem den_mkRat_le (x : ℤ) {n : ℕ} (hn : n ≠ 0) : (mkRat x n).den ≤ n := by
   rw [← Rat.normalize_eq_mkRat hn, Rat.normalize_eq hn]
