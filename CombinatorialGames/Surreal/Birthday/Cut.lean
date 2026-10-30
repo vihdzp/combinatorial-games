@@ -457,12 +457,12 @@ instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
   | infLeft s =>
     convert Small.infLeft ((· + x) '' s) using 1
     apply Cut.ext'
-    simp_rw [sInf_image, iInf_image, right_vadd, right_iInf, right_leftSurreal,
+    simp_rw [image_image, sInf_image, right_vadd, right_iInf, right_leftSurreal,
       image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Ici]
   | supRight s =>
     convert Small.supRight ((· + x) '' s) using 1
     apply Cut.ext
-    simp_rw [sSup_image, iSup_image, left_vadd, left_iSup, left_rightSurreal,
+    simp_rw [image_image, sSup_image, left_vadd, left_iSup, left_rightSurreal,
       image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Iic]
 
 end Surreal.Cut
