@@ -455,15 +455,15 @@ instance Small.iInf {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f 
 instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
   cases ‹y.Small› with
   | infLeft s =>
-    convert Small.infLeft ((x +ᵥ ·) '' s) using 1
+    convert Small.infLeft ((· + x) '' s) using 1
     apply Cut.ext'
-    simp_rw [sInf_image, iInf_image, right_vadd, right_iInf, right_leftSurreal, image_iUnion,
-      ← OrderIso.addRight_apply, OrderIso.image_Ici, OrderIso.addRight_apply, vadd_eq_add, add_comm]
+    simp_rw [sInf_image, iInf_image, right_vadd, right_iInf, right_leftSurreal,
+      image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Ici]
   | supRight s =>
-    convert Small.supRight ((x +ᵥ ·) '' s) using 1
+    convert Small.supRight ((· + x) '' s) using 1
     apply Cut.ext
-    simp_rw [sSup_image, iSup_image, left_vadd, left_iSup, left_rightSurreal, image_iUnion,
-      ← OrderIso.addRight_apply, OrderIso.image_Iic, OrderIso.addRight_apply, vadd_eq_add, add_comm]
+    simp_rw [sSup_image, iSup_image, left_vadd, left_iSup, left_rightSurreal,
+      image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Iic]
 
 end Surreal.Cut
 end
