@@ -361,8 +361,8 @@ theorem sSup_Iio_of_isSuccLimit {x : Simplicity} (hx : Order.IsSuccLimit x) :
   apply hx'.antisymm (le_of_le_of_length_le le_rfl hx' _)
   rw [length_sSup bddAbove_Iio]
   refine le_of_forall_lt fun i hi ↦ ?_
-  rw [(isSuccLimit_iff.1 hx).lt_iff_exists_lt] at hi
-  obtain ⟨j, hj, hij⟩ := hi
+  rw [(isSuccLimit_iff.1 hx).lt_iff_nonempty_Ioo] at hi
+  obtain ⟨j, hij, hj⟩ := hi
   apply hij.trans_le (le_sSup _)
   refine ⟨_, of_restrict_lt hj, ?_⟩
   simpa using hj.le

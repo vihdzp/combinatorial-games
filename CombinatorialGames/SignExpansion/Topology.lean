@@ -48,6 +48,7 @@ theorem isClosed_iff_sSup {s : Set Simplicity} :
   · rw [hx.unique (isLUB_sSup_of_bddAbove hx.bddAbove)]
     exact hs t ht ht₀ hx.bddAbove
 
+-- #43536
 theorem isClopen_Iic (x : Simplicity) : IsClopen (Iic x) := by
   constructor
   · rw [isClosed_iff_sSup]
@@ -58,6 +59,7 @@ theorem isClopen_Iic (x : Simplicity) : IsClopen (Iic x) := by
     obtain ⟨y, hy⟩ := ht₀
     exact ht hy <| (Simplicity.le_sSup hy ht₁).trans hx
 
+-- #43536
 theorem isClopen_Ioc (x y : Simplicity) : IsClopen (Ioc x y) := by
   by_cases h : x < y
   · rw [← Iic_sdiff_Iic h.le]
@@ -65,6 +67,7 @@ theorem isClopen_Ioc (x y : Simplicity) : IsClopen (Ioc x y) := by
   · rw [Ioc_eq_empty h]
     exact isClopen_empty
 
+-- #43536
 theorem isClopen_Ioi (x : Simplicity) : IsClopen (Ioi x) := by
   constructor
   · rw [isClosed_iff_sSup]
@@ -74,31 +77,6 @@ theorem isClopen_Ioi (x : Simplicity) : IsClopen (Ioi x) := by
   · have : Ioi x = ⋃ y : Ioi x, Ioc x y := by aesop
     rw [this]
     exact isOpen_iUnion fun i ↦ (isClopen_Ioc ..).isOpen
-
--- TODO: this would follow from the `ZeroDimensionalSpace` instance.
-instance : TotallySeparatedSpace Simplicity := by
-  rw [totallySeparatedSpace_iff_exists_isClopen]
-  intro x y _
-  by_cases x ≤ y
-  · refine ⟨_, (isClopen_Iic x), ?_⟩
-    grind
-  · refine ⟨_, (isClopen_Iic y).compl, ?_⟩
-    simpa
-
-theorem isOpen_Iio (x : Simplicity) : IsOpen (Iio x) := by
-  rw [← Iic_sdiff_right]
-  exact (isClopen_Iic x).isOpen.inter isOpen_compl_singleton
-
-theorem isClosed_Icc (x y : Simplicity) : IsClosed (Icc x y) := by
-  by_cases h : x ≤ y
-  · rw [← Ioc_insert_left h]
-    simpa using (isClopen_Ioc x y).isClosed.union (isClosed_singleton (x := x))
-  · rw [Icc_eq_empty h]
-    exact isClosed_empty
-
-theorem isClosed_Ici (x : Simplicity) : IsClosed (Ici x) := by
-  rw [← Ioi_insert]
-  simpa using (isClopen_Ioi x).isClosed.union (isClosed_singleton (x := x))
 
 theorem isClosed_of_pairwise_incompRel {s : Set Simplicity} (hs : s.Pairwise (IncompRel (· ≤ ·))) :
     IsClosed s := by
@@ -125,8 +103,7 @@ theorem isClopen_singleton_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLi
 theorem isClopen_singleton_bot : IsClopen {(⊥ : Simplicity)} :=
   isClopen_singleton_of_not_isSuccLimit not_isSuccLimit_bot
 
-theorem nhds_eq_pure_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x) :
-    𝓝 x = pure x := by
+theorem nhds_eq_pure_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x) : 𝓝 x = pure x := by
   rw [← isOpen_singleton_iff_nhds_eq_pure]
   exact (isClopen_singleton_of_not_isSuccLimit hx).isOpen
 
@@ -165,9 +142,8 @@ theorem hasBasis_nhds_Ioc {x : Simplicity} (hx₀ : x ≠ ⊥) : (𝓝 x).HasBas
     · rintro ⟨y, hy, hs⟩
       exact ⟨_, hs, (isClopen_Ioc y x).isOpen, ⟨hy, le_rfl⟩⟩
 
--- TODO: this should be a `ZeroDimensionalSpace` instance.
-theorem isTopologicalBasis_setOf_isClopen :
-    TopologicalSpace.IsTopologicalBasis {s : Set Simplicity | IsClopen s} := by
+instance : ZeroDimensionalSpace Simplicity := by
+  rw [zeroDimensionalSpace_iff_isTopologicalBasis_isClopen]
   refine .of_hasBasis_nhds fun x ↦ ?_
   obtain rfl | hx := eq_or_ne x ⊥
   · rw [nhds_bot]
@@ -180,8 +156,33 @@ theorem isTopologicalBasis_setOf_isClopen :
       simpa
     · exact fun s hs ↦ hs.1.isOpen.mem_nhds hs.2
 
-instance : CompletelyRegularSpace Simplicity :=
-  .of_isTopologicalBasis_clopens isTopologicalBasis_setOf_isClopen
+-- This follows from #43536 + #45602.
+instance : TotallySeparatedSpace Simplicity := by
+  rw [totallySeparatedSpace_iff_exists_isClopen]
+  intro x y _
+  by_cases x ≤ y
+  · refine ⟨_, (isClopen_Iic x), ?_⟩
+    grind
+  · refine ⟨_, (isClopen_Iic y).compl, ?_⟩
+    simpa
+
+-- #43536
+theorem isOpen_Iio (x : Simplicity) : IsOpen (Iio x) := by
+  rw [← Iic_sdiff_right]
+  exact (isClopen_Iic x).isOpen.inter isOpen_compl_singleton
+
+-- #43536
+theorem isClosed_Icc (x y : Simplicity) : IsClosed (Icc x y) := by
+  by_cases h : x ≤ y
+  · rw [← Ioc_insert_left h]
+    simpa using (isClopen_Ioc x y).isClosed.union (isClosed_singleton (x := x))
+  · rw [Icc_eq_empty h]
+    exact isClosed_empty
+
+-- #43536
+theorem isClosed_Ici (x : Simplicity) : IsClosed (Ici x) := by
+  rw [← Ioi_insert]
+  simpa using (isClopen_Ioi x).isClosed.union (isClosed_singleton (x := x))
 
 instance : T35Space Simplicity where
 
