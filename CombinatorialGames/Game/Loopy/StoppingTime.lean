@@ -111,19 +111,19 @@ theorem stoppingTime_of_eq {p q : Player} (h : p = q) (x : LGame.{u}) :
   unfold stoppingTime
   conv =>
     congr
-    · rw [if_pos h, ← OrderHom.isFixedPt_lfp,
+    · rw [ite_eq_left h, ← OrderHom.isFixedPt_lfp,
         stoppingTimeApprox, OrderHom.coe_mk, ← stoppingTimeApprox, h]
     · enter [1, y, 1, _]
-      rw [if_neg (Player.ne_neg.2 h), h]
+      rw [ite_eq_right (Player.ne_neg.2 h), h]
 
 theorem stoppingTime_of_ne {p q : Player} (h : p ≠ q) (x : LGame.{u}) :
     stoppingTime p q x = ⨆ y ∈ x.moves q, stoppingTime p (-q) y + 1 := by
   unfold stoppingTime
   conv =>
     congr
-    · rw [if_neg h]
+    · rw [ite_eq_right h]
     · enter [1, y, 1, _]
-      rw [if_pos (Player.eq_neg.2 h)]
+      rw [ite_eq_left (Player.eq_neg.2 h)]
 
 theorem stoppingTime_induction (p : Player)
     (val : Player → LGame.{u} → WithTop NatOrdinal.{u})

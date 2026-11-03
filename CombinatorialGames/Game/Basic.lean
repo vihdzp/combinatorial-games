@@ -144,6 +144,9 @@ theorem mk_intCast (n : ℤ) : mk n = n := rfl
 theorem zero_def : (0 : Game) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; simp
 theorem one_def : (1 : Game) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; simp
 
+@[simp] theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
+@[simp] theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
+
 instance : ZeroLEOneClass Game where
   zero_le_one := zero_le_one (α := IGame)
 
@@ -215,6 +218,22 @@ theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] 
   rw [ofSets_cases]
   have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_right this
+
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) := by
+  apply IGame.le_iff_forall_lf.trans
+  simp_rw [moves_ofSets, forall_mem_image]
+  congr! <;>
+  · rw [← Game.mk_le_mk, out_eq]
+    rfl
+
+theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
+  rw [ofSets_le_ofSets_iff]
+  push +distrib Not
+  rfl
 
 end Game
 

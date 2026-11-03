@@ -5,11 +5,15 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Surreal.Division
 
+import Mathlib.Analysis.Normed.Group.Basic
+import Mathlib.Data.EReal.Operations
 import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Topology.Algebra.InfiniteSum.Order
+import Mathlib.Topology.MetricSpace.Bounded
 
 /-!
 # Dyadic games
@@ -129,6 +133,44 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     upper x + y ≤ upper (x + y) := by
   simpa [add_comm] using le_upper_add_of_den_le h
 
+theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
+    max x.lower.den x.upper.den = x.den / 2 := by
+  unfold Dyadic.den at hx ⊢
+  rw [coe_lower, coe_upper]
+  unfold Dyadic.den
+  rw [Rat.sub_def', Rat.den_mkRat, ite_eq_right (by positivity),
+    Rat.add_def', Rat.den_mkRat, ite_eq_right (by positivity),
+    Rat.den_inv_of_ne_zero (by positivity), Rat.num_inv, Rat.num_natCast,
+    Int.natAbs_natCast, Rat.den_natCast, Int.sign_natCast_of_ne_zero x.den_ne_zero,
+    Nat.cast_one, Int.one_mul, ← Int.sub_mul, ← Int.add_mul,
+    Int.natAbs_mul, Int.natAbs_mul, Int.natAbs_natCast,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos,
+    Nat.gcd_mul_right, Nat.mul_div_mul_right _ _ x.den_pos]
+  generalize hn : x.toRat.num = n, hd : x.toRat.den = d
+  obtain ⟨e, rfl⟩ : ∃ e, 2 ^ e = d := by
+    rw [← hd, ← Submonoid.mem_powers_iff]
+    exact x.den_mem_powers
+  cases e with
+  | zero => exact (hx hd).elim
+  | succ e =>
+    have ⟨l2, hl2⟩ : Even (n - 1).natAbs := by simpa [hn] using x.odd_num hx
+    have ⟨u2, hu2⟩ : Even (n + 1).natAbs := by simpa [hn] using x.odd_num hx
+    rw [pow_succ, Nat.mul_div_cancel _ two_pos, hl2, hu2,
+      ← Nat.mul_two, ← Nat.mul_two, Nat.gcd_mul_right, Nat.gcd_mul_right,
+      Nat.mul_div_mul_right _ _ two_pos, Nat.mul_div_mul_right _ _ two_pos]
+    refine le_antisymm (max_le (Nat.div_le_self _ _) (Nat.div_le_self _ _)) ?_
+    suffices h : Nat.gcd 2 l2 = 1 ∨ Nat.gcd 2 u2 = 1 by
+      obtain h | h := h
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_left _ _
+      · rw [Nat.gcd_pow_left_of_gcd_eq_one h, Nat.div_one]
+        exact Nat.le_max_right _ _
+    rw [← Nat.coprime_iff_gcd_eq_one, ← Nat.coprime_iff_gcd_eq_one,
+      Nat.coprime_two_left, Nat.coprime_two_left,
+      ← Nat.not_even_iff_odd, ← Nat.not_even_iff_odd, ← not_and_or]
+    rintro ⟨⟨l4, rfl⟩, ⟨u4, rfl⟩⟩
+    lia
+
 /-! ### Dyadic numbers to games -/
 
 /-- Converts a dyadic rational into an `IGame`. This map is defined so that:
@@ -145,7 +187,7 @@ decreasing_by dyadic_wf
 noncomputable instance : Coe Dyadic IGame := ⟨toIGame⟩
 
 theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.num := by
-  rw [toIGame, dif_pos hx]
+  rw [toIGame, dite_eq_left hx]
 
 @[simp] theorem toIGame_intCast (n : ℤ) : ((n : Dyadic) : IGame) = n := by
   simpa using toIGame_of_den_eq_one (Dyadic.den_intCast n)
@@ -156,7 +198,7 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
-  by rw [toIGame, dif_neg hx]
+  by rw [toIGame, dite_eq_right hx]
 
 @[simp]
 theorem toIGame_half : half = ½ := by
@@ -176,18 +218,18 @@ theorem toIGame_neg (x : Dyadic) : (-x : Dyadic) = -(x : IGame) := by
 termination_by x.den
 decreasing_by dyadic_wf
 
-theorem eq_lower_of_mem_leftMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴸ) :
+theorem eq_lower_of_mem_moves_left_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴸ) :
     y = lower x := by
   by_cases hx : x.den = 1
   · rw [toIGame_of_den_eq_one hx] at h
-    rw [lower_eq_of_den_eq_one hx, eq_sub_one_of_mem_leftMoves_intCast h,
+    rw [lower_eq_of_den_eq_one hx, eq_sub_one_of_mem_moves_left_intCast h,
       ← Int.cast_one (R := Dyadic), ← Int.cast_sub, toIGame_intCast]
   · simpa [toIGame_of_den_ne_one hx] using h
 
-theorem eq_upper_of_mem_rightMoves_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴿ) :
+theorem eq_upper_of_mem_moves_right_toIGame {x : Dyadic} {y : IGame} (h : y ∈ xᴿ) :
     y = upper x := by
   have : -y ∈ (-x : Dyadic)ᴸ := by simpa
-  simpa using eq_lower_of_mem_leftMoves_toIGame this
+  simpa using eq_lower_of_mem_moves_left_toIGame this
 
 /-- A dyadic number `x` is always equivalent to `!{lower x | upper x}`, though this may not
 necessarily be the canonical form. -/
@@ -200,10 +242,10 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
     apply Fits.equiv_of_forall_moves
     · simp [Fits]
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_leftMoves_intCast hm
+      obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_moves_left_intCast hm
       simp
     · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_rightMoves_intCast hm
+      obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_moves_right_intCast hm
       simp
   · rfl
 
@@ -308,11 +350,11 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
     all_goals
       intro z hz
       first
-        | obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
-        | obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+        | obtain rfl := eq_lower_of_mem_moves_left_toIGame hz
+        | obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
       grw [← toIGame_add_equiv]
       simp
-  · obtain rfl := eq_lower_of_mem_leftMoves_toIGame hz
+  · obtain rfl := eq_lower_of_mem_moves_left_toIGame hz
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; · simp_all
       use x + lower y
@@ -325,7 +367,7 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
       have : (lower x : IGame) ∈ xᴸ := by rw [hx]; simp
       rw [← (toIGame_add_equiv ..).le_congr_right, hx]
       simpa using lower_add_le_of_den_ge h.le
-  · obtain rfl := eq_upper_of_mem_rightMoves_toIGame hz
+  · obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; · simp_all
       use x + upper y
@@ -347,7 +389,7 @@ theorem toIGame_sub_equiv (x y : Dyadic) : ((x - y : Dyadic) : IGame) ≈ x - y 
 theorem toIGame_equiv (x : Dyadic) : (x : IGame) ≈ (x : ℚ) := by
   by_cases h : x.den = 1
   · rw [toIGame_of_den_eq_one h, ← (ratCast_intCast_equiv _).antisymmRel_congr_left,
-      Rat.coe_int_num_of_den_eq_one h]
+      Rat.intCast_num_of_den_eq_one h]
   · have := den_add_self_lt h
     have := (toIGame_add_equiv x x).symm.trans (toIGame_equiv (x + x))
     simp_all [← Surreal.mk_eq_mk, ← two_mul]
@@ -548,10 +590,10 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
   use z
   refine (Fits.equiv_of_forall_not_fits H.1 fun p _ hz' hz ↦ ?_).symm
   cases p
-  · obtain rfl := Dyadic.eq_lower_of_mem_leftMoves_toIGame hz'
+  · obtain rfl := Dyadic.eq_lower_of_mem_moves_left_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
-  · obtain rfl := Dyadic.eq_upper_of_mem_rightMoves_toIGame hz'
+  · obtain rfl := Dyadic.eq_upper_of_mem_moves_right_toIGame hz'
     have hz' := birthday_lt_of_mem_moves hz'
     exact (H.2 hz hz'.le).not_gt hz'
 termination_by x
