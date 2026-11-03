@@ -48,6 +48,57 @@ theorem isClosed_iff_sSup {s : Set Simplicity} :
   · rw [hx.unique (isLUB_sSup_of_bddAbove hx.bddAbove)]
     exact hs t ht ht₀ hx.bddAbove
 
+-- #45605
+theorem dirSupClosed_closure (s : Set Simplicity) : DirSupClosed (closure s) := by
+  rw [← isClosed_iff_dirSupClosed]
+  exact isClosed_closure
+
+theorem closure_eq_setOfPred_isLUB (s : Set Simplicity) :
+    closure s = {x | ∃ d ⊆ s, d.Nonempty ∧ IsLUB d x} := by
+  apply subset_antisymm
+  · rw [IsClosed.closure_subset_iff]
+    · exact fun x hx ↦ ⟨{x}, singleton_subset_iff.2 hx, singleton_nonempty x, isLUB_singleton⟩
+    · rw [isClosed_iff_dirSupClosed]
+      intro d hd hd₀ hd₁ x hx
+      choose f hfs hf₀ hf using hd
+      refine ⟨⋃ y : d, f y.2, ?_, ?_, fun y hy ↦ ?_, fun y hy ↦ ?_⟩
+      · simpa
+      · aesop
+      · obtain ⟨⟨i, hi⟩, hz⟩ := mem_iUnion.1 hy
+        exact ((hf hi).1 hz).trans (hx.1 hi)
+      · exact hx.2 fun z hz ↦ (hf hz).2 (upperBounds_mono_set (subset_iUnion _ ⟨z, hz⟩) hy)
+  · rintro x ⟨d, hd, hd₀, hx⟩
+    -- mem_closure_of_isLUB
+    exact dirSupClosed_closure _ (hd.trans subset_closure) hd₀
+      (directedOn_iff_bddAbove.2 hx.bddAbove) hx
+
+theorem mem_closure_iff_isLUB {s : Set Simplicity} {x : Simplicity} :
+    x ∈ closure s ↔ ∃ d ⊆ s, d.Nonempty ∧ IsLUB d x :=
+  Set.ext_iff.1 (closure_eq_setOfPred_isLUB s) x
+
+-- #45605
+theorem mem_closure_of_isLUB {d s : Set Simplicity} (hd : d ⊆ s) (hd₀ : d.Nonempty)
+    {x : Simplicity} (hx : IsLUB d x) : x ∈ closure s :=
+  mem_closure_iff_isLUB.2 ⟨d, hd, hd₀, hx⟩
+
+theorem closure_eq_setOfPred_sSup (s : Set Simplicity) :
+    closure s = {x | ∃ d ⊆ s, d.Nonempty ∧ BddAbove d ∧ sSup d = x} := by
+  rw [closure_eq_setOfPred_isLUB]
+  ext x
+  constructor
+  · rintro ⟨d, hd, hd₀, hx⟩
+    exact ⟨d, hd, hd₀, hx.bddAbove, hx.sSup_eq⟩
+  · rintro ⟨d, hd, hd₀, hd₁, rfl⟩
+    exact ⟨d, hd, hd₀, isLUB_sSup_of_bddAbove hd₁⟩
+
+theorem mem_closure_iff_sSup {s : Set Simplicity} {x : Simplicity} :
+    x ∈ closure s ↔ ∃ d ⊆ s, d.Nonempty ∧ BddAbove d ∧ sSup d = x :=
+  Set.ext_iff.1 (closure_eq_setOfPred_sSup s) x
+
+theorem sSup_mem_closure {d s : Set Simplicity} (hd : d ⊆ s) (hd₀ : d.Nonempty) (hd₁ : BddAbove d) :
+    sSup d ∈ closure s :=
+  mem_closure_iff_sSup.2 ⟨d, hd, hd₀, hd₁, rfl⟩
+
 -- #43536
 theorem isClopen_Iic (x : Simplicity) : IsClopen (Iic x) := by
   constructor
@@ -90,6 +141,7 @@ theorem isClosed_of_pairwise_incompRel {s : Set Simplicity} (hs : s.Pairwise (In
   obtain rfl := ht'.eq_singleton_of_mem hx
   simpa using ht
 
+-- generalize to Scott-Hausdorff
 theorem isClopen_singleton_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x) :
     IsClopen {x} := by
   rw [not_isSuccLimit_iff, not_isSuccPrelimit_iff] at hx
@@ -99,6 +151,7 @@ theorem isClopen_singleton_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLi
   · rw [← hx.Ioc_eq]
     exact isClopen_Ioc y x
 
+-- generalize to Scott-Hausdorff
 @[simp]
 theorem isClopen_singleton_bot : IsClopen {(⊥ : Simplicity)} :=
   isClopen_singleton_of_not_isSuccLimit not_isSuccLimit_bot
@@ -110,8 +163,6 @@ theorem nhds_eq_pure_of_not_isSuccLimit {x : Simplicity} (hx : ¬ IsSuccLimit x)
 @[simp]
 theorem nhds_bot : 𝓝 (⊥ : Simplicity) = pure ⊥ :=
   nhds_eq_pure_of_not_isSuccLimit not_isSuccLimit_bot
-
-proof_wanted continuous_restrict (x : Simplicity) : Continuous (of ∘ restrict x.val)
 
 theorem hasBasis_nhds_Ioc {x : Simplicity} (hx₀ : x ≠ ⊥) : (𝓝 x).HasBasis (· < x) (Ioc · x) where
   mem_iff' s := by
@@ -185,6 +236,38 @@ theorem isClosed_Ici (x : Simplicity) : IsClosed (Ici x) := by
   simpa using (isClopen_Ioi x).isClosed.union (isClosed_singleton (x := x))
 
 instance : T35Space Simplicity where
+
+section LinearOrder
+variable {α} [LinearOrder α] [TopologicalSpace α]
+
+-- #45612
+instance [WellFoundedLT α] [OrderTopology α] : IsScottHausdorff α univ :=
+  sorry
+
+-- #45605
+theorem Topology.IsScottHausdorff.mem_closure_iff_isLUB [IsScottHausdorff α univ]
+    {s : Set α} {x : α} : x ∈ closure s ↔ ∃ d ⊆ s, d.Nonempty ∧ IsLUB d x :=
+  sorry
+
+end LinearOrder
+
+theorem continuous_of_leftOrdContinuous {f : Simplicity → Simplicity} (hf : LeftOrdContinuous f) :
+    Continuous f := by
+  rw [continuous_iff_image_closure_subset_closure_image]
+  rintro s _ ⟨y, hy, rfl⟩
+  obtain ⟨d, hd, hd₀, hx⟩ := mem_closure_iff_isLUB.1 hy
+  exact mem_closure_of_isLUB (image_mono hd) (hd₀.image _) (hf hd₀ hx)
+
+theorem continuous_of_leftOrdContinuous' {α : Type*} [LinearOrder α] [TopologicalSpace α]
+    [IsScottHausdorff α univ] {f : α → Simplicity} (hf : LeftOrdContinuous f) :
+    Continuous f := by
+  rw [continuous_iff_image_closure_subset_closure_image]
+  rintro s _ ⟨y, hy, rfl⟩
+  obtain ⟨d, hd, hd₀, hx⟩ := Topology.IsScottHausdorff.mem_closure_iff_isLUB.1 hy
+  exact mem_closure_of_isLUB (image_mono hd) (hd₀.image _) (hf hd₀ hx)
+
+theorem continuous_restrict (x : SignExpansion) : Continuous (of ∘ restrict x) :=
+  continuous_of_leftOrdContinuous' (leftOrdContinuous_restrict x)
 
 end Simplicity
 end

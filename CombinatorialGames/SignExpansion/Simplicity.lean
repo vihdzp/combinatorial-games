@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.SignExpansion.Basic
 public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Order.OrdContinuous
 
 /-!
 # Simplicity relation
@@ -128,6 +129,20 @@ theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
 
 theorem length_strictMono : StrictMono fun x : Simplicity ↦ x.val.length :=
   fun _ _ h ↦ (eq_or_length_lt_of_le h.le).resolve_left h.ne
+
+theorem monotone_restrict (x : SignExpansion) : Monotone (of ∘ restrict x) := by
+  intro a b h
+  simp [le_def, h]
+
+theorem leftOrdContinuous_restrict (x : SignExpansion) : LeftOrdContinuous (of ∘ restrict x) := by
+  refine fun s y hs hy ↦ ⟨(monotone_restrict x).mem_upperBounds_image hy.1, fun z hz ↦ ?_⟩
+  ext i
+  rw [Function.comp_apply, val_of, length_restrict]
+  obtain hi | hi := lt_or_ge (i : WithTop _) y
+  · obtain ⟨j, hj, hij, hjy⟩ := hy.exists_between hi
+    have := congrArg (fun x : SignExpansion ↦ x i) <| le_def.1 <| hz (mem_image_of_mem _ hj)
+    aesop
+  · rw [restrict_apply_of_le_coe (min_le_of_right_le hi), restrict_apply_of_le_coe hi]
 
 instance : PartialOrder Simplicity where
   le_antisymm x y h₁ h₂ := by
@@ -321,6 +336,9 @@ theorem isLUB_sSup_iff_bddAbove {s : Set Simplicity} : IsLUB s (sSup s) ↔ BddA
     exact isLUB_sSup_of_isChain hs
 
 alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
+
+instance : OrderSupSet Simplicity where
+  isLUB_sSup_of_isLUB _s _x hx := isLUB_sSup_of_bddAbove hx.bddAbove
 
 protected theorem le_sSup {s : Set Simplicity} {x : Simplicity} (hx : x ∈ s) (hs : BddAbove s) :
     x ≤ sSup s :=
