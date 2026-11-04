@@ -440,6 +440,18 @@ instance Small.iInf {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f 
   rw [← sSup_range, NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_range]
   exact fun i => Small.birthday_lt_top (f i)
 
+theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
+    (sSup s).Small := by
+  grw [small_iff_birthday, birthday_sSup_le]
+  rw [NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_image]
+  exact fun x hx => (hs x hx).birthday_lt_top
+
+theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
+    (sInf s).Small := by
+  grw [small_iff_birthday, birthday_sInf_le]
+  rw [NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_image]
+  exact fun x hx => (hs x hx).birthday_lt_top
+
 instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
   cases ‹y.Small› with
   | infLeft s =>
