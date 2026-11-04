@@ -487,5 +487,62 @@ protected instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Sma
   grw [small_iff_birthday, birthday_vadd_le]
   simp [Small.birthday_lt_top]
 
+def player (x : Cut.{u}) [x.Small] : Player :=
+  open scoped Classical in
+  if ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x then .left else .right
+
+@[simp]
+theorem player_infLeft (s : Set Surreal.{u}) [Small.{u} s] :
+    @player (sInf (leftSurreal '' s)) (.infLeft s) = .left := by
+  apply ite_eq_left
+  exact ⟨s, ‹_›, rfl⟩
+
+@[simp]
+theorem player_supRight (s : Set Surreal.{u}) [Small.{u} s] :
+    @player (sSup (rightSurreal '' s)) (.supRight s) = .right := by
+  apply ite_eq_right
+  intro ⟨t, _, hst⟩
+  by_cases! hlt : ∀ x ∈ s, ∀ y ∈ t, x < y
+  · apply hst.not_gt
+    rw [lt_iff_nonempty_inter]
+    exact ⟨!{s | t},
+      by simp +contextual [Surreal.lt_ofSets_of_mem_left],
+      by simp +contextual [Surreal.ofSets_lt_of_mem_right]⟩
+  · obtain ⟨x, hx, y, hy, hyx⟩ := hlt
+    apply hst.not_lt
+    rw [lt_iff_nonempty_inter]
+    refine ⟨y, ?_, isLowerSet_left _ hyx ?_⟩
+    · rw [right_sInf, biUnion_image]
+      exact mem_biUnion hy (mem_right_leftSurreal.2 le_rfl)
+    · rw [left_sSup, biUnion_image]
+      exact mem_biUnion hx (mem_right_leftSurreal.2 le_rfl)
+
+@[simp] theorem player_top : player ⊤ = .left := by simpa using player_infLeft ∅
+@[simp] theorem player_bot : player ⊥ = .right := by simpa using player_supRight ∅
+
+@[simp]
+theorem player_leftSurreal (x : Surreal) : (leftSurreal x).player = .left := by
+  simpa using player_infLeft {x}
+
+@[simp]
+theorem player_rightSurreal (x : Surreal) : (rightSurreal x).player = .right := by
+  simpa using player_supRight {x}
+
+@[simp]
+theorem player_neg (x : Cut) [x.Small] : player (-x) = -player x := by
+  cases ‹x.Small› <;> simp
+
+@[simp]
+theorem player_vadd (x : Surreal) (y : Cut) [y.Small] : player (x +ᵥ y) = player y := by
+  cases ‹y.Small› with
+  | infLeft s =>
+    simp_rw [vadd_sInf, ← image_vadd, image_image, vadd_leftSurreal]
+    rw! [← Set.image_image leftSurreal]
+    rw [player_infLeft, player_infLeft]
+  | supRight s =>
+    simp_rw [vadd_sSup, ← image_vadd, image_image, vadd_rightSurreal]
+    rw! [← Set.image_image rightSurreal]
+    rw [player_supRight, player_supRight]
+
 end Surreal.Cut
 end
