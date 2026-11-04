@@ -788,6 +788,9 @@ attribute [simp, instance] Numeric.leftSurreal Numeric.rightSurreal
 instance (x : Cut) [hx : x.Numeric] : (-x).Numeric := by
   cases hx <;> simp
 
+instance (x : Surreal) (y : Cut) [hy : y.Numeric] : (x +ᵥ y).Numeric := by
+  cases hy <;> simp
+
 @[simp low]
 theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by
   cases hx <;> simp
