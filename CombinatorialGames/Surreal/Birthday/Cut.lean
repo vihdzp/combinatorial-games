@@ -390,18 +390,8 @@ protected class inductive Small : (x : Cut.{u}) → Prop where
 theorem small_iff_birthday {x : Cut} : x.Small ↔ birthday x < ⊤ := by
   constructor
   · rintro (⟨s, _⟩ | ⟨s, _⟩)
-    · grw [birthday_sInf_le]
-      rw [Set.image_image]
-      simp_rw [birthday_leftSurreal, ← WithTop.coe_add_one]
-      rw [← Set.image_image WithTop.some, sSup_image',
-        WithTop.iSup_coe_lt_top]
-      apply NatOrdinal.bddAbove_of_small
-    · grw [birthday_sSup_le]
-      rw [Set.image_image]
-      simp_rw [birthday_rightSurreal, ← WithTop.coe_add_one]
-      rw [← Set.image_image WithTop.some, sSup_image',
-        WithTop.iSup_coe_lt_top]
-      apply NatOrdinal.bddAbove_of_small
+    · grw [birthday_sInf_leftSurreal_le', WithTop.coe_lt_top]
+    · grw [birthday_sSup_rightSurreal_le', WithTop.coe_lt_top]
   · obtain ⟨s, rfl | rfl, hb⟩ := birthday_eq_sSup_birthday x
     · rw [← hb, sSup_birthday_lt_top_iff]
       exact @Small.infLeft s
