@@ -547,6 +547,22 @@ theorem vadd_rightSurreal (a x : Surreal) : a +ᵥ rightSurreal x = rightSurreal
 theorem neg_vadd (a : Surreal) (x : Cut) : -(a +ᵥ x) = -a +ᵥ -x := by
   ext; simp [sub_eq_add_neg, add_comm]
 
+theorem vadd_iSup {ι : Sort*} (x : Surreal) (f : ι → Cut) : x +ᵥ ⨆ i, f i = ⨆ i, x +ᵥ f i := by
+  apply Cut.ext
+  simp
+
+theorem vadd_iInf {ι : Sort*} (x : Surreal) (f : ι → Cut) : x +ᵥ ⨅ i, f i = ⨅ i, x +ᵥ f i := by
+  apply Cut.ext'
+  simp
+
+theorem vadd_sSup (x : Surreal) (s : Set Cut) : x +ᵥ sSup s = ⨆ c ∈ s, x +ᵥ c := by
+  apply Cut.ext
+  simp
+
+theorem vadd_sInf (x : Surreal) (s : Set Cut) : x +ᵥ sInf s = ⨅ c ∈ s, x +ᵥ c := by
+  apply Cut.ext'
+  simp
+
 /-! ### Calculating cuts -/
 
 /-- The supremum $L'(x)$ of all right cuts of left options of `x`.
@@ -770,6 +786,9 @@ attribute [simp, instance] Numeric.leftSurreal Numeric.rightSurreal
 
 instance (x : Cut) [hx : x.Numeric] : (-x).Numeric := by
   cases hx <;> simp
+
+instance (x : Surreal) (y : Cut) [hy : y.Numeric] : (x +ᵥ y).Numeric := by
+  cases hy <;> simp
 
 @[simp low]
 theorem ne_bot (x : Cut) [hx : x.Numeric] : x ≠ ⊥ := by

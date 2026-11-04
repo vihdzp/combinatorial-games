@@ -29,6 +29,8 @@ open Set
 
 public noncomputable section
 
+attribute [gcongr] WithTop.coe_le_coe WithBot.coe_le_coe
+
 namespace Surreal.Cut
 
 /-! ### Birthday of cuts -/
@@ -162,6 +164,31 @@ theorem birthday_rightSurreal (x : Surreal) : (rightSurreal x).birthday = x.birt
 
 theorem birthday_of_numeric (x : Cut) [hx : x.Numeric] : x.birthday = x.toSurreal.birthday + 1 := by
   cases hx <;> simp
+
+theorem birthday_vadd_le (x : Surreal) (y : Cut) : (x +ᵥ y).birthday ≤ x.birthday + y.birthday := by
+  obtain ⟨s, rfl | rfl, hb⟩ := birthday_eq_sSup_birthday y
+  · rw [vadd_sInf, iInf_image, ← sInf_image, ← hb]
+    simp_rw [vadd_leftSurreal]
+    rw [← Set.image_image leftSurreal _]
+    grw [birthday_sInf_leftSurreal_le]
+    apply sSup_le
+    rw [image_image, forall_mem_image]
+    intro c hc
+    grw [Surreal.birthday_add_le, WithTop.coe_add, add_assoc]
+    apply add_le_add_right
+    apply le_sSup
+    exact mem_image_of_mem _ hc
+  · rw [vadd_sSup, iSup_image, ← sSup_image, ← hb]
+    simp_rw [vadd_rightSurreal]
+    rw [← Set.image_image rightSurreal _]
+    grw [birthday_sSup_rightSurreal_le]
+    apply sSup_le
+    rw [image_image, forall_mem_image]
+    intro c hc
+    grw [Surreal.birthday_add_le, WithTop.coe_add, add_assoc]
+    apply add_le_add_right
+    apply le_sSup
+    exact mem_image_of_mem _ hc
 
 theorem exists_birthday_lt_of_mem_Ioo {x y z : Cut} (h : y ∈ Ioo x z) :
     ∃ a : Surreal, a.birthday < y.birthday ∧ Fits a x z := by
@@ -453,17 +480,8 @@ protected theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, 
   exact fun x hx => (hs x hx).birthday_lt_top
 
 protected instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
-  cases ‹y.Small› with
-  | infLeft s =>
-    convert Small.infLeft ((· + x) '' s) using 1
-    apply Cut.ext'
-    simp_rw [image_image, sInf_image, right_vadd, right_iInf, right_leftSurreal,
-      image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Ici]
-  | supRight s =>
-    convert Small.supRight ((· + x) '' s) using 1
-    apply Cut.ext
-    simp_rw [image_image, sSup_image, left_vadd, left_iSup, left_rightSurreal,
-      image_iUnion, ← OrderIso.addRight_apply, OrderIso.image_Iic]
+  grw [small_iff_birthday, birthday_vadd_le]
+  simp [Small.birthday_lt_top]
 
 end Surreal.Cut
 end
