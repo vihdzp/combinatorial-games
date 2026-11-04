@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import Mathlib.Algebra.Group.Action.Defs
+public import Mathlib.Algebra.Group.Pointwise.Set.Scalar
 public import Mathlib.Order.Concept
 
 import Mathlib.Algebra.Order.Group.OrderIso
@@ -546,6 +547,22 @@ theorem vadd_rightSurreal (a x : Surreal) : a +ᵥ rightSurreal x = rightSurreal
 
 theorem neg_vadd (a : Surreal) (x : Cut) : -(a +ᵥ x) = -a +ᵥ -x := by
   ext; simp [sub_eq_add_neg, add_comm]
+
+theorem vadd_iInf (a : Surreal) {ι : Sort*} (f : ι → Cut) : a +ᵥ ⨅ i, f i = ⨅ i, a +ᵥ f i := by
+  ext; simp
+
+theorem vadd_iSup (a : Surreal) {ι : Sort*} (f : ι → Cut) : a +ᵥ ⨆ i, f i = ⨆ i, a +ᵥ f i := by
+  ext; simp
+
+open Pointwise in
+theorem vadd_sInf (a : Surreal) (s : Set Cut) : a +ᵥ sInf s = sInf (a +ᵥ s) := by
+  rw [sInf_eq_iInf', vadd_iInf]
+  exact sInf_image'.symm
+
+open Pointwise in
+theorem vadd_sSup (a : Surreal) (s : Set Cut) : a +ᵥ sSup s = sSup (a +ᵥ s) := by
+  rw [sSup_eq_iSup', vadd_iSup]
+  exact sSup_image'.symm
 
 /-! ### Calculating cuts -/
 
