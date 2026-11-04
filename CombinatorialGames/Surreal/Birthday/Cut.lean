@@ -417,9 +417,7 @@ instance Numeric.small (x : Cut) [x.Numeric] : x.Small := by
   | rightSurreal x => simpa using Small.supRight {x}
 
 instance Small.neg (x : Cut) [x.Small] : (-x).Small := by
-  cases ‹x.Small› with
-  | infLeft s => simpa using Small.supRight (-s)
-  | supRight s => simpa using Small.infLeft (-s)
+  simp_all [small_iff_birthday]
 
 instance Small.bot : Cut.Small ⊥ := by simpa using Small.supRight ∅
 instance Small.top : Cut.Small ⊤ := by simpa using Small.infLeft ∅
