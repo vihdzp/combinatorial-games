@@ -25,6 +25,18 @@ universe u
 
 open Set
 
+open Pointwise in
+@[to_additive (attr := simp)]
+theorem forall_mem_smulSet {α β : Type*} [SMul α β] {a : α} {s : Set β} {p : β → Prop} :
+    (∀ x ∈ a • s, p x) ↔ ∀ x ∈ s, p (a • x) :=
+  forall_mem_image
+
+open Pointwise in
+@[to_additive (attr := simp)]
+theorem exists_mem_smulSet {α β : Type*} [SMul α β] {a : α} {s : Set β} {p : β → Prop} :
+    (∃ x ∈ a • s, p x) ↔ ∃ x ∈ s, p (a • x) :=
+  exists_mem_image
+
 public noncomputable section
 
 namespace Surreal.Cut
@@ -376,6 +388,25 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         intro v
         rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
         apply hvb
+
+attribute [gcongr] WithTop.coe_le_coe
+
+theorem birthday_vadd_le (x : Surreal) (y : Cut) : (x +ᵥ y).birthday ≤ x.birthday + y.birthday := by
+  obtain ⟨s, rfl | rfl, hs⟩ := y.birthday_eq_sSup_birthday
+  · grw [vadd_sInf, birthday_sInf_le]
+    apply sSup_le
+    simp_rw [forall_mem_image, forall_mem_vaddSet, forall_mem_image, vadd_leftSurreal,
+      birthday_leftSurreal, ← hs]
+    intro y hy
+    grw [birthday_add_le, WithTop.coe_add, add_assoc]
+    apply add_le_add_right <| le_sSup (mem_image_of_mem _ hy)
+  · grw [vadd_sSup, birthday_sSup_le]
+    apply sSup_le
+    simp_rw [forall_mem_image, forall_mem_vaddSet, forall_mem_image, vadd_rightSurreal,
+      birthday_rightSurreal, ← hs]
+    intro y hy
+    grw [birthday_add_le, WithTop.coe_add, add_assoc]
+    apply add_le_add_right <| le_sSup (mem_image_of_mem _ hy)
 
 end Surreal.Cut
 end
