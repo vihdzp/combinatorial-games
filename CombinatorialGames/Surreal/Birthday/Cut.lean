@@ -401,58 +401,58 @@ theorem small_iff_birthday {x : Cut} : x.Small ↔ birthday x < ⊤ := by
 theorem Small.birthday_lt_top (x : Cut) [x.Small] : birthday x < ⊤ :=
   small_iff_birthday.1 ‹_›
 
-instance Numeric.small (x : Cut) [x.Numeric] : x.Small := by
+protected instance Numeric.small (x : Cut) [x.Numeric] : x.Small := by
   cases ‹x.Numeric› with
   | leftSurreal x => simpa using Small.infLeft {x}
   | rightSurreal x => simpa using Small.supRight {x}
 
-instance Small.neg (x : Cut) [x.Small] : (-x).Small := by
+protected instance Small.neg (x : Cut) [x.Small] : (-x).Small := by
   simp_all [small_iff_birthday]
 
-instance Small.bot : Cut.Small ⊥ := by simpa using Small.supRight ∅
-instance Small.top : Cut.Small ⊤ := by simpa using Small.infLeft ∅
+protected instance Small.bot : Cut.Small ⊥ := by simpa using Small.supRight ∅
+protected instance Small.top : Cut.Small ⊤ := by simpa using Small.infLeft ∅
 
-instance Small.leftGame (x : Game) : (leftGame x).Small := by
+protected instance Small.leftGame (x : Game) : (leftGame x).Small := by
   grw [small_iff_birthday, birthday_leftGame_le]
   simp
 
-instance Small.rightGame (x : Game) : (rightGame x).Small := by
+protected instance Small.rightGame (x : Game) : (rightGame x).Small := by
   grw [small_iff_birthday, birthday_rightGame_le]
   simp
 
-instance Small.supLeft (x : IGame) : (supLeft x).Small := by
+protected instance Small.supLeft (x : IGame) : (supLeft x).Small := by
   grw [small_iff_birthday, birthday_supLeft_le]
   simp
 
-instance Small.infRight (x : IGame) : (infRight x).Small := by
+protected instance Small.infRight (x : IGame) : (infRight x).Small := by
   grw [small_iff_birthday, birthday_infRight_le]
   simp
 
-instance Small.iSup {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f i).Small] :
+protected instance Small.iSup {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f i).Small] :
     (⨆ i, f i).Small := by
   grw [small_iff_birthday, birthday_iSup_le]
   rw [← sSup_range, NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_range]
   exact fun i => Small.birthday_lt_top (f i)
 
-instance Small.iInf {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f i).Small] :
+protected instance Small.iInf {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u}) [∀ i, (f i).Small] :
     (⨅ i, f i).Small := by
   grw [small_iff_birthday, birthday_iInf_le]
   rw [← sSup_range, NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_range]
   exact fun i => Small.birthday_lt_top (f i)
 
-theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
+protected theorem Small.sSup {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
     (sSup s).Small := by
   grw [small_iff_birthday, birthday_sSup_le]
   rw [NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_image]
   exact fun x hx => (hs x hx).birthday_lt_top
 
-theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
+protected theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, x.Small) :
     (sInf s).Small := by
   grw [small_iff_birthday, birthday_sInf_le]
   rw [NatOrdinal.withTop_sSup_lt_top, Set.forall_mem_image]
   exact fun x hx => (hs x hx).birthday_lt_top
 
-instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
+protected instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
   cases ‹y.Small› with
   | infLeft s =>
     convert Small.infLeft ((· + x) '' s) using 1
