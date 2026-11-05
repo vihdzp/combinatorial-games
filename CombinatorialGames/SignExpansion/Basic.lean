@@ -228,7 +228,7 @@ instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
 
 /-- Cut off the part of a sign expansion after an ordinal `o`, by filling it in with zeros. -/
-def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
+def trunc (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
   sign i := if i < o then x i else 0
   isUpperSet_preimage_singleton_zero' := by
     intro a b hab ha
@@ -236,58 +236,58 @@ def restrict (x : SignExpansion) (o : WithTop NatOrdinal) : SignExpansion where
     simp only [Set.mem_preimage, Set.mem_singleton_iff, ite_eq_right_iff, apply_eq_zero] at ha ⊢
     exact fun hb ↦ (ha (hab.trans_lt hb)).trans hab
 
-@[inherit_doc] scoped notation x:70 " ↾ " o:70 => restrict x o
-recommended_spelling "restrict" for "↾" in [«term_↾_»]
+@[inherit_doc] scoped notation x:70 " ↾ " o:70 => trunc x o
+recommended_spelling "trunc" for "↾" in [«term_↾_»]
 
 @[aesop simp]
-theorem coe_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
+theorem coe_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
     ⇑(x ↾ o) = fun i : NatOrdinal ↦ if i < o then x i else 0 :=
   rfl
 
 @[simp]
-theorem neg_restrict (x : SignExpansion) (o : WithTop NatOrdinal) : -x ↾ o = (-x) ↾ o := by
+theorem neg_trunc (x : SignExpansion) (o : WithTop NatOrdinal) : -x ↾ o = (-x) ↾ o := by
   aesop
 
-theorem restrict_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
+theorem trunc_apply_of_coe_lt {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₂ < o₁) : (x ↾ o₁) o₂ = x o₂ := ite_eq_left h
 
-theorem restrict_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
+theorem trunc_apply_of_le_coe {x : SignExpansion} {o₁ : WithTop NatOrdinal}
     {o₂ : NatOrdinal} (h : o₁ ≤ o₂) : (x ↾ o₁) o₂ = 0 := ite_eq_right h.not_gt
 
 @[simp]
-theorem length_restrict (x : SignExpansion) (o : WithTop NatOrdinal) :
+theorem length_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
     (x ↾ o).length = min x.length o := by
   refine eq_of_forall_ge_iff fun c ↦ ?_
-  cases c <;> simp [← apply_eq_zero, restrict, imp_iff_or_not]
+  cases c <;> simp [← apply_eq_zero, trunc, imp_iff_or_not]
 
 @[simp]
-theorem small_restrict (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
-  rw [Small, length_restrict]
+theorem small_trunc (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
+  rw [Small, length_trunc]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
 @[simp]
-theorem restrict_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
+theorem trunc_of_length_le {x : SignExpansion} {o : WithTop NatOrdinal}
     (ho : x.length ≤ o) : x ↾ o = x := by
   ext o'
   obtain ho' | ho' := lt_or_ge (↑o') x.length
-  · rw [restrict_apply_of_coe_lt (ho'.trans_le ho)]
+  · rw [trunc_apply_of_coe_lt (ho'.trans_le ho)]
   · rw [apply_of_length_le ho']
     apply apply_of_length_le
     simp [ho']
 
 @[simp, grind =]
-theorem restrict_restrict_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
+theorem trunc_trunc_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
     (x ↾ o₁) ↾ o₂ = x ↾ min o₁ o₂ := by
   aesop
 
-theorem restrict_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
+theorem trunc_zero_left (o : WithTop NatOrdinal) : 0 ↾ o = 0 := by
   simp
 
 @[simp]
-theorem restrict_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
+theorem trunc_zero_right (x : SignExpansion) : x ↾ 0 = 0 := by
   ext; simp [apply_eq_zero]
 
-theorem restrict_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
+theorem trunc_top_right {x : SignExpansion} : x ↾ ⊤ = x := by
   simp
 
 /-! ### Order structure -/
@@ -607,12 +607,12 @@ theorem coe_toSignExpansion (o : NatOrdinal) :
   unfold toSignExpansion
   aesop
 
-@[simp] theorem top_restrict (o : NatOrdinal) : ⊤ ↾ o = o := rfl
-@[simp] theorem bot_restrict (o : NatOrdinal) : ⊥ ↾ o = -o := by aesop
+@[simp] theorem top_trunc (o : NatOrdinal) : ⊤ ↾ o = o := rfl
+@[simp] theorem bot_trunc (o : NatOrdinal) : ⊥ ↾ o = -o := by aesop
 
 @[simp]
 theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
-  simp [← top_restrict]
+  simp [← top_trunc]
 
 theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o₂ = 1 := by
   aesop
