@@ -47,9 +47,9 @@ public noncomputable section
 open Surreal IGame SignExpansion
 namespace Surreal
 
-/-- The truncation of a surreal to an ordinal `o` is the unique surreal `truncate o x`
-with `birthday (truncate o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
-def truncate (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
+/-- The truncation of a surreal to an ordinal `o` is the unique surreal `trunc o x`
+with `birthday (trunc o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
+def trunc (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
   toFun x := !{fun p => {y | y.birthday < o} ∩ {s | p.cases (s < x) (x < s)}}'
     (fun u hu v hv => hu.2.trans hv.2)
   monotone' := by
@@ -64,18 +64,18 @@ def truncate (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
       apply Surreal.ofSets_lt_of_mem_right'
       exact ⟨hz.1, hxy.trans_lt hz.2⟩
 
-theorem birthday_truncate_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
-    (truncate o x).birthday ≤ o := by
-  rw [truncate, OrderHom.coe_mk]
+theorem birthday_trunc_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
+    (trunc o x).birthday ≤ o := by
+  rw [trunc, OrderHom.coe_mk]
   apply birthday_ofSets_le'.trans
   apply csSup_le'
   rw [mem_upperBounds, Set.forall_mem_image, Set.forall_mem_iUnion]
   intro p y hy
   exact Order.add_one_le_of_lt hy.1
 
-theorem truncate_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
-    (h : x.birthday ≤ o) : x.truncate o = x := by
-  rw [truncate, OrderHom.coe_mk]
+theorem trunc_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
+    (h : x.birthday ≤ o) : x.trunc o = x := by
+  rw [trunc, OrderHom.coe_mk]
   apply Surreal.ofSets_eq_of_forall_birthday_le'
   · simp
   · simp
@@ -86,58 +86,58 @@ theorem truncate_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
     · exact (hzr z ⟨hbb.trans_le h, hxz⟩).false
 
 @[simp]
-theorem truncate_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    x.truncate o = x ↔ x.birthday ≤ o := by
-  refine ⟨fun h => ?_, truncate_of_birthday_le⟩
+theorem trunc_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    x.trunc o = x ↔ x.birthday ≤ o := by
+  refine ⟨fun h => ?_, trunc_of_birthday_le⟩
   refine le_of_not_gt fun ho => ne_of_lt ?_ (congrArg birthday h)
-  exact (x.birthday_truncate_le o).trans_lt ho
+  exact (x.birthday_trunc_le o).trans_lt ho
 
 @[simp]
-theorem truncate_birthday_self {x : Surreal.{u}} :
-    x.truncate x.birthday = x := by simp
+theorem trunc_birthday_self {x : Surreal.{u}} :
+    x.trunc x.birthday = x := by simp
 
-private theorem truncate_lt_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) (hxy : x < y) : x.truncate o < y := by
-  rw [truncate, OrderHom.coe_mk]
+private theorem trunc_lt_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) (hxy : x < y) : x.trunc o < y := by
+  rw [trunc, OrderHom.coe_mk]
   apply ofSets_lt_of_mem_right'
   exact ⟨hy, hxy⟩
 
-private theorem lt_truncate_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) (hxy : y < x) : y < x.truncate o := by
-  rw [truncate, OrderHom.coe_mk]
+private theorem lt_trunc_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) (hxy : y < x) : y < x.trunc o := by
+  rw [trunc, OrderHom.coe_mk]
   apply lt_ofSets_of_mem_left'
   exact ⟨hy, hxy⟩
 
 @[grind =]
-theorem truncate_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) : x.truncate o < y ↔ x < y := by
+theorem trunc_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) : x.trunc o < y ↔ x < y := by
   obtain h | rfl | h := lt_trichotomy x y
-  · exact iff_of_true (truncate_lt_of_lt hy h) h
-  · exact iff_of_false (truncate_eq_self_iff.2 hy.le).not_lt (lt_irrefl _)
-  · exact iff_of_false (lt_truncate_of_lt hy h).not_gt h.not_gt
+  · exact iff_of_true (trunc_lt_of_lt hy h) h
+  · exact iff_of_false (trunc_eq_self_iff.2 hy.le).not_lt (lt_irrefl _)
+  · exact iff_of_false (lt_trunc_of_lt hy h).not_gt h.not_gt
 
 @[grind =]
-theorem lt_truncate_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) : y < x.truncate o ↔ y < x := by
+theorem lt_trunc_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) : y < x.trunc o ↔ y < x := by
   obtain h | rfl | h := lt_trichotomy x y
-  · exact iff_of_false (truncate_lt_of_lt hy h).not_gt h.not_gt
-  · exact iff_of_false (truncate_eq_self_iff.2 hy.le).not_gt (lt_irrefl _)
-  · exact iff_of_true (lt_truncate_of_lt hy h) h
+  · exact iff_of_false (trunc_lt_of_lt hy h).not_gt h.not_gt
+  · exact iff_of_false (trunc_eq_self_iff.2 hy.le).not_gt (lt_irrefl _)
+  · exact iff_of_true (lt_trunc_of_lt hy h) h
 
-theorem truncate_le_iff_le {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) : x.truncate o ≤ y ↔ x ≤ y := by
-  simpa using (lt_truncate_iff_lt hy).not
+theorem trunc_le_iff_le {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) : x.trunc o ≤ y ↔ x ≤ y := by
+  simpa using (lt_trunc_iff_lt hy).not
 
-theorem le_truncate_iff_le {x y : Surreal.{u}} {o : NatOrdinal.{u}}
-    (hy : y.birthday < o) : y ≤ x.truncate o ↔ y ≤ x := by
-  simpa using (truncate_lt_iff_lt hy).not
+theorem le_trunc_iff_le {x y : Surreal.{u}} {o : NatOrdinal.{u}}
+    (hy : y.birthday < o) : y ≤ x.trunc o ↔ y ≤ x := by
+  simpa using (trunc_lt_iff_lt hy).not
 
-theorem truncate_eq_of_birthday_le_of_forall_lt_gt_iff
+theorem trunc_eq_of_birthday_le_of_forall_lt_gt_iff
     {x y : Surreal.{u}} {o : NatOrdinal.{u}} (hy : y.birthday ≤ o)
     (hlt : ∀ z, z.birthday < o → (y < z ↔ x < z))
     (hgt : ∀ z, z.birthday < o → (z < y ↔ z < x)) :
-    x.truncate o = y := by
-  rw [truncate, OrderHom.coe_mk]
+    x.trunc o = y := by
+  rw [trunc, OrderHom.coe_mk]
   apply ofSets_eq_of_forall_birthday_le'
   · intro z hz
     exact (hgt z hz.1).2 hz.2
@@ -149,39 +149,39 @@ theorem truncate_eq_of_birthday_le_of_forall_lt_gt_iff
     · exact (hzl z ⟨hzb.trans_le hy, (hgt z (hzb.trans_le hy)).1 hzy⟩).false
     · exact (hzr z ⟨hzb.trans_le hy, (hlt z (hzb.trans_le hy)).1 hyz⟩).false
 
-theorem truncate_eq_of_birthday_le_of_forall_le_ge_iff
+theorem trunc_eq_of_birthday_le_of_forall_le_ge_iff
     {x y : Surreal.{u}} {o : NatOrdinal.{u}} (hy : y.birthday ≤ o)
     (hle : ∀ z, z.birthday < o → (y ≤ z ↔ x ≤ z))
     (hge : ∀ z, z.birthday < o → (z ≤ y ↔ z ≤ x)) :
-    x.truncate o = y :=
-  truncate_eq_of_birthday_le_of_forall_lt_gt_iff hy
+    x.trunc o = y :=
+  trunc_eq_of_birthday_le_of_forall_lt_gt_iff hy
     (fun z hz => by simpa using (hge z hz).not)
     (fun z hz => by simpa using (hle z hz).not)
 
-theorem birthday_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    (x.truncate o).birthday = min o x.birthday := by
+theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    (x.trunc o).birthday = min o x.birthday := by
   obtain h | h := le_total x.birthday o
-  · rw [truncate_eq_self_iff.2 h, min_eq_right h]
+  · rw [trunc_eq_self_iff.2 h, min_eq_right h]
   rw [min_eq_left h]
   apply le_antisymm
-  · exact birthday_truncate_le o x
+  · exact birthday_trunc_le o x
   contrapose! h
   refine lt_of_eq_of_lt (congrArg birthday ?_) h
   apply le_antisymm
-  · rw [← truncate_le_iff_le h]
-  · rw [← le_truncate_iff_le h]
+  · rw [← trunc_le_iff_le h]
+  · rw [← le_trunc_iff_le h]
 
-theorem truncate_truncate {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
-    (x.truncate o₁).truncate o₂ = x.truncate (min o₁ o₂) := by
-  refine (truncate_eq_of_birthday_le_of_forall_lt_gt_iff ?_ ?_ ?_).symm
-  · rw [birthday_truncate, birthday_truncate]
+theorem trunc_trunc {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
+    (x.trunc o₁).trunc o₂ = x.trunc (min o₁ o₂) := by
+  refine (trunc_eq_of_birthday_le_of_forall_lt_gt_iff ?_ ?_ ?_).symm
+  · rw [birthday_trunc, birthday_trunc]
     order
   · intro z hz
-    rw [truncate_lt_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
-      truncate_lt_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
+    rw [trunc_lt_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
+      trunc_lt_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
   · intro z hz
-    rw [lt_truncate_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
-      lt_truncate_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
+    rw [lt_trunc_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
+      lt_trunc_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
 
 end Surreal
 
@@ -189,16 +189,16 @@ namespace SignExpansion
 
 /-- To every surreal is associated a unique sign expansion, which can be seen as
 a sequence of directions along an ordinal-depth complete binary tree.
-The `o`'th term of this sign sequence is `+` if `truncate o x < x`,
-`-` if `x < truncate o x`, and `0` if `truncate o x = x`. -/
+The `o`'th term of this sign sequence is `+` if `trunc o x < x`,
+`-` if `x < trunc o x`, and `0` if `trunc o x = x`. -/
 def ofSurreal : Surreal.{u} ↪o SignExpansion :=
   .ofStrictMono (fun x =>
-    { sign i := .sign (x - x.truncate i)
+    { sign i := .sign (x - x.trunc i)
       isUpperSet_preimage_singleton_zero' := by
         apply id
         intro a b hab ha
         rw [Set.mem_preimage, Set.mem_singleton_iff,
-          sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff] at ha ⊢
+          sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff] at ha ⊢
         exact ha.trans hab }) fun x y hxy => by
     have cxy : Cut.leftSurreal x < Cut.rightSurreal y := by simpa using hxy.le
     let c := Cut.simplestBtwn cxy
@@ -208,18 +208,18 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
       apply Cut.birthday_simplestBtwn_le_of_fits
       exact hd
     have hcxy (j : NatOrdinal) (hj : j ≤ c.birthday)
-        (z : Surreal) (hz : z ∈ Set.Icc x y) : z.truncate j = c.truncate j := by
-      apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c) <;> grind
+        (z : Surreal) (hz : z ∈ Set.Icc x y) : z.trunc j = c.trunc j := by
+      apply trunc_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_trunc_le j c) <;> grind
     rw [lt_iff_toLex]
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
     · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
-      exact sign_sub_eq_of_notMem_Icc hxy.le (hdcc _ ((birthday_truncate_le j c).trans_lt hj))
+      exact sign_sub_eq_of_notMem_Icc hxy.le (hdcc _ ((birthday_trunc_le j c).trans_lt hj))
     · rw [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le)]
       apply sign_sub_lt_of_mem_Icc hxy
       simpa
 
 theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    ofSurreal x o = .sign (x - x.truncate o) := (rfl)
+    ofSurreal x o = .sign (x - x.trunc o) := (rfl)
 
 @[simp]
 theorem length_ofSurreal (x : Surreal.{u}) :
@@ -230,21 +230,21 @@ theorem length_ofSurreal (x : Surreal.{u}) :
   | top => simp
   | coe c =>
     rw [← apply_eq_zero, WithTop.coe_le_coe, ofSurreal_apply,
-      sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
+      sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff]
 
 @[simp]
-theorem ofSurreal_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal (x.truncate o) = (ofSurreal x).restrict o := by
+theorem ofSurreal_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    ofSurreal (x.trunc o) = (ofSurreal x).restrict o := by
   ext o'
   obtain h | h := lt_or_ge o' o
-  · rw [ofSurreal_apply, truncate_truncate, min_eq_right_of_lt h,
+  · rw [ofSurreal_apply, trunc_trunc, min_eq_right_of_lt h,
       restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), ofSurreal_apply]
     simp_rw [sign_apply, sub_pos, sub_neg,
-      lt_truncate_iff_lt ((birthday_truncate_le o' x).trans_lt h),
-      truncate_lt_iff_lt ((birthday_truncate_le o' x).trans_lt h)]
+      lt_trunc_iff_lt ((birthday_trunc_le o' x).trans_lt h),
+      trunc_lt_iff_lt ((birthday_trunc_le o' x).trans_lt h)]
   · rw [restrict_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
       length_ofSurreal, WithTop.coe_le_coe]
-    exact (birthday_truncate_le o x).trans h
+    exact (birthday_trunc_le o x).trans h
 
 @[simp]
 theorem small_ofSurreal (x : Surreal) : (ofSurreal x).Small :=
@@ -280,17 +280,17 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
     ext o
     induction o using WellFoundedLT.induction with | ind o ih
     rw [ofSurreal_apply]
-    obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).truncate o)
+    obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).trunc o)
     cases hfo : f o with
     | zero =>
-      rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, truncate_eq_self_iff]
+      rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff]
       apply ((birthday_mk_le g).trans hgo).trans
       rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo, SignType.zero_eq_zero]
     | neg =>
       rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
-      refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
+      refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
       · rw [hkg]
@@ -301,7 +301,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
       rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
-      refine ⟨(hkb.trans_le (birthday_truncate_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
+      refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
       · rw [hkg]
