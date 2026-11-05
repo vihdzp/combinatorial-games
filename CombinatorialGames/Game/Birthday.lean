@@ -36,6 +36,9 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
+instance {α : Type*} [ConditionallyCompleteLinearOrderBot α] : OrderSupSet α where
+  isLUB_sSup_of_isLUB _ _ ha := isLUB_csSup' ha.bddAbove
+
 /-! ### `IGame` birthday -/
 
 public noncomputable section
@@ -45,7 +48,7 @@ namespace IGame
 /-- The birthday of an `IGame` is inductively defined as the least strict upper bound of the
 birthdays of its options. It may be thought as the "step" in which a certain game is constructed. -/
 def birthday (x : IGame.{u}) : NatOrdinal.{u} :=
-  ⨆ p, ⨆ y : x.moves p, succ (birthday y)
+  ⨆ p, ⨆ y : x.moves p, birthday y + 1
 termination_by x
 decreasing_by igame_wf
 
@@ -59,7 +62,7 @@ theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
-    max (⨆ y : xᴸ, succ y.1.birthday) (⨆ y : xᴿ, succ y.1.birthday) := by
+    max (⨆ y : xᴸ, y.1.birthday + 1) (⨆ y : xᴿ, y.1.birthday + 1) := by
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
@@ -83,12 +86,20 @@ theorem birthday_le_of_wsubposition {x y : IGame} (hy : WSubposition y x) :
   · exact (birthday_lt_of_subposition hy).le
 
 theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
-    birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+    birthday !{s | t} =
+      max (sSup ((fun x => birthday x + 1) '' s)) (sSup ((fun x => birthday x + 1) '' t)) := by
   rw [birthday_eq_max, moves_left_ofSets, moves_right_ofSets]
   simp [iSup, image_eq_range]
 
+theorem birthday_ofSets' (st : Player → Set IGame.{u})
+    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+    birthday !{st} = sSup ((fun x => birthday x + 1) '' iUnion st) := by
+  rw [ofSets_eq_ofSets_cases, birthday_ofSets, Set.image_iUnion,
+    ← Set.sUnion_range, Player.range_eq, sUnion_pair,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
+
 theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
-    birthday !{fun _ ↦ s} = sSup (succ ∘ birthday '' s) := by
+    birthday !{fun _ ↦ s} = sSup ((fun x => birthday x + 1) '' s) := by
   rw [ofSets_eq_ofSets_cases, birthday_ofSets, max_self]
 
 @[simp]
@@ -131,8 +142,8 @@ decreasing_by igame_wf
 @[simp]
 theorem birthday_toIGame (o : NatOrdinal) : o.toIGame.birthday = o := by
   rw [toIGame_def, birthday_ofSets, image_empty, csSup_empty, max_bot_right, image_image]
-  conv_rhs => rw [← iSup_succ o, iSup]
-  simp_rw [Function.comp_apply, ← image_eq_range]
+  conv_rhs => rw [← iSup_succ o, ← sSup_range]
+  simp_rw [← image_eq_range, succ_eq_add_one]
   congr!
   rw [birthday_toIGame]
 termination_by o
@@ -205,7 +216,7 @@ theorem birthday_intCast (n : ℤ) : birthday n = n.natAbs := by
 
 @[simp]
 theorem birthday_tiny (x : IGame) : (⧾x).birthday = x.birthday + 2 := by
-  simp [tiny, Order.succ_eq_add_one, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
+  simp [tiny, birthday_ofSets, ← one_add_one_eq_two, ← add_assoc]
 
 @[simp]
 theorem birthday_miny (x : IGame) : (⧿x).birthday = x.birthday + 2 := by
@@ -228,7 +239,7 @@ instance small_setOfPred_birthday_lt (o : NatOrdinal.{u}) : Small.{u} {x | birth
 
 /-- Games with a bounded birthday form a small set. -/
 instance small_setOfPred_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
-  simpa using small_setOfPred_birthday_lt (succ o)
+  simpa using small_setOfPred_birthday_lt (o + 1)
 
 /-! #### Short games -/
 
@@ -294,7 +305,7 @@ theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .ome
     choose f hf using this
     obtain ⟨n, hn⟩ := (finite_iUnion fun p => finite_range (f p)).exists_le
     apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))
-    rw [birthday_le_iff, Nat.cast_add_one, ← succ_eq_add_one]
+    rw [birthday_le_iff, Nat.cast_add_one]
     aesop
   · rw [NatOrdinal.lt_omega0, short_iff_finite_setOfPred_subposition]
     intro ⟨n, hn⟩
@@ -396,15 +407,21 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   · rw [one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
+theorem birthday_ofSets_le' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+    birthday !{st} ≤ sSup ((fun x => birthday x + 1) '' iUnion st) := by
+  choose f hf hfb using birthday_eq_iGameBirthday
+  calc
+    _ = _ := by simp_rw [mk_ofSets', image_image, hf, Set.image_id']
+    _ ≤ _ := birthday_mk_le !{fun p => f '' st p}
+    _ = _ := by simp_rw [IGame.birthday_ofSets', Set.image_iUnion, Set.image_image, hfb]
+
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
-    birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  choose f hf using birthday_eq_iGameBirthday
-  trans !{f '' s | f '' t}.birthday
-  · convert birthday_mk_le !{f '' s | f '' t}
-    simp_rw [mk_ofSets, image_image]
-    aesop
-  · simp_rw [IGame.birthday_ofSets, image_comp]
-    congr! <;> aesop
+    birthday !{s | t} ≤
+      max (sSup ((fun x => birthday x + 1) '' s)) (sSup ((fun x => birthday x + 1) '' t)) := by
+  grw [birthday_ofSets_le']
+  rw [← sUnion_range, Player.range_cases, sUnion_pair, Set.image_union,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
 
 theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, ha, ha'⟩ := birthday_eq_iGameBirthday x

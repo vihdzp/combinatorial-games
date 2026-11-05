@@ -257,7 +257,7 @@ theorem birthday_simplestBtwn_le {x y : Cut.{u}} (h : x < y) :
     unfold Fits
     aesop
   · apply (WithTop.coe_le_coe.2 <| birthday_ofSets_le ..).trans_eq
-    simp [Order.succ_eq_add_one, WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _), image_image]
+    simp [WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _), image_image]
 
 private theorem birthday_game_le (x : IGame) :
     (supLeft x).birthday ≤ x.birthday ∧ (infRight x).birthday ≤ x.birthday ∧
