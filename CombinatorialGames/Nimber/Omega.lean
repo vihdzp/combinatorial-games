@@ -205,7 +205,7 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     have := hx.nonempty_Iio.to_subtype
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [isNormal_omega.apply_of_isSuccLimit hx]
-    rw [isNormal_enumAlgClosed.map_iSup Ordinal.bddAbove_of_small]
+    rw [isNormal_enumAlgClosed.leftOrdContinuous.map_ciSup Ordinal.bddAbove_of_small]
     refine ciSup_le' fun ⟨y, hy⟩ ↦ ?_
     obtain rfl | hy₀ := eq_or_ne y 0
     · grw [Subtype.coe_mk, zero_le_one]

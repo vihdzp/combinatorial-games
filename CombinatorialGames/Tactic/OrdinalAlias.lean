@@ -234,7 +234,7 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
 @[simp]
 theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
     Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
-  Cardinal.mk_Iio_ordinal _
+  Ordinal.cardinalMk_Iio _
 
 theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
     (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=

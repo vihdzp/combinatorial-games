@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios, Aaron Liu
 module
 
 public import CombinatorialGames.Surreal.Cut
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 import CombinatorialGames.Mathlib.WithTop
 import Mathlib.Algebra.Order.Group.OrderIso
@@ -390,8 +391,6 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         intro v
         rw [birthday_rightSurreal, ← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
         apply hvb
-
-attribute [gcongr] WithTop.coe_le_coe
 
 theorem birthday_vadd_le (x : Surreal) (y : Cut) : (x +ᵥ y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨s, rfl | rfl, hs⟩ := y.birthday_eq_sSup_birthday
