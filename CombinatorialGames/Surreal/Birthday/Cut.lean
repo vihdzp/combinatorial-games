@@ -418,6 +418,8 @@ protected class inductive Small : (x : Cut.{u}) → Prop where
   | protected infLeft (s : Set Surreal) [Small.{u} s] : Cut.Small (sInf (leftSurreal '' s))
   | protected supRight (s : Set Surreal) [Small.{u} s] : Cut.Small (sSup (rightSurreal '' s))
 
+attribute [instance] Small.infLeft Small.supRight
+
 theorem small_iff_birthday {x : Cut} : x.Small ↔ birthday x < ⊤ := by
   constructor
   · rintro (⟨s, _⟩ | ⟨s, _⟩)
