@@ -346,7 +346,7 @@ def floor (f : NatOrdinal → SignType) : SignExpansion :=
         by_cases h : f (sInf {b | a < b ∧ f b ≠ 0}) = -1
         · convert isUpperSet_empty
           aesop
-        · convert isUpperSet_Ici a
+        · convert IsUpperSet.Ici a
           aesop }
 
 private theorem floor_of_eq_neg_one {f : NatOrdinal → SignType} (hf : ¬ IsUpperSet (f ⁻¹' {0}))

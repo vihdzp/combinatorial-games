@@ -225,7 +225,7 @@ where finally
   have := H x hx ?_
   · generalize_proofs H' at this
     cases H'.choose_spec.2 this
-  · contrapose! hb
+  · contrapose hb
     exact isUpperSet_preimage_singleton_zero _ h hb
 
 @[simp]

@@ -219,6 +219,22 @@ theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] 
   have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_right this
 
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) := by
+  apply IGame.le_iff_forall_lf.trans
+  simp_rw [moves_ofSets, forall_mem_image]
+  congr! <;>
+  · rw [← Game.mk_le_mk, out_eq]
+    rfl
+
+theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
+  rw [ofSets_le_ofSets_iff]
+  push +distrib Not
+  rfl
+
 end Game
 
 namespace IGame

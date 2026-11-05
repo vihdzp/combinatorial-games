@@ -71,6 +71,9 @@ theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
 theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
   simpa using eq_zero_iff.not
 
+theorem ne_zero_iff' [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
+  simpa [Set.nonempty_iff_ne_empty] using ne_zero_iff
+
 theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
   Player.const_of_left_eq_right' (dicotic_def.1 hx).1
 
@@ -549,8 +552,7 @@ theorem finite_setOfPred_subposition (x : IGame) [Short x] : {y | Subposition y 
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
-  ext
-  rw [Set.mem_ofPred, subposition_iff_exists]
+  rw [Set.mem_eq_mem, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
 instance (x : IGame) [Short x] : Finite {y | Subposition y x} :=
