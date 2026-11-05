@@ -12,7 +12,7 @@ import CombinatorialGames.Surreal.Cut
 import Mathlib.Tactic.Order
 
 /-!
-# Sign Expansions
+# Sign expansions
 
 Every surreal number has a sign expansion, a function from its birthday to the set `{-1, 1}`.
 This sign expansion uniquely identifies the number.
