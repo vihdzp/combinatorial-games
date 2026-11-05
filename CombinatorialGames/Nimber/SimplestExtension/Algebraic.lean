@@ -39,10 +39,6 @@ instance {K : Type u} [Field K] : PerfectField (⊥ : Subfield K) := by
     exact .of_ringEquiv (Subfield.botEquivZMod K p).symm
 
 @[simp]
-theorem Ordinal.ofNat_lt_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) < ω :=
-  natCast_lt_omega0 n
-
-@[simp]
 theorem Ordinal.omega0_le_lift {x : Ordinal.{u}} : ω ≤ Ordinal.lift.{v} x ↔ ω ≤ x := by
   simpa using Ordinal.lift_le (a := ω)
 
@@ -399,7 +395,7 @@ theorem IsField.fieldAdjoin_simple_self {x : Nimber} (h : IsField x) :
   apply SetLike.ext'
   rw [IntermediateField.adjoin_toSubfield, union_singleton,
     Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, coe_toSubfield, Iio_insert, ← Iio_succ,
+    Subfield.fieldRange_subtype, coe_toSubfield, insert_Iio, ← Iio_succ,
     coe_subfieldClosure_Iio, coe_toSubfield]
 
 theorem IsField.pow_degree_leastNoRoots_eq_adjoin {x : Nimber} (h : IsField x) (ht) {n : ℕ}
@@ -476,7 +472,7 @@ theorem algebraAdjoin_simple_self :
   apply SetLike.ext'
   rw [Algebra.adjoin_eq_ring_closure, union_singleton,
     Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
-    Subfield.fieldRange_subtype, coe_toSubfield, Iio_insert, ← Iio_succ,
+    Subfield.fieldRange_subtype, coe_toSubfield, insert_Iio, ← Iio_succ,
     coe_subringClosure_Iio, ht.ringClosure_eq, coe_toSubring]
 
 end IsAlgClosed
@@ -795,7 +791,7 @@ theorem IsField.sqrt_lt {x y : Nimber} (h : IsField x) (hy : y < x)
   · aesop
   · rw [mem_roots]
     · simp
-    · apply_fun (coeff · 2)
+    · apply_fun (AddMonoidAlgebra.coeff · 2)
       simp
 
 theorem IsField.sqrt_lt' {x y : Nimber} (h : IsField x) (hy : y < x)

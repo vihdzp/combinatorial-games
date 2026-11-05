@@ -185,7 +185,7 @@ issues where `Field (h.toSubring ⋯)` can't be inferred, even if `h : IsField x
 @[expose]
 noncomputable def IsField.embed {x : Nimber} (h : IsField x) (p : Nimber[X])
     (hp : ∀ k, p.coeff k < x) : h.toSubfield[X] :=
-  .ofFinsupp ⟨.mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])⟩
+  ⟨.mk p.support (fun k ↦ ⟨p.coeff k, hp k⟩) (by simp [← Subtype.val_inj])⟩
 
 @[simp]
 theorem IsField.coeff_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
@@ -223,6 +223,7 @@ theorem IsField.embed_C {x : Nimber} (h : IsField x) {y hy} :
 theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
     (hp : ∀ k, p.coeff k < x) (y) : (h.embed p hp).eval y = ⟨_, h.eval_lt hp y.2⟩ := by
   simp [← Subtype.val_inj, embed, sum, eval_eq_sum]
+  rfl
 
 /-! ### Lexicographic ordering on polynomials -/
 
@@ -232,15 +233,15 @@ namespace Lex
 noncomputable instance : LinearOrder Nimber[X] where
   lt p q := ∃ n, (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n
   __ := LinearOrder.lift'
-    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff)
-    (toColex.injective.comp <| AddMonoidAlgebra.coeff_injective.comp toFinsupp_injective)
+    (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.coeff)
+    (toColex.injective.comp AddMonoidAlgebra.coeff_injective)
 
 theorem lt_def {p q : Nimber[X]} : p < q ↔ ∃ n,
     (∀ k, n < k → p.coeff k = q.coeff k) ∧ p.coeff n < q.coeff n :=
   .rfl
 
 instance : WellFoundedLT Nimber[X] :=
-  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.toFinsupp.coeff) wellFounded_lt
+  InvImage.wf (fun p : Nimber[X] ↦ toColex (α := ℕ →₀ _) p.coeff) wellFounded_lt
 
 instance : IsBotZeroClass Nimber[X] where
   isBot_zero p := by rw [← not_lt, lt_def]; simp
@@ -460,7 +461,7 @@ instance : NoMaxOrder Nimber[X] where
     simpa using degree_le_natDegree
 
 noncomputable instance : SuccOrder Nimber.{u}[X] := by
-  refine .ofCore (fun p ↦ .ofFinsupp ⟨(p.toFinsupp.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
+  refine .ofCore (fun p ↦ ⟨(p.update 0 (succ (p.coeff 0))).coeff⟩) ?_ (by simp)
   refine @fun p _ q ↦ ⟨fun hpq ↦ ?_, ?_⟩
   · obtain ⟨n, hn, hpq⟩ := hpq
     cases n with
@@ -487,7 +488,6 @@ noncomputable instance : SuccOrder Nimber.{u}[X] := by
 theorem coeff_succ (p : Nimber[X]) :
     (succ p).coeff = Function.update p.coeff 0 (succ (p.coeff 0)) := by
   simp [succ]
-  rfl
 
 @[simp]
 theorem coeff_succ_zero (p : Nimber[X]) : (succ p).coeff 0 = succ (p.coeff 0) := by
@@ -647,11 +647,11 @@ theorem oeval_lt_oeval {x : Nimber} {p q : Nimber[X]} (h : p < q)
   | zero =>
     rw [Nat.sub_eq_zero_iff_le] at hk
     apply (mul_coeff_le_oeval x q n).trans_lt'
-    have hpn : (erase n p).degree < n := by
+    have hpn : Polynomial.degree (AddMonoidAlgebra.erase n p) < n := by
       apply lt_of_le_of_ne ((p.degree_erase_le n).trans
         (degree_le_natDegree.trans (WithBot.coe_mono hk)))
       intro hdd
-      exact coeff_ne_zero_of_eq_degree hdd (erase_same p n)
+      exact coeff_ne_zero_of_eq_degree hdd Finsupp.erase_same
     rw [← p.monomial_add_erase n, ← C_mul_X_pow_eq_monomial]
     rw [oeval_C_mul_X_pow_add hpn, of.lt_iff_lt]
     have hpe (k : Nat) : (p.erase n).coeff k < x := by
@@ -876,7 +876,7 @@ theorem leastNoRoots_ne_X_pow' (x : Nimber) (ht) (n : ℕ) :
     have := degree_leastNoRoots_pos ht
     aesop
   | succ n =>
-    apply_fun (coeff · 0)
+    apply_fun (AddMonoidAlgebra.coeff · 0)
     simp
 
 theorem leastNoRoots_ne_X_pow (x : Nimber) (n : ℕ) :

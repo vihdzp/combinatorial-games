@@ -11,7 +11,7 @@ public import Mathlib.Basic.Sign.Defs
 public import Mathlib.Data.Fintype.Order
 public import Mathlib.Order.CompleteLattice.PiLex
 
-import CombinatorialGames.Mathlib.WithTop
+import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 /-!
 # Sign expansions
