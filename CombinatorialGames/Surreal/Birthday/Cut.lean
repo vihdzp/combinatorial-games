@@ -491,7 +491,7 @@ protected instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Sma
 
 /-- The `player` of a `Small` cut `x` is either `left` if `x` is
 the greatest lower bound of a `Small` set of surreals, or it's `right` if `x` is
-the least upper bound of a `Small` set of surreal.
+the least upper bound of a `Small` set of surreals.
 The sign expansion of a cut ends with a constant sequence of `1`s iff its player is `left`,
 and it ends with a constant sequence of `-1`s iff its player is `right`. -/
 @[nolint unusedArguments]
