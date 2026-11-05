@@ -525,6 +525,18 @@ theorem player_supRight (s : Set Surreal.{u}) [Small.{u} s] :
     · rw [left_sSup, biUnion_image]
       exact mem_biUnion hx (mem_right_leftSurreal.2 le_rfl)
 
+theorem exists_of_player_eq_left {x : Cut.{u}} [x.Small] (hx : x.player = .left) :
+    ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x := by
+  cases ‹x.Small› with
+  | infLeft s => exact ⟨s, ‹_›, rfl⟩
+  | supRight s => simp at hx
+
+theorem exists_of_player_eq_right {x : Cut.{u}} [x.Small] (hx : x.player = .right) :
+    ∃ s : Set Surreal, Small.{u} s ∧ sSup (rightSurreal '' s) = x := by
+  cases ‹x.Small› with
+  | infLeft s => simp at hx
+  | supRight s => exact ⟨s, ‹_›, rfl⟩
+
 @[simp] theorem player_top : player ⊤ = .left := by simpa using player_infLeft ∅
 @[simp] theorem player_bot : player ⊥ = .right := by simpa using player_supRight ∅
 
