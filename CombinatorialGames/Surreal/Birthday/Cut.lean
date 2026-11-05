@@ -492,6 +492,7 @@ the greatest lower bound of a `Small` set of surreals, or it's `right` if `x` is
 the least upper bound of a `Small` set of surreal.
 The sign expansion of a cut ends with a constant sequence of `1`s iff its player is `left`,
 and it ends with a constant sequence of `-1`s iff its player is `right`. -/
+@[nolint unusedArguments]
 def player (x : Cut.{u}) [x.Small] : Player :=
   open scoped Classical in
   if ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x then .left else .right
