@@ -418,6 +418,8 @@ protected class inductive Small : (x : Cut.{u}) → Prop where
   | protected infLeft (s : Set Surreal) [Small.{u} s] : Cut.Small (sInf (leftSurreal '' s))
   | protected supRight (s : Set Surreal) [Small.{u} s] : Cut.Small (sSup (rightSurreal '' s))
 
+attribute [instance] Small.infLeft Small.supRight
+
 theorem small_iff_birthday {x : Cut} : x.Small ↔ birthday x < ⊤ := by
   constructor
   · rintro (⟨s, _⟩ | ⟨s, _⟩)
@@ -486,6 +488,81 @@ protected theorem Small.sInf {s : Set Cut.{u}} [Small.{u} s] (hs : ∀ x ∈ s, 
 protected instance Small.vadd (x : Surreal) (y : Cut) [y.Small] : (x +ᵥ y).Small := by
   grw [small_iff_birthday, birthday_vadd_le]
   simp [Small.birthday_lt_top]
+
+/-- The `player` of a `Small` cut `x` is either `left` if `x` is
+the greatest lower bound of a `Small` set of surreals, or it's `right` if `x` is
+the least upper bound of a `Small` set of surreals.
+The sign expansion of a cut ends with a constant sequence of `1`s iff its player is `left`,
+and it ends with a constant sequence of `-1`s iff its player is `right`. -/
+@[nolint unusedArguments]
+def player (x : Cut.{u}) [x.Small] : Player :=
+  open scoped Classical in
+  if ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x then .left else .right
+
+@[simp]
+theorem player_infLeft (s : Set Surreal.{u}) [Small.{u} s] :
+    @player (sInf (leftSurreal '' s)) (.infLeft s) = .left := by
+  apply ite_eq_left
+  exact ⟨s, ‹_›, rfl⟩
+
+@[simp]
+theorem player_supRight (s : Set Surreal.{u}) [Small.{u} s] :
+    @player (sSup (rightSurreal '' s)) (.supRight s) = .right := by
+  apply ite_eq_right
+  intro ⟨t, _, hst⟩
+  by_cases! hlt : ∀ x ∈ s, ∀ y ∈ t, x < y
+  · apply hst.not_gt
+    rw [lt_iff_nonempty_inter]
+    exact ⟨!{s | t},
+      by simp +contextual [Surreal.lt_ofSets_of_mem_left],
+      by simp +contextual [Surreal.ofSets_lt_of_mem_right]⟩
+  · obtain ⟨x, hx, y, hy, hyx⟩ := hlt
+    apply hst.not_lt
+    rw [lt_iff_nonempty_inter]
+    refine ⟨y, ?_, isLowerSet_left _ hyx ?_⟩
+    · rw [right_sInf, biUnion_image]
+      exact mem_biUnion hy (mem_right_leftSurreal.2 le_rfl)
+    · rw [left_sSup, biUnion_image]
+      exact mem_biUnion hx (mem_right_leftSurreal.2 le_rfl)
+
+theorem exists_of_player_eq_left {x : Cut.{u}} [x.Small] (hx : x.player = .left) :
+    ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x := by
+  cases ‹x.Small› with
+  | infLeft s => exact ⟨s, ‹_›, rfl⟩
+  | supRight s => simp at hx
+
+theorem exists_of_player_eq_right {x : Cut.{u}} [x.Small] (hx : x.player = .right) :
+    ∃ s : Set Surreal, Small.{u} s ∧ sSup (rightSurreal '' s) = x := by
+  cases ‹x.Small› with
+  | infLeft s => simp at hx
+  | supRight s => exact ⟨s, ‹_›, rfl⟩
+
+@[simp] theorem player_top : player ⊤ = .left := by simpa using player_infLeft ∅
+@[simp] theorem player_bot : player ⊥ = .right := by simpa using player_supRight ∅
+
+@[simp]
+theorem player_leftSurreal (x : Surreal) : (leftSurreal x).player = .left := by
+  simpa using player_infLeft {x}
+
+@[simp]
+theorem player_rightSurreal (x : Surreal) : (rightSurreal x).player = .right := by
+  simpa using player_supRight {x}
+
+@[simp]
+theorem player_neg (x : Cut) [x.Small] : player (-x) = -player x := by
+  cases ‹x.Small› <;> simp
+
+@[simp]
+theorem player_vadd (x : Surreal) (y : Cut) [y.Small] : player (x +ᵥ y) = player y := by
+  cases ‹y.Small› with
+  | infLeft s =>
+    simp_rw [vadd_sInf, ← image_vadd, image_image, vadd_leftSurreal]
+    rw! [← Set.image_image leftSurreal]
+    rw [player_infLeft, player_infLeft]
+  | supRight s =>
+    simp_rw [vadd_sSup, ← image_vadd, image_image, vadd_rightSurreal]
+    rw! [← Set.image_image rightSurreal]
+    rw [player_supRight, player_supRight]
 
 end Surreal.Cut
 end
