@@ -234,15 +234,15 @@ theorem length_ofSurreal (x : Surreal.{u}) :
 
 @[simp]
 theorem ofSurreal_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal (x.trunc o) = (ofSurreal x).restrict o := by
+    ofSurreal (x.trunc o) = (ofSurreal x).trunc o := by
   ext o'
   obtain h | h := lt_or_ge o' o
   · rw [ofSurreal_apply, trunc_trunc, min_eq_right_of_lt h,
-      restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), ofSurreal_apply]
+      trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), ofSurreal_apply]
     simp_rw [sign_apply, sub_pos, sub_neg,
       lt_trunc_iff_lt ((birthday_trunc_le o' x).trans_lt h),
       trunc_lt_iff_lt ((birthday_trunc_le o' x).trans_lt h)]
-  · rw [restrict_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
+  · rw [trunc_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
       length_ofSurreal, WithTop.coe_le_coe]
     exact (birthday_trunc_le o x).trans h
 
@@ -295,8 +295,8 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         decide
       · rw [hkg]
         refine ⟨o, fun j hj => ?_, ?_⟩
-        · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
-        · simp [hfo, restrict_apply_of_le_coe le_rfl]
+        · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+        · simp [hfo, trunc_apply_of_le_coe le_rfl]
     | pos =>
       rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
@@ -306,7 +306,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         decide
       · rw [hkg]
         refine ⟨o, fun j hj => ?_, ?_⟩
-        · simp [← ih j hj, restrict_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
-        · simp [hfo, restrict_apply_of_le_coe le_rfl]
+        · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
+        · simp [hfo, trunc_apply_of_le_coe le_rfl]
 
 end SignExpansion
