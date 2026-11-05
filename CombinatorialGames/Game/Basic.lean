@@ -70,6 +70,15 @@ classes in `Game` have a canonical representative. -/
 instance : OfSets Game.{u} fun _ ↦ True where
   ofSets st _ := mk !{fun p ↦ out '' (st p)}
 
+theorem ofSets_eq_mk' {st : Player → Set Game.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] :
+    !{st} = mk !{fun p ↦ out '' st p} :=
+  rfl
+
+theorem ofSets_eq_mk {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
+    !{s | t} = mk !{out '' s | out '' t} := by
+  rw [ofSets_eq_mk', ofSets_eq_ofSets_cases]
+
 theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
     mk !{st} = !{fun p ↦ mk '' st p} := by
   refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
@@ -80,10 +89,6 @@ theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk !{s | t} = !{mk '' s | mk '' t} := by
   rw [mk_ofSets']
   simp_rw [Player.apply_cases]
-
-private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
-    !{s | t} = mk !{out '' s | out '' t} := by
-  simp [mk_ofSets, image_image]
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
@@ -207,29 +212,29 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
       hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
     abel
 
-theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ s) : x ⧏ !{s | t} := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using left_lf this
-
-theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ t) : !{s | t} ⧏ x := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using lf_right this
-
 theorem lf_ofSets_of_mem_left' {st : Player → Set Game.{u}}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
     (h : x ∈ st .left) : x ⧏ !{st} := by
-  rw [ofSets_eq_ofSets_cases]
-  exact lf_ofSets_of_mem_left h
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply left_lf
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
 
 theorem ofSets_lf_of_mem_right' {st : Player → Set Game.{u}}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
     (h : x ∈ st .right) : !{st} ⧏ x := by
-  rw [ofSets_eq_ofSets_cases]
-  exact ofSets_lf_of_mem_right h
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply lf_right
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
+
+theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ s) : x ⧏ !{s | t} :=
+  lf_ofSets_of_mem_left' h
+
+theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
+    (h : x ∈ t) : !{s | t} ⧏ x :=
+  ofSets_lf_of_mem_right' h
 
 theorem ofSets_le_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
     [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]

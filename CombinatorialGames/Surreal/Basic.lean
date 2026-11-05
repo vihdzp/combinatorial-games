@@ -309,8 +309,8 @@ theorem ofSets_eq_mk {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
     !{s | t} = @mk !{out '' s | out '' t} (.mk (by aesop) (by simp)) := by
   rw [ofSets_eq_mk']
-  congr
-  grind
+  rw! [ofSets_eq_ofSets_cases]
+  rfl
 
 theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
