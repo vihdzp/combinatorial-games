@@ -161,34 +161,31 @@ theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
   exact (birthday_ofSets_lt_of_btwn hL hR hz).not_ge <|
     h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
 
+theorem birthday_ofSets_le' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    !{st}.birthday ≤ sSup (succ ∘ birthday '' iUnion st) := by
+  choose f hfn hfx hfb using birthday_eq_iGameBirthday
+  have : Numeric !{fun p => f '' st p} := by
+    rw [numeric_def]
+    simp_rw [moves_ofSets, forall_mem_image]
+    refine ⟨fun x hx y hy => ?_, fun p x _ => hfn x⟩
+    rw [← mk_lt_mk, hfx x, hfx y]
+    exact H x hx y hy
+  have : !{st} = mk !{fun p => f '' st p} := by
+    rw [← toGame_inj, toGame_ofSets', toGame_mk, Game.mk_ofSets']
+    simp_rw [image_image, ← toGame_mk, funext fun x => congrArg toGame (hfx x)]
+  rw [this]
+  apply (birthday_mk_le _).trans
+  simp_rw [IGame.birthday_ofSets', image_comp]
+  congr! 2
+  aesop
+
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
     !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  choose f hf using birthday_eq_iGameBirthday
-  have : Numeric !{f '' s | f '' t} := by
-    rw [numeric_def]
-    simp_rw [moves_ofSets]
-    refine ⟨?_, ?_⟩
-    · rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩
-      obtain ⟨a, hx', _⟩ := hf x
-      obtain ⟨b, hy', _⟩ := hf y
-      rw [← mk_lt_mk, hx', hy']
-      exact H x hx y hy
-    rintro (_ | _) _ ⟨y, hy, rfl⟩
-    all_goals
-      obtain ⟨hy, _, _⟩ := hf y
-      exact hy
-  have : !{s | t} = mk !{f '' s | f '' t} := by
-    rw [← toGame_inj, toGame_ofSets, toGame_mk, Game.mk_ofSets]
-    simp_rw [image_image]
-    congr! with a ha a ha
-    all_goals
-    · obtain ⟨_, ha', _⟩ := hf a
-      rw [← toGame_mk, toGame_inj, ha']
-  rw [this]
-  apply (birthday_mk_le _).trans
-  simp_rw [IGame.birthday_ofSets, image_comp]
-  congr! <;> aesop
+  grw [birthday_ofSets_le']
+  rw [← sUnion_range, Player.range_cases, sUnion_pair, Set.image_union,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
 
 theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
     {x y : Surreal} (hx : birthday x = o) (hy : birthday y = o) (hxy : x < y) :

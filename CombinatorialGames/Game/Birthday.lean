@@ -36,6 +36,9 @@ theorem ciSup_eq_bot {α : Type*} {ι : Sort*} [ConditionallyCompleteLinearOrder
     (hf : BddAbove (range f)) : ⨆ i, f i = ⊥ ↔ ∀ i, f i = ⊥ := by
   simpa using ciSup_le_iff' hf (a := ⊥)
 
+instance {α : Type*} [ConditionallyCompleteLinearOrderBot α] : OrderSupSet α where
+  isLUB_sSup_of_isLUB _ _ ha := isLUB_csSup' ha.bddAbove
+
 /-! ### `IGame` birthday -/
 
 public noncomputable section
@@ -86,6 +89,13 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} = max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
   rw [birthday_eq_max, moves_left_ofSets, moves_right_ofSets]
   simp [iSup, image_eq_range]
+
+theorem birthday_ofSets' (st : Player → Set IGame.{u})
+    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+    birthday !{st} = sSup (succ ∘ birthday '' iUnion st) := by
+  rw [ofSets_eq_ofSets_cases, birthday_ofSets, Set.image_iUnion,
+    ← Set.sUnion_range, Player.range_eq, sUnion_pair,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
 
 theorem birthday_ofSets_const (s : Set IGame.{u}) [Small.{u} s] :
     birthday !{fun _ ↦ s} = sSup (succ ∘ birthday '' s) := by
@@ -396,15 +406,23 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   · rw [one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
+theorem birthday_ofSets_le' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+    birthday !{st} ≤ sSup (succ ∘ birthday '' iUnion st) := by
+  choose f hf using birthday_eq_iGameBirthday
+  trans !{fun p => f '' st p}.birthday
+  · convert birthday_mk_le !{fun p => f '' st p}
+    simp_rw [mk_ofSets', image_image]
+    aesop
+  · simp_rw [IGame.birthday_ofSets', image_comp]
+    congr! 2
+    aesop
+
 theorem birthday_ofSets_le {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
     birthday !{s | t} ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  choose f hf using birthday_eq_iGameBirthday
-  trans !{f '' s | f '' t}.birthday
-  · convert birthday_mk_le !{f '' s | f '' t}
-    simp_rw [mk_ofSets, image_image]
-    aesop
-  · simp_rw [IGame.birthday_ofSets, image_comp]
-    congr! <;> aesop
+  grw [birthday_ofSets_le']
+  rw [← sUnion_range, Player.range_cases, sUnion_pair, Set.image_union,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
 
 theorem birthday_add_le (x y : Game) : (x + y).birthday ≤ x.birthday + y.birthday := by
   obtain ⟨a, ha, ha'⟩ := birthday_eq_iGameBirthday x
