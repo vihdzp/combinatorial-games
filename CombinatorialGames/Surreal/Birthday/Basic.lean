@@ -163,7 +163,7 @@ theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
 
 theorem birthday_ofSets_le' {st : Player → Set Surreal.{u}}
     [Small.{u} (st left)] [Small.{u} (st right)] {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
-    !{st}.birthday ≤ sSup (succ ∘ birthday '' iUnion st) := by
+    !{st}.birthday ≤ sSup ((fun x => birthday x + 1) '' iUnion st) := by
   choose f hfn hfx hfb using birthday_eq_iGameBirthday
   have : Numeric !{fun p => f '' st p} := by
     rw [numeric_def]
@@ -171,18 +171,17 @@ theorem birthday_ofSets_le' {st : Player → Set Surreal.{u}}
     refine ⟨fun x hx y hy => ?_, fun p x _ => hfn x⟩
     rw [← mk_lt_mk, hfx x, hfx y]
     exact H x hx y hy
-  have : !{st} = mk !{fun p => f '' st p} := by
-    rw [← toGame_inj, toGame_ofSets', toGame_mk, Game.mk_ofSets']
-    simp_rw [image_image, ← toGame_mk, funext fun x => congrArg toGame (hfx x)]
-  rw [this]
-  apply (birthday_mk_le _).trans
-  simp_rw [IGame.birthday_ofSets', image_comp]
-  congr! 2
-  aesop
+  calc
+    _ = _ := congrArg birthday <| by
+      rw [← toGame_inj, toGame_ofSets', toGame_mk, Game.mk_ofSets']
+      simp_rw [image_image, ← toGame_mk, hfx]
+    _ ≤ _ := birthday_mk_le !{fun p => f '' st p}
+    _ = _ := by simp_rw [IGame.birthday_ofSets', image_iUnion, image_image, hfb]
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
-    !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
+    !{s | t}.birthday ≤
+      max (sSup ((fun x => birthday x + 1) '' s)) (sSup ((fun x => birthday x + 1) '' t)) := by
   grw [birthday_ofSets_le']
   rw [← sUnion_range, Player.range_cases, sUnion_pair, Set.image_union,
     csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
