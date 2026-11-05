@@ -111,13 +111,13 @@ instance : Preorder Simplicity where
 theorem le_def {x y : Simplicity} : x ≤ y ↔ y.val ↾ x.val.length = x.val := .rfl
 theorem of_le_of {x y} : of x ≤ of y ↔ y ↾ x.length = x := .rfl
 
-theorem le_restrict_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdinal}
+theorem le_trunc_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdinal}
     (h : x ≤ y) (h' : x.val.length ≤ o) : x ≤ of (val y ↾ o) := by
   simp_all [le_def]
 
 theorem apply_eq_of_le {x y : Simplicity} {o : NatOrdinal} (h : x ≤ y) (hx : x o ≠ 0) :
     x o = y o := by
-  rw [← val_apply, ← le_def.1 h, restrict_apply_of_coe_lt, val_apply]
+  rw [← val_apply, ← le_def.1 h, trunc_apply_of_coe_lt, val_apply]
   rwa [← apply_ne_zero]
 
 theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o = y o := by
@@ -125,9 +125,9 @@ theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o 
   ext o
   rw [eq_comm]
   obtain ho | ho := lt_or_ge (↑o) x.val.length
-  · rw [restrict_apply_of_coe_lt ho]
+  · rw [trunc_apply_of_coe_lt ho]
     exact H _ (apply_ne_zero.2 ho)
-  · rwa [restrict_apply_of_le_coe ho, apply_eq_zero]
+  · rwa [trunc_apply_of_le_coe ho, apply_eq_zero]
 
 theorem le_of_le_of_length_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z)
     (h : x.val.length ≤ y.val.length) : x ≤ y := by
@@ -142,8 +142,8 @@ theorem le_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x �
   · exact .inl <| le_of_le_of_length_le hx hy h
   · exact .inr <| le_of_le_of_length_le hy hx h
 
-theorem of_restrict_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
-  rw [of_le_of, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
+theorem of_trunc_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
+  rw [of_le_of, length_trunc, ← trunc_trunc_eq, trunc_of_length_le le_rfl]
 
 theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
     x = y ∨ x.val.length < y.val.length := by
@@ -185,18 +185,18 @@ private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈
   ext i
   obtain ha | ha := lt_or_ge (i : WithTop NatOrdinal)
     (sInf ((↑) '' {i | ∃ y ∈ s, ∃ z ∈ s, y i ≠ z i}))
-  · rw [restrict_apply_of_coe_lt ha, restrict_apply_of_coe_lt ha]
+  · rw [trunc_apply_of_coe_lt ha, trunc_apply_of_coe_lt ha]
     have := notMem_of_lt_csInf' ha
     grind
-  · rw [restrict_apply_of_le_coe ha, restrict_apply_of_le_coe ha]
+  · rw [trunc_apply_of_le_coe ha, trunc_apply_of_le_coe ha]
 
 theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s (sInf s) := by
   constructor <;> intro x hx
   · rw [sInf_eq_of_mem hx]
-    exact of_restrict_le_of ..
+    exact of_trunc_le_of ..
   · obtain ⟨y, hy⟩ := hs
     rw [sInf_eq_of_mem hy]
-    apply le_restrict_of_le_of_length_le (hx hy)
+    apply le_trunc_of_le_of_length_le (hx hy)
     rw [le_sInf_iff]
     rintro i ⟨o, ⟨a, ha, b, hb, H⟩, rfl⟩
     contrapose! H
