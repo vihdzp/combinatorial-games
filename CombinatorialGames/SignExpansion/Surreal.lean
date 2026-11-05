@@ -61,59 +61,40 @@ namespace Surreal
 /-- The truncation of a surreal to an ordinal `o` is the unique surreal `truncate o x`
 with `birthday (truncate o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
 def truncate (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
-  toFun x := @mk !{fun p => {s : IGame.{u} | s.birthday < o} ∩
-    {s | ∃ _ : s.Numeric, p.cases (.mk s < x) (x < .mk s)}} <| by
-      rw [numeric_def]
-      refine ⟨fun y hy z hz => ?_, fun p y hy => ?_⟩
-      · rw [moves_ofSets] at hy hz
-        exact (@mk_lt_mk y z hy.2.1 hz.2.1).mp (hy.2.2.trans hz.2.2)
-      · rw [moves_ofSets] at hy
-        exact hy.2.1
+  toFun x := !{fun p => {y | y.birthday < o} ∩ {s | p.cases (s < x) (x < s)}}'
+    (fun u hu v hv => hu.2.trans hv.2)
   monotone' := by
+    apply id
     intro x y hxy
-    simp_rw [Surreal.mk_le_mk]
-    rw [le_iff_forall_lf]
-    refine ⟨fun z hz => left_lf ?_, fun z hz => lf_right ?_⟩ <;> rw [moves_ofSets] at hz ⊢
-    · exact ⟨hz.1, hz.2.1, hz.2.2.trans_le hxy⟩
-    · exact ⟨hz.1, hz.2.1, hxy.trans_lt hz.2.2⟩
-
-private theorem truncate_apply (o : NatOrdinal.{u}) (x : Surreal.{u}) :
-    ∃ h : Numeric _, truncate o x = @mk !{fun p => {s : IGame.{u} | s.birthday < o} ∩
-      {s | ∃ _ : s.Numeric, p.cases (.mk s < x) (x < .mk s)}} h := ⟨_, rfl⟩
+    rw [Surreal.ofSets_le_ofSets_iff']
+    constructor
+    · intro z hz
+      apply Surreal.lt_ofSets_of_mem_left'
+      exact ⟨hz.1, hz.2.trans_le hxy⟩
+    · intro z hz
+      apply Surreal.ofSets_lt_of_mem_right'
+      exact ⟨hz.1, hxy.trans_lt hz.2⟩
 
 theorem birthday_truncate_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
     (truncate o x).birthday ≤ o := by
-  obtain ⟨_, h⟩ := truncate_apply o x
-  rw [h]
-  apply (birthday_mk_le _).trans
-  rw [birthday_le_iff]
+  rw [truncate, OrderHom.coe_mk]
+  apply birthday_ofSets_le'.trans
+  apply csSup_le'
+  rw [mem_upperBounds, Set.forall_mem_image, Set.forall_mem_iUnion]
   intro p y hy
-  rw [moves_ofSets] at hy
-  exact hy.1
+  exact Order.add_one_le_of_lt hy.1
 
 theorem truncate_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
     (h : x.birthday ≤ o) : x.truncate o = x := by
-  obtain ⟨k, nk, rfl, hk⟩ := x.birthday_eq_iGameBirthday
-  rw [← hk] at h
-  obtain ⟨_, ht⟩ := truncate_apply o (mk k)
-  rw [ht, Surreal.mk_eq_mk]
-  symm
-  apply Fits.equiv_of_forall_birthday_le
-  · constructor <;> simp +contextual
-  · intro z nz hz
-    apply le_of_not_gt
-    intro hbb
-    have hne : mk z ≠ mk k := by
-      intro eq
-      rw [hk, ← eq] at hbb
-      exact not_le_of_gt hbb (birthday_mk_le z)
-    obtain hzk | hkz := lt_or_gt_of_ne hne
-    · refine hz.left z ?_ le_rfl
-      rw [moves_ofSets]
-      exact ⟨hbb.trans_le h, nz, hzk⟩
-    · refine hz.right z ?_ le_rfl
-      rw [moves_ofSets]
-      exact ⟨hbb.trans_le h, nz, hkz⟩
+  rw [truncate, OrderHom.coe_mk]
+  apply Surreal.ofSets_eq_of_forall_birthday_le'
+  · simp
+  · simp
+  · intro z hzl hzr
+    by_contra! hbb
+    obtain hzx | hxz := lt_or_gt_of_ne (ne_of_apply_ne birthday hbb.ne)
+    · exact (hzl z ⟨hbb.trans_le h, hzx⟩).false
+    · exact (hzr z ⟨hbb.trans_le h, hxz⟩).false
 
 @[simp]
 theorem truncate_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
@@ -128,21 +109,15 @@ theorem truncate_birthday_self {x : Surreal.{u}} :
 
 private theorem truncate_lt_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) (hxy : x < y) : x.truncate o < y := by
-  obtain ⟨_, h⟩ := truncate_apply o x
-  obtain ⟨k, nk, rfl, hk⟩ := y.birthday_eq_iGameBirthday
-  rw [h, mk_lt_mk]
-  apply Numeric.lt_right
-  rw [moves_ofSets]
-  exact ⟨hk.trans_lt hy, nk, hxy⟩
+  rw [truncate, OrderHom.coe_mk]
+  apply ofSets_lt_of_mem_right'
+  exact ⟨hy, hxy⟩
 
 private theorem lt_truncate_of_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) (hxy : y < x) : y < x.truncate o := by
-  obtain ⟨_, h⟩ := truncate_apply o x
-  obtain ⟨k, nk, rfl, hk⟩ := y.birthday_eq_iGameBirthday
-  rw [h, mk_lt_mk]
-  apply Numeric.left_lt
-  rw [moves_ofSets]
-  exact ⟨hk.trans_lt hy, nk, hxy⟩
+  rw [truncate, OrderHom.coe_mk]
+  apply lt_ofSets_of_mem_left'
+  exact ⟨hy, hxy⟩
 
 @[grind =]
 theorem truncate_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
@@ -173,33 +148,17 @@ theorem truncate_eq_of_birthday_le_of_forall_lt_gt_iff
     (hlt : ∀ z, z.birthday < o → (y < z ↔ x < z))
     (hgt : ∀ z, z.birthday < o → (z < y ↔ z < x)) :
     x.truncate o = y := by
-  obtain ⟨_, h⟩ := truncate_apply o x
-  obtain ⟨k, nk, rfl, hk⟩ := y.birthday_eq_iGameBirthday
-  rw [h, eq_comm, mk_eq_mk]
-  apply Fits.equiv_of_forall_birthday_le
-  · constructor
-    · rw [moves_ofSets]
-      intro z hz
-      obtain ⟨hzb, zn, hz⟩ := hz
-      rw [← mk_le_mk, not_le, hgt (mk z) ((birthday_mk_le z).trans_lt hzb)]
-      exact hz
-    · rw [moves_ofSets]
-      intro z hz
-      obtain ⟨hzb, zn, hz⟩ := hz
-      rw [← mk_le_mk, not_le, hlt (mk z) ((birthday_mk_le z).trans_lt hzb)]
-      exact hz
-  · intro z zn hz
+  rw [truncate, OrderHom.coe_mk]
+  apply ofSets_eq_of_forall_birthday_le'
+  · intro z hz
+    exact (hgt z hz.1).2 hz.2
+  · intro z hz
+    exact (hlt z hz.1).2 hz.2
+  · intro z hzl hzr
     by_contra! hzb
-    obtain hzk | hzk | hkz := lt_trichotomy (mk z) (mk k)
-    · refine hz.1 z ?_ le_rfl
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
-      exact ⟨by order, zn, (hgt (mk z) (by order [birthday_mk_le z])).1 hzk⟩
-    · absurd hzb
-      rw [hk, ← hzk]
-      exact (birthday_mk_le z).not_gt
-    · refine hz.2 z ?_ le_rfl
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
-      exact ⟨by order, zn, (hlt (mk z) (by order [birthday_mk_le z])).1 hkz⟩
+    obtain hzy | hyz := lt_or_gt_of_ne (ne_of_apply_ne birthday hzb.ne)
+    · exact (hzl z ⟨hzb.trans_le hy, (hgt z (hzb.trans_le hy)).1 hzy⟩).false
+    · exact (hzr z ⟨hzb.trans_le hy, (hlt z (hzb.trans_le hy)).1 hyz⟩).false
 
 theorem truncate_eq_of_birthday_le_of_forall_le_ge_iff
     {x y : Surreal.{u}} {o : NatOrdinal.{u}} (hy : y.birthday ≤ o)
