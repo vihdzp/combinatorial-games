@@ -18,18 +18,6 @@ Every surreal number has a sign expansion, a function from its birthday to the s
 This sign expansion uniquely identifies the number.
 -/
 
-public theorem ite_lt_iff {α : Type*} [LT α] {P : Prop} [Decidable P] {a b c : α} :
-    (if P then a else b) < c ↔ P ∧ a < c ∨ ¬P ∧ b < c := by split <;> simp_all
-
-public theorem lt_ite_iff {α : Type*} [LT α] {P : Prop} [Decidable P] {a b c : α} :
-    a < (if P then b else c) ↔ P ∧ a < b ∨ ¬P ∧ a < c := by split <;> simp_all
-
-public theorem ite_le_iff {α : Type*} [LE α] {P : Prop} [Decidable P] {a b c : α} :
-    (if P then a else b) ≤ c ↔ P ∧ a ≤ c ∨ ¬P ∧ b ≤ c := by split <;> simp_all
-
-public theorem le_ite_iff {α : Type*} [LE α] {P : Prop} [Decidable P] {a b c : α} :
-    a ≤ (if P then b else c) ↔ P ∧ a ≤ b ∨ ¬P ∧ a ≤ c := by split <;> simp_all
-
 theorem sign_sub_eq_of_not_mem_Icc {α : Type*} [LinearOrder α]
     [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
     SignType.sign (x - z) = SignType.sign (y - z) := by
