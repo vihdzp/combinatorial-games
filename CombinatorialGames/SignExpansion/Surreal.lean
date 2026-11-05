@@ -203,7 +203,6 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
     have cxy : Cut.leftSurreal x < Cut.rightSurreal y := by simpa using hxy.le
     let c := Cut.simplestBtwn cxy
     have hc : c ∈ Set.Icc x y := Cut.fits_simplestBtwn cxy
-    rw [lt_iff_toLex]
     have hdcc (d : Surreal) (hd : d.birthday < c.birthday) : d ∉ Set.Icc x y := by
       contrapose! hd
       apply Cut.birthday_simplestBtwn_le_of_fits
@@ -211,6 +210,7 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
     have hcxy (j : NatOrdinal) (hj : j ≤ c.birthday)
         (z : Surreal) (hz : z ∈ Set.Icc x y) : z.truncate j = c.truncate j := by
       apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c) <;> grind
+    rw [lt_iff_toLex]
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
     · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
       exact sign_sub_eq_of_notMem_Icc hxy.le (hdcc _ ((birthday_truncate_le j c).trans_lt hj))
