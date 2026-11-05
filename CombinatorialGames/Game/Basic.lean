@@ -219,21 +219,43 @@ theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] 
   have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
   simpa [← mk_le_mk] using lf_right this
 
-theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
-    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
-    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) := by
+theorem lf_ofSets_of_mem_left' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .left) : x ⧏ !{st} := by
+  rw [ofSets_eq_ofSets_cases]
+  exact lf_ofSets_of_mem_left h
+
+theorem ofSets_lf_of_mem_right' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .right) : !{st} ⧏ x := by
+  rw [ofSets_eq_ofSets_cases]
+  exact ofSets_lf_of_mem_right h
+
+theorem ofSets_le_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ≤ !{st₂} ↔ (∀ z ∈ st₁ .left, z ⧏ !{st₂}) ∧ (∀ z ∈ st₂ .right, !{st₁} ⧏ z) := by
   apply IGame.le_iff_forall_lf.trans
   simp_rw [moves_ofSets, forall_mem_image]
-  congr! <;>
-  · rw [← Game.mk_le_mk, out_eq]
-    rfl
+  simp_rw [← Game.mk_le_mk, mk_ofSets', image_image, out_eq, image_id']
+
+theorem ofSets_lf_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ⧏ !{st₂} ↔ (∃ z ∈ st₂ .left, !{st₁} ≤ z) ∨ (∃ z ∈ st₁ .right, z ≤ !{st₂}) := by
+  rw [ofSets_le_ofSets_iff']
+  push +distrib Not
+  rfl
+
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) :=
+  ofSets_le_ofSets_iff'
 
 theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
-    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
-  rw [ofSets_le_ofSets_iff]
-  push +distrib Not
-  rfl
+    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) :=
+  ofSets_lf_ofSets_iff'
 
 end Game
 
