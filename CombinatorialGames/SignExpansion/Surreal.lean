@@ -14,8 +14,9 @@ import Mathlib.Tactic.Order
 /-!
 # Sign expansions
 
-Every surreal number has a sign expansion, a function from its birthday to the set `{-1, 1}`.
-This sign expansion uniquely identifies the number.
+In this file we define the correspondence between surreals and sign expansions. This map can be
+uniquely characterized as the order-preserving map such that every surreal gets mapped to a sign
+sequence whose length equals its birthday.
 -/
 
 theorem sign_sub_eq_of_notMem_Icc {α : Type*} [LinearOrder α]
