@@ -18,7 +18,7 @@ Every surreal number has a sign expansion, a function from its birthday to the s
 This sign expansion uniquely identifies the number.
 -/
 
-theorem sign_sub_eq_of_not_mem_Icc {α : Type*} [LinearOrder α]
+theorem sign_sub_eq_of_notMem_Icc {α : Type*} [LinearOrder α]
     [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
     SignType.sign (x - z) = SignType.sign (y - z) := by
   obtain hzx | hyz : z < x ∨ y < z := by grind
@@ -212,7 +212,7 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
       apply truncate_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_truncate_le j c) <;> grind
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
     · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
-      exact sign_sub_eq_of_not_mem_Icc hxy.le (hdcc _ ((birthday_truncate_le j c).trans_lt hj))
+      exact sign_sub_eq_of_notMem_Icc hxy.le (hdcc _ ((birthday_truncate_le j c).trans_lt hj))
     · rw [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le)]
       apply sign_sub_lt_of_mem_Icc hxy
       simpa
