@@ -246,11 +246,15 @@ theorem ofSurreal_truncate {x : Surreal.{u}} {o : NatOrdinal.{u}} :
       length_ofSurreal, WithTop.coe_le_coe]
     exact (birthday_truncate_le o x).trans h
 
-theorem range_ofSurreal : Set.range ofSurreal.{u} = { f | f.length ≠ ⊤ } := by
+@[simp]
+theorem small_ofSurreal (x : Surreal) : (ofSurreal x).Small :=
+  small_iff_length_lt_top.2 (by simp)
+
+theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
   apply subset_antisymm
   · simp [Set.range_subset_iff]
   · intro f hf
-    rw [Set.mem_ofPred, WithTop.ne_top_iff_exists] at hf
+    rw [Set.mem_ofPred, small_iff_length_ne_top, WithTop.ne_top_iff_exists] at hf
     obtain ⟨l, hl⟩ := hf
     rw [Set.mem_range]
     induction l using WellFoundedLT.induction generalizing f with | ind l ih
