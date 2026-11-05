@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.SignExpansion.Basic
 public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 /-!
 # Simplicity relation

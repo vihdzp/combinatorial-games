@@ -6,6 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 /-!
 # Extra lemmas on WithTop
@@ -15,11 +16,6 @@ universe u
 open Set NatOrdinal WithTop
 
 public section
-
--- #39952
-@[to_additive]
-instance {α} [LE α] [One α] [IsBotOneClass α] : IsBotOneClass (WithTop α) where
-  isBot_one x := by cases x <;> simp
 
 instance {α : Type*} [PartialOrder α] [Add α] [One α] [SuccAddOrder α] [NoMaxOrder α]
     [∀ a : α, Decidable (Order.succ a = a)] : SuccAddOrder (WithTop α) where

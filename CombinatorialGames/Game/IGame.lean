@@ -1149,7 +1149,7 @@ private theorem mul_comm' (x y : IGame) : x * y = y * x := by
     ← Set.image_swap_prod (x.moves _) (y.moves _),
     Set.image_image, Set.union_comm (_ '' IGame.moves left _ ×ˢ _) (_ '' IGame.moves right _ ×ˢ _),
     Prod.fst_swap, Prod.snd_swap]
-  constructor <;> refine congrArg₂ (· ∪ ·) ?_ ?_ <;> apply Set.image_congr <;>
+  constructor <;> refine congrArg₂ (α := Set IGame) (· ∪ ·) ?_ ?_ <;> apply Set.image_congr <;>
   · simp_rw [Prod.forall, Set.mem_prod, and_imp, mulOption]
     intro a b ha hb
     rw [ihx _ _ ha, ihx _ _ ha, ihy _ _ hb]
