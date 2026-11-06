@@ -19,6 +19,10 @@ uniquely characterized as the order-preserving map such that every surreal gets 
 sequence whose length equals its birthday.
 -/
 
+universe u
+
+public noncomputable section
+
 theorem sign_sub_eq_of_notMem_Icc {α : Type*} [LinearOrder α]
     [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
     SignType.sign (x - z) = SignType.sign (y - z) := by
@@ -40,9 +44,35 @@ theorem sign_sub_lt_of_mem_Icc {α : Type*} [LinearOrder α]
   · simpa
   · simpa
 
-universe u
+/-- Recursor for `SignType` using the preferred forms `0`, `-1`, and `1`. -/
+@[expose, elab_as_elim, cases_eliminator, induction_eliminator]
+def SignType.recZeroNegOne {motive : SignType → Sort*}
+    (zero : motive 0) (neg_one : motive (-1)) (one : motive 1) (t : SignType) : motive t :=
+  match t with
+  | 0 => zero
+  | -1 => neg_one
+  | 1 => one
 
-public noncomputable section
+@[simp]
+theorem SignType.recZeroNegOne_zero {motive : SignType → Sort*}
+    (zero : motive 0) (neg_one : motive (-1)) (one : motive 1) :
+    recZeroNegOne zero neg_one one 0 = zero := rfl
+
+@[simp]
+theorem SignType.recZeroNegOne_neg_one {motive : SignType → Sort*}
+    (zero : motive 0) (neg_one : motive (-1)) (one : motive 1) :
+    recZeroNegOne zero neg_one one (-1) = neg_one := rfl
+
+@[simp]
+theorem SignType.recZeroNegOne_one {motive : SignType → Sort*}
+    (zero : motive 0) (neg_one : motive (-1)) (one : motive 1) :
+    recZeroNegOne zero neg_one one 1 = one := rfl
+
+@[simp]
+theorem SignType.recZeroNegOne_neg {motive : SignType → Sort*}
+    (zero : motive 0) (neg_one : motive (-1)) (one : motive 1) (t : SignType) :
+    @recZeroNegOne motive zero neg_one one (-t) =
+      recZeroNegOne zero one neg_one t := by cases t <;> rfl
 
 open Surreal IGame SignExpansion
 namespace Surreal
@@ -280,11 +310,11 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
     obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).trunc o)
     cases hfo : f o with
     | zero =>
-      rw [SignType.zero_eq_zero, sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff]
+      rw [sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff]
       apply ((birthday_mk_le g).trans hgo).trans
-      rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo, SignType.zero_eq_zero]
-    | neg =>
-      rw [SignType.neg_eq_neg_one, sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
+      rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo]
+    | neg_one =>
+      rw [sign_eq_neg_one_iff, sub_neg, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
@@ -294,8 +324,8 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         refine ⟨o, fun j hj => ?_, ?_⟩
         · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
         · simp [hfo, trunc_apply_of_le_coe le_rfl]
-    | pos =>
-      rw [SignType.pos_eq_one, sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
+    | one =>
+      rw [sign_eq_one_iff, sub_pos, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
