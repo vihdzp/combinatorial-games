@@ -93,6 +93,9 @@ theorem IsGroup.one_le (h : IsGroup x) : 1 ≤ x := by
   rw [Nimber.one_le_iff_ne_zero]
   exact h.ne_zero
 
+theorem IsGroup.sub_lt (h : IsGroup x) ⦃y z : Nimber⦄ (hy : y < x) (hz : z < x) : y - z < x :=
+  h.add_lt hy hz
+
 theorem IsGroup.sum_lt (h : IsGroup x) {ι} {s : Finset ι}
     {f : ι → Nimber} (hs : ∀ y ∈ s, f y < x) : s.sum f < x := by
   classical
