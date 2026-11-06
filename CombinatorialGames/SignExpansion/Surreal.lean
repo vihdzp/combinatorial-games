@@ -189,8 +189,8 @@ theorem trunc_eq_of_birthday_le_of_forall_le_ge_iff
 theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     (x.trunc o).birthday = min x.birthday o := by
   obtain h | h := le_total x.birthday o
-  · rw [trunc_eq_self_iff.2 h, min_eq_right h]
-  rw [min_eq_left h]
+  · rw [trunc_eq_self_iff.2 h, min_eq_left h]
+  rw [min_eq_right h]
   apply (birthday_trunc_le o x).antisymm
   contrapose! h
   refine lt_of_eq_of_lt (congrArg birthday ?_) h
