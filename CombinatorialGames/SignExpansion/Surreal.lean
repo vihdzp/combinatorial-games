@@ -9,7 +9,6 @@ public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 
 import CombinatorialGames.Surreal.Cut
-import Mathlib.Tactic.Order
 
 /-!
 # Sign expansions
@@ -201,8 +200,7 @@ theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
 theorem trunc_trunc {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
     (x.trunc o₁).trunc o₂ = x.trunc (min o₁ o₂) := by
   refine (trunc_eq_of_birthday_le_of_forall_lt_gt_iff ?_ ?_ ?_).symm
-  · rw [birthday_trunc, birthday_trunc]
-    order
+  · grw [birthday_trunc, birthday_trunc, min_le_right x.birthday o₁]
   · intro z hz
     rw [trunc_lt_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
       trunc_lt_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
