@@ -80,6 +80,10 @@ theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
     {x y : Lex (α → SignType)} : x ≤ -y ↔ y ≤ -x := by
   simpa using Pi.Lex.neg_le_neg_iff (x := -x)
 
+theorem SignType.lt_cases {x y : SignType} :
+    x < y ↔ x = -1 ∧ y = 0 ∨ x = -1 ∧ y = 1 ∨ x = 0 ∧ y = 1 := by
+  decide +revert
+
 /-! ### Sign expansions -/
 
 noncomputable section
@@ -224,6 +228,10 @@ alias ⟨Small.length_lt_top, _⟩ := small_iff_length_lt_top
 theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 0 := by
   rw [small_iff_length_ne_top, ne_eq, length_eq_top, not_forall_not]
 
+theorem Small.of_apply_eq_zero {x : SignExpansion} {o : NatOrdinal} (h : x o = 0) :
+    Small x :=
+  small_iff_exists_eq_zero.2 ⟨o, h⟩
+
 instance : Neg SignExpansion where
   neg e := ⟨-e, by simpa using e.2⟩
 
@@ -279,7 +287,7 @@ theorem length_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
   cases c <;> simp [← apply_eq_zero, trunc, imp_iff_or_not]
 
 @[simp]
-theorem small_trunc (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
+instance Small.trunc (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
   rw [small_iff_length_ne_top, length_trunc]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
@@ -665,36 +673,56 @@ theorem succ_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.
     succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
+theorem lt_succ (x : SignExpansion) [x.Small] : x < succ x :=
+  ⟨Small.length x, by aesop⟩
+
 theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
-  refine ⟨⟨Small.length x, ?_⟩, fun y hxy ↦ ?_⟩
-  · aesop
-  · rw [lt_iff_toLex]
-    rintro ⟨i, H₁, H₂⟩
-    dsimp at H₁ H₂
-    obtain hi | rfl | hi := lt_trichotomy i (Small.length x)
-    · apply hxy.not_gt
-      refine ⟨i, fun j hj ↦ ?_, ?_⟩
-      · dsimp at *
-        rw [H₁ j hj]
-        apply succ_apply_of_lt
-        grw [hj]
-        simpa using hi.le
-      · aesop
-    · rw [succ_apply_smallLength] at H₂
-      apply hxy.not_gt
-      refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
-      · aesop
-      · simp_rw [Pi.toLex_apply, apply_smallLength]
-        rw [SignType.lt_one_iff] at H₂
-        apply H₂.lt_of_ne
-        contrapose! hxy
-        apply le_of_eq
-        ext i
-        obtain hi | hi := lt_or_ge i (Small.length x)
-        · rw [H₁ i hi, succ_apply_of_lt (by simpa using hi)]
-        · rw [apply_eq_zero_of_le hi hxy, apply_of_length_le (by simpa using hi)]
-    · rw [succ_apply_of_gt (by simpa using hi)] at H₂
-      simp at H₂
+  refine ⟨lt_succ x, fun y hxy ↦ ?_⟩
+  rw [lt_iff_toLex]
+  rintro ⟨i, H₁, H₂⟩
+  dsimp at H₁ H₂
+  obtain hi | rfl | hi := lt_trichotomy i (Small.length x)
+  · apply hxy.not_gt
+    refine ⟨i, fun j hj ↦ ?_, ?_⟩
+    · dsimp at *
+      rw [H₁ j hj]
+      apply succ_apply_of_lt
+      grw [hj]
+      simpa using hi.le
+    · aesop
+  · rw [succ_apply_smallLength] at H₂
+    apply hxy.not_gt
+    refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
+    · aesop
+    · simp_rw [Pi.toLex_apply, apply_smallLength]
+      rw [SignType.lt_one_iff] at H₂
+      apply H₂.lt_of_ne
+      contrapose! hxy
+      apply le_of_eq
+      ext i
+      obtain hi | hi := lt_or_ge i (Small.length x)
+      · rw [H₁ i hi, succ_apply_of_lt (by simpa using hi)]
+      · rw [apply_eq_zero_of_le hi hxy, apply_of_length_le (by simpa using hi)]
+  · rw [succ_apply_of_gt (by simpa using hi)] at H₂
+    simp at H₂
+
+@[simp]
+theorem succ_le_iff {x y : SignExpansion} [x.Small] : succ x ≤ y ↔ x < y :=
+  (covBy_succ x).le_iff_lt_right
+
+@[simp]
+theorem lt_succ_iff {x y : SignExpansion} [y.Small] : x < succ y ↔ x ≤ y :=
+  (covBy_succ y).le_iff_lt_left.symm
+
+theorem succ_le_succ_iff {x y : SignExpansion} [x.Small] [y.Small] : succ x ≤ succ y ↔ x ≤ y := by
+  simp
+
+theorem succ_lt_succ_iff {x y : SignExpansion} [x.Small] [y.Small] : succ x < succ y ↔ x < y := by
+  simp
+
+@[simp]
+theorem succ_inj {x y : SignExpansion} [x.Small] [y.Small] : succ x = succ y ↔ x = y := by
+  simp [le_antisymm_iff]
 
 /-! #### Predecessor function -/
 
@@ -732,12 +760,33 @@ theorem pred_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.
   rw [← smallLength_eq ho, pred_apply_smallLength]
 
 theorem pred_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
-    succ x o = -1 := by
+    pred x o = 1 := by
   aesop (add simp [lt_asymm])
+
+theorem pred_lt (x : SignExpansion) [x.Small] : pred x < x :=
+  ⟨Small.length x, by aesop⟩
 
 theorem pred_covBy (x : SignExpansion) [x.Small] : pred x ⋖ x := by
   rw [pred, SignExpansion.neg_covBy]
   exact covBy_succ _
+
+@[simp]
+theorem le_pred_iff {x y : SignExpansion} [y.Small] : x ≤ pred y ↔ x < y :=
+  (pred_covBy y).le_iff_lt_left
+
+@[simp]
+theorem pred_lt_iff {x y : SignExpansion} [x.Small] : pred x < y ↔ x ≤ y :=
+  (pred_covBy x).le_iff_lt_right.symm
+
+theorem pred_le_pred_iff {x y : SignExpansion} [x.Small] [y.Small] : pred x ≤ pred y ↔ x ≤ y := by
+  simp
+
+theorem pred_lt_pred_iff {x y : SignExpansion} [x.Small] [y.Small] : pred x < pred y ↔ x < y := by
+  simp
+
+@[simp]
+theorem pred_inj {x y : SignExpansion} [x.Small] [y.Small] : pred x = pred y ↔ x = y := by
+  simp [le_antisymm_iff]
 
 @[simp]
 theorem succ_neg (x : SignExpansion) [x.Small] : succ (-x) = -pred x := by
@@ -746,6 +795,44 @@ theorem succ_neg (x : SignExpansion) [x.Small] : succ (-x) = -pred x := by
 @[simp]
 theorem pred_neg (x : SignExpansion) [x.Small] : pred (-x) = -succ x := by
   simp [pred]
+
+theorem covBy_iff {x y : SignExpansion} :
+    x ⋖ y ↔ (∃ _ : x.Small, succ x = y) ∨ (∃ _ : y.Small, x = pred y) := by
+  refine ⟨fun h ↦ ?_, ?_⟩
+  · have h' := h.lt
+    rw [lt_iff_toLex] at h'
+    obtain ⟨i, hi, hi'⟩ := h'
+    dsimp at hi hi'
+    obtain ⟨hx, hy⟩ | ⟨hxi, hyi⟩ | ⟨hx, hy⟩ := SignType.lt_cases.1 hi'
+    · have := Small.of_apply_eq_zero hy
+      exact .inr ⟨this, h.unique_left (pred_covBy y)⟩
+    · absurd h
+      rw [not_covBy]
+      refine fun _ ↦ ⟨x ↾ i, ⟨i, ?_⟩, ⟨i, ?_⟩⟩ <;> aesop
+    · have := Small.of_apply_eq_zero hx
+      exact .inl ⟨this, .symm <| h.unique_right (covBy_succ x)⟩
+  · rintro (⟨_, rfl⟩ | ⟨_, rfl⟩)
+    · exact covBy_succ x
+    · exact pred_covBy y
+
+theorem exists_small_between {x y : SignExpansion} (h : ∃ z, x < z ∧ z < y) :
+    ∃ z, z.Small ∧ x < z ∧ z < y := by
+  obtain ⟨z, hxz, hzy⟩ := h
+  rw [lt_iff_toLex] at hxz hzy
+  obtain ⟨i, hi, hi'⟩ := hxz
+  obtain ⟨j, hj, hj'⟩ := hzy
+  obtain ⟨k, hk⟩ := exists_gt (max i j)
+  refine ⟨_, .trunc z k, ⟨i, ?_, ?_⟩, ⟨j, ?_, ?_⟩⟩
+  · dsimp at *
+    intro o ho
+    rw [hi o ho, trunc_apply_of_coe_lt]
+    grw [ho, ← hk, le_max_left i j]
+  · aesop
+  · dsimp at *
+    intro o ho
+    rw [← hj o ho, trunc_apply_of_coe_lt]
+    grw [ho, ← hk, le_max_right i j]
+  · aesop
 
 /-! #### Complete linear order instance -/
 
