@@ -221,7 +221,7 @@ alias ⟨Small.length_lt_top, _⟩ := small_iff_length_lt_top
 
 @[simp] theorem Small.zero : SignExpansion.Small 0 := ⟨by simp⟩
 
-theorem small_iff_exists_eq_zero {x : SignExpansion} : x.Small↔ ∃ o, x o = 0 := by
+theorem small_iff_exists_eq_zero {x : SignExpansion} : x.Small ↔ ∃ o, x o = 0 := by
   rw [small_iff_length_ne_top, ne_eq, length_eq_top, not_forall_not]
 
 instance : Neg SignExpansion where
