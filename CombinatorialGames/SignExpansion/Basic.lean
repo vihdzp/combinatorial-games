@@ -194,7 +194,7 @@ theorem length_top : length ⊤ = ⊤ := by
 /-- We say a sign expansion is "small" when it has length < ⊤. Equivalently, it contains at least
 one (and thus infinitely many) zeros. -/
 @[mk_iff small_iff_length_ne_top']
-class Small (x : SignExpansion) : Prop where
+protected class Small (x : SignExpansion) : Prop where
   length_ne_top : x.length ≠ ⊤
 
 /-- The length of a small sign expansion, as a `NatOrdinal`. -/
@@ -219,9 +219,9 @@ theorem small_iff_length_lt_top {x : SignExpansion} : x.Small ↔ x.length < ⊤
 
 alias ⟨Small.length_lt_top, _⟩ := small_iff_length_lt_top
 
-@[simp] theorem Small.zero : Small 0 := ⟨by simp⟩
+@[simp] theorem Small.zero : SignExpansion.Small 0 := ⟨by simp⟩
 
-theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 0 := by
+theorem small_iff_exists_eq_zero {x : SignExpansion} : x.Small↔ ∃ o, x o = 0 := by
   rw [small_iff_length_ne_top, ne_eq, length_eq_top, not_forall_not]
 
 instance : Neg SignExpansion where
@@ -236,7 +236,7 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 @[simp] theorem neg_top : -(⊤ : SignExpansion) = ⊥ := rfl
 
 @[simp] theorem length_neg (x : SignExpansion) : length (-x) = length x := by simp [length]
-@[simp] theorem small_neg_iff {x : SignExpansion} : Small (-x) ↔ Small x := by
+@[simp] theorem small_neg_iff {x : SignExpansion} : (-x).Small ↔ x.Small := by
   simp [small_iff_length_ne_top]
 
 instance Small.neg (x : SignExpansion) [x.Small] : (-x).Small := by
@@ -279,7 +279,7 @@ theorem length_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
   cases c <;> simp [← apply_eq_zero, trunc, imp_iff_or_not]
 
 @[simp]
-theorem small_trunc (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
+theorem small_trunc (x : SignExpansion) (o : NatOrdinal) : (x ↾ o).Small := by
   rw [small_iff_length_ne_top, length_trunc]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
