@@ -155,6 +155,7 @@ theorem trunc_eq_of_birthday_le_of_forall_le_ge_iff
     (fun z hz => by simpa using (hge z hz).not)
     (fun z hz => by simpa using (hle z hz).not)
 
+@[simp]
 theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     (x.trunc o).birthday = min o x.birthday := by
   obtain h | h := le_total x.birthday o
