@@ -295,7 +295,7 @@ theorem trunc_eq_self {x : SignExpansion} {o : WithTop NatOrdinal} : x ↾ o = x
       apply apply_of_length_le
       simp [ho']
 
-@[simp] alias ⟨_, trunc_eq_self_of_le⟩ := trunc_eq_self
+@[simp] alias ⟨_, trunc_of_length_le⟩ := trunc_eq_self
 
 @[simp, grind =]
 theorem trunc_trunc_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
