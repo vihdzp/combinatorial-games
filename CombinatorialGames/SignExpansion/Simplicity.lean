@@ -143,7 +143,7 @@ theorem le_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x �
   · exact .inr <| le_of_le_of_length_le hy hx h
 
 theorem of_trunc_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
-  rw [of_le_of, length_trunc, ← trunc_trunc_eq, trunc_of_length_le le_rfl]
+  rw [of_le_of, length_trunc, ← trunc_trunc_eq, trunc_eq_self_of_le le_rfl]
 
 theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
     x = y ∨ x.val.length < y.val.length := by
