@@ -380,28 +380,6 @@ theorem lt_trunc_iff {x : SignExpansion} {o : NatOrdinal} : x < x ↾ o ↔ x o 
 theorem trunc_lt_iff {x : SignExpansion} {o : NatOrdinal} : x ↾ o < x ↔ x o = 1 := by
   rw [← cmp_eq_gt_iff, cmp_trunc, SignType.orderingEquiv_eq_gt_iff]
 
-theorem eq_of_length_le_of_forall_lt_gt_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
-    (hlt : ∀ z, z.length < x.length → (z < y ↔ z < x))
-    (hgt : ∀ z, z.length < x.length → (y < z ↔ x < z)) : x = y := by
-  ext o
-  induction o using WellFoundedLT.induction with | ind o IH
-  obtain hxo | hox := le_or_gt x.length o
-  · rw [apply_eq_zero.2 hxo, apply_eq_zero.2 (hxy.trans hxo)]
-  · cases hyo : y o
-    · have hy : y.length < x.length := by
-        apply hox.trans_le'
-        rwa [← apply_eq_zero]
-      convert hyo
-      apply le_antisymm
-      · simpa using hlt y hy
-      · simpa using hgt y hy
-    · rw [SignType.neg_eq_neg_one, ← lt_trunc_iff, ← hgt]
-      · use o; aesop
-      · simpa
-    · rw [SignType.pos_eq_one, ← trunc_lt_iff, ← hlt]
-      · use o; aesop
-      · simpa
-
 /-! #### Floor function -/
 
 open Classical in
