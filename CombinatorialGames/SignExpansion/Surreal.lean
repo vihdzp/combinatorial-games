@@ -346,7 +346,7 @@ theorem mem_range_toSignExpansion (x : SignExpansion) [x.Small] :
 
 /-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
 correctly ordered with respect to simpler values. -/
-theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt
+theorem toSignExpansion_eq
     {x : Surreal} {y : SignExpansion} (hy : y.length ≤ x.birthday)
     (hlt : ∀ z : Surreal, z.birthday < x.birthday → (toSignExpansion z < y ↔ z < x))
     (hgt : ∀ z : Surreal, z.birthday < x.birthday → (y < toSignExpansion z ↔ x < z)) :
@@ -360,6 +360,22 @@ theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt
     rw [OrderEmbedding.lt_iff_lt]
     first | apply hlt | apply hgt
     simpa using hz
+
+@[simp]
+theorem toSignExpansion_neg (x : Surreal) : toSignExpansion (-x) = -toSignExpansion x := by
+  apply toSignExpansion_eq
+  · simp
+  · intro z hz
+    rw [birthday_neg] at hz
+    -- needed for `termination_by`
+    have := hz
+    rw [SignExpansion.lt_neg, ← toSignExpansion_neg z, toSignExpansion.lt_iff_lt, lt_neg]
+  · intro z hz
+    rw [birthday_neg] at hz
+    -- needed for `termination_by`
+    have := hz
+    rw [SignExpansion.neg_lt, ← toSignExpansion_neg z, toSignExpansion.lt_iff_lt, neg_lt]
+termination_by x.birthday
 
 end Surreal
 
