@@ -73,24 +73,21 @@ theorem birthday_trunc_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
   intro p y hy
   exact Order.add_one_le_of_lt hy.1
 
-theorem trunc_of_birthday_le {o : NatOrdinal.{u}} {x : Surreal.{u}}
-    (h : x.birthday ≤ o) : x.trunc o = x := by
-  rw [trunc, OrderHom.coe_mk]
-  apply Surreal.ofSets_eq_of_forall_birthday_le'
-  · simp
-  · simp
-  · intro z hzl hzr
-    by_contra! hbb
-    obtain hzx | hxz := lt_or_gt_of_ne (ne_of_apply_ne birthday hbb.ne)
-    · exact (hzl z ⟨hbb.trans_le h, hzx⟩).false
-    · exact (hzr z ⟨hbb.trans_le h, hxz⟩).false
-
 @[simp]
 theorem trunc_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     x.trunc o = x ↔ x.birthday ≤ o := by
-  refine ⟨fun h => ?_, trunc_of_birthday_le⟩
-  refine le_of_not_gt fun ho => ne_of_lt ?_ (congrArg birthday h)
-  exact (x.birthday_trunc_le o).trans_lt ho
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · refine le_of_not_gt fun ho => ne_of_lt ?_ (congrArg birthday h)
+    exact (x.birthday_trunc_le o).trans_lt ho
+  · rw [trunc, OrderHom.coe_mk]
+    apply Surreal.ofSets_eq_of_forall_birthday_le'
+    · simp
+    · simp
+    · intro z hzl hzr
+      by_contra! hbb
+      obtain hzx | hxz := lt_or_gt_of_ne (ne_of_apply_ne birthday hbb.ne)
+      · exact (hzl z ⟨hbb.trans_le h, hzx⟩).false
+      · exact (hzr z ⟨hbb.trans_le h, hxz⟩).false
 
 @[simp]
 theorem trunc_birthday_self {x : Surreal.{u}} :
