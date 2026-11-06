@@ -208,15 +208,11 @@ theorem trunc_trunc {x : Surreal.{u}} {o₁ o₂ : NatOrdinal.{u}} :
     rw [lt_trunc_iff_lt (hz.trans_le (min_le_right o₁ o₂)),
       lt_trunc_iff_lt (hz.trans_le (min_le_left o₁ o₂))]
 
-end Surreal
-
-namespace SignExpansion
-
 /-- To every surreal is associated a unique sign expansion, which can be seen as
 a sequence of directions along an ordinal-depth complete binary tree.
 The `o`'th term of this sign sequence is `+` if `trunc o x < x`,
 `-` if `x < trunc o x`, and `0` if `trunc o x = x`. -/
-def ofSurreal : Surreal.{u} ↪o SignExpansion :=
+def toSignExpansion : Surreal.{u} ↪o SignExpansion :=
   .ofStrictMono (fun x =>
     { sign i := .sign (x - x.trunc i)
       isUpperSet_preimage_singleton_zero' := by
@@ -243,49 +239,50 @@ def ofSurreal : Surreal.{u} ↪o SignExpansion :=
       apply sign_sub_lt_of_mem_Icc hxy
       simpa
 
-theorem ofSurreal_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    ofSurreal x o = .sign (x - x.trunc o) := (rfl)
+theorem toSignExpansion_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
+    toSignExpansion x o = .sign (x - x.trunc o) := (rfl)
 
-theorem ofSurreal_eq_neg_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal x o = -1 ↔ x < x.trunc o := by
-  rw [ofSurreal_apply, sign_eq_neg_one_iff, sub_lt_zero]
+theorem toSignExpansion_eq_neg_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    toSignExpansion x o = -1 ↔ x < x.trunc o := by
+  rw [toSignExpansion_apply, sign_eq_neg_one_iff, sub_lt_zero]
 
-theorem ofSurreal_eq_zero_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal x o = 0 ↔ x.trunc o = x := by
-  rw [ofSurreal_apply, sign_eq_zero_iff, sub_eq_zero, eq_comm]
+theorem toSignExpansion_eq_zero_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    toSignExpansion x o = 0 ↔ x.trunc o = x := by
+  rw [toSignExpansion_apply, sign_eq_zero_iff, sub_eq_zero, eq_comm]
 
-theorem ofSurreal_eq_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal x o = 1 ↔ x.trunc o < x := by
-  rw [ofSurreal_apply, sign_eq_one_iff, sub_pos]
+theorem toSignExpansion_eq_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    toSignExpansion x o = 1 ↔ x.trunc o < x := by
+  rw [toSignExpansion_apply, sign_eq_one_iff, sub_pos]
 
 @[simp]
-theorem length_ofSurreal (x : Surreal.{u}) :
-    (ofSurreal x).length = x.birthday := by
+theorem length_toSignExpansion (x : Surreal.{u}) :
+    (toSignExpansion x).length = x.birthday := by
   apply eq_of_forall_ge_iff
   intro c
   cases c with
   | top => simp
-  | coe c => rw [← apply_eq_zero, ofSurreal_eq_zero_iff, trunc_eq_self_iff, WithTop.coe_le_coe]
+  | coe c =>
+    rw [← apply_eq_zero, toSignExpansion_eq_zero_iff, trunc_eq_self_iff, WithTop.coe_le_coe]
 
 @[simp]
-theorem ofSurreal_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
-    ofSurreal (x.trunc o) = (ofSurreal x).trunc o := by
+theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+    toSignExpansion (x.trunc o) = (toSignExpansion x).trunc o := by
   ext o'
   obtain h | h := lt_or_ge o' o
-  · rw [ofSurreal_apply, trunc_trunc, min_eq_right_of_lt h,
-      trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), ofSurreal_apply]
+  · rw [toSignExpansion_apply, trunc_trunc, min_eq_right_of_lt h,
+      trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), toSignExpansion_apply]
     simp_rw [sign_apply, sub_pos, sub_neg,
       lt_trunc_iff_lt ((birthday_trunc_le o' x).trans_lt h),
       trunc_lt_iff_lt ((birthday_trunc_le o' x).trans_lt h)]
   · rw [trunc_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
-      length_ofSurreal, WithTop.coe_le_coe]
+      length_toSignExpansion, WithTop.coe_le_coe]
     exact (birthday_trunc_le o x).trans h
 
 @[simp]
-theorem small_ofSurreal (x : Surreal) : (ofSurreal x).Small :=
+theorem small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
   small_iff_length_lt_top.2 (by simp)
 
-theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
+theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred Small := by
   apply subset_antisymm
   · simp [Set.range_subset_iff]
   · intro f hf
@@ -298,12 +295,12 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         ((WithTop.untop_lt_iff _).2 hl) (WithTop.coe_untop _ _)
     choose u hu using ih
     let g : IGame := !{fun p => {s : IGame.{u} | s.birthday < l} ∩
-      {s | ∃ _ : s.Numeric, p.cases (ofSurreal (.mk s) < f) (f < ofSurreal (.mk s))}}
+      {s | ∃ _ : s.Numeric, p.cases (toSignExpansion (.mk s) < f) (f < toSignExpansion (.mk s))}}
     have hgn : g.Numeric := by
       rw [numeric_def]
       refine ⟨fun y hy z hz => ?_, fun p y hy => ?_⟩
       · rw [moves_ofSets] at hy hz
-        exact (@mk_lt_mk y z hy.2.1 hz.2.1).mp (ofSurreal.lt_iff_lt.1 (hy.2.2.trans hz.2.2))
+        exact (@mk_lt_mk y z hy.2.1 hz.2.1).mp (toSignExpansion.lt_iff_lt.1 (hy.2.2.trans hz.2.2))
       · rw [moves_ofSets] at hy
         exact hy.2.1
     have hgo : g.birthday ≤ l := by
@@ -317,11 +314,11 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
     obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).trunc o)
     cases hfo : f o with
     | zero =>
-      rw [ofSurreal_eq_zero_iff, trunc_eq_self_iff]
+      rw [toSignExpansion_eq_zero_iff, trunc_eq_self_iff]
       apply ((birthday_mk_le g).trans hgo).trans
       rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo]
     | neg_one =>
-      rw [ofSurreal_eq_neg_one_iff, ← hkg, mk_lt_mk]
+      rw [toSignExpansion_eq_neg_one_iff, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
@@ -332,7 +329,7 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
         · simp [hfo, trunc_apply_of_le_coe le_rfl]
     | one =>
-      rw [ofSurreal_eq_one_iff, ← hkg, mk_lt_mk]
+      rw [toSignExpansion_eq_one_iff, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
       rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
@@ -343,4 +340,4 @@ theorem range_ofSurreal : Set.range ofSurreal.{u} = .ofPred Small := by
         · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
         · simp [hfo, trunc_apply_of_le_coe le_rfl]
 
-end SignExpansion
+end Surreal
