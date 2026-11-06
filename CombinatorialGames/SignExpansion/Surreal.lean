@@ -161,8 +161,7 @@ theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
   obtain h | h := le_total x.birthday o
   · rw [trunc_eq_self_iff.2 h, min_eq_right h]
   rw [min_eq_left h]
-  apply le_antisymm
-  · exact birthday_trunc_le o x
+  apply (birthday_trunc_le o x).antisymm
   contrapose! h
   refine lt_of_eq_of_lt (congrArg birthday ?_) h
   apply le_antisymm
