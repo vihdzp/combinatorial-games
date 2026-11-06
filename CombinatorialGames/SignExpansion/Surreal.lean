@@ -279,7 +279,7 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     exact (birthday_trunc_le o x).trans h
 
 @[simp]
-theorem small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
+instance small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
   small_iff_length_lt_top.2 (by simp)
 
 theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred Small := by
@@ -340,4 +340,63 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred Small :=
         · simp [← ih j hj, trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 hj)]
         · simp [hfo, trunc_apply_of_le_coe le_rfl]
 
+theorem mem_range_toSignExpansion (x : SignExpansion) [x.Small] :
+    x ∈ Set.range toSignExpansion := by
+  rwa [range_toSignExpansion]
+
+/-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
+correctly ordered with respect to simpler values. -/
+theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt
+    {x : Surreal} {y : SignExpansion} (hy : y.length ≤ x.birthday)
+    (hlt : ∀ z : Surreal, z.birthday < x.birthday → (toSignExpansion z < y ↔ z < x))
+    (hgt : ∀ z : Surreal, z.birthday < x.birthday → (y < toSignExpansion z ↔ x < z)) :
+    toSignExpansion x = y := by
+  apply eq_of_length_le_of_forall_lt_gt_iff
+  · simpa
+  all_goals
+  · intro z hz
+    have := small_iff_length_lt_top.2 hz.lt_top
+    obtain ⟨z, rfl⟩ := mem_range_toSignExpansion z
+    rw [OrderEmbedding.lt_iff_lt]
+    first | apply hlt | apply hgt
+    simpa using hz
+
 end Surreal
+
+namespace SignExpansion
+
+/-- The surreal associated to the sign expansion. -/
+def toSurreal (x : SignExpansion) [x.Small] : Surreal :=
+  (mem_range_toSignExpansion x).choose
+
+@[simp]
+theorem _root_.Surreal.toSignExpansion_toSurreal (x : SignExpansion) [x.Small] :
+    x.toSurreal.toSignExpansion = x :=
+  (mem_range_toSignExpansion x).choose_spec
+
+@[simp]
+theorem toSurreal_toSignExpansion (x : Surreal) :
+    x.toSignExpansion.toSurreal = x := by
+  rw [← toSignExpansion.inj, toSignExpansion_toSurreal]
+
+@[simp]
+theorem birthday_toSurreal (x : SignExpansion) [x.Small] :
+    x.toSurreal.birthday = x.length := by
+  conv_rhs => rw [← toSignExpansion_toSurreal x, length_toSignExpansion]
+
+@[simp]
+theorem toSurreal_inj {x y : SignExpansion} [x.Small] [y.Small] :
+    x.toSurreal = y.toSurreal ↔ x = y := by
+  rw [← toSignExpansion.inj, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
+
+@[simp]
+theorem toSurreal_le_toSurreal {x y : SignExpansion} [x.Small] [y.Small] :
+    x.toSurreal ≤ y.toSurreal ↔ x ≤ y := by
+  rw [← toSignExpansion.le_iff_le, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
+
+@[simp]
+theorem toSurreal_lt_toSurreal {x y : SignExpansion} [x.Small] [y.Small] :
+    x.toSurreal < y.toSurreal ↔ x < y := by
+  rw [← toSignExpansion.lt_iff_lt, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
+
+end SignExpansion
