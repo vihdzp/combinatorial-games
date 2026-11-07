@@ -67,17 +67,17 @@ theorem toSignExpansion_lt_right {x : Cut} {y : Surreal} (hy : y ∈ x.right) :
     exact x.left_lt_right hz hr
 
 @[simp]
-theorem length_toSignExpansion (x : Cut) : x.toSignExpansion.length = ⊤ := by
-  by_contra! h
-  rw [← small_iff_length_ne_top] at h
+theorem not_small_toSignExpansion (x : Cut) : ¬ x.toSignExpansion.Small := by
+  intro
   obtain ⟨y, hyx⟩ := mem_range_toSignExpansion x.toSignExpansion
   obtain hy | hy := Set.mem_union_of_codisjoint x.isCompl_left_right.codisjoint y
   · exact (left_lt_toSignExpansion hy).ne hyx
   · exact (toSignExpansion_lt_right hy).ne' hyx
 
 @[simp]
-theorem not_small_toSignExpansion (x : Cut) : ¬ x.toSignExpansion.Small := by
-  simp [small_iff_length_ne_top]
+theorem length_toSignExpansion (x : Cut) : x.toSignExpansion.length = ⊤ := by
+  rw [← not_ne_iff, ← small_iff_length_ne_top]
+  exact not_small_toSignExpansion x
 
 /-- The sign expansion corresponding to `x` is the unique sign expansion between those of all the
 surreals in the left and right sets. -/
