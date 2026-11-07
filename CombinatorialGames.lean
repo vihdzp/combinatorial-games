@@ -29,6 +29,7 @@ public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Game.Stops
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
+public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
@@ -46,6 +47,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.Nimber.SmallDegree.Inseparable
 public import CombinatorialGames.Nimber.SmallDegree.Quartic
 public import CombinatorialGames.SignExpansion.Basic
+public import CombinatorialGames.SignExpansion.Cut
 public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.SignExpansion.Surreal
 public import CombinatorialGames.Surreal.Basic
