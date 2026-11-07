@@ -37,11 +37,11 @@ concept terminology.
 
 universe u
 
+@[expose] public section
+
 theorem Set.mem_union_of_codisjoint {α : Type*} {x y : Set α} (h : Codisjoint x y) (z : α) :
     z ∈ x ∪ y := by
   simpa using Set.ext_iff.1 (codisjoint_iff.1 h) z
-
-@[expose] public section
 
 namespace Surreal
 open Set IGame
