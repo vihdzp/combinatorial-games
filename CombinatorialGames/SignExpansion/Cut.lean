@@ -38,62 +38,45 @@ theorem lt_biInf_toSignExpansion_right {x : Cut} {y : Surreal} (hy : y ∈ x.lef
 
 open Classical in
 /-- The sign expansion associated to a cut, thought of as a surreal of birthday `univ`. -/
-def toSignExpansion (x : Cut) : SignExpansion :=
-  if ∃ a ∈ x.left, ∀ b ∈ x.left, b ≤ a
-    then ⨅ y ∈ x.right, y.toSignExpansion
-    else ⨆ y ∈ x.left, y.toSignExpansion
+def toSignExpansion : Cut ↪o SignExpansion :=
+  .ofStrictMono (fun x ↦ ⨆ y ∈ x.left, y.toSignExpansion.succ) <| by
+    intro x y h
+    obtain ⟨z, hx, hy⟩ := lt_iff_nonempty_inter.1 h
+    apply lt_of_le_of_lt (b := z.toSignExpansion)
+    · refine iSup₂_le fun w hw ↦ ?_
+      simpa using x.left_lt_right hw hx
+    · rw [← succ_le_iff]
+      apply le_biSup _ hy
 
 attribute [gcongr] OrderEmbedding.strictMono
 
 theorem left_lt_toSignExpansion {x : Cut} {y : Surreal} (hy : y ∈ x.left) :
     y.toSignExpansion < toSignExpansion x := by
-  rw [toSignExpansion]
-  split_ifs with hl
-  · exact lt_biInf_toSignExpansion_right hy
-  · push Not at hl
-    obtain ⟨z, hz, hyz⟩ := hl y hy
-    grw [hyz]
-    apply le_biSup
-    simpa
+  rw [← succ_le_iff]
+  apply le_biSup _ hy
 
 theorem toSignExpansion_lt_right {x : Cut} {y : Surreal} (hy : y ∈ x.right) :
     toSignExpansion x < y.toSignExpansion := by
-  rw [toSignExpansion]
-  split_ifs with hl
-  · obtain ⟨l, hl, hl'⟩ := hl
-    have hr : ∀ a ∈ x.right, ∃ b ∈ x.right, b < a := by
+  change ⨆ y ∈ x.left, y.toSignExpansion.succ < _
+  by_cases! hl : ∀ a ∈ x.left, ∃ b ∈ x.left, a < b
+  · rw [← le_pred_iff]
+    refine iSup₂_le fun z hz ↦ ?_
+    obtain ⟨w, hw, hzw⟩ := hl z hz
+    grw [succ_le_iff, hzw, le_pred_iff, OrderEmbedding.lt_iff_lt]
+    exact x.left_lt_right hw hy
+  · have hr : ∀ a ∈ x.right, ∃ b ∈ x.right, b < a := by
       by_contra! hr
+      obtain ⟨l, hl, hl'⟩ := hl
       obtain ⟨r, hr, hr'⟩ := hr
       obtain ⟨z, hzl, hzr⟩ := exists_between (x.left_lt_right hl hr)
       obtain hz | hz := Set.mem_union_of_codisjoint x.isCompl_left_right.codisjoint z
       · exact (hl' z hz).not_gt hzl
       · exact (hr' z hz).not_gt hzr
-    obtain ⟨z, hz, hzy⟩ := hr y hy
-    grw [← hzy]
-    apply biInf_le
-    simpa
-  · exact biSup_toSignExpansion_left_lt hy
-
-theorem toSignExpansion_strictMono : StrictMono toSignExpansion := by
-  intro x y h
-  rw [lt_iff_nonempty_inter] at h
-  obtain ⟨z, hx, hy⟩ := h
-  exact (toSignExpansion_lt_right hx).trans (left_lt_toSignExpansion hy)
-
-@[simp]
-theorem toSignExpansion_lt_toSignExpansion {x y : Cut} :
-    x.toSignExpansion < y.toSignExpansion ↔ x < y :=
-  toSignExpansion_strictMono.lt_iff_lt
-
-@[simp]
-theorem toSignExpansion_le_toSignExpansion {x y : Cut} :
-    x.toSignExpansion ≤ y.toSignExpansion ↔ x ≤ y :=
-  toSignExpansion_strictMono.le_iff_le
-
-@[simp]
-theorem toSignExpansion_inj {x y : Cut} :
-    x.toSignExpansion = y.toSignExpansion ↔ x = y :=
-  toSignExpansion_strictMono.injective.eq_iff
+    obtain ⟨r, hr, hry⟩ := hr y hy
+    grw [← hry]
+    refine iSup₂_le fun z hz ↦ ?_
+    rw [succ_le_iff, OrderEmbedding.lt_iff_lt]
+    exact x.left_lt_right hz hr
 
 @[simp]
 theorem length_toSignExpansion (x : Cut) : x.toSignExpansion.length = ⊤ := by
@@ -148,32 +131,9 @@ theorem toSignExpansion_neg (x : Cut) : toSignExpansion (-x) = -toSignExpansion 
   · simpa using fun _ ↦ toSignExpansion_lt_right
   · simpa using fun _ ↦ left_lt_toSignExpansion
 
-@[simp]
-theorem toSignExpansion_leftSurreal (x : Surreal) :
-    (leftSurreal x).toSignExpansion = .pred x.toSignExpansion := by
-  apply toSignExpansion_eq
-  · simp_rw [left_leftSurreal, Set.mem_Iio]
-    intro y hy
-    obtain ⟨z, hzy, hxz⟩ := exists_between hy
-    grw [hzy]
-    simpa
-  · simp
-
-@[simp]
-theorem toSignExpansion_rightSurreal (x : Surreal) :
-    (rightSurreal x).toSignExpansion = .succ x.toSignExpansion := by
-  conv_lhs => rw [← neg_neg x, ← neg_leftSurreal, toSignExpansion_neg]
-  simp
-
 theorem toSignExpansion_eq_biSup_left (x : Cut) :
-    toSignExpansion x = ⨆ y ∈ x.left, y.toSignExpansion.succ := by
-  apply toSignExpansion_eq <;> intro y hy
-  · apply (lt_succ _).trans_le
-    apply le_iSup₂ y hy
-  · grw [← toSignExpansion_lt_right hy]
-    refine iSup₂_le fun z hz ↦ ?_
-    rw [succ_le_iff]
-    exact left_lt_toSignExpansion hz
+    toSignExpansion x = ⨆ y ∈ x.left, y.toSignExpansion.succ :=
+  (rfl)
 
 theorem toSignExpansion_eq_biInf_right (x : Cut) :
     toSignExpansion x = ⨅ y ∈ x.right, y.toSignExpansion.pred := by
@@ -183,6 +143,19 @@ theorem toSignExpansion_eq_biInf_right (x : Cut) :
     rw [le_pred_iff]
     exact toSignExpansion_lt_right hz
   · exact (iInf₂_le y hy).trans_lt (pred_lt _)
+
+@[simp]
+theorem toSignExpansion_leftSurreal (x : Surreal) :
+    (leftSurreal x).toSignExpansion = .pred x.toSignExpansion := by
+  rw [toSignExpansion_eq_biInf_right]
+  apply (le_iInf₂ _).antisymm' (biInf_le _ _) <;> simp
+
+@[simp]
+theorem toSignExpansion_rightSurreal (x : Surreal) :
+    (rightSurreal x).toSignExpansion = .succ x.toSignExpansion := by
+  conv_lhs => rw [← neg_neg x, ← neg_leftSurreal, toSignExpansion_neg]
+  simp
+
 
 /-
 @[simp]
