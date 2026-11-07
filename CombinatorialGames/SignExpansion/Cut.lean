@@ -134,13 +134,13 @@ theorem toSignExpansion_eq_biInf_right (x : Cut) :
 
 @[simp]
 theorem toSignExpansion_leftSurreal (x : Surreal) :
-    (leftSurreal x).toSignExpansion = .pred x.toSignExpansion := by
+    (leftSurreal x).toSignExpansion = x.toSignExpansion.pred := by
   rw [toSignExpansion_eq_biInf_right]
   apply (le_iInf₂ _).antisymm' (biInf_le _ _) <;> simp
 
 @[simp]
 theorem toSignExpansion_rightSurreal (x : Surreal) :
-    (rightSurreal x).toSignExpansion = .succ x.toSignExpansion := by
+    (rightSurreal x).toSignExpansion = x.toSignExpansion.succ := by
   conv_lhs => rw [← neg_neg x, ← neg_leftSurreal, toSignExpansion_neg]
   simp
 
