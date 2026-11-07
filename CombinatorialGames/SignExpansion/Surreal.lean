@@ -282,7 +282,7 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
 instance small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
   small_iff_length_lt_top.2 (by simp)
 
-theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred Small := by
+theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpansion.Small := by
   apply subset_antisymm
   · simp [Set.range_subset_iff]
   · intro f hf

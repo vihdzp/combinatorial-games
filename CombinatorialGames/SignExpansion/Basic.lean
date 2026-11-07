@@ -198,20 +198,20 @@ theorem length_top : length ⊤ = ⊤ := by
 /-- We say a sign expansion is "small" when it has length < ⊤. Equivalently, it contains at least
 one (and thus infinitely many) zeros. -/
 @[mk_iff small_iff_length_ne_top']
-class Small (x : SignExpansion) : Prop where
+protected class Small (x : SignExpansion) : Prop where
   length_ne_top : x.length ≠ ⊤
 
 /-- The length of a small sign expansion, as a `NatOrdinal`. -/
 abbrev Small.length (x : SignExpansion) [x.Small] : NatOrdinal :=
   x.length.untop Small.length_ne_top
 
-theorem coe_smallLength (x : SignExpansion) [x.Small] : Small.length x = x.length := by simp
+theorem Small.coe_length (x : SignExpansion) [x.Small] : Small.length x = x.length := by simp
 
 @[simp]
-theorem apply_smallLength (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
-  rw [apply_eq_zero, coe_smallLength]
+theorem Small.apply_length (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
+  rw [apply_eq_zero, coe_length]
 
-theorem smallLength_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem Small.length_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
     Small.length x = o := by
   rw! [Small.length, ho, WithTop.untop_coe]
   rfl
@@ -223,13 +223,12 @@ theorem small_iff_length_lt_top {x : SignExpansion} : x.Small ↔ x.length < ⊤
 
 alias ⟨Small.length_lt_top, _⟩ := small_iff_length_lt_top
 
-@[simp] theorem Small.zero : Small 0 := ⟨by simp⟩
+@[simp] theorem Small.zero : SignExpansion.Small 0 := ⟨by simp⟩
 
-theorem small_iff_exists_eq_zero {x : SignExpansion} : Small x ↔ ∃ o, x o = 0 := by
+theorem small_iff_exists_eq_zero {x : SignExpansion} : x.Small ↔ ∃ o, x o = 0 := by
   rw [small_iff_length_ne_top, ne_eq, length_eq_top, not_forall_not]
 
-theorem Small.of_apply_eq_zero {x : SignExpansion} {o : NatOrdinal} (h : x o = 0) :
-    Small x :=
+theorem Small.of_apply_eq_zero {x : SignExpansion} {o : NatOrdinal} (h : x o = 0) : x.Small :=
   small_iff_exists_eq_zero.2 ⟨o, h⟩
 
 instance : Neg SignExpansion where
@@ -244,7 +243,7 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 @[simp] theorem neg_top : -(⊤ : SignExpansion) = ⊥ := rfl
 
 @[simp] theorem length_neg (x : SignExpansion) : length (-x) = length x := by simp [length]
-@[simp] theorem small_neg_iff {x : SignExpansion} : Small (-x) ↔ Small x := by
+@[simp] theorem small_neg_iff {x : SignExpansion} : (-x).Small ↔ x.Small := by
   simp [small_iff_length_ne_top]
 
 instance Small.neg (x : SignExpansion) [x.Small] : (-x).Small := by
@@ -287,7 +286,7 @@ theorem length_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
   cases c <;> simp [← apply_eq_zero, trunc, imp_iff_or_not]
 
 @[simp]
-instance Small.trunc (x : SignExpansion) (o : NatOrdinal) : Small (x ↾ o) := by
+instance Small.trunc (x : SignExpansion) (o : NatOrdinal) : (x ↾ o).Small := by
   rw [small_iff_length_ne_top, length_trunc]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
 
@@ -298,12 +297,12 @@ theorem trunc_eq_self {x : SignExpansion} {o : WithTop NatOrdinal} : x ↾ o = x
     exact min_le_right ..
   · ext o'
     obtain ho' | ho' := lt_or_ge (↑o') x.length
-    · rw [trunc_apply_of_coe_lt (ho'.trans_le ho)]
+    · exact trunc_apply_of_coe_lt (ho'.trans_le ho)
     · rw [apply_of_length_le ho']
       apply apply_of_length_le
       simp [ho']
 
-@[simp] alias ⟨_, trunc_eq_self_of_le⟩ := trunc_eq_self
+@[simp] alias ⟨_, trunc_of_length_le⟩ := trunc_eq_self
 
 @[simp, grind =]
 theorem trunc_trunc_eq {x : SignExpansion} {o₁ o₂ : WithTop NatOrdinal} :
@@ -351,23 +350,23 @@ protected theorem neg_covBy_neg_iff {x y : SignExpansion} : -x ⋖ -y ↔ y ⋖ 
   rw [covBy_iff_le_iff_lt_left, covBy_iff_le_iff_lt_right, (Equiv.neg _).forall_congr_left]
   simp
 
-protected theorem neg_le {x y : SignExpansion} : -x ≤ y ↔ -y ≤ x :=
-  by simpa using SignExpansion.neg_le_neg_iff (y := -y)
+protected theorem neg_le {x y : SignExpansion} : -x ≤ y ↔ -y ≤ x := by
+  simpa using SignExpansion.neg_le_neg_iff (y := -y)
 
-protected theorem le_neg {x y : SignExpansion} : x ≤ -y ↔ y ≤ -x :=
-  by simpa using SignExpansion.neg_le_neg_iff (x := -x)
+protected theorem le_neg {x y : SignExpansion} : x ≤ -y ↔ y ≤ -x := by
+  simpa using SignExpansion.neg_le_neg_iff (x := -x)
 
-protected theorem neg_lt {x y : SignExpansion} : -x < y ↔ -y < x :=
-  by simpa using SignExpansion.neg_lt_neg_iff (y := -y)
+protected theorem neg_lt {x y : SignExpansion} : -x < y ↔ -y < x := by
+  simpa using SignExpansion.neg_lt_neg_iff (y := -y)
 
-protected theorem lt_neg {x y : SignExpansion} : x < -y ↔ y < -x :=
-  by simpa using SignExpansion.neg_lt_neg_iff (x := -x)
+protected theorem lt_neg {x y : SignExpansion} : x < -y ↔ y < -x := by
+  simpa using SignExpansion.neg_lt_neg_iff (x := -x)
 
-protected theorem neg_covBy {x y : SignExpansion} : -x ⋖ y ↔ -y ⋖ x :=
-  by simpa using SignExpansion.neg_covBy_neg_iff (y := -y)
+protected theorem neg_covBy {x y : SignExpansion} : -x ⋖ y ↔ -y ⋖ x := by
+  simpa using SignExpansion.neg_covBy_neg_iff (y := -y)
 
-protected theorem covBy_neg {x y : SignExpansion} : x ⋖ -y ↔ y ⋖ -x :=
-  by simpa using SignExpansion.neg_covBy_neg_iff (x := -x)
+protected theorem covBy_neg {x y : SignExpansion} : x ⋖ -y ↔ y ⋖ -x := by
+  simpa using SignExpansion.neg_covBy_neg_iff (x := -x)
 
 theorem cmp_trunc (x : SignExpansion) (o : NatOrdinal) : cmp x (x ↾ o) = (x o).orderingEquiv := by
   cases ho : x o
@@ -388,6 +387,7 @@ theorem lt_trunc_iff {x : SignExpansion} {o : NatOrdinal} : x < x ↾ o ↔ x o 
 theorem trunc_lt_iff {x : SignExpansion} {o : NatOrdinal} : x ↾ o < x ↔ x o = 1 := by
   rw [← cmp_eq_gt_iff, cmp_trunc, SignType.orderingEquiv_eq_gt_iff]
 
+-- TODO make imp version instead?
 theorem eq_of_length_le_of_forall_lt_gt_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
     (hlt : ∀ z, z.length < x.length → (z < y ↔ z < x))
     (hgt : ∀ z, z.length < x.length → (y < z ↔ x < z)) : x = y := by
@@ -667,7 +667,7 @@ theorem succ_apply_smallLength {x : SignExpansion} [x.Small] :
 
 theorem succ_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
     succ x o = 1 := by
-  rw [← smallLength_eq ho, succ_apply_smallLength]
+  rw [← Small.length_eq ho, succ_apply_smallLength]
 
 theorem succ_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
     succ x o = -1 := by
@@ -694,7 +694,7 @@ theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
     apply hxy.not_gt
     refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
     · aesop
-    · simp_rw [Pi.toLex_apply, apply_smallLength]
+    · simp_rw [Pi.toLex_apply, Small.apply_length]
       rw [SignType.lt_one_iff] at H₂
       apply H₂.lt_of_ne
       contrapose! hxy
@@ -757,10 +757,10 @@ theorem pred_apply_smallLength {x : SignExpansion} [x.Small] :
 
 theorem pred_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
     pred x o = -1 := by
-  rw [← smallLength_eq ho, pred_apply_smallLength]
+  rw [← Small.length_eq ho, pred_apply_smallLength]
 
 theorem pred_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
-    pred x o = 1 := by
+    succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
 theorem pred_lt (x : SignExpansion) [x.Small] : pred x < x :=

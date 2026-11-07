@@ -197,8 +197,8 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 @[simp] theorem toIGame_one :  ((1 : Dyadic) : IGame) = 1 := by simpa using toIGame_natCast 1
 
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
-    x = !{{(lower x : IGame)} | {(upper x : IGame)}} :=
-  by rw [toIGame, dite_eq_right hx]
+    x = !{{(lower x : IGame)} | {(upper x : IGame)}} := by
+  rw [toIGame, dite_eq_right hx]
 
 @[simp]
 theorem toIGame_half : half = ½ := by
