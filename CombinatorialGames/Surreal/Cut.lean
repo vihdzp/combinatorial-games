@@ -37,6 +37,10 @@ concept terminology.
 
 universe u
 
+theorem Set.mem_union_of_codisjoint {α : Type*} {x y : Set α} (h : Codisjoint x y) (z : α) :
+    z ∈ x ∪ y := by
+  simpa using Set.ext_iff.1 (codisjoint_iff.1 h) z
+
 @[expose] public section
 
 namespace Surreal
@@ -193,6 +197,16 @@ protected theorem neg_lt {x y : Cut} : -x < y ↔ -y < x := by
   simpa using @Cut.neg_lt_neg_iff x (-y)
 protected theorem lt_neg {x y : Cut} : x < -y ↔ y < -x := by
   simpa using @Cut.neg_lt_neg_iff (-x) y
+
+-- Do we not have a set version of `NoMaxOrder` and `NoMinOrder`?
+theorem noMax_left_or_noMin_right (x : Cut) :
+    (∀ a ∈ x.left, ∃ b ∈ x.left, a < b) ∨ (∀ a ∈ x.right, ∃ b ∈ x.right, b < a) := by
+  by_contra! H
+  obtain ⟨⟨l, hl, hl'⟩, ⟨r, hr, hr'⟩⟩ := H
+  obtain ⟨z, hzl, hzr⟩ := exists_between (x.left_lt_right hl hr)
+  obtain hz | hz := Set.mem_union_of_codisjoint x.isCompl_left_right.codisjoint z
+  · exact (hl' z hz).not_gt hzl
+  · exact (hr' z hz).not_gt hzr
 
 /-! ### Cuts from games -/
 

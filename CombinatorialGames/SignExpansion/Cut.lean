@@ -16,10 +16,6 @@ A cut can be thought of as a `Surreal` of birthday `univ`. In particular, they c
 sequences without any zeros. This file constructs this correspondence.
 -/
 
-theorem Set.mem_union_of_codisjoint {α : Type*} {x y : Set α} (h : Codisjoint x y) (z : α) :
-    z ∈ x ∪ y := by
-  simpa using Set.ext_iff.1 (codisjoint_iff.1 h) z
-
 public noncomputable section
 
 open SignExpansion
@@ -58,21 +54,13 @@ theorem left_lt_toSignExpansion {x : Cut} {y : Surreal} (hy : y ∈ x.left) :
 theorem toSignExpansion_lt_right {x : Cut} {y : Surreal} (hy : y ∈ x.right) :
     toSignExpansion x < y.toSignExpansion := by
   change ⨆ y ∈ x.left, y.toSignExpansion.succ < _
-  by_cases! hl : ∀ a ∈ x.left, ∃ b ∈ x.left, a < b
+  obtain hl | hr := noMax_left_or_noMin_right x
   · rw [← le_pred_iff]
     refine iSup₂_le fun z hz ↦ ?_
     obtain ⟨w, hw, hzw⟩ := hl z hz
     grw [succ_le_iff, hzw, le_pred_iff, OrderEmbedding.lt_iff_lt]
     exact x.left_lt_right hw hy
-  · have hr : ∀ a ∈ x.right, ∃ b ∈ x.right, b < a := by
-      by_contra! hr
-      obtain ⟨l, hl, hl'⟩ := hl
-      obtain ⟨r, hr, hr'⟩ := hr
-      obtain ⟨z, hzl, hzr⟩ := exists_between (x.left_lt_right hl hr)
-      obtain hz | hz := Set.mem_union_of_codisjoint x.isCompl_left_right.codisjoint z
-      · exact (hl' z hz).not_gt hzl
-      · exact (hr' z hz).not_gt hzr
-    obtain ⟨r, hr, hry⟩ := hr y hy
+  · obtain ⟨r, hr, hry⟩ := hr y hy
     grw [← hry]
     refine iSup₂_le fun z hz ↦ ?_
     rw [succ_le_iff, OrderEmbedding.lt_iff_lt]
