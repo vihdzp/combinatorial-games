@@ -108,8 +108,8 @@ theorem right_injective : Function.Injective right := Concept.intent_injective
 instance : @Std.Total Cut (· ≤ ·) where
   total a b := le_total (α := LowerSet _) ⟨_, isLowerSet_left a⟩ ⟨_, isLowerSet_left b⟩
 
-noncomputable instance : LinearOrder Cut :=
-  by classical exact Lattice.toLinearOrder _
+noncomputable instance : LinearOrder Cut := by
+  classical exact Lattice.toLinearOrder _
 
 noncomputable instance : CompleteLinearOrder Cut where
   __ := instLinearOrder
