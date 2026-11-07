@@ -195,11 +195,11 @@ theorem length_top : length ⊤ = ⊤ := by
 one (and thus infinitely many) zeros. -/
 @[mk_iff small_iff_length_ne_top']
 protected class Small (x : SignExpansion) : Prop where
-  length_ne_top : x.length ≠ ⊤
+  length_ne_top (x) : x.length ≠ ⊤
 
 /-- The length of a small sign expansion, as a `NatOrdinal`. -/
 abbrev Small.length (x : SignExpansion) [x.Small] : NatOrdinal :=
-  x.length.untop Small.length_ne_top
+  x.length.untop (Small.length_ne_top x)
 
 theorem Small.coe_length (x : SignExpansion) [x.Small] : Small.length x = x.length := by simp
 
