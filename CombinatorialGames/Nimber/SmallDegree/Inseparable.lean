@@ -28,6 +28,20 @@ public section
 theorem RingEquiv.coe_subfieldCongr_apply {K : Type u} [DivisionRing K]
     {s t : Subfield K} (x : s) (h : s = t) : (RingEquiv.subfieldCongr h x : K) = (x : K) := rfl
 
+namespace Subfield
+variable {K L : Type*} [DivisionRing K] [DivisionRing L] (s : Subfield K)
+
+/-- A subfield is isomorphic to its image under an injective function -/
+@[expose]
+noncomputable def equivMap (f : K →+* L) : s ≃+* s.map f :=
+  s.toSubring.equivMapOfInjective f f.injective
+
+@[simp]
+theorem coe_equivMap_apply (f : K →+* L) (x : s) : (equivMap s f x : L) = f x :=
+  rfl
+
+end Subfield
+
 namespace Nimber.IsAlgClosed
 open Order Polynomial Ordinal
 
@@ -94,123 +108,142 @@ mutual
 
 theorem isField_fieldClosure_succ_pow_two_pow (n : Nat) :
     IsField (of (val (fieldClosure (succ t)) ^ 2 ^ n)) := by
-  have ih12 (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
-  have ih3 (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
+  have ih (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
+  have hdeg (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
   cases n with
   | zero =>
     rw [pow_zero, pow_one, of_val]
     exact IsField.fieldClosure (succ t)
   | succ n =>
     rw [pow_succ, pow_mul]
-    exact (ih3 n rfl).pow_degree_leastNoRoots (ih12 n rfl).1 (ih12 n rfl).2
+    exact (ih n rfl).pow_degree_leastNoRoots (hdeg n rfl).1 (hdeg n rfl).2
 termination_by (n, 0)
 
 private theorem degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux (n : Nat) :
     ∃ hc, ((leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ n))).untop hc).degree = 2 := by
-  have ih (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_succ m
+  have hl (m : Nat) (hm : m + 1 = n) := leastNoRoots_fieldClosure_succ_pow_two_pow_succ m
   cases n with
   | zero =>
-    rw! [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ, WithTop.untop_coe]
-    exact ⟨WithTop.coe_ne_top, degree_X_pow_add_C two_pos _⟩
+    rw [pow_zero, pow_one, of_val, ht.leastNoRoots_fieldClosure_succ]
+    refine ⟨WithTop.coe_ne_top, ?_⟩
+    rw [WithTop.untop_coe]
+    compute_degree!
   | succ n =>
-    rw! [ih n rfl, WithTop.untop_coe]
-    exact ⟨by simp, by compute_degree!⟩
-termination_by (n, 3)
+    rw [hl n rfl]
+    refine ⟨WithTop.coe_ne_top, ?_⟩
+    rw [WithTop.untop_coe]
+    compute_degree!
+termination_by (n, 5)
 decreasing_by grind
-
-theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
-    leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) =
-      .some (X ^ 2 + C (of (val (fieldClosure (succ t)) ^ 2 ^ n))) := by
-  have hf := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  have him := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n
-  apply le_antisymm
-  · apply leastNoRoots_le_of_not_isRoot
-    · simp [degree_X_pow_add_C]
-    · apply hf.coeff_add_lt
-      · exact coeff_X_pow_lt 2 hf.one_lt
-      · exact coeff_C_lt (of.strictMono (pow_lt_pow_right₀
-          (one_lt_val.2 (IsField.fieldClosure _).one_lt)
-          (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n))))
-    · intro r hr hrr
-      rw [IsRoot.def, eval_add, eval_X_pow, eval_C, CharTwo.add_eq_zero] at hrr
-      rw [← Set.mem_Iio, ← him, ← RingEquiv.coe_toEquiv, Set.mem_image_equiv,
-        ← RingEquiv.coe_toEquiv_symm, RingEquiv.coe_toEquiv, Nimber.sqrt_symm_apply, hrr,
-        Set.mem_Iio] at hr
-      exact hr.false
-  · refine hf.X_sq_add_C_le_leastNoRoots _ fun z hz ↦ ?_
-    rw [← Set.mem_Iio, ← him]
-    exact Set.mem_image_of_mem Nimber.sqrt hz
-termination_by (n + 1, 2)
 
 theorem fieldClosure_succ_pow_two_pow_succ_pow_two (n : Nat) :
     of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1)) ^ 2 =
       of (val (fieldClosure (succ t)) ^ 2 ^ n) := by
-  have hf := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  have ih := leastNoRoots_fieldClosure_succ_pow_two_pow_succ n
-  simpa [CharTwo.add_eq_zero] using hf.isRoot_leastNoRoots_of_eq ih
+  obtain ⟨hf, perf⟩ := not_perfectField_fieldClosure_succ_pow_two_pow_aux (n + 1)
+  have ih := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n
+  apply le_antisymm
+  · by_contra! hlt
+    apply hf.sqrt_lt_of_not_perfectField perf at hlt
+    rw [← Set.mem_Iio, ← ih, Nimber.sqrt.injective.mem_set_image, Set.mem_Iio] at hlt
+    exact hlt.false
+  · by_contra! hlt
+    rw [← Set.mem_Iio, ← Nimber.sqrt.injective.mem_set_image, ih, Set.mem_Iio, sqrt_sq] at hlt
+    exact hlt.false
 termination_by (n + 1, 3)
+
+theorem leastNoRoots_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
+    leastNoRoots (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) =
+      .some (X ^ 2 + C (of (val (fieldClosure (succ t)) ^ 2 ^ n))) := by
+  obtain ⟨hf, perf⟩ := not_perfectField_fieldClosure_succ_pow_two_pow_aux (n + 1)
+  have hsq := fieldClosure_succ_pow_two_pow_succ_pow_two n
+  rw [hf.leastNoRoots_eq_of_not_perfectField perf, hsq]
+termination_by (n + 1, 4)
 
 private theorem sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux (n : Nat) :
     Nimber.sqrt '' Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
       Set.Iio (of (val (fieldClosure (succ t)) ^ 2 ^ (n + 1))) := by
-  have hf0 := isField_fieldClosure_succ_pow_two_pow n
-  have hf1 := isField_fieldClosure_succ_pow_two_pow (n + 1)
-  have hf0td := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
-  have hp2 (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
-  have hfm (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
+  obtain ⟨hf, perf⟩ := not_perfectField_fieldClosure_succ_pow_two_pow_aux n
+  have hfp (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
+  have hd := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux n
+  have hdp (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
+  have hs := hf.fieldClosure_succ_eq_pow_degree_leastNoRoots 2 hd
+  have hsp (m : Nat) (hm : m + 1 = n) :=
+    (hfp m hm).fieldClosure_succ_eq_pow_degree_leastNoRoots 2 (hdp m hm)
+  have hsq (m : Nat) (hm : m + 1 = n) := fieldClosure_succ_pow_two_pow_succ_pow_two m
   have ih (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
-  have hf1td (m : Nat) (hm : m + 1 = n) := degree_leastNoRoots_fieldClosure_succ_pow_two_pow_aux m
-  rw [pow_succ, pow_mul] at hf1 ⊢
-  rw [← coe_toSubfield hf0, ← coe_toSubfield hf1, ← RingEquiv.coe_toRingHom,
-    ← Subfield.coe_map, SetLike.coe_set_eq]
-  erw [hf0.pow_degree_leastNoRoots_eq_adjoin hf0td.1 hf0td.2]
-  rw [← SetLike.coe_set_eq, Subfield.coe_map, RingEquiv.coe_toRingHom,
-    ← RingEquiv.coe_toEquiv, ← Equiv.eq_preimage_iff_image_eq, RingEquiv.coe_toEquiv,
-    ← RingEquiv.image_symm_eq_preimage, ← RingEquiv.coe_toRingHom, ← Subfield.coe_map,
-    IntermediateField.adjoin_toSubfield, Subfield.algebraMap_ofSubfield,
-    ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype, coe_toSubfield,
-    /- this was impossible to find
-      todo: fix names -/ RingHom.map_field_closure,
-    Set.image_union, Set.image_singleton,
-    RingEquiv.coe_toRingHom, Nimber.sqrt_symm_apply]
+  simp_rw [val_of] at hs hsp
+  rw [pow_succ, pow_mul, ← hs, ← coe_toSubfield (IsField.fieldClosure _),
+    ← hf.fieldAdjoin_simple_self, ← coe_toSubfield hf]
+  apply subset_antisymm
+  · rw [Set.image_subset_iff, ← sqrt.image_symm_eq_preimage, ← sqrt.symm.coe_toRingHom,
+      ← Subfield.coe_map, IntermediateField.adjoin_toSubfield,
+      /- this was impossible to find, todo: rename -/ RingHom.map_field_closure,
+      Set.image_union, Set.image_singleton, Subfield.algebraMap_ofSubfield,
+      ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype, RingEquiv.coe_toRingHom]
+    cases n with
+    | zero =>
+      rw! [pow_zero, pow_one, of_val]
+      rw [← ht.fieldAdjoin_simple_self, IntermediateField.adjoin_toSubfield,
+        Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype,
+        SetLike.coe_subset_coe, Subfield.closure_le, Set.union_subset_iff, Set.singleton_subset_iff]
+      constructor
+      · rw [SetLike.coe_subset_coe]
+        intro x hx
+        apply Subfield.mem_closure_of_mem
+        apply Set.mem_union_left
+        rw [sqrt.image_symm_eq_preimage, Set.mem_preimage, SetLike.mem_coe]
+        apply Subfield.mem_closure_of_mem
+        apply Set.mem_union_left
+        exact ht.sqrt_lt hx
+      · rw [SetLike.mem_coe]
+        apply Subfield.mem_closure_of_mem
+        simp [ht.fieldClosure_succ_pow_two]
+    | succ n =>
+      conv =>
+        enter [2, 1, 1, 1]
+        rw [coe_toSubfield, ← ih n rfl, ← Set.image_comp, ← RingEquiv.coe_trans,
+          RingEquiv.self_trans_symm, RingEquiv.coe_refl, Set.image_id,
+          ← coe_toSubfield (hfp n rfl)]
+      rw [sqrt_symm_apply, hsq n rfl]
+      rw! [pow_succ, pow_mul, ← hsp n rfl]
+      rw [← (hfp n rfl).fieldAdjoin_simple_self, IntermediateField.adjoin_toSubfield,
+        Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype]
+  · rw [/- todo: rename -/ IntermediateField.adjoin_toSubfield,
+      ← RingEquiv.coe_toRingHom, ← Subfield.coe_map,
+      SetLike.coe_subset_coe, Subfield.closure_le, Set.union_subset_iff,
+      Set.singleton_subset_iff, Subfield.algebraMap_ofSubfield, ← RingHom.coe_fieldRange,
+      Subfield.fieldRange_subtype, Subfield.coe_map, RingEquiv.coe_toRingHom,
+      sqrt.image_eq_preimage_symm]
+    constructor
+    · intro x hx
+      rw [Set.mem_preimage, SetLike.mem_coe, sqrt_symm_apply]
+      rw [SetLike.mem_coe] at hx
+      exact pow_mem hx 2
+    · rw [Set.mem_preimage, sqrt_symm_apply, SetLike.mem_coe, mem_toSubfield_iff]
+      exact hf.sq_lt_self_of_not_perfectField perf
+termination_by (n + 1, 1)
+
+private theorem not_perfectField_fieldClosure_succ_pow_two_pow_aux (n : Nat) :
+    ∃ hf : IsField (of (val (fieldClosure (succ t)) ^ 2 ^ n)), ¬PerfectField hf.toSubfield := by
+  have hf := isField_fieldClosure_succ_pow_two_pow n
+  have hf' (m : Nat) (hm : m + 1 = n) := isField_fieldClosure_succ_pow_two_pow m
+  have heq (m : Nat) (hm : m + 1 = n) := sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux m
+  have ih (m : Nat) (hm : m + 1 = n) := not_perfectField_fieldClosure_succ_pow_two_pow_aux m
+  refine ⟨hf, ?_⟩
   cases n with
   | zero =>
-    rw [pow_zero, pow_one, of_val] at hf0 ⊢
-    rw [ht.fieldClosure_succ_pow_two, ← coe_toSubfield hf0, ← ht.fieldAdjoin_simple_self,
-      IntermediateField.adjoin_toSubfield, SetLike.coe_set_eq, Subfield.algebraMap_ofSubfield,
-      ← RingHom.coe_fieldRange, Subfield.fieldRange_subtype, ← RingEquiv.coe_toRingHom,
-      ← Subfield.coe_map,
-      /- this was impossible to find
-        todo: fix names -/ RingHom.map_field_closure,
-      Set.image_union, Set.image_singleton, RingEquiv.coe_toRingHom, Nimber.sqrt_symm_apply]
-    apply le_antisymm
-    · gcongr
-      grw [← Set.subset_union_left]
-      intro x hx
-      exact Subfield.mem_closure_of_mem ⟨x.sqrt, ht.sqrt_lt hx, by simp⟩
-    · rw [Subfield.closure_le, Set.union_subset_iff, SetLike.coe_subset_coe,
-        Subfield.closure_le, Set.union_subset_iff, Set.singleton_subset_iff,
-        Set.singleton_subset_iff, Set.image_subset_iff]
-      refine ⟨⟨fun x hx => ?_, pow_mem ?_ 2⟩, ?_⟩
-      · grw [← Set.subset_union_left]
-        rw [Set.mem_preimage, Nimber.sqrt_symm_apply, Subfield.closure_eq]
-        exact pow_mem hx 2
-      · apply Subfield.mem_closure_of_mem
-        simp
-      · apply Subfield.mem_closure_of_mem
-        simp
+    rw [IsField.perfectField_iff_leastNoRoots, not_le, pow_zero, pow_one, of_val,
+      ht.leastNoRoots_fieldClosure_succ, WithTop.coe_lt_coe]
+    use 1; aesop
   | succ n =>
-    specialize ih n rfl
-    specialize hfm n rfl
-    rw [← RingEquiv.coe_toEquiv, ← Equiv.eq_preimage_iff_image_eq,
-      RingEquiv.coe_toEquiv, ← RingEquiv.image_symm_eq_preimage] at ih
-    rw [← ih, hp2 n rfl]
-    rw [pow_succ, pow_mul] at hf0 ⊢
-    rw [← coe_toSubfield hfm, ← hfm.toSubfield.fieldRange_subtype,
-      RingHom.coe_fieldRange, ← Subfield.algebraMap_ofSubfield,
-      ← IntermediateField.adjoin_toSubfield, ← coe_toSubfield hf0, SetLike.coe_set_eq]
-    exact hfm.pow_degree_leastNoRoots_eq_adjoin (hf1td n rfl).1 (hf1td n rfl).2
-termination_by (n + 1, 1)
+    let e : (hf' n rfl).toSubfield ≃+* hf.toSubfield :=
+      ((hf' n rfl).toSubfield.equivMap Nimber.sqrt.toRingHom).trans
+        (RingEquiv.subfieldCongr (SetLike.coe_injective (by simpa using heq n rfl)))
+    intro perf
+    apply (ih n rfl).2
+    exact .of_ringEquiv e.symm
+termination_by (n, 2)
+decreasing_by all_goals grind
 
 end
 
@@ -218,6 +251,10 @@ theorem sqrt_map_fieldClosure_succ_pow_two_pow_succ (n : Nat) :
     (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield.map Nimber.sqrt.toRingHom =
       (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)).toSubfield :=
   SetLike.coe_injective (ht.sqrt_image_fieldClosure_succ_pow_two_pow_succ_aux n)
+
+theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
+    ¬PerfectField (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield :=
+  (ht.not_perfectField_fieldClosure_succ_pow_two_pow_aux n).2
 
 theorem sqrt_fieldClosure_succ_pow_two_pow (n : Nat) :
     sqrt (of (val (fieldClosure (succ t)) ^ 2 ^ n)) =
@@ -297,27 +334,6 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
   rw [← mem_toSubfield_iff (ht.isField_fieldClosure_succ_pow_two_pow (n + 1)),
     ← ht.sqrt_map_fieldClosure_succ_pow_two_pow_succ, Subfield.mem_map]
   exact ⟨x, hn, rfl⟩
-
-theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
-    ¬PerfectField (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield := by
-  intro
-  absurd bijective_frobenius (ht.isField_fieldClosure_succ_pow_two_pow n).toSubfield 2
-  intro hbij
-  cases n with
-  | zero =>
-    obtain ⟨c, hc⟩ := hbij.surjective ⟨t, by simp [← Order.succ_le_iff]⟩
-    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
-      RingEquiv.symm_apply_eq, ht.sqrt_eq] at hc
-    absurd c.2
-    simp [hc]
-  | succ n =>
-    obtain ⟨c, hc⟩ := hbij.surjective ⟨of (val (fieldClosure (succ t)) ^ 2 ^ n),
-      of.strictMono (pow_lt_pow_right₀ (one_lt_val.2 (IsField.fieldClosure _).one_lt)
-        (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n)))⟩
-    rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
-      RingEquiv.symm_apply_eq, ht.sqrt_fieldClosure_succ_pow_two_pow] at hc
-    absurd c.2
-    simp [hc]
 
 omit ht in
 theorem _root_.Nimber.IsField.not_perfectField_iff {x : Nimber} (hx : IsField x) :
