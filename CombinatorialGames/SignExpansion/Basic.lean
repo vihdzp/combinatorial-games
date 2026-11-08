@@ -390,6 +390,49 @@ theorem lt_trunc_iff {x : SignExpansion} {o : NatOrdinal} : x < x ↾ o ↔ x o 
 theorem trunc_lt_iff {x : SignExpansion} {o : NatOrdinal} : x ↾ o < x ↔ x o = 1 := by
   rw [← cmp_eq_gt_iff, cmp_trunc, SignType.orderingEquiv_eq_gt_iff]
 
+theorem eq_of_length_le_of_forall_lt_gt_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
+    (hlt : ∀ z, z.length < x.length → (z < y ↔ z < x))
+    (hgt : ∀ z, z.length < x.length → (y < z ↔ x < z)) : x = y := by
+  ext o
+  induction o using WellFoundedLT.induction with | ind o IH
+  obtain hxo | hox := le_or_gt x.length o
+  · rw [apply_eq_zero.2 hxo, apply_eq_zero.2 (hxy.trans hxo)]
+  · cases hyo : y o
+    · have hy : y.length < x.length := by
+        apply hox.trans_le'
+        rwa [← apply_eq_zero]
+      convert hyo
+      apply le_antisymm
+      · simpa using hlt y hy
+      · simpa using hgt y hy
+    · rw [SignType.neg_eq_neg_one, ← lt_trunc_iff, ← hgt]
+      · use o; aesop
+      · simpa
+    · rw [SignType.pos_eq_one, ← trunc_lt_iff, ← hlt]
+      · use o; aesop
+      · simpa
+
+theorem eq_of_length_le_of_forall_le_ge_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
+    (hle : ∀ z, z.length < x.length → (z ≤ y ↔ z ≤ x))
+    (hge : ∀ z, z.length < x.length → (y ≤ z ↔ x ≤ z)) : x = y := by
+  simp_rw [le_iff_le_iff_lt_iff_lt] at hle hge
+  exact eq_of_length_le_of_forall_lt_gt_iff hxy hge hle
+
+theorem eq_of_length_eq_of_forall_lt_gt {x y : SignExpansion} (hxy : x.length = y.length)
+    (hlt : ∀ z, z.length < x.length → z < x → z < y)
+    (hgt : ∀ z, z.length < x.length → x < z → y < z) : x = y := by
+  apply eq_of_length_le_of_forall_lt_gt_iff hxy.ge <;> intro z hz
+  · refine ⟨fun hy ↦ ?_, hlt z hz⟩
+    contrapose! hy
+    apply (hgt z hz (hy.lt_of_ne _)).le
+    rintro rfl
+    exact hz.false
+  · refine ⟨fun hy ↦ ?_, hgt z hz⟩
+    contrapose! hy
+    apply (hlt z hz (hy.lt_of_ne _)).le
+    rintro rfl
+    exact hz.false
+
 /-! #### Floor function -/
 
 open Classical in
