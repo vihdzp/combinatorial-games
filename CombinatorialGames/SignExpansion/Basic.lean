@@ -203,6 +203,8 @@ one (and thus infinitely many) zeros. -/
 protected class Small (x : SignExpansion) : Prop where
   length_ne_top (x) : x.length ≠ ⊤
 
+attribute [simp] Small.length_ne_top
+
 /-- The length of a small sign expansion, as a `NatOrdinal`. -/
 abbrev Small.length (x : SignExpansion) [x.Small] : NatOrdinal :=
   x.length.untop (Small.length_ne_top x)
@@ -289,9 +291,12 @@ theorem length_trunc (x : SignExpansion) (o : WithTop NatOrdinal) :
   cases c <;> simp [← apply_eq_zero, trunc, imp_iff_or_not]
 
 @[simp]
-theorem small_trunc (x : SignExpansion) (o : NatOrdinal) : (x ↾ o).Small := by
+instance Small.trunc_coe (x : SignExpansion) (o : NatOrdinal) : (x ↾ o).Small := by
   rw [small_iff_length_ne_top, length_trunc]
   exact (min_lt_of_right_lt <| WithTop.coe_lt_top o).ne
+
+instance Small.trunc (x : SignExpansion) [x.Small] (o : WithTop NatOrdinal) : (x ↾ o).Small where
+  length_ne_top := by simp
 
 @[simp]
 theorem trunc_eq_self {x : SignExpansion} {o : WithTop NatOrdinal} : x ↾ o = x ↔ x.length ≤ o := by
@@ -903,10 +908,21 @@ theorem coe_toSignExpansion (o : NatOrdinal) :
 theorem length_toSignExpansion (o : NatOrdinal) : length o = o := by
   simp [← top_trunc]
 
+instance small_toSignExpansion (o : NatOrdinal) : SignExpansion.Small o where
+  length_ne_top := by simp
+
 theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o₂ = 1 := by
   aesop
 
 theorem toSignExpansion_apply_of_le (h : o₁ ≤ o₂) : toSignExpansion o₁ o₂ = 0 := by
   aesop
+
+@[simp]
+theorem toSignExpansion_apply_ne_neg_one (o₁ o₂ : NatOrdinal) : toSignExpansion o₁ o₂ ≠ -1 := by
+  aesop
+
+@[simp]
+theorem trunc_toSignExpansion (o₁ o₂ : NatOrdinal) : toSignExpansion o₁ ↾ o₂ = min o₁ o₂ := by
+  rw [← top_trunc, trunc_trunc_eq, ← WithTop.coe_min, top_trunc]
 
 end NatOrdinal

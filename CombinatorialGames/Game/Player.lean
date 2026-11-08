@@ -6,6 +6,7 @@ Authors: Yuyang Zhao
 module
 
 public import Mathlib.Algebra.Ring.Defs
+public import Mathlib.Basic.Sign.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 
@@ -125,6 +126,17 @@ instance : CommGroup Player where
 
 @[simp, grind =] lemma one_eq_left : 1 = left := rfl
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
+
+/-- The sign associated to each player, `Left = 1` and `Right = -1`. -/
+def sign : Player → SignType
+  | left => 1
+  | right => -1
+
+@[simp] theorem sign_left : sign left = 1 := rfl
+@[simp] theorem sign_right : sign right = -1 := rfl
+@[simp] theorem sign_neg : ∀ p, sign (-p) = -sign p := by decide
+@[simp] theorem sign_inj : ∀ {p q}, sign p = sign q ↔ p = q := by decide
+@[simp] theorem sign_ne_zero : ∀ p, sign p ≠ 0 := by decide
 
 end Player
 

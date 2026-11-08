@@ -291,11 +291,7 @@ theorem toGame_sub (x y : Surreal) : toGame (x - y) = toGame x - toGame y :=
 @[simp] theorem toGame_intCast (n : ℤ) : toGame n = n := map_intCast' toGameAddHom rfl n
 
 /-- Construct a `Surreal` from its left and right sets, and a proof that all elements from the left
-set are less than all the elements of the right set.
-
-Note that although this function is well-defined, this function isn't injective, nor do equivalence
-classes in Surreal have a canonical representative. (Note however that every short numeric game has
-a unique "canonical" form!) -/
+set are less than all the elements of the right set. -/
 instance : OfSets Surreal.{u} (fun st ↦ ∀ x ∈ st left, ∀ y ∈ st right, x < y) where
   ofSets st H _ _ := @mk !{fun p ↦ out '' st p} (.mk (by aesop) (by simp))
 

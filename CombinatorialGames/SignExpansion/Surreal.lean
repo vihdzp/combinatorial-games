@@ -20,10 +20,12 @@ sequence whose length equals its birthday.
 
 universe u
 
+open IGame Set SignExpansion Surreal
+
 public noncomputable section
 
 theorem cmp_eq_cmp_of_notMem_Icc {α : Type*} [LinearOrder α]
-    {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) : cmp x z = cmp y z := by
+    {x y z : α} (hxy : x ≤ y) (hz : z ∉ Icc x y) : cmp x z = cmp y z := by
   obtain hzx | hyz : z < x ∨ y < z := by grind
   · rw [hzx.cmp_eq_gt, (hzx.trans_le hxy).cmp_eq_gt]
   · have := hxy.trans_lt hyz
@@ -31,7 +33,7 @@ theorem cmp_eq_cmp_of_notMem_Icc {α : Type*} [LinearOrder α]
 
 -- TODO: should we have a `LinearOrder Ordering` instance?
 theorem cmp_lt_cmp_of_mem_Icc {α : Type*} [LinearOrder α]
-    {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
+    {x y z : α} (hxy : x < y) (hz : z ∈ Icc x y) :
     SignType.orderingEquiv.symm (cmp x z) < SignType.orderingEquiv.symm (cmp y z) := by
   obtain rfl | hxz := hz.1.eq_or_lt
   · simpa
@@ -70,7 +72,12 @@ theorem SignType.recZeroNegOne_neg {motive : SignType → Sort*}
     @recZeroNegOne motive zero neg_one one (-t) =
       recZeroNegOne zero one neg_one t := by cases t <;> rfl
 
-open Surreal IGame SignExpansion
+theorem SignType.lt_cases {x y : SignType} :
+    x < y ↔ x = -1 ∧ y = 0 ∨ x = -1 ∧ y = 1 ∨ x = 0 ∧ y = 1 := by
+  decide +revert
+
+/-! ### Surreals to sign sequences -/
+
 namespace Surreal
 
 /-- The truncation of a surreal to an ordinal `o` is the unique surreal `trunc o x`
@@ -95,12 +102,12 @@ theorem birthday_trunc_le (o : NatOrdinal.{u}) (x : Surreal.{u}) :
   rw [trunc, OrderHom.coe_mk]
   apply birthday_ofSets_le'.trans
   apply csSup_le'
-  rw [mem_upperBounds, Set.forall_mem_image, Set.forall_mem_iUnion]
+  rw [mem_upperBounds, forall_mem_image, forall_mem_iUnion]
   intro p y hy
   exact Order.add_one_le_of_lt hy.1
 
 @[simp]
-theorem trunc_eq_self_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
+theorem trunc_eq_self {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     x.trunc o = x ↔ x.birthday ≤ o := by
   refine ⟨fun h => ?_, fun h => ?_⟩
   · refine le_of_not_gt fun ho => ne_of_lt ?_ (congrArg birthday h)
@@ -136,7 +143,7 @@ theorem trunc_lt_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) : x.trunc o < y ↔ x < y := by
   obtain h | rfl | h := lt_trichotomy x y
   · exact iff_of_true (trunc_lt_of_lt hy h) h
-  · exact iff_of_false (trunc_eq_self_iff.2 hy.le).not_lt (lt_irrefl _)
+  · exact iff_of_false (trunc_eq_self.2 hy.le).not_lt (lt_irrefl _)
   · exact iff_of_false (lt_trunc_of_lt hy h).not_gt h.not_gt
 
 @[grind =]
@@ -144,7 +151,7 @@ theorem lt_trunc_iff_lt {x y : Surreal.{u}} {o : NatOrdinal.{u}}
     (hy : y.birthday < o) : y < x.trunc o ↔ y < x := by
   obtain h | rfl | h := lt_trichotomy x y
   · exact iff_of_false (trunc_lt_of_lt hy h).not_gt h.not_gt
-  · exact iff_of_false (trunc_eq_self_iff.2 hy.le).not_gt (lt_irrefl _)
+  · exact iff_of_false (trunc_eq_self.2 hy.le).not_gt (lt_irrefl _)
   · exact iff_of_true (lt_trunc_of_lt hy h) h
 
 theorem trunc_le_iff_le {x y : Surreal.{u}} {o : NatOrdinal.{u}}
@@ -185,7 +192,7 @@ theorem trunc_eq_of_birthday_le_of_forall_le_ge_iff
 theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     (x.trunc o).birthday = min x.birthday o := by
   obtain h | h := le_total x.birthday o
-  · rw [trunc_eq_self_iff.2 h, min_eq_left h]
+  · rw [trunc_eq_self.2 h, min_eq_left h]
   rw [min_eq_right h]
   apply (birthday_trunc_le o x).antisymm
   contrapose! h
@@ -215,25 +222,25 @@ def toSignExpansion : Surreal.{u} ↪o SignExpansion :=
       isUpperSet_preimage_singleton_zero' := by
         apply id
         intro a b hab ha
-        rw [Set.mem_preimage, Set.mem_singleton_iff, SignType.orderingEquiv_symm_eq_zero_iff,
-          cmp_eq_eq_iff, eq_comm, trunc_eq_self_iff] at ha ⊢
+        rw [mem_preimage, mem_singleton_iff, SignType.orderingEquiv_symm_eq_zero_iff,
+          cmp_eq_eq_iff, eq_comm, trunc_eq_self] at ha ⊢
         exact ha.trans hab }) fun x y hxy => by
     have cxy : Cut.leftSurreal x < Cut.rightSurreal y := by simpa using hxy.le
     let c := Cut.simplestBtwn cxy
-    have hc : c ∈ Set.Icc x y := Cut.fits_simplestBtwn cxy
-    have hdcc (d : Surreal) (hd : d.birthday < c.birthday) : d ∉ Set.Icc x y := by
+    have hc : c ∈ Icc x y := Cut.fits_simplestBtwn cxy
+    have hdcc (d : Surreal) (hd : d.birthday < c.birthday) : d ∉ Icc x y := by
       contrapose! hd
       apply Cut.birthday_simplestBtwn_le_of_fits
       exact hd
     have hcxy (j : NatOrdinal) (hj : j ≤ c.birthday)
-        (z : Surreal) (hz : z ∈ Set.Icc x y) : z.trunc j = c.trunc j := by
+        (z : Surreal) (hz : z ∈ Icc x y) : z.trunc j = c.trunc j := by
       apply trunc_eq_of_birthday_le_of_forall_lt_gt_iff (birthday_trunc_le j c) <;> grind
     rw [lt_iff_toLex]
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
-    · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
+    · rw [hcxy j hj.le x (left_mem_Icc.2 hxy.le), hcxy j hj.le y (right_mem_Icc.2 hxy.le)]
       congr 1
       exact cmp_eq_cmp_of_notMem_Icc hxy.le (hdcc _ ((birthday_trunc_le j c).trans_lt hj))
-    · rw [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le)]
+    · rw [hcxy _ le_rfl x (left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (right_mem_Icc.2 hxy.le)]
       apply cmp_lt_cmp_of_mem_Icc hxy
       simpa
 
@@ -260,7 +267,11 @@ theorem length_toSignExpansion (x : Surreal.{u}) :
   cases c with
   | top => simp
   | coe c =>
-    rw [← apply_eq_zero, toSignExpansion_eq_zero_iff, trunc_eq_self_iff, WithTop.coe_le_coe]
+    rw [← apply_eq_zero, toSignExpansion_eq_zero_iff, trunc_eq_self, WithTop.coe_le_coe]
+
+@[simp]
+instance small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
+  small_iff_length_lt_top.2 (by simp)
 
 @[simp]
 theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
@@ -276,17 +287,14 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
       length_toSignExpansion, WithTop.coe_le_coe]
     exact (birthday_trunc_le o x).trans h
 
-@[simp]
-instance small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
-  small_iff_length_lt_top.2 (by simp)
-
-theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpansion.Small := by
+/-
+theorem range_toSignExpansion : range toSignExpansion.{u} = .ofPred SignExpansion.Small := by
   apply subset_antisymm
-  · simp [Set.range_subset_iff]
+  · simp [range_subset_iff]
   · intro f hf
-    rw [Set.mem_ofPred, small_iff_length_ne_top, WithTop.ne_top_iff_exists] at hf
+    rw [mem_ofPred, small_iff_length_ne_top, WithTop.ne_top_iff_exists] at hf
     obtain ⟨l, hl⟩ := hf
-    rw [Set.mem_range]
+    rw [mem_range]
     induction l using WellFoundedLT.induction generalizing f with | ind l ih
     replace ih (f : SignExpansion) (hl : f.length < l) :=
       ih (f.length.untop (ne_top_of_lt hl))
@@ -304,7 +312,7 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpa
     have hgo : g.birthday ≤ l := by
       rw [birthday_le_iff]
       intro p m hm
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred] at hm
+      rw [moves_ofSets, mem_inter_iff, mem_ofPred] at hm
       exact hm.left
     refine ⟨Surreal.mk g, ?_⟩
     ext o
@@ -312,13 +320,13 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpa
     obtain ⟨k, nk, hkg, hkb⟩ := birthday_eq_iGameBirthday ((Surreal.mk g).trunc o)
     cases hfo : f o with
     | zero =>
-      rw [toSignExpansion_eq_zero_iff, trunc_eq_self_iff]
+      rw [toSignExpansion_eq_zero_iff, trunc_eq_self]
       apply ((birthday_mk_le g).trans hgo).trans
       rw [← WithTop.coe_le_coe, hl, ← apply_eq_zero, hfo]
     | neg_one =>
       rw [toSignExpansion_eq_neg_one_iff, ← hkg, mk_lt_mk]
       apply Numeric.lt_right
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
+      rw [moves_ofSets, mem_inter_iff, mem_ofPred, mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
@@ -329,7 +337,7 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpa
     | one =>
       rw [toSignExpansion_eq_one_iff, ← hkg, mk_lt_mk]
       apply Numeric.left_lt
-      rw [moves_ofSets, Set.mem_inter_iff, Set.mem_ofPred, Set.mem_ofPred]
+      rw [moves_ofSets, mem_inter_iff, mem_ofPred, mem_ofPred]
       refine ⟨(hkb.trans_le (birthday_trunc_le o (Surreal.mk g))).trans_lt ?_, nk, ?_⟩
       · rw [← WithTop.coe_lt_coe, hl, ← not_le, ← apply_eq_zero, hfo]
         decide
@@ -339,7 +347,7 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpa
         · simp [hfo, trunc_apply_of_le_coe le_rfl]
 
 theorem mem_range_toSignExpansion (x : SignExpansion) [x.Small] :
-    x ∈ Set.range toSignExpansion := by
+    x ∈ range toSignExpansion := by
   rwa [range_toSignExpansion]
 
 theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff
@@ -373,6 +381,198 @@ theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
     rw [OrderEmbedding.lt_iff_lt]
     first | apply hlt | apply hgt
     simpa using hz
+-/
 
 end Surreal
+
+namespace SignExpansion
+
+/-! ### Sign sequences to games -/
+
+private theorem preimage_singleton_sign_subset {x : SignExpansion} [x.Small] {p : Player} :
+    x ⁻¹' {p.sign} ⊆ Iio (Small.length x) := by
+  intro y hy
+  rw [mem_Iio, WithTop.lt_untop_iff, ← apply_ne_zero]
+  exact hy.trans_ne p.sign_ne_zero
+
+local instance (x : SignExpansion.{u}) [x.Small] (p : Player) : Small.{u} (x ⁻¹' {p.sign}) :=
+  small_subset preimage_singleton_sign_subset
+
+/-- The "canonical" game associated to a sign expansion, whose options are all the truncates on
+positions with signs -1 or +1, depending on the player. -/
+def toIGame (x : SignExpansion.{u}) [x.Small] : IGame.{u} :=
+  !{fun p ↦ range fun a : x ⁻¹' {p.sign} ↦ toIGame (x ↾ a)}
+termination_by wellFounded_lt.wrap x.length
+decreasing_by all_goals simpa using preimage_singleton_sign_subset a.2
+
+theorem toIGame_def (x : SignExpansion.{u}) [x.Small] :
+    toIGame x = !{fun p ↦ range fun a : x ⁻¹' {p.sign} ↦ toIGame (x ↾ a)} := by
+  rw [toIGame]
+
+theorem moves_toIGame (x : SignExpansion) [x.Small] (p : Player) :
+    x.toIGame.moves p = {z | ∃ o : NatOrdinal, toIGame (x ↾ o) = z ∧ x o = p.sign} := by
+  rw [toIGame_def, moves_ofSets]
+  aesop
+
+theorem toIGame_trunc_mem_moves_toIGame {x : SignExpansion} [x.Small] {p : Player} {o : NatOrdinal}
+    (hx : x o = p.sign) : toIGame (x ↾ o) ∈ x.toIGame.moves p := by
+  rw [moves_toIGame]
+  exact ⟨o, rfl, hx⟩
+
+theorem eq_toIGame_trunc_of_mem_moves_toIGame {x : SignExpansion} [x.Small] {y : IGame} {p : Player}
+    (hy : y ∈ x.toIGame.moves p) : ∃ o : NatOrdinal, o < x.length ∧ y = toIGame (x ↾ o) := by
+  rw [moves_toIGame] at hy
+  obtain ⟨o, rfl, ho⟩ := hy
+  refine ⟨o, ?_, rfl⟩
+  rw [← apply_ne_zero, ho]
+  exact p.sign_ne_zero
+
+@[simp]
+theorem forall_moves_toIGame {x : SignExpansion} [x.Small] {p : Player} {P : IGame → Prop} :
+    (∀ y ∈ x.toIGame.moves p, P y) ↔ ∀ o, x o = p.sign → P (x ↾ o).toIGame := by
+  rw [moves_toIGame]
+  grind
+
+@[simp]
+theorem exists_moves_toIGame {x : SignExpansion} [x.Small] {p : Player} {P : IGame → Prop} :
+    (∃ y ∈ x.toIGame.moves p, P y) ↔ ∃ o, x o = p.sign ∧ P (x ↾ o).toIGame := by
+  rw [moves_toIGame]
+  grind
+
+instance numeric_toIGame (x : SignExpansion) [x.Small] : Numeric x.toIGame := by
+  refine Numeric.mk (fun y hy z hz ↦ ?_) (fun p y hy ↦ ?_)
+  · rw [moves_toIGame] at hy hz
+    obtain ⟨a, rfl, ha⟩ := hy
+    obtain ⟨b, rfl, hb⟩ := hz
+    obtain hab | rfl | hba := lt_trichotomy a b
+    · have := apply_ne_zero.1 (hb.trans_ne <| by decide)
+      have := numeric_toIGame (x ↾ b)
+      have := hab.le
+      apply Numeric.left_lt
+      rw [moves_toIGame]
+      use a
+      aesop
+    · rw [ha] at hb
+      contradiction
+    · have := apply_ne_zero.1 (ha.trans_ne <| by decide)
+      have := numeric_toIGame (x ↾ a)
+      have := hba.le
+      apply Numeric.lt_right
+      rw [moves_toIGame]
+      use b
+      aesop
+  · obtain ⟨o, ho, rfl⟩ := eq_toIGame_trunc_of_mem_moves_toIGame hy
+    exact numeric_toIGame (x ↾ o)
+termination_by wellFounded_lt.wrap x.length
+
+private theorem toIGame_strictMono :
+    StrictMono fun x : Subtype SignExpansion.Small ↦ have := x.2; toIGame x := by
+  intro ⟨x, _⟩ ⟨y, _⟩ h
+  rw [Subtype.mk_lt_mk, lt_iff_toLex] at h
+  obtain ⟨i, hi, hi'⟩ := h
+  dsimp at *
+  have hxy : x ↾ i = y ↾ i := by aesop
+  obtain ⟨hx, hy⟩ | ⟨hx, hy⟩ | ⟨hx, hy⟩ := SignType.lt_cases.1 hi'
+  · convert ← Numeric.lt_right (toIGame_trunc_mem_moves_toIGame hx)
+    rwa [hxy, trunc_eq_self, ← apply_eq_zero]
+  · trans toIGame (x ↾ i)
+    · exact Numeric.lt_right (toIGame_trunc_mem_moves_toIGame hx)
+    · rw! [hxy]
+      exact Numeric.left_lt (toIGame_trunc_mem_moves_toIGame hy)
+  · convert ← Numeric.left_lt (toIGame_trunc_mem_moves_toIGame hy)
+    rwa [← hxy, trunc_eq_self, ← apply_eq_zero]
+
+@[simp]
+theorem toIGame_le_toIGame_iff {x y : SignExpansion} [x.Small] [y.Small] :
+    toIGame x ≤ toIGame y ↔ x ≤ y :=
+  toIGame_strictMono.le_iff_le (a := ⟨x, ‹_›⟩) (b := ⟨y, ‹_›⟩)
+
+@[simp]
+theorem toIGame_lt_toIGame_iff {x y : SignExpansion} [x.Small] [y.Small] :
+    toIGame x < toIGame y ↔ x < y :=
+  toIGame_strictMono.lt_iff_lt (a := ⟨x, ‹_›⟩) (b := ⟨y, ‹_›⟩)
+
+@[simp]
+theorem toIGame_equiv_toIGame_iff {x y : SignExpansion} [x.Small] [y.Small] :
+    toIGame x ≈ toIGame y ↔ x ≈ y := by
+  simp [AntisymmRel]
+
+@[simp]
+theorem toIGame_inj {x y : SignExpansion} [x.Small] [y.Small] :
+    toIGame x = toIGame y ↔ x = y := by
+  apply (toIGame_strictMono.injective.eq_iff (a := ⟨x, ‹_›⟩) (b := ⟨y, ‹_›⟩)).trans
+  rw [Subtype.mk_eq_mk]
+
+@[simp]
+theorem _root_.NatOrdinal.toIGame_toSignExpansion (o : NatOrdinal) :
+    o.toSignExpansion.toIGame = o := by
+  ext p x
+  cases p with
+  | right => simp [moves_toIGame]
+  | left =>
+    simp_rw [NatOrdinal.moves_left_toIGame, mem_image, mem_Iio, moves_toIGame]
+    constructor
+    · rintro ⟨a, rfl, ha⟩
+      have hao : a < o := by aesop
+      refine ⟨a, hao, ?_⟩
+      rw! [NatOrdinal.trunc_toSignExpansion, min_eq_right hao.le, toIGame_toSignExpansion]
+      rfl
+    · rintro ⟨a, hao, rfl⟩
+      refine ⟨a, ?_, ?_⟩
+      · rw! [NatOrdinal.trunc_toSignExpansion, min_eq_right hao.le, toIGame_toSignExpansion]
+        rfl
+      · aesop
+termination_by o
+
+/-! ### Sign sequences to surreals -/
+
+/-- The "canonical" surreal associated to a sign expansion, defined in terms of
+`SignExpansion.toIGame`. -/
+def toSurreal (x : SignExpansion) [x.Small] : Surreal := .mk x.toIGame
+
+@[simp]
+theorem mk_toIGame (x : SignExpansion) [x.Small] : .mk x.toIGame = x.toSurreal :=
+  (rfl)
+
+@[simp]
+theorem toSurreal_le_toSurreal_iff {x y : SignExpansion} [x.Small] [y.Small] :
+    toSurreal x ≤ toSurreal y ↔ x ≤ y :=
+  toIGame_le_toIGame_iff
+
+@[simp]
+theorem toSurreal_lt_toSurreal_iff {x y : SignExpansion} [x.Small] [y.Small] :
+    toSurreal x < toSurreal y ↔ x < y :=
+  toIGame_lt_toIGame_iff
+
+@[simp]
+theorem toSurreal_inj {x y : SignExpansion} [x.Small] [y.Small] :
+    toSurreal x = toSurreal y ↔ x = y := by
+  simp [le_antisymm_iff]
+
+theorem toSurreal_def (x : SignExpansion.{u}) [x.Small] :
+    toSurreal x = !{fun p ↦ range fun a : x ⁻¹' {p.sign} ↦ toSurreal (x ↾ a)}'(by
+      simp_rw [forall_mem_range]
+      intro ⟨a, ha⟩ ⟨b, hb⟩
+      rw [toSurreal_lt_toSurreal_iff]
+      trans x <;> simpa) := by
+  rw! [toSurreal, toIGame_def, Surreal.mk_ofSets']
+  congr!
+  aesop
+
+@[simp]
+theorem toSurreal_trunc (x : SignExpansion) [x.Small] (o : NatOrdinal) :
+    (x ↾ o).toSurreal = x.toSurreal.trunc o := by
+  rw [eq_comm]
+  apply trunc_eq_of_birthday_le_of_forall_le_ge_iff
+  sorry
+
+#exit
+@[simp]
+theorem toSignExpansion_toSurreal (x : SignExpansion) [x.Small] :
+    x.toSurreal.toSignExpansion = x := by
+  ext i
+  rw [toSignExpansion_apply, ]
+  sorry
+
+end SignExpansion
 end
