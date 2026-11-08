@@ -145,6 +145,11 @@ theorem IsGroup.coeff_add_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
   rw [coeff_add]
   exact h.add_lt (hp k) (hq k)
 
+theorem IsGroup.coeff_sub_lt {x : Nimber} {p q : Nimber[X]} (h : IsGroup x)
+    (hp : ∀ k, p.coeff k < x) (hq : ∀ k, q.coeff k < x) : ∀ k, (p - q).coeff k < x := by
+  rw [CharTwo.sub_eq_add]
+  exact h.coeff_add_lt hp hq
+
 theorem IsGroup.coeff_sum_lt {x : Nimber} {ι} {f : ι → Nimber[X]} {s : Finset ι} (h : IsGroup x)
     (hs : ∀ y ∈ s, ∀ k, (f y).coeff k < x) : ∀ k, (s.sum f).coeff k < x := by
   intro k
