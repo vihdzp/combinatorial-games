@@ -183,10 +183,9 @@ theorem trunc_eq_of_birthday_le_of_forall_le_ge_iff
     {x y : Surreal.{u}} {o : NatOrdinal.{u}} (hy : y.birthday ≤ o)
     (hle : ∀ z, z.birthday < o → (y ≤ z ↔ x ≤ z))
     (hge : ∀ z, z.birthday < o → (z ≤ y ↔ z ≤ x)) :
-    x.trunc o = y :=
-  trunc_eq_of_birthday_le_of_forall_lt_gt_iff hy
-    (fun z hz => by simpa using (hge z hz).not)
-    (fun z hz => by simpa using (hle z hz).not)
+    x.trunc o = y := by
+  simp_rw [le_iff_le_iff_lt_iff_lt] at hle hge
+  exact trunc_eq_of_birthday_le_of_forall_lt_gt_iff hy hge hle
 
 @[simp]
 theorem birthday_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
