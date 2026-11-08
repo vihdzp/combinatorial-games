@@ -679,6 +679,11 @@ theorem succ_apply_eq_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
   · exact (apply_lt_succ_apply_iff.2 ho).ne'
 
 @[simp]
+theorem succ_apply_ne_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    succ x o ≠ x o ↔ length x ≤ o := by
+  rw [ne_eq, succ_apply_eq_apply_iff, not_lt]
+
+@[simp]
 theorem apply_le_succ_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
     x o ≤ succ x o ↔ o ≤ length x := by
   rw [le_iff_lt_or_eq', apply_lt_succ_apply_iff, succ_apply_eq_apply_iff, le_iff_eq_or_lt']
@@ -761,6 +766,11 @@ theorem apply_lt_pred_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
 theorem pred_apply_eq_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
     pred x o = x o ↔ o < length x := by
   rw [pred, neg_apply, neg_eq_iff_eq_neg, ← neg_apply, succ_apply_eq_apply_iff, length_neg]
+
+@[simp]
+theorem pred_apply_ne_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    pred x o ≠ x o ↔ length x ≤ o := by
+  rw [ne_eq, pred_apply_eq_apply_iff, not_lt]
 
 @[simp]
 theorem pred_apply_le_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
