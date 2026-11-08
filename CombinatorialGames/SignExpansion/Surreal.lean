@@ -22,26 +22,23 @@ universe u
 
 public noncomputable section
 
-theorem sign_sub_eq_of_notMem_Icc {α : Type*} [LinearOrder α]
-    [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) :
-    SignType.sign (x - z) = SignType.sign (y - z) := by
+theorem cmp_eq_cmp_of_notMem_Icc {α : Type*} [LinearOrder α]
+    {x y z : α} (hxy : x ≤ y) (hz : z ∉ Set.Icc x y) : cmp x z = cmp y z := by
   obtain hzx | hyz : z < x ∨ y < z := by grind
-  · have := hzx.trans_le hxy
-    rw [sign_eq_one_iff.2, sign_eq_one_iff.2] <;> simpa
+  · rw [hzx.cmp_eq_gt, (hzx.trans_le hxy).cmp_eq_gt]
   · have := hxy.trans_lt hyz
-    rw [sign_eq_neg_one_iff.2, sign_eq_neg_one_iff.2] <;> simpa
+    rw [hyz.cmp_eq_lt, (hxy.trans_lt hyz).cmp_eq_lt]
 
-theorem sign_sub_lt_of_mem_Icc {α : Type*} [LinearOrder α]
-    [AddGroup α] [AddRightMono α] {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
-    SignType.sign (x - z) < SignType.sign (y - z) := by
+theorem cmp_lt_cmp_of_mem_Icc {α : Type*} [LinearOrder α]
+    {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
+    SignType.orderingEquiv.symm (cmp x z) < SignType.orderingEquiv.symm (cmp y z) := by
   obtain rfl | hxz := hz.1.eq_or_lt
-  · simpa [sign_eq_one_iff]
+  · simpa
+
   obtain rfl | hzy := hz.2.eq_or_lt
-  · simpa [sign_eq_neg_one_iff]
-  rw [sign_eq_neg_one_iff.2, sign_eq_one_iff.2]
-  · simp
   · simpa
-  · simpa
+  rw [hxz.cmp_eq_lt, hzy.cmp_eq_gt]
+  simp
 
 /-- Recursor for `SignType` using the preferred forms `0`, `-1`, and `1`. -/
 @[expose, elab_as_elim, cases_eliminator, induction_eliminator]
@@ -214,12 +211,12 @@ The `o`'th term of this sign sequence is `+` if `trunc o x < x`,
 `-` if `x < trunc o x`, and `0` if `trunc o x = x`. -/
 def toSignExpansion : Surreal.{u} ↪o SignExpansion :=
   .ofStrictMono (fun x =>
-    { sign i := .sign (x - x.trunc i)
+    { sign i := SignType.orderingEquiv.symm (cmp x (x.trunc i))
       isUpperSet_preimage_singleton_zero' := by
         apply id
         intro a b hab ha
-        rw [Set.mem_preimage, Set.mem_singleton_iff,
-          sign_eq_zero_iff, sub_eq_zero, eq_comm, trunc_eq_self_iff] at ha ⊢
+        rw [Set.mem_preimage, Set.mem_singleton_iff, SignType.orderingEquiv_symm_eq_zero_iff,
+          cmp_eq_eq_iff, eq_comm, trunc_eq_self_iff] at ha ⊢
         exact ha.trans hab }) fun x y hxy => by
     have cxy : Cut.leftSurreal x < Cut.rightSurreal y := by simpa using hxy.le
     let c := Cut.simplestBtwn cxy
@@ -234,25 +231,26 @@ def toSignExpansion : Surreal.{u} ↪o SignExpansion :=
     rw [lt_iff_toLex]
     refine ⟨c.birthday, fun j hj => ?_, ?_⟩ <;> dsimp
     · rw [hcxy j hj.le x (Set.left_mem_Icc.2 hxy.le), hcxy j hj.le y (Set.right_mem_Icc.2 hxy.le)]
-      exact sign_sub_eq_of_notMem_Icc hxy.le (hdcc _ ((birthday_trunc_le j c).trans_lt hj))
+      congr 1
+      exact cmp_eq_cmp_of_notMem_Icc hxy.le (hdcc _ ((birthday_trunc_le j c).trans_lt hj))
     · rw [hcxy _ le_rfl x (Set.left_mem_Icc.2 hxy.le), hcxy _ le_rfl y (Set.right_mem_Icc.2 hxy.le)]
-      apply sign_sub_lt_of_mem_Icc hxy
+      apply cmp_lt_cmp_of_mem_Icc hxy
       simpa
 
 theorem toSignExpansion_apply (x : Surreal.{u}) (o : NatOrdinal.{u}) :
-    toSignExpansion x o = .sign (x - x.trunc o) := (rfl)
+    toSignExpansion x o = SignType.orderingEquiv.symm (cmp x (x.trunc o)) := (rfl)
 
 theorem toSignExpansion_eq_neg_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     toSignExpansion x o = -1 ↔ x < x.trunc o := by
-  rw [toSignExpansion_apply, sign_eq_neg_one_iff, sub_lt_zero]
+  rw [toSignExpansion_apply, SignType.orderingEquiv_symm_eq_neg_one_iff, cmp_eq_lt_iff]
 
 theorem toSignExpansion_eq_zero_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     toSignExpansion x o = 0 ↔ x.trunc o = x := by
-  rw [toSignExpansion_apply, sign_eq_zero_iff, sub_eq_zero, eq_comm]
+  rw [toSignExpansion_apply, SignType.orderingEquiv_symm_eq_zero_iff, cmp_eq_eq_iff, eq_comm]
 
 theorem toSignExpansion_eq_one_iff {x : Surreal.{u}} {o : NatOrdinal.{u}} :
     toSignExpansion x o = 1 ↔ x.trunc o < x := by
-  rw [toSignExpansion_apply, sign_eq_one_iff, sub_pos]
+  rw [toSignExpansion_apply, SignType.orderingEquiv_symm_eq_one_iff, cmp_eq_gt_iff]
 
 @[simp]
 theorem length_toSignExpansion (x : Surreal.{u}) :
@@ -271,7 +269,7 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
   obtain h | h := lt_or_ge o' o
   · rw [toSignExpansion_apply, trunc_trunc, min_eq_right_of_lt h,
       trunc_apply_of_coe_lt (WithTop.coe_lt_coe.2 h), toSignExpansion_apply]
-    simp_rw [sign_apply, sub_pos, sub_neg,
+    simp_rw [SignType.orderingEquiv_symm_cmp, sign_apply, sub_pos, sub_neg,
       lt_trunc_iff_lt ((birthday_trunc_le o' x).trans_lt h),
       trunc_lt_iff_lt ((birthday_trunc_le o' x).trans_lt h)]
   · rw [trunc_apply_of_le_coe (WithTop.coe_le_coe.2 h), apply_eq_zero,
@@ -282,7 +280,7 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
 instance small_toSignExpansion (x : Surreal) : (toSignExpansion x).Small :=
   small_iff_length_lt_top.2 (by simp)
 
-theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred Small := by
+theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpansion.Small := by
   apply subset_antisymm
   · simp [Set.range_subset_iff]
   · intro f hf
@@ -344,14 +342,29 @@ theorem mem_range_toSignExpansion (x : SignExpansion) [x.Small] :
     x ∈ Set.range toSignExpansion := by
   rwa [range_toSignExpansion]
 
-/-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
-correctly ordered with respect to simpler values. -/
-theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt
+theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff
     {x : Surreal} {y : SignExpansion} (hy : y.length ≤ x.birthday)
     (hlt : ∀ z : Surreal, z.birthday < x.birthday → (toSignExpansion z < y ↔ z < x))
     (hgt : ∀ z : Surreal, z.birthday < x.birthday → (y < toSignExpansion z ↔ x < z)) :
     toSignExpansion x = y := by
   apply eq_of_length_le_of_forall_lt_gt_iff
+  · simpa
+  all_goals
+  · intro z hz
+    have := small_iff_length_lt_top.2 hz.lt_top
+    obtain ⟨z, rfl⟩ := mem_range_toSignExpansion z
+    rw [OrderEmbedding.lt_iff_lt]
+    first | apply hlt | apply hgt
+    simpa using hz
+
+/-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
+correctly ordered with respect to simpler values. -/
+theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
+    {x : Surreal} {y : SignExpansion} (hy : x.birthday = y.length)
+    (hlt : ∀ z : Surreal, z.birthday < x.birthday → z < x → toSignExpansion z < y)
+    (hgt : ∀ z : Surreal, z.birthday < x.birthday → x < z → y < toSignExpansion z) :
+    toSignExpansion x = y := by
+  apply eq_of_length_eq_of_forall_lt_gt
   · simpa
   all_goals
   · intro z hz
