@@ -29,12 +29,12 @@ theorem cmp_eq_cmp_of_notMem_Icc {α : Type*} [LinearOrder α]
   · have := hxy.trans_lt hyz
     rw [hyz.cmp_eq_lt, (hxy.trans_lt hyz).cmp_eq_lt]
 
+-- TODO: should we have a `LinearOrder Ordering` instance?
 theorem cmp_lt_cmp_of_mem_Icc {α : Type*} [LinearOrder α]
     {x y z : α} (hxy : x < y) (hz : z ∈ Set.Icc x y) :
     SignType.orderingEquiv.symm (cmp x z) < SignType.orderingEquiv.symm (cmp y z) := by
   obtain rfl | hxz := hz.1.eq_or_lt
   · simpa
-
   obtain rfl | hzy := hz.2.eq_or_lt
   · simpa
   rw [hxz.cmp_eq_lt, hzy.cmp_eq_gt]
@@ -375,41 +375,4 @@ theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
     simpa using hz
 
 end Surreal
-
-namespace SignExpansion
-
-/-- The surreal associated to the sign expansion. -/
-def toSurreal (x : SignExpansion) [x.Small] : Surreal :=
-  (mem_range_toSignExpansion x).choose
-
-@[simp]
-theorem _root_.Surreal.toSignExpansion_toSurreal (x : SignExpansion) [x.Small] :
-    x.toSurreal.toSignExpansion = x :=
-  (mem_range_toSignExpansion x).choose_spec
-
-@[simp]
-theorem toSurreal_toSignExpansion (x : Surreal) :
-    x.toSignExpansion.toSurreal = x := by
-  rw [← toSignExpansion.inj, toSignExpansion_toSurreal]
-
-@[simp]
-theorem birthday_toSurreal (x : SignExpansion) [x.Small] :
-    x.toSurreal.birthday = x.length := by
-  conv_rhs => rw [← toSignExpansion_toSurreal x, length_toSignExpansion]
-
-@[simp]
-theorem toSurreal_inj {x y : SignExpansion} [x.Small] [y.Small] :
-    x.toSurreal = y.toSurreal ↔ x = y := by
-  rw [← toSignExpansion.inj, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
-
-@[simp]
-theorem toSurreal_le_toSurreal {x y : SignExpansion} [x.Small] [y.Small] :
-    x.toSurreal ≤ y.toSurreal ↔ x ≤ y := by
-  rw [← toSignExpansion.le_iff_le, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
-
-@[simp]
-theorem toSurreal_lt_toSurreal {x y : SignExpansion} [x.Small] [y.Small] :
-    x.toSurreal < y.toSurreal ↔ x < y := by
-  rw [← toSignExpansion.lt_iff_lt, toSignExpansion_toSurreal, toSignExpansion_toSurreal]
-
-end SignExpansion
+end
