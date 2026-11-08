@@ -44,6 +44,9 @@ theorem Set.preimage_neg {α ι : Type*} [InvolutiveNeg α] (f : ι → α) {s :
 theorem Pi.Lex.neg_apply {α β : Type*} [Neg β] (x : Lex (α → β)) (i : α) : (-x) i = -x i :=
   rfl
 
+protected theorem SignType.neg_lt {x y : SignType} : -x < y ↔ -y < x := by
+  decide +revert
+
 -- TODO: we're missing an `AntitoneNeg` typeclass to express the following theorems generally.
 
 theorem Pi.Lex.neg_lt_neg {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} (h : x < y) :
@@ -241,6 +244,10 @@ theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
 
 instance Small.neg (x : SignExpansion) [x.Small] : (-x).Small := by
   rwa [small_neg_iff]
+
+@[simp]
+theorem Small.length_neg (x : SignExpansion) [x.Small] : Small.length (-x) = Small.length x := by
+  rw [← WithTop.coe_inj, Small.coe_length, Small.coe_length, x.length_neg]
 
 instance : InvolutiveNeg SignExpansion where
   neg_neg x := by ext; simp
@@ -646,35 +653,26 @@ theorem succ_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.
 theorem lt_succ (x : SignExpansion) [x.Small] : x < succ x :=
   ⟨Small.length x, by aesop⟩
 
+@[simp]
+theorem apply_lt_succ_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    x o < succ x o ↔ o = Small.length x := by
+  refine ⟨fun h ↦ le_antisymm ?_ ?_, by rintro rfl; simp⟩ <;> aesop
+
 theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
-  refine ⟨lt_succ x, fun y hxy ↦ ?_⟩
+  refine ⟨lt_succ x, fun y ↦ ?_⟩
   rw [lt_iff_toLex]
-  rintro ⟨i, H₁, H₂⟩
-  dsimp at H₁ H₂
-  obtain hi | rfl | hi := lt_trichotomy i (Small.length x)
-  · apply hxy.not_gt
-    refine ⟨i, fun j hj ↦ ?_, ?_⟩
-    · dsimp at *
-      rw [H₁ j hj]
-      apply succ_apply_of_lt
-      grw [hj]
-      simpa using hi.le
-    · aesop
-  · rw [succ_apply_smallLength] at H₂
-    apply hxy.not_gt
-    refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
-    · aesop
-    · simp_rw [Pi.toLex_apply, Small.apply_length]
-      rw [SignType.lt_one_iff] at H₂
-      apply H₂.lt_of_ne
-      contrapose! hxy
-      apply le_of_eq
-      ext i
-      obtain hi | hi := lt_or_ge i (Small.length x)
-      · rw [H₁ i hi, succ_apply_of_lt (by simpa using hi)]
-      · rw [apply_eq_zero_of_le hi hxy, apply_of_length_le (by simpa using hi)]
-  · rw [succ_apply_of_gt (by simpa using hi)] at H₂
-    simp at H₂
+  rintro ⟨i, hi₁, hi₂⟩ ⟨j, hj₁, hj₂⟩
+  dsimp at hi₁ hi₂ hj₁ hj₂
+  obtain hij | rfl | hji := lt_trichotomy i j
+  · rw [hj₁ i hij, apply_lt_succ_apply_iff] at hi₂
+    simp [succ_apply_of_gt (by simpa [hi₂] using hij)] at hj₂
+  · cases apply_lt_succ_apply_iff.1 (hi₂.trans hj₂)
+    simp_all
+  · rw [← hi₁ j hji, apply_lt_succ_apply_iff] at hj₂
+    apply hi₂.ne'
+    rw [hj₂] at hji
+    rw [apply_eq_zero_of_le hji.le (by simpa using (hi₁ _ hji).symm), eq_comm, apply_eq_zero]
+    exact le_of_lt (by simpa using hji)
 
 /-! #### Predecessor function -/
 
@@ -717,6 +715,11 @@ theorem pred_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.
 
 theorem pred_lt (x : SignExpansion) [x.Small] : pred x < x :=
   ⟨Small.length x, by aesop⟩
+
+@[simp]
+theorem pred_apply_lt_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    pred x o < x o ↔ o = Small.length x := by
+  rw [pred, neg_apply, SignType.neg_lt, ← neg_apply, apply_lt_succ_apply_iff, Small.length_neg]
 
 theorem pred_covBy (x : SignExpansion) [x.Small] : pred x ⋖ x := by
   rw [pred, SignExpansion.neg_covBy]
