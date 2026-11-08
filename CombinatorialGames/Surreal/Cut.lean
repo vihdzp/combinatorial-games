@@ -718,7 +718,7 @@ theorem covBy_iff {x y : Cut} : x ⋖ y ↔ ∃ z, leftSurreal z = x ∧ rightSu
   · rwa [le_leftSurreal_iff]
   · rwa [rightSurreal_le_iff]
   · rw [h.le_iff_lt_right, lt_iff_nonempty_inter]
-    exact ⟨simplestBtwn h.lt, h₁, mem_left_rightSurreal.2 le_rfl⟩
+    exact ⟨_, h₁, mem_left_rightSurreal.2 le_rfl⟩
 
 /-! ### Some explicit calculations with cuts -/
 
