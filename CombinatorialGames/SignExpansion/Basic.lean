@@ -299,6 +299,11 @@ instance Small.trunc (x : SignExpansion) [x.Small] (o : WithTop NatOrdinal) : (x
   length_ne_top := by simp
 
 @[simp]
+theorem Small.length_trunc (x : SignExpansion) (o : NatOrdinal) [x.Small] :
+    Small.length (x ↾ o) = min (Small.length x) o := by
+  rw [← WithTop.coe_inj, coe_length, x.length_trunc, WithTop.coe_min, coe_length]
+
+@[simp]
 theorem trunc_eq_self {x : SignExpansion} {o : WithTop NatOrdinal} : x ↾ o = x ↔ x.length ≤ o := by
   constructor <;> intro ho
   · rw [← ho, length_trunc]

@@ -286,7 +286,6 @@ theorem toSignExpansion_trunc {x : Surreal.{u}} {o : NatOrdinal.{u}} :
       length_toSignExpansion, WithTop.coe_le_coe]
     exact (birthday_trunc_le o x).trans h
 
-/-
 theorem range_toSignExpansion : range toSignExpansion.{u} = .ofPred SignExpansion.Small := by
   apply subset_antisymm
   · simp [range_subset_iff]
@@ -364,6 +363,14 @@ theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff
     first | apply hlt | apply hgt
     simpa using hz
 
+theorem toSignExpansion_eq_of_birthday_le_of_forall_le_ge_iff
+    {x : Surreal} {y : SignExpansion} (hy : y.length ≤ x.birthday)
+    (hle : ∀ z : Surreal, z.birthday < x.birthday → (toSignExpansion z ≤ y ↔ z ≤ x))
+    (hge : ∀ z : Surreal, z.birthday < x.birthday → (y ≤ toSignExpansion z ↔ x ≤ z)) :
+    toSignExpansion x = y := by
+  simp_rw [le_iff_le_iff_lt_iff_lt] at hle hge
+  exact toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff hy hge hle
+
 /-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
 correctly ordered with respect to simpler values. -/
 theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
@@ -380,7 +387,6 @@ theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
     rw [OrderEmbedding.lt_iff_lt]
     first | apply hlt | apply hgt
     simpa using hz
--/
 
 end Surreal
 
@@ -437,6 +443,33 @@ theorem exists_moves_toIGame {x : SignExpansion} [x.Small] {p : Player} {P : IGa
     (∃ y ∈ x.toIGame.moves p, P y) ↔ ∃ o, x o = p.sign ∧ P (x ↾ o).toIGame := by
   rw [moves_toIGame]
   grind
+
+@[simp]
+theorem birthday_toIGame (x : SignExpansion) [x.Small] : x.toIGame.birthday = Small.length x := by
+  rw [toIGame_def, IGame.birthday_ofSets', ← iSup_succ (Small.length x)]
+  congr
+  ext o
+  simp_rw [mem_image, mem_iUnion]
+  constructor
+  · rintro ⟨_, ⟨p, ⟨o, ho⟩, rfl⟩, rfl⟩
+    have ho' := preimage_singleton_sign_subset ho
+    have ho'' : o < x.length := by simpa using ho'
+    rw [birthday_toIGame, mem_range, Subtype.exists]
+    refine ⟨o, ho', ?_⟩
+    simpa using ho''.le
+  · rintro ⟨⟨o, ho⟩, rfl⟩
+    refine ⟨toIGame (x ↾ o), ?_, ?_⟩
+    · cases ho' : x o
+      · absurd ho'
+        simpa [apply_ne_zero] using ho
+      · use right
+        aesop
+      · use left
+        aesop
+    · have ho' : o < x.length := by simpa using ho
+      rw [birthday_toIGame]
+      simpa using ho'.le
+termination_by wellFounded_lt.wrap x.length
 
 instance numeric_toIGame (x : SignExpansion) [x.Small] : Numeric x.toIGame := by
   refine Numeric.mk (fun y hy z hz ↦ ?_) (fun p y hy ↦ ?_)
@@ -558,20 +591,21 @@ theorem toSurreal_def (x : SignExpansion.{u}) [x.Small] :
   congr!
   aesop
 
-@[simp]
-theorem toSurreal_trunc (x : SignExpansion) [x.Small] (o : NatOrdinal) :
-    (x ↾ o).toSurreal = x.toSurreal.trunc o := by
-  rw [eq_comm]
-  apply trunc_eq_of_birthday_le_of_forall_le_ge_iff
-  sorry
+private theorem birthday_toSurreal_le (x : SignExpansion) [x.Small] :
+    x.toSurreal.birthday ≤ Small.length x := by
+  rw [← birthday_toIGame]
+  exact birthday_mk_le _
 
-#exit
+/-
 @[simp]
 theorem toSignExpansion_toSurreal (x : SignExpansion) [x.Small] :
     x.toSurreal.toSignExpansion = x := by
+  apply toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff
+  ·
   ext i
   rw [toSignExpansion_apply, ]
   sorry
+-/
 
 end SignExpansion
 end
