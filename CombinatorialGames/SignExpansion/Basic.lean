@@ -47,6 +47,9 @@ theorem Pi.Lex.neg_apply {α β : Type*} [Neg β] (x : Lex (α → β)) (i : α)
 protected theorem SignType.neg_lt {x y : SignType} : -x < y ↔ -y < x := by
   decide +revert
 
+protected theorem SignType.lt_neg {x y : SignType} : x < -y ↔ y < -x := by
+  decide +revert
+
 -- TODO: we're missing an `AntitoneNeg` typeclass to express the following theorems generally.
 
 theorem Pi.Lex.neg_lt_neg {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} (h : x < y) :
@@ -655,8 +658,35 @@ theorem lt_succ (x : SignExpansion) [x.Small] : x < succ x :=
 
 @[simp]
 theorem apply_lt_succ_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
-    x o < succ x o ↔ o = Small.length x := by
-  refine ⟨fun h ↦ le_antisymm ?_ ?_, by rintro rfl; simp⟩ <;> aesop
+    x o < succ x o ↔ length x = o := by
+  rw [← Small.coe_length x, WithTop.coe_inj]
+  aesop (add apply unsafe le_antisymm)
+
+@[simp]
+theorem succ_apply_lt_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    succ x o < x o ↔ length x < o := by
+  refine ⟨by aesop, fun ho ↦ ?_⟩
+  rw [succ_apply_of_gt ho, apply_of_length_le ho.le]
+  decide
+
+@[simp]
+theorem succ_apply_eq_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    succ x o = x o ↔ o < length x := by
+  refine ⟨fun ho ↦ ?_, succ_apply_of_lt⟩
+  contrapose! ho
+  obtain ho | ho := ho.lt_or_eq
+  · exact (succ_apply_lt_apply_iff.2 ho).ne
+  · exact (apply_lt_succ_apply_iff.2 ho).ne'
+
+@[simp]
+theorem apply_le_succ_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    x o ≤ succ x o ↔ o ≤ length x := by
+  rw [le_iff_lt_or_eq', apply_lt_succ_apply_iff, succ_apply_eq_apply_iff, le_iff_eq_or_lt']
+
+@[simp]
+theorem succ_apply_le_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    succ x o ≤ x o ↔ length x ≠ o := by
+  rw [← not_lt, apply_lt_succ_apply_iff, ne_eq]
 
 theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
   refine ⟨lt_succ x, fun y ↦ ?_⟩
@@ -665,12 +695,13 @@ theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
   dsimp at hi₁ hi₂ hj₁ hj₂
   obtain hij | rfl | hji := lt_trichotomy i j
   · rw [hj₁ i hij, apply_lt_succ_apply_iff] at hi₂
-    simp [succ_apply_of_gt (by simpa [hi₂] using hij)] at hj₂
-  · cases apply_lt_succ_apply_iff.1 (hi₂.trans hj₂)
+    rw [← WithTop.coe_lt_coe, ← hi₂] at hij
+    simp [succ_apply_of_gt hij] at hj₂
+  · cases Small.length_eq <| apply_lt_succ_apply_iff.1 (hi₂.trans hj₂)
     simp_all
   · rw [← hi₁ j hji, apply_lt_succ_apply_iff] at hj₂
     apply hi₂.ne'
-    rw [hj₂] at hji
+    rw [← Small.length_eq hj₂] at hji
     rw [apply_eq_zero_of_le hji.le (by simpa using (hi₁ _ hji).symm), eq_comm, apply_eq_zero]
     exact le_of_lt (by simpa using hji)
 
@@ -718,8 +749,28 @@ theorem pred_lt (x : SignExpansion) [x.Small] : pred x < x :=
 
 @[simp]
 theorem pred_apply_lt_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
-    pred x o < x o ↔ o = Small.length x := by
-  rw [pred, neg_apply, SignType.neg_lt, ← neg_apply, apply_lt_succ_apply_iff, Small.length_neg]
+    pred x o < x o ↔ length x = o := by
+  rw [pred, neg_apply, SignType.neg_lt, ← neg_apply, apply_lt_succ_apply_iff, length_neg]
+
+@[simp]
+theorem apply_lt_pred_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    x o < pred x o ↔ length x < o := by
+  rw [pred, neg_apply, SignType.lt_neg, ← neg_apply, succ_apply_lt_apply_iff, length_neg]
+
+@[simp]
+theorem pred_apply_eq_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    pred x o = x o ↔ o < length x := by
+  rw [pred, neg_apply, neg_eq_iff_eq_neg, ← neg_apply, succ_apply_eq_apply_iff, length_neg]
+
+@[simp]
+theorem pred_apply_le_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    pred x o ≤ x o ↔ o ≤ length x := by
+  rw [le_iff_lt_or_eq, pred_apply_lt_apply_iff, pred_apply_eq_apply_iff, le_iff_eq_or_lt']
+
+@[simp]
+theorem apply_le_pred_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
+    x o ≤ pred x o ↔ length x ≠ o := by
+  rw [← not_lt, pred_apply_lt_apply_iff, ne_eq]
 
 theorem pred_covBy (x : SignExpansion) [x.Small] : pred x ⋖ x := by
   rw [pred, SignExpansion.neg_covBy]
