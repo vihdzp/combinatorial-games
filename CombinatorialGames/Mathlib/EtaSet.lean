@@ -5,13 +5,15 @@ Authors: Yan Yablonovskiy
 -/
 module
 
-public import Mathlib.Algebra.Field.Rat
-public import Mathlib.Algebra.Order.Field.Basic
-public import Mathlib.Algebra.Order.Ring.Rat
-public import Mathlib.Data.Finset.DenselyOrdered
-public import Mathlib.Order.Interval.Set.Infinite
+public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
+public import Mathlib.SetTheory.Ordinal.Basic -- shake: keep
 public import Mathlib.Order.Types.Defs
-public import Mathlib.SetTheory.Ordinal.Basic
+
+import Mathlib.Algebra.Field.Rat
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Ring.Rat
+import Mathlib.Data.Finset.DenselyOrdered
+import Mathlib.Order.Interval.Set.Infinite
 
 /-!
 # Eta sets
@@ -143,7 +145,7 @@ open Classical in
 /-- The function which will be shown to be either just an order embedding,
 or potentially an order isomorphism if the cardinalities of β and α are equal. -/
 @[reducible]
-private noncomputable def f [Nonempty α] (h : IsEta #α β) (hord : (#α).ord = Ordinal.type r)
+private noncomputable def f (h : IsEta #α β) (hord : (#α).ord = Ordinal.type r)
     (s : β → β → Prop) [hs : IsWellOrder β s] : α → β :=
   hr.wf.fix fun a g ↦
     if hsep : ∀ x ∈ lo a g, ∀ y ∈ hi a g, x < y then
@@ -151,7 +153,7 @@ private noncomputable def f [Nonempty α] (h : IsEta #α β) (hord : (#α).ord =
         (h.exists_between (mk_lo_lt hord a g) (mk_hi_lt hord a g) hsep)
     else (h.nonempty <| have : Nonempty α := ⟨a⟩; mk_ne_zero α).some
 
-variable [Nonempty α] {s : β → β → Prop} [hs : IsWellOrder β s] {h : IsEta #α β}
+variable {s : β → β → Prop} [hs : IsWellOrder β s] {h : IsEta #α β}
   {hord : (#α).ord = Ordinal.type r}
 
 open Classical in
@@ -163,7 +165,7 @@ private theorem f_def (a : α) :
           {z | (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
             ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y}
           (h.exists_between (mk_lo_lt hord a _) (mk_hi_lt hord a _) hsep)
-      else (h.nonempty <| mk_ne_zero α).some :=
+      else (have : Nonempty α := ⟨a⟩; h.nonempty <| mk_ne_zero α).some :=
   hr.wf.fix_eq _ a
 
 private theorem f_mem (a : α)
@@ -171,7 +173,7 @@ private theorem f_mem (a : α)
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, x < y) :
     (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < h.f hord s a) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, h.f hord s a < y := by
-  rw [f_def a, dif_pos hsep]
+  rw [f_def a, dite_eq_left hsep]
   exact hs.wf.min_mem
     {z | (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y} _
@@ -200,11 +202,10 @@ private theorem not_lt_f {z : β} (a : α)
     (hz : (∀ x ∈ lo a fun y (_ : r y a) ↦ h.f hord s y, x < z) ∧
       ∀ y ∈ hi a fun y (_ : r y a) ↦ h.f hord s y, z < y) :
     ¬s z (h.f hord s a) := by
-  rw [f_def a, dif_pos (f_sep a)]
+  rw [f_def a, dite_eq_left (f_sep a)]
   exact hs.wf.not_lt_min _ hz
 
-private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.type s)
-    (heq : #α = #β) :
+private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.type s) (heq : #α = #β) :
     Function.Surjective (h.f hord s) := by
   intro b
   by_contra hb
@@ -218,8 +219,8 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
       fun a₁ a₂ he ↦ Subtype.ext (hmono.injective (congrArg Subtype.val he))).trans_lt
       (card_subtype_lt hords b)).trans_eq heq.symm
   have hS : {z | (∀ x ∈ Alo, x < z) ∧ ∀ y ∈ Ahi, z < y}.Nonempty :=
-    hα ((mk_le_mk_of_subset fun _ hx ↦ hx.1).trans_lt hA)
-      ((mk_le_mk_of_subset fun _ hx ↦ hx.1).trans_lt hA)
+    hα ((mk_le_mk_of_subset fun _ hx ↦ (Set.mem_ofPred.1 hx).1).trans_lt hA)
+      ((mk_le_mk_of_subset fun _ hx ↦ (Set.mem_ofPred.1 hx).1).trans_lt hA)
       fun x hx y hy ↦ hmono.lt_iff_lt.1 (hx.2.trans hy.2)
   obtain ⟨a₀, ⟨hlo₀, hhi₀⟩, hmin⟩ := hr.wf.has_min _ hS
   have hcand₁ : ∀ x ∈ lo a₀ fun y (_ : r y a₀) ↦ h.f hord s y, x < b := by
@@ -239,7 +240,6 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
   have hfa₀ : s (h.f hord s a₀) b := (trichotomous_of s _ b).resolve_right <|
     not_or.2 ⟨hb a₀, not_lt_f a₀ ⟨hcand₁, hcand₂⟩⟩
   rcases lt_or_gt_of_ne (hb a₀) with h' | h'
-  --couldnt get grind to play nice here either, even though its so repetitive
   · exact (hlo₀ a₀ ⟨hfa₀, h'⟩).false
   · exact (hhi₀ a₀ ⟨hfa₀, h'⟩).false
 
@@ -251,25 +251,17 @@ open IsEta OrderType
 /-- If `β` is an `η_c` set, any linear order of cardinal `c` embeds into it. -/
 public theorem OrderType.type_le_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (h : IsEta #α β) : type α ≤ type β := by
-  cases isEmpty_or_nonempty α with
-  | inl _ => exact type_le_type_iff.2 ⟨.ofIsEmpty⟩
-  | inr _ =>
-    obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
-    obtain ⟨s, hs, -⟩ := Cardinal.exists_ord_eq β
-    exact type_le_type_iff.2 ⟨.ofStrictMono _ (strictMono_f (h := h) (hord := hord) (s := s))⟩
+  obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
+  obtain ⟨s, hs, -⟩ := Cardinal.exists_ord_eq β
+  exact type_le_type_iff.2 ⟨.ofStrictMono _ (strictMono_f (h := h) (hord := hord) (s := s))⟩
 
 /-- Any two `η_c` ordered sets of cardinal `c` are order-isomorphic. -/
 public theorem OrderType.type_eq_type_of_isEta {α β : Type u} [LinearOrder α] [LinearOrder β]
     (hα : IsEta #α α) (hβ : IsEta #β β) (heq : #α = #β) : type α = type β := by
-  cases isEmpty_or_nonempty α with
-  | inl h' =>
-    have h'' : IsEmpty β := mk_eq_zero_iff.1 (heq ▸ mk_eq_zero α)
-    rw [type_eq_zero.2 h', type_eq_zero.2 h'']
-  | inr _ =>
-    obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
-    obtain ⟨s, hs, hords⟩ := Cardinal.exists_ord_eq β
-    have h : IsEta #α β := heq ▸ hβ
-    exact type_eq_type.2 ⟨(strictMono_f (h := h) (hord := hord) (s := s)).orderIsoOfSurjective _
-      (surjective_f hα hords heq)⟩
+  obtain ⟨r, hr, hord⟩ := Cardinal.exists_ord_eq α
+  obtain ⟨s, hs, hords⟩ := Cardinal.exists_ord_eq β
+  have h : IsEta #α β := heq ▸ hβ
+  exact type_eq_type.2 ⟨(strictMono_f (h := h) (hord := hord) (s := s)).orderIsoOfSurjective _
+    (surjective_f hα hords heq)⟩
 
 end Order

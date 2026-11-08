@@ -9,7 +9,7 @@ public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 
--- import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.DeriveFintype -- shake: keep
 
 /-!
 # Type of players
@@ -24,6 +24,7 @@ universe u
 
 /-! ### Players -/
 
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Either the Left or Right player. -/
 @[aesop safe cases, grind cases]
 inductive Player where
@@ -31,14 +32,9 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Inhabited
+deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
-
-#adaptation_note /-- `deriving Fintype` is currently broken. -/
-instance : Fintype Player where
-  elems := ⟨[left, right], by decide⟩
-  complete x := by cases x <;> simp
 
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
@@ -74,6 +70,15 @@ protected lemma «exists» {p : Player → Prop} :
     (∃ x, p x) ↔ p left ∨ p right :=
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
+theorem univ_eq : Set.univ = {left, right} := Set.ext (by simp)
+
+theorem range_eq {α : Type*} (f : Player → α) : Set.range f = {f left, f right} := by
+  rw [← Set.image_univ, univ_eq, Set.image_pair]
+
+@[simp]
+theorem range_cases {α : Type*} (l r : α) : Set.range (Player.cases l r) = {l, r} :=
+  Player.range_eq _
+
 instance : Neg Player where
   neg := cases right left
 
@@ -88,6 +93,8 @@ theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
+
+theorem compl_singleton (p : Player) : ({p} : Set Player)ᶜ = {-p} := by grind
 
 /--
 The multiplication of `Player`s is used to state the lemmas about the multiplication of
@@ -120,6 +127,47 @@ instance : CommGroup Player where
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
 end Player
+
+/-! ### Outcomes -/
+
+set_option backward.isDefEq.respectTransparency.types false in
+/-- The three possible outcomes of a game.
+
+We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
+inductive Outcome : Type
+  /-- A given player loses in perfect play. -/
+  | loss
+  /-- A given player draws in perfect play. -/
+  | draw
+  /-- A given player wins in perfect play. -/
+  | win
+deriving DecidableEq, Fintype, Inhabited
+
+namespace Outcome
+
+/-- An auxiliary definition for the `LinearOrder` instance on `Outcome`. -/
+private def toNat : Outcome → ℕ
+  | loss => 0
+  | draw => 1
+  | win => 2
+
+@[no_expose]
+instance : LinearOrder Outcome :=
+  LinearOrder.lift' toNat (by decide)
+
+@[simp] theorem loss_le : ∀ x, loss ≤ x := by decide
+@[simp] theorem le_win : ∀ x, x ≤ win := by decide
+
+instance : BoundedOrder Outcome where
+  bot := loss
+  top := win
+  bot_le := loss_le
+  le_top := le_win
+
+@[simp] theorem bot_eq_loss : ⊥ = loss := rfl
+@[simp] theorem top_eq_win : ⊤ = win := rfl
+
+end Outcome
 
 open Player
 

@@ -5,9 +5,9 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import Mathlib.Init
-public meta import Lean.LabelAttribute -- TODO: `registerLabelAttr` should be marked `meta`
-import Lean.Meta.Tactic.Simp.Attr
+public meta import Lean.Meta.Tactic.Simp.Simproc
+meta import Lean.Meta.Tactic.Simp.Attr
+import Lean.Meta.Tactic.Simp.RegisterCommand
 
 /-!
 We register a `simp` attribute for the `game_cmp` tactic. This needs to be done in a separate file

@@ -14,3 +14,4 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           build-args: "--iofail"
+          mk_all-check: "true"
