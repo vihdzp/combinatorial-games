@@ -602,6 +602,49 @@ theorem floor_lt_ceil_of_not_isUpperSet {f : NatOrdinal → SignType} (h : ¬ Is
     floor f < ceil f :=
   (floor_lt_of_not_isUpperSet h).trans_le (le_ceil f)
 
+/-! #### Complete linear order instance -/
+
+instance : CompleteLattice SignExpansion :=
+  fast_instance%
+  { __ := instLinearOrder.toBiheytingAlgebra _
+    __ := giCeil.liftCompleteLattice.toCompleteSemilatticeInf
+    __ := gciFloor.liftCompleteLattice.toCompleteSemilatticeSup }
+
+instance : CompleteLinearOrder SignExpansion where
+  __ := LinearOrder.toBiheytingAlgebra _
+  __ := instCompleteLattice
+  __ := instLinearOrder
+
+theorem coe_sInf (s : Set SignExpansion) :
+    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
+
+theorem coe_iInf {ι} (f : ι → SignExpansion) :
+    ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
+  rw [iInf, coe_sInf]
+  congr
+  aesop
+
+theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
+  rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
+  apply congrArg sInf
+  aesop
+
+theorem coe_sSup (s : Set SignExpansion) :
+    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
+
+theorem coe_iSup {ι} (f : ι → SignExpansion) :
+    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
+  rw [iSup, coe_sSup]
+  congr
+  aesop
+
+theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
+  rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
+  apply congrArg sSup
+  aesop
+
 /-! #### Successor function -/
 
 private def succFun (x : SignExpansion) [x.Small] (o : NatOrdinal) : SignType :=
@@ -791,49 +834,6 @@ theorem succ_neg (x : SignExpansion) [x.Small] : succ (-x) = -pred x := by
 @[simp]
 theorem pred_neg (x : SignExpansion) [x.Small] : pred (-x) = -succ x := by
   simp [pred]
-
-/-! #### Complete linear order instance -/
-
-instance : CompleteLattice SignExpansion :=
-  fast_instance%
-  { __ := instLinearOrder.toBiheytingAlgebra _
-    __ := giCeil.liftCompleteLattice.toCompleteSemilatticeInf
-    __ := gciFloor.liftCompleteLattice.toCompleteSemilatticeSup }
-
-instance : CompleteLinearOrder SignExpansion where
-  __ := LinearOrder.toBiheytingAlgebra _
-  __ := instCompleteLattice
-  __ := instLinearOrder
-
-theorem coe_sInf (s : Set SignExpansion) :
-    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
-
-theorem coe_iInf {ι} (f : ι → SignExpansion) :
-    ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
-  rw [iInf, coe_sInf]
-  congr
-  aesop
-
-theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
-  rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
-  apply congrArg sInf
-  aesop
-
-theorem coe_sSup (s : Set SignExpansion) :
-    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
-
-theorem coe_iSup {ι} (f : ι → SignExpansion) :
-    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
-  rw [iSup, coe_sSup]
-  congr
-  aesop
-
-theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
-  rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
-  apply congrArg sSup
-  aesop
 
 end SignExpansion
 
