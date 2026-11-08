@@ -604,17 +604,14 @@ theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < inf
 
 theorem covBy_iff {x y : Cut} : x ⋖ y ↔ ∃ z, leftSurreal z = x ∧ rightSurreal z = y := by
   refine ⟨fun h => ?_, by rintro ⟨z, rfl, rfl⟩; exact leftSurreal_covBy_rightSurreal z⟩
-  refine ⟨simplestBtwn h.lt, ?_, ?_⟩
-  · apply le_antisymm
-    · rw [h.le_iff_lt_left, lt_iff_nonempty_inter]
-      exact ⟨simplestBtwn h.lt, mem_right_leftSurreal.2 le_rfl, (fits_simplestBtwn h.lt).2⟩
-    · rw [le_leftSurreal_iff]
-      exact (fits_simplestBtwn h.lt).1
-  · apply le_antisymm
-    · rw [rightSurreal_le_iff]
-      exact (fits_simplestBtwn h.lt).2
-    · rw [h.le_iff_lt_right, lt_iff_nonempty_inter]
-      exact ⟨simplestBtwn h.lt, (fits_simplestBtwn h.lt).1, mem_left_rightSurreal.2 le_rfl⟩
+  have ⟨h₁, h₂⟩ := fits_simplestBtwn h.lt
+  refine ⟨simplestBtwn h.lt, ?_, ?_⟩ <;> apply le_antisymm
+  · rw [h.le_iff_lt_left, lt_iff_nonempty_inter]
+    exact ⟨_, mem_right_leftSurreal.2 le_rfl, h₂⟩
+  · rwa [le_leftSurreal_iff]
+  · rwa [rightSurreal_le_iff]
+  · rw [h.le_iff_lt_right, lt_iff_nonempty_inter]
+    exact ⟨simplestBtwn h.lt, h₁, mem_left_rightSurreal.2 le_rfl⟩
 
 /-! ### Numeric cuts -/
 
