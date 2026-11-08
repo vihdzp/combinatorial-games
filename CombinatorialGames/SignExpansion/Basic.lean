@@ -412,6 +412,12 @@ theorem eq_of_length_le_of_forall_lt_gt_iff {x y : SignExpansion} (hxy : y.lengt
       · use o; aesop
       · simpa
 
+theorem eq_of_length_le_of_forall_le_ge_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
+    (hle : ∀ z, z.length < x.length → (z ≤ y ↔ z ≤ x))
+    (hge : ∀ z, z.length < x.length → (y ≤ z ↔ x ≤ z)) : x = y := by
+  simp_rw [le_iff_le_iff_lt_iff_lt] at hle hge
+  exact eq_of_length_le_of_forall_lt_gt_iff hxy hge hle
+
 theorem eq_of_length_eq_of_forall_lt_gt {x y : SignExpansion} (hxy : x.length = y.length)
     (hlt : ∀ z, z.length < x.length → z < x → z < y)
     (hgt : ∀ z, z.length < x.length → x < z → y < z) : x = y := by
