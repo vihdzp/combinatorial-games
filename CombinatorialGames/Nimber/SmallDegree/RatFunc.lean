@@ -21,16 +21,6 @@ reflects its partial fraction decomposition.
 
 universe u
 
-public theorem Ordinal.opow_eq_one_iff {a b : Ordinal} : a ^ b = 1 ↔ a = 1 ∨ b = 0 := by
-  refine ⟨fun h => ?_, by simp +contextual [or_imp]⟩
-  contrapose! h
-  by_cases ha : a = 0
-  · simp [ha, h.2]
-  apply ne_of_gt
-  have h1a : 1 < a := lt_of_not_ge (by simp [le_one_iff, ha, h.1])
-  rw [← opow_zero a, opow_lt_opow_iff_right h1a]
-  exact pos_of_ne_zero h.2
-
 public theorem Ordinal.exists_omega0_mul_add_natCast (o : Ordinal) :
     ∃ a b, omega0 * a + Nat.cast b = o := by
   obtain ⟨b, hb⟩ := lt_omega0.1 (mod_lt o omega0_ne_zero)
@@ -62,7 +52,6 @@ include ht
 
 /-- If `t` is algebraically closed, then `t ^ ω` is an algebra over `t`.
 This is not an instance because the hypothesis `ht` is not inferrable. -/
-@[expose]
 abbrev algebraOpowOmega0 : Algebra ht.toSubfield ht.isRing_opow_omega0.toSubring :=
   (Subring.inclusion (Set.Iio_subset_Iio (val_le_iff.1 (left_le_opow _ omega0_pos)))).toAlgebra
 
@@ -81,6 +70,7 @@ def algEquivPolynomial :
   letI := ht.algebraOpowOmega0
   .symm <| .ofBijective (aeval
       ⟨t, val_lt_iff.1 (left_lt_opow ht.one_lt one_lt_omega0)⟩) <| by
+    apply id
     have algMap (x : ht.toSubfield) :
         algebraMap ht.toSubfield ht.isRing_opow_omega0.toSubring x = ⟨x, _⟩ := rfl
     refine ⟨fun p q hpq => ?_, ?_⟩
@@ -91,7 +81,7 @@ def algEquivPolynomial :
         oeval_inj (by simp [algMap]) (by simp [algMap]),
         (map_injective _ (Subring.subtype_injective _)).eq_iff] at hpq
       refine map_injective _ ?_ hpq
-      exact fun _ _ h => by simpa [algMap] using h
+      exact fun _ _ h => by simpa using h
     · intro y
       obtain ⟨y, hy⟩ := y
       obtain ⟨py, hyd, rfl⟩ := eq_oeval_of_lt_opow_omega0 hy
@@ -188,7 +178,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     obtain ⟨m, hm, hmd⟩ : ∃ m : Multiset ht.toSubfield,
         (∀ i ∈ m, i < c) ∧ (m.map fun x => t - x.1).prod = d := by
       obtain ⟨m, hm, hmd⟩ := Submonoid.exists_multiset_of_mem_closure hd
-      simp_rw [Set.mem_image, Set.mem_setOf] at hm
+      simp_rw [Set.mem_image, Set.mem_ofPred] at hm
       choose p hpc hpy using hm
       refine ⟨m.pmap p fun _ h => h, fun i hi => ?_, ?_⟩
       · rw [Multiset.mem_pmap] at hi
@@ -295,14 +285,14 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     have hgg : (SetLike.coe s).Pairwise fun a b => IsCoprime (g a) (g b) := by
       unfold g
       intro a ha b hb hab
-      rw [dif_pos (hst a ha), dif_pos (hst b hb)]
+      rw [dite_eq_left (hst a ha), dite_eq_left (hst b hb)]
       apply Polynomial.isCoprime_X_sub_C_of_isUnit_sub
-      simp [sub_ne_zero, hab]
+      simp [sub_ne_zero, Subtype.ext_iff, hab]
     let n i := if i = c then n1 + n2 else (mu + mv).count i
     let gi i := of (val t ^ (ω * (1 + val i)))
     have hgi i (hi : i ∈ s) : gi i * algebraMap _ _ (g i) = 1 := by
       unfold g gi
-      rw [dif_pos (hst i hi), algMap, ← add_zero (ω * (1 + val i)),
+      rw [dite_eq_left (hst i hi), algMap, ← add_zero (ω * (1 + val i)),
         ← Nat.cast_zero, (ih i 0 (hi0 i (hsc i hi)) (hst i hi).le).1 (hst i hi)]
       simp [sub_ne_zero.2 (ne_of_gt (hst i hi))]
     obtain ⟨q, r, hr, hf⟩ := mul_prod_pow_inverse_eq_quo_add_sum_rem_mul_pow_inverse f
@@ -328,14 +318,14 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
           ← Multiset.map_replicate (fun j => of (val t ^ (ω * (1 + val j)))),
           Finset.prod_multiset_map_count]
         refine Finset.prod_congr rfl fun i hi => ?_
-        rw [Multiset.eq_of_mem_replicate (Multiset.mem_toFinset.1 hi), if_pos rfl,
+        rw [Multiset.eq_of_mem_replicate (Multiset.mem_toFinset.1 hi), ite_eq_left rfl,
           Multiset.count_replicate_self]
       · rw [Finset.prod_multiset_map_count, ← Finset.prod_inv_distrib]
         refine Finset.prod_congr rfl fun i hi => ?_
         unfold gi n
         have hlt := (hmi i hi).trans_le (hcx.trans hx)
-        rw [← inv_pow, if_neg (ne_of_lt (hmi i hi)), ← add_zero (ω * (1 + val i)), ← Nat.cast_zero,
-          (ih i 0 (hi0 i (hmi i hi).le) hlt.le).1 hlt, zero_add, pow_one]
+        rw [← inv_pow, ite_eq_right (ne_of_lt (hmi i hi)), ← add_zero (ω * (1 + val i)),
+          ← Nat.cast_zero, (ih i 0 (hi0 i (hmi i hi).le) hlt.le).1 hlt, zero_add, pow_one]
     clear lhs
     rw [hll, hf]
     apply (ht.toIsGroup.opow _).add_lt
@@ -349,7 +339,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
         rw [natDegree_eq_zero_iff_degree_le_zero, ← Nat.WithBot.lt_one_iff_le_zero, ← hgd]
         exact hr i hi j
       have hlx : toLex (i, j.1) < toLex (c, n1 + n2) :=
-        Prod.Lex.toLex_lt_toLex'.2 ⟨hsc i hi, fun h => j.2.trans_eq (if_pos h)⟩
+        Prod.Lex.toLex_lt_toLex'.2 ⟨hsc i hi, fun h => j.2.trans_eq (ite_eq_left h)⟩
       obtain ⟨b, hb⟩ := natDegree_eq_zero.1 hrd
       rw [← hb, algMap, coe_eval₂RingHom, eval₂_C]
       unfold gi
@@ -396,7 +386,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
       obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_lt_succ_of_lt hyc).resolve_left (by simp)
       obtain ⟨d, rfl⟩ := lt_omega0.1 hd
-      rw [← natCast_succ] at hyd
+      rw [Order.succ_eq_add_one, ← Nat.cast_add_one] at hyd
       have hrr := (ih c d.succ (Prod.Lex.toLex_lt_toLex.2 (.inl hcx)) (hcx.le.trans hx)).2.1
       refine lt_of_lt_of_le (hr d.succ d.succ c (Prod.Lex.toLex_le_toLex.2 (.inl hcx)) y z hyd
         (hzy.trans_lt hyd) (Not.elim hcx.ne) (Not.elim (hcx.trans_le hx).ne))
@@ -412,10 +402,14 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
         algebraMap ht.isRing_opow_omega0.toSubring hrr.toSubring x = ⟨x, _⟩ := rfl
     have hll : IsLocalization ((Submonoid.closure ((fun u ↦ X - C u) '' {u | u.1 < x})).comap
         ht.ringEquivPolynomial.toMonoidHom) hrr.toSubring := by
-      refine { map_units := ?_, surj y := ?_, exists_of_eq h := ⟨1, by simpa [algMap] using h⟩ }
+      refine { map_units := ?_, surj y := ?_, exists_of_eq h := ⟨1, by
+        -- todo: mark `Subring.inclusion` as `@[implicit_reducible]`
+        -- simpa [algMap] using h
+        rw [algMap, algMap, Subtype.ext_iff] at h
+        rwa [Submonoid.coe_one, one_mul, one_mul, Subtype.ext_iff]⟩ }
       · rw [Subtype.forall]
         simp only [← IsUnit.mem_submonoid_iff, ← Submonoid.mem_comap]
-        rw [← SetLike.le_def,
+        rw [← IsConcreteLE.le_iff,
           show ht.ringEquivPolynomial.toMonoidHom = -- is there a better way
             ht.ringEquivPolynomial.toMulEquiv.toMonoidHom from rfl,
           -- problem with `Submonoid.comap`, should take a `MonoidHom` instead
@@ -448,7 +442,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
         rw [val.map_succ, Order.succ_eq_add_one, ← add_assoc, mul_add_one] at hyc
         obtain ⟨d, hd, hyd⟩ := (normal2.isBot_or_exists_lt_succ_of_lt hyc).resolve_left (by simp)
         obtain ⟨d, rfl⟩ := lt_omega0.1 hd
-        rw [← natCast_succ] at hyd
+        rw [Order.succ_eq_add_one, ← Nat.cast_add_one] at hyd
         obtain ⟨m, hmc, p, hp, hpm⟩ := surj c d.succ (Prod.Lex.toLex_le_toLex.2 (.inl hcx))
           y hyd (Not.elim hcx.ne) (Not.elim (hcx.trans_le hx).ne)
         have hti i (hi : i ≤ c) : t - i ∈ ht.isRing_opow_omega0.toSubring := by
@@ -507,7 +501,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
       let ml := hll.lift (g := m) <| by
         rw [Subtype.forall]
         simp only [← IsUnit.mem_submonoid_iff, ← Submonoid.mem_comap]
-        rw [← SetLike.le_def,
+        rw [← IsConcreteLE.le_iff,
           show ht.ringEquivPolynomial.toMonoidHom = -- is there a better way
             ht.ringEquivPolynomial.toMulEquiv.toMonoidHom from rfl,
           -- problem with `Submonoid.comap`, should take a `MonoidHom` instead
@@ -582,7 +576,7 @@ private theorem next_field_aux {x : Nimber} (hx : x ≤ t) (n : ℕ) :
     · refine le_of_not_gt fun h => ?_
       obtain ⟨m, hm, p, hp, hy⟩ := surj x (n + 1) le_rfl _ h
         (fun _ => Nat.add_one_ne_zero n) (Not.elim hx.ne)
-      rw [← div_div, div_eq_iff (pow_ne_zero _ (sub_ne_zero.2 (ne_of_gt hx))),
+      rw [← div_div, _root_.div_eq_iff (pow_ne_zero _ (sub_ne_zero.2 (ne_of_gt hx))),
         mul_assoc, inv_mul_cancel₀ (pow_ne_zero _ (sub_ne_zero.2 (ne_of_gt hx))), mul_one,
         ← hp0 hx, div_eq_mul_inv] at hy
       refine ne_of_lt ?_ hy
