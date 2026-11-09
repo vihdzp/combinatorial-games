@@ -47,8 +47,9 @@ end Ordinal.CNF
 namespace Finsupp
 variable {M N α : Type*} [AddZeroClass M] [AddZeroClass N]
 
-theorem mapRange_single_add {f : M → N} {g : α →₀ M} {hf : f 0 = 0} {a : α} {b : M}
-    (hg : a ∉ g.support) : mapRange f hf (single a b + g) = single a (f b) + mapRange f hf g := by
+theorem mapRange_single_add_of_notMem_support {f : M → N} {g : α →₀ M} {hf : f 0 = 0}
+    {a : α} {b : M} (hg : a ∉ g.support) :
+    mapRange f hf (single a b + g) = single a (f b) + mapRange f hf g := by
   ext e
   obtain rfl | he := eq_or_ne e a
   · rw [notMem_support_iff] at hg
@@ -133,7 +134,7 @@ theorem ofFinsupp_def (x) :
   induction x using induction_on_max with
   | zero => simp
   | single_add o x f hf hx IH =>
-    rw [ofFinsupp, mapRange_single_add (by contrapose! hf; use o),
+    rw [ofFinsupp, mapRange_single_add_of_notMem_support (by contrapose! hf; use o),
       CNF.eval_single_add', (hb.opow o).mul_add_eq_of_lt', hb.opow_mul_eq_of_lt]
     · dsimp [linearCombination, lsum, Subfield.smul_def] at IH ⊢
       rw [sum_add_index' (by simp) (by simp [add_mul]), ← IH, sum_single_index (by simp), mul_comm]
