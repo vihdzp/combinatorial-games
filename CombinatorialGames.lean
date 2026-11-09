@@ -46,7 +46,7 @@ public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.Nimber.SmallDegree.Inseparable
 public import CombinatorialGames.Nimber.SmallDegree.Quartic
-public import CombinatorialGames.Nimber.Transcendental.Field
+public import CombinatorialGames.Nimber.SmallDegree.RatFunc
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
 public import CombinatorialGames.SignExpansion.Surreal
