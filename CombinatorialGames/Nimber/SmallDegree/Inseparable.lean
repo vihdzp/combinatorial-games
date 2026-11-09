@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Inseparable nimber extensions
@@ -285,7 +286,7 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
   refine .ofSurjective _ 2 ?_
   intro ⟨x, hx⟩
   refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
-  rw [mem_toSubfield_iff, ← ofNat_opow_omega0 2] at hx ⊢
+  rw [mem_toSubfield_iff, ← Ordinal.ofNat_opow_omega0 2] at hx ⊢
   obtain ⟨n, hno, hn⟩ :=
     ((isNormal_of_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
       isSuccLimit_omega0).mp hx

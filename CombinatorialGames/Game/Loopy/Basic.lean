@@ -337,11 +337,11 @@ theorem moves_ofSets (p : Player) (lr : Player → Set LGame.{u})
   generalize_proofs
   exact congrFun (congrArg _ (corec_comp_hom some (fun _ ↦ rfl))) _
 
-theorem leftMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+theorem moves_left_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
     !{l | r}ᴸ = l :=
   moves_ofSets ..
 
-theorem rightMoves_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
+theorem moves_right_ofSets (l r : Set LGame) [Small.{u} l] [Small.{u} r] :
     !{l | r}ᴿ = r :=
   moves_ofSets ..
 
@@ -361,14 +361,14 @@ instance : One LGame := ⟨!{{0} | ∅}⟩
 
 theorem one_def : (1 : LGame) = !{{0} | ∅} := rfl
 
-@[simp] theorem leftMoves_one : 1ᴸ = {0} := leftMoves_ofSets ..
-@[simp] theorem rightMoves_one : 1ᴿ = ∅ := rightMoves_ofSets ..
+@[simp] theorem moves_left_one : 1ᴸ = {0} := moves_left_ofSets ..
+@[simp] theorem moves_right_one : 1ᴿ = ∅ := moves_right_ofSets ..
 
 /-- The game `on = !{{on} | ∅}`. -/
 def on : LGame := corec (Player.cases ⊤ ⊥) ()
 
-@[simp] theorem leftMoves_on : onᴸ = {on} := by simp [on]
-@[simp] theorem rightMoves_on : onᴿ = ∅ := by simp [on]
+@[simp] theorem moves_left_on : onᴸ = {on} := by simp [on]
+@[simp] theorem moves_right_on : onᴿ = ∅ := by simp [on]
 theorem on_eq : on = !{{on} | ∅} := by ext p; cases p <;> simp
 
 theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
@@ -381,8 +381,8 @@ theorem eq_on {x : LGame} : x = on ↔ xᴸ = {x} ∧ xᴿ = ∅ := by
 /-- The game `off = !{∅ | {off}}`. -/
 def off : LGame := corec (Player.cases ⊥ ⊤) ()
 
-@[simp] theorem leftMoves_off : offᴸ = ∅ := by simp [off]
-@[simp] theorem rightMoves_off : offᴿ = {off} := by simp [off]
+@[simp] theorem moves_left_off : offᴸ = ∅ := by simp [off]
+@[simp] theorem moves_right_off : offᴿ = {off} := by simp [off]
 theorem off_eq : off = !{∅ | {off}} := by ext p; cases p <;> simp
 
 theorem eq_off {x : LGame} : x = off ↔ xᴸ = ∅ ∧ xᴿ = {x} := by
@@ -410,12 +410,12 @@ def tis : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} �
 /-- The game `tisn = !{∅ | {tis}}`, where `tis = !{{tisn} | ∅}`. -/
 def tisn : LGame := corec (Player.cases (Bool.rec ∅ {false}) (Bool.rec {true} ∅)) false
 
-@[simp] theorem leftMoves_tis : tisᴸ = {tisn} := by simp [tis, tisn]
-@[simp] theorem rightMoves_tis : tisᴿ = ∅ := by simp [tis]
+@[simp] theorem moves_left_tis : tisᴸ = {tisn} := by simp [tis, tisn]
+@[simp] theorem moves_right_tis : tisᴿ = ∅ := by simp [tis]
 theorem tis_eq : tis = !{{tisn} | ∅} := by ext p; cases p <;> simp
 
-@[simp] theorem leftMoves_tisn : tisnᴸ = ∅ := by simp [tisn]
-@[simp] theorem rightMoves_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
+@[simp] theorem moves_left_tisn : tisnᴸ = ∅ := by simp [tisn]
+@[simp] theorem moves_right_tisn : tisnᴿ = {tis} := by simp [tis, tisn]
 theorem tisn_eq : tisn = !{∅ | {tis}} := by ext p; cases p <;> simp
 
 /-! ### Negation -/

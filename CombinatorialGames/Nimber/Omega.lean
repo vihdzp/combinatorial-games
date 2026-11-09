@@ -65,9 +65,6 @@ theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
 theorem Ordinal.one_le_lift_iff {x : Ordinal.{u}} : 1 ≤ Ordinal.lift.{v} x ↔ 1 ≤ x := by
   simpa using Ordinal.lift_le (a := 1)
 
-theorem Ordinal.card_le_aleph_iff {x y : Ordinal} : x.card ≤ ℵ_ y ↔ x < ω_ (y + 1) := by
-  rw [card_le_iff, succ_aleph, ord_aleph]
-
 namespace Nimber
 
 /-! ### ω is a field -/
@@ -208,7 +205,7 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     have := hx.nonempty_Iio.to_subtype
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [isNormal_omega.apply_of_isSuccLimit hx]
-    rw [isNormal_enumAlgClosed.map_iSup Ordinal.bddAbove_of_small]
+    rw [isNormal_enumAlgClosed.leftOrdContinuous.map_ciSup Ordinal.bddAbove_of_small]
     refine ciSup_le' fun ⟨y, hy⟩ ↦ ?_
     obtain rfl | hy₀ := eq_or_ne y 0
     · grw [Subtype.coe_mk, zero_le_one]

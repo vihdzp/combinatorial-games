@@ -1,6 +1,7 @@
 module  -- shake: keep-all --deprecated_module: ignore
 
 public import CombinatorialGames.Counterexamples.Multiplication
+public import CombinatorialGames.Counterexamples.OrdinalSum
 public import CombinatorialGames.Counterexamples.TinyOrder
 public import CombinatorialGames.Game.Basic
 public import CombinatorialGames.Game.Birthday
@@ -18,6 +19,7 @@ public import CombinatorialGames.Game.Loopy.Outcome
 public import CombinatorialGames.Game.Loopy.StoppingTime
 public import CombinatorialGames.Game.Order
 public import CombinatorialGames.Game.Ordinal
+public import CombinatorialGames.Game.OrdinalSum
 public import CombinatorialGames.Game.Player
 public import CombinatorialGames.Game.Small
 public import CombinatorialGames.Game.Special
@@ -27,6 +29,7 @@ public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Game.Stops
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
+public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
@@ -43,8 +46,10 @@ public import CombinatorialGames.Nimber.SimplestExtension.Basic
 public import CombinatorialGames.Nimber.SimplestExtension.Closure
 public import CombinatorialGames.Nimber.SimplestExtension.Polynomial
 public import CombinatorialGames.Nimber.SmallDegree.Inseparable
+public import CombinatorialGames.Nimber.SmallDegree.Quartic
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
+public import CombinatorialGames.SignExpansion.Surreal
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut

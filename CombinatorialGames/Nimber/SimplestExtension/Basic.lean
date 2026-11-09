@@ -50,10 +50,6 @@ theorem Maximal.isGreatest {α : Type*} [LinearOrder α] {P : α → Prop} {x : 
 
 namespace Ordinal
 
-@[simp]
-theorem ofNat_opow_omega0 (n : ℕ) [n.AtLeastTwo] : ofNat(n) ^ ω = ω :=
-  natCast_opow_omega0 Nat.AtLeastTwo.one_lt
-
 theorem mul_add_lt {a b c d : Ordinal} (h₁ : c < a) (h₂ : b < d) : a * b + c < a * d := by
   apply lt_of_lt_of_le (b := a * (Order.succ b))
   · rwa [mul_succ, add_lt_add_iff_left]
@@ -328,6 +324,9 @@ attribute [aesop forward safe] IsRing.toIsGroup
 theorem IsRing.one_lt (h : IsRing x) : 1 < x := by
   rw [← not_le, Nimber.le_one_iff, not_or]
   exact ⟨h.ne_zero, h.ne_one⟩
+
+theorem IsRing.one_lt_val (h : IsRing x) : 1 < x.val :=
+  h.one_lt
 
 theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
   rw [← succ_one, succ_le_iff]

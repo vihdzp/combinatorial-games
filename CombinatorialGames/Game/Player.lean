@@ -70,6 +70,15 @@ protected lemma «exists» {p : Player → Prop} :
     (∃ x, p x) ↔ p left ∨ p right :=
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
+theorem univ_eq : Set.univ = {left, right} := Set.ext (by simp)
+
+theorem range_eq {α : Type*} (f : Player → α) : Set.range f = {f left, f right} := by
+  rw [← Set.image_univ, univ_eq, Set.image_pair]
+
+@[simp]
+theorem range_cases {α : Type*} (l r : α) : Set.range (Player.cases l r) = {l, r} :=
+  Player.range_eq _
+
 instance : Neg Player where
   neg := cases right left
 
@@ -84,6 +93,8 @@ theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
+
+theorem compl_singleton (p : Player) : ({p} : Set Player)ᶜ = {-p} := by grind
 
 /--
 The multiplication of `Player`s is used to state the lemmas about the multiplication of

@@ -70,6 +70,15 @@ classes in `Game` have a canonical representative. -/
 instance : OfSets Game.{u} fun _ ↦ True where
   ofSets st _ := mk !{fun p ↦ out '' (st p)}
 
+theorem ofSets_eq_mk' {st : Player → Set Game.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] :
+    !{st} = mk !{fun p ↦ out '' st p} :=
+  rfl
+
+theorem ofSets_eq_mk {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
+    !{s | t} = mk !{out '' s | out '' t} := by
+  rw [ofSets_eq_mk', ofSets_eq_ofSets_cases]
+
 theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
     mk !{st} = !{fun p ↦ mk '' st p} := by
   refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
@@ -80,10 +89,6 @@ theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
     mk !{s | t} = !{mk '' s | mk '' t} := by
   rw [mk_ofSets']
   simp_rw [Player.apply_cases]
-
-private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
-    !{s | t} = mk !{out '' s | out '' t} := by
-  simp [mk_ofSets, image_image]
 
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
@@ -162,7 +167,7 @@ theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) 
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
-  congrm _ ∈ ?_ ∪ (?_ ∪ (?_ ∪ ?_))
+  congrm _ ∈ (?_ ∪ (?_ ∪ (?_ ∪ ?_)) : Set _)
   all_goals
     ext
     simp only [mulOption, mk_sub, mk_add, mem_image, mem_prod, and_assoc, Prod.exists,
@@ -207,33 +212,55 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
       hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
     abel
 
+theorem lf_ofSets_of_mem_left' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .left) : x ⧏ !{st} := by
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply left_lf
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
+
+theorem ofSets_lf_of_mem_right' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .right) : !{st} ⧏ x := by
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply lf_right
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
+
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ s) : x ⧏ !{s | t} := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using left_lf this
+    (h : x ∈ s) : x ⧏ !{s | t} :=
+  lf_ofSets_of_mem_left' h
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ t) : !{s | t} ⧏ x := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using lf_right this
+    (h : x ∈ t) : !{s | t} ⧏ x :=
+  ofSets_lf_of_mem_right' h
+
+theorem ofSets_le_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ≤ !{st₂} ↔ (∀ z ∈ st₁ .left, z ⧏ !{st₂}) ∧ (∀ z ∈ st₂ .right, !{st₁} ⧏ z) := by
+  apply IGame.le_iff_forall_lf.trans
+  simp_rw [moves_ofSets, forall_mem_image]
+  simp_rw [← Game.mk_le_mk, mk_ofSets', image_image, out_eq, image_id']
+
+theorem ofSets_lf_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ⧏ !{st₂} ↔ (∃ z ∈ st₂ .left, !{st₁} ≤ z) ∨ (∃ z ∈ st₁ .right, z ≤ !{st₂}) := by
+  rw [ofSets_le_ofSets_iff']
+  push +distrib Not
+  rfl
 
 theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
-    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) := by
-  apply IGame.le_iff_forall_lf.trans
-  simp_rw [moves_ofSets, forall_mem_image]
-  congr! <;>
-  · rw [← Game.mk_le_mk, out_eq]
-    rfl
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) :=
+  ofSets_le_ofSets_iff'
 
 theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
-    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
-  rw [ofSets_le_ofSets_iff]
-  push +distrib Not
-  rfl
+    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) :=
+  ofSets_lf_ofSets_iff'
 
 end Game
 
