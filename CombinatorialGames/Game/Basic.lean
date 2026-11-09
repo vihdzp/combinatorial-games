@@ -1,7 +1,8 @@
 /-
 Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison, Apurva Nakade, Yuyang Zhao
+Authors: Violeta Hernández Palacios, Reid Barton, Mario Carneiro, Isabel Longbottom, Kim Morrison,
+Apurva Nakade, Yuyang Zhao
 -/
 module
 
@@ -69,6 +70,15 @@ classes in `Game` have a canonical representative. -/
 instance : OfSets Game.{u} fun _ ↦ True where
   ofSets st _ := mk !{fun p ↦ out '' (st p)}
 
+theorem ofSets_eq_mk' {st : Player → Set Game.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] :
+    !{st} = mk !{fun p ↦ out '' st p} :=
+  rfl
+
+theorem ofSets_eq_mk {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] :
+    !{s | t} = mk !{out '' s | out '' t} := by
+  rw [ofSets_eq_mk', ofSets_eq_ofSets_cases]
+
 theorem mk_ofSets' (st : Player → Set IGame.{u}) [Small.{u} (st left)] [Small.{u} (st right)] :
     mk !{st} = !{fun p ↦ mk '' st p} := by
   refine mk_eq <| IGame.equiv_of_exists ?_ ?_ ?_ ?_ <;>
@@ -80,16 +90,17 @@ theorem mk_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   rw [mk_ofSets']
   simp_rw [Player.apply_cases]
 
-private theorem ofSets_cases (s t : Set Game.{u}) [Small.{u} s] [Small.{u} t] :
-    !{s | t} = mk !{out '' s | out '' t} := by
-  simp [mk_ofSets, image_image]
-
 instance : Zero Game := ⟨mk 0⟩
 instance : One Game := ⟨mk 1⟩
-instance : Add Game := ⟨Quotient.map₂ _ @add_congr⟩
-instance : Neg Game := ⟨Quotient.map _ @neg_congr⟩
+instance : Add Game := ⟨Quotient.map₂ (· + ·) @add_congr⟩
+instance : Neg Game := ⟨Quotient.map (-·) @neg_congr⟩
+instance : Sub Game := ⟨Quotient.map₂ (· - ·) @sub_congr⟩
 instance : PartialOrder Game := inferInstanceAs (PartialOrder (Antisymmetrization ..))
 instance : Inhabited Game := ⟨0⟩
+instance : NSMul Game := ⟨fun n => Quotient.map (n • ·) (@nsmul_congr n)⟩
+instance : ZSMul Game := ⟨fun n => Quotient.map (n • ·) (@zsmul_congr n)⟩
+instance : NatCast Game := ⟨fun n => mk n⟩
+instance : IntCast Game := ⟨fun n => mk n⟩
 
 instance : AddCommGroupWithOne Game where
   zero_add := by rintro ⟨x⟩; exact congr(mk $(zero_add _))
@@ -97,8 +108,12 @@ instance : AddCommGroupWithOne Game where
   add_comm := by rintro ⟨x⟩ ⟨y⟩; exact congr(mk $(add_comm _ _))
   add_assoc := by rintro ⟨x⟩ ⟨y⟩ ⟨z⟩; exact congr(mk $(add_assoc _ _ _))
   neg_add_cancel := by rintro ⟨a⟩; exact mk_eq (neg_add_equiv _)
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul_zero := by rintro ⟨a⟩; rfl
+  nsmul_succ := by rintro n ⟨a⟩; rfl
+  zsmul_zero' := by rintro ⟨a⟩; rfl
+  zsmul_succ' := by rintro n ⟨a⟩; rfl
+  zsmul_neg' := by rintro n ⟨a⟩; rfl
+  sub_eq_add_neg := by rintro ⟨a⟩ ⟨b⟩; rfl
 
 instance : IsOrderedAddMonoid Game where
   add_le_add_left := by rintro ⟨a⟩ ⟨b⟩ h ⟨c⟩; exact add_le_add_left (α := IGame) h _
@@ -111,6 +126,8 @@ instance : RatCast Game where
 @[simp] theorem mk_add (x y : IGame) : mk (x + y) = mk x + mk y := rfl
 @[simp] theorem mk_neg (x : IGame) : mk (-x) = -mk x := rfl
 @[simp] theorem mk_sub (x y : IGame) : mk (x - y) = mk x - mk y := rfl
+@[simp] theorem mk_nsmul (n : Nat) (x : IGame) : mk (n • x) = n • mk x := rfl
+@[simp] theorem mk_zsmul (n : Int) (x : IGame) : mk (n • x) = n • mk x := rfl
 
 theorem mk_mulOption (x y a b : IGame) :
     mk (mulOption x y a b) = mk (a * y) + mk (x * b) - mk (a * b) :=
@@ -121,19 +138,19 @@ theorem mk_mulOption (x y a b : IGame) :
 @[simp] theorem mk_fuzzy_mk {x y : IGame} : mk x ‖ mk y ↔ x ‖ y := .rfl
 
 @[simp, norm_cast]
-theorem mk_natCast : ∀ n : ℕ, mk n = n
-  | 0 => rfl
-  | n + 1 => by rw [Nat.cast_add, Nat.cast_add, mk_add, mk_natCast]; rfl
+theorem mk_natCast (n : Nat) : mk n = n := rfl
 
 @[simp, norm_cast]
-theorem mk_intCast (n : ℤ) : mk n = n := by
-  cases n <;> simp
+theorem mk_intCast (n : ℤ) : mk n = n := rfl
 
 @[simp, norm_cast] theorem mk_ratCast (q : ℚ) : mk q = q := rfl
 @[simp, norm_cast] theorem ratCast_neg (q : ℚ) : ((-q : ℚ) : Game) = -q := by simp [← mk_ratCast]
 
 theorem zero_def : (0 : Game) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; simp
 theorem one_def : (1 : Game) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; simp
+
+@[simp] theorem mk_eq_zero {x : IGame} : mk x = 0 ↔ x ≈ 0 := mk_eq_mk
+@[simp] theorem zero_eq_mk {x : IGame} : 0 = mk x ↔ 0 ≈ x := mk_eq_mk
 
 instance : ZeroLEOneClass Game where
   zero_le_one := zero_le_one (α := IGame)
@@ -150,7 +167,7 @@ theorem mk_mul_add (x y z : IGame) : mk (x * (y + z)) = mk (x * y) + mk (x * z) 
   congr! 2
   ext p
   nth_rewrite 2 [union_left_comm]
-  congrm _ ∈ ?_ ∪ (?_ ∪ (?_ ∪ ?_))
+  congrm _ ∈ (?_ ∪ (?_ ∪ (?_ ∪ ?_)) : Set _)
   all_goals
     ext
     simp only [mulOption, mk_sub, mk_add, mem_image, mem_prod, and_assoc, Prod.exists,
@@ -163,13 +180,13 @@ termination_by (x, y, z)
 decreasing_by igame_wf
 
 theorem mk_mul_sub (x y z : IGame) : mk (x * (y - z)) = mk (x * y) - mk (x * z) := by
-  simpa using mk_mul_add x y (-z)
+  simpa [sub_eq_add_neg] using mk_mul_add x y (-z)
 
 theorem mk_add_mul (x y z : IGame) : mk ((x + y) * z) = mk (x * z) + mk (y * z) := by
   rw [mul_comm, mk_mul_add, mul_comm, mul_comm z]
 
 theorem mk_sub_mul (x y z : IGame) : mk ((x - y) * z) = mk (x * z) - mk (y * z) := by
-  simpa using mk_add_mul x (-y) z
+  simpa [sub_eq_add_neg] using mk_add_mul x (-y) z
 
 theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
   induction x using IGame.ofSetsRecOn generalizing y z with | ofSets xL xR ihxl ihxr
@@ -195,17 +212,55 @@ theorem mk_mul_assoc (x y z : IGame) : mk (x * y * z) = mk (x * (y * z)) := by
       hx.elim (ihxl x) (ihxr x), hy.elim (ihyl y) (ihyr y), hz.elim (ihzl z) (ihzr z)]
     abel
 
+theorem lf_ofSets_of_mem_left' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .left) : x ⧏ !{st} := by
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply left_lf
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
+
+theorem ofSets_lf_of_mem_right' {st : Player → Set Game.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {x : Game.{u}}
+    (h : x ∈ st .right) : !{st} ⧏ x := by
+  rw [ofSets_eq_mk', ← x.out_eq, mk_le_mk]
+  apply lf_right
+  rw [moves_ofSets]
+  exact mem_image_of_mem out h
+
 theorem lf_ofSets_of_mem_left {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ s) : x ⧏ !{s | t} := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴸ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using left_lf this
+    (h : x ∈ s) : x ⧏ !{s | t} :=
+  lf_ofSets_of_mem_left' h
 
 theorem ofSets_lf_of_mem_right {s t : Set Game.{u}} [Small.{u} s] [Small.{u} t] {x : Game.{u}}
-    (h : x ∈ t) : !{s | t} ⧏ x := by
-  rw [ofSets_cases]
-  have : x.out ∈ !{out '' s | out '' t}ᴿ := by simpa using mem_image_of_mem _ h
-  simpa [← mk_le_mk] using lf_right this
+    (h : x ∈ t) : !{s | t} ⧏ x :=
+  ofSets_lf_of_mem_right' h
+
+theorem ofSets_le_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ≤ !{st₂} ↔ (∀ z ∈ st₁ .left, z ⧏ !{st₂}) ∧ (∀ z ∈ st₂ .right, !{st₁} ⧏ z) := by
+  apply IGame.le_iff_forall_lf.trans
+  simp_rw [moves_ofSets, forall_mem_image]
+  simp_rw [← Game.mk_le_mk, mk_ofSets', image_image, out_eq, image_id']
+
+theorem ofSets_lf_ofSets_iff' {st₁ st₂ : Player → Set Game.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)] :
+    !{st₁} ⧏ !{st₂} ↔ (∃ z ∈ st₂ .left, !{st₁} ≤ z) ∨ (∃ z ∈ st₁ .right, z ≤ !{st₂}) := by
+  rw [ofSets_le_ofSets_iff']
+  push +distrib Not
+  rfl
+
+theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z ⧏ !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} ⧏ z) :=
+  ofSets_le_ofSets_iff'
+
+theorem ofSets_lf_ofSets_iff {s₁ t₁ s₂ t₂ : Set Game.{u}}
+    [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂] :
+    !{s₁ | t₁} ⧏ !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) :=
+  ofSets_lf_ofSets_iff'
 
 end Game
 

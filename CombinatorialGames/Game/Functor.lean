@@ -18,7 +18,7 @@ small sets of games (one for each player) and outputting a new game. This sugges
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : IGame.{u}
 ```
 
 However, the kernel does not accept this, as `Set IGame = IGame → Prop` contains a non-positive
@@ -55,10 +55,10 @@ to various Lean limitations):
 
 ```
 inductive IGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : IGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : IGame.{u}
 
 coinductive LGame : Type (u + 1)
-  | ofSets (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] : LGame
+  | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : LGame.{u}
 ```
 -/
 def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
@@ -83,6 +83,6 @@ noncomputable instance : QPF GameFunctor where
   abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ by infer_instance⟩
   repr x := ⟨fun p ↦ Shrink (x.1 p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.1).1)⟩
   abs_repr x := by ext; simp [← (equivShrink _).exists_congr_right]
-  abs_map f := by intro ⟨x, f⟩; ext; simp [PFunctor.map, map_def]
+  abs_map f := by intro ⟨x, f⟩; ext; simp [PFunctor.map, map_def]; rfl
 
 end GameFunctor

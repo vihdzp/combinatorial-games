@@ -6,6 +6,11 @@ Authors: Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
+
+/-!
+# Extra lemmas on WithTop
+-/
 
 universe u
 open Set NatOrdinal WithTop
