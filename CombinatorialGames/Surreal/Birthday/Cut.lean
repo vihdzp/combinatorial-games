@@ -202,8 +202,7 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   · let dn := !{{st s} | f '' t}
     have hdl : supLeft dn = sInf (leftSurreal '' s) := by
       unfold dn supLeft
-      rw [IGame.leftMoves_ofSets, iSup_singleton]
-      rw [rightGame_eq_infRight_of_le (hstrl hxb), hstr]
+      rw [IGame.leftMoves_ofSets, iSup_singleton, rightGame_eq_infRight_of_le (hstrl hxb), hstr]
     have hdr : infRight dn = sInf (leftSurreal '' t) := by
       unfold dn
       rw [infRight, IGame.rightMoves_ofSets,
