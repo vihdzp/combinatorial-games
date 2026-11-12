@@ -183,13 +183,10 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
       infRight (st s) ≤ supLeft (st s) := by
     rw [hstl, hstr]
     obtain ⟨x, hx⟩ := hs
-    apply le_of_lt
-    rw [lt_iff_nonempty_inter]
-    refine ⟨x, ?_, ?_⟩
-    · rw [← lt_rightSurreal_iff, sInf_lt_iff, exists_mem_image]
-      exact ⟨x, hx, leftSurreal_lt_rightSurreal x⟩
-    · rw [← leftSurreal_lt_iff, lt_sSup_iff, exists_mem_image]
-      exact ⟨x, hx, leftSurreal_lt_rightSurreal x⟩
+    calc
+      _ ≤ leftSurreal x := sInf_le (mem_image_of_mem _ hx)
+      _ ≤ rightSurreal x := leftSurreal_le_rightSurreal x
+      _ ≤ _ := le_sSup (mem_image_of_mem _ hx)
   obtain ⟨s, rfl | rfl, hs⟩ := birthday_eq_sSup_birthday x <;>
   obtain ⟨t, rfl | rfl, ht⟩ := birthday_eq_sSup_birthday y <;> (
     rw [← hs] at hxt
