@@ -6,11 +6,10 @@ Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Birthday
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
-import CombinatorialGames.Tactic.OrdinalAlias
+import CombinatorialGames.Tactic.Register
 import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
@@ -38,7 +37,7 @@ namespace GameGraph
 abbrev nim : GameGraph Nimber where
   moves _ := Iio
 
-instance : nim.IsWellFounded :=
+instance : nim.WellFounded :=
   .of_subrelation (· < ·) <| by simp
 
 end GameGraph
@@ -104,12 +103,12 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
-  rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
-  -- TODO: don't abuse def-eq
-  change ⨆ a : Iio (NatOrdinal.of o.val), Order.succ (nim a.1).birthday = _
-  convert iSup_succ _ with _ x
-  cases x
-  exact birthday_nim _
+  rw [nim_def, birthday_ofSets_const, image_image]
+  conv_rhs => rw [← iSup_succ o, ← sSup_range]
+  simp_rw [val_sSup, of_preimage, NatOrdinal.of_sSup, NatOrdinal.val_preimage,
+    ← image_eq_range, image_image, OrderIso.map_succ, Order.succ_eq_add_one]
+  congr!
+  rw [birthday_nim]
 termination_by o
 
 @[simp, game_cmp]
@@ -153,7 +152,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
   · exact hu hy hxy
   have hyo := lf_right_of_le hxo.ge hy
   replace hy := Subposition.of_mem_moves hy
-  induction y using IsWellFounded.induction Subposition with | ind y ihy
+  induction y using wellFounded_subposition.induction with | h y ihy
   obtain ⟨w, hw, how⟩ | ⟨w, hw, hxy⟩ := lf_iff_exists_le.1 hyo
   · refine lf_of_le_left ?_ hw hyx
     rw [le_iff_forall_lf]
