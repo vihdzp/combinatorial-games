@@ -215,8 +215,7 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
     refine ⟨Game.mk dn, ?_, ?_⟩
     · rw [← hdl]
       apply leftGame_eq_supLeft_of_le
-      rw [hdl, hdr]
-      exact h
+      rwa [hdl, hdr]
     · rw [← hdr]
       apply rightGame_eq_infRight_of_le
       rw [hdl, hdr]
