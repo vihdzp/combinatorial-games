@@ -185,7 +185,7 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   have hstl {s : Set Surreal} [Small s] :
       supLeft (st s) = sSup (rightSurreal '' s) := by
     unfold st supLeft
-    rw [IGame.leftMoves_ofSets, iSup_image, sSup_image]
+    rw [IGame.moves_left_ofSets, iSup_image, sSup_image]
     refine iSup_congr fun u => iSup_congr fun hu => ?_
     rw [← rightGame_toGame]
     apply congrArg rightGame
@@ -193,7 +193,7 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   have hstr {s : Set Surreal} [Small s] :
       infRight (st s) = sInf (leftSurreal '' s) := by
     unfold st infRight
-    rw [IGame.rightMoves_ofSets, iInf_image, sInf_image]
+    rw [IGame.moves_right_ofSets, iInf_image, sInf_image]
     refine iInf_congr fun u => iInf_congr fun hu => ?_
     rw [← leftGame_toGame]
     apply congrArg leftGame
@@ -221,11 +221,11 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   · let dn := !{{st s} | f '' t}
     have hdl : supLeft dn = sInf (leftSurreal '' s) := by
       unfold dn supLeft
-      rw [IGame.leftMoves_ofSets, iSup_singleton, rightGame_eq_infRight_of_le (hstrl hxb), hstr]
+      rw [IGame.moves_left_ofSets, iSup_singleton, rightGame_eq_infRight_of_le (hstrl hxb), hstr]
     have hdr : infRight dn = sInf (leftSurreal '' t) := by
       unfold dn
-      rw [infRight, IGame.rightMoves_ofSets,
-        ← IGame.rightMoves_ofSets (f '' t) (f '' t), ← infRight, hstr]
+      rw [infRight, IGame.moves_right_ofSets,
+        ← IGame.moves_right_ofSets (f '' t) (f '' t), ← infRight, hstr]
     refine ⟨Game.mk dn, ?_, ?_⟩
     · rw [← hdl]
       apply leftGame_eq_supLeft_of_le
@@ -237,11 +237,11 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   · let zr := !{{st s} | {st t}}
     have hzl : supLeft zr = sInf (leftSurreal '' s) := by
       unfold zr supLeft
-      rw [IGame.leftMoves_ofSets, iSup_singleton]
+      rw [IGame.moves_left_ofSets, iSup_singleton]
       rw [rightGame_eq_infRight_of_le (hstrl hxb), hstr]
     have hzr : infRight zr = sSup (rightSurreal '' t) := by
       unfold zr infRight
-      rw [IGame.rightMoves_ofSets, iInf_singleton]
+      rw [IGame.moves_right_ofSets, iInf_singleton]
       rw [leftGame_eq_supLeft_of_le (hstrl hyb), hstl]
     refine ⟨Game.mk zr, ?_, ?_⟩
     · rw [← hzl]
@@ -255,12 +255,12 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   · let sr := !{f '' s | f '' t}
     have hsl : supLeft sr = sSup (rightSurreal '' s) := by
       unfold sr
-      rw [supLeft, IGame.leftMoves_ofSets,
-        ← IGame.leftMoves_ofSets (f '' s) (f '' s), ← supLeft, hstl]
+      rw [supLeft, IGame.moves_left_ofSets,
+        ← IGame.moves_left_ofSets (f '' s) (f '' s), ← supLeft, hstl]
     have hsr : infRight sr = sInf (leftSurreal '' t) := by
       unfold sr
-      rw [infRight, IGame.rightMoves_ofSets,
-        ← IGame.rightMoves_ofSets (f '' t) (f '' t), ← infRight, hstr]
+      rw [infRight, IGame.moves_right_ofSets,
+        ← IGame.moves_right_ofSets (f '' t) (f '' t), ← infRight, hstr]
     refine ⟨Game.mk sr, ?_, ?_⟩
     · rw [← hsl]
       apply leftGame_eq_supLeft_of_le
@@ -273,11 +273,11 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
   · let up := !{f '' s | {st t}}
     have hul : supLeft up = sSup (rightSurreal '' s) := by
       unfold up
-      rw [supLeft, IGame.leftMoves_ofSets,
-        ← IGame.leftMoves_ofSets (f '' s) (f '' s), ← supLeft, hstl]
+      rw [supLeft, IGame.moves_left_ofSets,
+        ← IGame.moves_left_ofSets (f '' s) (f '' s), ← supLeft, hstl]
     have hur : infRight up = sSup (rightSurreal '' t) := by
       unfold up infRight
-      rw [IGame.rightMoves_ofSets, iInf_singleton]
+      rw [IGame.moves_right_ofSets, iInf_singleton]
       rw [leftGame_eq_supLeft_of_le (hstrl hyb), hstl]
     refine ⟨Game.mk up, ?_, ?_⟩
     · rw [← hul]
