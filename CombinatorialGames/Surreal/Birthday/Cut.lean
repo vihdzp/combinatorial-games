@@ -139,6 +139,15 @@ theorem birthday_bot : birthday ⊥ = 0 := by
 theorem birthday_top : birthday ⊤ = 0 := by
   simpa using birthday_sInf_leftSurreal_le ∅
 
+@[simp]
+theorem birthday_eq_zero {x : Cut} : birthday x = 0 ↔ x = ⊥ ∨ x = ⊤ := by
+  refine ⟨fun h => ?_, by rintro (rfl | rfl) <;> simp⟩
+  obtain ⟨s, rfl | rfl, hb⟩ := x.birthday_eq_sSup_birthday <;>
+    · simp_rw [h, ← le_zero_iff, sSup_le_iff, Set.forall_mem_image,
+        ← WithTop.coe_add_one, WithTop.coe_le_zero, Order.add_one_le_iff,
+        not_lt_zero, imp_false, ← Set.eq_empty_iff_forall_notMem] at hb
+      simp [hb]
+
 private theorem birthday_neg_le (x : Cut) : (-x).birthday ≤ x.birthday := by
   obtain ⟨x, rfl | rfl, hx⟩ := birthday_eq_sSup_birthday x
   · rw [← hx, neg_sInf, neg_leftSurreal_image]
