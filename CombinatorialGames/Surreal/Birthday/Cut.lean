@@ -716,17 +716,11 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
   have hsl : supLeft sr = sSup (rightSurreal '' s) := by
     unfold sr supLeft
     rw [IGame.moves_left_ofSets, iSup_image, sSup_image]
-    refine iSup_congr fun u => iSup_congr fun hu => ?_
-    rw [← rightGame_toGame]
-    apply congrArg rightGame
-    rw [← hf u, toGame_mk, hf u]
+    simp_rw [((toGame_mk _).symm.trans (congrArg toGame (hf _))), rightGame_toGame]
   have hsr : infRight sr = sInf (leftSurreal '' t) := by
     unfold sr infRight
     rw [IGame.moves_right_ofSets, iInf_image, sInf_image]
-    refine iInf_congr fun u => iInf_congr fun hu => ?_
-    rw [← leftGame_toGame]
-    apply congrArg leftGame
-    rw [← hf u, toGame_mk, hf u]
+    simp_rw [((toGame_mk _).symm.trans (congrArg toGame (hf _))), leftGame_toGame]
   have hgl : leftGame (Game.mk sr) = sSup (rightSurreal '' s) := by
     rw [← hsl]
     apply leftGame_eq_supLeft_of_le
@@ -768,10 +762,7 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
   have hul : supLeft up = sSup (rightSurreal '' s) := by
     unfold up supLeft
     rw [IGame.moves_left_ofSets, iSup_image, sSup_image]
-    refine iSup_congr fun u => iSup_congr fun hu => ?_
-    rw [← rightGame_toGame]
-    apply congrArg rightGame
-    rw [← hf u, toGame_mk, hf u]
+    simp_rw [((toGame_mk _).symm.trans (congrArg toGame (hf _))), rightGame_toGame]
   have hur : infRight up = leftGame (.mk sr) := by
     unfold up infRight
     simp
