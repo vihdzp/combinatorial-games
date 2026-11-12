@@ -310,6 +310,18 @@ theorem birthday_rightGame_le (x : Game) : (rightGame x).birthday ≤ x.birthday
   apply (birthday_game_le x).2.2.2.trans
   rw [hx]
 
+theorem birthday_leftGame_le_of_not_surreal {x : Game} (hx : x ∉ Set.range Surreal.toGame) :
+    (leftGame x).birthday ≤ x.birthday := by
+  obtain ⟨x, rfl, hxb⟩ := x.birthday_eq_iGameBirthday
+  rw [← infRight_le_supLeft_iff] at hx
+  grw [leftGame_eq_supLeft_of_le hx, birthday_supLeft_le, hxb]
+
+theorem birthday_rightGame_le_of_not_surreal {x : Game} (hx : x ∉ Set.range Surreal.toGame) :
+    (rightGame x).birthday ≤ x.birthday := by
+  obtain ⟨x, rfl, hxb⟩ := x.birthday_eq_iGameBirthday
+  rw [← infRight_le_supLeft_iff] at hx
+  grw [rightGame_eq_infRight_of_le hx, birthday_infRight_le, hxb]
+
 /-- The smallest birthday among *numeric* games equivalent to a surreal, is also the smallest
 birthday among *all* games in general. -/
 @[simp]
@@ -447,8 +459,10 @@ protected instance Numeric.small (x : Cut) [x.Numeric] : x.Small := by
   | leftSurreal x => simpa using Small.infLeft {x}
   | rightSurreal x => simpa using Small.supRight {x}
 
-protected instance Small.neg (x : Cut) [x.Small] : (-x).Small := by
-  simp_all [small_iff_birthday]
+@[simp]
+theorem small_neg_iff {x : Cut} : (-x).Small ↔ x.Small := by simp [small_iff_birthday]
+
+protected instance Small.neg (x : Cut) [x.Small] : (-x).Small := small_neg_iff.2 ‹_›
 
 protected instance Small.bot : Cut.Small ⊥ := by simpa using Small.supRight ∅
 protected instance Small.top : Cut.Small ⊤ := by simpa using Small.infLeft ∅
@@ -545,6 +559,18 @@ theorem exists_of_player_eq_right {x : Cut.{u}} [x.Small] (hx : x.player = .righ
   | infLeft s => simp at hx
   | supRight s => exact ⟨s, ‹_›, rfl⟩
 
+@[simp]
+theorem player_iInf_leftSurreal {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    player (⨅ i, .leftSurreal (f i)) = .left := by
+  simp_rw [← sInf_range, Set.range_comp' leftSurreal f]
+  apply player_infLeft
+
+@[simp]
+theorem player_iSup_rightSurreal {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
+    player (⨆ i, .rightSurreal (f i)) = .right := by
+  simp_rw [← sSup_range, Set.range_comp' rightSurreal f]
+  apply player_supRight
+
 @[simp] theorem player_top : player ⊤ = .left := by simpa using player_infLeft ∅
 @[simp] theorem player_bot : player ⊥ = .right := by simpa using player_supRight ∅
 
@@ -571,6 +597,118 @@ theorem player_vadd (x : Surreal) (y : Cut) [y.Small] : player (x +ᵥ y) = play
     simp_rw [vadd_sSup, ← image_vadd, image_image, vadd_rightSurreal]
     rw! [← Set.image_image rightSurreal]
     rw [player_supRight, player_supRight]
+
+theorem exists_max_or_player_iSup_eq_right {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u})
+    [(⨆ i, f i).Small] : (∃ i, ∀ j, f j ≤ f i) ∨ (⨆ i, f i).player = .right := by
+  rw [or_iff_not_imp_left]
+  push Not
+  intro h
+  choose s hs using h
+  suffices hc : ⨆ i, f i = ⨆ i, .rightSurreal (simplestBtwn (hs i)) by
+    simp_rw [hc, player_iSup_rightSurreal]
+  apply le_antisymm
+  · refine iSup_le fun i => le_iSup_of_le i ?_
+    grw [← leftSurreal_le_rightSurreal, le_leftSurreal_iff]
+    exact (fits_simplestBtwn (hs i)).left
+  · refine iSup_le fun i => le_iSup_of_le (s i) ?_
+    rw [rightSurreal_le_iff]
+    exact (fits_simplestBtwn (hs i)).right
+
+theorem exists_min_or_player_iInf_eq_left {ι : Type*} [Small.{u} ι] (f : ι → Cut.{u})
+    [(⨅ i, f i).Small] : (∃ i, ∀ j, f i ≤ f j) ∨ (⨅ i, f i).player = .left := by
+  have : (⨆ i, -f i).Small := by rwa [← neg_iInf, small_neg_iff]
+  simpa [← neg_iInf, ← Player.eq_neg] using exists_max_or_player_iSup_eq_right (fun i => -(f i))
+
+theorem exists_max_or_player_sSup_eq_right (s : Set Cut.{u}) [Small.{u} s]
+    [(sSup s).Small] : (∃ i ∈ s, ∀ j ∈ s, j ≤ i) ∨ (sSup s).player = .right := by
+  revert ‹(sSup s).Small›
+  simp_rw [sSup_eq_iSup', Subtype.forall', ← exists_prop, Subtype.exists']
+  apply exists_max_or_player_iSup_eq_right
+
+theorem exists_min_or_player_sInf_eq_left (s : Set Cut.{u}) [Small.{u} s]
+    [(sInf s).Small] : (∃ i ∈ s, ∀ j ∈ s, i ≤ j) ∨ (sInf s).player = .left := by
+  revert ‹(sInf s).Small›
+  simp_rw [sInf_eq_iInf', Subtype.forall', ← exists_prop, Subtype.exists']
+  apply exists_min_or_player_iInf_eq_left
+
+theorem birthday_leftGame_lt_of_not_surreal_of_player_eq {x : Game}
+    (hxs : x ∉ Set.range Surreal.toGame) (hx : (leftGame x).player = .left) :
+    (leftGame x).birthday < x.birthday := by
+  obtain ⟨x, rfl, hxb⟩ := x.birthday_eq_iGameBirthday
+  rw [← infRight_le_supLeft_iff] at hxs
+  simp_rw [leftGame_eq_supLeft_of_le hxs, supLeft, ← iSup_subtype''] at hx ⊢
+  obtain ⟨c, hc⟩ := (exists_max_or_player_iSup_eq_right _).resolve_right
+    (ne_of_eq_of_ne hx Player.noConfusion)
+  have hs : ⨆ i : x.moves .left, rightGame (.mk i) = rightGame (.mk c) :=
+    iSup_eq_of_forall_le_of_forall_lt_exists_gt hc fun w hw => ⟨c, hw⟩
+  grw [← hxb, ← IGame.birthday_lt_of_mem_moves c.2, hs, ← Game.birthday_mk_le]
+  apply birthday_rightGame_le_of_not_surreal
+  rintro ⟨y, hy⟩
+  simp_rw [hs, ← hy, rightGame_toGame, player_rightSurreal] at hx
+  exact Player.noConfusion hx
+
+theorem birthday_rightGame_lt_of_not_surreal_of_player_eq {x : Game}
+    (hxs : x ∉ Set.range Surreal.toGame) (hx : (rightGame x).player = .right) :
+    (rightGame x).birthday < x.birthday := by
+  rw [← birthday_neg, ← Game.birthday_neg, ← leftGame_neg]
+  apply birthday_leftGame_lt_of_not_surreal_of_player_eq
+  · rintro ⟨c, hc⟩
+    apply hxs
+    rw [← neg_neg x, ← hc, ← toGame_neg]
+    exact mem_range_self (-c)
+  · simpa [← Player.eq_neg] using hx
+
+theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq {x y : Cut}
+    [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left)
+    (h : y ≤ x) : ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
+      g.birthday = max x.birthday y.birthday := by
+  choose f nf hf hfb using birthday_eq_iGameBirthday
+  obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
+  have hbs : Small s := by
+    rw [← sSup_birthday_lt_top_iff, hs]
+    exact Small.birthday_lt_top x
+  cases hx with | inl hx => simp [← hx] at hxp | inr hx
+  cases hx
+  obtain ⟨t, hy, ht⟩ := birthday_eq_sSup_birthday y
+  have hbt : Small t := by
+    rw [← sSup_birthday_lt_top_iff, ht]
+    exact Small.birthday_lt_top y
+  cases hy with | inr hy => simp [← hy] at hyp | inl hy
+  cases hy
+  let sr := !{f '' s | f '' t}
+  have hsl : supLeft sr = sSup (rightSurreal '' s) := by
+    unfold sr supLeft
+    rw [IGame.moves_left_ofSets, iSup_image, sSup_image]
+    refine iSup_congr fun u => iSup_congr fun hu => ?_
+    rw [← rightGame_toGame]
+    apply congrArg rightGame
+    rw [← hf u, toGame_mk, hf u]
+  have hsr : infRight sr = sInf (leftSurreal '' t) := by
+    unfold sr infRight
+    rw [IGame.moves_right_ofSets, iInf_image, sInf_image]
+    refine iInf_congr fun u => iInf_congr fun hu => ?_
+    rw [← leftGame_toGame]
+    apply congrArg leftGame
+    rw [← hf u, toGame_mk, hf u]
+  have hgl : leftGame (Game.mk sr) = sSup (rightSurreal '' s) := by
+    rw [← hsl]
+    apply leftGame_eq_supLeft_of_le
+    rw [hsl, hsr]
+    exact h
+  have hgr : rightGame (Game.mk sr) = sInf (leftSurreal '' t) := by
+    rw [← hsr]
+    apply rightGame_eq_infRight_of_le
+    rw [hsl, hsr]
+    exact h
+  have hgs : Game.mk sr ∉ Set.range Surreal.toGame := by
+    rwa [← rightGame_le_leftGame_iff, hgr, hgl]
+  refine ⟨Game.mk sr, hgl, hgr, le_antisymm ?_ ?_⟩
+  · grw [Game.birthday_mk_le, IGame.birthday_ofSets, ← hs, ← ht]
+    simp_rw [WithTop.coe_max, WithTop.coe_sSup' (NatOrdinal.bddAbove_of_small _),
+      Set.image_image, hfb, WithTop.coe_add_one]
+    rfl
+  · grw [← hgl, ← hgr, birthday_leftGame_le_of_not_surreal hgs,
+      birthday_rightGame_le_of_not_surreal hgs, max_self]
 
 theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
     (hxb : birthday x ≠ 0) (hxt : birthday x ≠ ⊤)
