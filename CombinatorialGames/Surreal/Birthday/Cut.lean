@@ -730,13 +730,11 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
   have hgl : leftGame (Game.mk sr) = sSup (rightSurreal '' s) := by
     rw [← hsl]
     apply leftGame_eq_supLeft_of_le
-    rw [hsl, hsr]
-    exact h
+    rwa [hsl, hsr]
   have hgr : rightGame (Game.mk sr) = sInf (leftSurreal '' t) := by
     rw [← hsr]
     apply rightGame_eq_infRight_of_le
-    rw [hsl, hsr]
-    exact h
+    rwa [hsl, hsr]
   have hgs : Game.mk sr ∉ Set.range Surreal.toGame := by
     rwa [← rightGame_le_leftGame_iff, hgr, hgl]
   refine ⟨Game.mk sr, hgl, hgr, le_antisymm ?_ ?_⟩
@@ -780,13 +778,11 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
   have hgl : leftGame (Game.mk up) = sSup (rightSurreal '' s) := by
     rw [← hul]
     apply leftGame_eq_supLeft_of_le
-    rw [hul, hur]
-    exact h
+    rwa [hul, hur]
   have hgr : rightGame (Game.mk up) = leftGame (.mk sr) := by
     rw [← hur]
     apply rightGame_eq_infRight_of_le
-    rw [hul, hur]
-    exact h
+    rwa [hul, hur]
   have hgs : Game.mk up ∉ Set.range Surreal.toGame := by
     rwa [← rightGame_le_leftGame_iff, hgr, hgl]
   refine ⟨Game.mk up, hgl, hgr, le_antisymm ?_ ?_⟩
@@ -839,13 +835,11 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_right {
   have hgl : leftGame (Game.mk zr) = rightGame (.mk srl) := by
     rw [← hzl]
     apply leftGame_eq_supLeft_of_le
-    rw [hzl, hzr]
-    exact h
+    rwa [hzl, hzr]
   have hgr : rightGame (Game.mk zr) = leftGame (.mk srr) := by
     rw [← hzr]
     apply rightGame_eq_infRight_of_le
-    rw [hzl, hzr]
-    exact h
+    rwa [hzl, hzr]
   have hgs : Game.mk zr ∉ Set.range Surreal.toGame := by
     rwa [← rightGame_le_leftGame_iff, hgr, hgl]
   refine ⟨Game.mk zr, hgl, hgr, le_antisymm ?_ (Order.add_one_le_of_lt ?_)⟩
