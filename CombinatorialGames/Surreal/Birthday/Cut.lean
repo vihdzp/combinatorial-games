@@ -696,8 +696,8 @@ theorem birthday_simplestBtwn_le_of_player_eq_left_right {x y : Cut} [x.Small] [
     (birthday_simplestBtwn_lt_of_player_eq_right hy h)
 
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {x y : Cut}
-    [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left)
-    (h : y ≤ x) : ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
+    [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left) (h : y ≤ x) :
+    ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
       g.birthday = max x.birthday y.birthday := by
   choose f nf hf hfb using birthday_eq_iGameBirthday
   obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
@@ -748,8 +748,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
       birthday_rightGame_le_of_not_surreal hgs, max_self]
 
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right {x y : Cut}
-    [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .right) (hyb : y ≠ ⊥)
-    (h : y ≤ x) : ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
+    [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .right)
+    (hyb : y ≠ ⊥) (h : y ≤ x) :
+    ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
       g.birthday = max x.birthday (y.birthday + 1) := by
   choose f nf hf hfb using birthday_eq_iGameBirthday
   obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
@@ -800,8 +801,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
     simp_rw [hgr, hyp]
 
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_left {x y : Cut}
-    [x.Small] [y.Small] (hxp : x.player = .left) (hyp : y.player = .left) (hxt : x ≠ ⊤)
-    (h : y ≤ x) : ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
+    [x.Small] [y.Small] (hxp : x.player = .left) (hyp : y.player = .left)
+    (hxt : x ≠ ⊤) (h : y ≤ x) :
+    ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
       g.birthday = max (x.birthday + 1) y.birthday := by
   rw [← neg_inj, ← player_neg, Player.neg_left] at hxp hyp
   obtain ⟨g, hgl, hgr, hgb⟩ :=
