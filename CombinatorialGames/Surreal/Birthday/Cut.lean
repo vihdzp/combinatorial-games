@@ -193,9 +193,8 @@ theorem exists_leftGame_rightGame_eq_of_le {x y : Cut}
     rw [← ht] at hyt
     rw [← lt_top_iff_ne_top, sSup_birthday_lt_top_iff] at hxt hyt
     replace hxb : s.Nonempty := by
-      rw [Set.nonempty_iff_ne_empty]
-      rintro rfl
-      simp at hxb
+      contrapose! hxb
+      simp [hxb]
     replace hyb : t.Nonempty := by
       rw [Set.nonempty_iff_ne_empty]
       rintro rfl
