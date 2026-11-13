@@ -688,7 +688,7 @@ theorem birthday_simplestBtwn_lt_of_player_eq_right {x y : Cut} [y.Small]
   apply birthday_simplestBtwn_le_of_fits
   exact ⟨by simpa using hcx, left_subset_left_iff.2 (le_sSup (mem_image_of_mem _ hct)) (by simp)⟩
 
-theorem birthday_simplestBtwn_le_of_player_eq_left_right {x y : Cut} [x.Small] [y.Small]
+theorem birthday_simplestBtwn_lt_of_player_eq_left_right {x y : Cut} [x.Small] [y.Small]
     (hx : x.player = .left) (hy : y.player = .right) (h : x < y) :
     (simplestBtwn h).birthday < min x.birthday y.birthday :=
   lt_min
