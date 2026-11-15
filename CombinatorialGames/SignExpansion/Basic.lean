@@ -35,6 +35,7 @@ attribute [grind =] Pi.toLex_apply
 instance : ZeroLEOneClass SignType where
   zero_le_one := by decide
 
+open Pointwise in
 @[local simp ←]
 theorem Set.preimage_neg {α ι : Type*} [InvolutiveNeg α] (f : ι → α) {s : Set α} :
     f ⁻¹' (-s) = (-f) ⁻¹' s :=
