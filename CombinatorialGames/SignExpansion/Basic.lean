@@ -434,6 +434,12 @@ theorem eq_of_length_eq_of_forall_lt_gt {x y : SignExpansion} (hxy : x.length = 
     rintro rfl
     exact hz.false
 
+theorem eq_of_length_eq_of_forall_le_ge {x y : SignExpansion} (hxy : x.length = y.length)
+    (hlt : ∀ z, z.length < x.length → z ≤ y → z ≤ x)
+    (hgt : ∀ z, z.length < x.length → y ≤ z → x ≤ z) : x = y := by
+  simp_rw [le_imp_le_iff_lt_imp_lt] at hlt hgt
+  exact eq_of_length_eq_of_forall_lt_gt hxy hgt hlt
+
 /-! #### Floor function -/
 
 open Classical in

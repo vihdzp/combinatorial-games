@@ -341,37 +341,5 @@ theorem mem_range_toSignExpansion (x : SignExpansion) [x.Small] :
     x ∈ Set.range toSignExpansion := by
   rwa [range_toSignExpansion]
 
-theorem toSignExpansion_eq_of_birthday_le_of_forall_lt_gt_iff
-    {x : Surreal} {y : SignExpansion} (hy : y.length ≤ x.birthday)
-    (hlt : ∀ z : Surreal, z.birthday < x.birthday → (toSignExpansion z < y ↔ z < x))
-    (hgt : ∀ z : Surreal, z.birthday < x.birthday → (y < toSignExpansion z ↔ x < z)) :
-    toSignExpansion x = y := by
-  apply eq_of_length_le_of_forall_lt_gt_iff
-  · simpa
-  all_goals
-  · intro z hz
-    have := small_iff_length_lt_top.2 hz.lt_top
-    obtain ⟨z, rfl⟩ := mem_range_toSignExpansion z
-    rw [OrderEmbedding.lt_iff_lt]
-    first | apply hlt | apply hgt
-    simpa using hz
-
-/-- The `toSignExpansion` function is determined uniquely by the birthday relation, and by being
-correctly ordered with respect to simpler values. -/
-theorem toSignExpansion_eq_of_birthday_eq_of_forall_lt_gt
-    {x : Surreal} {y : SignExpansion} (hy : x.birthday = y.length)
-    (hlt : ∀ z : Surreal, z.birthday < x.birthday → z < x → toSignExpansion z < y)
-    (hgt : ∀ z : Surreal, z.birthday < x.birthday → x < z → y < toSignExpansion z) :
-    toSignExpansion x = y := by
-  apply eq_of_length_eq_of_forall_lt_gt
-  · simpa
-  all_goals
-  · intro z hz
-    have := small_iff_length_lt_top.2 hz.lt_top
-    obtain ⟨z, rfl⟩ := mem_range_toSignExpansion z
-    rw [OrderEmbedding.lt_iff_lt]
-    first | apply hlt | apply hgt
-    simpa using hz
-
 end Surreal
 end
