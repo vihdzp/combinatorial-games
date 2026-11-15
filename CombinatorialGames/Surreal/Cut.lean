@@ -40,7 +40,7 @@ universe u
 @[expose] public section
 
 namespace Surreal
-open Set IGame
+open IGame Pointwise Set
 
 /-- A surreal cut, sometimes called a section, consists of two complementary sets of surreals,
 where every surreal in the former is less than every surreal in the latter. -/
