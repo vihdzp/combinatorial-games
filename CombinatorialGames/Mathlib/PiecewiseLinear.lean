@@ -28,7 +28,132 @@ instance {R S : Type*} [CommMonoid S] [Preorder S] [IsOrderedMonoid S] :
     IsOrderedMonoid (R → S) where
   mul_le_mul_left _ _ h _ := fun i ↦ mul_le_mul_left (h i) _
 
+theorem List.SortedLT.of_cons {α : Type*} [LinearOrder α] {a : α} {l : List α}
+    (hl : (a :: l).SortedLT) : l.SortedLT := by
+  rw [List.sortedLT_cons] at hl
+  exact hl.2
+
 /-! ### Partition a linear order via endpoints -/
+
+namespace LinearOrder
+variable {α : Type*} [LinearOrder α]
+
+/-- Given a finset `{a₁ < a₂ < ⋯ < aₙ}`, returns the set of intervals
+`{Iio a₁, Ico a₁ a₂, Ico a₂ a₃, ⋯}`. These partition the interval `Iio aₙ`. -/
+@[to_dual
+/-- Given a finset `{a₁ < a₂ < ⋯ < aₙ}`, returns the set of intervals
+`{Ioc a₁ a₂, Ioc a₂ a₃, ⋯, Ioi aₙ}`. These partition the interval `Ioi a₁`. -/]
+def endpointPartitionIio (e : Finset α) : Finset (Set α) :=
+  e.image fun x ↦ {y | ∀ z ∈ e, z < x ↔ z ≤ y}
+
+/-- Given a finset `{a₁ < a₂ < ⋯ < aₙ}`, returns the set of intervals
+`{Iio a₁, Ico a₁ a₂, Ico a₂ a₃, ⋯, Ici aₙ}`. These form a partition of the linear order by
+left-closed intervals. -/
+@[to_dual endpointPartitionRight
+/-- Given a finset `{a₁ < a₂ < ⋯ < aₙ}`, returns the set of intervals
+`{Iic a₁, Ioc a₁ a₂, Ioc a₂ a₃, ⋯, Ioi aₙ}`. These form a partition of the linear order by
+right-closed intervals. -/]
+def endpointPartitionLeft (e : Finset α) : Finset (Set α) :=
+  insert {y | ∀ z ∈ e, z ≤ y} (endpointPartitionIio e)
+
+@[to_dual (attr := grind =)]
+theorem mem_endpointPartitionIio_iff {e : Finset α} {s : Set α} :
+    s ∈ endpointPartitionIio e ↔ ∃ t ∈ e, s = {y | ∀ z ∈ e, z < t ↔ z ≤ y} := by
+  simp [endpointPartitionIio, eq_comm]
+
+@[to_dual (attr := grind =) mem_endpointPartitionRight_iff]
+theorem mem_endpointPartitionLeft_iff {e : Finset α} {s : Set α} :
+    s ∈ endpointPartitionLeft e ↔
+      s = {y | ∀ z ∈ e, z ≤ y} ∨ ∃ t ∈ e, s = {y | ∀ z ∈ e, z < t ↔ z ≤ y} := by
+  rw [endpointPartitionLeft, Finset.mem_insert, mem_endpointPartitionIio_iff]
+
+@[to_dual (attr := simp)]
+theorem endpointPartitionIio_empty : endpointPartitionIio (∅ : Finset α) = ∅ := by
+  ext; simp [mem_endpointPartitionIio_iff]
+
+@[to_dual (attr := simp) mem_endpointPartitionRight_empty]
+theorem endpointPartitionLeft_empty : endpointPartitionLeft (∅ : Finset α) = {univ} := by
+  ext; simp [mem_endpointPartitionLeft_iff]
+
+@[to_dual pairwiseDisjoint_endpointPartitionIoi]
+theorem pairwiseDisjoint_endpointPartitionIio (e : Finset α) :
+    PairwiseDisjoint (endpointPartitionIio e : Set (Set α)) id := by
+  intro; grind
+
+@[to_dual pairwiseDisjoint_endpointPartitionRight]
+theorem pairwiseDisjoint_endpointPartitionLeft (e : Finset α) :
+    PairwiseDisjoint (endpointPartitionLeft e : Set (Set α)) id := by
+  intro; grind
+
+@[to_dual]
+theorem biUnion_endpointPartitionIio (e : Finset α) :
+    ⋃ s ∈ endpointPartitionIio e, s = {y | ∃ z ∈ e, y < z} := by
+  ext x
+  simp only [mem_endpointPartitionIio_iff, mem_iUnion₂, ↓existsAndEq, mem_ofPred_eq, and_true,
+    exists_prop]
+  constructor
+  · grind
+  · intro ⟨y, hy, hxy⟩
+    refine ⟨(e.filter (x < ·)).min' (show _ from ⟨y, ?_⟩), ?_, ?_⟩
+    · simpa using ⟨hy, hxy⟩
+    · exact mem_of_mem_filter _ (min'_mem ..)
+    · simp_rw [lt_min'_iff, mem_filter]
+      grind
+
+@[to_dual biUnion_endpointPartitionRight]
+theorem biUnion_endpointPartitionLeft (e : Finset α) :
+    ⋃ y ∈ endpointPartitionLeft e, y = univ := by
+  simp_rw [endpointPartitionLeft, Finset.mem_insert, iUnion_iUnion_eq_or_left,
+    biUnion_endpointPartitionIio]
+  ext
+  grind
+
+@[to_dual]
+theorem exists_endpointPartitionIio_mem {e : Finset α} {x : α} :
+    (∃ s ∈ endpointPartitionIio e, x ∈ s) ↔ ∃ y ∈ e, x < y := by
+  simpa using Set.ext_iff.1 (biUnion_endpointPartitionIio e) x
+
+@[to_dual exists_endpointPartitionRight]
+theorem exists_endpointPartitionLeft_mem {e : Finset α} (x : α) :
+    ∃ s ∈ endpointPartitionLeft e, x ∈ s := by
+  simpa using Set.ext_iff.1 (biUnion_endpointPartitionLeft e) x
+
+@[to_dual]
+theorem ordConnected_of_mem_endpointPartitionIio {e : Finset α} {s : Set α}
+    (hs : s ∈ endpointPartitionIio e) : s.OrdConnected where
+  out' := by grind
+
+@[to_dual ordConnected_of_mem_endpointPartitionRight]
+theorem ordConnected_of_mem_endpointPartitionLeft {e : Finset α} {s : Set α}
+    (hs : s ∈ endpointPartitionLeft e) : s.OrdConnected where
+  out' := by grind
+
+/-- If `e₁ ⊆ e₂`, then `endpointPartitionLeft e₂` is a refinement of
+`endpointPartitioLeft e₁`. -/
+@[to_dual exists_subset_endpointPartitionRight_of_subset
+/-- If `e₁ ⊆ e₂`, then `endpointPartitionRight e₂` is a refinement of
+`endpointPartitionRight e₁`. -/]
+theorem exists_subset_endpointPartitionLeft_of_subset {e₁ e₂ : Finset α} (h : e₁ ⊆ e₂) {s : Set α}
+    (hs : s ∈ endpointPartitionLeft e₂) : ∃ t ∈ endpointPartitionLeft e₁, s ⊆ t := by
+  simp_rw [mem_endpointPartitionLeft_iff] at hs ⊢
+  obtain rfl | ⟨y, hy₂, rfl⟩ := hs
+  · refine ⟨_, .inl rfl, ?_⟩
+    grind
+  · by_cases hy₁ : y ∈ e₁
+    · refine ⟨_, .inr ⟨y, hy₁, rfl⟩, ?_⟩
+      grind
+    obtain ⟨t, ht, hy⟩ := exists_endpointPartitionLeft_mem y
+    rw [mem_endpointPartitionLeft_iff] at ht
+    refine ⟨t, ht, fun x hx ↦ ?_⟩
+    obtain rfl | ⟨z, hz, rfl⟩ := ht
+    · intro z hz
+      rw [← hx z (h hz)]
+      apply (hy z hz).lt_of_ne
+      rintro rfl
+      contradiction
+    · grind
+
+end LinearOrder
 
 namespace Finpartition
 
@@ -39,10 +164,18 @@ private def ofEndpointsPartsAux : List α → Finset (Set α)
   | [a] => {Ioi a}
   | a :: b :: l => insert (Ioc a b) (ofEndpointsPartsAux (b :: l))
 
+@[simp]
+private theorem ofEndpointsPartsAux_nil : ofEndpointsPartsAux (α := α) [] = {} :=
+  rfl
+
+@[simp]
+private theorem ofEndpointsPartsAux_singleton (a : α) : ofEndpointsPartsAux [a] = {Ioi a} :=
+  rfl
+
 private theorem Ioi_subset_sup_ofEndpointsPartsAux_cons (a : α) (l : List α) :
     Ioi a ⊆ (ofEndpointsPartsAux (a :: l)).sup id := by
   induction l generalizing a with
-  | nil => simp [ofEndpointsPartsAux]
+  | nil => simp
   | cons b l IH =>
     rw [ofEndpointsPartsAux, sup_insert, id]
     grw [← IH, Ioi_subset_Ioc_union_Ioi]
@@ -50,7 +183,7 @@ private theorem Ioi_subset_sup_ofEndpointsPartsAux_cons (a : α) (l : List α) :
 private theorem sup_ofEndpointsPartsAux_cons {a : α} {l : List α} (hl : (a :: l).SortedLE) :
     (ofEndpointsPartsAux (a :: l)).sup id = Ioi a := by
   induction l generalizing a with
-  | nil => simp [ofEndpointsPartsAux]
+  | nil => simp
   | cons b l IH =>
     apply (Ioi_subset_sup_ofEndpointsPartsAux_cons a _).antisymm'
     rw [List.sortedLE_cons] at hl
@@ -63,10 +196,10 @@ private theorem sup_ofEndpointsPartsAux_cons {a : α} {l : List α} (hl : (a :: 
 private theorem pairwiseDisjoint_ofEndpointsPartsAux {l : List α} (hl : l.SortedLE) :
     PairwiseDisjoint (ofEndpointsPartsAux l : Set (Set α)) id := by
   cases l with
-  | nil => simp [ofEndpointsPartsAux]
+  | nil => simp
   | cons a l =>
     induction l generalizing a with
-    | nil => simp [ofEndpointsPartsAux]
+    | nil => simp
     | cons b l IH =>
       rw [ofEndpointsPartsAux, coe_insert, pairwiseDisjoint_insert]
       rw [List.sortedLE_cons] at hl
@@ -77,8 +210,8 @@ private theorem pairwiseDisjoint_ofEndpointsPartsAux {l : List α} (hl : l.Sorte
 
 private theorem empty_notMem_ofEndpointsPartsAux [NoMaxOrder α] :
     ∀ {l : List α} (_ : l.SortedLT), ∅ ∉ ofEndpointsPartsAux l
-  | [] => by simp [ofEndpointsPartsAux]
-  | [a] => by simp [ofEndpointsPartsAux, ← nonempty_iff_empty_ne]
+  | [] => by simp
+  | [a] => by simp [← nonempty_iff_empty_ne]
   | a :: b :: l => by
     rw [List.sortedLT_cons]
     intro ⟨hl₁, hl₂⟩
@@ -87,6 +220,65 @@ private theorem empty_notMem_ofEndpointsPartsAux [NoMaxOrder α] :
     rw [← ne_eq, ← nonempty_iff_empty_ne, nonempty_Ioc]
     exact hl₁ _ List.mem_cons_self
 
+private theorem ordConnected_of_mem_ofEndpointsPartsAux {l : List α} {s : Set α}
+    (hs : s ∈ ofEndpointsPartsAux l) : s.OrdConnected := by
+  cases l with
+  | nil => simp_all
+  | cons a l =>
+    induction l generalizing a with
+    | nil => simp_all [ordConnected_Ioi]
+    | cons b l IH =>
+      rw [ofEndpointsPartsAux, Finset.mem_insert] at hs
+      obtain rfl | hs := hs
+      · exact ordConnected_Ioc
+      · exact IH b hs
+
+private theorem setOfPred_forall_cons_lt_iff_le {a y : α} {l : List α}
+    (hy : y ∈ l) (hl : (a :: l).SortedLT) :
+    {x | ∀ z ∈ a :: l, y < z ↔ x ≤ z} = {x | ∀ z ∈ l, y < z ↔ x ≤ z} := by
+  ext x
+  refine ⟨by simp, fun hx z hz ↦ ?_⟩
+  rw [List.mem_cons] at hz
+  obtain rfl | hz := hz
+  · rw [List.sortedLT_cons] at hl
+    have hz := hl.1 y hy
+    apply iff_of_false hz.asymm (hz.trans _).not_ge
+    rw [← not_le, ← hx y hy]
+    exact lt_irrefl y
+  · exact hx z hz
+
+private theorem setOfPred_forall_cons_cons_lt_iff_le {a b : α} {l : List α}
+    (hl : (a :: b :: l).SortedLT) :
+    {x | ∀ z ∈ a :: b :: l, a < z ↔ x ≤ z} = Ioc a b := by
+  rw [List.sortedLT_cons, List.sortedLT_cons] at hl
+  ext x
+  refine ⟨fun hx ↦ ⟨?_, ?_⟩, by grind⟩
+  · rw [← not_le, ← hx] <;> simp
+  · rw [← hx b (by simp)]
+    exact hl.1 b List.mem_cons_self
+
+private theorem mem_ofEndpointsPartsAux_iff {l : List α} (hl : l.SortedLT)
+    {s : Set α} : s ∈ ofEndpointsPartsAux l ↔ ∃ y ∈ l, s = {x | ∀ z ∈ l, y < z ↔ x ≤ z} := by
+  cases l with
+  | nil => simp
+  | cons a l =>
+    induction l generalizing a with
+    | nil => simp [Ioi_def]
+    | cons b l IH =>
+      rw [ofEndpointsPartsAux, Finset.mem_insert]
+      constructor
+      · rintro (rfl | hs)
+        · exact ⟨a, List.mem_cons_self, (setOfPred_forall_cons_cons_lt_iff_le hl).symm⟩
+        · rw [IH _ hl.of_cons] at hs
+          obtain ⟨x, hx, rfl⟩ := hs
+          exact ⟨x, List.mem_cons_of_mem _ hx, (setOfPred_forall_cons_lt_iff_le hx hl).symm⟩
+      · rintro ⟨y, hy, rfl⟩
+        rw [List.mem_cons] at hy
+        obtain rfl | hy := hy
+        · exact .inl <| setOfPred_forall_cons_cons_lt_iff_le hl
+        · exact .inr <| (IH b hl.of_cons).2 ⟨y, hy, setOfPred_forall_cons_lt_iff_le hy hl⟩
+
+-- TODO: come up with better name?
 /-- Given a list `[a₁, a₂, ⋯, aₙ]` returns the finset `{Iic a₁, Ioc a₁ a₂, ⋯, Ioi aₙ}`. -/
 def ofEndpointsParts : List α → Finset (Set α)
   | [] => {univ}
@@ -129,21 +321,89 @@ theorem empty_notMem_ofEndpointsParts [Nonempty α] [NoMaxOrder α] {l : List α
     rw [ofEndpointsParts, Finset.mem_insert, not_or, ← ne_eq, ← Set.nonempty_iff_empty_ne]
     exact ⟨nonempty_Iic, empty_notMem_ofEndpointsPartsAux hl⟩
 
+theorem ordConnected_of_mem_ofEndpointsParts {l : List α} {s : Set α}
+    (hs : s ∈ ofEndpointsParts l) : s.OrdConnected := by
+  cases l with
+  | nil => simp_all [ordConnected_univ]
+  | cons a l =>
+    rw [ofEndpointsParts, Finset.mem_insert] at hs
+    obtain rfl | hs := hs
+    · exact ordConnected_Iic
+    · exact ordConnected_of_mem_ofEndpointsPartsAux hs
+
+theorem mem_ofEndpointsParts_iff {l : List α} (hl : l.SortedLT)
+    {s : Set α} : s ∈ ofEndpointsParts l ↔
+      s = {x | ∀ z ∈ l, x ≤ z} ∨ ∃ y ∈ l, s = {x | ∀ z ∈ l, y < z ↔ x ≤ z} := by
+  cases l with
+  | nil => simp
+  | cons a l =>
+    rw [ofEndpointsParts, Finset.mem_insert]
+    apply or_congr _ (mem_ofEndpointsPartsAux_iff hl)
+    congr! 1
+    ext x
+    refine ⟨fun hx y hy ↦ ?_, fun hx ↦ hx a List.mem_cons_self⟩
+    rw [List.mem_cons] at hy
+    obtain rfl | hy := hy
+    · exact hx
+    · rw [List.sortedLT_cons] at hl
+      exact hx.trans (hl.1 y hy).le
+
 /-- Partition a linear order into intervals `Iic`, `Ioc`, and `Ioi` using a finset of endpoints. -/
-def ofEndpoints (s : Finset α) : Finpartition (.univ : Set α) where
-  parts := (ofEndpointsParts (s.sort (· ≤ ·))).erase ∅
+def ofEndpoints (e : Finset α) : Finpartition (.univ : Set α) where
+  parts := (ofEndpointsParts (e.sort (· ≤ ·))).erase ∅
   supIndep :=
     (pairwiseDisjoint_ofEndpointsParts (sortedLT_sort _).sortedLE).supIndep.subset (erase_subset ..)
   sup_parts := by rw [← Set.bot_eq_empty, sup_erase_bot, sup_ofEndpointsParts]
   bot_notMem := notMem_erase _ _
 
-theorem parts_ofEndpoints (s : Finset α) :
-    (ofEndpoints s).parts = (ofEndpointsParts (s.sort (· ≤ ·))).erase ∅ :=
+private theorem parts_ofEndpoints' (e : Finset α) :
+    (ofEndpoints e).parts = (ofEndpointsParts (e.sort (· ≤ ·))).erase ∅ :=
   (rfl)
+
+private theorem parts_ofEndpoints [Nonempty α] [NoMaxOrder α] (e : Finset α) :
+    (ofEndpoints e).parts = ofEndpointsParts (e.sort (· ≤ ·)) :=
+  Finset.erase_eq_of_notMem <| empty_notMem_ofEndpointsParts (sortedLT_sort _)
 
 @[simp]
 theorem ofEndpoints_empty [Nonempty α] : ofEndpoints (α := α) ∅ = indiscrete (by simp) := by
-  ext; simp +contextual [parts_ofEndpoints]
+  ext; simp +contextual [parts_ofEndpoints']
+
+theorem ordConnected_of_mem_parts_ofEndpoints {e : Finset α} {s : Set α}
+    (hx : s ∈ (ofEndpoints e).parts) : s.OrdConnected :=
+  ordConnected_of_mem_ofEndpointsParts (mem_of_mem_erase hx)
+
+theorem mem_parts_ofEndpoint_iff [Nonempty α] [NoMaxOrder α] {e : Finset α}
+    {s : Set α} : s ∈ (ofEndpoints e).parts ↔
+      s = {x | ∀ z ∈ e, x ≤ z} ∨ ∃ y ∈ e, s = {x | ∀ z ∈ e, y < z ↔ x ≤ z} := by
+  rw [parts_ofEndpoints, mem_ofEndpointsParts_iff (sortedLT_sort _)]
+  simp
+
+/-- If `e₁ ⊆ e₂`, then `ofEndpoints e₂` is a refinement of `ofEndpoints e₁`. -/
+theorem exists_subset_parts_ofEndpoints_of_subset [Nonempty α] [NoMaxOrder α]
+    {e₁ e₂ : Finset α} (h : e₁ ⊆ e₂) {s : Set α} (hs : s ∈ (ofEndpoints e₂).parts) :
+    ∃ t ∈ (ofEndpoints e₁).parts, s ⊆ t := by
+  rw [mem_parts_ofEndpoint_iff] at hs
+  obtain rfl | ⟨y, hy₂, rfl⟩ := hs
+  · refine ⟨{x | ∀ z ∈ e₁, x ≤ z}, ?_, ?_⟩
+    · rw [mem_parts_ofEndpoint_iff]
+      exact .inl rfl
+    · grind
+  · by_cases hy₁ : y ∈ e₁
+    · refine ⟨{x | ∀ z ∈ e₁, y < z ↔ x ≤ z}, ?_, ?_⟩
+      · rw [mem_parts_ofEndpoint_iff]
+        exact .inr ⟨y, hy₁, rfl⟩
+      · grind
+    obtain ⟨t, ht, hy⟩ : ∃ t ∈ (ofEndpoints e₁).parts, y ∈ t := by
+      simpa using Set.ext_iff.1 (ofEndpoints e₁).sup_parts y
+    refine ⟨t, ht, fun x hx ↦ ?_⟩
+    rw [mem_parts_ofEndpoint_iff] at ht
+    obtain rfl | ⟨z, hz, rfl⟩ := ht
+    · intro z hz
+      rw [← hx z (h hz)]
+      apply (hy z hz).lt_of_ne
+      rintro rfl
+      contradiction
+    · grind
 
 end Finpartition
 
@@ -155,10 +415,14 @@ variable {K : Type*} [Field K]
 
 /-- A function is linear on a set if it equals a linear polynomial on that set. -/
 def IsLinearOn (f : K → K) (s : Set K) : Prop :=
-  ∃ a b, ∀ t ∈ s, f t = a * t + b
+  ∃ a b, ∀ x ∈ s, f x = a * x + b
 
 namespace IsLinearOn
-variable {f : K → K} {s : Set K}
+variable {f g : K → K} {s t : Set K}
+
+protected theorem anti (hst : s ⊆ t) (hf : IsLinearOn f t) : IsLinearOn f s := by
+  obtain ⟨a, b, hf⟩ := hf
+  exact ⟨a, b, fun x hx ↦ hf x (hst hx)⟩
 
 @[simp]
 protected theorem const (c : K) (s : Set K) : IsLinearOn (const K c) s :=
@@ -198,6 +462,16 @@ protected theorem neg (hf : IsLinearOn f s) : IsLinearOn (-f) s := by
 @[simp]
 theorem neg_iff : IsLinearOn (-f) s ↔ IsLinearOn f s :=
   ⟨by simpa using IsLinearOn.neg (f := -f), IsLinearOn.neg⟩
+
+protected theorem add (hf : IsLinearOn f s) (hg : IsLinearOn g s) : IsLinearOn (f + g) s := by
+  obtain ⟨a, b, hf⟩ := hf
+  obtain ⟨c, d, hg⟩ := hg
+  refine ⟨a + c, b + d, ?_⟩
+  grind [Pi.add_apply]
+
+protected theorem sub (hf : IsLinearOn f s) (hg : IsLinearOn g s) : IsLinearOn (f - g) s := by
+  rw [sub_eq_add_neg]
+  exact hf.add hg.neg
 
 end IsLinearOn
 
@@ -242,18 +516,34 @@ theorem neg_iff : IsPiecewiseLinear (-f) ↔ IsPiecewiseLinear f :=
 variable [IsOrderedRing K]
 
 protected theorem add (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
-    IsPiecewiseLinear (f + g) :=
-  sorry
+    IsPiecewiseLinear (f + g) := by
+  obtain ⟨s, hs⟩ := hf
+  obtain ⟨t, ht⟩ := hg
+  refine ⟨s ∪ t, fun p hp ↦ ?_⟩
+  obtain ⟨q, hq, hpq⟩ :=
+    Finpartition.exists_subset_parts_ofEndpoints_of_subset subset_union_left hp
+  obtain ⟨r, hr, hpr⟩ :=
+    Finpartition.exists_subset_parts_ofEndpoints_of_subset subset_union_right hp
+  exact ((hs q hq).anti hpq).add ((ht r hr).anti hpr)
 
 protected theorem sub (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
     IsPiecewiseLinear (f - g) := by
   rw [sub_eq_add_neg]
   exact hf.add hg.neg
 
-@[to_dual]
-protected theorem max (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
-    IsPiecewiseLinear (max f g) :=
+private theorem max_zero (hf : IsPiecewiseLinear f) : IsPiecewiseLinear (max f 0) := by
   sorry
+
+#exit
+protected theorem max (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
+    IsPiecewiseLinear (max f g) := by
+  rw [← add_zero g, ← add_sub_cancel g f, ← add_sup]
+  exact hg.add (hf.sub hg).max_zero
+
+@[to_dual existing]
+protected theorem min (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
+    IsPiecewiseLinear (min f g) := by
+  simpa [← neg_inf] using hf.neg.max hg.neg
 
 end IsPiecewiseLinear
 
