@@ -55,6 +55,7 @@ theorem confusionInterval_toGame (x : Surreal) : confusionInterval x.toGame = âˆ
 theorem confusionInterval_mk_of_numeric (x : IGame) [x.Numeric] : confusionInterval (.mk x) = âˆ… :=
   confusionInterval_toGame (.mk x)
 
+open Pointwise in
 @[simp]
 theorem confusionInterval_neg (x : Game) : confusionInterval (-x) = -confusionInterval x := by
   simp [confusionInterval, Set.inter_comm]

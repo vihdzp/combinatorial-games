@@ -36,7 +36,7 @@ theorem InitialSeg.le_of_strictMono {α β : Type*} [LinearOrder α] [LinearOrde
 
 theorem Order.enum_le_of_strictMono {α : Type*} [LinearOrder α] [WellFoundedLT α]
     [IsRegularCardinalOrder α] {s : Set α} (hs : IsCofinal s) {x y : α}
-    {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, mem_Iio.2 hy⟩ :=
+    {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, hy⟩ :=
   InitialSeg.le_of_strictMono ((Set.principalSegIio x).transInitial (Order.enum s hs).toInitialSeg)
     hf ⟨y, hy⟩
 

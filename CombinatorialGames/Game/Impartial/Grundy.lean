@@ -103,6 +103,7 @@ theorem grundyAux_neg (p : Player) (x : IGame) : grundyAux p (-x) = grundyAux (-
 termination_by x
 decreasing_by igame_wf
 
+open Pointwise in
 @[simp]
 theorem grundyAux_image_neg (p : Player) (s : Set IGame) :
     grundyAux p '' (-s) = grundyAux (-p) '' s :=
