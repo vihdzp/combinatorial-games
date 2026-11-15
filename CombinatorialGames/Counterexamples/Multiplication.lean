@@ -21,8 +21,6 @@ is colloquially known as `star`, so we use the name `star'` for the second. We p
 -/
 
 public noncomputable section
-open IGame
-
 namespace IGame
 
 /-- The game `⋆' = {-1, 0 | 0, 1}`, which is equivalent but not identical to `⋆`. -/

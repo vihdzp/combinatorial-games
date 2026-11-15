@@ -103,12 +103,12 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
-  rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
-  -- TODO: don't abuse def-eq
-  change ⨆ a : Iio (NatOrdinal.of o.val), Order.succ (nim a.1).birthday = _
-  convert iSup_succ _ with _ x
-  cases x
-  exact birthday_nim _
+  rw [nim_def, birthday_ofSets_const, image_image]
+  conv_rhs => rw [← iSup_succ o, ← sSup_range]
+  simp_rw [val_sSup, of_preimage, NatOrdinal.of_sSup, NatOrdinal.val_preimage,
+    ← image_eq_range, image_image, OrderIso.map_succ, Order.succ_eq_add_one]
+  congr!
+  rw [birthday_nim]
 termination_by o
 
 @[simp, game_cmp]

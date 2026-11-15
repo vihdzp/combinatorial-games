@@ -219,8 +219,8 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
       fun a₁ a₂ he ↦ Subtype.ext (hmono.injective (congrArg Subtype.val he))).trans_lt
       (card_subtype_lt hords b)).trans_eq heq.symm
   have hS : {z | (∀ x ∈ Alo, x < z) ∧ ∀ y ∈ Ahi, z < y}.Nonempty :=
-    hα ((mk_le_mk_of_subset fun _ hx ↦ hx.1).trans_lt hA)
-      ((mk_le_mk_of_subset fun _ hx ↦ hx.1).trans_lt hA)
+    hα ((mk_le_mk_of_subset fun _ hx ↦ (Set.mem_ofPred.1 hx).1).trans_lt hA)
+      ((mk_le_mk_of_subset fun _ hx ↦ (Set.mem_ofPred.1 hx).1).trans_lt hA)
       fun x hx y hy ↦ hmono.lt_iff_lt.1 (hx.2.trans hy.2)
   obtain ⟨a₀, ⟨hlo₀, hhi₀⟩, hmin⟩ := hr.wf.has_min _ hS
   have hcand₁ : ∀ x ∈ lo a₀ fun y (_ : r y a₀) ↦ h.f hord s y, x < b := by
