@@ -13,6 +13,7 @@ public import Mathlib.Order.Partition.Finpartition
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Algebra.Group.Action.Defs
 import Mathlib.Algebra.Order.Group.Lattice
+public import Mathlib.Data.Finset.DenselyOrdered
 import Mathlib.Data.Int.Cast.Lemmas
 import Mathlib.Order.Interval.Set.Disjoint
 
@@ -33,6 +34,19 @@ theorem List.SortedLT.of_cons {α : Type*} [LinearOrder α] {a : α} {l : List �
     (hl : (a :: l).SortedLT) : l.SortedLT := by
   rw [List.sortedLT_cons] at hl
   exact hl.2
+
+instance (priority := 100) IsStrictOrderedRing.toNoMinOrder {R : Type*}
+    [Ring R] [PartialOrder R] [IsStrictOrderedRing R] : NoMinOrder R :=
+  ⟨fun a => ⟨a - 1, by simp⟩⟩
+
+@[to_dual existing IsStrictOrderedRing.toNoMinOrder]
+theorem IsStrictOrderedRing.toNoMaxOrder' {R : Type*}
+    [Ring R] [PartialOrder R] [IsStrictOrderedRing R] : NoMaxOrder R :=
+  inferInstance
+
+attribute [to_dual self (reorder := x y, 6 8)] Set.OrdConnected.out
+
+attribute [to_dual existing] instNoMaxOrderOfNontrivial
 
 /-! ### Partition a linear order via endpoints -/
 
@@ -157,6 +171,41 @@ theorem lt_of_mem_endpointPartitionLeft {e : Finset α} {s t : Set α} {x y : α
     (hx : x ∈ s) (hy : y ∈ t) (hxy : x < y) : ∀ a ∈ s, ∀ b ∈ t, a < b := by
   grind
 
+-- TODO: dualize `Finset.exists_between`
+-- TODO: make versions that only assume one of `NoMaxOrder` or `NoMinOrder`
+@[to_dual none]
+theorem _root_.Finset.exists_between'' [DenselyOrdered α] {s t : Finset α}
+    (hs : s.Nonempty) (ht : t.Nonempty) (H : ∀ x ∈ s, ∀ y ∈ t, x < y) :
+    ∃ b, (∀ x ∈ s, x < b) ∧ (∀ y ∈ t, b < y) := by
+  convert! _root_.exists_between (a₁ := s.max' hs) (a₂ := t.min' ht) (by simp_all) <;> simp
+
+@[to_dual]
+theorem nonempty_of_mem_endpointPartitionIio [NoMinOrder α] [DenselyOrdered α]
+    {e : Finset α} {s : Set α} (hs : s ∈ endpointPartitionIio e) : s.Nonempty := by
+  rw [mem_endpointPartitionIio_iff] at hs
+  obtain ⟨t, ht, rfl⟩ := hs
+  by_cases! Ht : ∀ x < t, x ∉ e
+  · obtain ⟨x, hx⟩ := exists_lt t
+    use x
+    grind
+  · obtain ⟨x, hx, hx'⟩ := Ht
+    obtain ⟨y, hy, hy'⟩ := Finset.exists_between'' (s := e.filter (· < t)) (t := {t})
+      (by use x; simpa using ⟨hx', hx⟩) (by simp) (by simp)
+    use y
+    simp_rw [Finset.mem_singleton, forall_eq] at hy'
+    simp_rw [mem_filter, and_imp] at hy
+    exact fun z hz ↦ ⟨fun hz' ↦ (hy z hz hz').le, hy'.trans_le'⟩
+
+@[to_dual nonempty_of_mem_endpointPartitionRight]
+theorem nonempty_of_mem_endpointPartitionLeft [Nonempty α] [NoMinOrder α] [DenselyOrdered α]
+    {e : Finset α} {s : Set α} (hs : s ∈ endpointPartitionLeft e) : s.Nonempty := by
+  rw [endpointPartitionLeft, Finset.mem_insert] at hs
+  obtain rfl | hs := hs
+  · obtain rfl | he := e.eq_empty_or_nonempty
+    · simp
+    · exact ⟨e.max' he, fun _ ↦ le_max' _ _⟩
+  · exact nonempty_of_mem_endpointPartitionIio hs
+
 /-- If `e₁ ⊆ e₂`, then `endpointPartitionLeft e₂` is a refinement of
 `endpointPartitioLeft e₁`. -/
 @[to_dual exists_subset_endpointPartitionRight_of_subset
@@ -204,10 +253,9 @@ theorem exists_endpointPartitionLeft_inter_of_mem_union_image {e : Finset α}
       · left; grind
       right
       ext y
-      constructor
+      refine ⟨?_, fun ⟨hy, hys⟩ z hz ↦ ?_⟩
       · grind
-      · intro ⟨hy, hys⟩ z hz
-        simp only [Finset.mem_union, Finset.mem_image, mem_attach, true_and, Subtype.exists] at hz
+      · simp only [Finset.mem_union, Finset.mem_image, mem_attach, true_and, Subtype.exists] at hz
         obtain hz | ⟨t, ht, rfl⟩ := hz
         · exact hy z hz
         · refine ⟨fun htx ↦ hys.trans' ?_, fun hty ↦ hty.trans_lt ?_⟩
@@ -219,20 +267,11 @@ theorem exists_endpointPartitionLeft_inter_of_mem_union_image {e : Finset α}
       · contradiction
       refine ⟨⟨s, hs⟩, .inl ?_⟩
       ext x
-      constructor
-      · intro hx
-        constructor
-        · rw [mem_endpointPartitionLeft_iff] at hs
-          obtain rfl | ⟨y, hy, rfl⟩ := hs
-          · intro z hz
-            rw [← hx z (Finset.mem_union_left _ hz)]
-            apply ((hf ⟨_, hs⟩) z hz).lt_of_ne
-            rintro rfl
-            contradiction
-          · grind
-        · simpa using hx (f ⟨s, hs⟩)
-      · intro ⟨hx, hxf⟩ y hy
-        simp only [Finset.mem_union, Finset.mem_image, mem_attach, true_and, Subtype.exists] at hy
+      refine ⟨fun hx ↦ ⟨?_, ?_⟩, fun ⟨hx, hxf⟩ y hy ↦ ?_⟩
+      · rw [mem_endpointPartitionLeft_iff] at hs
+        obtain rfl | ⟨y, hy, rfl⟩ := hs <;> grind
+      · simpa using hx (f ⟨s, hs⟩)
+      · simp only [Finset.mem_union, Finset.mem_image, mem_attach, true_and, Subtype.exists] at hy
         obtain hy | ⟨y, hy, rfl⟩ := hy
         · grind
         · refine ⟨fun hf' ↦ le_of_lt ?_, hxf.trans_le'⟩
@@ -255,6 +294,8 @@ def IsLinearOn (f : K → K) (s : Set K) : Prop :=
 
 namespace IsLinearOn
 variable {f g : K → K} {s t : Set K}
+
+@[simp] protected theorem empty : IsLinearOn f ∅ := by simp [IsLinearOn]
 
 protected theorem anti (hst : s ⊆ t) (hf : IsLinearOn f t) : IsLinearOn f s := by
   obtain ⟨a, b, hf⟩ := hf
@@ -309,8 +350,9 @@ protected theorem sub (hf : IsLinearOn f s) (hg : IsLinearOn g s) : IsLinearOn (
   rw [sub_eq_add_neg]
   exact hf.add hg.neg
 
-theorem ordConnected_image [LinearOrder K] [IsOrderedRing K]
-    (hf : IsLinearOn f s) (hs : s.OrdConnected) : (f '' s).OrdConnected where
+variable [LinearOrder K] [IsOrderedRing K]
+
+theorem ordConnected_image (hf : IsLinearOn f s) (hs : s.OrdConnected) : (f '' s).OrdConnected where
   out' := by
     obtain ⟨a, b, hf⟩ := hf
     rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩ z ⟨hxz, hzy⟩
@@ -331,6 +373,52 @@ theorem ordConnected_image [LinearOrder K] [IsOrderedRing K]
       refine ⟨(z - b) / a, H, ?_⟩
       rw [hf _ H]
       grind
+
+private theorem max_inter_Iio (hf : IsLinearOn f s) {x : K} (hx : x ∈ s) (hfx : f x = 0) :
+    IsLinearOn (max f 0) (s ∩ Iio x) := by
+  obtain ⟨a, b, hf'⟩ := id hf
+  obtain ha | ha := lt_or_ge a 0
+  · refine ⟨a, b, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.sup_apply, Pi.zero_apply, hf' y hy, sup_eq_left, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonpos_left hyx.le ha.le
+  · refine ⟨0, 0, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.sup_apply, Pi.zero_apply, zero_mul, add_zero, sup_eq_right, hf' y hy, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonneg_left hyx.le ha
+
+@[to_dual existing]
+private theorem min_inter_Ioi (hf : IsLinearOn f s) {x : K} (hx : x ∈ s) (hfx : f x = 0) :
+    IsLinearOn (min f 0) (s ∩ Ioi x) := by
+  obtain ⟨a, b, hf'⟩ := id hf
+  obtain ha | ha := lt_or_ge a 0
+  · refine ⟨a, b, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.inf_apply, Pi.zero_apply, hf' y hy, inf_eq_left, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonpos_left hyx.le ha.le
+  · refine ⟨0, 0, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.inf_apply, Pi.zero_apply, zero_mul, add_zero, inf_eq_right, hf' y hy, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonneg_left hyx.le ha
+
+private theorem max_inter_Ici (hf : IsLinearOn f s) {x : K} (hx : x ∈ s) (hfx : f x = 0) :
+    IsLinearOn (max f 0) (s ∩ Ici x) := by
+  obtain ⟨a, b, hf'⟩ := id hf
+  obtain ha | ha := lt_or_ge a 0
+  · refine ⟨0, 0, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.sup_apply, Pi.zero_apply, zero_mul, add_zero, sup_eq_right, hf' y hy, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonpos_left hyx ha.le
+  · refine ⟨a, b, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.sup_apply, Pi.zero_apply, hf' y hy, sup_eq_left, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonneg_left hyx ha
+
+@[to_dual existing]
+private theorem min_inter_Iic (hf : IsLinearOn f s) {x : K} (hx : x ∈ s) (hfx : f x = 0) :
+    IsLinearOn (min f 0) (s ∩ Iic x) := by
+  obtain ⟨a, b, hf'⟩ := id hf
+  obtain ha | ha := lt_or_ge a 0
+  · refine ⟨0, 0, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.inf_apply, Pi.zero_apply, zero_mul, add_zero, inf_eq_right, hf' y hy, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonpos_left hyx ha.le
+  · refine ⟨a, b, fun y ⟨hy, hyx⟩ ↦ ?_⟩
+    rw [Pi.inf_apply, Pi.zero_apply, hf' y hy, inf_eq_left, ← hfx, hf' x hx]
+    simpa using mul_le_mul_of_nonneg_left hyx ha
 
 end IsLinearOn
 
@@ -355,45 +443,49 @@ protected theorem const (c : K) : IsPiecewiseLeftLinear (const K c) :=
 
 @[to_dual]
 protected theorem smul (x : K) (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (x • f) := by
-  obtain ⟨s, hs⟩ := hf
-  exact ⟨s, fun p hp ↦ (hs p hp).smul x⟩
+  obtain ⟨e, he⟩ := hf
+  exact ⟨e, fun p hp ↦ (he p hp).smul x⟩
 
 @[to_dual]
 protected theorem qsmul (q : ℚ) (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (q • f) := by
-  obtain ⟨s, hs⟩ := hf
-  exact ⟨s, fun p hp ↦ (hs p hp).qsmul q⟩
+  obtain ⟨e, he⟩ := hf
+  exact ⟨e, fun p hp ↦ (he p hp).qsmul q⟩
 
 @[to_dual]
 protected theorem zsmul (n : ℤ) (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (n • f) := by
-  obtain ⟨s, hs⟩ := hf
-  exact ⟨s, fun p hp ↦ (hs p hp).zsmul n⟩
+  obtain ⟨e, he⟩ := hf
+  exact ⟨e, fun p hp ↦ (he p hp).zsmul n⟩
 
 @[to_dual]
 protected theorem nsmul (n : ℕ) (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (n • f) := by
-  obtain ⟨s, hs⟩ := hf
-  exact ⟨s, fun p hp ↦ (hs p hp).nsmul n⟩
+  obtain ⟨e, he⟩ := hf
+  exact ⟨e, fun p hp ↦ (he p hp).nsmul n⟩
 
 @[to_dual]
 protected theorem neg (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (-f) := by
-  obtain ⟨s, hs⟩ := hf
-  use s
+  obtain ⟨e, he⟩ := hf
+  use e
   simpa
 
 @[to_dual (attr := simp)]
 theorem neg_iff : IsPiecewiseLeftLinear (-f) ↔ IsPiecewiseLeftLinear f :=
   ⟨by simpa using IsPiecewiseLeftLinear.neg (f := -f), IsPiecewiseLeftLinear.neg⟩
 
+protected theorem neg' (hf : IsPiecewiseLeftLinear f) :
+    IsPiecewiseRightLinear (fun x ↦ f (-x)) := by
+  sorry
+
 @[to_dual]
 protected theorem add (hf : IsPiecewiseLeftLinear f) (hg : IsPiecewiseLeftLinear g) :
     IsPiecewiseLeftLinear (f + g) := by
-  obtain ⟨s, hs⟩ := hf
-  obtain ⟨t, ht⟩ := hg
-  refine ⟨s ∪ t, fun p hp ↦ ?_⟩
+  obtain ⟨e₁, he₁⟩ := hf
+  obtain ⟨e₂, he₂⟩ := hg
+  refine ⟨e₁ ∪ e₂, fun p hp ↦ ?_⟩
   obtain ⟨q, hq, hpq⟩ :=
     exists_subset_endpointPartitionLeft_of_subset subset_union_left hp
   obtain ⟨r, hr, hpr⟩ :=
     exists_subset_endpointPartitionLeft_of_subset subset_union_right hp
-  exact ((hs q hq).anti hpq).add ((ht r hr).anti hpr)
+  exact ((he₁ q hq).anti hpq).add ((he₂ r hr).anti hpr)
 
 @[to_dual]
 protected theorem sub (hf : IsPiecewiseLeftLinear f) (hg : IsPiecewiseLeftLinear g) :
@@ -401,82 +493,137 @@ protected theorem sub (hf : IsPiecewiseLeftLinear f) (hg : IsPiecewiseLeftLinear
   rw [sub_eq_add_neg]
   exact hf.add hg.neg
 
+variable [IsOrderedRing K]
+
+@[to_dual]
 private theorem max_zero (hf : IsPiecewiseLeftLinear f) : IsPiecewiseLeftLinear (max f 0) := by
-  obtain ⟨s, hs⟩ := hf
+  classical
+  obtain ⟨e, he⟩ := hf
+  have H' (t : endpointPartitionLeft e) (h0 : 0 ∉ f '' t.1) : IsLinearOn (max f 0) t.1 := by
+    obtain ⟨a, b, hf⟩ := he _ t.2
+    obtain ht | ⟨y, hy⟩ := t.1.eq_empty_or_nonempty
+    · simp [ht]
+    · have H := (he _ t.2).ordConnected_image (ordConnected_of_mem_endpointPartitionLeft t.2)
+      obtain hfy | hfy := lt_or_ge (f y) 0
+      · refine ⟨0, 0, fun x hx ↦ ?_⟩
+        rw [Pi.sup_apply, Pi.zero_apply, zero_mul, add_zero, sup_eq_right]
+        contrapose! h0
+        exact H.out (mem_image_of_mem _ hy) (mem_image_of_mem _ hx) ⟨hfy.le, h0.le⟩
+      · refine ⟨a, b, fun x hx ↦ ?_⟩
+        rw [Pi.sup_apply, Pi.zero_apply, ← hf x hx, sup_eq_left]
+        contrapose! h0
+        exact H.out (mem_image_of_mem _ hx) (mem_image_of_mem _ hy) ⟨h0.le, hfy⟩
+  let g (t : endpointPartitionLeft e) : K :=
+    if hf : 0 ∈ f '' t.1 then hf.choose else (nonempty_of_mem_endpointPartitionLeft t.2).choose
+  use e ∪ (endpointPartitionLeft e).attach.image g
+  intro s hs
+  obtain ⟨t, rfl | rfl⟩ := exists_endpointPartitionLeft_inter_of_mem_union_image g (by grind) hs
+  · dsimp [g]
+    split_ifs with h0
+    · obtain ⟨ht₁, ht₂⟩ := Exists.choose_spec h0
+      exact (he _ t.2).max_inter_Iio ht₁ ht₂
+    · exact IsLinearOn.anti inter_subset_left (H' t h0)
+  · dsimp [g]
+    split_ifs with h0
+    · obtain ⟨ht₁, ht₂⟩ := Exists.choose_spec h0
+      exact (he _ t.2).max_inter_Ici ht₁ ht₂
+    · exact IsLinearOn.anti inter_subset_left (H' t h0)
 
-  sorry
-
-#exit
-protected theorem max (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
-    IsPiecewiseLinear (max f g) := by
+protected theorem max (hf : IsPiecewiseLeftLinear f) (hg : IsPiecewiseLeftLinear g) :
+    IsPiecewiseLeftLinear (max f g) := by
   rw [← add_zero g, ← add_sub_cancel g f, ← add_sup]
   exact hg.add (hf.sub hg).max_zero
 
-@[to_dual existing]
-protected theorem min (hf : IsPiecewiseLinear f) (hg : IsPiecewiseLinear g) :
-    IsPiecewiseLinear (min f g) := by
+protected theorem min (hf : IsPiecewiseLeftLinear f) (hg : IsPiecewiseLeftLinear g) :
+    IsPiecewiseLeftLinear (min f g) := by
   simpa [← neg_inf] using hf.neg.max hg.neg
 
-end IsPiecewiseLinear
+end IsPiecewiseLeftLinear
+
+namespace IsPiecewiseRightLinear
+variable {f g : K → K} [IsOrderedRing K]
+
+@[to_dual existing]
+protected theorem min (hf : IsPiecewiseRightLinear f) (hg : IsPiecewiseRightLinear g) :
+    IsPiecewiseRightLinear (min f g) := by
+  rw [← add_zero g, ← add_sub_cancel g f, ← add_inf]
+  exact hg.add (hf.sub hg).min_zero
+
+@[to_dual existing]
+protected theorem max (hf : IsPiecewiseRightLinear f) (hg : IsPiecewiseRightLinear g) :
+    IsPiecewiseRightLinear (max f g) := by
+  simpa [← neg_sup] using hf.neg.min hg.neg
+
+end IsPiecewiseRightLinear
 
 variable (K) in
-/-- The subtype of piecewise linear functions. -/
-abbrev PiecewiseLinear : Type _ := Subtype (IsPiecewiseLinear (K := K))
+/-- The subtype of left-continuous piecewise linear functions. -/
+@[to_dual PiecewiseRightLinear
+/-- The subtype of right-continuous piecewise linear functions. -/]
+abbrev PiecewiseLeftLinear : Type _ := Subtype (IsPiecewiseLeftLinear (K := K))
 
-namespace PiecewiseLinear
+namespace PiecewiseLeftLinear
 
-instance : CoeFun (PiecewiseLinear K) (fun _ ↦ K → K) where
+@[to_dual]
+instance : CoeFun (PiecewiseLeftLinear K) (fun _ ↦ K → K) where
   coe := Subtype.val
 
-theorem isPiecewiseLinear (f : PiecewiseLinear K) : IsPiecewiseLinear f :=
+@[to_dual]
+theorem isPiecewiseLinear (f : PiecewiseLeftLinear K) : IsPiecewiseLeftLinear f :=
   f.2
 
-@[ext]
-theorem ext {f g : PiecewiseLinear K} (H : ∀ x, f x = g x) : f = g :=
+@[to_dual (attr := ext)]
+theorem ext {f g : PiecewiseLeftLinear K} (H : ∀ x, f x = g x) : f = g :=
   Subtype.ext (funext H)
 
 /-- The constant function as a piecewise linear function. -/
-@[expose]
-protected def const (c : K) : PiecewiseLinear K :=
+@[expose, to_dual]
+protected def const (c : K) : PiecewiseLeftLinear K :=
   ⟨_, .const c⟩
 
-instance : Zero (PiecewiseLinear K) := ⟨.const 0⟩
-instance : One (PiecewiseLinear K) := ⟨.const 1⟩
+@[to_dual] instance : Zero (PiecewiseLeftLinear K) := ⟨.const 0⟩
+@[to_dual] instance : One (PiecewiseLeftLinear K) := ⟨.const 1⟩
 
-@[simp] theorem coe_zero : (0 : PiecewiseLinear K) = (0 : K → K) := rfl
-@[simp] theorem coe_one : (1 : PiecewiseLinear K) = (1 : K → K) := rfl
+@[to_dual (attr := simp)] theorem coe_zero : (0 : PiecewiseLeftLinear K) = (0 : K → K) := rfl
+@[to_dual (attr := simp)] theorem coe_one : (1 : PiecewiseLeftLinear K) = (1 : K → K) := rfl
 
-instance : SMul K (PiecewiseLinear K) where
+@[to_dual]
+instance : SMul K (PiecewiseLeftLinear K) where
   smul x f := ⟨_, f.2.smul x⟩
 
-instance : ZSMul (PiecewiseLinear K) where
+@[to_dual]
+instance : ZSMul (PiecewiseLeftLinear K) where
   zsmul n f := ⟨_, f.2.zsmul n⟩
 
-instance : NSMul (PiecewiseLinear K) where
+@[to_dual]
+instance : NSMul (PiecewiseLeftLinear K) where
   nsmul n f := ⟨_, f.2.nsmul n⟩
 
-@[simp]
-theorem coe_smul (x : K) (f : PiecewiseLinear K) : (x • f : PiecewiseLinear K) = (x • f : K → K) :=
+@[to_dual (attr := simp)]
+theorem coe_smul (x : K) (f : PiecewiseLeftLinear K) :
+    (x • f : PiecewiseLeftLinear K) = (x • f : K → K) :=
   rfl
 
-@[simp]
-theorem coe_zsmul (n : ℤ) (f : PiecewiseLinear K) : (n • f : PiecewiseLinear K) = (n • f : K → K) :=
+@[to_dual (attr := simp)]
+theorem coe_zsmul (n : ℤ) (f : PiecewiseLeftLinear K) :
+    (n • f : PiecewiseLeftLinear K) = (n • f : K → K) :=
   rfl
 
-@[simp]
-theorem coe_nsmul (n : ℕ) (f : PiecewiseLinear K) : (n • f : PiecewiseLinear K) = (n • f : K → K) :=
+@[to_dual (attr := simp)]
+theorem coe_nsmul (n : ℕ) (f : PiecewiseLeftLinear K) :
+    (n • f : PiecewiseLeftLinear K) = (n • f : K → K) :=
   rfl
 
-variable [IsOrderedRing K]
-
-instance : Add (PiecewiseLinear K) where
+@[to_dual]
+instance : Add (PiecewiseLeftLinear K) where
   add f g := ⟨_, f.2.add g.2⟩
 
-@[simp]
-theorem coe_add (f g : PiecewiseLinear K) : (f + g : PiecewiseLinear K) = (f + g : K → K) :=
+@[to_dual (attr := simp)]
+theorem coe_add (f g : PiecewiseLeftLinear K) : (f + g : PiecewiseLeftLinear K) = (f + g : K → K) :=
   rfl
 
-instance : AddCommMonoidWithOne (PiecewiseLinear K) where
+@[to_dual]
+instance : AddCommMonoidWithOne (PiecewiseLeftLinear K) where
   zero_add f := by ext; exact zero_add ..
   add_zero f := by ext; exact add_zero ..
   add_comm f g := by ext; exact add_comm ..
@@ -484,22 +631,34 @@ instance : AddCommMonoidWithOne (PiecewiseLinear K) where
   nsmul_zero f := by ext; simp
   nsmul_succ f n := by ext; simp [add_one_mul]
 
+variable [IsOrderedRing K]
+
 @[to_dual]
-instance : Max (PiecewiseLinear K) where
+instance : Max (PiecewiseLeftLinear K) where
   max f g := ⟨_, f.2.max g.2⟩
 
 @[to_dual (attr := simp)]
-theorem coe_sup (f g : PiecewiseLinear K) : (f ⊔ g : PiecewiseLinear K) = (f ⊔ g : K → K) :=
+theorem coe_sup (f g : PiecewiseLeftLinear K) : (f ⊔ g : PiecewiseLeftLinear K) = (f ⊔ g : K → K) :=
   rfl
 
 @[to_dual]
-instance : SemilatticeSup (PiecewiseLinear K) where
-  sup f g := max f g
+instance : Min (PiecewiseLeftLinear K) where
+  min f g := ⟨_, f.2.min g.2⟩
+
+@[to_dual (attr := simp)]
+theorem coe_inf (f g : PiecewiseLeftLinear K) : (f ⊓ g : PiecewiseLeftLinear K) = (f ⊓ g : K → K) :=
+  rfl
+
+@[to_dual]
+instance : Lattice (PiecewiseLeftLinear K) where
+  sup f g := f ⊔ g
   le_sup_left _ _ _  := le_sup_left
   le_sup_right _ _ _  := le_sup_right
   sup_le _f _g _h hfg hgh x := sup_le (hfg x) (hgh x)
+  inf f g := f ⊓ g
+  inf_le_left _ _ _  := inf_le_left
+  inf_le_right _ _ _  := inf_le_right
+  le_inf _f _g _h hfg hgh x := le_inf (hfg x) (hgh x)
 
-instance : Lattice (PiecewiseLinear K) where
-
-end PiecewiseLinear
+end PiecewiseLeftLinear
 end Function
