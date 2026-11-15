@@ -48,6 +48,8 @@ universe u v w
 
 variable {α : Type v} {β : Type w}
 
+open Pointwise
+
 /-! ### For Mathlib -/
 
 -- This is problematic as an instance.
