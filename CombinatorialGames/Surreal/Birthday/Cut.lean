@@ -653,14 +653,14 @@ theorem birthday_leftGame_lt_of_notMem_of_player_eq {x : Game}
   rw [← infRight_le_supLeft_iff] at hxs
   simp_rw [leftGame_eq_supLeft_of_le hxs, supLeft, ← iSup_subtype''] at hx ⊢
   obtain ⟨c, hc⟩ := (exists_max_or_player_iSup_eq_right _).resolve_right
-    (ne_of_eq_of_ne hx Player.noConfusion)
+    (ne_of_eq_of_ne hx Player.left_ne_right)
   have hs : ⨆ i : x.moves .left, rightGame (.mk i) = rightGame (.mk c) :=
     iSup_eq_of_forall_le_of_forall_lt_exists_gt hc fun w hw => ⟨c, hw⟩
   grw [← hxb, ← IGame.birthday_lt_of_mem_moves c.2, hs, ← Game.birthday_mk_le]
   apply birthday_rightGame_le_of_notMem
   rintro ⟨y, hy⟩
   simp_rw [hs, ← hy, rightGame_toGame, player_rightSurreal] at hx
-  exact Player.noConfusion hx
+  exact Player.right_ne_left hx
 
 theorem birthday_rightGame_lt_of_notMem_of_player_eq {x : Game}
     (hxs : x ∉ Set.range Surreal.toGame) (hx : (rightGame x).player = .right) :
