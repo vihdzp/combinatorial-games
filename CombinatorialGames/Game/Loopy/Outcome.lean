@@ -66,9 +66,11 @@ which gives an explicit answer for every reachable state. -/
 def IsStrategy (p : Player) (s : Set LGame) : Prop :=
   ∀ y ∈ s, ∀ z ∈ y.moves (-p), ∃ r ∈ z.moves p, r ∈ s
 
+open Pointwise in
 theorem IsStrategy.neg {s : Set LGame} (h : IsStrategy p s) : IsStrategy (-p) (-s) := by
   aesop (add simp [IsStrategy])
 
+open Pointwise in
 @[simp]
 theorem isStrategy_neg {s : Set LGame} : IsStrategy p (-s) ↔ IsStrategy (-p) s := by
   constructor <;> intro h <;> simpa using h.neg
@@ -114,6 +116,7 @@ theorem not_isLoss_of_isWin (h : IsWin p x) : ¬ IsLoss p x :=
 theorem not_isWin_of_isLoss (h : IsLoss p x) : ¬ IsWin p x :=
   imp_not_comm.1 not_isLoss_of_isWin h
 
+open Pointwise in
 @[simp]
 theorem isWin_neg : IsWin p (-x) ↔ IsWin (-p) x := by
   rw [← not_iff_not, not_isWin_iff_mem_isStrategy, not_isWin_iff_mem_isStrategy,
