@@ -680,8 +680,8 @@ theorem birthday_simplestBtwn_lt_of_player_eq_left {x y : Cut} [x.Small]
   have hbs : Small s := by
     rw [← sSup_birthday_lt_top_iff, hsb]
     exact Small.birthday_lt_top x
-  cases hs with | inr hs => simp [← hs] at hx | inl hs
-  cases hs
+  obtain rfl | rfl := hs.symm
+  · simp at hx
   obtain ⟨c, hcs, hcy⟩ := exists_mem_image.1 (sInf_lt_iff.1 h)
   grw [← hsb, ← le_sSup (mem_image_of_mem _ hcs), ← WithTop.coe_add_one, WithTop.coe_lt_coe,
     Order.lt_add_one_iff]
@@ -695,8 +695,8 @@ theorem birthday_simplestBtwn_lt_of_player_eq_right {x y : Cut} [y.Small]
   have hbt : Small t := by
     rw [← sSup_birthday_lt_top_iff, htb]
     exact Small.birthday_lt_top y
-  obtain (rfl | rfl) := hs.symm
-  · simp at hx
+  obtain rfl | rfl := ht
+  · simp at hy
   obtain ⟨c, hct, hcx⟩ := exists_mem_image.1 (lt_sSup_iff.1 h)
   grw [← htb, ← le_sSup (mem_image_of_mem _ hct), ← WithTop.coe_add_one, WithTop.coe_lt_coe,
     Order.lt_add_one_iff]
