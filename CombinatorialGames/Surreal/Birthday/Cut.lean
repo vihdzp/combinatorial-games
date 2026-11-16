@@ -712,8 +712,7 @@ theorem birthday_simplestBtwn_lt_min {x y : Cut} [x.Small] [y.Small]
 
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {x y : Cut}
     [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left) (h : y ≤ x) :
-    ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
-      g.birthday = max x.birthday y.birthday := by
+    ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧ g.birthday = max x.birthday y.birthday := by
   choose f nf hf hfb using birthday_eq_iGameBirthday
   obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
   have hbs : Small s := by
