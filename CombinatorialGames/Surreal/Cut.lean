@@ -406,6 +406,10 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
   · aesop
 
+theorem rightGame_le_leftGame_iff {x : Game} :
+    rightGame x ≤ leftGame x ↔ x ∉ range Surreal.toGame := by
+  simpa using leftGame_lt_rightGame_iff.not
+
 @[simp]
 theorem leftGame_ne_bot (x : Game) : leftGame x ≠ ⊥ := by
   apply_fun left
@@ -708,6 +712,20 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
+
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ .mk x ∈ range Surreal.toGame := by
+  constructor
+  · intro h
+    rw [← simplestBtwn_supLeft_infRight h]
+    exact mem_range_self (simplestBtwn h)
+  · rintro ⟨y, hy⟩
+    rw [← y.out_eq, toGame_mk, Game.mk_eq_mk] at hy
+    exact supLeft_lt_infRight_of_equiv_numeric hy.symm
+
+theorem infRight_le_supLeft_iff {x : IGame} :
+    infRight x ≤ supLeft x ↔ .mk x ∉ range Surreal.toGame := by
+  simpa using supLeft_lt_infRight_iff.not
 
 /-! ### Some explicit calculations with cuts -/
 
