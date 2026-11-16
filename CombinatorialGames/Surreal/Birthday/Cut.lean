@@ -710,6 +710,9 @@ theorem birthday_simplestBtwn_lt_min {x y : Cut} [x.Small] [y.Small]
     (birthday_simplestBtwn_lt_left hx h)
     (birthday_simplestBtwn_lt_right hy h)
 
+/-- If `y ≤ x` are small cuts, with `x` a right cut and `y` a left cut, then
+they're the respective right and left stops of some game whose birthday is bounded by
+the birthdays of `x` and `y`. -/
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {x y : Cut}
     [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left) (h : y ≤ x) :
     ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧ g.birthday = max x.birthday y.birthday := by
@@ -753,6 +756,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
   · grw [← hgl, ← hgr, birthday_leftGame_le_of_notMem hgs,
       birthday_rightGame_le_of_notMem hgs, max_self]
 
+/-- If `y ≤ x` are small cuts, with `x` and `y` both right cuts other than `⊥`, then
+they're the respective right and left stops of some game whose birthday is bounded by
+the birthdays of `x` and `y`. -/
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right {x y : Cut}
     [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .right)
     (hyb : y ≠ ⊥) (h : y ≤ x) :
@@ -801,6 +807,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
     apply birthday_rightGame_lt_of_notMem_of_player_eq hgs
     simp_rw [hgr, hyp]
 
+/-- If `y ≤ x` are small cuts, with `x` and `y` both left cuts other than `⊤`, then
+they're the respective right and left stops of some game whose birthday is bounded by
+the birthdays of `x` and `y`. -/
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_left {x y : Cut}
     [x.Small] [y.Small] (hxp : x.player = .left) (hyp : y.player = .left)
     (hxt : x ≠ ⊤) (h : y ≤ x) :
@@ -812,6 +821,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_left {x
       (by simpa [neg_eq_iff_eq_neg] using hxt) (Cut.neg_le_neg_iff.2 h)
   exact ⟨-g, by simp [hgr], by simp [hgl], by simp [hgb, max_comm]⟩
 
+/-- If `y ≤ x` are small cuts, with `x` a left cut and `y` a right cut other than `⊤` and `⊥`, then
+they're the respective right and left stops of some game whose birthday is bounded by
+the birthdays of `x` and `y`. -/
 theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_right {x y : Cut}
     [x.Small] [y.Small] (hxp : x.player = .left) (hyp : y.player = .right)
     (hxt : x ≠ ⊤) (hyb : y ≠ ⊥) (h : y ≤ x) :
@@ -859,6 +871,9 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_right {
     · apply birthday_rightGame_lt_of_notMem_of_player_eq hgs
       simp_rw [hgr, hyp]
 
+/-- If `y ≤ x` are small cuts, other than `⊤` and `⊥`, then
+they're the respective right and left stops of some game whose birthday is bounded by
+the birthdays of `x` and `y`. -/
 theorem exists_leftGame_rightGame_eq_birthday_le_of_le {x y : Cut} [x.Small] [y.Small]
     (hxt : x ≠ ⊤) (hyb : y ≠ ⊥) (h : y ≤ x) :
     ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧ g.birthday ≤ max x.birthday y.birthday + 1 := by
