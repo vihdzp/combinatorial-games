@@ -40,6 +40,21 @@ theorem exists_mem_smulSet {α β : Type*} [SMul α β] {a : α} {s : Set β} {p
     (∃ x ∈ a • s, p x) ↔ ∃ x ∈ s, p (a • x) :=
   exists_mem_image
 
+theorem sInf_eq_bot_iff_bot_mem {α : Type*}
+    [CompleteLinearOrder α] [Nontrivial α] [WellFoundedLT α] {s : Set α} : sInf s = ⊥ ↔ ⊥ ∈ s := by
+  refine ⟨fun hs ↦ ?_, csInf_eq_bot_of_bot_mem⟩
+  rw [← hs]
+  obtain rfl | hs := s.eq_empty_or_nonempty
+  · simp at hs
+  · exact csInf_mem hs
+
+@[simp]
+theorem Order.add_one_ne_zero {α : Type*} [Add α] [Zero α] [One α] [PartialOrder α]
+    [SuccAddOrder α] [IsBotZeroClass α] [Nontrivial α] (x : α) : x + 1 ≠ 0 := by
+  let := IsBotZeroClass.toOrderBot α
+  rw [← succ_eq_add_one, ← bot_eq_zero]
+  exact succ_ne_bot x
+
 public noncomputable section
 
 namespace Surreal.Cut
