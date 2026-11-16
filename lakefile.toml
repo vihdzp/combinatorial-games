@@ -10,9 +10,9 @@ autoImplicit = false
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 
+[[lean_lib]]
+name = "CombinatorialGames"
+
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-
-[[lean_lib]]
-name = "CombinatorialGames"
