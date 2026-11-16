@@ -658,7 +658,7 @@ theorem birthday_leftGame_lt_of_notMem_of_player_eq {x : Game}
     iSup_eq_of_forall_le_of_forall_lt_exists_gt hc fun w hw => ⟨c, hw⟩
   grw [← hxb, ← IGame.birthday_lt_of_mem_moves c.2, hs, ← Game.birthday_mk_le]
   apply birthday_rightGame_le_of_notMem
-  rintro ⟨y, hy⟩
+  intro ⟨y, hy⟩
   simp_rw [hs, ← hy, rightGame_toGame, player_rightSurreal] at hx
   exact Player.right_ne_left hx
 
@@ -667,7 +667,7 @@ theorem birthday_rightGame_lt_of_notMem_of_player_eq {x : Game}
     (rightGame x).birthday < x.birthday := by
   rw [← birthday_neg, ← Game.birthday_neg, ← leftGame_neg]
   apply birthday_leftGame_lt_of_notMem_of_player_eq
-  · rintro ⟨c, hc⟩
+  · intro ⟨c, hc⟩
     apply hxs
     rw [← neg_neg x, ← hc, ← toGame_neg]
     exact mem_range_self (-c)
