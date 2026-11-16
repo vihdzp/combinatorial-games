@@ -719,14 +719,14 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
   have hbs : Small s := by
     rw [← sSup_birthday_lt_top_iff, hs]
     exact Small.birthday_lt_top x
-  cases hx with | inl hx => simp [← hx] at hxp | inr hx
-  cases hx
+  obtain rfl | rfl := hx
+  · simp at hxp
   obtain ⟨t, hy, ht⟩ := birthday_eq_sSup_birthday y
   have hbt : Small t := by
     rw [← sSup_birthday_lt_top_iff, ht]
     exact Small.birthday_lt_top y
-  cases hy with | inr hy => simp [← hy] at hyp | inl hy
-  cases hy
+  obtain rfl | rfl := hy.symm
+  · simp at hyp
   let sr := !{f '' s | f '' t}
   have hsl : supLeft sr = sSup (rightSurreal '' s) := by
     unfold sr supLeft
@@ -764,8 +764,8 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
   have hbs : Small s := by
     rw [← sSup_birthday_lt_top_iff, hs]
     exact Small.birthday_lt_top x
-  cases hx with | inl hx => simp [← hx] at hxp | inr hx
-  cases hx
+  obtain rfl | rfl := hx
+  · simp at hxp
   obtain ⟨sr, rfl, -, hyb⟩ :=
     exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left
       hyp (player_leftSurreal (simplestBtwn (bot_lt_iff_ne_bot.2 hyb)))
