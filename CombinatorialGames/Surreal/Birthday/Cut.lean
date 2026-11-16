@@ -771,7 +771,7 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
       hyp (player_leftSurreal (simplestBtwn (bot_lt_iff_ne_bot.2 hyb)))
       ((leftSurreal_le_rightSurreal _).trans (rightSurreal_le_iff.2 (fits_simplestBtwn _).2))
   rw [birthday_leftSurreal, max_eq_left (Order.add_one_le_of_lt
-    (birthday_simplestBtwn_lt_of_player_eq_right hyp _))] at hyb
+    (birthday_simplestBtwn_lt_right hyp _))] at hyb
   obtain ⟨sr, rfl, hsrb⟩ := sr.birthday_eq_iGameBirthday
   let up := !{f '' s | {sr}}
   have hul : supLeft up = sSup (rightSurreal '' s) := by
@@ -822,14 +822,14 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_right {
       (player_rightSurreal (simplestBtwn (lt_top_iff_ne_top.2 hxt))) hxp
       ((le_leftSurreal_iff.2 (fits_simplestBtwn _).1).trans (leftSurreal_le_rightSurreal _))
   rw [birthday_rightSurreal, max_eq_right (Order.add_one_le_of_lt
-    (birthday_simplestBtwn_lt_of_player_eq_left hxp _))] at hxb
+    (birthday_simplestBtwn_lt_left hxp _))] at hxb
   obtain ⟨srl, rfl, hsrlb⟩ := srl.birthday_eq_iGameBirthday
   obtain ⟨srr, rfl, -, hyb⟩ :=
     exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left
       hyp (player_leftSurreal (simplestBtwn (bot_lt_iff_ne_bot.2 hyb)))
       ((leftSurreal_le_rightSurreal _).trans (rightSurreal_le_iff.2 (fits_simplestBtwn _).2))
   rw [birthday_leftSurreal, max_eq_left (Order.add_one_le_of_lt
-    (birthday_simplestBtwn_lt_of_player_eq_right hyp _))] at hyb
+    (birthday_simplestBtwn_lt_right hyp _))] at hyb
   obtain ⟨srr, rfl, hsrrb⟩ := srr.birthday_eq_iGameBirthday
   let zr := !{{srl} | {srr}}
   have hzl : supLeft zr = rightGame (.mk srl) := by
