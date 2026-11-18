@@ -35,14 +35,6 @@ noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α
 namespace WithTop
 variable {α : Type*}
 
-theorem isGLB_of_coe_preimage [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ∃ y : α, ↑y ∈ s) (hs : IsGLB ((↑) ⁻¹' s) x) : IsGLB s x := by
-  simpa [isGLB_iff_le_iff, lowerBounds, WithTop.forall, hs'] using hs
-
-theorem isLUB_of_coe_preimage [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ⊤ ∉ s) (hs : IsLUB ((↑) ⁻¹' s) x) : IsLUB s x := by
-  simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, hs'] using hs
-
 @[to_dual]
 theorem nonempty_preimage_some_iff {s : Set (WithTop α)} :
     (((↑) ⁻¹' s : Set α)).Nonempty ↔ ¬ s ⊆ {⊤} := by
@@ -60,13 +52,6 @@ theorem isGLB_sInf_of_preimage' [InfSet α] {s : Set (WithTop α)}
   rw [sInf_eq h hs', isGLB_coe_iff]
   exact ⟨h, hs h⟩
 
-/-- See `isGLB_sInf_of_preimage'` for a stronger version. -/
-@[to_dual
-/-- See `isGLB_sInf_of_preimage` for a stronger version. -/]
-theorem isGLB_sInf_of_preimage [InfSet α] {s : Set (WithTop α)}
-    (hs : IsGLB ((↑) ⁻¹' s : Set α) (sInf ((↑) ⁻¹' s))) (hs' : BddBelow s) : IsGLB s (sInf s) :=
-  isGLB_sInf_of_preimage' (fun _ ↦ hs) hs'
-
 @[to_dual]
 public theorem isLUB_sSup_of_preimage' [SupSet α] {s : Set (WithTop α)}
     (hs : ⊤ ∉ s → BddAbove ((↑) ⁻¹' s : Set α) →
@@ -78,13 +63,6 @@ public theorem isLUB_sSup_of_preimage' [SupSet α] {s : Set (WithTop α)}
   push Not at h
   rw [sSup_eq h.1 h.2, isLUB_coe_iff]
   exact ⟨h.1, hs h.1 h.2⟩
-
-/-- See `isLUB_sSup_of_preimage'` for a stronger version. -/
-@[to_dual
-/-- See `isGLB_sInf_of_preimage'` for a stronger version. -/]
-theorem isLUB_sSup_of_preimage [SupSet α] {s : Set (WithTop α)}
-    (hs : IsLUB ((↑) ⁻¹' s : Set α) (sSup ((↑) ⁻¹' s))) : IsLUB s (sSup s) :=
-  isLUB_sSup_of_preimage' fun _ _ ↦ hs
 
 end WithTop
 
