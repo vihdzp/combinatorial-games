@@ -393,15 +393,24 @@ variable {x y}
 omit hx in
 /-- This lemma doesn't require `x` to be impartial. -/
 theorem equiv_iff_add_equiv_zero : x ≈ y ↔ x + y ≈ 0 := by
-  rw [← Game.mk_eq_mk, ← Game.mk_eq_mk, Game.mk_add, Game.mk_zero, add_eq_zero_iff_eq_neg, neg_mk]
+  rw [← add_equiv_add_iff_right (a := y), (add_self_equiv y).antisymmRel_congr_right]
 
 omit hy in
 /-- This lemma doesn't require `y` to be impartial. -/
 theorem equiv_iff_add_equiv_zero' : x ≈ y ↔ x + y ≈ 0 := by
-  rw [antisymmRel_comm, add_comm, equiv_iff_add_equiv_zero]
+  rw [← add_equiv_add_iff_left (a := x), (add_self_equiv x).antisymmRel_congr_left,
+    antisymmRel_comm]
 
+omit hx in
+/-- This lemma doesn't require `x` to be impartial. -/
 theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
-  simpa using (@equiv_iff_add_equiv_zero x y).not
+  rw [← add_fuzzy_add_iff_right (a := y), (add_self_equiv y).incompRel_congr_right]
+
+omit hy in
+/-- This lemma doesn't require `x` to be impartial. -/
+theorem fuzzy_iff_add_fuzzy_zero' : x ‖ y ↔ x + y ‖ 0 := by
+  rw [← add_fuzzy_add_iff_left (a := x), (add_self_equiv x).incompRel_congr_left,
+    incompRel_comm]
 
 end Impartial
 end IGame
