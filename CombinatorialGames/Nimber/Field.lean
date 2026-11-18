@@ -265,8 +265,6 @@ protected theorem sq_eq_one_iff {x : Nimber} : x ^ 2 = 1 ↔ x = 1 := by simp
 @[simp] protected theorem mul_self_eq_one_iff {x : Nimber} : x * x = 1 ↔ x = 1 := by simp [← sq]
 @[simp] protected theorem one_eq_mul_self_iff {x : Nimber} : 1 = x * x ↔ 1 = x := by simp [← sq]
 
-attribute [simp] Nat.ofNat_lt
-
 @[simp]
 theorem two_mul_two : ∗2 * ∗2 = ∗3 := by
   apply le_antisymm
