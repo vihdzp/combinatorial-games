@@ -352,13 +352,13 @@ theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
 @[simp]
 theorem IsRing.two : IsRing (∗2) where
   ne_one := by simp
-  mul_lt := by simp_rw [lt_two_iff]; aesop
+  mul_lt := by simp +contextual [lt_two_iff, or_imp]
   __ := IsGroup.two
 
 @[simp]
 theorem IsRing.four : IsRing (∗4) where
   ne_one := by simp
-  mul_lt := by simp_rw [lt_four_iff]; aesop
+  mul_lt := by simp +contextual [lt_four_iff, or_imp]
   __ := IsGroup.four
 
 /-- `Iio x` as a subring of `Nimber`. -/
@@ -499,7 +499,7 @@ theorem IsField.two : IsField (∗2) where
 
 @[simp]
 theorem IsField.four : IsField (∗4) where
-  inv_lt' := by simp_rw [lt_four_iff]; aesop
+  inv_lt' := by simp +contextual [lt_four_iff, or_imp]
   __ := IsRing.four
 
 /-- `Iio x` as a subring of `Nimber`. -/
