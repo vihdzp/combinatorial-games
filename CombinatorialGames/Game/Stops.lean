@@ -69,7 +69,7 @@ theorem toSurreal_rightGame_mk_of_short (x : IGame) [Short x] :
 
 @[simp]
 theorem leftStop_of_numeric (x : IGame) [Short x] [Numeric x] : leftStop x = x.toDyadic := by
-  simpa [← Surreal.ratCast_toDyadic, Dyadic.toRat_inj] using (toSurreal_leftGame_mk_of_short x).symm
+  simpa [← Surreal.ratCast_toDyadic] using (toSurreal_leftGame_mk_of_short x).symm
 
 @[simp]
 theorem rightStop_of_numeric (x : IGame) [Short x] [Numeric x] : rightStop x = x.toDyadic := by
