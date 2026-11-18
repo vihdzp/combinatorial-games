@@ -41,6 +41,8 @@ recommended_spelling "star" for "⋆" in [«term⋆»]
 
 @[simp, game_cmp] theorem moves_star (p : Player) : moves p ⋆ = {0} := moves_ofSets ..
 
+theorem star_eq : ⋆ = !{{0} | {0}} := ofSets_eq_ofSets_cases ..
+
 theorem zero_lf_star : 0 ⧏ ⋆ := by rw [zero_lf]; simp
 theorem star_lf_zero : ⋆ ⧏ 0 := by rw [lf_zero]; simp
 
