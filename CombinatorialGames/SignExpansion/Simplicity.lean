@@ -264,10 +264,6 @@ where finally
   · contrapose hb
     exact isUpperSet_preimage_singleton_zero _ h hb
 
-@[simp]
-theorem sSup_empty : sSup ∅ = (⊥ : Simplicity) := by
-  ext; simp [sSup]
-
 private theorem sSup_apply_of_mem {x : Simplicity} {s : Set Simplicity}
     (hs : IsChain (· ≤ ·) s) (hx : x ∈ s) {o : NatOrdinal} (ho : x o ≠ 0) : sSup s o = x o := by
   dsimp [sSup]
