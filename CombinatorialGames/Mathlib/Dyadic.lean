@@ -27,12 +27,6 @@ the `CommRing` structure, as well as proving some auxiliary theorems on them.
 
 /-! ### For Mathlib -/
 
-theorem le_of_le_of_lt_of_lt {α β : Type*} [PartialOrder α] [Preorder β] {x y : α}
-    {f : α → β} (h : x < y → f x < f y) (hxy : x ≤ y) : f x ≤ f y := by
-  obtain rfl | h' := hxy.eq_or_lt
-  · rfl
-  · exact (h h').le
-
 theorem Nat.pow_log_eq_self_iff {b n : ℕ} (hb : b ≠ 0) :
     b ^ Nat.log b n = n ↔ n ∈ Set.range (b ^ ·) := by
   constructor
