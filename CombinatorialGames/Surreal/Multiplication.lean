@@ -615,11 +615,6 @@ theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
 
-private theorem _root_.Game.mul_congr_left {x y z : IGame}
-    [Numeric x] [Numeric y] [Numeric z] (he : x ≈ y) :
-    Game.mk (x * z) = Game.mk (y * z) :=
-  mk_eq (Numeric.mul_congr_left he)
-
 theorem mulOption_congr₁ {x₁ x₂ y a b : IGame}
     [Numeric x₁] [Numeric x₂] [Numeric b] (he : x₁ ≈ x₂) :
     mulOption x₁ y a b ≈ mulOption x₂ y a b := by
