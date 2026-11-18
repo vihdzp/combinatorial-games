@@ -36,6 +36,9 @@ deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
 
+theorem left_ne_right : left ≠ right := Player.noConfusion
+theorem right_ne_left : right ≠ left := Player.noConfusion
+
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
 abbrev cases {α : Sort*} (l r : α) : Player → α
