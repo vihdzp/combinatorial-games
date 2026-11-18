@@ -407,7 +407,7 @@ theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
   rw [← add_fuzzy_add_iff_right (a := y), (add_self_equiv y).incompRel_congr_right]
 
 omit hy in
-/-- This lemma doesn't require `x` to be impartial. -/
+/-- This lemma doesn't require `y` to be impartial. -/
 theorem fuzzy_iff_add_fuzzy_zero' : x ‖ y ↔ x + y ‖ 0 := by
   rw [← add_fuzzy_add_iff_left (a := x), (add_self_equiv x).incompRel_congr_left,
     incompRel_comm]
