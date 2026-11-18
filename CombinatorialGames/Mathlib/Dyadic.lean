@@ -164,9 +164,6 @@ alias toRat_eq_zero := toRat_eq_zero_iff
 @[simp] theorem toRat_eq_one {x : Dyadic} : x.toRat = 1 ↔ x = 1 := by norm_cast
 @[simp] theorem one_eq_toRat {x : Dyadic} : 1 = x.toRat ↔ 1 = x := by norm_cast
 
-instance : Nontrivial Dyadic where
-  exists_pair_ne := ⟨0, 1, by decide⟩
-
 @[simp] theorem num_neg (x : Dyadic) : (-x).num = -x.num := congrArg Rat.num (toRat_neg x)
 @[simp] theorem den_neg (x : Dyadic) : (-x).den = x.den := (congrArg Rat.den (toRat_neg x) :)
 
