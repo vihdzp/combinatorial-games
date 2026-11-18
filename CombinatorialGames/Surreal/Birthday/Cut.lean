@@ -473,6 +473,14 @@ theorem small_iff_birthday {x : Cut} : x.Small ↔ birthday x < ⊤ := by
 theorem Small.birthday_lt_top (x : Cut) [x.Small] : birthday x < ⊤ :=
   small_iff_birthday.1 ‹_›
 
+theorem birthday_eq_small_sSup_birthday (x : Cut.{u}) [x.Small] :
+    ∃ s : Set Surreal, Small.{u} s ∧ (sInf (leftSurreal '' s) = x ∨ sSup (rightSurreal '' s) = x) ∧
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x := by
+  obtain ⟨s, hs, hsb⟩ := x.birthday_eq_sSup_birthday
+  refine ⟨s, ?_, hs, hsb⟩
+  rw [← sSup_birthday_lt_top_iff, hsb]
+  exact Small.birthday_lt_top x
+
 protected instance Numeric.small (x : Cut) [x.Numeric] : x.Small := by
   cases ‹x.Numeric› with
   | leftSurreal x => simpa using Small.infLeft {x}
@@ -567,16 +575,18 @@ theorem player_supRight (s : Set Surreal.{u}) [Small.{u} s] :
       exact mem_biUnion hx (mem_right_leftSurreal.2 le_rfl)
 
 theorem exists_of_player_eq_left {x : Cut.{u}} [x.Small] (hx : x.player = .left) :
-    ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x := by
-  cases ‹x.Small› with
-  | infLeft s => exact ⟨s, ‹_›, rfl⟩
-  | supRight s => simp at hx
+    ∃ s : Set Surreal, Small.{u} s ∧ sInf (leftSurreal '' s) = x ∧
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x := by
+  obtain ⟨s, hs, rfl | rfl, hsb⟩ := x.birthday_eq_small_sSup_birthday
+  · exact ⟨s, hs, rfl, hsb⟩
+  · simp at hx
 
 theorem exists_of_player_eq_right {x : Cut.{u}} [x.Small] (hx : x.player = .right) :
-    ∃ s : Set Surreal, Small.{u} s ∧ sSup (rightSurreal '' s) = x := by
-  cases ‹x.Small› with
-  | infLeft s => simp at hx
-  | supRight s => exact ⟨s, ‹_›, rfl⟩
+    ∃ s : Set Surreal, Small.{u} s ∧ sSup (rightSurreal '' s) = x ∧
+      sSup ((fun x ↦ (x.birthday : WithTop _) + 1) '' s) = birthday x := by
+  obtain ⟨s, hs, rfl | rfl, hsb⟩ := x.birthday_eq_small_sSup_birthday
+  · simp at hx
+  · exact ⟨s, hs, rfl, hsb⟩
 
 @[simp]
 theorem player_iInf_leftSurreal {ι : Type*} [Small.{u} ι] (f : ι → Surreal.{u}) :
@@ -721,18 +731,8 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left {
     [x.Small] [y.Small] (hxp : x.player = .right) (hyp : y.player = .left) (h : y ≤ x) :
     ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧ g.birthday = max x.birthday y.birthday := by
   choose f nf hf hfb using birthday_eq_iGameBirthday
-  obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
-  have hbs : Small s := by
-    rw [← sSup_birthday_lt_top_iff, hs]
-    exact Small.birthday_lt_top x
-  obtain rfl | rfl := hx
-  · simp at hxp
-  obtain ⟨t, hy, ht⟩ := birthday_eq_sSup_birthday y
-  have hbt : Small t := by
-    rw [← sSup_birthday_lt_top_iff, ht]
-    exact Small.birthday_lt_top y
-  obtain rfl | rfl := hy.symm
-  · simp at hyp
+  obtain ⟨s, hbs, rfl, hs⟩ := exists_of_player_eq_right hxp
+  obtain ⟨t, hbt, rfl, ht⟩ := exists_of_player_eq_left hyp
   let sr := !{f '' s | f '' t}
   have hsl : supLeft sr = sSup (rightSurreal '' s) := by
     unfold sr supLeft
@@ -769,12 +769,7 @@ theorem exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right 
     ∃ g : Game, leftGame g = x ∧ rightGame g = y ∧
       g.birthday = max x.birthday (y.birthday + 1) := by
   choose f nf hf hfb using birthday_eq_iGameBirthday
-  obtain ⟨s, hx, hs⟩ := birthday_eq_sSup_birthday x
-  have hbs : Small s := by
-    rw [← sSup_birthday_lt_top_iff, hs]
-    exact Small.birthday_lt_top x
-  obtain rfl | rfl := hx
-  · simp at hxp
+  obtain ⟨s, hbs, rfl, hs⟩ := exists_of_player_eq_right hxp
   obtain ⟨sr, rfl, -, hyb⟩ :=
     exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left
       hyp (player_leftSurreal (simplestBtwn hyb.bot_lt))
