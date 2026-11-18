@@ -23,15 +23,7 @@ define two separate `PartialOrder` instances on the same type, we instead create
 `Simpllicity`, and declare the simplicity ordering on that.
 -/
 
-/-! ### For Mathlib -/
-
-@[no_expose, implicit_reducible]
-noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
-    OrderBot α := by
-  choose a ha using h
-  refine { bot := a, bot_le := ?_ }
-  simpa [lowerBounds] using ha
-
+-- #46150
 namespace WithTop
 variable {α : Type*}
 
