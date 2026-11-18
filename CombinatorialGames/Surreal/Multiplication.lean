@@ -615,25 +615,30 @@ theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x
   repeat rw [← Surreal.mk_eq_mk]
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
 
+private theorem _root_.Game.mul_congr_left {x y z : IGame}
+    [Numeric x] [Numeric y] [Numeric z] (he : x ≈ y) :
+    Game.mk (x * z) = Game.mk (y * z) :=
+  mk_eq (Numeric.mul_congr_left he)
+
 theorem mulOption_congr₁ {x₁ x₂ y a b : IGame}
-    [Numeric x₁] [Numeric x₂] [Numeric y] [Numeric a] [Numeric b] (he : x₁ ≈ x₂) :
+    [Numeric x₁] [Numeric x₂] [Numeric b] (he : x₁ ≈ x₂) :
     mulOption x₁ y a b ≈ mulOption x₂ y a b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_left he)]
 
 theorem mulOption_congr₂ {x y₁ y₂ a b : IGame}
-    [Numeric x] [Numeric y₁] [Numeric y₂] [Numeric a] [Numeric b] (he : y₁ ≈ y₂) :
+    [Numeric y₁] [Numeric y₂] [Numeric a] (he : y₁ ≈ y₂) :
     mulOption x y₁ a b ≈ mulOption x y₂ a b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_right he)]
 
 theorem mulOption_congr₃ {x y a₁ a₂ b : IGame}
-    [Numeric x] [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
+    [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
     mulOption x y a₁ b ≈ mulOption x y a₂ b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_left he)]
 
 theorem mulOption_congr₄ {x y a b₁ b₂ : IGame}
-    [Numeric x] [Numeric y] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
+    [Numeric x] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
     mulOption x y a b₁ ≈ mulOption x y a b₂ := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_right he)]
 
 end IGame.Numeric
 end
