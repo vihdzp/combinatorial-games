@@ -179,6 +179,16 @@ instance : PartialOrder Simplicity where
 instance : OrderBot Simplicity where
   bot_le := by simp [le_def]
 
+instance : NoTopOrder Simplicity where
+  exists_not_le s := by
+    obtain rfl | hs := eq_or_ne s (.of ⊤)
+    · use .of ⊥
+      simp [of_le_of]
+    · use .of ⊤
+      contrapose hs
+      apply eq_of_ge_of_length_le hs
+      simp
+
 /-! ### Infimum -/
 
 open Classical in
@@ -218,16 +228,6 @@ theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s 
     contrapose! H
     rw [← apply_ne_zero] at H
     rw [← apply_eq_of_le (hx ha) H, ← apply_eq_of_le (hx hb) H]
-
-instance : NoTopOrder Simplicity where
-  exists_not_le s := by
-    obtain rfl | hs := eq_or_ne s (.of ⊤)
-    · use .of ⊥
-      simp [of_le_of]
-    · use .of ⊤
-      contrapose hs
-      apply eq_of_ge_of_length_le hs
-      simp
 
 instance : OrderInfSet Simplicity where
   isGLB_sInf_of_isGLB s x hx := by
@@ -310,6 +310,11 @@ alias ⟨_, isLUB_sSup_of_bddAbove⟩ := isLUB_sSup_iff_bddAbove
 theorem sSup_of_not_bddAbove {s : Set Simplicity} (hs : ¬ BddAbove s) : sSup s = ⊥ := by
   apply dite_eq_right
   rwa [isChain_iff_bddAbove]
+
+instance : OrderSupSet Simplicity where
+  isLUB_sSup_of_isLUB s x hx := by
+    rw [isLUB_sSup_iff_bddAbove]
+    exact hx.bddAbove
 
 instance : Max Simplicity where
   max x y := sSup {x, y}
