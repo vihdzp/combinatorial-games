@@ -165,9 +165,6 @@ def const (s : SignType) : SignExpansion where
   sign _ := s
   isUpperSet_preimage_singleton_zero' := by aesop
 
-@[simp] theorem coe_const (s : SignType) : ⇑(const s) = Function.const _ s := rfl
-@[simp] theorem const_apply (s : SignType) (x : Ordinal) : const s x = s := rfl
-
 instance : Zero SignExpansion where
   zero := const 0
 
@@ -200,17 +197,6 @@ theorem top_apply (o : NatOrdinal) : (⊤ : SignExpansion) o = 1 := rfl
 @[simp]
 theorem length_top : length ⊤ = ⊤ := by
   simp [length]
-
-theorem const_injective : Function.Injective const := by
-  intro x y h
-  rw [← const_apply x 0, ← const_apply y 0, h]
-
-@[simp]
-theorem const_inj {x y : SignType} : const x = const y ↔ x = y :=
-  const_injective.eq_iff
-
-instance : Nontrivial SignExpansion :=
-  ⟨⊥, ⊤, by apply const_injective.ne; decide⟩
 
 /-- We say a sign expansion is "small" when it has length < ⊤. Equivalently, it contains at least
 one (and thus infinitely many) zeros. -/

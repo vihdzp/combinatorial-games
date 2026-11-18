@@ -157,16 +157,6 @@ theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
   have := lt_or_ge x.val.length y.val.length
   aesop
 
-theorem eq_of_le_of_length_ge {x y : Simplicity} (h : x ≤ y) (hyx : y.val.length ≤ x.val.length) :
-    x = y := by
-  obtain rfl | hxy := eq_or_length_lt_of_le h
-  · rfl
-  · cases hyx.not_gt hxy
-
-theorem eq_of_ge_of_length_le {x y : Simplicity} (h : y ≤ x) (hyx : x.val.length ≤ y.val.length) :
-    x = y :=
-  (eq_of_le_of_length_ge h hyx).symm
-
 theorem length_strictMono : StrictMono fun x : Simplicity ↦ x.val.length :=
   fun _ _ h ↦ (eq_or_length_lt_of_le h.le).resolve_left h.ne
 
@@ -218,22 +208,6 @@ theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s 
     contrapose! H
     rw [← apply_ne_zero] at H
     rw [← apply_eq_of_le (hx ha) H, ← apply_eq_of_le (hx hb) H]
-
-instance : NoTopOrder Simplicity where
-  exists_not_le s := by
-    obtain rfl | hs := eq_or_ne s (.of ⊤)
-    · use .of ⊥
-      simp [of_le_of]
-    · use .of ⊤
-      contrapose hs
-      apply eq_of_ge_of_length_le hs
-      simp
-
-instance : OrderInfSet Simplicity where
-  isGLB_sInf_of_isGLB s x hx := by
-    obtain rfl | hs := s.eq_empty_or_nonempty
-    · simp at hx
-    · exact isGLB_sInf_of_nonempty hs
 
 instance : SemilatticeInf Simplicity :=
   .ofIsGLB _ fun a b ↦ isGLB_sInf_of_nonempty (by simp)
