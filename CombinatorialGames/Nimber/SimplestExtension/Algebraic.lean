@@ -117,10 +117,7 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
       cases n with
       | zero => simp
       | succ n =>
-        have hxn : val x ≤ val x ^ (n + 1) := by
-          rw [← opow_natCast]
-          exact left_le_opow _ (mod_cast n.succ_pos)
-        refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn le_rfl ?_
+        refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup le_rfl ?_
           @h.inv_lt fun a b ha hb ↦ ?_
         · convert hpk (n + 1)
           simpa using q.coeff_eq_zero_of_degree_lt hqn
