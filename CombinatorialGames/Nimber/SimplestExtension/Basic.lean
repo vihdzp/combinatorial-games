@@ -142,7 +142,7 @@ protected theorem IsGroup.sSup {s : Set Nimber} (H : ∀ x ∈ s, IsGroup x)
     have lub := isLUB_csSup ne bdd
     obtain ⟨x, hx⟩ := ne
     apply (H x hx).ne_zero
-    rw [← le_zero_iff, ← h]
+    rw [← nonpos_iff_eq_zero, ← h]
     exact lub.left hx
 
 protected theorem IsGroup.iSup {ι} [Nonempty ι] {f : ι → Nimber} (H : ∀ i, IsGroup (f i))
