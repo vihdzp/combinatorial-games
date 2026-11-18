@@ -55,6 +55,10 @@ theorem Order.add_one_ne_zero {α : Type*} [Add α] [Zero α] [One α] [PartialO
   rw [← succ_eq_add_one, ← bot_eq_zero]
   exact succ_ne_bot x
 
+theorem Order.le_add_one {α : Type*} [Preorder α] [Add α] [One α] [SuccAddOrder α]
+    (x : α) : x ≤ x + 1 :=
+  succ_eq_add_one x ▸ le_succ x
+
 public noncomputable section
 
 namespace Surreal.Cut
@@ -883,7 +887,7 @@ theorem exists_leftGame_rightGame_eq_birthday_le_of_le {x y : Cut} [x.Small] [y.
     refine ⟨g, hgl, hgr, ?_⟩
     rw [hgb, max_add]
     apply max_le_max_left
-    exact Order.succ_eq_add_one y.birthday ▸ Order.le_succ _
+    exact Order.le_add_one y.birthday
   · obtain ⟨g, hgl, hgr, hgb⟩ :=
       exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_left_right hx hy hxt hyb h
     exact ⟨g, hgl, hgr, hgb.le⟩
@@ -891,13 +895,13 @@ theorem exists_leftGame_rightGame_eq_birthday_le_of_le {x y : Cut} [x.Small] [y.
       exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_left hx hy h
     refine ⟨g, hgl, hgr, ?_⟩
     rw [hgb]
-    exact Order.succ_eq_add_one (max x.birthday y.birthday) ▸ Order.le_succ _
+    exact Order.le_add_one (max x.birthday y.birthday)
   · obtain ⟨g, hgl, hgr, hgb⟩ :=
       exists_leftGame_rightGame_eq_birthday_eq_of_le_of_player_eq_right_right hx hy hyb h
     refine ⟨g, hgl, hgr, ?_⟩
     rw [hgb, max_add]
     apply max_le_max_right
-    exact Order.succ_eq_add_one x.birthday ▸ Order.le_succ _
+    exact Order.le_add_one x.birthday
 
 end Surreal.Cut
 end
