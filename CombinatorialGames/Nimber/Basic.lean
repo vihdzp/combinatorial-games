@@ -141,7 +141,7 @@ theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
     · rfl
     · have hb : b + b = 0 := add_eq_zero.2 rfl
       rwa [← hb, add_left_inj] at hab
-  · rw [← le_zero_iff]
+  · rw [← nonpos_iff_eq_zero]
     apply add_le_of_forall_ne <;>
     simp_rw [ne_eq] <;>
     intro x hx

@@ -297,13 +297,17 @@ private theorem toIGame_lt_toIGame_aux {x y : Dyadic}
       by_cases hy' : y.den = 1
       · rw [hy', den_le_one_iff_eq_one] at hd
         exact (H ⟨hd, hy'⟩).elim
-      · exact (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (le_lower_of_lt hd h)).trans_lt hy
+      · grw [← hy]
+        apply map_le_of_lt_imp_le_of_le _ (le_lower_of_lt hd h)
+        exact fun h' ↦ (toIGame_lt_toIGame_aux h').le
     · have := numeric_upper x
       have hx := lt_upper_aux x
       by_cases hx' : x.den = 1
       · rw [hx', den_le_one_iff_eq_one] at hd
         exact (H ⟨hx', hd⟩).elim
-      · exact hx.trans_le (le_of_le_of_lt_of_lt toIGame_lt_toIGame_aux (upper_le_of_lt hd h))
+      · grw [hx]
+        apply map_le_of_lt_imp_le_of_le _ (upper_le_of_lt hd h)
+        exact fun h ↦ (toIGame_lt_toIGame_aux h).le
 termination_by (x.den, y.den)
 decreasing_by dyadic_wf
 

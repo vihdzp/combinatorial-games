@@ -143,7 +143,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · repeat rw [← le_zero_iff]
+  · repeat rw [← nonpos_iff_eq_zero]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
@@ -290,7 +290,7 @@ instance : CommMagma NatOrdinal where
   mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
-  rw [← le_zero_iff, mul_le_iff]
+  rw [← nonpos_iff_eq_zero, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where

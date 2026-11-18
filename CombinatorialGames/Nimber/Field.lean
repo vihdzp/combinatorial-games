@@ -95,10 +95,10 @@ theorem mul_le_of_forall_ne (h : ∀ a' < a, ∀ b' < b, a' * b + a * b' + a' * 
 
 instance : MulZeroClass Nimber where
   mul_zero a := by
-    rw [← le_zero_iff]
+    rw [← nonpos_iff_eq_zero]
     exact mul_le_of_forall_ne fun _ _ _ h ↦ (not_lt_zero h).elim
   zero_mul a := by
-    rw [← le_zero_iff]
+    rw [← nonpos_iff_eq_zero]
     exact mul_le_of_forall_ne fun _ h ↦ (not_lt_zero h).elim
 
 private theorem mul_ne_of_lt {a' : Nimber} (ha : a' < a) {b' : Nimber} (hb : b' < b) :
