@@ -65,11 +65,15 @@ theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → S
   mp := by simpa using @Pi.Lex.neg_lt_neg _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
-set_option backward.isDefEq.respectTransparency false in
+theorem Pi.Lex.neg_le_neg {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} (h : x ≤ y) :
+    -y ≤ -x :=
+  map_le_of_gt_imp_le_of_ge (fun h' ↦ (Pi.Lex.neg_lt_neg h').le) h
+
 @[simp]
-theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by
-  simp [← not_lt]
+theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x ≤ -y ↔ y ≤ x where
+  mp := by simpa using @Pi.Lex.neg_le_neg _ _ (-x) (-y)
+  mpr := Pi.Lex.neg_le_neg
 
 theorem Pi.Lex.neg_lt_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
     -x < y ↔ -y < x := by
@@ -79,12 +83,12 @@ theorem Pi.Lex.lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignT
     x < -y ↔ y < -x := by
   simpa using Pi.Lex.neg_lt_neg_iff (x := -x)
 
-theorem Pi.Lex.neg_le_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x ≤ y ↔ -y ≤ x := by
+theorem Pi.Lex.neg_le_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x ≤ y ↔ -y ≤ x := by
   simpa using Pi.Lex.neg_le_neg_iff (y := -y)
 
-theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : x ≤ -y ↔ y ≤ -x := by
+theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    x ≤ -y ↔ y ≤ -x := by
   simpa using Pi.Lex.neg_le_neg_iff (x := -x)
 
 /-! ### Sign expansions -/
