@@ -16,6 +16,8 @@ macro which contains all the boilerplate required to set up these types. This al
 API between both stays consistent.
 -/
 
+-- We don't make aliases of these, since the preferred spelling of `of (Nat.cast n)` is not the same
+-- for `NatOrdinal` and `Nimber`.
 public section
 namespace Ordinal
 
