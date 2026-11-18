@@ -303,6 +303,14 @@ theorem three_mul_three : ∗3 * ∗3 = ∗2 := by
 theorem three_sq : (∗3) ^ 2 = ∗2 := by
   simp [sq]
 
+@[simp]
+theorem two_pow_three : (∗2) ^ 3 = 1 := by
+  simp [pow_succ]
+
+@[simp]
+theorem three_pow_three : (∗3) ^ 3 = 1 := by
+  simp [pow_succ]
+
 /-! ### Nimber division -/
 
 mutual
