@@ -249,4 +249,28 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
     · apply h.ne
       simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
 
+@[simp]
+theorem one_add_two : 1 + ∗2 = ∗3 := by
+  simpa using add_nat 1 2
+
+@[simp]
+theorem two_add_one : ∗2 + 1 = ∗3 := by
+  rw [add_comm, one_add_two]
+
+@[simp]
+theorem one_add_three : 1 + ∗3 = ∗2 := by
+  simpa using add_nat 1 3
+
+@[simp]
+theorem three_add_one : ∗3 + 1 = ∗2 := by
+  rw [add_comm, one_add_three]
+
+@[simp]
+theorem two_add_three : ∗2 + ∗3 = 1 := by
+  simpa using add_nat 2 3
+
+@[simp]
+theorem three_add_two : ∗3 + ∗2 = 1 := by
+  rw [add_comm, two_add_three]
+
 end Nimber

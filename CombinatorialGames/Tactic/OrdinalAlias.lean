@@ -16,6 +16,48 @@ macro which contains all the boilerplate required to set up these types. This al
 API between both stays consistent.
 -/
 
+public section
+namespace Ordinal
+
+theorem forall_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x < (n : Ordinal), P x) ↔ (∀ x < n, P x) := by
+  trans ∀ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.forall_mem_image]
+    simp
+
+theorem exists_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x < (n : Ordinal), P x) ↔ (∃ x < n, P x) := by
+  trans ∃ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.exists_mem_image]
+    simp
+
+theorem forall_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x ≤ (n : Ordinal), P x) ↔ (∀ x ≤ n, P x) := by
+  simpa using Ordinal.forall_lt_natCast (n := n + 1)
+
+theorem exists_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x ≤ (n : Ordinal), P x) ↔ (∃ x ≤ n, P x) := by
+  simpa using Ordinal.exists_lt_natCast (n := n + 1)
+
+theorem lt_three_iff {x : Ordinal} : x < 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 := by
+  rw [← two_add_one_eq_three, Order.lt_add_one_iff, Order.le_two_iff]
+
+theorem le_three_iff {x : Ordinal} : x ≤ 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [le_iff_lt_or_eq, lt_three_iff]
+  tauto
+
+theorem lt_four_iff {x : Ordinal} : x < 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [← three_add_one_eq_four, Order.lt_add_one_iff, le_three_iff]
+
+theorem le_four_iff {x : Ordinal} : x ≤ 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 ∨ x = 4 := by
+  rw [le_iff_lt_or_eq, lt_four_iff]
+  tauto
+
+end Ordinal
+end
+
 open Lean
 
 /-! ### Auxiliary defs -/
@@ -93,6 +135,8 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 
 @[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+@[simp] theorem $(mkIdent `zero_eq_of) {a} : 0 = $(mkOf Alias) a ↔ 0 = a := .rfl
+@[simp] theorem $(mkIdent `zero_eq_val) {a} : 0 = $(mkVal Alias) a ↔ 0 = a := .rfl
 theorem $(mkIdent `of_ne_zero) {a} : $(mkOf Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 @[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
@@ -100,6 +144,8 @@ theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+@[simp] theorem $(mkIdent `one_eq_of) {a} : 1 = $(mkOf Alias) a ↔ 1 = a := .rfl
+@[simp] theorem $(mkIdent `one_eq_val) {a} : 1 = $(mkVal Alias) a ↔ 1 = a := .rfl
 theorem $(mkIdent `of_ne_one) {a} : $(mkOf Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 @[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
@@ -190,6 +236,39 @@ theorem $(mkIdent `Iio_one) : Set.Iio (1 : $Alias) = {0} := Order.Iio_one (α :=
 theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $(mkOf Alias) b) :
     ∃ c : ℕ, a = $(mkOf Alias) c :=
   Ordinal.eq_natCast_of_le_natCast h
+
+theorem $(mkIdent `forall_lt_natCast) {P : $Alias → Prop} {n : ℕ} :
+    (∀ x < ($(mkOf Alias) n), P x) ↔ (∀ x < n, P ($(mkOf Alias) x)) :=
+  Ordinal.forall_lt_natCast
+
+theorem $(mkIdent `exists_lt_natCast) {P : $Alias → Prop} {n : ℕ} :
+    (∃ x < ($(mkOf Alias) n), P x) ↔ (∃ x < n, P ($(mkOf Alias) x)) :=
+  Ordinal.exists_lt_natCast
+
+theorem $(mkIdent `forall_le_natCast) {P : $Alias → Prop} {n : ℕ} :
+    (∀ x ≤ ($(mkOf Alias) n), P x) ↔ (∀ x ≤ n, P ($(mkOf Alias) x)) :=
+  Ordinal.forall_le_natCast
+
+theorem $(mkIdent `exists_le_natCast) {P : $Alias → Prop} {n : ℕ} :
+    (∃ x ≤ ($(mkOf Alias) n), P x) ↔ (∃ x ≤ n, P ($(mkOf Alias) x)) :=
+  Ordinal.exists_le_natCast
+
+theorem $(mkIdent `lt_three_iff) {x : $Alias} :
+    x < $(mkOf Alias) 3 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 :=
+  Ordinal.lt_three_iff
+
+theorem $(mkIdent `le_three_iff) {x : $Alias} :
+    x ≤ $(mkOf Alias) 3 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 :=
+  Ordinal.le_three_iff
+
+theorem $(mkIdent `lt_four_iff) {x : $Alias} :
+    x < $(mkOf Alias) 4 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 :=
+  Ordinal.lt_four_iff
+
+theorem $(mkIdent `le_four_iff) {x : $Alias} :
+    x ≤ $(mkOf Alias) 4 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 ∨
+      x = $(mkOf Alias) 4 :=
+  Ordinal.le_four_iff
 
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
