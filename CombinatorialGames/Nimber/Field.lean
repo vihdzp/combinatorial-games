@@ -14,7 +14,6 @@ public import Mathlib.SetTheory.Ordinal.Arithmetic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
 import Mathlib.Tactic.Abel
-import Mathlib.Tactic.IntervalCases
 import Mathlib.Tactic.Ring.RingNF
 
 /-!

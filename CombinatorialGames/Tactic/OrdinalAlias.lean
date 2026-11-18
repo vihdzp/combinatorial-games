@@ -237,39 +237,6 @@ theorem $(mkIdent `eq_natCast_of_le_natCast) {a : $Alias} {b : ℕ} (h : a ≤ $
     ∃ c : ℕ, a = $(mkOf Alias) c :=
   Ordinal.eq_natCast_of_le_natCast h
 
-theorem $(mkIdent `forall_lt_natCast) {P : $Alias → Prop} {n : ℕ} :
-    (∀ x < ($(mkOf Alias) n), P x) ↔ (∀ x < n, P ($(mkOf Alias) x)) :=
-  Ordinal.forall_lt_natCast
-
-theorem $(mkIdent `exists_lt_natCast) {P : $Alias → Prop} {n : ℕ} :
-    (∃ x < ($(mkOf Alias) n), P x) ↔ (∃ x < n, P ($(mkOf Alias) x)) :=
-  Ordinal.exists_lt_natCast
-
-theorem $(mkIdent `forall_le_natCast) {P : $Alias → Prop} {n : ℕ} :
-    (∀ x ≤ ($(mkOf Alias) n), P x) ↔ (∀ x ≤ n, P ($(mkOf Alias) x)) :=
-  Ordinal.forall_le_natCast
-
-theorem $(mkIdent `exists_le_natCast) {P : $Alias → Prop} {n : ℕ} :
-    (∃ x ≤ ($(mkOf Alias) n), P x) ↔ (∃ x ≤ n, P ($(mkOf Alias) x)) :=
-  Ordinal.exists_le_natCast
-
-theorem $(mkIdent `lt_three_iff) {x : $Alias} :
-    x < $(mkOf Alias) 3 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 :=
-  Ordinal.lt_three_iff
-
-theorem $(mkIdent `le_three_iff) {x : $Alias} :
-    x ≤ $(mkOf Alias) 3 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 :=
-  Ordinal.le_three_iff
-
-theorem $(mkIdent `lt_four_iff) {x : $Alias} :
-    x < $(mkOf Alias) 4 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 :=
-  Ordinal.lt_four_iff
-
-theorem $(mkIdent `le_four_iff) {x : $Alias} :
-    x ≤ $(mkOf Alias) 4 ↔ x = 0 ∨ x = 1 ∨ x = $(mkOf Alias) 2 ∨ x = $(mkOf Alias) 3 ∨
-      x = $(mkOf Alias) 4 :=
-  Ordinal.le_four_iff
-
 instance (a : $Alias.{u}) : Small.{u} (Set.Iio a) := Ordinal.small_Iio a
 instance (a : $Alias.{u}) : Small.{u} (Set.Iic a) := Ordinal.small_Iic a
 instance (a b : $Alias.{u}) : Small.{u} (Set.Ico a b) := Ordinal.small_Ico a b

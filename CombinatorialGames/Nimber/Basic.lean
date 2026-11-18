@@ -62,7 +62,21 @@ attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff one_le_val
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
 @[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Order.Iio_two (α := Ordinal)
-theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
+
+theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 :=
+  Set.ext_iff.1 Iio_two x
+
+theorem lt_three_iff {x : Nimber} : x < ∗3 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 :=
+  Ordinal.lt_three_iff
+
+theorem le_three_iff {x : Nimber} : x ≤ ∗3 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 :=
+  Ordinal.le_three_iff
+
+theorem lt_four_iff {x : Nimber} : x < ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 :=
+  Ordinal.lt_four_iff
+
+theorem le_four_iff {x : Nimber} : x ≤ ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 ∨ x = ∗4 :=
+  Ordinal.le_four_iff
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
 
