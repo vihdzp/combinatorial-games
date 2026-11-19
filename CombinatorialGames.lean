@@ -33,6 +33,7 @@ public import CombinatorialGames.Mathlib.EtaSet
 public import CombinatorialGames.Mathlib.FourFactorRefinement
 public import CombinatorialGames.Mathlib.Polynomial.GeneratingRows
 public import CombinatorialGames.Mathlib.Polynomial.OrderedReadings
+public import CombinatorialGames.Mathlib.Polynomial.TranslatedPowers
 public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.Subring.RescaleFactors
@@ -87,6 +88,8 @@ public import CombinatorialGames.Surreal.Scale.Basic
 public import CombinatorialGames.Surreal.Scale.Growth
 public import CombinatorialGames.Surreal.Scale.Limit
 public import CombinatorialGames.Surreal.Scale.OptionGaps
+public import CombinatorialGames.Surreal.Scale.RoundedPowers
+public import CombinatorialGames.Surreal.Scale.RoundedProduct
 public import CombinatorialGames.Surreal.Scale.Rounding
 public import CombinatorialGames.Tactic.AddInstances
 public import CombinatorialGames.Tactic.GameCmp
