@@ -57,6 +57,9 @@ public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut
 public import CombinatorialGames.Surreal.Birthday.Dyadic
+public import CombinatorialGames.Surreal.Birthday.Simplicity
+public import CombinatorialGames.Surreal.Coset.Arithmetic
+public import CombinatorialGames.Surreal.Coset.Basic
 public import CombinatorialGames.Surreal.Cut
 public import CombinatorialGames.Surreal.Division
 public import CombinatorialGames.Surreal.Dyadic
@@ -64,6 +67,11 @@ public import CombinatorialGames.Surreal.HahnSeries.Basic
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
 public import CombinatorialGames.Surreal.Omnific.Basic
+public import CombinatorialGames.Surreal.Omnific.Coset
+public import CombinatorialGames.Surreal.Omnific.Divisibility
+public import CombinatorialGames.Surreal.Omnific.Order
+public import CombinatorialGames.Surreal.Omnific.Refinement.Integer
+public import CombinatorialGames.Surreal.Omnific.Residue
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
