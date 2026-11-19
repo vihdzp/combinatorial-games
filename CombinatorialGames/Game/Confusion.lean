@@ -91,9 +91,8 @@ theorem confusionInterval_switch_of_numeric (x : IGame) [x.Numeric] :
   · rw [confusionInterval, leftGame_switch_of_numeric hx, rightGame_switch_of_numeric hx]
     ext
     simp
-  · rw [Game.mk_eq <| IGame.switch_equiv_zero hx, Set.Icc_eq_empty]
-    · simp
-    · simpa [← Surreal.mk_lt_mk] using hx
+  · rw [Game.mk_eq <| IGame.switch_equiv_zero hx, eq_comm]
+    simpa [Set.Icc_eq_empty_iff, ← Surreal.mk_lt_mk] using hx
 
 end Game
 end
