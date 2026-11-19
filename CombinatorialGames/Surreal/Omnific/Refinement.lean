@@ -25,6 +25,8 @@ are multiples of one row of least horizontal level. Rounding the horizontal quot
 multiplier. When there is no least class, a refinement of four germs holds at one common cutoff.
 Rescaling makes the factors whole. The complementary divisor retains precisely the classes
 strictly above the cutoff.
+
+The accompanying `Refinement.md` gives the mathematical argument and links to its main lemmas.
 -/
 
 universe u
