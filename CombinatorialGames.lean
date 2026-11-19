@@ -60,6 +60,8 @@ public import CombinatorialGames.Surreal.Birthday.Dyadic
 public import CombinatorialGames.Surreal.Birthday.Simplicity
 public import CombinatorialGames.Surreal.Coset.Arithmetic
 public import CombinatorialGames.Surreal.Coset.Basic
+public import CombinatorialGames.Surreal.Coset.PolynomialDivision
+public import CombinatorialGames.Surreal.Coset.ResidueField
 public import CombinatorialGames.Surreal.Cut
 public import CombinatorialGames.Surreal.Division
 public import CombinatorialGames.Surreal.Dyadic
@@ -75,6 +77,8 @@ public import CombinatorialGames.Surreal.Omnific.Residue
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
+public import CombinatorialGames.Surreal.Scale.Basic
+public import CombinatorialGames.Surreal.Scale.Rounding
 public import CombinatorialGames.Tactic.AddInstances
 public import CombinatorialGames.Tactic.GameCmp
 public import CombinatorialGames.Tactic.OrdinalAlias
