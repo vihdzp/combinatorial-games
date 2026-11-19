@@ -68,6 +68,10 @@ public import CombinatorialGames.Surreal.Coset.ResidueField
 public import CombinatorialGames.Surreal.Cut
 public import CombinatorialGames.Surreal.Division
 public import CombinatorialGames.Surreal.Dyadic
+public import CombinatorialGames.Surreal.Germ.Basic
+public import CombinatorialGames.Surreal.Germ.Polynomial
+public import CombinatorialGames.Surreal.Germ.Readings
+public import CombinatorialGames.Surreal.Germ.Transcendence
 public import CombinatorialGames.Surreal.HahnSeries.Basic
 public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
@@ -77,10 +81,12 @@ public import CombinatorialGames.Surreal.Omnific.Denominator
 public import CombinatorialGames.Surreal.Omnific.Divisibility
 public import CombinatorialGames.Surreal.Omnific.GrowthInduction
 public import CombinatorialGames.Surreal.Omnific.Order
+public import CombinatorialGames.Surreal.Omnific.Refinement
 public import CombinatorialGames.Surreal.Omnific.Refinement.AtScale
 public import CombinatorialGames.Surreal.Omnific.Refinement.InfinitesimalExponent
 public import CombinatorialGames.Surreal.Omnific.Refinement.Integer
 public import CombinatorialGames.Surreal.Omnific.Refinement.LeastClass
+public import CombinatorialGames.Surreal.Omnific.Refinement.Limit
 public import CombinatorialGames.Surreal.Omnific.Rescaling
 public import CombinatorialGames.Surreal.Omnific.Residue
 public import CombinatorialGames.Surreal.Ordinal
@@ -108,3 +114,4 @@ public import CombinatorialGames.Tactic.GameCmp
 public import CombinatorialGames.Tactic.OrdinalAlias
 public import CombinatorialGames.Tactic.Register
 public import CombinatorialGames.Test.GameCmp
+public import CombinatorialGames.Test.OmnificRefinement
