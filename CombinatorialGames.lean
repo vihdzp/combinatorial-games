@@ -27,6 +27,7 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Game.Stops
+public import CombinatorialGames.Mathlib.AddMonoidAlgebra.GeneratingRows
 public import CombinatorialGames.Mathlib.ConvexSubgroup
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
@@ -79,6 +80,7 @@ public import CombinatorialGames.Surreal.Omnific.Order
 public import CombinatorialGames.Surreal.Omnific.Refinement.AtScale
 public import CombinatorialGames.Surreal.Omnific.Refinement.InfinitesimalExponent
 public import CombinatorialGames.Surreal.Omnific.Refinement.Integer
+public import CombinatorialGames.Surreal.Omnific.Refinement.LeastClass
 public import CombinatorialGames.Surreal.Omnific.Rescaling
 public import CombinatorialGames.Surreal.Omnific.Residue
 public import CombinatorialGames.Surreal.Ordinal
@@ -88,8 +90,10 @@ public import CombinatorialGames.Surreal.Scale.Basic
 public import CombinatorialGames.Surreal.Scale.Bounded.Adjunction
 public import CombinatorialGames.Surreal.Scale.Bounded.Basic
 public import CombinatorialGames.Surreal.Scale.Bounded.Leaders
+public import CombinatorialGames.Surreal.Scale.Bounded.LeastRow
 public import CombinatorialGames.Surreal.Scale.Bounded.Polynomial
 public import CombinatorialGames.Surreal.Scale.Bounded.Precision
+public import CombinatorialGames.Surreal.Scale.Bounded.Prefix
 public import CombinatorialGames.Surreal.Scale.Bounded.Readings
 public import CombinatorialGames.Surreal.Scale.Bounded.Recovery
 public import CombinatorialGames.Surreal.Scale.Growth
