@@ -28,10 +28,6 @@ Among other things, we prove that every non-zero surreal number is commensurate 
   `-ω` is commensurate to `ω`.
 - The order in `ArchimedeanClass` is defined so that the equivalence class of `0` is the **largest**
   equivalence class, rather than the smallest.
-
-## Todo
-
-- Define the normal form of a surreal number.
 -/
 
 universe u
@@ -48,6 +44,10 @@ theorem Set.image2_eq_range {α β γ : Type*} (f : α → β → γ) (s : Set �
   aesop
 
 namespace ArchimedeanClass
+
+@[simp]
+theorem mk_realCast {r : ℝ} (h : r ≠ 0) : mk (r : Surreal) = 0 := by
+  simpa using mk_map_of_archimedean Real.toSurrealRingHom.toOrderAddMonoidHom h
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
     mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
@@ -353,9 +353,21 @@ theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     simp [← Surreal.mk_le_mk, mulOption] at this ⊢
     linarith only [this]
 
+instance (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    Numeric !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
+  apply Numeric.mk
+  · aesop (add safe tactic (by order))
+  · aesop (add safe tactic (by infer_instance))
+
 theorem wpow_mul_realCast_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     ω^ x * r ≈ !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
   simpa [mul_comm] using realCast_mul_wpow_equiv r x
+
+instance (r : ℝ) (x : IGame.{u}) [Numeric x] :
+    Numeric !{(fun s : ℝ ↦ ω^ x * s) '' Iio r | (fun s : ℝ ↦ ω^ x * s) '' Ioi r} := by
+  apply Numeric.mk
+  · aesop (add safe tactic (by order))
+  · aesop (add safe tactic (by infer_instance))
 
 private theorem mulOption_lt_wpow {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
     (h₁ : x < z) (h₂ : y < w) (IH₁ : ω^ (x + w) ≈ ω^ x * ω^ w)
@@ -557,10 +569,6 @@ theorem mul_wpow_lt_mul_wpow_of_neg {r : ℝ} (s : ℝ) (hr : r < 0) (h : y < x)
 /-! ### Archimedean classes -/
 
 open ArchimedeanClass
-
-@[simp]
-theorem mk_realCast {r : ℝ} (hr : r ≠ 0) : ArchimedeanClass.mk (r : Surreal) = 0 :=
-  mk_map_of_archimedean' Real.toSurrealRingHom hr
 
 /-- We define a `ValuativeRel` instance on `Surreal` which is compatible with
 `ArchimedeanClass.addValuation`. In particular, you can write `x =ᵥ y` to mean that `x` is
@@ -830,12 +838,28 @@ theorem wlog_le_wlog_of_vle (hx : x ≠ 0) (h : x ≤ᵥ y) : wlog x ≤ wlog y 
   obtain rfl | hy := eq_or_ne y 0; · simp_all
   rwa [wlog_le_wlog_iff hx hy]
 
+@[simp]
+theorem wlog_le_iff (h : x ≠ 0) : wlog x ≤ y ↔ x ≤ᵥ ω^ y := by
+  rw [← wlog_le_wlog_iff h (wpow_ne_zero _), wlog_wpow]
+
+@[simp]
+theorem le_wlog_iff (h : y ≠ 0) : x ≤ wlog y ↔ ω^ x ≤ᵥ y := by
+  rw [← wlog_le_wlog_iff (wpow_ne_zero _) h, wlog_wpow]
+
 theorem wlog_lt_wlog_iff (hx : x ≠ 0) (hy : y ≠ 0) : wlog x < wlog y ↔ x <ᵥ y := by
   rw [← not_le, wlog_le_wlog_iff hy hx, ValuativeRel.not_vle]
 
 theorem wlog_lt_wlog_of_vlt (hx : x ≠ 0) (h : x <ᵥ y) : wlog x < wlog y := by
   obtain rfl | hy := eq_or_ne y 0; · simp at h
   rwa [wlog_lt_wlog_iff hx hy]
+
+@[simp]
+theorem wlog_lt_iff (h : x ≠ 0) : wlog x < y ↔ x <ᵥ ω^ y := by
+  rw [← wlog_lt_wlog_iff h (wpow_ne_zero _), wlog_wpow]
+
+@[simp]
+theorem lt_wlog_iff (h : y ≠ 0) : x < wlog y ↔ ω^ x <ᵥ y := by
+  rw [← wlog_lt_wlog_iff (wpow_ne_zero _) h, wlog_wpow]
 
 @[simp]
 theorem wlog_mul {x y : Surreal} (hx : x ≠ 0) (hy : y ≠ 0) : wlog (x * y) = wlog x + wlog y := by
