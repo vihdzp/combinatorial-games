@@ -35,6 +35,7 @@ public import CombinatorialGames.Mathlib.Polynomial.GeneratingRows
 public import CombinatorialGames.Mathlib.Polynomial.OrderedReadings
 public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
+public import CombinatorialGames.Mathlib.Subring.RescaleFactors
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
 public import CombinatorialGames.NatOrdinal.Basic
@@ -72,12 +73,15 @@ public import CombinatorialGames.Surreal.Omnific.Basic
 public import CombinatorialGames.Surreal.Omnific.Coset
 public import CombinatorialGames.Surreal.Omnific.Divisibility
 public import CombinatorialGames.Surreal.Omnific.Order
+public import CombinatorialGames.Surreal.Omnific.Refinement.InfinitesimalExponent
 public import CombinatorialGames.Surreal.Omnific.Refinement.Integer
+public import CombinatorialGames.Surreal.Omnific.Rescaling
 public import CombinatorialGames.Surreal.Omnific.Residue
 public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
 public import CombinatorialGames.Surreal.Scale.Basic
+public import CombinatorialGames.Surreal.Scale.OptionGaps
 public import CombinatorialGames.Surreal.Scale.Rounding
 public import CombinatorialGames.Tactic.AddInstances
 public import CombinatorialGames.Tactic.GameCmp
