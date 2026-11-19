@@ -9,6 +9,7 @@ public import CombinatorialGames.Nimber.Basic
 public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
+public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
@@ -258,6 +259,56 @@ theorem pow_le_of_forall_ne {a b : Nimber} {n : ℕ}
     ring_nf
     rw [CharTwo.two_eq_zero, mul_zero, add_zero]
 
+protected theorem sq_eq_one_iff {x : Nimber} : x ^ 2 = 1 ↔ x = 1 := by simp
+@[simp] protected theorem one_eq_sq_iff {x : Nimber} : 1 = x ^ 2 ↔ 1 = x := by simp [eq_comm]
+
+@[simp] protected theorem mul_self_eq_one_iff {x : Nimber} : x * x = 1 ↔ x = 1 := by simp [← sq]
+@[simp] protected theorem one_eq_mul_self_iff {x : Nimber} : 1 = x * x ↔ 1 = x := by simp [← sq]
+
+@[simp]
+theorem two_mul_two : ∗2 * ∗2 = ∗3 := by
+  apply le_antisymm
+  · apply mul_le_of_forall_ne
+    simp [lt_two_iff]
+  · apply le_of_forall_lt_imp_ne
+    simp [lt_three_iff]
+
+@[simp]
+theorem two_sq : (∗2) ^ 2 = ∗3 := by
+  simp [sq]
+
+@[simp]
+theorem two_mul_three : ∗2 * ∗3 = 1 := by
+  apply le_antisymm
+  · apply mul_le_of_forall_ne
+    simp [lt_two_iff, lt_three_iff]
+  · apply le_of_forall_lt_imp_ne
+    simp
+
+@[simp]
+theorem three_mul_two : ∗3 * ∗2 = 1 := by
+  rw [mul_comm, two_mul_three]
+
+@[simp]
+theorem three_mul_three : ∗3 * ∗3 = ∗2 := by
+  apply le_antisymm
+  · apply mul_le_of_forall_ne
+    simp [lt_three_iff]
+  · apply le_of_forall_lt_imp_ne
+    simp [lt_two_iff]
+
+@[simp]
+theorem three_sq : (∗3) ^ 2 = ∗2 := by
+  simp [sq]
+
+@[simp]
+theorem two_pow_three : (∗2) ^ 3 = 1 := by
+  simp [pow_succ]
+
+@[simp]
+theorem three_pow_three : (∗3) ^ 3 = 1 := by
+  simp [pow_succ]
+
 /-! ### Nimber division -/
 
 mutual
@@ -368,6 +419,14 @@ instance : Field Nimber where
   inv_zero := by exact dite_eq_left rfl
   nnqsmul := _
   qsmul := _
+
+@[simp]
+theorem inv_two : (∗2)⁻¹ = ∗3 :=
+  inv_eq_of_mul_eq_one_left three_mul_two
+
+@[simp]
+theorem inv_three : (∗3)⁻¹ = ∗2 :=
+  inv_eq_of_mul_eq_one_left two_mul_three
 
 -- TODO: PR this
 section Mathlib

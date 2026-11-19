@@ -238,6 +238,11 @@ theorem IsGroup.two_opow (x : Ordinal) : IsGroup (∗2 ^ x) := by
 termination_by x
 
 @[simp]
+theorem IsGroup.two_pow (n : ℕ) : IsGroup (∗2 ^ n) := by
+  rw [← opow_natCast]
+  exact IsGroup.two_opow n
+
+@[simp]
 theorem IsGroup.omega0_opow (x : Ordinal) : IsGroup (∗ω ^ x) := by
   rw [← natCast_opow_omega0 one_lt_two, ← opow_mul]
   exact .two_opow _
@@ -247,6 +252,9 @@ theorem IsGroup.omega0 : IsGroup (∗ω) := by
   simpa using IsGroup.omega0_opow 1
 
 @[simp] theorem IsGroup.two : IsGroup (∗2) := by simpa using IsGroup.two_opow 1
+@[simp] theorem IsGroup.four : IsGroup (∗4) := by
+  rw [← Nat.cast_ofNat, ← show 2 * 2 = (4 : ℕ) by decide, natCast_mul]
+  simp [← sq]
 
 theorem two_opow_log_add {o : Ordinal} (ho : o ≠ 0) : ∗(2 ^ log 2 o) + ∗(o % 2 ^ log 2 o) = ∗o :=
   ((IsGroup.two_opow _).add_eq_of_lt (mod_lt _ (opow_ne_zero _ two_ne_zero))).symm.trans
@@ -343,9 +351,15 @@ theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
 
 @[simp]
 theorem IsRing.two : IsRing (∗2) where
-  ne_one := by rw [← of_one, of.eq_iff_eq.ne]; simp
-  mul_lt := by simp_rw [lt_two_iff]; aesop
+  ne_one := by simp
+  mul_lt := by simp +contextual [lt_two_iff, or_imp]
   __ := IsGroup.two
+
+@[simp]
+theorem IsRing.four : IsRing (∗4) where
+  ne_one := by simp
+  mul_lt := by simp +contextual [lt_four_iff, or_imp]
+  __ := IsGroup.four
 
 /-- `Iio x` as a subring of `Nimber`. -/
 @[implicit_reducible]
@@ -482,6 +496,11 @@ theorem IsField.div_lt (h : IsField x) (hy : y < x) (hz : z < x) : y / z < x :=
 theorem IsField.two : IsField (∗2) where
   inv_lt' := by simp [lt_two_iff]
   __ := IsRing.two
+
+@[simp]
+theorem IsField.four : IsField (∗4) where
+  inv_lt' := by simp +contextual [lt_four_iff, or_imp]
+  __ := IsRing.four
 
 /-- `Iio x` as a subring of `Nimber`. -/
 @[implicit_reducible]
