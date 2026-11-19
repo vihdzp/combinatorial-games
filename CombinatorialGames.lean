@@ -71,8 +71,11 @@ public import CombinatorialGames.Surreal.Leading
 public import CombinatorialGames.Surreal.Multiplication
 public import CombinatorialGames.Surreal.Omnific.Basic
 public import CombinatorialGames.Surreal.Omnific.Coset
+public import CombinatorialGames.Surreal.Omnific.Denominator
 public import CombinatorialGames.Surreal.Omnific.Divisibility
+public import CombinatorialGames.Surreal.Omnific.GrowthInduction
 public import CombinatorialGames.Surreal.Omnific.Order
+public import CombinatorialGames.Surreal.Omnific.Refinement.AtScale
 public import CombinatorialGames.Surreal.Omnific.Refinement.InfinitesimalExponent
 public import CombinatorialGames.Surreal.Omnific.Refinement.Integer
 public import CombinatorialGames.Surreal.Omnific.Rescaling
@@ -81,6 +84,8 @@ public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
 public import CombinatorialGames.Surreal.Scale.Basic
+public import CombinatorialGames.Surreal.Scale.Growth
+public import CombinatorialGames.Surreal.Scale.Limit
 public import CombinatorialGames.Surreal.Scale.OptionGaps
 public import CombinatorialGames.Surreal.Scale.Rounding
 public import CombinatorialGames.Tactic.AddInstances
