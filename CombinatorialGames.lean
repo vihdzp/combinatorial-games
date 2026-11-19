@@ -27,8 +27,12 @@ public import CombinatorialGames.Game.Specific.Domineering
 public import CombinatorialGames.Game.Specific.Nim
 public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Game.Stops
+public import CombinatorialGames.Mathlib.ConvexSubgroup
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
+public import CombinatorialGames.Mathlib.FourFactorRefinement
+public import CombinatorialGames.Mathlib.Polynomial.GeneratingRows
+public import CombinatorialGames.Mathlib.Polynomial.OrderedReadings
 public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
