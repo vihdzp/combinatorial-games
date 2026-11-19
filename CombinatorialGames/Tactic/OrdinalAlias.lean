@@ -80,7 +80,7 @@ macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 
 $doc:docComment
 def $Alias : Type _ :=
-  $Source deriving Zero, One, Nontrivial, Inhabited, WellFoundedRelation
+  $Source deriving Zero, One, Nontrivial, Inhabited
 
 namespace $Alias
 universe u
@@ -94,6 +94,7 @@ instance : NeZero (1 : $Alias) := inferInstanceAs (NeZero (1 : $Source))
 instance : WellFoundedLT $Alias := inferInstanceAs (WellFoundedLT $Source)
 noncomputable instance : ConditionallyCompleteLinearOrderBot $Alias :=
   inferInstanceAs (ConditionallyCompleteLinearOrderBot $Source)
+instance : WellFoundedRelation $Alias := WellFoundedLT.toWellFoundedRelation
 
 theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
