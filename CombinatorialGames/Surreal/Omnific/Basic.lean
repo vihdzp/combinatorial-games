@@ -208,10 +208,41 @@ theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : �
   refine exists_congr fun _ ↦ ?_
   norm_cast
 
-/-- This seemingly innocuous theorem seems to require the result that any surreal is at distance at
-most 1 from an omnific integer, which itself seems to require the characterization in the module
-docstring. -/
-proof_wanted IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific
+/-- Rounding a surreal at unit radius gives an omnific integer. -/
+theorem IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific := by
+  let y := x.round 1
+  change y.round 1 = y
+  have hy : y ∈ Ioo (x - 1) (x + 1) := by
+    dsimp [y]
+    rw [round_of_pos zero_lt_one]
+    exact ⟨lt_ofSets_of_mem_left (mem_singleton _), ofSets_lt_of_mem_right (mem_singleton _)⟩
+  have birthday_lt_of_mem (w : Surreal) (hw : w ∈ Ioo (x - 1) (x + 1)) (hne : y ≠ w) :
+      y.birthday < w.birthday := by
+    dsimp [y] at hne ⊢
+    rw [round_of_pos zero_lt_one] at hne ⊢
+    exact birthday_ofSets_lt_of_btwn (by simpa using hw.1) (by simpa using hw.2) hne
+  apply round_eq_of_forall_birthday_le
+  · exact ⟨sub_lt_self _ zero_lt_one, lt_add_of_pos_right _ zero_lt_one⟩
+  intro z hz
+  by_contra! hb
+  have hsucc : z.birthday + 1 ≤ y.birthday := Order.add_one_le_iff.mpr hb
+  -- A simpler candidate outside the original interval is moved inside by one unit,
+  -- increasing its birthday by at most one.
+  rcases lt_or_ge (x - 1) z with hl | hl
+  · rcases lt_or_ge z (x + 1) with hr | hr
+    · exact hb.not_ge (birthday_round_le ⟨hl, hr⟩)
+    · have hzy : z - 1 < y := sub_lt_iff_lt_add.mpr hz.2
+      have hzx : x ≤ z - 1 := le_sub_iff_add_le.mpr hr
+      have hmem : z - 1 ∈ Ioo (x - 1) (x + 1) :=
+        ⟨(sub_lt_self _ zero_lt_one).trans_le hzx, hzy.trans hy.2⟩
+      exact (birthday_lt_of_mem _ hmem hzy.ne').not_ge <|
+        (birthday_sub_le z 1).trans (by simpa only [birthday_one] using hsucc)
+  · have hyz : y < z + 1 := sub_lt_iff_lt_add.mp hz.1
+    have hzx : z + 1 ≤ x := le_sub_iff_add_le.mp hl
+    have hmem : z + 1 ∈ Ioo (x - 1) (x + 1) :=
+      ⟨hy.1.trans hyz, hzx.trans_lt (lt_add_of_pos_right _ zero_lt_one)⟩
+    exact (birthday_lt_of_mem _ hmem hyz.ne).not_ge <|
+      (birthday_add_le z 1).trans (by simpa only [birthday_one] using hsucc)
 
 end Surreal
 end
