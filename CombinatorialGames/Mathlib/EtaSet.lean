@@ -89,7 +89,8 @@ protected theorem denselyOrdered (hc : 1 < c) (h : IsEta c α) : DenselyOrdered 
 protected theorem noMinOrder (hc : 1 < c) (h : IsEta c α) : NoMinOrder α where
   exists_lt x := by simpa [hc, hc.pos] using @h ∅ {x}
 
-protected theorem infinite (hc : 1 < c) (h : IsEta c α) [Nonempty α] : Infinite α :=
+protected theorem infinite (hc : 1 < c) (h : IsEta c α) : Infinite α :=
+  have := h.nonempty hc.ne_zero
   h.noMinOrder hc |>.infinite
 
 private theorem of_isEta_iso (e : α ≃o β) : IsEta c α → IsEta c β := fun H s t hs ht hsep ↦ by
