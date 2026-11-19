@@ -85,8 +85,16 @@ public import CombinatorialGames.Surreal.Ordinal
 public import CombinatorialGames.Surreal.Pow
 public import CombinatorialGames.Surreal.Real
 public import CombinatorialGames.Surreal.Scale.Basic
+public import CombinatorialGames.Surreal.Scale.Bounded.Adjunction
+public import CombinatorialGames.Surreal.Scale.Bounded.Basic
+public import CombinatorialGames.Surreal.Scale.Bounded.Leaders
+public import CombinatorialGames.Surreal.Scale.Bounded.Polynomial
+public import CombinatorialGames.Surreal.Scale.Bounded.Precision
+public import CombinatorialGames.Surreal.Scale.Bounded.Readings
+public import CombinatorialGames.Surreal.Scale.Bounded.Recovery
 public import CombinatorialGames.Surreal.Scale.Growth
 public import CombinatorialGames.Surreal.Scale.Limit
+public import CombinatorialGames.Surreal.Scale.MonoidAlgebra
 public import CombinatorialGames.Surreal.Scale.OptionGaps
 public import CombinatorialGames.Surreal.Scale.RoundedPowers
 public import CombinatorialGames.Surreal.Scale.RoundedProduct

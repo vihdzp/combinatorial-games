@@ -6,14 +6,22 @@ Authors: CombinatorialGames contributors
 module
 
 public import Mathlib.RingTheory.AlgebraicIndependent.Transcendental
+public import Mathlib.Order.Prod.Lex.Basic
 
 import CombinatorialGames.Mathlib.FourFactorRefinement
 import Mathlib.Algebra.MvPolynomial.NoZeroDivisors
 import Mathlib.Algebra.MvPolynomial.Supported
+import Mathlib.Data.Finset.Max
+import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.Tactic.TypeStar
 
 /-!
-# Finite coordinates in a polynomial algebra
+# Polynomial coordinates from ordered readings
+
+Read the entries in order, and read each entry from higher precision to lower precision.
+Keep exactly the values outside the algebra of all preceding values. A polynomial relation
+uses finitely many readings and therefore has a last one. For spanning, a first reading
+missing from the generated algebra would itself have been kept.
 -/
 
 public noncomputable section
@@ -22,7 +30,99 @@ namespace Algebra
 
 open Set
 
-variable {R A : Type*} [CommRing R] [CommRing A] [Algebra R A]
+variable {R A ι P : Type*} [CommRing R] [CommRing A] [Algebra R A]
+  [LinearOrder ι] [WellFoundedLT ι] [LinearOrder P]
+
+/-- Entries already visited, including the higher precisions of the current entry. -/
+def earlierReadings (v : ι → P → A) (i : ι) (t : P) : Set A :=
+  {a | ∃ j s, (j < i ∨ j = i ∧ t < s) ∧ v j s = a}
+
+omit [CommRing A] [WellFoundedLT ι] in
+theorem mem_earlierReadings {v : ι → P → A} {i : ι} {t : P} {a : A} :
+    a ∈ earlierReadings v i t ↔ ∃ j s, (j < i ∨ j = i ∧ t < s) ∧ v j s = a := Iff.rfl
+
+/-- Readings whose predecessors cannot express them as a polynomial. -/
+def selectedReadings (R : Type*) [CommRing R] [Algebra R A] (v : ι → P → A) : Set A :=
+  {a | ∃ i t, v i t ∉ adjoin R (earlierReadings v i t) ∧ v i t = a}
+
+omit [WellFoundedLT ι] in
+theorem mem_selectedReadings {v : ι → P → A} {a : A} :
+    a ∈ selectedReadings R v ↔ ∃ i t, v i t ∉ adjoin R (earlierReadings v i t) ∧ v i t = a :=
+  Iff.rfl
+
+omit [CommRing A] [WellFoundedLT ι] in
+theorem earlierReadings_of_isBot (v : ι → P → A) {i : ι} (hi : IsBot i) (t : P) :
+    earlierReadings v i t = v i '' Ioi t := by
+  ext a
+  constructor
+  · rintro ⟨j, s, hj | ⟨rfl, hs⟩, rfl⟩
+    · exact (hj.not_ge (hi j)).elim
+    · exact ⟨s, hs, rfl⟩
+  · rintro ⟨s, hs, rfl⟩
+    exact ⟨i, s, Or.inr ⟨rfl, hs⟩, rfl⟩
+
+private theorem independent_of_earlier {J : Type*} [LinearOrder J] (v : J → A)
+    (hinj : Function.Injective (algebraMap R A))
+    (h : ∀ j, Transcendental (adjoin R (v '' Iio j)) (v j)) : AlgebraicIndependent R v := by
+  classical
+  apply algebraicIndependent_of_finite_type
+  intro t hfin
+  suffices aux : ∀ s : Finset J, AlgebraicIndepOn R v (s : Set J) by
+    simpa using aux hfin.toFinset
+  intro s
+  induction s using Finset.induction_on_max with
+  | empty =>
+    rw [Finset.coe_empty]
+    exact algebraicIndependent_empty_type_iff.mpr hinj
+  | insert j s hsj ih =>
+    rw [Finset.coe_insert]
+    exact ih.insert ((h j).of_tower_top_of_subalgebra_le
+      (adjoin_mono (image_mono fun k hk ↦ hsj k hk)))
+
+/-- Determine the polynomial generators from the readings of the specified entries.
+The first-missing hypothesis concerns one entry at a time. -/
+theorem independent_ordered_readings [Nontrivial R] (v : ι → P → A)
+    (hinj : Function.Injective (algebraMap R A))
+    (hrigid : ∀ i t, let E := adjoin R (earlierReadings v i t)
+      v i t ∉ E → Transcendental E (v i t))
+    (hfirst : ∀ (E : Subalgebra R A) i, (∃ t, v i t ∉ E) →
+      ∃ t, v i t ∉ E ∧ ∀ s, t < s → v i s ∈ E) :
+    AlgebraicIndependent R ((↑) : selectedReadings R v → A) ∧
+      ∀ i t, v i t ∈ adjoin R (selectedReadings R v) := by
+  let J := ι ×ₗ Pᵒᵈ
+  let read (j : J) := v (ofLex j).1 (OrderDual.ofDual (ofLex j).2)
+  let fresh := {j : J | read j ∉ adjoin R (earlierReadings v (ofLex j).1 (ofLex j).2)}
+  let w (j : fresh) := read j.1
+  have hind : AlgebraicIndependent R w := by
+    apply independent_of_earlier w hinj
+    intro j
+    apply (hrigid _ _ j.2).of_tower_top_of_subalgebra_le
+    apply adjoin_mono
+    rintro _ ⟨k, hk, rfl⟩
+    exact ⟨(ofLex k.1).1, (ofLex k.1).2, Prod.Lex.lt_iff.mp hk, rfl⟩
+  have heq : range w = selectedReadings R v := by
+    ext a
+    constructor
+    · rintro ⟨j, rfl⟩
+      exact ⟨_, _, j.2, rfl⟩
+    · rintro ⟨i, t, hnew, rfl⟩
+      exact ⟨⟨toLex (i, OrderDual.toDual t), hnew⟩, rfl⟩
+  rw [← heq]
+  refine ⟨(algebraicIndependent_subtype_range hind.injective).mpr hind, ?_⟩
+  let E := adjoin R (range w)
+  intro i
+  have wf : WellFounded ((· < ·) : ι → ι → Prop) := wellFounded_lt
+  induction i using wf.induction with
+  | h i ih =>
+    by_contra! hmiss
+    obtain ⟨t, ht, hprev⟩ := hfirst E i hmiss
+    have hle : adjoin R (earlierReadings v i t) ≤ E := by
+      apply adjoin_le
+      rintro _ ⟨j, s, hji | ⟨rfl, hts⟩, rfl⟩
+      · exact ih j hji s
+      · exact hprev s hts
+    have hj : toLex (i, OrderDual.toDual t) ∈ fresh := fun h ↦ ht (hle h)
+    exact ht (subset_adjoin ⟨⟨_, hj⟩, rfl⟩)
 
 /-- Evaluating a polynomial only uses the values of the variables that occur in it. -/
 theorem eval_mem_adjoin_of_vars {R A σ : Type*} [CommSemiring R] [CommSemiring A]
