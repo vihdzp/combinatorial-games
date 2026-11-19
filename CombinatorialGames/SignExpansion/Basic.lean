@@ -213,8 +213,10 @@ theorem const_injective : Function.Injective const := by
 theorem const_inj {x y : SignType} : const x = const y ↔ x = y :=
   const_injective.eq_iff
 
-instance : Nontrivial SignExpansion :=
-  ⟨⊥, ⊤, by apply const_injective.ne; decide⟩
+@[simp] theorem bot_ne_zero : (⊥ : SignExpansion) ≠ 0 := const_injective.ne (by decide)
+@[simp] theorem zero_ne_bot : 0 ≠ (⊥ : SignExpansion) := const_injective.ne (by decide)
+@[simp] theorem top_ne_zero : (⊤ : SignExpansion) ≠ 0 := const_injective.ne (by decide)
+@[simp] theorem zero_ne_top : 0 ≠ (⊤ : SignExpansion) := const_injective.ne (by decide)
 
 /-- We say a sign expansion is "small" when it has length < ⊤. Equivalently, it contains at least
 one (and thus infinitely many) zeros. -/
@@ -890,5 +892,8 @@ theorem toSignExpansion_apply_of_lt (h : o₂ < o₁) : toSignExpansion o₁ o�
 
 theorem toSignExpansion_apply_of_le (h : o₁ ≤ o₂) : toSignExpansion o₁ o₂ = 0 := by
   aesop
+
+instance : Uncountable SignExpansion :=
+  toSignExpansion.injective.uncountable
 
 end NatOrdinal
