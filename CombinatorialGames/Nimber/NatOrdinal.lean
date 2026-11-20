@@ -54,6 +54,9 @@ termination_by (a, b)
 theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
   add_le_nadd' ..
 
+theorem add_one_le_succ (a : Nimber) : a + 1 ≤ Order.succ a := by
+  simpa [succ_def] using add_le_nadd a 1
+
 /-! ### Multiplication -/
 
 private theorem exists_of_natCast_mul_eq (m n : ℕ) : ∃ k : ℕ, ∗m * ∗n = ∗k := by
