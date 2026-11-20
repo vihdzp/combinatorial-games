@@ -80,6 +80,8 @@ theorem le_four_iff {x : Nimber} : x ≤ ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 �
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
 
+theorem two_le_iff {x : Nimber} : ∗2 ≤ x ↔ 1 < x := by rw [← succ_one, succ_le_iff]
+
 theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
 /-! ### Nimber addition -/

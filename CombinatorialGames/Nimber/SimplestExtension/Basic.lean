@@ -337,7 +337,7 @@ theorem IsRing.one_lt_val (h : IsRing x) : 1 < x.val :=
   h.one_lt
 
 theorem IsRing.two_le (h : IsRing x) : ∗2 ≤ x := by
-  rw [← succ_one, succ_le_iff]
+  rw [two_le_iff]
   exact h.one_lt
 
 theorem IsRing.pow_lt (h : IsRing x) {n : ℕ} (hy : y < x) : y ^ n < x := by
@@ -423,9 +423,8 @@ theorem IsGroup.exists_mul_of_not_isRing (h' : IsGroup x) (h : ¬IsRing x) (ne :
   · exact fun r hr => iha r hr b (hr.trans ha) hb
   · exact fun r hr l hl => iha r hr l (hr.trans ha) (hl.trans hb)
 
--- TODO: `IsGroup (∗x)` is implied from `H'` with `b = ∗2`.
-/-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
-theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
+/-- The hypothesis `hx` is redundant; this is proven near the bottom of the file. -/
+private theorem IsGroup.mul_eq_of_lt_aux' {x y z w : Ordinal}
     (hx : IsGroup (∗x)) (hy : IsGroup (∗y)) (hz : IsGroup (∗z)) (hwy : w < y)
     (H : ∀ a < y, (∗a)⁻¹ < ∗z) (H' : ∀ ⦃a b⦄, a < x → b < z → ∗a * ∗b < ∗x) :
     x * w = val (∗x * ∗w) := by
@@ -434,7 +433,7 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
     rw [forall_lt_mul]
     intro a ha b hb
     rw [ne_eq, ← of_eq_iff, hx.mul_add_eq_of_lt' hb,
-      hx.mul_eq_of_lt' hy hz (ha.trans hwy) H H', add_comm, CharTwo.add_eq_iff_eq_add,
+      hx.mul_eq_of_lt_aux' hy hz (ha.trans hwy) H H', add_comm, CharTwo.add_eq_iff_eq_add,
       of_val, ← mul_add]
     obtain hwa | hwa := eq_or_ne (∗w + ∗a) 0
     · cases ha.ne' (add_eq_zero.1 hwa)
@@ -450,19 +449,21 @@ theorem IsGroup.mul_eq_of_lt' {x y z w : Ordinal}
       simpa using H _ ((Nimber.val_lt_iff.2 <| H z hzy).trans hzy)
     have hwz := hwy.trans_le hyz
     have hx' : val (a * (∗b + ∗w)) < x := H' ha (hz.add_lt (hb.trans hwz) hwz)
-    rw [← of_val (_ * _), ← hx.mul_eq_of_lt' hy hz (hb.trans hwy) H H',
+    rw [← of_val (_ * _), ← hx.mul_eq_of_lt_aux' hy hz (hb.trans hwy) H H',
       ← of_val (a * _), ← hx.mul_add_eq_of_lt' hx']
     exact (mul_add_lt hx' hb).ne
 termination_by w
 
-theorem IsGroup.mul_eq_of_lt (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z) (hwy : w < y)
+/-- The hypothesis `hx` is redundant; this is proven near the bottom of the file. -/
+private theorem IsGroup.mul_eq_of_lt_aux
+    (hx : IsGroup x) (hy : IsGroup y) (hz : IsGroup z) (hwy : w < y)
     (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : ∗(x.val * w.val) = x * w :=
-  hx.mul_eq_of_lt' hy hz hwy H H'
+  hx.mul_eq_of_lt_aux' hy hz hwy H H'
 
 /-- A version of `IsRing.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsRing.mul_eq_of_lt' {x y z : Ordinal} (hx : IsRing (∗x)) (hy : IsGroup (∗y))
     (hzy : z < y) (H : ∀ z < y, (∗z)⁻¹ < ∗x) : x * z = val (∗x * ∗z) :=
-  hx.toIsGroup.mul_eq_of_lt' hy hx.toIsGroup hzy H hx.mul_lt
+  hx.toIsGroup.mul_eq_of_lt_aux' hy hx.toIsGroup hzy H hx.mul_lt
 
 theorem IsRing.mul_eq_of_lt (hx : IsRing x) (hy : IsGroup y)
     (hzy : z < y) (H : ∀ z < y, z⁻¹ < x) : ∗(x.val * z.val) = x * z :=
@@ -617,10 +618,10 @@ theorem IsRing.inv_lt_self_of_not_isField (h' : IsRing x) (h : ¬ IsField x) : x
 
 /-- A version of `IsField.opow_mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
-    (hx : IsField (∗x)) (y : Ordinal) (hz : z < x) : x ^ y * z = val (∗(x ^ y) * ∗z) := by
+    (hx : IsField (∗x)) (y : Ordinal) (hz : z < x) : ∗(x ^ y * z) = ∗(x ^ y) * ∗z := by
   have hx' := hx.opow' y
   obtain rfl | hy := eq_zero_or_pos y; · simp
-  apply hx'.mul_eq_of_lt' hx.toIsGroup hx.toIsGroup hz @hx.inv_lt
+  apply hx'.mul_eq_of_lt_aux' hx.toIsGroup hx.toIsGroup hz @hx.inv_lt
   intro a b ha hb
   induction a using WellFoundedLT.induction with | ind a IH
   obtain rfl | ha' := eq_or_ne a 0; · simpa
@@ -631,7 +632,7 @@ theorem IsField.opow_mul_eq_of_lt' {x z : Ordinal}
       have hay : log x a < y := by
         rwa [← lt_opow_iff_log_lt _ ha']
         exact hx.one_lt
-      rw [IsField.opow_mul_eq_of_lt' hx _ hax', of_val, mul_assoc, ← val_lt_iff,
+      rw [IsField.opow_mul_eq_of_lt' hx _ hax', mul_assoc, ← val_lt_iff,
         ← of_val (∗_ * ∗_), ← IsField.opow_mul_eq_of_lt' hx _ hax]
       apply (opow_le_opow_right (of_pos.1 hx.pos) (add_one_le_of_lt hay)).trans_lt'
       rw [opow_add_one]
@@ -646,12 +647,32 @@ theorem IsField.opow_mul_eq_of_lt (hx : IsField x) (y : Ordinal) (hz : z < x) :
 
 /-- A version of `IsField.pow_mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsField.pow_mul_eq_of_lt' {x z : Ordinal}
-    (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : x ^ n * z = val (∗(x ^ n) * ∗z) :=
+    (hx : IsField (∗x)) (n : ℕ) (hz : z < x) : ∗(x ^ n * z) = ∗(x ^ n) * ∗z :=
   mod_cast hx.opow_mul_eq_of_lt' n hz
 
 theorem IsField.pow_mul_eq_of_lt
     (hx : IsField x) (n : ℕ) (hz : z < x) : ∗(val x ^ n * val z) = ∗(val x ^ n) * z :=
   mod_cast hx.opow_mul_eq_of_lt n hz
+
+/-- A version of `IsField.opow_mul_add_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.opow_mul_add_of_lt' {x y z w : Ordinal}
+    (hx : IsField (∗x)) (hz : z < x) (hw : w < x ^ y) :
+    ∗(x ^ y * z + w) = ∗(x ^ y) * ∗z + ∗w := by
+  rw [IsGroup.mul_add_eq_of_lt' (hx.toIsGroup.opow' y) hw, hx.opow_mul_eq_of_lt' y hz]
+
+theorem IsField.opow_mul_add_of_lt {y : Ordinal}
+    (hx : IsField x) (hz : z < x) (hw : w < ∗(x.val ^ y)) :
+    ∗(val x ^ y * val z + val w) = ∗(val x ^ y) * z + w :=
+  hx.opow_mul_add_of_lt' hz hw
+
+/-- A version of `IsField.opow_add_of_lt` stated in terms of `Ordinal`. -/
+theorem IsField.opow_add_of_lt' {x y w : Ordinal} (hx : IsField (∗x)) (hw : w < x ^ y) :
+    ∗(x ^ y + w) = ∗(x ^ y) + ∗w := by
+  simpa using hx.opow_mul_add_of_lt' hx.one_lt_val hw
+
+theorem IsField.opow_add_of_lt {y : Ordinal} (hx : IsField x) (hw : w < ∗(x.val ^ y)) :
+    ∗(val x ^ y + val w) = ∗(val x ^ y) + w :=
+  hx.opow_add_of_lt' hw
 
 /-- If `x` is a field and `y` is an `x`-subspace, then `y` is an ordinal power of `x`. -/
 theorem IsField.opow_log_eq_of_isGroup (hx : IsField x) (hy : IsGroup y)
@@ -662,7 +683,7 @@ theorem IsField.opow_log_eq_of_isGroup (hx : IsField x) (hy : IsGroup y)
     have H₁ : ∗(val y / val x ^ log x.val y.val) < x := div_opow_log_lt _ hx.one_lt
     have H₂ : ∗(val y % val x ^ log x.val y.val) < y := mod_opow_log_lt_self _ hy.ne_zero
     apply (hy.add_lt (hxy _ _ H₁ hy') H₂).ne
-    rw [mul_comm, ← hx.opow_mul_eq_of_lt _ H₁, ← (hx.opow _).mul_add_eq_of_lt']
+    rw [mul_comm, ← hx.opow_mul_add_of_lt H₁]
     · exact div_add_mod ..
     · exact mod_lt _ (opow_ne_zero _ hx.ne_zero)
 
@@ -671,7 +692,7 @@ theorem IsField.opow_log_eq_of_isRing (hx : IsField x) (hy : IsRing y) (hxy : x 
     ∗(x.val ^ log x.val y.val) = y :=
   hx.opow_log_eq_of_isGroup hy.toIsGroup fun _z _w hz hw ↦ hy.mul_lt (hz.trans_le hxy) hw
 
-theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
+theorem IsField.mul_lt_opow_of_left_lt {o : Ordinal}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ o)) : y * z < ∗(val x ^ o) := by
   induction o using WellFoundedLT.induction generalizing z with | ind o IH
   obtain rfl | ho := eq_or_ne o 0
@@ -688,20 +709,130 @@ theorem IsField.mul_lt_opow_of_left_lt {x y z : Nimber} {o : Ordinal}
     · exact H₂
   · exact (IH _ H₃ H₄).trans_le (opow_le_opow_right h.pos H₃.le)
 
-theorem IsField.mul_lt_opow_of_right_lt {x y z : Nimber} {o : Ordinal}
+theorem IsField.mul_lt_opow_of_right_lt {o : Ordinal}
     (h : IsField x) (hy : y < ∗(val x ^ o)) (hz : z < x) : y * z < ∗(val x ^ o) :=
   mul_comm y z ▸ h.mul_lt_opow_of_left_lt hz hy
 
-theorem IsField.mul_lt_pow_of_left_lt {x y z : Nimber} {n : ℕ}
+theorem IsField.mul_lt_pow_of_left_lt {n : ℕ}
     (h : IsField x) (hy : y < x) (hz : z < ∗(val x ^ n)) : y * z < ∗(val x ^ n) :=
   (opow_natCast x.val n ▸ h.mul_lt_opow_of_left_lt) hy hz
 
-theorem IsField.mul_lt_pow_of_right_lt {x y z : Nimber} {n : ℕ}
+theorem IsField.mul_lt_pow_of_right_lt {n : ℕ}
     (h : IsField x) (hy : y < ∗(val x ^ n)) (hz : z < x) : y * z < ∗(val x ^ n) :=
   (opow_natCast x.val n ▸ h.mul_lt_opow_of_right_lt) hy hz
 
 -- TODO: this follows from `IsRing.two_two_pow` and the surjectivity of `a * ·` for `a ≠ 0`.
 proof_wanted IsField.two_two_pow (n : ℕ) : IsField (∗(2 ^ 2 ^ n))
+
+theorem IsField.opow_log_eq_of_isCofinalFor_pow_image {s : Set Nimber}
+    (hx : x ≠ 0) (hy : y.IsField) (hy2 : y ≠ ∗2) (hsy : ∀ a ∈ s, a < y)
+    (hs : IsCofinalFor (Iio y) (⋃ n : ℕ, (fun z => z ^ n) '' s))
+    (h : ∀ a < x, ∀ b ∈ s, a * b < x) : ∗(val y ^ log y.val x.val) = x := by
+  obtain hx | hx := (opow_log_le_self y.val (val_ne_zero.2 hx)).eq_or_lt
+  · rwa [← of_eq_iff] at hx
+  replace hy2 : ∗2 < y := hy.two_le.lt_of_ne' hy2
+  replace h : ∀ a < x, ∀ b ∈ s, ∀ n, a * b ^ n < x := by
+    intro a ha b hb n
+    induction n with
+    | zero => simpa
+    | succ n IH =>
+      rw [pow_succ, ← mul_assoc]
+      exact h _ IH b hb
+  simp_rw [IsCofinalFor, mem_Iio, mem_iUnion, mem_image] at hs
+  have Hq1 {q r} (hq : q ≤ 1) (hr : r < val y ^ log (val y) (val x)) :
+      val y ^ log (val y) (val x) * q + r < val x := by
+    rw [← lt_add_one_iff, one_add_one_eq_two] at hq
+    obtain ⟨_, ⟨n, q', hq', rfl⟩, hqq'⟩ := hs hy2
+    rw [of_le_iff] at hqq'
+    rw [← of_lt_iff] at hx
+    grw [← h _ hx q' hq' n, ← hy.opow_mul_eq_of_lt, val_of, mul_add_lt hr (hq.trans_le hqq')]
+    exact hy.pow_lt (hsy q' hq')
+  absurd lt_opow_succ_log_self hy.one_lt_val x.val
+  rw [not_lt, succ_eq_add_one]
+  apply le_of_forall_lt
+  intro z hz
+  rw [opow_add_one, Ordinal.lt_mul_iff] at hz
+  obtain ⟨q, hq, r, hr, rfl⟩ := hz
+  obtain ⟨_, ⟨n, q', hq', rfl⟩, hqq'⟩ := hs (of_lt_iff.2 hq)
+  rw [of_le_iff] at hqq'
+  grw [hqq']
+  have hq'y := hy.pow_lt (n := n) (hsy q' hq')
+  obtain rfl | hq'₀ := eq_or_ne q' 0
+  · exact Hq1 (val_le_one.2 (zero_pow_le_one n)) hr
+  rw [← of_lt_iff, ← val_of r, hy.opow_mul_add_of_lt hq'y (of.strictMono hr)]
+  suffices of (val y ^ log (val y) (val x)) + of r * (q' ^ n)⁻¹ < x by
+    simpa [add_mul, hq'₀] using h _ this q' hq' n
+  have key : of r * (q' ^ n)⁻¹ < of (val y ^ log (val y) (val x)) := by
+    apply hy.mul_lt_opow_of_right_lt _ (hy.inv_lt hq'y)
+    rwa [of.lt_iff_lt]
+  rw [← hy.opow_add_of_lt key, of_lt_iff, ← mul_one (val y ^ _)]
+  apply Hq1 le_rfl
+  rwa [val_lt_iff]
+
+theorem IsGroup.of_isCofinalFor_pow_image {s : Set Nimber}
+    (hx : x ≠ 0) (hy : y.IsField) (hy2 : y ≠ ∗2) (hsy : ∀ a ∈ s, a < y)
+    (hs : IsCofinalFor (Iio y) (⋃ n : ℕ, (fun z => z ^ n) '' s))
+    (h : ∀ a < x, ∀ b ∈ s, a * b < x) : IsGroup x := by
+  rw [← hy.opow_log_eq_of_isCofinalFor_pow_image hx hy2 hsy hs h]
+  exact hy.opow _
+
+theorem four_opow_log_eq_of_mul_two_lt (hx : x ≠ 0) (h : ∀ y < x, y * ∗2 < x) :
+    ∗(4 ^ log 4 x.val) = x := by
+  apply IsField.four.opow_log_eq_of_isCofinalFor_pow_image
+    (s := {∗2}) hx (by simp) (by simp [Nat.ofNat_lt]) _ (by simpa)
+  refine fun y hy ↦ ⟨∗3, mem_iUnion_of_mem 2 ?_, ?_⟩
+  · simp
+  · rwa [mem_Iio, ← three_add_one_eq_four, ← succ_of, lt_succ_iff] at hy
+
+theorem IsGroup.of_mul_two_lt (hx : x ≠ 0) (h : ∀ y < x, y * ∗2 < x) : IsGroup x := by
+  rw [← four_opow_log_eq_of_mul_two_lt hx h]
+  exact IsGroup.four.opow _
+
+theorem four_opow_log_eq_of_two_mul_lt (hx : x ≠ 0) (h : ∀ y < x, ∗2 * y < x) :
+    ∗(4 ^ log 4 x.val) = x :=
+  four_opow_log_eq_of_mul_two_lt hx fun y hy ↦ mul_comm y _ ▸ h y hy
+
+theorem IsGroup.of_two_mul_lt (hx : x ≠ 0) (h : ∀ y < x, ∗2 * y < x) : IsGroup x :=
+  .of_mul_two_lt hx fun y hy ↦ mul_comm y _ ▸ h y hy
+
+/-- If a nimber `1 < x` is closed under multiplication, it's also closed under addition. -/
+theorem IsRing.of_mul (one_lt : 1 < x) (mul_lt : ∀ ⦃y z : Nimber⦄, y < x → z < x → y * z < x) :
+    IsRing x where
+  mul_lt
+  ne_zero := one_lt.ne_zero
+  ne_one := one_lt.ne'
+  add_lt := by
+    apply IsGroup.add_lt
+    obtain rfl | hx2 := (succ_le_of_lt one_lt).eq_or_lt
+    · simp
+    · rw [succ_one] at hx2
+      exact IsGroup.of_mul_two_lt one_lt.ne_zero fun y hy ↦ mul_lt hy hx2
+
+/-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
+theorem IsGroup.mul_eq_of_lt' (x : Ordinal) {y z w : Ordinal}
+    (hy : IsGroup (∗y)) (hz : IsGroup (∗z)) (hwy : w < y)
+    (H : ∀ a < y, (∗a)⁻¹ < ∗z) (H' : ∀ ⦃a b⦄, a < x → b < z → ∗a * ∗b < ∗x) :
+    x * w = val (∗x * ∗w) := by
+  obtain hx | hx := le_or_gt x 1
+  · rw [Order.le_one_iff] at hx
+    obtain rfl | rfl := hx <;> simp
+  obtain hw | hw := le_or_gt w 1
+  · rw [Order.le_one_iff] at hw
+    obtain rfl | rfl := hw <;> simp
+  apply IsGroup.mul_eq_of_lt_aux' _ hy hz hwy H H'
+  rw [← add_one_le_iff, one_add_one_eq_two] at hx
+  obtain rfl | hx := hx.eq_or_lt
+  · exact .two
+  · apply IsGroup.of_mul_two_lt hx.ne_zero fun a ha ↦ ?_
+    apply H' ha
+    rw [← add_one_le_iff, one_add_one_eq_two] at hw
+    grw [← hw] at hwy
+    grw [← of.lt_iff_lt, ← H _ hwy]
+    simp [Nat.ofNat_le]
+
+theorem IsGroup.mul_eq_of_lt (x : Nimber) (hy : IsGroup y) (hz : IsGroup z) (hwy : w < y)
+    (H : ∀ a < y, a⁻¹ < z) (H' : ∀ ⦃a b⦄, a < x → b < z → a * b < x) : ∗(x.val * w.val) = x * w :=
+  hy.mul_eq_of_lt' x hz hwy H H'
 
 end Nimber
 end

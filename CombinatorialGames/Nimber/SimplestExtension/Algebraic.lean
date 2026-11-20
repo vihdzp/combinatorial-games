@@ -117,7 +117,8 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
       cases n with
       | zero => simp
       | succ n =>
-        refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup ?_ @h.inv_lt fun a b ha hb ↦ ?_
+        refine IsGroup.mul_eq_of_lt (∗(x.val ^ (n + 1)))
+          h.toIsGroup h.toIsGroup ?_ @h.inv_lt fun a b ha hb ↦ ?_
         · convert hpk (n + 1)
           simpa using q.coeff_eq_zero_of_degree_lt hqn
         · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' ha
