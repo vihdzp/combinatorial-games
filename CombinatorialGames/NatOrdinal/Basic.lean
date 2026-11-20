@@ -55,7 +55,7 @@ variable {a b c d a' b' c' : NatOrdinal.{u}}
 /-! ### Natural addition -/
 
 private def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
+  max (⨆ x : Iio a, succ (add x b)) (⨆ x : Iio b, succ (add a x))
 termination_by (a, b)
 decreasing_by all_goals cases x; decreasing_tactic
 
@@ -68,7 +68,7 @@ corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
 @[no_expose] instance : Add NatOrdinal := ⟨add⟩
 
 theorem add_def (a b : NatOrdinal) :
-    a + b = max (⨆ x : Iio a, succ (x.1 + b)) (⨆ x : Iio b, succ (a + x.1)) := by
+    a + b = max (⨆ x : Iio a, succ (x + b)) (⨆ x : Iio b, succ (a + x)) := by
   change add .. = _
   rw [add]
   rfl
@@ -106,7 +106,7 @@ private theorem add_zero' (a : NatOrdinal) : a + 0 = a := by
 termination_by a
 
 private theorem iSup_add_of_monotone (f : NatOrdinal.{u} → NatOrdinal.{u}) (h : Monotone f) :
-    ⨆ x : Iio (a + b), f x = max (⨆ a' : Iio a, f (a'.1 + b)) (⨆ b' : Iio b, f (a + b'.1)) := by
+    ⨆ x : Iio (a + b), f x = max (⨆ a' : Iio a, f (a' + b)) (⨆ b' : Iio b, f (a + b')) := by
   apply (max_le _ _).antisymm'
   · rw [iSup_le_iff]
     rintro ⟨i, hi⟩

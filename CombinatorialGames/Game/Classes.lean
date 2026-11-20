@@ -68,11 +68,8 @@ theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
   rw [dicotic_def] at hx
   simp_all [Player.exists, IGame.ext_iff]
 
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
   simpa using eq_zero_iff.not
-
-theorem ne_zero_iff' [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
-  simpa [Set.nonempty_iff_ne_empty] using ne_zero_iff
 
 theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
   Player.const_of_left_eq_right' (dicotic_def.1 hx).1
@@ -387,9 +384,9 @@ protected instance zero : Numeric 0 := by
 protected instance one : Numeric 1 := by
   rw [numeric_def]; simp
 
-protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
+protected instance subtype (x : Subtype Numeric) : Numeric x := x.prop
 protected instance moves {x : IGame} [Numeric x] {p : Player} (y : x.moves p) : Numeric y :=
-  .of_mem_moves y.2
+  .of_mem_moves y.prop
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]

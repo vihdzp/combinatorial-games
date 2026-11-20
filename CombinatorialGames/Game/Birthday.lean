@@ -62,7 +62,7 @@ theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
-    max (⨆ y : xᴸ, y.1.birthday + 1) (⨆ y : xᴿ, y.1.birthday + 1) := by
+    max (⨆ y : xᴸ, y.val.birthday + 1) (⨆ y : xᴿ, y.val.birthday + 1) := by
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
@@ -301,7 +301,7 @@ theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .ome
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (p : Player) (y : x.moves p) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
-      exact .of_mem_moves y.2
+      exact .of_mem_moves y.prop
     choose f hf using this
     obtain ⟨n, hn⟩ := (finite_iUnion fun p => finite_range (f p)).exists_le
     apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))

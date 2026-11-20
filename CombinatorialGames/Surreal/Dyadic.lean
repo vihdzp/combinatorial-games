@@ -54,11 +54,11 @@ def upper (x : Dyadic) : Dyadic :=
   .mkRat (x.num + 1) x.den_mem_powers
 
 theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den := by
-  rw [den, lower, coe_mkRat]
+  rw [den, lower, toRat_mkRat]
   exact den_mkRat_lt ((odd_num h).sub_odd odd_one).two_dvd h
 
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den := by
-  rw [den, upper, coe_mkRat]
+  rw [den, upper, toRat_mkRat]
   exact den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
 
 /-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
@@ -115,7 +115,7 @@ theorem coe_upper (x : Dyadic) : upper x = x + (x.den : ℚ)⁻¹ := by
 
 theorem lower_add_le_of_den_le {x y : Dyadic} (h : x.den ≤ y.den) :
     lower (x + y) ≤ x + lower y := by
-  rw [← Dyadic.coe_le_coe]
+  rw [← Dyadic.toRat_le_toRat_iff]
   suffices (y.den : ℚ)⁻¹ ≤ ((x + y).den : ℚ)⁻¹ by simpa [coe_lower, Rat.add_assoc, sub_eq_add_neg]
   rw [inv_le_inv₀ (mod_cast y.den_pos) (mod_cast den_pos _)]
   exact_mod_cast den_add_le_den_right h
@@ -205,7 +205,7 @@ theorem toIGame_half : half = ½ := by
   rw [toIGame_of_den_ne_one (by decide)]
   suffices uh : upper half = 1 by
     rw [show lower half = 0 from rfl, uh]; ext p; cases p <;> simp
-  rw [← Dyadic.coe_inj, upper, Dyadic.coe_mkRat]
+  rw [← Dyadic.toRat_inj, upper, Dyadic.toRat_mkRat]
   rfl
 
 @[simp]
@@ -562,13 +562,13 @@ end Dyadic
 namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
-  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_moves y.2
-    have := Short.of_mem_moves y.2
+  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.val ≈ z.toIGame := by
+    have := Numeric.of_mem_moves y.prop
+    have := Short.of_mem_moves y.prop
     exact IGame.equiv_dyadic _
-  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_moves y.2
-    have := Short.of_mem_moves y.2
+  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.val ≈ z.toIGame := by
+    have := Numeric.of_mem_moves y.prop
+    have := Short.of_mem_moves y.prop
     exact IGame.equiv_dyadic _
   choose f hf using H₁
   choose g hg using H₂
@@ -578,7 +578,7 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
     obtain ⟨b, rfl⟩ := hy
     rw [← Dyadic.toIGame_lt_toIGame]
     grw [← hf, ← hg]
-    exact Numeric.left_lt_right a.2 b.2
+    exact Numeric.left_lt_right a.prop b.prop
   have : ∃ y, Fits (Dyadic.toIGame y) x := by
     use y
     constructor <;> intro z hz

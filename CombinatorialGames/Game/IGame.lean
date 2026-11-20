@@ -123,7 +123,7 @@ instance : OfSets IGame fun _ ↦ True where
   ofSets st _ := QPF.Fix.mk ⟨st, by rintro (_ | _) <;> assumption⟩
 
 /-- The set of moves of the game. -/
-def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.1 p
+def moves (p : Player) (x : IGame.{u}) : Set IGame.{u} := x.dest.val p
 
 /-- The set of left moves of the game. -/
 scoped notation:max x:max "ᴸ" => moves left x
@@ -131,7 +131,7 @@ scoped notation:max x:max "ᴸ" => moves left x
 /-- The set of right moves of the game. -/
 scoped notation:max x:max "ᴿ" => moves right x
 
-instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
+instance (p : Player) (x : IGame.{u}) : Small.{u} (x.moves p) := x.dest.prop p
 
 @[simp, game_cmp]
 theorem moves_ofSets (p) (st : Player → Set IGame) [Small.{u} (st left)] [Small.{u} (st right)] :
@@ -565,7 +565,7 @@ instance : ZeroLEOneClass IGame where
 /-! ### Negation -/
 
 private def neg' (x : IGame) : IGame :=
-  !{range fun y : xᴿ ↦ neg' y.1 | range fun y : xᴸ ↦ neg' y.1}
+  !{range fun y : xᴿ ↦ neg' y | range fun y : xᴸ ↦ neg' y}
 termination_by x
 decreasing_by igame_wf
 
@@ -1061,9 +1061,9 @@ attribute [aesop apply unsafe 50%] Prod.Lex.left Prod.Lex.right
 
 private def mul' (x y : IGame) : IGame :=
   !{(range fun a : (xᴸ ×ˢ yᴸ ∪ xᴿ ×ˢ yᴿ :) ↦
-    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2) |
+    mul' a.val.1 y + mul' x a.val.2 - mul' a.val.1 a.val.2) |
   (range fun a : (xᴸ ×ˢ yᴿ ∪ xᴿ ×ˢ yᴸ :) ↦
-    mul' a.1.1 y + mul' x a.1.2 - mul' a.1.1 a.1.2)}
+    mul' a.val.1 y + mul' x a.val.2 - mul' a.val.1 a.val.2)}
 termination_by (x, y)
 decreasing_by all_goals aesop
 
@@ -1226,7 +1226,7 @@ private def inv' (x : IGame.{u}) : IGame.{u} :=
     fun x ↦ inv' (Subtype.val <| (equivShrink _).symm x)
   !{.range (InvTy.val' IH left) | .range (InvTy.val' IH right)}
 termination_by x
-decreasing_by exact .of_mem_moves ((equivShrink _).symm x).2.1
+decreasing_by exact .of_mem_moves ((equivShrink _).symm x).prop.1
 
 private abbrev InvTy.val (x : IGame) (b : Player)
     (i : InvTy (fun p ↦ Shrink {y ∈ x.moves p | 0 < y}) b) : IGame :=
@@ -1320,8 +1320,8 @@ private theorem invRec' {x : IGame.{u}} (hx : 0 < x)
   induction i
   · simpa
   · apply mk
-    · exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.2
-    · exact ((equivShrink {y ∈ _ | 0 < y}).symm _).2.1
+    · exact ((equivShrink {y ∈ _ | 0 < y}).symm _).prop.2
+    · exact ((equivShrink {y ∈ _ | 0 < y}).symm _).prop.1
     · assumption
 
 /-- An induction principle on left and right moves of `x⁻¹`. -/

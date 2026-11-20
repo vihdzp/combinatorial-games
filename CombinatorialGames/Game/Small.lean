@@ -226,7 +226,7 @@ theorem of_forall_of_nonempty {x : IGame}
 /-- The **lawnmower theorem**: every dicotic game is small. -/
 instance _root_.IGame.Dicotic.toSmall (x) [Dicotic x] : Small x := by
   obtain rfl | hx := eq_or_ne x 0; · infer_instance
-  refine Small.of_forall_of_nonempty (fun p y hy ↦ ?_) (Dicotic.ne_zero_iff'.1 hx)
+  refine Small.of_forall_of_nonempty (fun p y hy ↦ ?_) (Dicotic.ne_zero_iff.1 hx)
   dicotic
   exact Dicotic.toSmall y
 termination_by x
