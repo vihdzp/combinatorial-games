@@ -74,6 +74,7 @@ meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 
 /-! ### Macros -/
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 @[expose] public section
@@ -210,6 +211,7 @@ end $Alias
 end
 )
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 

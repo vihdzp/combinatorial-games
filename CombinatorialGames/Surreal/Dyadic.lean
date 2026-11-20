@@ -562,13 +562,13 @@ end Dyadic
 namespace IGame
 
 private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic, x ≈ y.toIGame := by
-  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_moves y.2
-    have := Short.of_mem_moves y.2
+  have H₁ (y : xᴸ) : ∃ z : Dyadic, y.val ≈ z.toIGame := by
+    have := Numeric.of_mem_moves y.prop
+    have := Short.of_mem_moves y.prop
     exact IGame.equiv_dyadic _
-  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.1 ≈ z.toIGame := by
-    have := Numeric.of_mem_moves y.2
-    have := Short.of_mem_moves y.2
+  have H₂ (y : xᴿ) : ∃ z : Dyadic, y.val ≈ z.toIGame := by
+    have := Numeric.of_mem_moves y.prop
+    have := Short.of_mem_moves y.prop
     exact IGame.equiv_dyadic _
   choose f hf using H₁
   choose g hg using H₂
@@ -578,7 +578,7 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
     obtain ⟨b, rfl⟩ := hy
     rw [← Dyadic.toIGame_lt_toIGame]
     grw [← hf, ← hg]
-    exact Numeric.left_lt_right a.2 b.2
+    exact Numeric.left_lt_right a.prop b.prop
   have : ∃ y, Fits (Dyadic.toIGame y) x := by
     use y
     constructor <;> intro z hz

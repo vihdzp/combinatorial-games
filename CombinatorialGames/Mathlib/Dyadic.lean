@@ -59,7 +59,7 @@ instance : Coe Dyadic Rat where
 
 @[norm_cast] alias coe_le_coe := toRat_le_toRat_iff
 @[norm_cast] alias coe_lt_coe := toRat_lt_toRat_iff
-@[simp, norm_cast] alias coe_inj := toRat_inj
+@[norm_cast] alias coe_inj := toRat_inj
 
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.toRat.num

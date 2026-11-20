@@ -110,7 +110,7 @@ def IsGroup.toAddSubgroup (h : IsGroup x) : AddSubgroup Nimber where
   add_mem' := @h.add_lt
   neg_mem' := id
 
-@[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.2
+@[simp] theorem val_toAddSubgroup_lt (h : IsGroup x) (y : h.toAddSubgroup) : y < x := y.prop
 @[simp] theorem mem_toAddSubgroup_iff (h : IsGroup x) : y ∈ h.toAddSubgroup ↔ y < x := .rfl
 @[simp] theorem coe_toAddSubgroup (h : IsGroup x) : h.toAddSubgroup = Set.Iio x := rfl
 
@@ -368,7 +368,7 @@ def IsRing.toSubring (h : IsRing x) : Subring Nimber where
   one_mem' := h.one_lt
   mul_mem' := @h.mul_lt
 
-@[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.2
+@[simp] theorem val_toSubring_lt (h : IsRing x) (y : h.toSubring) : y < x := y.prop
 @[simp] theorem mem_toSubring_iff (h : IsRing x) : y ∈ h.toSubring ↔ y < x := .rfl
 @[simp] theorem coe_toSubring (h : IsRing x) : h.toSubring = Set.Iio x := rfl
 
@@ -508,7 +508,7 @@ def IsField.toSubfield (h : IsField x) : Subfield Nimber where
   toSubring := h.toSubring
   inv_mem' := @h.inv_lt
 
-@[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.2
+@[simp] theorem val_toSubfield_lt (h : IsField x) (y : h.toSubfield) : y < x := y.prop
 @[simp] theorem mem_toSubfield_iff (h : IsField x) : y ∈ h.toSubfield ↔ y < x := .rfl
 @[simp] theorem coe_toSubfield (h : IsField x) : h.toSubfield = Set.Iio x := rfl
 

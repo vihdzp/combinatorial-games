@@ -38,7 +38,7 @@ namespace IGame
 This is an auxiliary definition for reasoning about games not yet known to be impartial. Use
 `Impartial.grundy` for an impartial game. -/
 def grundyAux (p : Player) (x : IGame.{u}) : Nimber.{u} :=
-  sInf (Set.range fun y : x.moves p ↦ grundyAux p y.1)ᶜ
+  sInf (Set.range fun y : x.moves p ↦ grundyAux p y.val)ᶜ
 termination_by x
 decreasing_by igame_wf
 
