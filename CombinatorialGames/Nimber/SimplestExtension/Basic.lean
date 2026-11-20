@@ -324,6 +324,7 @@ theorem IsGroup.pow' {x : Ordinal} (h : IsGroup (∗x)) (n : ℕ) : IsGroup (∗
 @[mk_iff]
 structure IsRing (x : Nimber) extends IsGroup x where
   mul_lt ⦃y z : Nimber⦄ (hy : y < x) (hz : z < x) : y * z < x
+  add_lt := by exact add_lt_of_mul_lt mul_lt
   ne_one : x ≠ 1
 
 attribute [aesop forward safe] IsRing.toIsGroup
@@ -795,18 +796,23 @@ theorem four_opow_log_eq_of_two_mul_lt (hx : x ≠ 0) (h : ∀ y < x, ∗2 * y <
 theorem IsGroup.of_two_mul_lt (hx : x ≠ 0) (h : ∀ y < x, ∗2 * y < x) : IsGroup x :=
   .of_mul_two_lt hx fun y hy ↦ mul_comm y _ ▸ h y hy
 
-/-- If a nimber `1 < x` is closed under multiplication, it's also closed under addition. -/
+/-- If a nimber is closed under multiplication, it's also closed under addition. -/
+theorem add_lt_of_mul_lt (mul_lt : ∀ ⦃y z : Nimber⦄, y < x → z < x → y * z < x) :
+    ∀ ⦃y z : Nimber⦄, y < x → z < x → y + z < x := by
+  obtain hx | hx := le_or_gt x (∗2)
+  · rw [Nimber.le_two_iff] at hx
+    obtain rfl | rfl | rfl := hx
+    · simp
+    · simp
+    · exact IsGroup.two.add_lt
+  · exact (IsGroup.of_mul_two_lt hx.ne_zero fun y hy ↦ mul_lt hy hx).add_lt
+
 theorem IsRing.of_mul (one_lt : 1 < x) (mul_lt : ∀ ⦃y z : Nimber⦄, y < x → z < x → y * z < x) :
     IsRing x where
   mul_lt
   ne_zero := one_lt.ne_zero
   ne_one := one_lt.ne'
-  add_lt := by
-    apply IsGroup.add_lt
-    obtain rfl | hx2 := (succ_le_of_lt one_lt).eq_or_lt
-    · simp
-    · rw [succ_one] at hx2
-      exact IsGroup.of_mul_two_lt one_lt.ne_zero fun y hy ↦ mul_lt hy hx2
+  add_lt := add_lt_of_mul_lt mul_lt
 
 /-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_eq_of_lt' (x : Ordinal) {y z w : Ordinal}
