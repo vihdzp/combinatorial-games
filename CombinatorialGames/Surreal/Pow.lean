@@ -46,9 +46,9 @@ namespace ArchimedeanClass
 
 theorem mk_le_mk_iff_dyadic {x y : Surreal} :
     mk x ≤ mk y ↔ ∃ q : Dyadic, 0 < q ∧ q * |y| ≤ |x| := by
-  convert! mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.coeRingHom) (x := x) ?_
+  convert! mk_le_mk_iff_denselyOrdered ((Rat.castHom _).comp Dyadic.toRatRingHom) (x := x) ?_
   · simp
-  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.coe_lt_coe.mpr
+  · exact Rat.cast_strictMono.comp fun x y ↦ Dyadic.toRat_lt_toRat_iff.mpr
 
 end ArchimedeanClass
 
