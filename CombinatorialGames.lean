@@ -38,7 +38,8 @@ public import CombinatorialGames.NatOrdinal.Pow
 public import CombinatorialGames.Nimber.Basic
 public import CombinatorialGames.Nimber.Field
 public import CombinatorialGames.Nimber.Nat
-public import CombinatorialGames.Nimber.NatOrdinal
+public import CombinatorialGames.Nimber.NatOrdinal.Addition
+public import CombinatorialGames.Nimber.NatOrdinal.Multiplication
 public import CombinatorialGames.Nimber.Omega
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
