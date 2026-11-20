@@ -595,7 +595,6 @@ theorem neg_ofSets' (st : Player → Set IGame) [∀ p, Small (st p)] :
 @[simp]
 theorem neg_ofSets (s t : Set IGame.{u}) [Small s] [Small t] :
     -!{s | t} = !{-t | -s} := by
-  have : ∀ p, Small.{u} (Player.cases s t p :) := by simp_all
   rw [neg_ofSets']
   grind
 
@@ -714,7 +713,7 @@ theorem ofSets_add_ofSets
   simp
 
 theorem ofSets_add_ofSets' (st₁ st₂ : Player → Set IGame)
-    [Small (st₁ left)] [Small (st₂ left)] [Small (st₁ right)] [Small (st₂ right)] :
+    [∀ p, Small (st₁ p)] [∀ p, Small (st₂ p)] :
     !{st₁} + !{st₂} =
       !{fun p ↦ (· + !{st₂}) '' st₁ p ∪ (!{st₁} + ·) '' st₂ p} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases st₂, ofSets_eq_ofSets_cases (fun _ ↦ _ ∪ _),

@@ -91,8 +91,7 @@ theorem birthday_ofSets (s t : Set IGame.{u}) [Small.{u} s] [Small.{u} t] :
   rw [birthday_eq_max, moves_left_ofSets, moves_right_ofSets]
   simp [iSup, image_eq_range]
 
-theorem birthday_ofSets' (st : Player → Set IGame.{u})
-    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+theorem birthday_ofSets' (st : Player → Set IGame.{u}) [∀ p, Small.{u} (st p)] :
     birthday !{st} = sSup ((fun x => birthday x + 1) '' iUnion st) := by
   rw [ofSets_eq_ofSets_cases, birthday_ofSets, Set.image_iUnion,
     ← Set.sUnion_range, Player.range_eq, sUnion_pair,
@@ -407,8 +406,7 @@ theorem birthday_star : birthday (Game.mk ⋆) = 1 := by
   · rw [one_le_iff_ne_zero, birthday_eq_zero.ne]
     exact IncompRel.ne (r := (· ≤ ·)) IGame.star_fuzzy_zero
 
-theorem birthday_ofSets_le' {st : Player → Set Game.{u}}
-    [Small.{u} (st .left)] [Small.{u} (st .right)] :
+theorem birthday_ofSets_le' {st : Player → Set Game.{u}} [∀ p, Small.{u} (st p)] :
     birthday !{st} ≤ sSup ((fun x => birthday x + 1) '' iUnion st) := by
   choose f hf hfb using birthday_eq_iGameBirthday
   calc
