@@ -243,23 +243,23 @@ This is more general than `Impartial`, since we don't require `x = -x`. Despite 
 Sprague-Grundy theorem still holds: see `IGame.nim_grundy_equiv`.
 
 In such a game, both players have the same payoffs at any subposition. -/
-@[mk_iff impartial_def']
+@[mk_iff weaklyImpartial_def']
 class inductive WeaklyImpartial : IGame → Prop where
   | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y) → WeaklyImpartial x
 
-theorem impartial_def {x : IGame} :
+theorem weaklyImpartial_def {x : IGame} :
     x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y :=
-  impartial_def' x
+  weaklyImpartial_def' x
 
 namespace WeaklyImpartial
 
 instance (x : IGame) [hx : WeaklyImpartial x] : NegSelfEquiv x where
-  neg_equiv := (impartial_def.1 hx).1
+  neg_equiv := (weaklyImpartial_def.1 hx).1
 
 @[aesop unsafe 50% apply]
 protected theorem of_mem_moves {p} {x y : IGame} [h : WeaklyImpartial x] :
     y ∈ x.moves p → WeaklyImpartial y :=
-  (impartial_def.1 h).2 p y
+  (weaklyImpartial_def.1 h).2 p y
 
 protected theorem subposition {x y} [WeaklyImpartial x] (h : Subposition y x) :
     WeaklyImpartial y := by
@@ -280,7 +280,7 @@ elab "weakly_impartial" : tactic =>
   addInstances <| .mk
     [``WeaklyImpartial.of_mem_moves, ``WeaklyImpartial.subposition, ``WeaklyImpartial.wsubposition]
 
-@[simp] protected instance zero : WeaklyImpartial 0 := by rw [impartial_def]; simp
+@[simp] protected instance zero : WeaklyImpartial 0 := by rw [weaklyImpartial_def]; simp
 
 protected instance neg (x : IGame) [WeaklyImpartial x] : WeaklyImpartial (-x) := by
   apply mk
@@ -292,6 +292,10 @@ protected instance neg (x : IGame) [WeaklyImpartial x] : WeaklyImpartial (-x) :=
     exact .neg _
 termination_by x
 decreasing_by igame_wf
+
+@[simp]
+protected theorem neg_iff {x : IGame} : WeaklyImpartial (-x) ↔ WeaklyImpartial x :=
+  ⟨fun _ ↦ by simpa using WeaklyImpartial.neg (-x), fun _ ↦ .neg x⟩
 
 protected instance add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     WeaklyImpartial (x + y) := by
@@ -362,6 +366,133 @@ theorem fuzzy_zero_of_forall_exists {x y : IGame} [WeaklyImpartial x]
 end WeaklyImpartial
 
 /-! ### Impartial games -/
+
+/--
+An impartial game is one that's equal to its negative, such that each left and right move is also
+impartial.
+
+Note that many theorems hold under the `WeaklyImpartial` assumption, or the even weaker
+`NegSelfEquiv` assumption. -/
+@[mk_iff impartial_def']
+class inductive Impartial : IGame → Prop where
+  | mk {x : IGame} : -x = x → (∀ p, ∀ y ∈ x.moves p, Impartial y) → Impartial x
+
+theorem impartial_def {x : IGame} : x.Impartial ↔ -x = x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y :=
+  impartial_def' x
+
+namespace Impartial
+
+@[simp] theorem neg_eq (x : IGame) [hx : Impartial x] : -x = x := (impartial_def.1 hx).1
+
+@[aesop unsafe 50% apply]
+protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
+    y ∈ x.moves p → Impartial y :=
+  (impartial_def.1 h).2 p y
+
+protected theorem subposition {x y} [WeaklyImpartial x] (h : Subposition y x) :
+    WeaklyImpartial y := by
+  induction x using IGame.moveRecOn generalizing ‹x.WeaklyImpartial› with | ind x ih
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
+
+protected theorem wsubposition {x y} [WeaklyImpartial x] (h : WSubposition y x) :
+    WeaklyImpartial y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact .subposition hy
+
+/-- `impartial` eagerly adds all possible `Impartial` hypotheses. -/
+elab "impartial" : tactic =>
+  addInstances <| .mk
+    [``Impartial.of_mem_moves, ``Impartial.subposition, ``Impartial.wsubposition]
+
+instance toWeaklyImpartial (x : IGame) [Impartial x] : WeaklyImpartial x := by
+  rw [weaklyImpartial_def]
+  constructor
+  · simp
+  · intro p y hy
+    impartial
+    exact toWeaklyImpartial y
+termination_by x
+decreasing_by igame_wf
+
+@[simp] protected instance zero : Impartial 0 := by rw [impartial_def]; simp
+
+protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
+  apply mk
+  · simp
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
+    impartial
+    rw [← neg_neg y]
+    exact .neg _
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+protected theorem neg_iff {x : IGame} : Impartial (-x) ↔ Impartial x :=
+  ⟨fun _ ↦ by simpa using Impartial.neg (-x), fun _ ↦ .neg x⟩
+
+protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
+  apply mk
+  · simp [add_comm]
+  · simp_rw [forall_moves_add]
+    intro p
+    constructor
+    all_goals intro z hz; impartial; exact .add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
+  .add x (-y)
+
+protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x * y) := by
+  apply mk
+  · simp [← neg_mul]
+  · simp_rw [forall_moves_mul, mulOption]
+    intro p q a ha b hb
+    impartial
+    have := Impartial.mul a y
+    have := Impartial.mul x b
+    have := Impartial.mul a b
+    infer_instance
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance mulOption (x y a b : IGame)
+    [Impartial x] [Impartial y] [Impartial a] [Impartial b] : Impartial (mulOption x y a b) :=
+  .sub ..
+
+open Pointwise in
+@[simp]
+theorem neg_moves (x : IGame) [Impartial x] (p : Player) : -x.moves p = x.moves p := by
+  ext y
+  constructor <;> intro hy
+  · rw [Set.mem_neg] at hy
+    have := Impartial.of_mem_moves hy
+    rw [Impartial.neg_iff] at this
+    rwa [← neg_eq y]
+  · impartial
+    simpa
+
+theorem moves_congr (x : IGame) [Impartial x] (p q : Player) : x.moves p = x.moves q := by
+  apply Player.const_of_left_eq_right _ p q
+  conv_rhs => rw [← neg_eq x, moves_neg]
+  simp
+
+instance toDicotic (x : IGame) [Impartial x] : Dicotic x := by
+  rw [dicotic_def]
+  constructor
+  · rw [moves_congr x left right]
+  · intro p y hy
+    impartial
+    exact toDicotic y
+termination_by x
+decreasing_by igame_wf
+
+end Impartial
 
 /-! ### Numeric games -/
 
