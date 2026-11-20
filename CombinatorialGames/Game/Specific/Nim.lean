@@ -136,7 +136,7 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
-  rw [← WeaklyImpartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+  rw [← NegSelfEquiv.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
 
 theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val := by
   apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
@@ -163,7 +163,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
       exact ihy k hky hk' (lf_right_of_le how hk) (hky.trans hy)
   · rw [moves_nim] at hw
     obtain ⟨o', ho', rfl⟩ := hw
-    obtain rfl := nim_equiv_iff.1 (WeaklyImpartial.le_iff_equiv.1 (hxy.trans hyx))
+    obtain rfl := nim_equiv_iff.1 (NegSelfEquiv.le_iff_equiv.1 (hxy.trans hyx))
     exact iho _ ho' y ⟨hyx, hxy⟩ (birthday_lt_of_subposition hy)
 
 end IGame

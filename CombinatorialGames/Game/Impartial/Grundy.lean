@@ -203,12 +203,12 @@ private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
   · intro y hy
     have := h right y hy
     grw [← nim_grundy_equiv y]
-    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy right]
+    rw [NegSelfEquiv.lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy right]
     exact (grundyFor_ne hy).symm
   · intro y hy
     have := h left y hy
     grw [← nim_grundy_equiv y]
-    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy left]
+    rw [NegSelfEquiv.lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy left]
     exact H ▸ grundyFor_ne hy
   · rw [forall_moves_nim]
     intro a ha
