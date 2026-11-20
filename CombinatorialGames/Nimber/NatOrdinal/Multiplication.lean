@@ -5,7 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.NatOrdinal.Basic
+public import CombinatorialGames.Nimber.NatOrdinal.Addition
 public import CombinatorialGames.Nimber.SimplestExtension.Basic
 
 import CombinatorialGames.NatOrdinal.Pow
@@ -13,17 +13,17 @@ import CombinatorialGames.Nimber.Omega
 import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
-# Bounds for nimber arithmetic
+# Bound for nimber addition
 
-We prove that the sum of two nimbers is bounded by their natural sum, and likewise for the product.
-As a corollary of these bounds, `∗(ω ^ ω ^ x)` is always a ring.
+This file proves that nimber multiplication is bounded above by natural multiplication. As a
+corollary, `∗(ω ^ ω ^ x)` is always a ring.
 -/
 
 public section
 
-open Ordinal
-
 universe u
+
+open Ordinal
 
 private theorem Ordinal.isPrincipal_mul_opow_omega0 {x : Ordinal} (hx : 1 < x) :
     IsPrincipal (· * ·) (x ^ ω) := by
@@ -36,28 +36,6 @@ private theorem Ordinal.isPrincipal_mul_opow_omega0 {x : Ordinal} (hx : 1 < x) :
   exact natCast_lt_omega0 _
 
 namespace Nimber
-
-/-! ### Addition -/
-
-/-- A version of `add_le_nadd` stated in terms of `Ordinal`. -/
-theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + NatOrdinal.of b).val := by
-  rw [val_le_iff]
-  apply add_le_of_forall_ne
-  all_goals
-    intro c hc
-    cases c with | of c
-    rw [← val_eq_iff.ne]
-    apply ((add_le_nadd' ..).trans_lt _).ne
-    simpa
-termination_by (a, b)
-
-theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
-  add_le_nadd' ..
-
-theorem add_one_le_succ (a : Nimber) : a + 1 ≤ Order.succ a := by
-  simpa [succ_def] using add_le_nadd a 1
-
-/-! ### Multiplication -/
 
 private theorem exists_of_natCast_mul_eq (m n : ℕ) : ∃ k : ℕ, ∗m * ∗n = ∗k := by
   simp_rw [← val_eq_iff, ← lt_omega0]
