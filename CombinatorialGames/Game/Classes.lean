@@ -155,7 +155,7 @@ variable {x y : IGame} [hx : NegSelfEquiv x] [hy : NegSelfEquiv y]
 attribute [simp] neg_equiv
 @[simp] theorem equiv_neg (x : IGame) [NegSelfEquiv x] : x ≈ -x := (neg_equiv _).symm
 
-protected instance zero : NegSelfEquiv 0 := ⟨by simp⟩
+@[simp] protected instance zero : NegSelfEquiv 0 := ⟨by simp⟩
 
 theorem sub_equiv (x y : IGame) [NegSelfEquiv y] : x - y ≈ x + y :=
   add_congr_right (neg_equiv y)
@@ -170,6 +170,12 @@ protected theorem neg_iff {x : IGame} : NegSelfEquiv (-x) ↔ NegSelfEquiv x := 
   simp [negSelfEquiv_iff, antisymmRel_comm]
 
 protected instance neg (x : IGame) [NegSelfEquiv x] : NegSelfEquiv (-x) := ⟨by simp⟩
+
+protected instance add (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : NegSelfEquiv (x + y) where
+  neg_equiv := by grw [neg_add, neg_equiv, neg_equiv]
+
+protected instance sub (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : NegSelfEquiv (x - y) :=
+  .add x (-y)
 
 theorem le_comm : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
@@ -354,6 +360,8 @@ theorem fuzzy_zero_of_forall_exists {x y : IGame} [WeaklyImpartial x]
   exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
 
 end WeaklyImpartial
+
+/-! ### Impartial games -/
 
 /-! ### Numeric games -/
 
