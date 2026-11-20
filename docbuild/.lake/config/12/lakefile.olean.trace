@@ -1,8 +1,0 @@
-{"platform": "x86_64-unknown-linux-gnu",
- "options":
- {"errorOnBuild":
-  "ProofWidgets failed to reuse pre-built JS code. Please report this issue on the Lean Zulip."},
- "name": "proofwidgets",
- "leanHash": "0b77e12952ad39077d80d8bd6b66d601f225c321",
- "idx": 12,
- "configHash": "58c5ecd96477fdd9"}
