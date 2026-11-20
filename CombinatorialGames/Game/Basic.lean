@@ -368,8 +368,8 @@ theorem zero_le_intCast {n : ℤ} : 0 ≤ (n : IGame) ↔ 0 ≤ n := by
 theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
-namespace Impartial
-variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
+namespace WeaklyImpartial
+variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
 
 @[simp]
 theorem neg_mk : -Game.mk x = Game.mk x :=
@@ -385,7 +385,7 @@ theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
 
 -- TODO: move these four lemmas earlier:
 
-theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
+theorem add_self_equiv (x : IGame) [WeaklyImpartial x] : x + x ≈ 0 :=
   Game.mk_eq_mk.1 (mk_add_self x)
 
 variable {x y}
@@ -412,6 +412,6 @@ theorem fuzzy_iff_add_fuzzy_zero' : x ‖ y ↔ x + y ‖ 0 := by
   rw [← add_fuzzy_add_iff_left (a := x), (add_self_equiv x).incompRel_congr_left,
     incompRel_comm]
 
-end Impartial
+end WeaklyImpartial
 end IGame
 end

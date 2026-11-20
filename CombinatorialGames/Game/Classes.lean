@@ -141,25 +141,25 @@ protected instance zsmul (n : ℤ) (x : IGame) [Dicotic x] : Dicotic (n • x) :
 
 end Dicotic
 
-/-! ### Impartial games -/
+/-! ### "Weakly" impartial games -/
 
-/-- An impartial game is one that's equivalent to its negative, such that each left and right move
-is also impartial.
+/-- A weakly impartial game is one that's equivalent to its negative, such that each left and right
+move is also weakly impartial.
 
-Note that this is a slightly more general definition than the one that's usually in the literature,
-as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still holds: see
-`IGame.equiv_nim_grundyValue`.
+This is more general than `Impartial`, since we don't require `x = -x`. Despite this, the
+Sprague-Grundy theorem still holds: see `IGame.nim_grundy_equiv`.
 
 In such a game, both players have the same payoffs at any subposition. -/
 @[mk_iff impartial_def']
-class inductive Impartial : IGame → Prop where
-  | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, Impartial y) → Impartial x
+class inductive WeaklyImpartial : IGame → Prop where
+  | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y) → WeaklyImpartial x
 
-theorem impartial_def {x : IGame} : x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y :=
+theorem impartial_def {x : IGame} :
+    x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y :=
   impartial_def' x
 
-namespace Impartial
-variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
+namespace WeaklyImpartial
+variable (x y : IGame) [hx : WeaklyImpartial x] [hy : WeaklyImpartial y]
 
 @[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
 @[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
@@ -168,52 +168,56 @@ omit hx in
 theorem sub_equiv : x - y ≈ x + y := add_congr_right (neg_equiv y)
 
 @[aesop unsafe 50% apply]
-protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
-    y ∈ x.moves p → Impartial y :=
+protected theorem of_mem_moves {p} {x y : IGame} [h : WeaklyImpartial x] :
+    y ∈ x.moves p → WeaklyImpartial y :=
   (impartial_def.1 h).2 p y
 
-protected theorem subposition {x y} [Impartial x] (h : Subposition y x) : Impartial y := by
-  induction x using IGame.moveRecOn generalizing ‹x.Impartial› with | ind x ih
+protected theorem subposition {x y} [WeaklyImpartial x] (h : Subposition y x) :
+    WeaklyImpartial y := by
+  induction x using IGame.moveRecOn generalizing ‹x.WeaklyImpartial› with | ind x ih
   obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
-protected theorem wsubposition {x y} [Impartial x] (h : WSubposition y x) : Impartial y := by
+protected theorem wsubposition {x y} [WeaklyImpartial x] (h : WSubposition y x) :
+    WeaklyImpartial y := by
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
   · assumption
   · exact .subposition hy
 
-/-- `impartial` eagerly adds all possible `Impartial` hypotheses. -/
-elab "impartial" : tactic =>
+/-- `weakly_impartial` eagerly adds all possible `WeaklyImpartial` hypotheses. -/
+elab "weakly_impartial" : tactic =>
   addInstances <| .mk
-    [``Impartial.of_mem_moves, ``Impartial.subposition, ``Impartial.wsubposition]
+    [``WeaklyImpartial.of_mem_moves, ``WeaklyImpartial.subposition, ``WeaklyImpartial.wsubposition]
 
-@[simp] protected instance zero : Impartial 0 := by rw [impartial_def]; simp
+@[simp] protected instance zero : WeaklyImpartial 0 := by rw [impartial_def]; simp
 
-protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
+protected instance neg (x : IGame) [WeaklyImpartial x] : WeaklyImpartial (-x) := by
   apply mk
   · simp
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
-    impartial
+    weakly_impartial
     rw [← neg_neg y]
     exact .neg _
 termination_by x
 decreasing_by igame_wf
 
-protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
+protected instance add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x + y) := by
   apply mk
   · rw [neg_add]
     exact add_congr (neg_equiv x) (neg_equiv y)
   · simp_rw [forall_moves_add]
     intro p
     constructor
-    all_goals intro z hz; impartial; exact .add ..
+    all_goals intro z hz; weakly_impartial; exact .add ..
 termination_by (x, y)
 decreasing_by igame_wf
 
-protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
+protected instance sub (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x - y) :=
   .add x (-y)
 
 /- The product instance is proven in `Game.Impartial.Multiplication`. -/
@@ -221,7 +225,7 @@ protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
 theorem _root_.le_comm_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : x ≤ y ↔ y ≤ x := by
   rw [← IGame.neg_le_neg_iff, hy.le_congr hx]
 
-theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x :=
+theorem le_comm {x y} [WeaklyImpartial x] [WeaklyImpartial y] : x ≤ y ↔ y ≤ x :=
   le_comm_of_neg_equiv (neg_equiv x) (neg_equiv y)
 
 theorem _root_.not_lt_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : ¬x < y := by
@@ -299,7 +303,7 @@ private theorem equiv_iff_forall_fuzzy' :
     x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
   rw [← le_iff_equiv, le_iff_forall_lf]
   congr! with z hz z hz
-  all_goals impartial; simp [incompRel_comm]
+  all_goals weakly_impartial; simp [incompRel_comm]
 
 theorem equiv_iff_forall_fuzzy (p : Player) :
     x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
@@ -315,7 +319,7 @@ theorem fuzzy_iff_exists_equiv (p : Player) :
   rw [← not_equiv_iff, equiv_iff_forall_fuzzy p, not_and_or]
   simp_rw [not_forall, ← exists_prop]
   congr! with _ h _ h
-  all_goals impartial; exact not_fuzzy_iff
+  all_goals weakly_impartial; exact not_fuzzy_iff
 
 theorem equiv_zero (p : Player) : x ≈ 0 ↔ ∀ y ∈ x.moves p, y ‖ 0 := by
   rw [equiv_iff_forall_fuzzy p]; simp
@@ -328,13 +332,13 @@ have also been reached in the first turn, then `x` is won by the first player. -
 theorem fuzzy_zero_of_forall_exists {p : Player} {y} (hy : y ∈ x.moves p)
     (H : ∀ z ∈ y.moves p, ∃ w ∈ x.moves p, z ≈ w) : x ‖ 0 := by
   apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
-  impartial
+  weakly_impartial
   rw [equiv_zero] at hx
   obtain ⟨z, hz, hz'⟩ := (fuzzy_zero _).1 (hx y hy)
   obtain ⟨w, hw, hw'⟩ := H z hz
   exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
 
-end Impartial
+end WeaklyImpartial
 
 /-! ### Numeric games -/
 

@@ -234,8 +234,8 @@ decreasing_by igame_wf
 
 -- TODO: a game is dicotic iff every non-strict subposition is small.
 
-instance _root_.IGame.Impartial.toSmall (x) [Impartial x] : Small x :=
-  .of_equiv (Impartial.nim_grundy_equiv x)
+instance _root_.IGame.WeaklyImpartial.toSmall (x) [WeaklyImpartial x] : Small x :=
+  .of_equiv (nim_grundy_equiv x)
 
 @[simp]
 protected instance ofSets_zero_left (x : IGame) [Small x] : !{{0} | {x}}.Small :=
