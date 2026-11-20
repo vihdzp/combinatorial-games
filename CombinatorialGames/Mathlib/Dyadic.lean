@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Algebra.Group.Submonoid.Membership
 public import Mathlib.Algebra.Order.Archimedean.Defs
-public import Mathlib.Algebra.Ring.Parity
 public import Mathlib.Algebra.Ring.Rat
 public import Mathlib.Data.Dyadic.Basic
 public import Mathlib.Data.Nat.Log

@@ -9,8 +9,6 @@ public import CombinatorialGames.Surreal.Cut
 public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 import CombinatorialGames.Mathlib.WithTop
-import Mathlib.Algebra.Order.Group.OrderIso
-import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
 # Birthday of cuts

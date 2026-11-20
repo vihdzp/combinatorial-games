@@ -9,10 +9,10 @@ public import CombinatorialGames.Nimber.Basic
 public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
-public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
+import Mathlib.SetTheory.Ordinal.Arithmetic
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring.RingNF
 
