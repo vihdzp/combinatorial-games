@@ -225,8 +225,8 @@ namespace IGame
 open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
-  have (y : xᴸ) : ∃ n : ℕ, y.1 < n := by
-    have := Short.of_mem_moves y.2
+  have (y : xᴸ) : ∃ n : ℕ, y.val < n := by
+    have := Short.of_mem_moves y.prop
     exact Short.exists_lt_natCast y
   choose f hf using this
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove

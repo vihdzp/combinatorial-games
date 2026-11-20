@@ -49,9 +49,9 @@ theorem Ordinal.enum_lt_of_lt_ord_cof {s : Set Ordinal} (hs : IsCofinal s) {x y 
     refine cof_le fun ⟨a, ha⟩ ↦ ?_
     obtain ⟨b, hb, ⟨hab, hbx⟩⟩ := hx a ha
     exact ⟨⟨b, hbx⟩, hb, hab⟩
-  let g (a : Iio x.cof.ord) : s := ⟨f a, (f a).2⟩
+  let g (a : Iio x.cof.ord) : s := ⟨f a, (f a).prop⟩
   have hg : StrictMono g := fun _ ↦ by simp [g]
-  exact (Subtype.coe_le_coe.2 <| enum_le_of_strictMono hs hg hy).trans_lt (f _).1.2
+  exact (Subtype.coe_le_coe.2 <| enum_le_of_strictMono hs hg hy).trans_lt (f _).val.prop
 
 theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
     (hx : ∀ a < x, ∃ b ∈ s, b ∈ Ico a x) (hx' : IsSuccLimit x) :

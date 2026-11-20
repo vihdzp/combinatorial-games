@@ -9,10 +9,10 @@ public import CombinatorialGames.Nimber.Basic
 public import Mathlib.Algebra.CharP.Defs
 public import Mathlib.Algebra.Field.Defs
 public import Mathlib.Algebra.Ring.Int.Parity
-public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.CharP.Two
+import Mathlib.SetTheory.Ordinal.Arithmetic
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Ring.RingNF
 
@@ -253,7 +253,7 @@ theorem pow_le_of_forall_ne {a b : Nimber} {n : ℕ}
     push Not at hc'
     obtain ⟨f, rfl⟩ := hc'
     convert H <| Fin.cons (α := fun _ ↦ Iio a) ⟨d, hd⟩ f using 1
-    have := Fin.comp_cons (fun x ↦ a + x.1) ⟨d, hd⟩ f
+    have := Fin.comp_cons (fun x ↦ a + x.val) ⟨d, hd⟩ f
     dsimp [Function.comp_def] at this
     rw [this, Fin.prod_cons]
     ring_nf

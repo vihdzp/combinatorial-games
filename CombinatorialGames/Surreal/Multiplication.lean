@@ -493,7 +493,8 @@ end IGame.Numeric
 namespace Surreal
 
 noncomputable instance : CommRing Surreal where
-  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h _ _ ↦ Numeric.mul_congr h
+  mul := Quotient.map₂ (fun a b ↦ ⟨a.val * b.val, inferInstance⟩)
+    fun _ _ h _ _ ↦ Numeric.mul_congr h
   zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
   mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
   one_mul := by rintro ⟨x⟩; change mk (1 * x) = mk x; simp_rw [one_mul]

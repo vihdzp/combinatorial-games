@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Algebra.Group.Submonoid.Membership
 public import Mathlib.Algebra.Order.Archimedean.Defs
-public import Mathlib.Algebra.Ring.Parity
 public import Mathlib.Algebra.Ring.Rat
 public import Mathlib.Data.Dyadic.Basic
 public import Mathlib.Data.Nat.Log
@@ -51,15 +50,6 @@ theorem dvd_iff_le_of_mem_powers {m n : ℕ}
   simp_all [pow_dvd_pow_iff, pow_le_pow_iff_right₀]
 
 namespace Dyadic
-
-attribute [coe] toRat
-
-instance : Coe Dyadic Rat where
-  coe := toRat
-
-attribute [norm_cast] toRat_le_toRat_iff toRat_lt_toRat_iff toRat_inj
-  toRat_zero toRat_one toRat_natCast toRat_intCast toRat_add toRat_neg toRat_sub toRat_mul toRat_pow
-attribute [simp] toRat_inj
 
 /-- Numerator of a dyadic number. -/
 abbrev num (x : Dyadic) : ℤ := x.toRat.num
@@ -112,8 +102,6 @@ theorem den_ne_one_of_den_lt {x y : Dyadic} (h : x.den < y.den) : y.den ≠ 1 :=
 @[simp, norm_cast] theorem den_natCast (n : ℕ) : (n : Dyadic).den = 1 :=
   congrArg Rat.den (toRat_natCast n)
 
-@[simp] theorem toRat_ofNat (n : ℕ) : (ofNat(n) : Dyadic).toRat = n :=
-  toRat_natCast n
 @[simp] theorem num_ofNat (n : ℕ) : (ofNat(n) : Dyadic).num = n :=
   num_natCast n
 @[simp] theorem den_ofNat (n : ℕ) : (ofNat(n) : Dyadic).den = 1 :=
@@ -156,6 +144,8 @@ alias toRat_eq_zero := toRat_eq_zero_iff
 
 @[simp] theorem num_one : (1 : Dyadic).num = 1 := rfl
 @[simp] theorem den_one : (1 : Dyadic).den = 1 := rfl
+
+attribute [norm_cast] toRat_one
 
 @[simp] theorem one_lt_toRat {x : Dyadic} : 1 < x.toRat ↔ 1 < x := by norm_cast
 @[simp] theorem one_le_toRat {x : Dyadic} : 1 ≤ x.toRat ↔ 1 ≤ x := by norm_cast

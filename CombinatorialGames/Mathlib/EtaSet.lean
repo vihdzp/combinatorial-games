@@ -118,11 +118,11 @@ variable {r : α → α → Prop}
 
 /-- The image under `g` of the `r`-predecessors of `a` lying below `a`. -/
 private def lo (a : α) (g : ∀ y, r y a → β) : Set β :=
-  Set.range fun x : {x : α // r x a ∧ x < a} ↦ g x.1 x.2.1
+  Set.range fun x : {x : α // r x a ∧ x < a} ↦ g x x.prop.1
 
 /-- The image under `g` of the `r`-predecessors of `a` lying above `a`. -/
 private def hi (a : α) (g : ∀ y, r y a → β) : Set β :=
-  Set.range fun x : {x : α // r x a ∧ a < x} ↦ g x.1 x.2.1
+  Set.range fun x : {x : α // r x a ∧ a < x} ↦ g x x.prop.1
 
 private theorem card_subtype_lt {δ : Type v} {t : δ → δ → Prop} [IsWellOrder δ t]
     (h : (#δ).ord = Ordinal.type t) (x : δ) : #{y : δ // t y x} < #δ :=
@@ -216,7 +216,7 @@ private theorem surjective_f (hα : IsEta #α α) (hords : (#β).ord = Ordinal.t
   set Alo : Set α := {a ∈ A | h.f hord s a < b}
   set Ahi : Set α := {a ∈ A | b < h.f hord s a}
   have hA : #A < #α :=
-    ((mk_le_of_injective (f := fun a : A ↦ (⟨h.f hord s a.1, a.2⟩ : {c : β // s c b}))
+    ((mk_le_of_injective (f := fun a : A ↦ (⟨h.f hord s a.val, a.prop⟩ : {c : β // s c b}))
       fun a₁ a₂ he ↦ Subtype.ext (hmono.injective (congrArg Subtype.val he))).trans_lt
       (card_subtype_lt hords b)).trans_eq heq.symm
   have hS : {z | (∀ x ∈ Alo, x < z) ∧ ∀ y ∈ Ahi, z < y}.Nonempty :=
