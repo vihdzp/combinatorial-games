@@ -123,7 +123,7 @@ theorem IsRing.omega0 : IsRing (∗ω) :=
 theorem of_omega0_opow_mul_natCast_add {x y : Ordinal} (hy : y < ω ^ x) (n : ℕ) :
     ∗(ω ^ x * n + y) = ∗ω ^ x * ∗n + ∗y := by
   rw [(IsField.omega0.opow' _).mul_add_eq_of_lt' hy,
-    IsField.omega0.opow_mul_eq_of_lt' _ (natCast_lt_omega0 _), of_val]
+    IsField.omega0.opow_mul_eq_of_lt' _ (natCast_lt_omega0 _)]
 
 theorem of_omega0_opow_add {x y : Ordinal} (hy : y < ω ^ x) : ∗(ω ^ x + y) = ∗ω ^ x + ∗y := by
   simpa using of_omega0_opow_mul_natCast_add hy 1

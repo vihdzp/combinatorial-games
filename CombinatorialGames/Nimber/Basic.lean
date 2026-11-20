@@ -66,6 +66,9 @@ recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 :=
   Set.ext_iff.1 Iio_two x
 
+theorem le_two_iff {x : Nimber} : x ≤ ∗2 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 :=
+  Order.le_two_iff (α := Ordinal)
+
 theorem lt_three_iff {x : Nimber} : x < ∗3 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 :=
   Ordinal.lt_three_iff
 
@@ -79,6 +82,8 @@ theorem le_four_iff {x : Nimber} : x ≤ ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 �
   Ordinal.le_four_iff
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
+
+theorem two_le_iff {x : Nimber} : ∗2 ≤ x ↔ 1 < x := by rw [← succ_one, succ_le_iff]
 
 theorem not_small_nimber : ¬ Small.{u} Nimber.{u} := not_small_ordinal
 
