@@ -21,9 +21,9 @@ corollary, `∗(ω ^ ω ^ x)` is always a ring.
 
 public section
 
-universe u
-
 open Ordinal
+
+universe u
 
 private theorem Ordinal.isPrincipal_mul_opow_omega0 {x : Ordinal} (hx : 1 < x) :
     IsPrincipal (· * ·) (x ^ ω) := by
