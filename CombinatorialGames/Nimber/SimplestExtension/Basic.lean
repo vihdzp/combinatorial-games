@@ -807,13 +807,6 @@ theorem add_lt_of_mul_lt (mul_lt : ∀ ⦃y z : Nimber⦄, y < x → z < x → y
     · exact IsGroup.two.add_lt
   · exact (IsGroup.of_mul_two_lt hx.ne_zero fun y hy ↦ mul_lt hy hx).add_lt
 
-theorem IsRing.of_mul (one_lt : 1 < x) (mul_lt : ∀ ⦃y z : Nimber⦄, y < x → z < x → y * z < x) :
-    IsRing x where
-  mul_lt
-  ne_zero := one_lt.ne_zero
-  ne_one := one_lt.ne'
-  add_lt := add_lt_of_mul_lt mul_lt
-
 /-- A version of `IsGroup.mul_eq_of_lt` stated in terms of `Ordinal`. -/
 theorem IsGroup.mul_eq_of_lt' (x : Ordinal) {y z w : Ordinal}
     (hy : IsGroup (∗y)) (hz : IsGroup (∗z)) (hwy : w < y)
