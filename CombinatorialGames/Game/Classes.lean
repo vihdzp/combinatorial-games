@@ -361,8 +361,6 @@ theorem fuzzy_zero_of_forall_exists {x y : IGame} [WeaklyImpartial x]
 
 end WeaklyImpartial
 
-/-! ### Impartial games -/
-
 /-! ### Numeric games -/
 
 /-- A game `!{s | t}` is numeric if everything in `s` is less than everything in `t`, and all the
