@@ -114,10 +114,6 @@ theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
     toIGame t ∈ (toIGame s).moves p :=
   GameGraph.mem_moves_toIGame_of_mem h
 
-@[simp]
-protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
-  neg_toIGame rfl ..
-
 protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
   impartial_toIGame rfl ..
 

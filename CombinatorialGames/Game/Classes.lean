@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Game.IGame
 public import CombinatorialGames.Tactic.AddInstances
 
+import CombinatorialGames.Tactic.Register
 import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
 
@@ -382,7 +383,7 @@ theorem impartial_def {x : IGame} : x.Impartial ↔ -x = x ∧ ∀ p, ∀ y ∈ 
 
 namespace Impartial
 
-@[simp] theorem neg_eq (x : IGame) [hx : Impartial x] : -x = x := (impartial_def.1 hx).1
+@[simp, game_cmp] theorem neg_eq (x : IGame) [hx : Impartial x] : -x = x := (impartial_def.1 hx).1
 
 @[aesop unsafe 50% apply]
 protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :

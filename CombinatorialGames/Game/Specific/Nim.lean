@@ -111,10 +111,6 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   rw [birthday_nim]
 termination_by o
 
-@[simp, game_cmp]
-theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  GameGraph.neg_toIGame rfl ..
-
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
   GameGraph.impartial_toIGame rfl ..
 
