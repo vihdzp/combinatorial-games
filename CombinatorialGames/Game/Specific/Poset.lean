@@ -87,7 +87,6 @@ instance wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺
   rw [(hg m).2, mem_sdiff] at this
   exact this.2 h'
 
-
 /-! ### Poset game -/
 
 -- TODO: add stuff on `LGame`
@@ -115,13 +114,8 @@ theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
     toIGame t ∈ (toIGame s).moves p :=
   GameGraph.mem_moves_toIGame_of_mem h
 
-@[simp]
-protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
-  neg_toIGame rfl ..
-
--- TODO: strengthen to `Impartial`
-protected instance weaklyImpartial_toIGame (s : Set α) : (toIGame s).WeaklyImpartial :=
-  weaklyImpartial_toIGame rfl ..
+protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
+  impartial_toIGame rfl ..
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.

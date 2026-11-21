@@ -20,7 +20,7 @@ open Nimber
 
 public section
 
-namespace IGame.Impartial
+namespace IGame.WeaklyImpartial
 
 private theorem mul' (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     WeaklyImpartial (x * y) ∧ grundyFor right (x * y) = grundyFor right x * grundyFor right y := by
@@ -67,9 +67,7 @@ protected instance mul (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     WeaklyImpartial (x * y) :=
   (mul' x y).1
 
-end Impartial
-
-namespace Impartial
+end WeaklyImpartial
 
 variable {x y x₁ x₂ y₁ y₂ : IGame} [WeaklyImpartial x] [WeaklyImpartial y]
   [WeaklyImpartial x₁] [WeaklyImpartial x₂] [WeaklyImpartial y₁] [WeaklyImpartial y₂]
@@ -77,7 +75,7 @@ variable {x y x₁ x₂ y₁ y₂ : IGame} [WeaklyImpartial x] [WeaklyImpartial 
 @[simp]
 theorem grundy_mul (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
     grundy (x * y) = grundy x * grundy y := by
-  simp_rw [← grundyFor_eq_grundy right]; exact (Impartial.mul' x y).2
+  simp_rw [← grundyFor_eq_grundy right]; exact (WeaklyImpartial.mul' x y).2
 
 theorem _root_.IGame.nim_mul_equiv (a b : Nimber) : nim a * nim b ≈ nim (a * b) := by
   conv_rhs => rw [← grundy_nim a, ← grundy_nim b, ← grundy_mul]
@@ -86,7 +84,7 @@ theorem _root_.IGame.nim_mul_equiv (a b : Nimber) : nim a * nim b ≈ nim (a * b
 theorem mul_equiv_zero : x * y ≈ 0 ↔ x ≈ 0 ∨ y ≈ 0 := by
   rw [← grundy_eq_zero_iff, grundy_mul, mul_eq_zero, grundy_eq_zero_iff, grundy_eq_zero_iff]
 
-protected instance mulOption (x y a b : IGame)
+protected instance WeaklyImpartial.mulOption (x y a b : IGame)
     [WeaklyImpartial x] [WeaklyImpartial y] [WeaklyImpartial a] [WeaklyImpartial b] :
     WeaklyImpartial (mulOption x y a b) :=
   .sub ..
@@ -102,5 +100,5 @@ theorem mul_congr_right (he : y₁ ≈ y₂) : x * y₁ ≈ x * y₂ := by
 theorem mul_congr (hx : x₁ ≈ x₂) (hy : y₁ ≈ y₂) : x₁ * y₁ ≈ x₂ * y₂ :=
   (mul_congr_left hx).trans (mul_congr_right hy)
 
-end IGame.Impartial
+end IGame
 end

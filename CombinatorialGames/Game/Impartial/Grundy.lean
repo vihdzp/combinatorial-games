@@ -163,7 +163,8 @@ theorem grundy_eq_iff_equiv {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y
 
 @[simp]
 theorem grundy_neg (x : IGame) [WeaklyImpartial x] : grundy (-x) = grundy x := by
-  rw [grundy_eq_iff_equiv_nim, ← neg_nim, IGame.neg_equiv_neg_iff, ← grundy_eq_iff_equiv_nim]
+  rw [grundy_eq_iff_equiv_nim, ← Impartial.neg_eq (nim _), IGame.neg_equiv_neg_iff,
+    ← grundy_eq_iff_equiv_nim]
 
 @[simp]
 theorem grundyFor_eq_grundy (p) (x : IGame) [WeaklyImpartial x] : grundyFor p x = grundy x := by
@@ -203,12 +204,12 @@ private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
   · intro y hy
     have := h right y hy
     grw [← nim_grundy_equiv y]
-    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy right]
+    rw [NegSelfEquiv.lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy right]
     exact (grundyFor_ne hy).symm
   · intro y hy
     have := h left y hy
     grw [← nim_grundy_equiv y]
-    rw [lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy left]
+    rw [NegSelfEquiv.lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy left]
     exact H ▸ grundyFor_ne hy
   · rw [forall_moves_nim]
     intro a ha
@@ -222,7 +223,7 @@ theorem of_grundyFor_left_eq_grundyFor_right {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
     (H : grundyFor left x = grundyFor right x) : WeaklyImpartial x :=
   have H := of_grundyFor_left_eq_grundyFor_right' h H
-  .mk ((neg_congr H).symm.trans ((neg_nim _).symm ▸ H)) h
+  .mk ((neg_congr H).symm.trans ((Impartial.neg_eq (nim _)).symm ▸ H)) h
 
 end IGame
 end
