@@ -89,15 +89,15 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
           apply Lex.lt_of_degree_lt
           simp [hqn]
         · aesop
-      · have hm : (∏ i, (X + C (f i).1)).Monic := by simp [Monic, leadingCoeff_prod]
-        have hq : (∏ i, (X + C (f i).1)).degree = (n : WithBot ℕ) := by
+      · have hm : (∏ i, (X + C (f i).val)).Monic := by simp [Monic, leadingCoeff_prod]
+        have hq : (∏ i, (X + C (f i).val)).degree = (n : WithBot ℕ) := by
           rw [degree_prod_of_monic] <;> simp [Monic]
-        have hq' : (X ^ n + ∏ i, (X + C (f i).1)).degree < n := by
+        have hq' : (X ^ n + ∏ i, (X + C (f i).val)).degree < n := by
           rw [← CharTwo.sub_eq_add]
           convert degree_sub_lt_left .. <;> simp_all
-        have H : ∀ k, (X ^ n + ∏ i, (X + C (f i).1)).coeff k < x := by
+        have H : ∀ k, (X ^ n + ∏ i, (X + C (f i).val)).coeff k < x := by
           refine h.coeff_add_lt (coeff_X_pow_lt _ hx₁) <| h.coeff_prod_lt fun y hy ↦ ?_
-          have : (f y).1 < x := (f y).2
+          have : (f y).val < x := (f y).prop
           apply h.coeff_add_lt <;> aesop (add simp [coeff_X, coeff_C])
         replace IH := IH hq' H
         simp only [eval_add, eval_X, eval_pow, eval_prod, eval_C] at IH
@@ -117,11 +117,7 @@ private theorem IsField.eval_eq_of_lt {n : ℕ} {x : Nimber} (h : IsField x)
       cases n with
       | zero => simp
       | succ n =>
-        have hxn : val x ≤ val x ^ (n + 1) := by
-          rw [← opow_natCast]
-          exact left_le_opow _ (mod_cast n.succ_pos)
-        refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup hxn le_rfl ?_
-          @h.inv_lt fun a b ha hb ↦ ?_
+        refine (h.pow (n + 1)).mul_eq_of_lt h.toIsGroup h.toIsGroup ?_ @h.inv_lt fun a b ha hb ↦ ?_
         · convert hpk (n + 1)
           simpa using q.coeff_eq_zero_of_degree_lt hqn
         · obtain ⟨p, hpn, hpk, rfl⟩ := eq_oeval_of_lt_pow hx₀.ne' ha
@@ -183,7 +179,7 @@ structure IsAlgClosed (x : Nimber) extends IsField x where
       degree_pos_of_root (ne_of_apply_ne (·.coeff 0) (by simp [p]))
         (show IsRoot _ y⁻¹ by simp [hy0, p])
     have hpp (k : ℕ) : (p.map toIsRing.toSubring.subtype).coeff k < x :=
-      (coeff_map toIsRing.toSubring.subtype k).trans_lt (p.coeff k).2
+      (coeff_map toIsRing.toSubring.subtype k).trans_lt (p.coeff k).prop
     obtain ⟨r, hrx, hr⟩ := exists_root' hpd hpp
     refine Eq.trans_lt ?_ hrx
     simpa [sub_eq_zero, mul_eq_one_iff_inv_eq₀ hy0, p] using hr)
@@ -292,7 +288,7 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       simpa
   · refine pow_le_of_forall_ne fun f hf ↦ ?_
     rw [add_right_inj] at hf
-    have hf' : ∏ i, (x + (f i)) = eval x (∏ i, (X + C (f i).1)) := by simp
+    have hf' : ∏ i, (x + (f i)) = eval x (∏ i, (X + C (f i).val)) := by simp
     rw [hf', ← Nimber.add_eq_zero, ← eval_add] at hf
     apply (h.root_lt _ _ ((mem_roots _).2 hf)).false
     · conv_rhs => rw [← WithTop.coe_untop _ ht]
@@ -304,9 +300,9 @@ private theorem IsField.isRoot_leastNoRoots {x : Nimber} (h : IsField x) (ht) :
       aesop (add apply safe [Subtype.prop])
     · rw [ne_eq, CharTwo.add_eq_zero]
       let i : Fin n := ⟨0, natDegree_leastNoRoots_pos ht⟩
-      apply_fun eval (f i).1
+      apply_fun eval (f i).val
       rw [eval_prod, Finset.prod_eq_zero (Finset.mem_univ i), ne_comm]
-      · exact not_isRoot_leastNoRoots_of_lt _ (f i).2
+      · exact not_isRoot_leastNoRoots_of_lt _ (f i).prop
       · simp
 
 /-- The fourth **simplest extension theorem**: if `x` is a ring that isn't algebraically closed,
@@ -380,7 +376,7 @@ theorem IsField.pow_degree_leastNoRoots {x : Nimber} (hf : IsField x) (ht) {n : 
       ne_eq, ← RingHom.mem_ker] at hy0
     obtain ⟨i, s, hs, hi⟩ := hr.exists_inv hy0
     rw [inv_eq_of_mul_eq_one_left]
-    · exact (r i).2
+    · exact (r i).prop
     · replace hi := congrArg r hi
       rw [map_add, map_mul, hs] at hi
       simpa using! congrArg hxr.toSubring.subtype hi
@@ -464,7 +460,7 @@ protected theorem transcendental : Transcendental ht.toSubfield t := by
   rw [transcendental_iff]
   intro p hp
   rwa [aeval_def, eval₂_eq_eval_map, Subfield.algebraMap_ofSubfield,
-    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).2,
+    ht.eval_eq_of_lt fun k => (coeff_map _ k).trans_lt (p.coeff k).prop,
     oeval_eq_zero_iff ht.ne_zero, Polynomial.map_eq_zero] at hp
 
 theorem algebraAdjoin_simple_self :
@@ -509,13 +505,13 @@ theorem IsField.sq_le_fieldClosure_succ {x : Nimber} (h : IsField x) :
 open Pointwise
 
 private instance (x : Nimber.{u}) : Small.{u} {p : Nimber[X] // ∀ k, p.coeff k < x} := by
-  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.2 k⟩) fun p q h ↦ ?_
+  refine small_of_injective (β := ℕ → Iio x) (f := fun p k ↦ ⟨_, p.prop k⟩) fun p q h ↦ ?_
   ext k
   simpa using congrFun h k
 
 /-- The set of roots of polynomials with coefficients less than `x`. -/
 private noncomputable def rootSet (x : Nimber) : Set Nimber :=
-  ⋃ p : {p : Nimber[X] // ∀ k, p.coeff k < x}, p.1.roots.toFinset
+  ⋃ p : {p : Nimber[X] // ∀ k, p.coeff k < x}, p.val.roots.toFinset
 
 private instance (x : Nimber.{u}) : Small.{u} x.rootSet :=
   small_iUnion _
@@ -553,7 +549,7 @@ private theorem isAlgebraic_of_leastNoRoots {x y : Nimber} (h : y ≤ x.algClosu
     (Subfield.inclusion (Iio_subset_Iio hxy)).toAlgebra
   have tower : IsScalarTower hcf.toSubfield hyf.toSubfield Nimber := ⟨fun _ _ _ => mul_assoc ..⟩
   have int : Algebra.IsAlgebraic hcf.toSubfield hyf.toSubfield :=
-    ⟨fun z => have := z.2; (isAlgebraic_of_lt (z.2.trans_le h)).of_ringHom_of_comp_eq
+    ⟨fun z => have hz := z.prop; (isAlgebraic_of_lt (hz.trans_le h)).of_ringHom_of_comp_eq
       (RingHom.id _) (algebraMap _ _) Function.surjective_id (RingHom.injective _) rfl⟩
   refine IsAlgebraic.restrictScalars _
     ⟨hyf.embed (y.leastNoRoots.untop ht) (coeff_leastNoRoots_lt ht), ?_, ?_⟩
@@ -851,7 +847,7 @@ theorem IsField.perfectField_of_btwn {x y : Nimber} (hx : IsField x) (hy : IsFie
     rw [← isAlgebraic_algebraMap_iff
         ((Subfield.algebraMap_ofSubfield hy.toSubfield).symm ▸ Subfield.subtype_injective _),
       ← hx.lt_algClosure_iff_isAlgebraic, Subfield.algebraMap_ofSubfield, Subfield.subtype_apply]
-    exact c.2.trans_le hyx
+    exact c.prop.trans_le hyx
   Algebra.IsAlgebraic.perfectField hx.toSubfield
 
 theorem IsField.perfectField_of_le_algClosure_zero {x : Nimber} (h : IsField x)

@@ -65,11 +65,15 @@ theorem Pi.Lex.neg_lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → S
   mp := by simpa using @Pi.Lex.neg_lt_neg _ _ (-x) (-y)
   mpr := Pi.Lex.neg_lt_neg
 
-set_option backward.isDefEq.respectTransparency false in
+theorem Pi.Lex.neg_le_neg {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} (h : x ≤ y) :
+    -y ≤ -x :=
+  map_le_of_gt_imp_le_of_ge (fun h' ↦ (Pi.Lex.neg_lt_neg h').le) h
+
 @[simp]
-theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x ≤ -y ↔ y ≤ x := by
-  simp [← not_lt]
+theorem Pi.Lex.neg_le_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x ≤ -y ↔ y ≤ x where
+  mp := by simpa using @Pi.Lex.neg_le_neg _ _ (-x) (-y)
+  mpr := Pi.Lex.neg_le_neg
 
 theorem Pi.Lex.neg_lt_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
     -x < y ↔ -y < x := by
@@ -79,12 +83,12 @@ theorem Pi.Lex.lt_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignT
     x < -y ↔ y < -x := by
   simpa using Pi.Lex.neg_lt_neg_iff (x := -x)
 
-theorem Pi.Lex.neg_le_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : -x ≤ y ↔ -y ≤ x := by
+theorem Pi.Lex.neg_le_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    -x ≤ y ↔ -y ≤ x := by
   simpa using Pi.Lex.neg_le_neg_iff (y := -y)
 
-theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] [WellFoundedLT α]
-    {x y : Lex (α → SignType)} : x ≤ -y ↔ y ≤ -x := by
+theorem Pi.Lex.le_neg_iff {α : Type*} [LinearOrder α] {x y : Lex (α → SignType)} :
+    x ≤ -y ↔ y ≤ -x := by
   simpa using Pi.Lex.neg_le_neg_iff (x := -x)
 
 /-! ### Sign expansions -/
@@ -108,7 +112,8 @@ instance : FunLike SignExpansion NatOrdinal SignType where
   coe_injective a b hab := by cases a; cases b; cases hab; rfl
 
 /-- Every sign after the first `0` is also `0`. -/
-theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) := x.2
+theorem isUpperSet_preimage_singleton_zero (x : SignExpansion) : IsUpperSet (x ⁻¹' {0}) :=
+  x.isUpperSet_preimage_singleton_zero'
 
 /-- Adjust definitional equalities of a sign expansion. -/
 def copy (x : SignExpansion) (sign : NatOrdinal → SignType)
@@ -232,7 +237,7 @@ theorem small_iff_exists_eq_zero {x : SignExpansion} : x.Small ↔ ∃ o, x o = 
   rw [small_iff_length_ne_top, ne_eq, length_eq_top, not_forall_not]
 
 instance : Neg SignExpansion where
-  neg e := ⟨-e, by simpa using e.2⟩
+  neg e := ⟨-e, by simpa using e.isUpperSet_preimage_singleton_zero⟩
 
 @[simp] theorem coe_neg (x : SignExpansion) : ⇑(-x : SignExpansion) = -⇑x := rfl
 theorem neg_apply (x : SignExpansion) (o : NatOrdinal) : (-x) o = -x o := rfl
@@ -490,7 +495,7 @@ theorem floor_of_isUpperSet {f : NatOrdinal → SignType} (hf : IsUpperSet (f �
 
 @[simp]
 theorem floor_coe (x : SignExpansion) : floor x = x :=
-  floor_of_isUpperSet x.2
+  floor_of_isUpperSet x.isUpperSet_preimage_singleton_zero
 
 theorem floor_apply_of_lt_sInf {f : NatOrdinal → SignType} {a : NatOrdinal}
     (hf : a < sInf (f ⁻¹' {0})) : floor f a = f a := by
@@ -600,7 +605,7 @@ theorem ceil_of_isUpperSet {f : NatOrdinal → SignType} (hf : IsUpperSet (f ⁻
 
 @[simp]
 theorem ceil_coe (x : SignExpansion) : ceil x = x :=
-  ceil_of_isUpperSet x.2
+  ceil_of_isUpperSet x.isUpperSet_preimage_singleton_zero
 
 theorem ceil_apply_of_lt_sInf {f : NatOrdinal → SignType} {a : NatOrdinal}
     (hf : a < sInf (f ⁻¹' {0})) : ceil f a = f a := by
@@ -675,7 +680,7 @@ theorem coe_iInf {ι} (f : ι → SignExpansion) :
   aesop
 
 theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.1 i := by
+    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.val i := by
   rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
   apply congrArg sInf
   aesop
@@ -690,7 +695,7 @@ theorem coe_iSup {ι} (f : ι → SignExpansion) :
   aesop
 
 theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.1 i := by
+    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.val i := by
   rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
   apply congrArg sSup
   aesop

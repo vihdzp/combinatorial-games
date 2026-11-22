@@ -187,8 +187,8 @@ def omnific : Subring Surreal where
   mul_mem' := .mul
 
 @[simp] theorem mem_omnific_iff {x : Surreal} : x ∈ omnific ↔ IsOmnific x := .rfl
-@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).2
-@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).2
+@[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : omnific).prop
+@[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : omnific).prop
 
 @[simp]
 theorem isOmnific_realCast_iff {r : ℝ} : IsOmnific r ↔ r ∈ range ((↑) : ℤ → ℝ) where

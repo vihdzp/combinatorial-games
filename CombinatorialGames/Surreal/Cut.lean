@@ -139,7 +139,7 @@ noncomputable instance : CompleteLinearOrder Cut where
 @[simp] theorem left_iSup {ι} (f : ι → Cut) : (⨆ i, f i).left = ⋃ i, (f i).left := by simp [iSup]
 
 instance : Nontrivial Cut :=
-  ⟨⊥, ⊤, by apply_fun left; simpa using empty_ne_univ⟩
+  ⟨⊥, ⊤, by apply_fun left; simp⟩
 
 theorem lt_iff_nonempty_inter {x y : Cut} : x < y ↔ (x.right ∩ y.left).Nonempty := by
   rw [← not_le, ← left_subset_left_iff, ← sdiff_nonempty, sdiff_eq_compl_inter, compl_left]
@@ -406,17 +406,21 @@ theorem leftGame_lt_rightGame_iff {x : Game} :
     exact fun ⟨y, hyr, hyl⟩ ↦ ⟨y, le_antisymm hyl hyr⟩
   · aesop
 
+theorem rightGame_le_leftGame_iff {x : Game} :
+    rightGame x ≤ leftGame x ↔ x ∉ range Surreal.toGame := by
+  simpa using leftGame_lt_rightGame_iff.not
+
 @[simp]
 theorem leftGame_ne_bot (x : Game) : leftGame x ≠ ⊥ := by
   apply_fun left
-  rw [left_bot, ← Set.nonempty_iff_ne_empty, left_leftGame]
+  rw [left_bot, Set.ne_empty_iff_nonempty, left_leftGame]
   refine ⟨-(x.birthday + 1), fun h ↦ ?_⟩
   simpa [zero_lt_one.not_ge] using (Game.neg_toGame_birthday_le x).trans h
 
 @[simp]
 theorem leftGame_ne_top (x : Game) : leftGame x ≠ ⊤ := by
   apply_fun right
-  rw [right_top, ← Set.nonempty_iff_ne_empty, right_leftGame]
+  rw [right_top, Set.ne_empty_iff_nonempty, right_leftGame]
   exact ⟨x.birthday, Game.le_toGame_birthday x⟩
 
 @[simp]
@@ -466,7 +470,7 @@ theorem rightSurreal_mem_of_sInf_eq {s : Set Cut.{u}} {x : Surreal} [Small.{u} s
     (hs : sInf s = rightSurreal x) : rightSurreal x ∈ s := by
   by_contra hx
   have (a : s) : ∃ y, leftSurreal y ∈ Ioo (sInf s) a := by
-    have : sInf s < a := (sInf_le a.2).lt_of_ne <| by aesop
+    have : sInf s < a := (sInf_le a.prop).lt_of_ne <| by aesop
     obtain ⟨y, hy⟩ := lt_iff_nonempty_inter.1 this
     use y
     simp_all
@@ -708,6 +712,20 @@ theorem supLeft_lt_infRight_of_equiv_numeric {x y : IGame} [y.Numeric] (h : x �
 
 theorem supLeft_lt_infRight_of_numeric (x : IGame) [x.Numeric] : supLeft x < infRight x :=
   supLeft_lt_infRight_of_equiv_numeric .rfl
+
+theorem supLeft_lt_infRight_iff {x : IGame} :
+    supLeft x < infRight x ↔ .mk x ∈ range Surreal.toGame := by
+  constructor
+  · intro h
+    rw [← simplestBtwn_supLeft_infRight h]
+    exact mem_range_self (simplestBtwn h)
+  · rintro ⟨y, hy⟩
+    rw [← y.out_eq, toGame_mk, Game.mk_eq_mk] at hy
+    exact supLeft_lt_infRight_of_equiv_numeric hy.symm
+
+theorem infRight_le_supLeft_iff {x : IGame} :
+    infRight x ≤ supLeft x ↔ .mk x ∉ range Surreal.toGame := by
+  simpa using supLeft_lt_infRight_iff.not
 
 /-! ### Some explicit calculations with cuts -/
 

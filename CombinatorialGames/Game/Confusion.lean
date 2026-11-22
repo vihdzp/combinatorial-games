@@ -85,11 +85,14 @@ theorem confusionInterval_down : confusionInterval (.mk ↓) = ∅ := by
   grind [confusionInterval]
 
 @[simp]
-theorem confusionInterval_switch_of_numeric {x : IGame} (h : 0 ≤ x) [x.Numeric] :
+theorem confusionInterval_switch_of_numeric (x : IGame) [x.Numeric] :
     confusionInterval (.mk (±x)) = Set.Icc (-Surreal.mk x) (.mk x) := by
-  rw [confusionInterval, leftGame_switch_of_numeric h, rightGame_switch_of_numeric h]
-  ext
-  simp
+  by_cases hx : 0 ≤ x
+  · rw [confusionInterval, leftGame_switch_of_numeric hx, rightGame_switch_of_numeric hx]
+    ext
+    simp
+  · rw [Game.mk_eq <| IGame.switch_equiv_zero hx, eq_comm]
+    simpa [Set.Icc_eq_empty_iff, ← Surreal.mk_lt_mk] using hx
 
 end Game
 end

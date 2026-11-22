@@ -158,11 +158,11 @@ theorem mk_eq_mk' {x y : IGame} {_ : Numeric x} {_ : Numeric y} : mk x = mk y �
 
 @[cases_eliminator]
 theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
-    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
+    motive x := Quotient.ind (fun h ↦ @mk _ h.prop) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).1
-@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
+@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).val
+@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).prop
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) [h : Numeric x] : (mk x).out ≈ x :=
@@ -178,19 +178,19 @@ instance : NatCast Surreal := ⟨fun n => mk n⟩
 instance : IntCast Surreal := ⟨fun n => mk n⟩
 
 instance : Add Surreal where
-  add := Quotient.map₂ (fun a b ↦ ⟨a.1 + b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
+  add := Quotient.map₂ (fun a b ↦ ⟨a.val + b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
 
 instance : Neg Surreal where
-  neg := Quotient.map (fun a ↦ ⟨-a.1, inferInstance⟩) fun _ _ ↦ neg_congr
+  neg := Quotient.map (fun a ↦ ⟨-a.val, inferInstance⟩) fun _ _ ↦ neg_congr
 
 instance : Sub Surreal where
-  sub := Quotient.map₂ (fun a b ↦ ⟨a.1 - b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
+  sub := Quotient.map₂ (fun a b ↦ ⟨a.val - b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
 
 instance : NSMul Surreal where
-  nsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ nsmul_congr
+  nsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ nsmul_congr
 
 instance : ZSMul Surreal where
-  zsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ zsmul_congr
+  zsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ zsmul_congr
 
 instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))

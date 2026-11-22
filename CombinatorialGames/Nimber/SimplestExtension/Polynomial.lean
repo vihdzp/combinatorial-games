@@ -221,7 +221,7 @@ theorem IsField.embed_C {x : Nimber} (h : IsField x) {y hy} :
 
 @[simp]
 theorem IsField.eval_embed {x : Nimber} (h : IsField x) {p : Nimber[X]}
-    (hp : ∀ k, p.coeff k < x) (y) : (h.embed p hp).eval y = ⟨_, h.eval_lt hp y.2⟩ := by
+    (hp : ∀ k, p.coeff k < x) (y) : (h.embed p hp).eval y = ⟨_, h.eval_lt hp y.prop⟩ := by
   simp [← Subtype.val_inj, embed, sum, eval_eq_sum]
   rfl
 
