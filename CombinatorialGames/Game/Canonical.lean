@@ -48,17 +48,21 @@ def undominate (x : IGame) : IGame :=
 termination_by x
 decreasing_by igame_wf
 
-theorem undominate_def (x : IGame) : x.undominate =
+theorem undominate_def' (x : IGame) : x.undominate =
     !{fun p ↦ {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z}} := by
   rw [undominate]
   simp
+
+theorem undominate_def (x : IGame) : x.undominate =
+    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} | {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
+  rw [undominate_def', ofSets_eq_ofSets_cases]
 
 @[simp]
 theorem forall_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.undominate.moves p, P y) ↔
       ∀ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) →
         P y.undominate := by
-  rw [undominate_def]
+  rw [undominate_def']
   simp
 
 @[simp]
@@ -66,18 +70,18 @@ theorem exists_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∃ y ∈ x.undominate.moves p, P y) ↔
       ∃ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) ∧
         P y.undominate := by
-  rw [undominate_def]
+  rw [undominate_def']
   aesop
 
 theorem undominate_mem_moves_undominate' {x y : IGame} {p : Player} (hy : y ∈ x.moves p)
     (H : ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) :
     y.undominate ∈ x.undominate.moves p := by
-  rw [undominate_def, moves_ofSets]
+  rw [undominate_def', moves_ofSets]
   exact ⟨Set.mem_image_of_mem _ hy, H⟩
 
 theorem not_lt_of_mem_moves_undominate' {x y z : IGame} {p : Player}
     (hy : y ∈ x.undominate.moves p) (hz : z ∈ x.moves p) : ¬p.cases (· < ·) (· > ·) y z := by
-  rw [undominate_def, moves_ofSets] at hy
+  rw [undominate_def', moves_ofSets] at hy
   obtain ⟨⟨y, hy, rfl⟩, Hy⟩ := hy
   exact Hy _ hz
 
@@ -102,12 +106,9 @@ instance {x : IGame} [hx : Short x] : Short (undominate x) := by
 @[simp]
 theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
   have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  rw [undominate_def, undominate_def, neg_ofSets']
+  rw [undominate_def, undominate_def, neg_ofSets]
   simp_rw [this]
-  ext p
-  cases p
-  · simp [IGame.lt_neg]
-  · simp [IGame.neg_lt]
+  simp_all [IGame.lt_neg, IGame.neg_lt]
 termination_by x
 decreasing_by igame_wf
 
@@ -147,7 +148,7 @@ theorem undominate_mem_moves_undominate {x y : IGame} {p : Player} [Short x] (hy
 theorem not_lt_of_mem_moves_undominate {x y z : IGame} {p : Player} [Short x]
     (hy : y ∈ x.undominate.moves p) (hz : z ∈ x.undominate.moves p) :
     ¬p.cases (· < ·) (· > ·) y z := by
-  rw [undominate_def, moves_ofSets] at hz
+  rw [undominate_def', moves_ofSets] at hz
   obtain ⟨⟨z, hz, rfl⟩, Hz⟩ := hz
   short
   cases p <;>
