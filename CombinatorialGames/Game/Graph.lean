@@ -113,7 +113,7 @@ theorem moveRecOn_eq {motive : α → Sort*} (x)
 variable (c) in
 /-- Turns a state of a `GameGraph` into an `IGame`. -/
 def toIGame (a : α) : IGame.{u} :=
-  c.moveRecOn a fun x IH ↦ !{fun p ↦ .range fun b : c.moves p x ↦ IH p b b.2}
+  c.moveRecOn a fun x IH ↦ !{fun p ↦ .range fun b : c.moves p x ↦ IH p b b.prop}
 
 theorem toIGame_def' (a : α) : c.toIGame a =
     !{fun p ↦ c.toIGame '' c.moves p a} := by
@@ -149,7 +149,9 @@ theorem neg_toIGame (h : c.moves left = c.moves right) (a : α) : -c.toIGame a =
   rw [← IGame.toLGame.injective.eq_iff]
   simpa using neg_toLGame h a
 
-theorem impartial_toIGame (h : c.moves left = c.moves right) (a : α) : Impartial (c.toIGame a) := by
+-- TODO: strengthen to `Impartial`
+theorem weaklyImpartial_toIGame (h : c.moves left = c.moves right) (a : α) :
+    WeaklyImpartial (c.toIGame a) := by
   refine c.moveRecOn a fun b IH ↦ ?_
   rw [impartial_def, neg_toIGame h]
   simp_all

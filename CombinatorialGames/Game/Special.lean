@@ -57,7 +57,7 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext p; cases p <;> simp [mulOption]
 
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
-protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp
+protected instance Impartial.star : WeaklyImpartial ⋆ := by rw [impartial_def]; simp
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
 @[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
@@ -260,6 +260,8 @@ theorem neg_switch (x : IGame) : -±x = ±x := by
   rw [switch, neg_ofSets]
   simp [Set.neg_singleton]
 
+instance (x : IGame) : NegSelfEquiv (±x) := ⟨by simp⟩
+
 @[simp]
 theorem switch_zero : ±0 = ⋆ := by
   ext p; cases p <;> simp
@@ -287,9 +289,7 @@ theorem switch_equiv_zero_iff {x : IGame} : ±x ≈ 0 ↔ ¬0 ≤ x := by
 alias ⟨_, switch_equiv_zero⟩ := switch_equiv_zero_iff
 
 theorem switch_fuzzy_zero_iff {x : IGame} : ±x ‖ 0 ↔ 0 ≤ x := by
-  rw [← not_iff_not, ← switch_equiv_zero_iff]
-  exact not_fuzzy_iff_of_neg_equiv
-    (neg_switch x).antisymmRel neg_zero.antisymmRel
+  rw [← not_iff_not, ← switch_equiv_zero_iff, NegSelfEquiv.not_fuzzy_iff]
 
 alias ⟨_, switch_fuzzy_zero⟩ := switch_fuzzy_zero_iff
 
@@ -298,7 +298,7 @@ theorem switch_fuzzy_self_iff {x : IGame} : ±x ‖ x ↔ ¬x < 0 := by
   · refine iff_of_true ⟨left_lf ?_, fun h ↦ ?_⟩ h0x.not_gt
     · simp
     · absurd h0x.trans_lt (lt_of_le_not_ge h (left_lf (by simp)))
-      exact not_lt_of_neg_equiv neg_zero.antisymmRel (neg_switch x).antisymmRel
+      exact NegSelfEquiv.not_lt 0 _
   · rw [lt_iff_le_not_ge, and_iff_left h0x]
     exact ⟨fun hx => mt (switch_equiv_zero h0x).ge.trans' hx.2,
       fun hx0 => (switch_equiv_zero h0x).trans_incompRel ⟨h0x, hx0⟩⟩

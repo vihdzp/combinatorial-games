@@ -23,34 +23,40 @@ define two separate `PartialOrder` instances on the same type, we instead create
 `Simpllicity`, and declare the simplicity ordering on that.
 -/
 
-/-! ### For Mathlib -/
+-- #46150
+namespace WithTop
+variable {α : Type*}
 
-@[no_expose, implicit_reducible]
-noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
-    OrderBot α := by
-  choose a ha using h
-  refine { bot := a, bot_le := ?_ }
-  simpa [lowerBounds] using ha
+@[to_dual]
+theorem nonempty_preimage_some_iff {s : Set (WithTop α)} :
+    (((↑) ⁻¹' s : Set α)).Nonempty ↔ ¬ s ⊆ {⊤} := by
+  rw [Set.nonempty_preimage_iff, isCompl_range_coe.eq_compl, Set.inter_compl_nonempty_iff]
 
-theorem WithTop.isGLB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ∃ y : α, ↑y ∈ s) (hs : IsGLB ((↑) ⁻¹' s) x) : IsGLB s x := by
-  simpa [isGLB_iff_le_iff, lowerBounds, WithTop.forall, hs'] using hs
+variable [Preorder α]
 
-theorem WithTop.isLUB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ⊤ ∉ s) (hs : IsLUB ((↑) ⁻¹' s) x) : IsLUB s x := by
-  simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, hs'] using hs
+@[to_dual]
+theorem isGLB_sInf_of_preimage' [InfSet α] {s : Set (WithTop α)}
+    (hs : ¬ s ⊆ {⊤} → IsGLB ((↑) ⁻¹' s : Set α) (sInf ((↑) ⁻¹' s))) (hs' : BddBelow s) :
+    IsGLB s (sInf s) := by
+  by_cases h : s ⊆ {⊤}
+  · rw [sInf_eq_top_iff.2 (.inl h)]
+    exact isGLB_top_iff.2 h
+  rw [sInf_eq h hs', isGLB_coe_iff]
+  exact ⟨h, hs h⟩
 
-open Classical in
-theorem WithTop.isGLB_sInf_of_nonempty {α : Type*} [PartialOrder α] [InfSet α]
-    (h : ∀ s : Set α, s.Nonempty → IsGLB s (sInf s)) (s : Set (WithTop α)) : IsGLB s (sInf s) := by
-  change IsGLB s (dite ..)
-  let := (h _ Set.univ_nonempty).bddBelow.orderBot
-  split_ifs with hs
-  · rw [Set.subset_singleton_iff_eq] at hs
-    aesop
-  · apply isGLB_of_coe_preimage _ (h ..)
-    · simpa [WithTop.exists] using hs
-    · aesop (add simp [WithTop.exists, Set.Nonempty])
+@[to_dual]
+public theorem isLUB_sSup_of_preimage' [SupSet α] {s : Set (WithTop α)}
+    (hs : ⊤ ∉ s → BddAbove ((↑) ⁻¹' s : Set α) →
+      IsLUB ((↑) ⁻¹' s : Set α) (sSup ((↑) ⁻¹' s))) :
+    IsLUB s (sSup s) := by
+  by_cases h : ⊤ ∈ s ∨ ¬BddAbove ((↑) ⁻¹' s : Set α)
+  · rw [sSup_eq_top_iff.2 h]
+    exact isLUB_top_iff.2 h
+  push Not at h
+  rw [sSup_eq h.1 h.2, isLUB_coe_iff]
+  exact ⟨h.1, hs h.1 h.2⟩
+
+end WithTop
 
 @[expose] public noncomputable section
 
@@ -209,7 +215,10 @@ instance : SemilatticeInf Simplicity :=
 theorem sInf_pair (x y : Simplicity) : sInf {x, y} = x ⊓ y := (rfl)
 
 instance instCompleteSemilatticeInfWithTop : CompleteSemilatticeInf (WithTop Simplicity) where
-  isGLB_sInf := by exact WithTop.isGLB_sInf_of_nonempty fun _ ↦ isGLB_sInf_of_nonempty
+  isGLB_sInf s := by
+    refine WithTop.isGLB_sInf_of_preimage' (fun hs ↦ isGLB_sInf_of_nonempty ?_)
+      (OrderBot.bddBelow _)
+    rwa [WithTop.nonempty_preimage_some_iff]
 
 /-! ### Supremum -/
 
@@ -313,12 +322,7 @@ instance : CompletePartialOrder Simplicity where
 
 open Classical in
 instance instCompleteSemilatticeSupWithTop : CompleteSemilatticeSup (WithTop Simplicity) where
-  isLUB_sSup s := by
-    change IsLUB s (dite ..)
-    split_ifs with h hs
-    · simp [isLUB_iff_le_iff, upperBounds, WithTop.forall, h]
-    · exact WithTop.isLUB_of_coe_preimage h (isLUB_sSup_of_bddAbove hs)
-    · simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, h, bddAbove_def] using hs
+  isLUB_sSup _ := WithTop.isLUB_sSup_of_preimage' fun _ ↦ isLUB_sSup_of_bddAbove
 
 instance : CompleteLattice (WithTop Simplicity) where
   __ := WithTop.instBoundedOrder

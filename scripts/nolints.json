@@ -38,5 +38,9 @@
     [
         "defsWithUnderscore",
         "tacticGame_cmp"
+    ],
+    [
+        "defsWithUnderscore",
+        "IGame.WeaklyImpartial.tacticWeakly_impartial"
     ]
 ]
