@@ -219,8 +219,15 @@ theorem Small.coe_length (x : SignExpansion) [x.Small] : Small.length x = x.leng
 theorem Small.apply_length (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
   rw [apply_eq_zero, coe_length]
 
+theorem Small.of_length_le_coe {x : SignExpansion} {o : NatOrdinal} (ho : x.length ≤ o) :
+    x.Small where
+  length_ne_top := by
+    rw [← lt_top_iff_ne_top]
+    grw [ho]
+    exact WithTop.coe_lt_top o
+
 theorem Small.length_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
-    haveI : x.Small := ⟨by simp [ho]⟩
+    haveI := Small.of_length_le_coe ho.le
     Small.length x = o := by
   rw! [Small.length, ho, WithTop.untop_coe]
   rfl
@@ -701,11 +708,14 @@ theorem succ_apply_smallLength {x : SignExpansion} [x.Small] :
     succ x (Small.length x) = 1 := by
   aesop
 
-theorem succ_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem succ_apply_of_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = 1 := by
-  rw [← smallLength_eq ho, succ_apply_smallLength]
+  generalize_proofs
+  rw [← Small.length_eq ho, succ_apply_smallLength]
 
-theorem succ_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
+theorem succ_apply_of_gt {x : SignExpansion} {o : NatOrdinal} (ho : x.length < o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
@@ -767,7 +777,7 @@ theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
       apply hxy.not_gt
       refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
       · aesop
-      · simp_rw [Pi.toLex_apply, apply_smallLength]
+      · simp_rw [Pi.toLex_apply, Small.apply_length]
         rw [SignType.lt_one_iff] at H₂
         apply H₂.lt_of_ne
         contrapose! hxy
@@ -810,11 +820,14 @@ theorem pred_apply_smallLength {x : SignExpansion} [x.Small] :
     pred x (Small.length x) = -1 := by
   aesop
 
-theorem pred_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem pred_apply_of_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI := Small.of_length_le_coe ho.le
     pred x o = -1 := by
-  rw [← smallLength_eq ho, pred_apply_smallLength]
+  generalize_proofs
+  rw [← Small.length_eq ho, pred_apply_smallLength]
 
-theorem pred_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
+theorem pred_apply_of_gt {x : SignExpansion} {o : NatOrdinal} (ho : x.length < o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
