@@ -430,12 +430,12 @@ theorem eq_of_length_eq_of_forall_lt_gt {x y : SignExpansion} (hxy : x.length = 
   apply eq_of_length_le_of_forall_lt_gt_iff hxy.ge <;> intro z hz
   · refine ⟨fun hy ↦ ?_, hlt z hz⟩
     contrapose! hy
-    apply (hgt z hz (hy.lt_of_ne _)).le
+    refine (hgt z hz (hy.lt_of_ne ?_)).le
     rintro rfl
     exact hz.false
   · refine ⟨fun hy ↦ ?_, hgt z hz⟩
     contrapose! hy
-    apply (hlt z hz (hy.lt_of_ne _)).le
+    refine (hlt z hz (hy.lt_of_ne ?_)).le
     rintro rfl
     exact hz.false
 
