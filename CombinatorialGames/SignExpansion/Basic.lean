@@ -219,18 +219,8 @@ theorem Small.coe_length (x : SignExpansion) [x.Small] : Small.length x = x.leng
 theorem Small.apply_length (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
   rw [apply_eq_zero, coe_length]
 
-theorem Small.length_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
-    Small.length x = o := by
-  rw! [Small.length, ho, WithTop.untop_coe]
-  rfl
-
-theorem coe_smallLength (x : SignExpansion) [x.Small] : Small.length x = x.length := by simp
-
-@[simp]
-theorem apply_smallLength (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
-  rw [apply_eq_zero, coe_smallLength]
-
-theorem smallLength_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem Small.length_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI : x.Small := ⟨by simp [ho]⟩
     Small.length x = o := by
   rw! [Small.length, ho, WithTop.untop_coe]
   rfl
