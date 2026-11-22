@@ -73,6 +73,12 @@ theorem exists_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
   rw [undominate_def']
   aesop
 
+/-- Every move of `undominate x` is itself undominated. -/
+theorem moves_undominate_subset_range (x : IGame) (p : Player) :
+    x.undominate.moves p ⊆ .range undominate := by
+  rw [Set.subset_def, forall_moves_undominate]
+  simp
+
 theorem undominate_mem_moves_undominate' {x y : IGame} {p : Player} (hy : y ∈ x.moves p)
     (H : ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) :
     y.undominate ∈ x.undominate.moves p := by
