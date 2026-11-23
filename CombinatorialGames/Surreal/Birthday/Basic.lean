@@ -215,7 +215,8 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
   apply hxy.ne
   rw [mk_eq_mk]
   apply Fits.antisymm
-  · constructor
+  · rw [fits_def]
+    constructor
     · intro z hzy hxz
       numeric
       have hzx : ¬z ≤ x := by
@@ -223,6 +224,7 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         apply hx.not_lt
         grw [mk_eq_mk.2 ⟨hxz, hzx⟩, birthday_mk_le, birthday_lt_of_mem_moves hzy, hyb, hy]
       have hzf : z.Fits !{{x} | {y}} := by
+        rw [fits_def]
         constructor
         · rwa [moves_left_ofSets, Set.forall_mem_singleton]
         · rw [moves_right_ofSets, Set.forall_mem_singleton]
@@ -234,7 +236,8 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         birthday_lt_of_mem_moves hzy, hyb, hy]
     · intro z hz
       exact ((mk_lt_mk.1 hxy).trans (Numeric.lt_right hz)).not_ge
-  · constructor
+  · rw [fits_def]
+    constructor
     · intro z hz
       exact ((Numeric.left_lt hz).trans (mk_lt_mk.1 hxy)).not_ge
     · intro z hzx hzy
@@ -244,6 +247,7 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         apply hy.not_lt
         grw [mk_eq_mk.2 ⟨hyz, hzy⟩, birthday_mk_le, birthday_lt_of_mem_moves hzx, hxb, hx]
       have hzf : z.Fits !{{x} | {y}} := by
+        rw [fits_def]
         constructor
         · rw [moves_left_ofSets, Set.forall_mem_singleton]
           exact lf_right hzx

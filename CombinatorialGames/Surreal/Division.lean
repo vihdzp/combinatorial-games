@@ -216,9 +216,11 @@ lemma mul_inv_self {x : IGame} [Numeric x] (hx : 0 < x)
     x * x⁻¹ ≈ 1 := by
   obtain ⟨Hl, Hr⟩ := option_mul_inv_lt hx hl hr hl' hr'
   have := numeric_inv hx hl hr hl' hr'
-  apply equiv_one_of_fits ⟨fun z hz ↦ (Hl z hz).not_ge, fun z hz ↦ (Hr z hz).not_ge⟩
-  rw [Numeric.mul_equiv_zero, not_or]
-  exact ⟨hx.not_antisymmRel_symm, (inv_pos' hx).not_antisymmRel_symm⟩
+  apply equiv_one_of_fits
+  · rw [fits_def]
+    exact ⟨fun z hz ↦ (Hl z hz).not_ge, fun z hz ↦ (Hr z hz).not_ge⟩
+  · rw [Numeric.mul_equiv_zero, not_or]
+    exact ⟨hx.not_antisymmRel_symm, (inv_pos' hx).not_antisymmRel_symm⟩
 
 theorem main {x : IGame} [Numeric x] (hx : 0 < x) : Numeric x⁻¹ ∧ x * x⁻¹ ≈ 1 := by
   have IHl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹ ∧ y * y⁻¹ ≈ 1 :=

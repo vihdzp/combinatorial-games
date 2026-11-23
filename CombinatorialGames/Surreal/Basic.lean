@@ -36,17 +36,26 @@ universe u
 
 namespace IGame
 
-/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every
-`z ∈ yᴿ`.
+/-- `x` fits within `y` when `z ⧏ x` for every `z ∈ yᴸ`, and `x ⧏ z` for every `z ∈ yᴿ`.
 
 The simplicity theorem states that if a game fits a numeric game, but none of its options do, then
 the games are equivalent. In particular, a numeric game is equivalent to the game of the least
 birthday that fits in it. -/
 def Fits (x y : IGame) : Prop :=
-  (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z)
+  ∀ p, ∀ z ∈ y.moves p, ¬p.LE x z
 
-theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y :=
-  ⟨fun _ hz ↦ mt h.ge.trans (left_lf hz), fun _ hz ↦ mt h.le.trans' (lf_right hz) ⟩
+theorem fits_def {x y : IGame} : Fits x y ↔ (∀ z ∈ yᴸ, z ⧏ x) ∧ (∀ z ∈ yᴿ, x ⧏ z) := by
+  simp [Fits]
+
+theorem not_fits_iff' {x y : IGame} : ¬ Fits x y ↔ ∃ p, ∃ z ∈ y.moves p, p.LE x z := by
+  rw [Fits]; push Not; rfl
+
+theorem not_fits_iff {x y : IGame} : ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
+  simp [not_fits_iff']
+
+theorem fits_of_equiv {x y : IGame} (h : x ≈ y) : Fits x y := by
+  rw [fits_def]
+  exact ⟨fun _ hz ↦ mt h.ge.trans (left_lf hz), fun _ hz ↦ mt h.le.trans' (lf_right hz)⟩
 
 alias AntisymmRel.Fits := fits_of_equiv
 
@@ -58,7 +67,7 @@ instance : Std.Refl Fits where
 
 theorem Fits.antisymm {x y : IGame} (h₁ : Fits x y) (h₂ : Fits y x) : x ≈ y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  exact ⟨⟨h₂.1, h₁.2⟩, ⟨h₁.1, h₂.2⟩⟩
+  exact ⟨⟨h₂ left, h₁ right⟩, ⟨h₁ left, h₂ right⟩⟩
 
 @[simp]
 theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
@@ -66,27 +75,25 @@ theorem fits_neg_iff {x y : IGame} : Fits (-x) (-y) ↔ Fits x y := by
 
 alias ⟨_, Fits.neg⟩ := fits_neg_iff
 
-theorem not_fits_iff {x y : IGame} :
-    ¬ Fits x y ↔ (∃ z ∈ yᴸ, x ≤ z) ∨ (∃ z ∈ yᴿ, z ≤ x) := by
-  rw [Fits, not_and_or]; simp
-
 theorem Fits.congr {x y z : IGame} (h : x ≈ y) (hx : x.Fits z) : y.Fits z := by
-  constructor <;> intro w hw <;> grw [← h]
-  exacts [hx.1 w hw, hx.2 w hw]
-
+  intro p w hw
+  rw [← Player.le_congr_left h]
+  exact hx p w hw
+  
 theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
   ⟨.congr h, .congr h.symm⟩
 
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
 theorem Fits.equiv_of_forall_mem_moves {x y : IGame} (hx : x.Fits y)
-    (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  ⟨le_of_forall_mem_moves_right_lf hx.2 hl, le_of_forall_mem_moves_left_lf hx.1 hr⟩
+    (H : ∀ p, ∀ z ∈ x.moves p, ∃ w ∈ y.moves p, p.LE z w) : x ≈ y :=
+  ⟨le_of_forall_mem_moves_right_lf (hx right) (H left),
+    le_of_forall_mem_moves_left_lf (hx left) (H right)⟩
 
 /-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
 are easier to enumerate. -/
 theorem Fits.equiv_of_forall_mem_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a)
-    (hx : x.Fits y) (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  h.trans <| Fits.equiv_of_forall_mem_moves (hx.congr h) hl hr
+    (hx : x.Fits y) (H : ∀ p, ∀ z ∈ a.moves p, ∃ w ∈ y.moves p, p.LE z w) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_mem_moves (hx.congr h) H
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
@@ -96,12 +103,14 @@ theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (h : ∀ p, ∀ z ∈ x.moves p, ¬ z.Fits y) : x ≈ y := by
   simp_rw [not_fits_iff] at h
   apply hx.equiv_of_forall_mem_moves
+  rw [Player.forall]
+  constructor
   · refine fun z hz ↦ (h _ z hz).resolve_right ?_
     rintro ⟨w, hw, hwz⟩
-    exact hx.2 w hw <| hwz.trans (Numeric.left_lt hz).le
+    exact hx _ w hw <| hwz.trans (Numeric.left_lt hz).le
   · refine fun z hz ↦ (h _ z hz).resolve_left ?_
     rintro ⟨w, hw, hwz⟩
-    exact hx.1 w hw <| (Numeric.lt_right hz).le.trans hwz
+    exact hx _ w hw <| (Numeric.lt_right hz).le.trans hwz
 
 /-- A variant of the **simplicity theorem**: if `x` is the numeric game with the least birthday that
 fits within `y`, then `x ≈ y`. -/
