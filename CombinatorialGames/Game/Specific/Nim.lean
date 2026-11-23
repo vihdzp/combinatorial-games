@@ -58,33 +58,33 @@ theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
   GameGraph.moves_toIGame ..
 
-theorem forall_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
+theorem forall_mem_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
     (∀ x ∈ (nim o).moves p, P x) ↔ (∀ a < o, P (nim a)) := by
   simp
 
-theorem exists_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
+theorem exists_mem_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
     (∃ x ∈ (nim o).moves p, P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
 @[game_cmp]
-theorem forall_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
+theorem forall_mem_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (nim (∗n)).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) := by
   simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
-theorem exists_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
+theorem exists_mem_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (nim (∗n)).moves p, P x) ↔ (∃ m < n, P (nim (∗m))) := by
   simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
-theorem forall_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem forall_mem_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∀ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) :=
-  forall_moves_nim_natCast
+  forall_mem_moves_nim_natCast
 
 @[game_cmp]
-theorem exists_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem exists_mem_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∃ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∃ m < n, P (nim (∗m)) :=
-  exists_moves_nim_natCast
+  exists_mem_moves_nim_natCast
 
 theorem mem_moves_nim_of_lt {a b : Nimber} (p : Player) (h : a < b) :
     (nim a) ∈ (nim b).moves p := by

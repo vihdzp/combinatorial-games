@@ -53,7 +53,7 @@ private theorem mul' (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
   simp_rw [grundyFor_eq_grundy] at h
   refine ⟨of_grundyFor_left_eq_grundyFor_right ?_ ((h left).trans (h right).symm), ?_⟩
   · intro p
-    simp only [forall_moves_mul, mulOption]
+    simp only [forall_mem_moves_mul, mulOption]
     intro p' a ha b hb
     weakly_impartial
     have := (mul' a y).1; have := (mul' x b).1; have := (mul' a b).1
