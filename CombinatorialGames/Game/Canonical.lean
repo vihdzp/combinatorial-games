@@ -72,6 +72,52 @@ theorem not_lt_of_mem_moves_right {x y z : IGame} (h : IsUndominated x)
     (hy : y ∈ xᴿ) (hz : z ∈ xᴿ) : ¬z < y :=
   not_lt_of_mem_moves h hy hz
 
+protected theorem neg {x : IGame} (hx : IsUndominated x) : IsUndominated (-x) := by
+  rw [isUndominated_def]
+  simp_rw [forall_moves_neg]
+  intro p y hy
+  refine ⟨(hx.of_mem_moves hy).neg, fun z hz ↦ ?_⟩
+  cases p <;> simpa using hx.not_lt_of_mem_moves hy hz
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem neg_iff {x : IGame} : IsUndominated (-x) ↔ IsUndominated x :=
+  ⟨by simpa using IsUndominated.neg (x := -x), .neg⟩
+
+@[simp]
+protected theorem natCast (n : ℕ) : IsUndominated n := by
+  rw [isUndominated_def]
+  intro p y hy
+  obtain ⟨m, hm, rfl⟩ := eq_natCast_of_mem_moves_natCast hy
+  refine ⟨.natCast m, fun z hz ↦ ?_⟩
+  rw [subsingleton_moves_natCast hy hz]
+  cases p <;> exact lt_irrefl z
+
+@[simp]
+protected theorem intCast (n : ℤ) : IsUndominated n := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
+
+@[simp]
+protected theorem zero : IsUndominated 0 := by
+  simpa using IsUndominated.natCast 0
+
+@[simp]
+protected theorem one : IsUndominated 1 := by
+  simpa using IsUndominated.natCast 1
+
+protected theorem _root_.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
+    IsUndominated x := by
+  rw [isUndominated_def]
+  intro p y hy
+  weakly_impartial
+  refine ⟨WeaklyImpartial.isUndominated y, fun z hz ↦ ?_⟩
+  weakly_impartial
+  cases p <;> simp
+termination_by x
+decreasing_by igame_wf
+
+#exit
 end IsUndominated
 
 /-- Hereditarily undominating a game. This returns garbage values on non-short games. -/
@@ -182,6 +228,7 @@ theorem undominate_mem_moves_undominate {x y : IGame} {p : Player} [Short x] (hy
     grw [undominate_equiv]
     exact H z hz
 
+@[simp]
 theorem IsUndominated.undominate (x : IGame) [Short x] : IsUndominated x.undominate := by
   rw [isUndominated_def]
   simp_rw [forall_mem_moves_undominate]
@@ -196,6 +243,7 @@ theorem IsUndominated.undominate (x : IGame) [Short x] : IsUndominated x.undomin
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
 theorem IsUndominated.undominate_eq {x : IGame} (hx : IsUndominated x) : x.undominate = x := by
   ext p y
   rw [undominate_def', moves_ofSets]
@@ -212,9 +260,13 @@ theorem isUndominated_iff_undominate_eq {x : IGame} [Short x] :
   rw [← hx]
   exact .undominate x
 
-@[simp]
-theorem undominate_undominate (x : IGame) [Short x] : x.undominate.undominate = x.undominate :=
-  (IsUndominated.undominate x).undominate_eq
+theorem undominate_undominate (x : IGame) [Short x] : x.undominate.undominate = x.undominate := by
+  simp
+
+theorem undominate_zero : undominate 0 = 0 := by simp
+theorem undominate_one : undominate 1 = 1 := by simp
+theorem undominate_natCast (n : ℕ) : undominate n = n := by simp
+theorem undominate_intCast (n : ℤ) : undominate n = n := by simp
 
 end IGame
 end
