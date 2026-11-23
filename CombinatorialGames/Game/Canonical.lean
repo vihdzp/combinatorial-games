@@ -44,12 +44,12 @@ namespace IGame
 /-- A hereditarily undominated game is one where no move is dominated, and such that every
 subposition satisfies this same property. -/
 def IsUndominated (x : IGame) : Prop :=
-  ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z
+  ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.LT y z
 termination_by x
 decreasing_by igame_wf
 
 theorem isUndominated_def {x : IGame} : IsUndominated x ↔
-    ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z := by
+    ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.LT y z := by
   rw [IsUndominated]
 
 namespace IsUndominated
@@ -60,7 +60,7 @@ theorem of_mem_moves {x y : IGame} {p : Player} (hy : y ∈ x.moves p) (h : IsUn
   exact (h p y hy).1
 
 theorem not_lt_of_mem_moves {x y z : IGame} {p : Player} (h : IsUndominated x)
-    (hy : y ∈ x.moves p) (hz : z ∈ x.moves p) : ¬p.cases (· < ·) (· > ·) y z := by
+    (hy : y ∈ x.moves p) (hz : z ∈ x.moves p) : ¬p.LT y z := by
   rw [isUndominated_def] at h
   exact (h p y hy).2 z hz
 
@@ -121,13 +121,12 @@ end IsUndominated
 
 /-- Hereditarily undominating a game. This returns garbage values on non-short games. -/
 def undominate (x : IGame) : IGame :=
-  !{fun p ↦ {y ∈ Set.range fun z : x.moves p ↦ undominate z |
-    ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z}}
+  !{fun p ↦ {y ∈ Set.range fun z : x.moves p ↦ undominate z | ∀ z ∈ x.moves p, ¬p.LT y z}}
 termination_by x
 decreasing_by igame_wf
 
 theorem undominate_def' (x : IGame) : x.undominate =
-    !{fun p ↦ {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z}} := by
+    !{fun p ↦ {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬p.LT y z}} := by
   rw [undominate]
   simp
 
@@ -138,7 +137,7 @@ theorem undominate_def (x : IGame) : x.undominate =
 @[simp]
 theorem forall_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.undominate.moves p, P y) ↔
-      ∀ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) →
+      ∀ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) →
         P y.undominate := by
   rw [undominate_def']
   simp
@@ -146,7 +145,7 @@ theorem forall_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop
 @[simp]
 theorem exists_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∃ y ∈ x.undominate.moves p, P y) ↔
-      ∃ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) ∧
+      ∃ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) ∧
         P y.undominate := by
   rw [undominate_def']
   aesop
@@ -158,13 +157,13 @@ theorem moves_undominate_subset_range (x : IGame) (p : Player) :
   simp
 
 theorem undominate_mem_moves_undominate' {x y : IGame} {p : Player} (hy : y ∈ x.moves p)
-    (H : ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y.undominate z) :
+    (H : ∀ z ∈ x.moves p, ¬p.LT y.undominate z) :
     y.undominate ∈ x.undominate.moves p := by
   rw [undominate_def', moves_ofSets]
   exact ⟨Set.mem_image_of_mem _ hy, H⟩
 
 theorem not_lt_of_mem_moves_undominate {x y z : IGame} {p : Player}
-    (hy : y ∈ x.undominate.moves p) (hz : z ∈ x.moves p) : ¬p.cases (· < ·) (· > ·) y z := by
+    (hy : y ∈ x.undominate.moves p) (hz : z ∈ x.moves p) : ¬p.LT y z := by
   rw [undominate_def', moves_ofSets] at hy
   obtain ⟨⟨y, hy, rfl⟩, Hy⟩ := hy
   exact Hy _ hz
@@ -199,14 +198,14 @@ decreasing_by igame_wf
 private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
   rw [le_iff_forall_lf]
   simp_rw [forall_mem_moves_undominate]
-  dsimp
+  dsimp [Player.LT]
   refine ⟨fun y hy ↦ ?_, fun y hy _ hyx ↦ ?_⟩
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
     short
     have IH := le_undominate z
     refine fun hxy ↦ lf_of_le_left IH (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
       (hxy.trans hyz)
-    grw [Player.cases, ← IH] at hzw
+    grw [Player.left_lt, ← IH] at hzw
     exact hzw.not_ge (hz' hw hzw.le)
   · short
     grw [← le_undominate y] at hyx
@@ -218,13 +217,12 @@ theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
   ⟨by simpa using le_undominate (-x), le_undominate x⟩
 
 theorem undominate_mem_moves_undominate {x y : IGame} {p : Player} [Short x] (hy : y ∈ x.moves p)
-    (H : ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z) :
+    (H : ∀ z ∈ x.moves p, ¬p.LT y z) :
     y.undominate ∈ x.undominate.moves p := by
   refine undominate_mem_moves_undominate' hy fun z hz ↦ ?_
   short
   cases p <;>
-  · dsimp
-    grw [undominate_equiv]
+  · grw [Player.left_lt, undominate_equiv]
     exact H z hz
 
 @[simp]
@@ -236,8 +234,7 @@ theorem IsUndominated.undominate (x : IGame) [Short x] : IsUndominated x.undomin
   refine ⟨.undominate y, fun z hz _ ↦ ?_⟩
   short
   cases p <;>
-  · dsimp
-    grw [undominate_equiv z]
+  · grw [Player.right_lt, undominate_equiv z]
     exact Hy _ hz
 termination_by x
 decreasing_by igame_wf
