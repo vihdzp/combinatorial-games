@@ -24,7 +24,6 @@ universe u
 
 /-! ### Players -/
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- Either the Left or Right player. -/
 @[aesop safe cases, grind cases]
 inductive Player where
@@ -145,7 +144,6 @@ end Player
 
 /-! ### Outcomes -/
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- The three possible outcomes of a game.
 
 We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
