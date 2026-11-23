@@ -106,6 +106,11 @@ protected theorem zero : IsUndominated 0 := by
 protected theorem one : IsUndominated 1 := by
   simpa using IsUndominated.natCast 1
 
+@[simp]
+protected theorem half : IsUndominated half := by
+  rw [isUndominated_def]
+  simp
+
 protected theorem _root_.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
     IsUndominated x := by
   rw [isUndominated_def]
