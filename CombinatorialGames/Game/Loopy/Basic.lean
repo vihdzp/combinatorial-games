@@ -88,7 +88,7 @@ export Player (left right)
 instance : DecidableEq LGame := Classical.decEq _
 
 /-- The set of moves of the game. -/
-def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.1 p
+def moves (p : Player) (x : LGame.{u}) : Set LGame.{u} := x.dest.val p
 
 /-- The set of left moves of the game. -/
 scoped notation:max x:max "ᴸ" => moves left x
@@ -96,7 +96,7 @@ scoped notation:max x:max "ᴸ" => moves left x
 /-- The set of right moves of the game. -/
 scoped notation:max x:max "ᴿ" => moves right x
 
-instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.2 p
+instance small_moves (p : Player) (x : LGame.{u}) : Small.{u} (x.moves p) := x.dest.prop p
 
 /-- A (proper) subposition is any game reachable a nonempty sequence of
 (not necessarily alternating) left and right moves. -/
@@ -198,7 +198,7 @@ private instance : Small.{u + 1} (Subtype (Reachable mov init)) :=
 @[simp]
 private def dest (x : Shrink (Subtype (Reachable mov init))) :
     GameFunctor (Shrink (Subtype (Reachable mov init))) :=
-  have hx := ((equivShrink _).symm x).2
+  have hx := ((equivShrink _).symm x).prop
   ⟨fun
     | left => equivShrink _ '' range (inclusion (t := {x | Reachable mov init x})
         fun _y hy ↦ .trans (.single (.inl hy)) hx)
@@ -275,12 +275,12 @@ theorem hom_unique_apply {mov : Player → α → Set α}
     rw [hf]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
-        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).2
+        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).prop
   · change _ ∈ (moves p ∘ g) _ ↔ _
     rw [hg]
     cases p <;>
       simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
-        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).2
+        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).prop
 
 theorem hom_unique {mov : Player → α → Set α}
     [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})

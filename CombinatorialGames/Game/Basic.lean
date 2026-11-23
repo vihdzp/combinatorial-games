@@ -368,8 +368,8 @@ theorem zero_le_intCast {n : ℤ} : 0 ≤ (n : IGame) ↔ 0 ≤ n := by
 theorem intCast_le_zero {n : ℤ} : (n : IGame) ≤ 0 ↔ n ≤ 0 := by
   simpa using intCast_le (n := 0)
 
-namespace Impartial
-variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
+namespace NegSelfEquiv
+variable (x y : IGame) [hx : NegSelfEquiv x] [hy : NegSelfEquiv y]
 
 @[simp]
 theorem neg_mk : -Game.mk x = Game.mk x :=
@@ -383,35 +383,6 @@ theorem sub_mk (x : Game) : x - Game.mk y = x + Game.mk y := by
 theorem mk_add_self : Game.mk x + Game.mk x = 0 := by
   rw [add_eq_zero_iff_neg_eq, neg_mk]
 
--- TODO: move these four lemmas earlier:
-
-theorem add_self_equiv (x : IGame) [Impartial x] : x + x ≈ 0 :=
-  Game.mk_eq_mk.1 (mk_add_self x)
-
-variable {x y}
-
-omit hx in
-/-- This lemma doesn't require `x` to be impartial. -/
-theorem equiv_iff_add_equiv_zero : x ≈ y ↔ x + y ≈ 0 := by
-  rw [← add_equiv_add_iff_right (a := y), (add_self_equiv y).antisymmRel_congr_right]
-
-omit hy in
-/-- This lemma doesn't require `y` to be impartial. -/
-theorem equiv_iff_add_equiv_zero' : x ≈ y ↔ x + y ≈ 0 := by
-  rw [← add_equiv_add_iff_left (a := x), (add_self_equiv x).antisymmRel_congr_left,
-    antisymmRel_comm]
-
-omit hx in
-/-- This lemma doesn't require `x` to be impartial. -/
-theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
-  rw [← add_fuzzy_add_iff_right (a := y), (add_self_equiv y).incompRel_congr_right]
-
-omit hy in
-/-- This lemma doesn't require `y` to be impartial. -/
-theorem fuzzy_iff_add_fuzzy_zero' : x ‖ y ↔ x + y ‖ 0 := by
-  rw [← add_fuzzy_add_iff_left (a := x), (add_self_equiv x).incompRel_congr_left,
-    incompRel_comm]
-
-end Impartial
+end NegSelfEquiv
 end IGame
 end

@@ -9,8 +9,6 @@ public import CombinatorialGames.Surreal.Cut
 public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 import CombinatorialGames.Mathlib.WithTop
-import Mathlib.Algebra.Order.Group.OrderIso
-import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
 # Birthday of cuts
@@ -296,12 +294,12 @@ private theorem birthday_game_le (x : IGame) :
     rw [supLeft, iSup_subtype']
     apply (birthday_iSup_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.2.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_moves i.2
+    exact IGame.birthday_lt_of_mem_moves i.prop
   have H₂ : (infRight x).birthday ≤ x.birthday := by
     rw [infRight, iInf_subtype']
     apply (birthday_iInf_le _).trans <| iSup_le fun i ↦ (birthday_game_le _).2.2.1.trans ?_
     rw [← WithTop.coe_add_one, WithTop.coe_le_coe, Order.add_one_le_iff]
-    exact IGame.birthday_lt_of_mem_moves i.2
+    exact IGame.birthday_lt_of_mem_moves i.prop
   use H₁, H₂
   obtain h | h := lt_or_ge (supLeft x) (infRight x)
   · rw [← simplestBtwn_supLeft_infRight h, leftGame_toGame, rightGame_toGame]
@@ -370,18 +368,18 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         constructor
       · have hbs := Order.succ_eq_of_covBy hb
         rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
-        have he (v : s) : ∃ c, c ≤ v.1 ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
-          obtain ⟨w, hws, hwv⟩ := hs v.1 v.2
-          have hvb := birthday_lt_sSup_birthday v.2
+        have he (v : s) : ∃ c, c ≤ v.val ∧ c.birthday < b ∧ ∃ w ∈ s, w ≤ c := by
+          obtain ⟨w, hws, hwv⟩ := hs v v.prop
+          have hvb := birthday_lt_sSup_birthday v.prop
           have hwb := birthday_lt_sSup_birthday hws
           rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
           obtain hvb | hvb := hvb.eq_or_lt
           · obtain hwb | hwb := hwb.eq_or_lt
-            · exact ⟨_, (ofSets_lt_of_mem_right (mem_singleton v.1)).le,
+            · exact ⟨_, (ofSets_lt_of_mem_right (mem_singleton v.val)).le,
                 birthday_ofSets_singleton_lt_of_birthday_eq hwb hvb hwv,
                 w, hws, (lt_ofSets_of_mem_left (mem_singleton w)).le⟩
             · exact ⟨w, hwv.le, hwb, w, hws, le_rfl⟩
-          · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
+          · exact ⟨v, le_rfl, hvb, v, v.prop, le_rfl⟩
         choose vv hvv hvb hvw using he
         have hxv : x = sInf (leftSurreal '' Set.range vv) := by
           rw [← hx, sInf_image, sInf_image, iInf_range, ← iInf_subtype'']
@@ -404,18 +402,18 @@ theorem numeric_iff_birthday {x : Cut} : x.Numeric ↔ ¬Order.IsSuccPrelimit x.
         constructor
       · have hbs := Order.succ_eq_of_covBy hb
         rw [Order.succ_eq_add_one, ← WithTop.coe_add_one, ← hsb] at hbs
-        have he (v : s) : ∃ c, v.1 ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
-          obtain ⟨w, hws, hvw⟩ := hs v.1 v.2
-          have hvb := birthday_lt_sSup_birthday v.2
+        have he (v : s) : ∃ c, v.val ≤ c ∧ c.birthday < b ∧ ∃ w ∈ s, c ≤ w := by
+          obtain ⟨w, hws, hvw⟩ := hs v v.prop
+          have hvb := birthday_lt_sSup_birthday v.prop
           have hwb := birthday_lt_sSup_birthday hws
           rw [← hbs, WithTop.coe_lt_coe, Order.lt_add_one_iff] at hvb hwb
           obtain hvb | hvb := hvb.eq_or_lt
           · obtain hwb | hwb := hwb.eq_or_lt
-            · exact ⟨_, (lt_ofSets_of_mem_left (mem_singleton v.1)).le,
+            · exact ⟨_, (lt_ofSets_of_mem_left (mem_singleton v.val)).le,
                 birthday_ofSets_singleton_lt_of_birthday_eq hvb hwb hvw,
                 w, hws, (ofSets_lt_of_mem_right (mem_singleton w)).le⟩
             · exact ⟨w, hvw.le, hwb, w, hws, le_rfl⟩
-          · exact ⟨v.1, le_rfl, hvb, v.1, v.2, le_rfl⟩
+          · exact ⟨v, le_rfl, hvb, v, v.prop, le_rfl⟩
         choose vv hvv hvb hvw using he
         have hxv : x = sSup (rightSurreal '' Set.range vv) := by
           rw [← hx, sSup_image, sSup_image, iSup_range, ← iSup_subtype'']
@@ -670,7 +668,7 @@ theorem birthday_leftGame_lt_of_notMem_of_player_eq {x : Game}
     (ne_of_eq_of_ne hx Player.left_ne_right)
   have hs : ⨆ i : x.moves .left, rightGame (.mk i) = rightGame (.mk c) :=
     iSup_eq_of_forall_le_of_forall_lt_exists_gt hc fun w hw => ⟨c, hw⟩
-  grw [← hxb, ← IGame.birthday_lt_of_mem_moves c.2, hs, ← Game.birthday_mk_le]
+  grw [← hxb, ← IGame.birthday_lt_of_mem_moves c.prop, hs, ← Game.birthday_mk_le]
   apply birthday_rightGame_le_of_notMem
   intro ⟨y, hy⟩
   simp_rw [hs, ← hy, rightGame_toGame, player_rightSurreal] at hx

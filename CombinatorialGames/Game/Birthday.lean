@@ -62,7 +62,7 @@ theorem birthday_le_iff {x : IGame} {o : NatOrdinal} : x.birthday ≤ o ↔
   simpa using lt_birthday_iff.not
 
 theorem birthday_eq_max (x : IGame) : birthday x =
-    max (⨆ y : xᴸ, y.1.birthday + 1) (⨆ y : xᴿ, y.1.birthday + 1) := by
+    max (⨆ y : xᴸ, y.val.birthday + 1) (⨆ y : xᴿ, y.val.birthday + 1) := by
   apply eq_of_forall_lt_iff
   simp [lt_birthday_iff, NatOrdinal.lt_iSup_iff]
 
@@ -129,7 +129,7 @@ theorem birthday_down : birthday ↓ = 2 := by
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   refine eq_of_forall_lt_iff fun y ↦ ?_
-  simp_rw [lt_birthday_iff, exists_moves_neg, Player.exists]
+  simp_rw [lt_birthday_iff, exists_mem_moves_neg, Player.exists]
   rw [or_comm]
   congr! 3
   all_goals
@@ -179,7 +179,7 @@ theorem equiv_neg_ordinal_of_left_eq_empty {x : IGame} (hx : xᴸ = ∅) :
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
   refine eq_of_forall_lt_iff fun o ↦ ?_
-  simp_rw [lt_add_iff, lt_birthday_iff, Player.exists, exists_moves_add,
+  simp_rw [lt_add_iff, lt_birthday_iff, Player.exists, exists_mem_moves_add,
     or_and_right, exists_or, or_or_or_comm]
   congr! 2
   all_goals
@@ -301,7 +301,7 @@ theorem short_iff_birthday_finite {x : IGame} : x.Short ↔ x.birthday < of .ome
   refine ⟨fun h ↦ ?_, ?_⟩
   · have (p : Player) (y : x.moves p) : ∃ n : ℕ, birthday y = n := by
       rw [← NatOrdinal.lt_omega0, ← short_iff_birthday_finite]
-      exact .of_mem_moves y.2
+      exact .of_mem_moves y.prop
     choose f hf using this
     obtain ⟨n, hn⟩ := (finite_iUnion fun p => finite_range (f p)).exists_le
     apply lt_of_le_of_lt _ (NatOrdinal.natCast_lt_omega0 (n + 1))

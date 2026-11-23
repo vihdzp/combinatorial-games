@@ -78,24 +78,24 @@ theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
   ⟨.congr h, .congr h.symm⟩
 
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
-theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
+theorem Fits.equiv_of_forall_mem_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  ⟨le_of_forall_moves_right_lf hx.2 hl, le_of_forall_moves_left_lf hx.1 hr⟩
+  ⟨le_of_forall_mem_moves_right_lf hx.2 hl, le_of_forall_mem_moves_left_lf hx.1 hr⟩
 
 /-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
 are easier to enumerate. -/
-theorem Fits.equiv_of_forall_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a) (hx : x.Fits y)
-    (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  h.trans <| Fits.equiv_of_forall_moves (hx.congr h) hl hr
+theorem Fits.equiv_of_forall_mem_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a)
+    (hx : x.Fits y) (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_mem_moves (hx.congr h) hl hr
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
 
-Note that under most circumstances, `Fits.equiv_of_forall_moves` is easier to use. -/
+Note that under most circumstances, `Fits.equiv_of_forall_mem_moves` is easier to use. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (h : ∀ p, ∀ z ∈ x.moves p, ¬ z.Fits y) : x ≈ y := by
   simp_rw [not_fits_iff] at h
-  apply hx.equiv_of_forall_moves
+  apply hx.equiv_of_forall_mem_moves
   · refine fun z hz ↦ (h _ z hz).resolve_right ?_
     rintro ⟨w, hw, hwz⟩
     exact hx.2 w hw <| hwz.trans (Numeric.left_lt hz).le
@@ -158,11 +158,11 @@ theorem mk_eq_mk' {x y : IGame} {_ : Numeric x} {_ : Numeric y} : mk x = mk y �
 
 @[cases_eliminator]
 theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
-    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
+    motive x := Quotient.ind (fun h ↦ @mk _ h.prop) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).1
-@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
+@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).val
+@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).prop
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) [h : Numeric x] : (mk x).out ≈ x :=
@@ -178,19 +178,19 @@ instance : NatCast Surreal := ⟨fun n => mk n⟩
 instance : IntCast Surreal := ⟨fun n => mk n⟩
 
 instance : Add Surreal where
-  add := Quotient.map₂ (fun a b ↦ ⟨a.1 + b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
+  add := Quotient.map₂ (fun a b ↦ ⟨a.val + b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
 
 instance : Neg Surreal where
-  neg := Quotient.map (fun a ↦ ⟨-a.1, inferInstance⟩) fun _ _ ↦ neg_congr
+  neg := Quotient.map (fun a ↦ ⟨-a.val, inferInstance⟩) fun _ _ ↦ neg_congr
 
 instance : Sub Surreal where
-  sub := Quotient.map₂ (fun a b ↦ ⟨a.1 - b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
+  sub := Quotient.map₂ (fun a b ↦ ⟨a.val - b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
 
 instance : NSMul Surreal where
-  nsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ nsmul_congr
+  nsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ nsmul_congr
 
 instance : ZSMul Surreal where
-  zsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ zsmul_congr
+  zsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ zsmul_congr
 
 instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))

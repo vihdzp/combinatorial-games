@@ -83,7 +83,7 @@ theorem IsStrategy.iUnion {ι} {s : ι → Set LGame} (h : ∀ i, IsStrategy p (
 
 theorem IsStrategy.sUnion {S : Set (Set LGame)} (h : ∀ s ∈ S, IsStrategy p s) :
     IsStrategy p (⋃₀ S) :=
-  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.2
+  Set.sUnion_eq_iUnion ▸ .iUnion fun s ↦ h s s.prop
 
 theorem isStrategy_setOfPred_isLoss (p : Player) : IsStrategy p {x | IsLoss (-p) x} :=
   fun _ ↦ (isLoss_iff_forall.trans (by simp [isWin_iff_exists])).mp
