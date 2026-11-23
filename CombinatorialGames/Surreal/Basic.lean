@@ -78,24 +78,24 @@ theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
   ⟨.congr h, .congr h.symm⟩
 
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
-theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
+theorem Fits.equiv_of_forall_mem_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  ⟨le_of_forall_moves_right_lf hx.2 hl, le_of_forall_moves_left_lf hx.1 hr⟩
+  ⟨le_of_forall_mem_moves_right_lf hx.2 hl, le_of_forall_mem_moves_left_lf hx.1 hr⟩
 
 /-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
 are easier to enumerate. -/
-theorem Fits.equiv_of_forall_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a) (hx : x.Fits y)
-    (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  h.trans <| Fits.equiv_of_forall_moves (hx.congr h) hl hr
+theorem Fits.equiv_of_forall_mem_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a)
+    (hx : x.Fits y) (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_mem_moves (hx.congr h) hl hr
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
 
-Note that under most circumstances, `Fits.equiv_of_forall_moves` is easier to use. -/
+Note that under most circumstances, `Fits.equiv_of_forall_mem_moves` is easier to use. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (h : ∀ p, ∀ z ∈ x.moves p, ¬ z.Fits y) : x ≈ y := by
   simp_rw [not_fits_iff] at h
-  apply hx.equiv_of_forall_moves
+  apply hx.equiv_of_forall_mem_moves
   · refine fun z hz ↦ (h _ z hz).resolve_right ?_
     rintro ⟨w, hw, hwz⟩
     exact hx.2 w hw <| hwz.trans (Numeric.left_lt hz).le
@@ -158,11 +158,11 @@ theorem mk_eq_mk' {x y : IGame} {_ : Numeric x} {_ : Numeric y} : mk x = mk y �
 
 @[cases_eliminator]
 theorem ind {motive : Surreal → Prop} (mk : ∀ y [Numeric y], motive (mk y)) (x : Surreal) :
-    motive x := Quotient.ind (fun h ↦ @mk _ h.2) x
+    motive x := Quotient.ind (fun h ↦ @mk _ h.prop) x
 
 /-- Choose an element of the equivalence class using the axiom of choice. -/
-@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).1
-@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).2
+@[no_expose] def out (x : Surreal) : IGame := (Quotient.out x).val
+@[simp] instance (x : Surreal) : Numeric x.out := (Quotient.out x).prop
 @[simp] theorem out_eq (x : Surreal) : mk x.out = x := Quotient.out_eq x
 
 theorem mk_out_equiv (x : IGame) [h : Numeric x] : (mk x).out ≈ x :=
@@ -178,19 +178,19 @@ instance : NatCast Surreal := ⟨fun n => mk n⟩
 instance : IntCast Surreal := ⟨fun n => mk n⟩
 
 instance : Add Surreal where
-  add := Quotient.map₂ (fun a b ↦ ⟨a.1 + b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
+  add := Quotient.map₂ (fun a b ↦ ⟨a.val + b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ add_congr h₁ h₂
 
 instance : Neg Surreal where
-  neg := Quotient.map (fun a ↦ ⟨-a.1, inferInstance⟩) fun _ _ ↦ neg_congr
+  neg := Quotient.map (fun a ↦ ⟨-a.val, inferInstance⟩) fun _ _ ↦ neg_congr
 
 instance : Sub Surreal where
-  sub := Quotient.map₂ (fun a b ↦ ⟨a.1 - b.1, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
+  sub := Quotient.map₂ (fun a b ↦ ⟨a.val - b, inferInstance⟩) fun _ _ h₁ _ _ h₂ ↦ sub_congr h₁ h₂
 
 instance : NSMul Surreal where
-  nsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ nsmul_congr
+  nsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ nsmul_congr
 
 instance : ZSMul Surreal where
-  zsmul n := Quotient.map (fun a ↦ ⟨n • a.1, inferInstance⟩) fun _ _ ↦ zsmul_congr
+  zsmul n := Quotient.map (fun a ↦ ⟨n • a.val, inferInstance⟩) fun _ _ ↦ zsmul_congr
 
 instance : PartialOrder Surreal :=
   inferInstanceAs (PartialOrder (Antisymmetrization ..))
@@ -309,8 +309,8 @@ theorem ofSets_eq_mk {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
     !{s | t} = @mk !{out '' s | out '' t} (.mk (by aesop) (by simp)) := by
   rw [ofSets_eq_mk']
-  congr
-  grind
+  rw! [ofSets_eq_ofSets_cases]
+  rfl
 
 theorem toGame_ofSets' (st : Player → Set Surreal.{u}) [Small.{u} (st left)] [Small.{u} (st right)]
     {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
@@ -343,30 +343,63 @@ theorem mk_ofSets {s t : Set IGame.{u}} [Small.{u} s] [Small.{u} t] {H : Numeric
   congr!; aesop
 
 @[aesop apply unsafe]
+theorem lt_ofSets_of_mem_left' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)]
+    {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y} {x : Surreal} (hx : x ∈ st .left) :
+    x < !{st} := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets']
+  exact Game.lf_ofSets_of_mem_left' (Set.mem_image_of_mem _ hx)
+
+@[aesop apply unsafe]
+theorem ofSets_lt_of_mem_right' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st .left)] [Small.{u} (st .right)]
+    {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y} {x : Surreal} (hx : x ∈ st .right) :
+    !{st} < x := by
+  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets']
+  exact Game.ofSets_lf_of_mem_right' (Set.mem_image_of_mem _ hx)
+
+@[aesop apply unsafe]
 theorem lt_ofSets_of_mem_left {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ s) :
-    x < !{s | t} := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
-  exact Game.lf_ofSets_of_mem_left (Set.mem_image_of_mem _ hx)
+    x < !{s | t} :=
+  lt_ofSets_of_mem_left' hx
 
 @[aesop apply unsafe]
 theorem ofSets_lt_of_mem_right {s t : Set Surreal.{u}} [Small.{u} s] [Small.{u} t]
     {H : ∀ x ∈ s, ∀ y ∈ t, x < y} {x : Surreal} (hx : x ∈ t) :
-    !{s | t} < x := by
-  rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets]
-  exact Game.ofSets_lf_of_mem_right (Set.mem_image_of_mem _ hx)
+    !{s | t} < x :=
+  ofSets_lt_of_mem_right' hx
+
+theorem ofSets_le_ofSets_iff' {st₁ st₂ : Player → Set Surreal.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)]
+    {H₁ : ∀ x ∈ st₁ .left, ∀ y ∈ st₁ .right, x < y}
+    {H₁ : ∀ x ∈ st₂ .left, ∀ y ∈ st₂ .right, x < y} :
+    !{st₁} ≤ !{st₂} ↔ (∀ z ∈ st₁ .left, z < !{st₂}) ∧ (∀ z ∈ st₂ .right, !{st₁} < z) := by
+  simp_rw [lt_iff_not_ge, ← toGame_le_iff, toGame_ofSets',
+    Game.ofSets_le_ofSets_iff', Set.forall_mem_image]
+
+theorem ofSets_lt_ofSets_iff' {st₁ st₂ : Player → Set Surreal.{u}}
+    [Small.{u} (st₁ .left)] [Small.{u} (st₁ .right)]
+    [Small.{u} (st₂ .left)] [Small.{u} (st₂ .right)]
+    {H₁ : ∀ x ∈ st₁ .left, ∀ y ∈ st₁ .right, x < y}
+    {H₁ : ∀ x ∈ st₂ .left, ∀ y ∈ st₂ .right, x < y} :
+    !{st₁} < !{st₂} ↔ (∃ z ∈ st₂ .left, !{st₁} ≤ z) ∨ (∃ z ∈ st₁ .right, z ≤ !{st₂}) := by
+  rw [← not_le, ofSets_le_ofSets_iff']
+  push +distrib Not
+  rfl
 
 theorem ofSets_le_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
     {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
-    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z < !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} < z) := by
-  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_le_ofSets_iff]
+    !{s₁ | t₁} ≤ !{s₂ | t₂} ↔ (∀ z ∈ s₁, z < !{s₂ | t₂}) ∧ (∀ z ∈ t₂, !{s₁ | t₁} < z) :=
+  ofSets_le_ofSets_iff'
 
 theorem ofSets_lt_ofSets_iff {s₁ t₁ s₂ t₂ : Set Surreal.{u}}
     [Small.{u} s₁] [Small.{u} t₁] [Small.{u} s₂] [Small.{u} t₂]
     {H₁ : ∀ x ∈ s₁, ∀ y ∈ t₁, x < y} {H₁ : ∀ x ∈ s₂, ∀ y ∈ t₂, x < y} :
-    !{s₁ | t₁} < !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) := by
-  simp [lt_iff_not_ge, ← toGame_le_iff, Game.ofSets_lf_ofSets_iff]
+    !{s₁ | t₁} < !{s₂ | t₂} ↔ (∃ z ∈ s₂, !{s₁ | t₁} ≤ z) ∨ (∃ z ∈ t₁, z ≤ !{s₂ | t₂}) :=
+  ofSets_lt_ofSets_iff'
 
 theorem zero_def : (0 : Surreal) = !{fun _ ↦ ∅} := by apply (mk_ofSets' ..).trans; congr!; simp
 theorem one_def : (1 : Surreal) = !{{0} | ∅} := by apply (mk_ofSets ..).trans; congr! <;> aesop

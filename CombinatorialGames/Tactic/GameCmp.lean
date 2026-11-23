@@ -70,5 +70,6 @@ attribute [game_cmp] le_rfl
   false_implies implies_true forall_const and_imp forall_exists_index
   Player.neg_left Player.neg_right Player.left_mul Player.right_mul Player.forall Player.exists
   Set.forall_mem_image Set.exists_mem_image Set.forall_mem_insert Set.exists_mem_insert Set.mem_Iio
+  Set.forall_mem_union Set.exists_mem_union Player.cases
 
 end

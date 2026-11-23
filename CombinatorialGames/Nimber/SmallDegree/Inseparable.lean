@@ -8,6 +8,7 @@ module
 public import CombinatorialGames.Nimber.SimplestExtension.Algebraic
 
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
+import Mathlib.SetTheory.Ordinal.Principal
 
 /-!
 # Inseparable nimber extensions
@@ -285,7 +286,7 @@ theorem perfectField_fieldClosure_succ_pow_omega0 :
   refine .ofSurjective _ 2 ?_
   intro ⟨x, hx⟩
   refine ⟨⟨x.sqrt, ?_⟩, by simp [Subtype.ext_iff, frobenius_def]⟩
-  rw [mem_toSubfield_iff, ← ofNat_opow_omega0 2] at hx ⊢
+  rw [mem_toSubfield_iff, ← Ordinal.ofNat_opow_omega0 2] at hx ⊢
   obtain ⟨n, hno, hn⟩ :=
     ((isNormal_of_val_fieldClosure_succ_pow_two_pow).lt_iff_exists_lt
       isSuccLimit_omega0).mp hx
@@ -307,7 +308,7 @@ theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
     obtain ⟨c, hc⟩ := hbij.surjective ⟨t, by simp [← Order.succ_le_iff]⟩
     rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
       RingEquiv.symm_apply_eq, ht.sqrt_eq] at hc
-    absurd c.2
+    absurd c.prop
     simp [hc]
   | succ n =>
     obtain ⟨c, hc⟩ := hbij.surjective ⟨of (val (fieldClosure (succ t)) ^ 2 ^ n),
@@ -315,7 +316,7 @@ theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
         (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n)))⟩
     rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
       RingEquiv.symm_apply_eq, ht.sqrt_fieldClosure_succ_pow_two_pow] at hc
-    absurd c.2
+    absurd c.prop
     simp [hc]
 
 omit ht in

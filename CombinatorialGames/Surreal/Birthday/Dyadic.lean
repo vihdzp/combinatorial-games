@@ -212,10 +212,9 @@ theorem IGame.birthday_dyadic (x : Dyadic) : IGame.birthday x = x.birthday := by
   obtain hd | hd := eq_or_ne x.den 1
   · rw [Dyadic.birthday_of_den_eq_one hd, Dyadic.toIGame_of_den_eq_one hd, IGame.birthday_intCast]
   · rw [Dyadic.toIGame_of_den_ne_one hd, birthday_ofSets]
-    simp_rw [Set.image_singleton, csSup_singleton, Function.comp_apply]
+    simp_rw [Set.image_singleton, csSup_singleton]
     rw [ih _ (x.den_lower_lt hd) _ rfl, ih _ (x.den_upper_lt hd) _ rfl,
-      Order.succ_eq_add_one, Order.succ_eq_add_one, ← Nat.cast_add_one, ← Nat.cast_add_one,
-      ← Nat.cast_max, Nat.cast_inj, Nat.add_max_add_right,
+      ← Nat.cast_add_one, ← Nat.cast_add_one, ← Nat.cast_max, Nat.cast_inj, Nat.add_max_add_right,
       Dyadic.max_birthday_lower_birthday_upper_add_one_of_den_ne_one hd]
 
 -- `Dyadic.toIGame` is canonical, so it minimizes the birthday in its equivalence class.
