@@ -117,7 +117,6 @@ protected theorem _root_.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpart
 termination_by x
 decreasing_by igame_wf
 
-#exit
 end IsUndominated
 
 /-- Hereditarily undominating a game. This returns garbage values on non-short games. -/
