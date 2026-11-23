@@ -88,7 +88,7 @@ theorem undominate_def' (x : IGame) : x.undominate =
 
 theorem undominate_def (x : IGame) : x.undominate =
     !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < undominate z} |
-      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬ undominate z < y}} := by
+      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬undominate z < y}} := by
   rw [undominate_def', ofSets_eq_ofSets_cases]
 
 @[simp]
