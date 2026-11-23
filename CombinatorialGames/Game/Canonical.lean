@@ -158,39 +158,35 @@ termination_by x
 decreasing_by igame_wf
 
 theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x := by
-  constructor
-  · dsimp
-    rw [le_iff_forall_lf]
-    simp_rw [forall_mem_moves_undominate]
+  refine equiv_of_forall_lf ?_ ?_ (fun y hy hxy ↦ ?_) (fun y hy hxy ↦ ?_)
+  · simp_rw [forall_mem_moves_undominate]
     dsimp [Player.LT]
-    refine ⟨fun y hy _ hyx ↦ ?_, fun y hy ↦ ?_⟩
-    · short
-      grw [undominate_equiv] at hyx
-      exact left_lf hy hyx
-    · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_minimal hy
-      short
-      have IHz := undominate_equiv z
-      refine fun hxy ↦ lf_of_right_le IHz.le (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
-        (hyz.trans hxy)
-      short
-      grw [Player.left_lt, IHz, undominate_equiv w] at hzw
-      exact hzw.not_ge (hz' hw hzw.le)
-  · dsimp
-    rw [le_iff_forall_lf]
-    simp_rw [forall_mem_moves_undominate]
+    refine fun y hy _ hyx ↦ ?_
+    short
+    grw [undominate_equiv] at hyx
+    exact left_lf hy hyx
+  · simp_rw [forall_mem_moves_undominate]
     dsimp [Player.LT]
-    refine ⟨fun y hy ↦ ?_, fun y hy _ hyx ↦ ?_⟩
-    · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
-      short
-      have IHz := undominate_equiv z
-      refine fun hxy ↦ lf_of_le_left IHz.ge (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
-        (hxy.trans hyz)
-      short
-      grw [Player.left_lt, IHz, undominate_equiv w] at hzw
-      exact hzw.not_ge (hz' hw hzw.le)
-    · short
-      grw [undominate_equiv y] at hyx
-      exact lf_right hy hyx
+    refine fun y hy _ hyx ↦ ?_
+    short
+    grw [undominate_equiv y] at hyx
+    exact lf_right hy hyx
+  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
+    short
+    have IHz := undominate_equiv z
+    refine lf_of_le_left IHz.ge (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
+      (hxy.trans hyz)
+    short
+    grw [Player.left_lt, IHz, undominate_equiv w] at hzw
+    exact hzw.not_ge (hz' hw hzw.le)
+  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_minimal hy
+    short
+    have IHz := undominate_equiv z
+    refine lf_of_right_le IHz.le (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
+      (hyz.trans hxy)
+    short
+    grw [Player.left_lt, IHz, undominate_equiv w] at hzw
+    exact hzw.not_ge (hz' hw hzw.le)
 termination_by x
 decreasing_by igame_wf
 
