@@ -239,7 +239,7 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
   split_ifs with h
   · unfold lower upper
     simp only [h, mkRat_one, toIGame_intCast]
-    apply Fits.equiv_of_forall_moves
+    apply Fits.equiv_of_forall_mem_moves
     · simp [Fits]
     · intro m hm
       obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_moves_left_intCast hm
@@ -348,8 +348,8 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   by_cases H : x.den = 1 ∧ y.den = 1
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
-  apply Fits.equiv_of_forall_moves ?_ (fun z hz ↦ ?_) (fun z hz ↦ ?_)
-  · rw [Fits, forall_moves_add, forall_moves_add]
+  apply Fits.equiv_of_forall_mem_moves ?_ (fun z hz ↦ ?_) (fun z hz ↦ ?_)
+  · rw [Fits, forall_mem_moves_add, forall_mem_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
       intro z hz

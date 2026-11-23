@@ -129,7 +129,7 @@ theorem birthday_down : birthday ↓ = 2 := by
 @[simp]
 theorem birthday_neg (x : IGame) : (-x).birthday = x.birthday := by
   refine eq_of_forall_lt_iff fun y ↦ ?_
-  simp_rw [lt_birthday_iff, exists_moves_neg, Player.exists]
+  simp_rw [lt_birthday_iff, exists_mem_moves_neg, Player.exists]
   rw [or_comm]
   congr! 3
   all_goals
@@ -179,7 +179,7 @@ theorem equiv_neg_ordinal_of_left_eq_empty {x : IGame} (hx : xᴸ = ∅) :
 @[simp]
 theorem birthday_add (x y : IGame) : (x + y).birthday = x.birthday + y.birthday := by
   refine eq_of_forall_lt_iff fun o ↦ ?_
-  simp_rw [lt_add_iff, lt_birthday_iff, Player.exists, exists_moves_add,
+  simp_rw [lt_add_iff, lt_birthday_iff, Player.exists, exists_mem_moves_add,
     or_and_right, exists_or, or_or_or_comm]
   congr! 2
   all_goals

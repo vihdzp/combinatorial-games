@@ -95,19 +95,19 @@ theorem forall_mem_moves_left_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈
   rfl
 
 @[simp]
-theorem forall_moves_right_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴿ, P y) ↔
+theorem forall_mem_moves_right_wpow {x : IGame} {P : IGame → Prop} : (∀ y ∈ (ω^ x)ᴿ, P y) ↔
     ∀ r : Dyadic, 0 < r → ∀ y ∈ xᴿ, P (r * ω^ y) := by
   rw [moves_right_wpow]
   exact forall_mem_image2
 
 @[simp]
-theorem exists_moves_left_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴸ, P y) ↔
+theorem exists_mem_moves_left_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴸ, P y) ↔
     P 0 ∨ ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴸ, P (r * ω^ y) := by
   rw [moves_left_wpow, exists_mem_insert, exists_mem_image2]
   rfl
 
 @[simp]
-theorem exists_moves_right_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴿ, P y) ↔
+theorem exists_mem_moves_right_wpow {x : IGame} {P : IGame → Prop} : (∃ y ∈ (ω^ x)ᴿ, P y) ↔
     ∃ r : Dyadic, 0 < r ∧ ∃ y ∈ xᴿ, P (r * ω^ y) := by
   rw [moves_right_wpow]
   exact exists_mem_image2
@@ -179,7 +179,7 @@ private theorem wpow_strictMono_aux {x y : IGame} [Numeric x] [Numeric y]
       apply (Numeric.lt_right (mul_wpow_mem_moves_right_wpow (mod_cast hq) hz)).trans
       rw [Numeric.mul_lt_mul_iff_left (wpow_pos' z)]
       simpa
-  · rw [le_iff_forall_lf, forall_mem_moves_left_wpow, forall_moves_right_wpow]
+  · rw [le_iff_forall_lf, forall_mem_moves_left_wpow, forall_mem_moves_right_wpow]
     refine ⟨⟨zero_lf_wpow _, ?_⟩, ?_⟩ <;> intro r hr z hz
     · have := wpow_mem_moves_left_wpow hz
       numeric
@@ -196,7 +196,7 @@ decreasing_by igame_wf
 
 protected instance wpow (x : IGame) [Numeric x] : Numeric (ω^ x) := by
   rw [numeric_def]
-  simp_rw [Player.forall, forall_mem_moves_left_wpow, forall_moves_right_wpow]
+  simp_rw [Player.forall, forall_mem_moves_left_wpow, forall_mem_moves_right_wpow]
   refine ⟨⟨fun r hr y hy ↦ ?_, fun r hr y hy s hs z hz ↦ ?_⟩,
     ⟨.zero, fun r hr y hy ↦ ?_⟩, fun r hr y hy ↦ ?_⟩
   all_goals numeric; have := Numeric.wpow y
@@ -299,10 +299,10 @@ theorem wpow_congr (h : x ≈ y) : ω^ x ≈ ω^ y := by
 
 theorem realCast_mul_wpow_equiv (r : ℝ) (x : IGame.{u}) [Numeric x] :
     r * ω^ x ≈ !{(fun s : ℝ ↦ s * ω^ x) '' Iio r | (fun s : ℝ ↦ s * ω^ x) '' Ioi r} := by
-  apply Fits.equiv_of_forall_moves
+  apply Fits.equiv_of_forall_mem_moves
   · simp [Fits]
   all_goals
-    simp only [forall_moves_mul, Player.mul_left, Player.mul_right,
+    simp only [forall_mem_moves_mul, Player.mul_left, Player.mul_right,
       moves_ofSets, Player.cases, exists_mem_image]
     rintro (_ | _) a ha b hb
   · rw [Real.moves_left_toIGame] at ha
@@ -384,8 +384,8 @@ private theorem wpow_lt_mulOption {r s : Dyadic} (hr : 0 < r) (hs : 0 < s)
 
 theorem wpow_add_equiv (x y : IGame) [Numeric x] [Numeric y] : ω^ (x + y) ≈ ω^ x * ω^ y := by
   rw [AntisymmRel, le_iff_forall_lf, le_iff_forall_lf]
-  simp only [forall_mem_moves_left_wpow, forall_moves_right_wpow, forall_and,
-    forall_moves_add, forall_moves_mul, Player.forall,
+  simp only [forall_mem_moves_left_wpow, forall_mem_moves_right_wpow, forall_and,
+    forall_mem_moves_add, forall_mem_moves_mul, Player.forall,
     Player.left_mul, Player.right_mul, Player.neg_left, Player.neg_right]
   repeat any_goals constructor
   on_goal 1 => exact (Numeric.mul_pos (wpow_pos _) (wpow_pos _)).not_ge
@@ -647,13 +647,13 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   have Hl' := mk_lt_mk_of_ne h Hl
   have Hr' := mk_lt_mk_of_ne' h Hr
   have := numeric_of_forall_mk_ne_mk' h hf hg Hl Hr
-  apply (Fits.equiv_of_forall_moves ..).symm
+  apply (Fits.equiv_of_forall_mem_moves ..).symm
   · constructor
     · simp_rw [forall_mem_moves_left_wpow, moves_left_ofSets, forall_mem_range,
         Function.comp_apply, ← Surreal.mk_le_mk]
       refine ⟨h.not_ge, fun r hr y ↦ (lt_of_mk_lt_mk_of_nonneg ?_ h.le).not_ge⟩
       simpa [hr.ne', hf] using Hl' _ y.prop.1 y.prop.2
-    · simp_rw [forall_moves_right_wpow, moves_right_ofSets, forall_mem_range,
+    · simp_rw [forall_mem_moves_right_wpow, moves_right_ofSets, forall_mem_range,
         Function.comp_apply, ← Surreal.mk_le_mk]
       refine fun r hr y ↦ (lt_of_mk_lt_mk_of_nonneg ?_ ?_).not_ge
       · simpa [hr.ne', hg] using Hr' _ y.prop
@@ -661,7 +661,7 @@ private theorem wpow_equiv_of_forall_mk_ne_mk' {x : IGame.{u}} [Numeric x] (h : 
   all_goals
     intro y hy
     numeric
-    simp only [exists_moves_right_wpow, exists_moves_left_wpow]
+    simp only [exists_mem_moves_right_wpow, exists_mem_moves_left_wpow]
   · refine or_iff_not_imp_left.2 fun hy' ↦ ?_
     rw [Numeric.not_le] at hy'
     obtain ⟨(_ | n), hn⟩ := (hf ⟨y, hy, hy'⟩).le
