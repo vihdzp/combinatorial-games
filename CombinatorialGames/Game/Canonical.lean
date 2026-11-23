@@ -92,16 +92,14 @@ theorem undominate_def (x : IGame) : x.undominate =
 @[simp]
 theorem forall_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.undominate.moves p, P y) ↔
-      ∀ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) →
-        P y.undominate := by
+      ∀ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) → P y.undominate := by
   rw [undominate_def']
   simp
 
 @[simp]
 theorem exists_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∃ y ∈ x.undominate.moves p, P y) ↔
-      ∃ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) ∧
-        P y.undominate := by
+      ∃ y ∈ x.moves p, (∀ z ∈ x.moves p, ¬p.LT y.undominate z) ∧ P y.undominate := by
   rw [undominate_def']
   aesop
 
