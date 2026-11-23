@@ -62,11 +62,6 @@ variable {α β γ : Type*}
   [LinearOrder α] [LinearOrder β] [LinearOrder γ]
   [WellFoundedLT α] [WellFoundedLT β] [WellFoundedLT γ]
 
--- #43588
-instance : WellFoundedLT (α ⊕ₗ β) :=
-  have H : IsWellOrder _ (Sum.Lex (· < · : α → _) (· < · : β → _)) := inferInstance
-  H.wf
-
 /-- An order isomorphism between `insert a s` and `s ⊕ₗ PUnit`. -/
 def orderIsoInsert {s : Set α} [DecidablePred (· ∈ s)] {a : α} (ha : ∀ b ∈ s, b < a) :
     (insert a s :) ≃o s ⊕ₗ PUnit :=
@@ -101,7 +96,7 @@ theorem type_le_iff_forall {x : Ordinal} :
     simpa using h (enum (· < ·) ⟨x, hx⟩)
 
 /-- Well-orders of the same order type are isomorphic. -/
-noncomputable def OrderIso.of_ordinalType_eq {α β : Type u} [LinearOrder α] [LinearOrder β]
+noncomputable def _root_.OrderIso.ofOrdinalTypeEq {α β : Type u} [LinearOrder α] [LinearOrder β]
     [WellFoundedLT α] [WellFoundedLT β] (H : typeLT α = typeLT β) : α ≃o β :=
   .ofRelIsoLT (type_eq.1 H).some
 
@@ -111,7 +106,7 @@ theorem exists_orderIso_sum {α : Type u} [LinearOrder α] [WellFoundedLT α]
       (γ : Type u) (_ : LinearOrder γ) (_ : WellFoundedLT γ)
       (_ : β ⊕ₗ γ ≃o α), typeLT β = x := by
   refine ⟨x.ToType, inferInstance, inferInstance,
-    (typeLT α - x).ToType, inferInstance, inferInstance, .of_ordinalType_eq ?_, by simp⟩
+    (typeLT α - x).ToType, inferInstance, inferInstance, .ofOrdinalTypeEq ?_, by simp⟩
   simpa using Ordinal.add_sub_cancel_of_le hx
 
 end Ordinal
@@ -137,7 +132,7 @@ theorem type_sum_embedding_le {f : α ⊕ β → γ} (hf : Monotone f) (hfs : f.
   intro c
   rw [← of_lt_iff]
   let g (x : (f ∘ Sum.inl) ⁻¹' Iio c ⊕ (f ∘ Sum.inr) ⁻¹' Iio c) : Iio c :=
-    x.rec (fun y ↦ ⟨f (.inl y.1), y.2⟩) (fun y ↦ ⟨f (.inr y.1), y.2⟩)
+    x.rec (fun y ↦ ⟨f (.inl y), y.prop⟩) (fun y ↦ ⟨f (.inr y), y.prop⟩)
   apply (IH (f := g) ..).trans_lt
   · obtain ⟨a | b, rfl⟩ := hfs c
     · apply add_lt_add_of_lt_of_le
