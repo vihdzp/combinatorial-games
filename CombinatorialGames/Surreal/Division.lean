@@ -171,7 +171,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     (∀ y ∈ (x * x⁻¹)ᴸ, y < 1) ∧ (∀ y ∈ (x * x⁻¹)ᴿ, 1 < y) := by
   have := numeric_inv hx hl hr hl' hr'
   obtain H := numeric_option_inv hx hl hr
-  rw [forall_moves_mul, forall_moves_mul]
+  rw [forall_mem_moves_mul, forall_mem_moves_mul]
   refine ⟨?_, ?_⟩ <;> rintro (_ | _)
   all_goals
     intro y hyx a ha
@@ -440,7 +440,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
   constructor
   all_goals
     rw [ratCast_def]
-    simp only [IGame.div_eq_mul_inv, forall_moves_mul, forall_moves_mul]
+    simp only [IGame.div_eq_mul_inv, forall_mem_moves_mul, forall_mem_moves_mul]
     obtain ⟨m, n, hn, _⟩ := q
     rintro (_ | _)
     all_goals
