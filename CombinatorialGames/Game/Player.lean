@@ -129,6 +129,18 @@ instance : CommGroup Player where
 @[simp, grind =] lemma one_eq_left : 1 = left := rfl
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
+/-- A predicate for `x ≤ y` or `y ≤ x`, according to the player. -/
+protected abbrev LE {α : Type*} [LE α] (p : Player) (x y : α) : Prop := p.cases (x ≤ y) (y ≤ x)
+
+theorem left_le {α : Type*} [LE α] {x y : α} : left.LE x y ↔ x ≤ y := .rfl
+theorem right_le {α : Type*} [LE α] {x y : α} : right.LE x y ↔ y ≤ x := .rfl
+
+/-- A predicate for `x < y` or `y < x`, according to the player. -/
+protected abbrev LT {α : Type*} [LT α] (p : Player) (x y : α) : Prop := p.cases (x < y) (y < x)
+
+theorem left_lt {α : Type*} [LT α] {x y : α} : left.LT x y ↔ x < y := .rfl
+theorem right_lt {α : Type*} [LT α] {x y : α} : right.LT x y ↔ y < x := .rfl
+
 end Player
 
 /-! ### Outcomes -/
