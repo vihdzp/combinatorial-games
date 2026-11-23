@@ -79,7 +79,7 @@ namespace Surreal
 /-- The truncation of a surreal to an ordinal `o` is the unique surreal `trunc o x`
 with `birthday (trunc o x) ≤ o` which compares the same to every `y` with `birthday y < o`. -/
 def trunc (o : NatOrdinal.{u}) : Surreal.{u} →o Surreal.{u} where
-  toFun x := !{fun p => {y | y.birthday < o} ∩ {s | p.cases (s < x) (x < s)}}'
+  toFun x := !{fun p => {y | y.birthday < o} ∩ {s | p.LT s x}}'
     (fun u hu v hv => hu.2.trans hv.2)
   monotone' := by
     apply id
@@ -295,7 +295,7 @@ theorem range_toSignExpansion : Set.range toSignExpansion.{u} = .ofPred SignExpa
         ((WithTop.untop_lt_iff _).2 hl) (WithTop.coe_untop _ _)
     choose u hu using ih
     let g : IGame := !{fun p => {s : IGame.{u} | s.birthday < l} ∩
-      {s | ∃ _ : s.Numeric, p.cases (toSignExpansion (.mk s) < f) (f < toSignExpansion (.mk s))}}
+      {s | ∃ _ : s.Numeric, p.LT (toSignExpansion (.mk s)) f}}
     have hgn : g.Numeric := by
       rw [numeric_def]
       refine ⟨fun y hy z hz => ?_, fun p y hy => ?_⟩
