@@ -126,11 +126,10 @@ private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
   · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
     short
     have IH := le_undominate z
-    refine fun hxy ↦ lf_of_le_left IH (undominate_mem_moves_undominate' hz fun w hw ↦ ?_)
+    refine fun hxy ↦ lf_of_le_left IH (undominate_mem_moves_undominate' hz fun w hw hzw ↦ ?_)
       (hxy.trans hyz)
-    dsimp
-    grw [← IH]
-    exact fun hzw ↦ hzw.not_ge (hz' hw hzw.le)
+    grw [Player.cases, ← IH] at hzw
+    exact hzw.not_ge (hz' hw hzw.le)
   · short
     grw [← le_undominate y] at hyx
     exact lf_right hy hyx
