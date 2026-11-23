@@ -112,11 +112,10 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
     (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     (∀ y ∈ x⁻¹ᴸ, x * y < 1) ∧ (∀ y ∈ x⁻¹ᴿ, 1 < x * y) := by
-  suffices ∀ p y, y ∈ x⁻¹.moves p → p.cases (x * y < 1) (1 < x * y) by
-    exact ⟨this left, this right⟩
-  apply invRec (P := fun p y hy ↦ p.cases (x * y < 1) (1 < x * y)) hx
+  suffices ∀ p y, y ∈ x⁻¹.moves p → p.LT (x * y) 1 from ⟨this left, this right⟩
+  apply invRec (P := fun p y hy ↦ p.LT (x * y) 1) hx
   · simp
-  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp
+  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp [Player.LT]
   · numeric
     have := hr y hyx
     have := numeric_option_inv hx hl hr left a ha
