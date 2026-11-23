@@ -43,22 +43,25 @@ namespace IGame
 
 /-- A hereditarily undominated game is one where no move is dominated, and such that every
 subposition satisfies this same property. -/
-@[expose]
 def IsUndominated (x : IGame) : Prop :=
-  ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ (∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z)
+  ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z
 termination_by x
 decreasing_by igame_wf
+
+theorem isUndominated_def {x : IGame} : IsUndominated x ↔
+    ∀ p, ∀ y ∈ x.moves p, IsUndominated y ∧ ∀ z ∈ x.moves p, ¬p.cases (· < ·) (· > ·) y z := by
+  rw [IsUndominated]
 
 namespace IsUndominated
 
 theorem of_mem_moves {x y : IGame} {p : Player} (hy : y ∈ x.moves p) (h : IsUndominated x) :
     IsUndominated y := by
-  rw [IsUndominated] at h
+  rw [isUndominated_def] at h
   exact (h p y hy).1
 
 theorem not_lt_of_mem_moves {x y z : IGame} {p : Player} (h : IsUndominated x)
     (hy : y ∈ x.moves p) (hz : z ∈ x.moves p) : ¬p.cases (· < ·) (· > ·) y z := by
-  rw [IsUndominated] at h
+  rw [isUndominated_def] at h
   exact (h p y hy).2 z hz
 
 theorem not_lt_of_mem_moves_left {x y z : IGame} (h : IsUndominated x)
@@ -180,7 +183,7 @@ theorem undominate_mem_moves_undominate {x y : IGame} {p : Player} [Short x] (hy
     exact H z hz
 
 theorem IsUndominated.undominate (x : IGame) [Short x] : IsUndominated x.undominate := by
-  rw [IsUndominated]
+  rw [isUndominated_def]
   simp_rw [forall_mem_moves_undominate]
   intro p y hy Hy
   short
