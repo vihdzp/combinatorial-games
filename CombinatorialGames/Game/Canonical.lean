@@ -203,6 +203,12 @@ theorem IsUndominated.undominate_eq {x : IGame} (hx : IsUndominated x) : x.undom
 termination_by x
 decreasing_by igame_wf
 
+theorem isUndominated_iff_undominate_eq {x : IGame} [Short x] :
+    IsUndominated x ↔ x.undominate = x := by
+  refine ⟨IsUndominated.undominate_eq, fun hx ↦ ?_⟩
+  rw [← hx]
+  exact .undominate x
+
 @[simp]
 theorem undominate_undominate (x : IGame) [Short x] : x.undominate.undominate = x.undominate :=
   (IsUndominated.undominate x).undominate_eq
