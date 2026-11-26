@@ -312,22 +312,22 @@ theorem quadraticLower_two : quadraticLower (of 2) = 0 := by
   exact h.1.pos.false
 
 theorem coe_enum_quadraticIrreducibles_zero :
-    (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).1 = 1 := by
+    (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).val = 1 := by
   apply le_antisymm
   · let one : quadraticIrreducibles := ⟨1, by simp [quadraticIrreducibles, lt_two_iff]⟩
-    change _ ≤ one.1
+    change _ ≤ one.val
     rw [Subtype.coe_le_coe, ← OrderIso.le_symm_apply]
     apply zero_le
   · rw [one_le_iff_ne_zero]
-    exact (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).2.1.ne_zero
+    exact (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).prop.1.ne_zero
 
 theorem notMem_image_of_quadraticLower_le (x : Nimber) {y : quadraticIrreducibles}
     (hy : enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x)) ≤ y) :
-    y.1 ∉ (fun z => z ^ 2 - z) '' Iio x := by
+    y.val ∉ (fun z => z ^ 2 - z) '' Iio x := by
   unfold quadraticLower quadraticAux at hy
   rw [← OrderIso.le_symm_apply, of_le_iff, ciSup_le_iff' Ordinal.bddAbove_of_small] at hy
   intro hyi
-  refine (Order.lt_succ _).not_ge (hy ⟨y.1, y.2, mem_of_subset_of_mem ?_ hyi⟩)
+  refine (Order.lt_succ _).not_ge (hy ⟨y.val, y.prop, mem_of_subset_of_mem ?_ hyi⟩)
   grw [← le_fieldClosure]
 
 theorem IsField.leastNoRoots_lt_of_quadraticLower_lt
@@ -459,9 +459,10 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
   by_cases ho : IsSuccLimit o
   · have hne : (Iio o).Nonempty := ⟨0, pos_of_ne_zero ho0⟩
     rw [← hox, isNormal_enumField.lt_iff_exists_lt ho] at hyx
-    change yq.1 < _ at hy
+    change yq.val < _ at hy
     rw [Subtype.coe_lt_coe, ← OrderIso.symm_apply_lt, ← val_lt_iff] at hy
-    rw [← hox, ← ho.sSup_Iio, isNormal_enumField.map_sSup hne Ordinal.bddAbove_of_small,
+    rw [← hox, ← ho.sSup_Iio,
+      isNormal_enumField.leftOrdContinuous.map_csSup hne Ordinal.bddAbove_of_small,
       leftOrdContinuous_quadraticLower.map_csSup (hne.image _) (bddAbove_of_small _),
       Set.image_image, lt_csSup_iff' Ordinal.bddAbove_of_small, exists_mem_image] at hy
     obtain ⟨o', hoo', hyx⟩ := hyx
@@ -481,7 +482,7 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
       (of (quadraticLower (Nimber.enumField o)))
   · grw [← hox, ← le_fieldClosure, ← le_succ]
     refine ihx (Nimber.enumField o) (IsField.enumField o) hxe ?_ hcl
-    change yq.1 < _
+    change yq.val < _
     grw [← (IsField.enumField o).lt_quadraticUpper_iff,
       ← Subtype.coe_lt_coe, ← quadraticLower_le_quadraticUpper, ← hcl]
   have perf : PerfectField (IsField.enumField o).toSubfield := by
@@ -490,7 +491,7 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
   have h2 : leastNoRoots (Nimber.enumField o) < .some (X ^ 3) := by
     contrapose! hcl
     rwa [← (IsField.enumField o).quadraticLower_fieldClosure_succ_of_le_leastNoRoots hcl, hox]
-  change yq.1 < _ at hy
+  change yq.val < _ at hy
   rw [← hox, ihqs (Nimber.enumField o) (IsField.enumField o) hxe perf h2,
     Subtype.coe_lt_coe, ← OrderIso.symm_apply_lt, ← val_lt_iff, lt_add_one_iff,
     val_le_iff, OrderIso.symm_apply_le, ← Subtype.coe_le_coe] at hy
@@ -531,7 +532,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
   rw [succ_eq_add_one, enumField_add_one] at hox
   have hxe : Nimber.enumField o < x := ((lt_succ _).trans_le (le_fieldClosure _)).trans_eq hox
   by_cases! hlt : Nimber.enumField o ≤ y
-  · apply y.2.2
+  · apply y.prop.2
     grw [hz, ← hox, (IsField.fieldClosure _).fieldClosure_le_iff, hlt, ← le_fieldClosure]
   by_cases! perf : ¬PerfectField (IsField.enumField o).toSubfield
   · have hlr := (IsField.enumField o).leastNoRoots_eq_of_not_perfectField perf
@@ -624,8 +625,8 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
         apply hcy.not_gt
         rw [← add_sub_cancel_left
           (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-            (of (quadraticLower (Nimber.enumField o)))).1 (b ^ 2 - b - y)]
-        apply y.2.1.sub_lt hcx
+            (of (quadraticLower (Nimber.enumField o)))).val (b ^ 2 - b - y)]
+        apply y.prop.1.sub_lt hcx
         rwa [Subtype.coe_lt_coe, ← OrderIso.lt_symm_apply, of_lt_iff, ← add_one_le_iff,
           ← of_le_iff, OrderIso.le_symm_apply,
           ← ihqs (Nimber.enumField o) (IsField.enumField o) hxe perf h2, hox]
@@ -688,7 +689,7 @@ theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_l
     (h2 : leastNoRoots x < .some (X ^ 3)) :
     leastNoRoots x = .some (X ^ 2 - X -
       C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-        (of (quadraticLower x))).1) := by
+        (of (quadraticLower x))).val) := by
   have ihc := @hx.mem_image_of_lt_quadraticLower
   have ihl := hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2
   apply le_antisymm
@@ -704,9 +705,9 @@ theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_l
       exact Set.mem_image_of_mem (fun z => z ^ 2 - z) hr
   · apply hx.le_leastNoRoots_of_exists_isRoot
     rw [show X ^ 2 - X -
-      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 =
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).val =
       C 1 * X ^ 2 + C 1 * X +
-      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 by
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).val by
         simp [CharTwo.sub_eq_add], Lex.forall_lt_quadratic]
     refine ⟨fun c hc _ _ => ?_, fun b hb c hd hc => ?_, fun a ha _ _ hd => ?_⟩
     · obtain ⟨r, hr, rfl⟩ := ihc (hc.trans ihl) hc
