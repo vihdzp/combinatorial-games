@@ -854,7 +854,7 @@ theorem quadraticLower_surjective : quadraticLower.Surjective := by
     exact ⟨of 2, quadraticLower_two⟩
   | isSuccLimit o ho ih =>
     choose c hc using ih
-    let s := range fun i : Iio o => c i.1 (id i.2)
+    let s := range fun i : Iio o => c i.val (id i.prop)
     refine ⟨sSup s, ?_⟩
     have hne : s.Nonempty := ⟨_, mem_range_self ⟨0, ho.pos⟩⟩
     rw [leftOrdContinuous_quadraticLower.map_csSup hne (bddAbove_of_small _), ← Set.range_comp']
