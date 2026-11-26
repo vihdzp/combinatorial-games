@@ -206,9 +206,8 @@ private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.2)
 
 /-- For `x` a field, `quadraticLower x` is the ordinal index into `quadraticIrreducibles` giving
-the smallest element of `quadraticIrreducibles` which is still irreducible in `x`, meaning,
-it cannot be expressed as a finite sum of smaller quadratic irreducibles and
-elements of the form `y ^ 2 - y` for `y < x`.
+the smallest element of `quadraticIrreducibles` which is still irreducible in `x`.
+
 For `x` not a field, `quadraticLower x = quadraticLower (fieldClosure x)`. -/
 def quadraticLower (x : Nimber) : Ordinal :=
   quadraticAux ((fun y => y ^ 2 - y) '' Iio (fieldClosure x))
