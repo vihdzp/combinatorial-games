@@ -216,6 +216,7 @@ def quadraticLower (x : Nimber) : Ordinal :=
 /-- For `x` a field, `quadraticUpper x` is the ordinal index into `quadraticIrreducibles` giving
 the unique element `y` of `quadraticIrreducibles` satisfying
 `y ≤ z ↔ x ≤ z` for `z ∈ quadraticIrreducibles`.
+
 For `x` not a field, `quadraticUpper x = quadraticUpper (fieldClosure x)`. -/
 def quadraticUpper (x : Nimber) : Ordinal :=
   quadraticAux (Iio (fieldClosure x))
