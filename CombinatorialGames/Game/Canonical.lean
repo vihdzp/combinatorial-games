@@ -91,6 +91,18 @@ theorem undominate_def (x : IGame) : x.undominate =
       {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬undominate z < y}} := by
   rw [undominate_def', ofSets_eq_ofSets_cases]
 
+theorem moves_undominate (x : IGame) (p : Player) : x.undominate.moves p =
+    {y ∈ undominate '' x.moves p | ∀ z ∈ x.moves p, ¬p.LT y (undominate z)} := by
+  rw [undominate_def', moves_ofSets]
+
+theorem moves_left_undominate (x : IGame) : x.undominateᴸ =
+    {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < undominate z} :=
+  moves_undominate ..
+
+theorem moves_right_undominate (x : IGame) : x.undominateᴿ =
+    {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬undominate z < y} :=
+  moves_undominate ..
+
 @[simp]
 theorem forall_mem_moves_undominate {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.undominate.moves p, P y) ↔
