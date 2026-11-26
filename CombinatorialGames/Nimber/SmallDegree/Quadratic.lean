@@ -300,7 +300,7 @@ theorem IsField.lt_quadraticUpper_iff {x : Nimber} (hx : IsField x) {y : quadrat
 
 theorem IsField.quadraticUpper_le_iff {x : Nimber} (hx : IsField x) {y : quadraticIrreducibles} :
     enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-      (of (quadraticUpper x)) ≤ y ↔ x ≤ y := by
-  rw [← not_lt, hx.lt_quadraticUpper_iff, not_lt]
+      (of (quadraticUpper x)) ≤ y ↔ x ≤ y :=
+  le_iff_le_iff_lt_iff_lt.2 hx.lt_quadraticUpper_iff
 
 end Nimber
