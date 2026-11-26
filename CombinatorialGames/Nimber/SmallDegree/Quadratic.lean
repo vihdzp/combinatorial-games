@@ -855,7 +855,8 @@ theorem IsField.quadraticUpper_fieldClosure_succ_of_not_perfectField {x : Nimber
     obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
       ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
     rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
-    apply ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).2.2
+    apply ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles
+        (of (quadraticUpper x))).prop.2
       (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)))
       ((lt_succ _).trans_le (le_fieldClosure _))).not_gt
     grw [← hgt]
