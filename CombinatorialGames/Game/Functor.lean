@@ -61,27 +61,26 @@ coinductive LGame : Type (u + 1)
   | ofSets (st : Player → Set IGame) [∀ p, Small.{u} (st p)] : LGame.{u}
 ```
 -/
-def GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
+abbrev GameFunctor (α : Type (u + 1)) : Type (u + 1) :=
   {s : Player → Set α // ∀ p, Small.{u} (s p)}
 
 namespace GameFunctor
 
-@[ext] theorem ext {α : Type (u + 1)} {x y : GameFunctor α} : x.1 = y.1 → x = y := Subtype.ext
+@[ext] theorem ext {α : Type (u + 1)} {x y : GameFunctor α} : x.val = y.val → x = y := Subtype.ext
 
-instance {α : Type (u + 1)} (x : GameFunctor α) (p : Player) : Small.{u} (x.1 p) := x.2 p
+instance {α : Type (u + 1)} (x : GameFunctor α) (p : Player) : Small.{u} (x.val p) := x.prop p
 
 instance : Functor GameFunctor where
-  map f s := ⟨(f '' s.1 ·), fun _ ↦ by infer_instance⟩
+  map f s := ⟨(f '' s.val ·), fun _ ↦ by infer_instance⟩
 
 theorem map_def {α β} (f : α → β) (s : GameFunctor α) :
-    f <$> s = ⟨(f '' s.1 ·), fun _ ↦ by infer_instance⟩ :=
+    f <$> s = ⟨(f '' s.val ·), fun _ ↦ by infer_instance⟩ :=
   rfl
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : QPF GameFunctor where
   P := ⟨Player → Type u, fun x ↦ Σ p, PLift (x p)⟩
   abs x := ⟨fun p ↦ Set.range (x.2 ∘ .mk p ∘ PLift.up), fun _ ↦ by infer_instance⟩
-  repr x := ⟨fun p ↦ Shrink (x.1 p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.1).1)⟩
+  repr x := ⟨fun p ↦ Shrink (x.val p), Sigma.rec (fun _ y ↦ ((equivShrink _).symm y.down).val)⟩
   abs_repr x := by ext; simp [← (equivShrink _).exists_congr_right]
   abs_map f := by intro ⟨x, f⟩; ext; simp [PFunctor.map, map_def]; rfl
 
