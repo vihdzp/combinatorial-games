@@ -24,7 +24,6 @@ universe u
 
 /-! ### Players -/
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- Either the Left or Right player. -/
 @[aesop safe cases, grind cases]
 inductive Player where
@@ -35,6 +34,9 @@ inductive Player where
 deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
+
+theorem left_ne_right : left ≠ right := Player.noConfusion
+theorem right_ne_left : right ≠ left := Player.noConfusion
 
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
@@ -70,6 +72,15 @@ protected lemma «exists» {p : Player → Prop} :
     (∃ x, p x) ↔ p left ∨ p right :=
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
+theorem univ_eq : Set.univ = {left, right} := Set.ext (by simp)
+
+theorem range_eq {α : Type*} (f : Player → α) : Set.range f = {f left, f right} := by
+  rw [← Set.image_univ, univ_eq, Set.image_pair]
+
+@[simp]
+theorem range_cases {α : Type*} (l r : α) : Set.range (Player.cases l r) = {l, r} :=
+  Player.range_eq _
+
 instance : Neg Player where
   neg := cases right left
 
@@ -84,6 +95,8 @@ theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
+
+theorem compl_singleton (p : Player) : ({p} : Set Player)ᶜ = {-p} := by grind
 
 /--
 The multiplication of `Player`s is used to state the lemmas about the multiplication of
@@ -115,11 +128,22 @@ instance : CommGroup Player where
 @[simp, grind =] lemma one_eq_left : 1 = left := rfl
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
+/-- A predicate for `x ≤ y` or `y ≤ x`, according to the player. -/
+protected abbrev LE {α : Type*} [LE α] (p : Player) (x y : α) : Prop := p.cases (x ≤ y) (y ≤ x)
+
+theorem left_le {α : Type*} [LE α] {x y : α} : left.LE x y ↔ x ≤ y := .rfl
+theorem right_le {α : Type*} [LE α] {x y : α} : right.LE x y ↔ y ≤ x := .rfl
+
+/-- A predicate for `x < y` or `y < x`, according to the player. -/
+protected abbrev LT {α : Type*} [LT α] (p : Player) (x y : α) : Prop := p.cases (x < y) (y < x)
+
+theorem left_lt {α : Type*} [LT α] {x y : α} : left.LT x y ↔ x < y := .rfl
+theorem right_lt {α : Type*} [LT α] {x y : α} : right.LT x y ↔ y < x := .rfl
+
 end Player
 
 /-! ### Outcomes -/
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- The three possible outcomes of a game.
 
 We register a linear order, with `⊤ = win` and `⊥ = loss`. -/

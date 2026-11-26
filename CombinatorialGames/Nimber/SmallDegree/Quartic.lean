@@ -63,7 +63,7 @@ theorem Polynomial.exists_irreducible_quadratic_or_cubic_of_irreducible_quartic
       by_contra! surj
       have pr : PerfectRing k 2 := .ofSurjective k 2 surj
       exact perf pr.toPerfectField
-    exact ⟨X ^ 2 - C b, X_pow_sub_C_irreducible_of_prime Nat.prime_two hb,
+    exact ⟨X ^ 2 - C b, irreducible_X_pow_sub_C_of_prime Nat.prime_two hb,
       .inl (by compute_degree!)⟩
   · have splits := IsSplittingField.splits p.SplittingField p
     have := Fact.mk splits

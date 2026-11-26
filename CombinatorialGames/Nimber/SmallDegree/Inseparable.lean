@@ -304,7 +304,7 @@ theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
     obtain ⟨c, hc⟩ := hbij.surjective ⟨t, by simp [← Order.succ_le_iff]⟩
     rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
       RingEquiv.symm_apply_eq, ht.sqrt_eq] at hc
-    absurd c.2
+    absurd c.prop
     simp [hc]
   | succ n =>
     obtain ⟨c, hc⟩ := hbij.surjective ⟨of (val (fieldClosure (succ t)) ^ 2 ^ n),
@@ -312,7 +312,7 @@ theorem not_perfectField_fieldClosure_succ_pow_two_pow (n : Nat) :
         (Nat.pow_lt_pow_right one_lt_two (Nat.lt_add_one n)))⟩
     rw [frobenius_def, Subtype.ext_iff, SubmonoidClass.coe_pow, ← Nimber.sqrt_symm_apply,
       RingEquiv.symm_apply_eq, ht.sqrt_fieldClosure_succ_pow_two_pow] at hc
-    absurd c.2
+    absurd c.prop
     simp [hc]
 
 omit ht in

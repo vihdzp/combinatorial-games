@@ -36,7 +36,7 @@ theorem InitialSeg.le_of_strictMono {α β : Type*} [LinearOrder α] [LinearOrde
 
 theorem Order.enum_le_of_strictMono {α : Type*} [LinearOrder α] [WellFoundedLT α]
     [IsRegularCardinalOrder α] {s : Set α} (hs : IsCofinal s) {x y : α}
-    {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, mem_Iio.2 hy⟩ :=
+    {f : Iio x → s} (hf : StrictMono f) (hy : y < x) : Order.enum s hs y ≤ f ⟨y, hy⟩ :=
   InitialSeg.le_of_strictMono ((Set.principalSegIio x).transInitial (Order.enum s hs).toInitialSeg)
     hf ⟨y, hy⟩
 
@@ -49,9 +49,9 @@ theorem Ordinal.enum_lt_of_lt_ord_cof {s : Set Ordinal} (hs : IsCofinal s) {x y 
     refine cof_le fun ⟨a, ha⟩ ↦ ?_
     obtain ⟨b, hb, ⟨hab, hbx⟩⟩ := hx a ha
     exact ⟨⟨b, hbx⟩, hb, hab⟩
-  let g (a : Iio x.cof.ord) : s := ⟨f a, (f a).2⟩
+  let g (a : Iio x.cof.ord) : s := ⟨f a, (f a).prop⟩
   have hg : StrictMono g := fun _ ↦ by simp [g]
-  exact (Subtype.coe_le_coe.2 <| enum_le_of_strictMono hs hg hy).trans_lt (f _).1.2
+  exact (Subtype.coe_le_coe.2 <| enum_le_of_strictMono hs hg hy).trans_lt (f _).val.prop
 
 theorem Ordinal.enum_ord_cof_le {s : Set Ordinal} (hs : IsClub s) {x : Ordinal}
     (hx : ∀ a < x, ∃ b ∈ s, b ∈ Ico a x) (hx' : IsSuccLimit x) :
@@ -205,7 +205,7 @@ theorem enumAlgClosed_omega {x : Ordinal} (hx₀ : x ≠ 0) : enumAlgClosed (ω_
     have := hx.nonempty_Iio.to_subtype
     apply (of_le_enumAlgClosed _).antisymm'
     conv_lhs => rw [isNormal_omega.apply_of_isSuccLimit hx]
-    rw [isNormal_enumAlgClosed.map_iSup Ordinal.bddAbove_of_small]
+    rw [isNormal_enumAlgClosed.leftOrdContinuous.map_ciSup Ordinal.bddAbove_of_small]
     refine ciSup_le' fun ⟨y, hy⟩ ↦ ?_
     obtain rfl | hy₀ := eq_or_ne y 0
     · grw [Subtype.coe_mk, zero_le_one]

@@ -16,6 +16,50 @@ macro which contains all the boilerplate required to set up these types. This al
 API between both stays consistent.
 -/
 
+-- We don't make aliases of these, since the preferred spelling of `of (Nat.cast n)` is not the same
+-- for `NatOrdinal` and `Nimber`.
+public section
+namespace Ordinal
+
+theorem forall_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x < (n : Ordinal), P x) ↔ (∀ x < n, P x) := by
+  trans ∀ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.forall_mem_image]
+    simp
+
+theorem exists_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x < (n : Ordinal), P x) ↔ (∃ x < n, P x) := by
+  trans ∃ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.exists_mem_image]
+    simp
+
+theorem forall_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x ≤ (n : Ordinal), P x) ↔ (∀ x ≤ n, P x) := by
+  simpa using Ordinal.forall_lt_natCast (n := n + 1)
+
+theorem exists_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x ≤ (n : Ordinal), P x) ↔ (∃ x ≤ n, P x) := by
+  simpa using Ordinal.exists_lt_natCast (n := n + 1)
+
+theorem lt_three_iff {x : Ordinal} : x < 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 := by
+  rw [← two_add_one_eq_three, Order.lt_add_one_iff, Order.le_two_iff]
+
+theorem le_three_iff {x : Ordinal} : x ≤ 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [le_iff_lt_or_eq, lt_three_iff]
+  tauto
+
+theorem lt_four_iff {x : Ordinal} : x < 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [← three_add_one_eq_four, Order.lt_add_one_iff, le_three_iff]
+
+theorem le_four_iff {x : Ordinal} : x ≤ 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 ∨ x = 4 := by
+  rw [le_iff_lt_or_eq, lt_four_iff]
+  tauto
+
+end Ordinal
+end
+
 open Lean
 
 /-! ### Auxiliary defs -/
@@ -30,6 +74,7 @@ meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 
 /-! ### Macros -/
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 @[expose] public section
@@ -93,6 +138,8 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 
 @[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+@[simp] theorem $(mkIdent `zero_eq_of) {a} : 0 = $(mkOf Alias) a ↔ 0 = a := .rfl
+@[simp] theorem $(mkIdent `zero_eq_val) {a} : 0 = $(mkVal Alias) a ↔ 0 = a := .rfl
 theorem $(mkIdent `of_ne_zero) {a} : $(mkOf Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 @[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
@@ -100,6 +147,8 @@ theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+@[simp] theorem $(mkIdent `one_eq_of) {a} : 1 = $(mkOf Alias) a ↔ 1 = a := .rfl
+@[simp] theorem $(mkIdent `one_eq_val) {a} : 1 = $(mkVal Alias) a ↔ 1 = a := .rfl
 theorem $(mkIdent `of_ne_one) {a} : $(mkOf Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 @[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
@@ -162,6 +211,7 @@ end $Alias
 end
 )
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
@@ -234,7 +284,7 @@ theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Al
 @[simp]
 theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
     Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
-  Cardinal.mk_Iio_ordinal _
+  Ordinal.cardinalMk_Iio _
 
 theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
     (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=

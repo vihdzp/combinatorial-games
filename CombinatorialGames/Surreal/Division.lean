@@ -112,11 +112,10 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
     (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     (∀ y ∈ x⁻¹ᴸ, x * y < 1) ∧ (∀ y ∈ x⁻¹ᴿ, 1 < x * y) := by
-  suffices ∀ p y, y ∈ x⁻¹.moves p → p.cases (x * y < 1) (1 < x * y) by
-    exact ⟨this left, this right⟩
-  apply invRec (P := fun p y hy ↦ p.cases (x * y < 1) (1 < x * y)) hx
+  suffices ∀ p y, y ∈ x⁻¹.moves p → p.LT (x * y) 1 from ⟨this left, this right⟩
+  apply invRec (P := fun p y hy ↦ p.LT (x * y) 1) hx
   · simp
-  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp
+  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp [Player.LT]
   · numeric
     have := hr y hyx
     have := numeric_option_inv hx hl hr left a ha
@@ -171,7 +170,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     (∀ y ∈ (x * x⁻¹)ᴸ, y < 1) ∧ (∀ y ∈ (x * x⁻¹)ᴿ, 1 < y) := by
   have := numeric_inv hx hl hr hl' hr'
   obtain H := numeric_option_inv hx hl hr
-  rw [forall_moves_mul, forall_moves_mul]
+  rw [forall_mem_moves_mul, forall_mem_moves_mul]
   refine ⟨?_, ?_⟩ <;> rintro (_ | _)
   all_goals
     intro y hyx a ha
@@ -440,7 +439,7 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
   constructor
   all_goals
     rw [ratCast_def]
-    simp only [IGame.div_eq_mul_inv, forall_moves_mul, forall_moves_mul]
+    simp only [IGame.div_eq_mul_inv, forall_mem_moves_mul, forall_mem_moves_mul]
     obtain ⟨m, n, hn, _⟩ := q
     rintro (_ | _)
     all_goals
