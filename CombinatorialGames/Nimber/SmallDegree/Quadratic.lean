@@ -25,11 +25,6 @@ universe u
 
 public noncomputable section
 
-theorem Order.IsNormal.leftOrdContinuous {α β : Type*} [LinearOrder α] [LinearOrder β]
-    {f : α → β} (hf : Order.IsNormal f) : LeftOrdContinuous f := by
-  intro s x hs hx
-  exact hf.map_isLUB hx hs
-
 -- is this a good name?
 -- should more of these arguments be explicit?
 theorem Ordinal.mul_le_mul_add_iff_of_lt
@@ -44,7 +39,7 @@ open Ordinal in
 theorem Ordinal.type_lt_Ico (a b : Ordinal.{u}) : typeLT (Set.Ico a b) = lift.{u + 1} (b - a) := by
   by_cases! hab : b < a
   · rw [Set.Ico_eq_empty hab.not_gt, Ordinal.sub_eq_zero_iff_le.2 hab.le,
-      /- why is `type_empty` something different -/ Ordinal.type_eq_zero_of_empty, lift_zero]
+      /- why is `type_empty` something different -/ type_of_isEmpty, lift_zero]
   rw [le_iff_exists_add] at hab
   obtain ⟨b, rfl⟩ := hab
   rw [Ordinal.add_sub_cancel, ← type_lt_Iio]
@@ -121,14 +116,14 @@ theorem IsAlgClosed.mem_quadraticIrreducibles {t : Nimber} (ht : IsAlgClosed t) 
   have herr0 : e.symm rr ≠ 0 := by
     intro h
     simp [h, RatFunc.X_ne_zero] at hrf
-  have hro : (X ^ 2 - C pi.1 * X - C pi.1).IsRoot (e.symm rr)⁻¹ := by
-    rw [IsRoot.def, ← neg_zero, ← zero_mul (pi.1 / e.symm rr ^ 2),
+  have hro : (X ^ 2 - C pi.val * X - C pi.val).IsRoot (e.symm rr)⁻¹ := by
+    rw [IsRoot.def, ← neg_zero, ← zero_mul (pi.val / e.symm rr ^ 2),
       ← hrf, CharTwo.sub_eq_add (X ^ 2)]
     simp [pi]
     field [RatFunc.X_ne_zero]
   refine Irreducible.not_isRoot_of_natDegree_ne_one ?_
     (ne_of_eq_of_ne (by compute_degree!) (show 2 ≠ 1 by decide)) hro
-  have hpi : X ^ 2 - C pi.1 * X - C pi.1 = (X ^ 2 - C pi * X - C pi).map (algebraMap _ _) := by
+  have hpi : X ^ 2 - C pi.val * X - C pi.val = (X ^ 2 - C pi * X - C pi).map (algebraMap _ _) := by
     simp
   have hdeg : (X ^ 2 - C pi * X - C pi).degree = 2 := by compute_degree!
   rw [hpi]
@@ -174,7 +169,8 @@ theorem isCofinal_quadraticIrreducibles : IsCofinal quadraticIrreducibles :=
 
 private def quadraticAux (s : Set Nimber.{u}) : Ordinal :=
   ⨆ (i : ↥(quadraticIrreducibles ∩ s)),
-    val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i.1, i.2.1⟩) + 1
+    val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
+      ⟨i.val, i.prop.1⟩) + 1
 
 private theorem quadraticAux_monotone (s t : Set Nimber.{u})
     [Small.{u} s] [Small.{u} t] (hst : s ⊆ t) : quadraticAux s ≤ quadraticAux t := by
@@ -184,8 +180,8 @@ private theorem quadraticAux_monotone (s t : Set Nimber.{u})
   exact Ordinal.le_iSup
     (fun i : ↥(quadraticIrreducibles ∩ t) =>
       val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
-        ⟨i.1, i.2.1⟩) + 1)
-    ⟨i.1, i.2.1, hst i.2.2⟩
+        ⟨i.val, i.prop.1⟩) + 1)
+    ⟨i.val, i.prop.1, hst i.prop.2⟩
 
 private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     (hs : Small.{u} s) (ht : ∀ t : s, Small.{u} t) :
@@ -195,20 +191,19 @@ private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     intro ⟨i, hiq, ⟨t, hts, hit⟩⟩
     refine le_trans ?_ (Ordinal.le_iSup (fun t : s => quadraticAux t) ⟨t, hts⟩)
     rw [quadraticAux]
-    have : Small t := ‹∀ t : s, Small t› ⟨t, hts⟩
+    have : Small t := ht ⟨t, hts⟩
     exact Ordinal.le_iSup
       (fun i : ↥(quadraticIrreducibles ∩ t) =>
         val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
-          ⟨i.1, i.2.1⟩) + 1)
+          ⟨i.val, i.prop.1⟩) + 1)
       ⟨i, hiq, hit⟩
   · rw [Ordinal.iSup_le_iff]
     intro t
-    exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.2)
+    exact quadraticAux_monotone t (sUnion s) (subset_sUnion_of_mem t.prop)
 
 /-- For `x` a field, `quadraticLower x` is the ordinal index into `quadraticIrreducibles` giving
-the smallest element of `quadraticIrreducibles` which is still irreducible in `x`, meaning,
-it cannot be expressed as a finite sum of smaller quadratic irreducibles and
-elements of the form `y ^ 2 - y` for `y < x`.
+the smallest element of `quadraticIrreducibles` which is still irreducible in `x`.
+
 For `x` not a field, `quadraticLower x = quadraticLower (fieldClosure x)`. -/
 def quadraticLower (x : Nimber) : Ordinal :=
   quadraticAux ((fun y => y ^ 2 - y) '' Iio (fieldClosure x))
@@ -216,6 +211,7 @@ def quadraticLower (x : Nimber) : Ordinal :=
 /-- For `x` a field, `quadraticUpper x` is the ordinal index into `quadraticIrreducibles` giving
 the unique element `y` of `quadraticIrreducibles` satisfying
 `y ≤ z ↔ x ≤ z` for `z ∈ quadraticIrreducibles`.
+
 For `x` not a field, `quadraticUpper x = quadraticUpper (fieldClosure x)`. -/
 def quadraticUpper (x : Nimber) : Ordinal :=
   quadraticAux (Iio (fieldClosure x))
@@ -279,8 +275,8 @@ theorem le_quadraticUpper (x : Nimber) :
     x ≤ enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)) := by
   by_contra! h
   apply (Ordinal.le_iSup (fun i : ↥(quadraticIrreducibles ∩ Iio (fieldClosure x)) =>
-    val ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i, i.2.1⟩) + 1)
-    ⟨_, (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).2,
+    val ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm ⟨i, i.prop.1⟩) + 1)
+    ⟨_, (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).prop,
       lt_of_lt_of_le h (le_fieldClosure x)⟩).not_gt
   rw [← quadraticAux, ← quadraticUpper]
   simp
@@ -294,14 +290,14 @@ theorem IsField.lt_quadraticUpper_iff {x : Nimber} (hx : IsField x) {y : quadrat
       lt_ciSup_iff' Ordinal.bddAbove_of_small] at hy
     obtain ⟨i, hi⟩ := hy
     rw [lt_add_one_iff, val.le_iff_le, OrderIso.le_iff_le, ← Subtype.coe_le_coe] at hi
-    exact hi.trans_lt i.2.2
+    exact hi.trans_lt i.prop.2
   · rw [← Subtype.coe_lt_coe]
     exact (le_quadraticUpper x).trans_lt'
 
 theorem IsField.quadraticUpper_le_iff {x : Nimber} (hx : IsField x) {y : quadraticIrreducibles} :
     enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-      (of (quadraticUpper x)) ≤ y ↔ x ≤ y := by
-  rw [← not_lt, hx.lt_quadraticUpper_iff, not_lt]
+      (of (quadraticUpper x)) ≤ y ↔ x ≤ y :=
+  le_iff_le_iff_lt_iff_lt.2 hx.lt_quadraticUpper_iff
 
 section quadraticLower
 
@@ -316,22 +312,22 @@ theorem quadraticLower_two : quadraticLower (of 2) = 0 := by
   exact h.1.pos.false
 
 theorem coe_enum_quadraticIrreducibles_zero :
-    (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).1 = 1 := by
+    (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).val = 1 := by
   apply le_antisymm
   · let one : quadraticIrreducibles := ⟨1, by simp [quadraticIrreducibles, lt_two_iff]⟩
-    change _ ≤ one.1
+    change _ ≤ one.val
     rw [Subtype.coe_le_coe, ← OrderIso.le_symm_apply]
     apply zero_le
   · rw [one_le_iff_ne_zero]
-    exact (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).2.1.ne_zero
+    exact (enum quadraticIrreducibles isCofinal_quadraticIrreducibles 0).prop.1.ne_zero
 
 theorem notMem_image_of_quadraticLower_le (x : Nimber) {y : quadraticIrreducibles}
     (hy : enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x)) ≤ y) :
-    y.1 ∉ (fun z => z ^ 2 - z) '' Iio x := by
+    y.val ∉ (fun z => z ^ 2 - z) '' Iio x := by
   unfold quadraticLower quadraticAux at hy
   rw [← OrderIso.le_symm_apply, of_le_iff, ciSup_le_iff' Ordinal.bddAbove_of_small] at hy
   intro hyi
-  refine (Order.lt_succ _).not_ge (hy ⟨y.1, y.2, mem_of_subset_of_mem ?_ hyi⟩)
+  refine (Order.lt_succ _).not_ge (hy ⟨y.val, y.prop, mem_of_subset_of_mem ?_ hyi⟩)
   grw [← le_fieldClosure]
 
 theorem IsField.leastNoRoots_lt_of_quadraticLower_lt
@@ -463,9 +459,10 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
   by_cases ho : IsSuccLimit o
   · have hne : (Iio o).Nonempty := ⟨0, pos_of_ne_zero ho0⟩
     rw [← hox, isNormal_enumField.lt_iff_exists_lt ho] at hyx
-    change yq.1 < _ at hy
+    change yq.val < _ at hy
     rw [Subtype.coe_lt_coe, ← OrderIso.symm_apply_lt, ← val_lt_iff] at hy
-    rw [← hox, ← ho.sSup_Iio, isNormal_enumField.map_sSup hne Ordinal.bddAbove_of_small,
+    rw [← hox, ← ho.sSup_Iio,
+      isNormal_enumField.leftOrdContinuous.map_csSup hne Ordinal.bddAbove_of_small,
       leftOrdContinuous_quadraticLower.map_csSup (hne.image _) (bddAbove_of_small _),
       Set.image_image, lt_csSup_iff' Ordinal.bddAbove_of_small, exists_mem_image] at hy
     obtain ⟨o', hoo', hyx⟩ := hyx
@@ -485,7 +482,7 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
       (of (quadraticLower (Nimber.enumField o)))
   · grw [← hox, ← le_fieldClosure, ← le_succ]
     refine ihx (Nimber.enumField o) (IsField.enumField o) hxe ?_ hcl
-    change yq.1 < _
+    change yq.val < _
     grw [← (IsField.enumField o).lt_quadraticUpper_iff,
       ← Subtype.coe_lt_coe, ← quadraticLower_le_quadraticUpper, ← hcl]
   have perf : PerfectField (IsField.enumField o).toSubfield := by
@@ -494,7 +491,7 @@ theorem IsField.mem_image_of_lt_quadraticLower {x : Nimber} (hx : IsField x) {y 
   have h2 : leastNoRoots (Nimber.enumField o) < .some (X ^ 3) := by
     contrapose! hcl
     rwa [← (IsField.enumField o).quadraticLower_fieldClosure_succ_of_le_leastNoRoots hcl, hox]
-  change yq.1 < _ at hy
+  change yq.val < _ at hy
   rw [← hox, ihqs (Nimber.enumField o) (IsField.enumField o) hxe perf h2,
     Subtype.coe_lt_coe, ← OrderIso.symm_apply_lt, ← val_lt_iff, lt_add_one_iff,
     val_le_iff, OrderIso.symm_apply_le, ← Subtype.coe_le_coe] at hy
@@ -535,7 +532,7 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
   rw [succ_eq_add_one, enumField_add_one] at hox
   have hxe : Nimber.enumField o < x := ((lt_succ _).trans_le (le_fieldClosure _)).trans_eq hox
   by_cases! hlt : Nimber.enumField o ≤ y
-  · apply y.2.2
+  · apply y.prop.2
     grw [hz, ← hox, (IsField.fieldClosure _).fieldClosure_le_iff, hlt, ← le_fieldClosure]
   by_cases! perf : ¬PerfectField (IsField.enumField o).toSubfield
   · have hlr := (IsField.enumField o).leastNoRoots_eq_of_not_perfectField perf
@@ -628,8 +625,8 @@ theorem IsField.le_of_quadraticLower_le {x : Nimber} (hx : IsField x) {y : quadr
         apply hcy.not_gt
         rw [← add_sub_cancel_left
           (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-            (of (quadraticLower (Nimber.enumField o)))).1 (b ^ 2 - b - y)]
-        apply y.2.1.sub_lt hcx
+            (of (quadraticLower (Nimber.enumField o)))).val (b ^ 2 - b - y)]
+        apply y.prop.1.sub_lt hcx
         rwa [Subtype.coe_lt_coe, ← OrderIso.lt_symm_apply, of_lt_iff, ← add_one_le_iff,
           ← of_le_iff, OrderIso.le_symm_apply,
           ← ihqs (Nimber.enumField o) (IsField.enumField o) hxe perf h2, hox]
@@ -692,7 +689,7 @@ theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_l
     (h2 : leastNoRoots x < .some (X ^ 3)) :
     leastNoRoots x = .some (X ^ 2 - X -
       C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles
-        (of (quadraticLower x))).1) := by
+        (of (quadraticLower x))).val) := by
   have ihc := @hx.mem_image_of_lt_quadraticLower
   have ihl := hx.quadraticLower_lt_of_perfectField_of_leastNoRoots_lt perf h2
   apply le_antisymm
@@ -708,9 +705,9 @@ theorem IsField.leastNoRoots_eq_quadraticLower_of_perfectField_of_leastNoRoots_l
       exact Set.mem_image_of_mem (fun z => z ^ 2 - z) hr
   · apply hx.le_leastNoRoots_of_exists_isRoot
     rw [show X ^ 2 - X -
-      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 =
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).val =
       C 1 * X ^ 2 + C 1 * X +
-      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).1 by
+      C (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticLower x))).val by
         simp [CharTwo.sub_eq_add], Lex.forall_lt_quadratic]
     refine ⟨fun c hc _ _ => ?_, fun b hb c hd hc => ?_, fun a ha _ _ hd => ?_⟩
     · obtain ⟨r, hr, rfl⟩ := ihc (hc.trans ihl) hc
@@ -928,7 +925,8 @@ theorem IsField.quadraticUpper_fieldClosure_succ_of_not_perfectField {x : Nimber
     obtain ⟨a, b, rfl⟩ : ∃ a b, p = C a * X + C b :=
       ⟨_, _, Polynomial.eq_X_add_C_of_degree_le_one hpd⟩
     rw [eval_add, eval_C_mul, eval_X, eval_C] at hr
-    apply ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x))).2.2
+    apply ((enum quadraticIrreducibles isCofinal_quadraticIrreducibles
+        (of (quadraticUpper x))).prop.2
       (enum quadraticIrreducibles isCofinal_quadraticIrreducibles (of (quadraticUpper x)))
       ((lt_succ _).trans_le (le_fieldClosure _))).not_gt
     grw [← hgt]

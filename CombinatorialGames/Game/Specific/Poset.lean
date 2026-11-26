@@ -119,8 +119,9 @@ theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
 protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
   neg_toIGame rfl ..
 
-protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
-  impartial_toIGame rfl ..
+-- TODO: strengthen to `Impartial`
+protected instance weaklyImpartial_toIGame (s : Set α) : (toIGame s).WeaklyImpartial :=
+  weaklyImpartial_toIGame rfl ..
 
 -- TODO: this should generalize to a `Preorder`.
 -- A game should be equal to its antisymmetrization.
@@ -129,7 +130,7 @@ protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (@univ α) ‖ 0 := by
-  apply IGame.Impartial.fuzzy_zero_of_forall_exists
+  apply IGame.WeaklyImpartial.fuzzy_zero_of_forall_exists
     (mem_moves_toIGame_of_rel default top_compl_rel_univ)
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [moves_toIGame, mem_image] at hz ⊢

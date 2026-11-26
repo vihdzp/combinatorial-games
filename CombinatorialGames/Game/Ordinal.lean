@@ -96,7 +96,7 @@ theorem forall_mem_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
     (∀ x ∈ (toIGame o)ᴸ, P x) ↔ ∀ a < o, P (toIGame a) := by
   simp
 
-theorem exists_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
+theorem exists_mem_moves_left_toIGame {P : IGame → Prop} {o : NatOrdinal} :
     (∃ x ∈ (toIGame o)ᴸ, P x) ↔ ∃ a < o, P (toIGame a) := by
   simp
 
@@ -106,7 +106,7 @@ theorem forall_mem_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
   simp
 
 @[game_cmp]
-theorem exists_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
+theorem exists_mem_moves_left_toIGame_natCast {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (toIGame n)ᴸ, P x) ↔ (∃ m < n, P (toIGame m)) := by
   simp
 
@@ -116,9 +116,9 @@ theorem forall_mem_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.At
   forall_mem_moves_left_toIGame_natCast
 
 @[game_cmp]
-theorem exists_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem exists_mem_moves_left_toIGame_ofNat {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∃ x ∈ (toIGame ofNat(n))ᴸ, P x) ↔ ∃ m < n, P (toIGame m) :=
-  exists_moves_left_toIGame_natCast
+  exists_mem_moves_left_toIGame_natCast
 
 theorem mem_moves_left_toIGame_of_lt {a b : NatOrdinal} (h : a < b) :
     a.toIGame ∈ b.toIGameᴸ := by
@@ -225,8 +225,8 @@ namespace IGame
 open NatOrdinal
 
 theorem Short.exists_lt_natCast (x : IGame) [Short x] : ∃ n : ℕ, x < n := by
-  have (y : xᴸ) : ∃ n : ℕ, y.1 < n := by
-    have := Short.of_mem_moves y.2
+  have (y : xᴸ) : ∃ n : ℕ, y.val < n := by
+    have := Short.of_mem_moves y.prop
     exact Short.exists_lt_natCast y
   choose f hf using this
   obtain ⟨n, hn⟩ := (finite_range f).bddAbove

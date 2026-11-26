@@ -1,4 +1,4 @@
-module  -- shake: keep-all --deprecated_module: ignore
+module -- shake: keep-all -- deprecated_module: ignore
 
 public import CombinatorialGames.Counterexamples.Multiplication
 public import CombinatorialGames.Counterexamples.OrdinalSum
@@ -29,6 +29,7 @@ public import CombinatorialGames.Game.Specific.Poset
 public import CombinatorialGames.Game.Stops
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Mathlib.EtaSet
+public import CombinatorialGames.Mathlib.SignType
 public import CombinatorialGames.Mathlib.Small
 public import CombinatorialGames.Mathlib.WithTop
 public import CombinatorialGames.NatOrdinal.AddMonoidAlgebra
@@ -48,6 +49,7 @@ public import CombinatorialGames.Nimber.SmallDegree.Quadratic
 public import CombinatorialGames.Nimber.SmallDegree.Quartic
 public import CombinatorialGames.SignExpansion.Basic
 public import CombinatorialGames.SignExpansion.Simplicity
+public import CombinatorialGames.SignExpansion.Surreal
 public import CombinatorialGames.Surreal.Basic
 public import CombinatorialGames.Surreal.Birthday.Basic
 public import CombinatorialGames.Surreal.Birthday.Cut

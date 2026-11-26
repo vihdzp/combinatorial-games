@@ -59,15 +59,15 @@ lemma forall_mem_moves_left_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴸ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ yᴸ, P (mulOption x y a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ (-y)ᴸ, P (mulOption (-x) (-y) a b)) := by
-  rw [forall_moves_mul]
+  rw [forall_mem_moves_mul]
   simp [mulOption_neg]
 
 /-- A characterization of right moves of `x * y` in terms only of left moves. -/
-lemma forall_moves_right_mul' {P : IGame → Prop} {x y : IGame} :
+lemma forall_mem_moves_right_mul' {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y)ᴿ, P a) ↔
       (∀ a ∈ xᴸ, ∀ b ∈ (-y)ᴸ, P (-mulOption x (-y) a b)) ∧
       (∀ a ∈ (-x)ᴸ, ∀ b ∈ yᴸ, P (-mulOption (-x) y a b)) := by
-  rw [forall_moves_mul]
+  rw [forall_mem_moves_mul]
   simp [mulOption_neg_right, mulOption_neg_left]
 
 /-! ### Predicates P1 – P4 -/
@@ -266,7 +266,7 @@ lemma P1_of_IH (IH : ∀ a, ArgsRel a (Args.P1 x y) → P124 a) [Numeric x] [Num
   have ihxyn := IH1_neg_left (IH1_neg_right ihxy)
   have ihyxn := IH1_neg_left (IH1_neg_right ihyx)
   refine .mk ?_ ?_
-  · simp_rw [forall_mem_moves_left_mul', forall_moves_right_mul']
+  · simp_rw [forall_mem_moves_left_mul', forall_mem_moves_right_mul']
     constructor <;> intro a ha b hb <;> constructor <;> intro c hc d hd
     · exact mulOption_lt ihxy ihyx ha hb hc hd
     · simpa [mulOption_comm, ← mk_lt_mk] using mulOption_lt ihyx ihxy hb ha hd hc
@@ -362,7 +362,7 @@ lemma mul_right_le_of_equiv [Numeric x₁] [Numeric x₂]
     constructor <;> intro a ha b hb
     · exact (mulOption_lt_mul_of_equiv ih₁₂ he ha hb).not_ge
     · simpa using (mulOption_lt_mul_of_equiv (IH24_neg <| (IH24_neg ih₂₁).1).2 he' ha hb).not_ge
-  · rw [forall_moves_right_mul']
+  · rw [forall_mem_moves_right_mul']
     constructor <;> intro a ha b hb
     · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₂₁).2 he.symm ha hb).not_ge
     · simpa [neg_le] using (mulOption_lt_mul_of_equiv (IH24_neg ih₁₂).1 he'.symm ha hb).not_ge
@@ -493,7 +493,8 @@ end IGame.Numeric
 namespace Surreal
 
 noncomputable instance : CommRing Surreal where
-  mul := Quotient.map₂ (fun a b ↦ ⟨a.1 * b.1, inferInstance⟩) fun _ _ h _ _ ↦ Numeric.mul_congr h
+  mul := Quotient.map₂ (fun a b ↦ ⟨a.val * b.val, inferInstance⟩)
+    fun _ _ h _ _ ↦ Numeric.mul_congr h
   zero_mul := by rintro ⟨x⟩; change mk (0 * x) = mk 0; simp_rw [zero_mul]
   mul_zero := by rintro ⟨x⟩; change mk (x * 0) = mk 0; simp_rw [mul_zero]
   one_mul := by rintro ⟨x⟩; change mk (1 * x) = mk x; simp_rw [one_mul]
@@ -616,24 +617,24 @@ theorem mul_equiv_zero {x y : IGame} [Numeric x] [Numeric y] : x * y ≈ 0 ↔ x
   exact @mul_eq_zero Surreal _ _ (.mk x) (.mk y)
 
 theorem mulOption_congr₁ {x₁ x₂ y a b : IGame}
-    [Numeric x₁] [Numeric x₂] [Numeric y] [Numeric a] [Numeric b] (he : x₁ ≈ x₂) :
+    [Numeric x₁] [Numeric x₂] [Numeric b] (he : x₁ ≈ x₂) :
     mulOption x₁ y a b ≈ mulOption x₂ y a b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_left he)]
 
 theorem mulOption_congr₂ {x y₁ y₂ a b : IGame}
-    [Numeric x] [Numeric y₁] [Numeric y₂] [Numeric a] [Numeric b] (he : y₁ ≈ y₂) :
+    [Numeric y₁] [Numeric y₂] [Numeric a] (he : y₁ ≈ y₂) :
     mulOption x y₁ a b ≈ mulOption x y₂ a b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_right he)]
 
 theorem mulOption_congr₃ {x y a₁ a₂ b : IGame}
-    [Numeric x] [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
+    [Numeric y] [Numeric a₁] [Numeric a₂] [Numeric b] (he : a₁ ≈ a₂) :
     mulOption x y a₁ b ≈ mulOption x y a₂ b := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_left he)]
 
 theorem mulOption_congr₄ {x y a b₁ b₂ : IGame}
-    [Numeric x] [Numeric y] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
+    [Numeric x] [Numeric a] [Numeric b₁] [Numeric b₂] (he : b₁ ≈ b₂) :
     mulOption x y a b₁ ≈ mulOption x y a b₂ := by
-  simp_all [← Surreal.mk_eq_mk, mulOption]
+  simp_rw [← Game.mk_eq_mk, Game.mk_mulOption, Game.mk_eq (Numeric.mul_congr_right he)]
 
 end IGame.Numeric
 end
