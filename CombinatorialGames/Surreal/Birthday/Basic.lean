@@ -134,6 +134,22 @@ theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric 
   exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
     he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
 
+theorem exists_le_left_of_birthday_le {x y : IGame} [Numeric x] [Numeric y] (h : x < y)
+    (hxy : birthday (mk x) ≤ birthday (mk y)) : ∃ z ∈ yᴸ, x ≤ z := by
+  contrapose! hxy
+  refine Fits.surrealBirthday_lt ⟨hxy, fun z hz ↦ ?_⟩ h.not_antisymmRel
+  numeric
+  grw [Numeric.not_le, h]
+  exact (Numeric.lt_right hz).le
+
+theorem exists_right_le_of_birthday_le {x y : IGame} [Numeric x] [Numeric y] (h : y < x)
+    (hxy : birthday (mk x) ≤ birthday (mk y)) : ∃ z ∈ yᴿ, z ≤ x := by
+  contrapose! hxy
+  refine Fits.surrealBirthday_lt ⟨fun z hz ↦ ?_, hxy⟩ h.not_antisymmRel_symm
+  numeric
+  grw [Numeric.not_le, ← h]
+  exact (Numeric.left_lt hz).le
+
 theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
     (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) : !{st}.birthday ≤ z.birthday := by
