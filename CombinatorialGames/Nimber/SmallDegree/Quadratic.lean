@@ -195,7 +195,7 @@ private theorem leftOrdContinuous_quadraticAux (s : Set (Set Nimber.{u}))
     intro ⟨i, hiq, ⟨t, hts, hit⟩⟩
     refine le_trans ?_ (Ordinal.le_iSup (fun t : s => quadraticAux t) ⟨t, hts⟩)
     rw [quadraticAux]
-    have : Small t := ‹∀ t : s, Small t› ⟨t, hts⟩
+    have : Small t := ht ⟨t, hts⟩
     exact Ordinal.le_iSup
       (fun i : ↥(quadraticIrreducibles ∩ t) =>
         val ((Order.enum quadraticIrreducibles isCofinal_quadraticIrreducibles).symm
