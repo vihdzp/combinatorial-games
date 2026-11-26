@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.Game.Loopy.Basic
 public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 import CombinatorialGames.Mathlib.WithTop
 
