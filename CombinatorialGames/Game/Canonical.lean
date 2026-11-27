@@ -222,10 +222,7 @@ theorem IsUndominated.undominate (x : IGame) : IsUndominated x.undominate := by
   rw [isUndominated_def]
   simp_rw [forall_mem_moves_undominate]
   intro p y hy Hy
-  refine ⟨.undominate y, fun z hz _ ↦ ?_⟩
-  cases p <;>
-  · grw [Player.right_lt]
-    exact Hy _ hz
+  exact ⟨.undominate y, fun z hz _ ↦ Hy z hz⟩
 termination_by x
 decreasing_by igame_wf
 
