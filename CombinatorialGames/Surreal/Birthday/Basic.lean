@@ -5,6 +5,7 @@ Authors: Aaron Liu
 -/
 module
 
+public import CombinatorialGames.Game.Canonical
 public import CombinatorialGames.Surreal.Ordinal
 
 import Mathlib.Algebra.Order.Group.OrderIso
@@ -155,6 +156,38 @@ theorem _root_.IGame.exists_right_le_of_surrealBirthday_le {x y : IGame} [Numeri
   contrapose! hxy
   exact Fits.surrealBirthday_lt ⟨fun z hz hxz ↦ left_lf hz (h.le.trans hxz), hxy⟩
     h.not_antisymmRel_symm
+
+theorem _root_.IGame.IsUnreversed.birthday_le_of_numeric {x y : IGame} [Numeric x] [Numeric y]
+    (h : x ≈ y) (hx : IsUnreversed x) : x.birthday ≤ y.birthday := by
+  by_contra! hyx
+  rw [lt_birthday_iff] at hyx
+  obtain ⟨p, z, hz, hyz⟩ := hyx
+  have hz' := hx.of_mem_moves hz
+  cases p with
+  | left =>
+    have hzx := Numeric.left_lt hz
+    grw [h] at hzx
+    numeric
+    have ⟨w, hw, hwy⟩ := exists_right_le_of_surrealBirthday_le hzx ?_
+    · apply hx.lf_of_mem_moves_left_of_mem_moves_right hz hw
+      grw [hwy, h]
+    · grw [birthday_mk_le, hyz]
+      obtain ⟨w, hw, hwz, hwz'⟩ := birthday_eq_iGameBirthday (mk z)
+      rw [← hwz']
+      exact IGame.IsUnreversed.birthday_le_of_numeric (mk_eq_mk.1 hwz).symm hz'
+  | right =>
+    have hzx := Numeric.lt_right hz
+    grw [h] at hzx
+    numeric
+    have ⟨w, hw, hwy⟩ := exists_le_left_of_surrealBirthday_le hzx ?_
+    · apply hx.lf_of_mem_moves_right_of_mem_moves_left hz hw
+      grw [← hwy, h]
+    · grw [birthday_mk_le, hyz]
+      obtain ⟨w, hw, hwz, hwz'⟩ := birthday_eq_iGameBirthday (mk z)
+      rw [← hwz']
+      exact IGame.IsUnreversed.birthday_le_of_numeric (mk_eq_mk.1 hwz).symm hz'
+termination_by x
+decreasing_by igame_wf
 
 theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
