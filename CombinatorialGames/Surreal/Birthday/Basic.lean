@@ -139,16 +139,16 @@ theorem exists_le_left_of_birthday_le {x y : IGame} [Numeric x] [Numeric y] (h :
   contrapose! hxy
   refine Fits.surrealBirthday_lt ⟨hxy, fun z hz ↦ ?_⟩ h.not_antisymmRel
   numeric
-  grw [Numeric.not_le, h]
-  exact (Numeric.lt_right hz).le
+  grw [h]
+  exact (Numeric.lt_right hz).not_gt
 
 theorem exists_right_le_of_birthday_le {x y : IGame} [Numeric x] [Numeric y] (h : y < x)
     (hxy : birthday (mk x) ≤ birthday (mk y)) : ∃ z ∈ yᴿ, z ≤ x := by
   contrapose! hxy
   refine Fits.surrealBirthday_lt ⟨fun z hz ↦ ?_, hxy⟩ h.not_antisymmRel_symm
   numeric
-  grw [Numeric.not_le, ← h]
-  exact (Numeric.left_lt hz).le
+  grw [← h]
+  exact (Numeric.left_lt hz).not_gt
 
 theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
