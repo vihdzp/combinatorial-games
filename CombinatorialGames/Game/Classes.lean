@@ -474,6 +474,10 @@ protected instance mulOption' (x y a b : IGame)
     [Impartial y] [Impartial b] : Impartial (mulOption x y a b) :=
   .sub ..
 
+protected instance mulOption'' (x y a b : IGame)
+    [Impartial a] [Impartial b] : Impartial (mulOption x y a b) :=
+  .sub ..
+
 open Pointwise in
 @[simp]
 theorem neg_moves (x : IGame) [Impartial x] (p : Player) : -x.moves p = x.moves p := by
