@@ -57,13 +57,13 @@ theorem moves_impartialize (x : IGame) (p : Player) :
 @[simp]
 theorem forall_mem_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.impartialize.moves p, P y) ↔ ∀ q, ∀ y ∈ x.moves q, P (impartialize y) := by
-  rw [impartialize]
+  rw [impartialize_def]
   aesop
 
 @[simp]
 theorem exists_mem_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
     (∃ y ∈ x.impartialize.moves p, P y) ↔ ∃ q, ∃ y ∈ x.moves q, P (impartialize y) := by
-  rw [impartialize]
+  rw [impartialize_def]
   aesop
 
 protected instance Impartial.impartialize (x : IGame) : Impartial (impartialize x) := by
@@ -147,7 +147,7 @@ theorem impartialize_mul (x y : IGame) :
   · ext z
     constructor
     · rintro ⟨_, ⟨⟨a, b⟩, ⟨ha, hb⟩, rfl⟩, rfl⟩
-      refine ⟨⟨a.impartialize, b.impartialize⟩, ⟨mem_image_of_mem _ ha, mem_image_of_mem _ hb⟩, ?_⟩
+      refine ⟨⟨_, _⟩, ⟨mem_image_of_mem _ ha, mem_image_of_mem _ hb⟩, ?_⟩
       simp only [mulOption, impartialize_add, impartialize_sub]
       iterate 3 rw [impartialize_mul]
     · rintro ⟨⟨_, _⟩, ⟨⟨a, ha, rfl⟩, ⟨b, hb, rfl⟩⟩, rfl⟩
