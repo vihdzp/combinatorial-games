@@ -220,6 +220,11 @@ theorem IsOmnific.natOrdinal (x : NatOrdinal) : IsOmnific x := by
   rwa [← NatOrdinal.toSurreal_one, ← NatOrdinal.toSurreal_add, NatOrdinal.toSurreal.lt_iff_lt,
     Order.lt_add_one_iff, ← birthday_toSurreal x] at hz
 
+/-- This seemingly innocuous theorem seems to require the result that any surreal is at distance at
+most 1 from an omnific integer, which itself seems to require the characterization in the module
+docstring. -/
+proof_wanted IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific
+
 /-- The subring of `IsOmnific` surreal numbers. -/
 private def omnificSubring : Subring Surreal where
   carrier := {x | IsOmnific x}
