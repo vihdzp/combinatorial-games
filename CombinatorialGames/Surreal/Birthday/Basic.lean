@@ -134,6 +134,28 @@ theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric 
   exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
     he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
 
+theorem _root_.IGame.exists_le_left_of_gameBirthday_le {x y : IGame} [Numeric x]
+    (h : x < y) (hxy : birthday (mk x) ≤ Game.birthday (.mk y)) : ∃ z ∈ yᴸ, x ≤ z := by
+  contrapose! hxy
+  exact Fits.gameBirthday_lt ⟨hxy, fun z hz hzx ↦ lf_right hz (hzx.trans h.le)⟩ h.not_antisymmRel
+
+theorem _root_.IGame.exists_right_le_of_gameBirthday_le {x y : IGame} [Numeric x]
+    (h : y < x) (hxy : birthday (mk x) ≤ Game.birthday (.mk y)) : ∃ z ∈ yᴿ, z ≤ x := by
+  contrapose! hxy
+  exact Fits.gameBirthday_lt ⟨fun z hz hxz ↦ left_lf hz (h.le.trans hxz), hxy⟩
+    h.not_antisymmRel_symm
+
+theorem _root_.IGame.exists_le_left_of_surrealBirthday_le {x y : IGame} [Numeric x] [Numeric y]
+    (h : x < y) (hxy : birthday (mk x) ≤ birthday (mk y)) : ∃ z ∈ yᴸ, x ≤ z := by
+  contrapose! hxy
+  exact Fits.surrealBirthday_lt ⟨hxy, fun z hz hzx ↦ lf_right hz (hzx.trans h.le)⟩ h.not_antisymmRel
+
+theorem _root_.IGame.exists_right_le_of_surrealBirthday_le {x y : IGame} [Numeric x] [Numeric y]
+    (h : y < x) (hxy : birthday (mk x) ≤ birthday (mk y)) : ∃ z ∈ yᴿ, z ≤ x := by
+  contrapose! hxy
+  exact Fits.surrealBirthday_lt ⟨fun z hz hxz ↦ left_lf hz (h.le.trans hxz), hxy⟩
+    h.not_antisymmRel_symm
+
 theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
     [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
     (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) : !{st}.birthday ≤ z.birthday := by
