@@ -11,6 +11,7 @@ public import CombinatorialGames.Game.Stops
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.CharZero
 import CombinatorialGames.Game.Impartial.Grundy
+import Mathlib.Algebra.Order.Field.Basic
 
 /-!
 # Small games all around
@@ -241,6 +242,23 @@ instance _root_.IGame.WeaklyImpartial.toSmall (x) [WeaklyImpartial x] : Small x 
 protected instance ofSets_zero_left (x : IGame) [Small x] : !{{0} | {x}}.Small :=
   .of_forall_of_nonempty (by simpa) (by simp)
 
+/-- Infinitesimal games lie between all the positive and negative dyadics. -/
+class Infinitesimal (x : IGame) : Prop where
+  /-- An infinitesimal game is smaller than any positive dyadic game. -/
+  lt_of_pos {y : Dyadic} : 0 < y → x < y
+  /-- An infinitesimal game is larger than any negative dyadic game. -/
+  lt_of_neg {y : Dyadic} : y < 0 → y < x
+
+namespace Infinitesimal
+
+protected instance zero : Infinitesimal 0 :=
+  ⟨Dyadic.zero_lt_toIGame.mpr, Dyadic.toIGame_lt_zero.mpr⟩
+
+theorem of_equiv {x y : IGame} (h : x ≈ y) [Infinitesimal x] : Infinitesimal y where
+  lt_of_pos := by grw [← h]; exact lt_of_pos
+  lt_of_neg := by grw [← h]; exact lt_of_neg
+
+end Infinitesimal
 @[simp]
 protected instance ofSets_zero_right (x : IGame) [Small x] : !{{x} | {0}}.Small :=
   .of_forall_of_nonempty (by simpa) (by simp)
@@ -264,5 +282,23 @@ example : Small ↑ := by infer_instance
 example : Small ↓ := by infer_instance
 
 end Small
+
+/-- Infinitesimal games lie between all the positive and negative dyadics. -/
+class Infinitesimal (x : IGame) : Prop where
+  /-- An infinitesimal game is smaller than any positive dyadic game. -/
+  lt_of_pos {y : Dyadic} : 0 < y → x < y
+  /-- An infinitesimal game is larger than any negative dyadic game. -/
+  lt_of_neg {y : Dyadic} : y < 0 → y < x
+
+namespace Infinitesimal
+
+protected instance zero : Infinitesimal 0 :=
+  ⟨Dyadic.zero_lt_toIGame.mpr, Dyadic.toIGame_lt_zero.mpr⟩
+
+theorem of_equiv {x y : IGame} (h : x ≈ y) [Infinitesimal x] : Infinitesimal y where
+  lt_of_pos := by grw [← h]; exact lt_of_pos
+  lt_of_neg := by grw [← h]; exact lt_of_neg
+
+end Infinitesimal
 end IGame
 end
