@@ -288,7 +288,7 @@ def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   map_mul' _ _ := by ext; simp
   monotone' _ := by simp [← Omnific.coe_le_coe]
 
-@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := (rfl)
+@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := rfl
 
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
