@@ -288,8 +288,7 @@ protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := b
   rw [isUnreversed_def]
   intro p
   rw [forall_mem_moves_neg]
-  intro y hy
-  refine ⟨ih (-p) y hy (.of_mem_moves hy hx), ?_⟩
+  refine fun y hy ↦ ⟨ih (-p) y hy (.of_mem_moves hy hx), ?_⟩
   rw [forall_mem_moves_neg]
   intro z hz
   rw [IGame.neg_playerLE_neg_iff, ← Player.neg_le_iff_swap]
