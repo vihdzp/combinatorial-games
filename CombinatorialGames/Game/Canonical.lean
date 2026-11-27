@@ -32,7 +32,7 @@ well do this. Reversible moves for Right are defined analogously.
 
 ## Todo
 
-Define `unreverse` and prove `unreverse x ≈ x` for **any** game.
+Prove `unreverse x ≈ x` for **any** game.
 -/
 
 public noncomputable section
