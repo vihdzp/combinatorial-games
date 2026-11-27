@@ -9,6 +9,7 @@ public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
 public import Mathlib.Order.Antisymmetrization
+public import Mathlib.Order.SetNotation
 
 import Mathlib.Tactic.DeriveFintype -- shake: keep
 
@@ -38,6 +39,9 @@ namespace Player
 
 theorem left_ne_right : left ≠ right := Player.noConfusion
 theorem right_ne_left : right ≠ left := Player.noConfusion
+
+@[simp] theorem ne_left_iff : ∀ {p : Player}, p ≠ left ↔ p = right := by decide
+@[simp] theorem ne_right_iff : ∀ {p : Player}, p ≠ right ↔ p = left := by decide
 
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
@@ -77,6 +81,9 @@ theorem univ_eq : Set.univ = {left, right} := Set.ext (by simp)
 
 theorem range_eq {α : Type*} (f : Player → α) : Set.range f = {f left, f right} := by
   rw [← Set.image_univ, univ_eq, Set.image_pair]
+
+theorem iUnion_eq {α : Type*} (f : Player → Set α) : ⋃ i, f i = f left ∪ f right := by
+  ext; simp
 
 @[simp]
 theorem range_cases {α : Type*} (l r : α) : Set.range (Player.cases l r) = {l, r} :=
