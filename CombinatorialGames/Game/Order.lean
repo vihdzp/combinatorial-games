@@ -21,7 +21,7 @@ public section
 
 theorem tiny_lf_of_not_nonpos_of_forall_neg_le
     {x a : IGame} (hx : 0 ⧏ x) (ha : ∀ y ∈ xᴿ, -y ≤ a) : ⧾a ⧏ x := by
-  refine lf_of_right_le ?_ (rightMoves_tiny _ ▸ Set.mem_singleton _)
+  refine lf_of_right_le ?_ (moves_right_tiny _ ▸ Set.mem_singleton _)
   rw [le_iff_forall_lf]
   exact ⟨by simpa using hx, fun z hz => lf_of_right_le (IGame.neg_le.1 (ha z hz)) (by simp)⟩
 

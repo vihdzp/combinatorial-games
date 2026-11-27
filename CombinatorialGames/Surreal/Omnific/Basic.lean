@@ -231,10 +231,10 @@ def Omnific : Type _ := omnificSubring
 deriving CommRing, LinearOrder, IsStrictOrderedRing
 
 /-- The coercion from omnific integers into surreals. -/
-@[coe] def Omnific.coe (x : Omnific) : Surreal := x.1
+@[coe] def Omnific.coe (x : Omnific) : Surreal := x.val
 instance : Coe Omnific Surreal := ⟨Omnific.coe⟩
 
-theorem Omnific.prop (x : Omnific) : IsOmnific x := x.2
+theorem Omnific.prop (x : Omnific) : IsOmnific x := x.property
 
 /-- Construct an omnific integer from a surreal. -/
 def Omnific.mk (x : Surreal) (hx : IsOmnific x) : Omnific := ⟨x, hx⟩
@@ -276,6 +276,7 @@ theorem Omnific.coe_add_one (x : Omnific) : ((x + 1 : Omnific) : Surreal) = x + 
 @[ext] theorem Omnific.ext {x y : Omnific} (h : x.coe = y.coe) : x = y := Subtype.ext h
 
 /-- Cast an ordinal to an omnific integer. -/
+@[expose]
 def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   toFun x := Omnific.mk x (IsOmnific.natOrdinal x)
   map_zero' := by ext; simp
@@ -307,26 +308,24 @@ theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : �
   refine exists_congr fun _ ↦ ?_
   norm_cast
 
-@[no_expose]
 instance : SuccOrder Omnific :=
-  .ofCore (fun x ↦ x + 1) (by
+  fast_instance% .ofCore (fun x ↦ x + 1) (by
     refine @fun x _ y ↦ ⟨fun h ↦ ?_, (lt_add_one x).trans_le⟩
     rwa [← le_sub_iff_add_le', ← Omnific.coe_le_coe, Omnific.coe_one,
       (Omnific.prop _).one_le_iff_pos, Omnific.coe_sub, lt_sub_iff_add_lt, zero_add]
   ) (by simp)
 
 instance : SuccAddOrder Omnific where
-  succ_eq_add_one x := by rfl
+  succ_eq_add_one _ := rfl
 
-@[no_expose]
 instance : PredOrder Omnific :=
-  .ofCore (fun x ↦ x - 1) (by
+  fast_instance% .ofCore (fun x ↦ x - 1) (by
     refine @fun x _ y ↦ ⟨fun h ↦ ?_, (sub_one_lt x).trans_le'⟩
     rwa [le_sub_comm, Order.one_le_iff_pos, sub_pos]
   ) (by simp)
 
 instance : PredSubOrder Omnific where
-  pred_eq_sub_one x := by rfl
+  pred_eq_sub_one _ := rfl
 
 end Surreal
 end

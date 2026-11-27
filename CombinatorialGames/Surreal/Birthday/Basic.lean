@@ -134,61 +134,75 @@ theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric 
   exact hz.trans <| (h.congr hz).equiv_of_forall_birthday_le fun w _ hw ↦
     he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
 
-theorem birthday_ofSets_le_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
-    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
-    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday := by
-  rw [ofSets_eq_mk, ← out_eq z]
+theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) : !{st}.birthday ≤ z.birthday := by
+  rw [ofSets_eq_mk', ← out_eq z]
   generalize_proofs
   apply IGame.Fits.surrealBirthday_le
   simp_all [IGame.Fits]
 
-theorem birthday_ofSets_lt_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
-    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
-    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
-    !{s | t}.birthday < z.birthday := by
-  rw [ofSets_eq_mk, ← out_eq z]
+theorem birthday_ofSets_lt_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) (h : !{st} ≠ z) :
+    !{st}.birthday < z.birthday := by
+  rw [ofSets_eq_mk', ← out_eq z]
   generalize_proofs
   apply IGame.Fits.surrealBirthday_lt
   · simp_all [IGame.Fits]
-  · rwa [← mk_eq_mk, ← ofSets_eq_mk, out_eq, eq_comm]
+  · rwa [← mk_eq_mk, ← ofSets_eq_mk', out_eq, eq_comm]
+
+theorem birthday_ofSets_le_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday :=
+  birthday_ofSets_le_of_btwn' hL hR
+
+theorem birthday_ofSets_lt_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
+    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
+    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    !{s | t}.birthday < z.birthday :=
+  birthday_ofSets_lt_of_btwn' hL hR h
+
+theorem ofSets_eq_of_forall_birthday_le' {st : Player → Set Surreal.{u}} {z : Surreal}
+    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y)
+    (h : ∀ w, (∀ x ∈ st .left, x < w) → (∀ y ∈ st .right, w < y) → z.birthday ≤ w.birthday) :
+    !{st} = z := by
+  by_contra hz
+  exact (birthday_ofSets_lt_of_btwn' hL hR hz).not_ge <|
+    h _ (fun x ↦ lt_ofSets_of_mem_left') (fun x ↦ ofSets_lt_of_mem_right')
 
 theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
     (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
     (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
-    !{s | t} = z := by
-  by_contra hz
-  exact (birthday_ofSets_lt_of_btwn hL hR hz).not_ge <|
-    h _ (fun x ↦ lt_ofSets_of_mem_left) (fun x ↦ ofSets_lt_of_mem_right)
+    !{s | t} = z :=
+  ofSets_eq_of_forall_birthday_le' hL hR h
+
+theorem birthday_ofSets_le' {st : Player → Set Surreal.{u}}
+    [Small.{u} (st left)] [Small.{u} (st right)] {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    !{st}.birthday ≤ sSup ((fun x => birthday x + 1) '' iUnion st) := by
+  choose f hfn hfx hfb using birthday_eq_iGameBirthday
+  have : Numeric !{fun p => f '' st p} := by
+    rw [numeric_def]
+    simp_rw [moves_ofSets, forall_mem_image]
+    refine ⟨fun x hx y hy => ?_, fun p x _ => hfn x⟩
+    rw [← mk_lt_mk, hfx x, hfx y]
+    exact H x hx y hy
+  calc
+    _ = _ := congrArg birthday <| by
+      rw [← toGame_inj, toGame_ofSets', toGame_mk, Game.mk_ofSets']
+      simp_rw [image_image, ← toGame_mk, hfx]
+    _ ≤ _ := birthday_mk_le !{fun p => f '' st p}
+    _ = _ := by simp_rw [IGame.birthday_ofSets', image_iUnion, image_image, hfb]
 
 theorem birthday_ofSets_le {s t : Set Surreal.{u}}
     [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y} :
-    !{s | t}.birthday ≤ max (sSup (succ ∘ birthday '' s)) (sSup (succ ∘ birthday '' t)) := by
-  choose f hf using birthday_eq_iGameBirthday
-  have : Numeric !{f '' s | f '' t} := by
-    rw [numeric_def]
-    simp_rw [moves_ofSets]
-    refine ⟨?_, ?_⟩
-    · rintro _ ⟨x, hx, rfl⟩ _ ⟨y, hy, rfl⟩
-      obtain ⟨a, hx', _⟩ := hf x
-      obtain ⟨b, hy', _⟩ := hf y
-      rw [← mk_lt_mk, hx', hy']
-      exact H x hx y hy
-    rintro (_ | _) _ ⟨y, hy, rfl⟩
-    all_goals
-      obtain ⟨hy, _, _⟩ := hf y
-      exact hy
-  have : !{s | t} = mk !{f '' s | f '' t} := by
-    rw [← toGame_inj, toGame_ofSets, toGame_mk, Game.mk_ofSets]
-    simp_rw [image_image]
-    congr! with a ha a ha
-    all_goals
-    · obtain ⟨_, ha', _⟩ := hf a
-      rw [← toGame_mk, toGame_inj, ha']
-  rw [this]
-  apply (birthday_mk_le _).trans
-  simp_rw [IGame.birthday_ofSets, image_comp]
-  congr! <;> aesop
+    !{s | t}.birthday ≤
+      max (sSup ((fun x => birthday x + 1) '' s)) (sSup ((fun x => birthday x + 1) '' t)) := by
+  grw [birthday_ofSets_le']
+  rw [← sUnion_range, Player.range_cases, sUnion_pair, Set.image_union,
+    csSup_union' (bddAbove_of_small _) (bddAbove_of_small _)]
 
 theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
     {x y : Surreal} (hx : birthday x = o) (hy : birthday y = o) (hxy : x < y) :
@@ -210,8 +224,8 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         grw [mk_eq_mk.2 ⟨hxz, hzx⟩, birthday_mk_le, birthday_lt_of_mem_moves hzy, hyb, hy]
       have hzf : z.Fits !{{x} | {y}} := by
         constructor
-        · rwa [leftMoves_ofSets, Set.forall_mem_singleton]
-        · rw [rightMoves_ofSets, Set.forall_mem_singleton]
+        · rwa [moves_left_ofSets, Set.forall_mem_singleton]
+        · rw [moves_right_ofSets, Set.forall_mem_singleton]
           exact left_lf hzy
       obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
       apply hbxy
@@ -231,9 +245,9 @@ theorem birthday_ofSets_singleton_lt_of_birthday_eq {o : NatOrdinal}
         grw [mk_eq_mk.2 ⟨hyz, hzy⟩, birthday_mk_le, birthday_lt_of_mem_moves hzx, hxb, hx]
       have hzf : z.Fits !{{x} | {y}} := by
         constructor
-        · rw [leftMoves_ofSets, Set.forall_mem_singleton]
+        · rw [moves_left_ofSets, Set.forall_mem_singleton]
           exact lf_right hzx
-        · rwa [rightMoves_ofSets, Set.forall_mem_singleton]
+        · rwa [moves_right_ofSets, Set.forall_mem_singleton]
       obtain ⟨w, hwz, hwxy⟩ := hzf.exists_wsubposition_equiv
       apply hbxy
       have := Numeric.wsubposition hwz
