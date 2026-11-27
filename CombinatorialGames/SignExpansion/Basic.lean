@@ -219,7 +219,15 @@ theorem Small.coe_length (x : SignExpansion) [x.Small] : Small.length x = x.leng
 theorem Small.apply_length (x : SignExpansion) [x.Small] : x (Small.length x) = 0 := by
   rw [apply_eq_zero, coe_length]
 
-theorem Small.length_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem Small.of_length_le_coe {x : SignExpansion} {o : NatOrdinal} (ho : x.length ≤ o) :
+    x.Small where
+  length_ne_top := by
+    rw [← lt_top_iff_ne_top]
+    grw [ho]
+    exact WithTop.coe_lt_top o
+
+theorem Small.length_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI := Small.of_length_le_coe ho.le
     Small.length x = o := by
   rw! [Small.length, ho, WithTop.untop_coe]
   rfl
@@ -395,6 +403,55 @@ theorem lt_trunc_iff {x : SignExpansion} {o : NatOrdinal} : x < x ↾ o ↔ x o 
 @[simp]
 theorem trunc_lt_iff {x : SignExpansion} {o : NatOrdinal} : x ↾ o < x ↔ x o = 1 := by
   rw [← cmp_eq_gt_iff, cmp_trunc, SignType.orderingEquiv_eq_gt_iff]
+
+theorem eq_of_length_le_of_forall_lt_gt_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
+    (hlt : ∀ z, z.length < x.length → (z < y ↔ z < x))
+    (hgt : ∀ z, z.length < x.length → (y < z ↔ x < z)) : x = y := by
+  ext o
+  induction o using WellFoundedLT.induction with | ind o IH
+  obtain hxo | hox := le_or_gt x.length o
+  · rw [apply_eq_zero.2 hxo, apply_eq_zero.2 (hxy.trans hxo)]
+  · cases hyo : y o
+    · have hy : y.length < x.length := by
+        apply hox.trans_le'
+        rwa [← apply_eq_zero]
+      convert hyo
+      apply le_antisymm
+      · simpa using hlt y hy
+      · simpa using hgt y hy
+    · rw [SignType.neg_eq_neg_one, ← lt_trunc_iff, ← hgt]
+      · use o; aesop
+      · simpa
+    · rw [SignType.pos_eq_one, ← trunc_lt_iff, ← hlt]
+      · use o; aesop
+      · simpa
+
+theorem eq_of_length_le_of_forall_le_ge_iff {x y : SignExpansion} (hxy : y.length ≤ x.length)
+    (hle : ∀ z, z.length < x.length → (z ≤ y ↔ z ≤ x))
+    (hge : ∀ z, z.length < x.length → (y ≤ z ↔ x ≤ z)) : x = y := by
+  simp_rw [le_iff_le_iff_lt_iff_lt] at hle hge
+  exact eq_of_length_le_of_forall_lt_gt_iff hxy hge hle
+
+theorem eq_of_length_eq_of_forall_lt_gt {x y : SignExpansion} (hxy : x.length = y.length)
+    (hlt : ∀ z, z.length < x.length → z < x → z < y)
+    (hgt : ∀ z, z.length < x.length → x < z → y < z) : x = y := by
+  apply eq_of_length_le_of_forall_lt_gt_iff hxy.ge <;> intro z hz
+  · refine ⟨fun hy ↦ ?_, hlt z hz⟩
+    contrapose! hy
+    refine (hgt z hz (hy.lt_of_ne ?_)).le
+    rintro rfl
+    exact hz.false
+  · refine ⟨fun hy ↦ ?_, hgt z hz⟩
+    contrapose! hy
+    refine (hlt z hz (hy.lt_of_ne ?_)).le
+    rintro rfl
+    exact hz.false
+
+theorem eq_of_length_eq_of_forall_le_ge {x y : SignExpansion} (hxy : x.length = y.length)
+    (hlt : ∀ z, z.length < x.length → z ≤ y → z ≤ x)
+    (hgt : ∀ z, z.length < x.length → y ≤ z → x ≤ z) : x = y := by
+  simp_rw [le_imp_le_iff_lt_imp_lt] at hlt hgt
+  exact eq_of_length_eq_of_forall_lt_gt hxy hgt hlt
 
 /-! #### Floor function -/
 
@@ -608,49 +665,6 @@ theorem floor_lt_ceil_of_not_isUpperSet {f : NatOrdinal → SignType} (h : ¬ Is
     floor f < ceil f :=
   (floor_lt_of_not_isUpperSet h).trans_le (le_ceil f)
 
-/-! #### Complete linear order instance -/
-
-instance : CompleteLattice SignExpansion :=
-  fast_instance%
-  { __ := instLinearOrder.toBiheytingAlgebra _
-    __ := giCeil.liftCompleteLattice.toCompleteSemilatticeInf
-    __ := gciFloor.liftCompleteLattice.toCompleteSemilatticeSup }
-
-instance : CompleteLinearOrder SignExpansion where
-  __ := LinearOrder.toBiheytingAlgebra _
-  __ := instCompleteLattice
-  __ := instLinearOrder
-
-theorem coe_sInf (s : Set SignExpansion) :
-    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
-
-theorem coe_iInf {ι} (f : ι → SignExpansion) :
-    ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
-  rw [iInf, coe_sInf]
-  congr
-  aesop
-
-theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.val i := by
-  rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
-  apply congrArg sInf
-  aesop
-
-theorem coe_sSup (s : Set SignExpansion) :
-    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
-
-theorem coe_iSup {ι} (f : ι → SignExpansion) :
-    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
-  rw [iSup, coe_sSup]
-  congr
-  aesop
-
-theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
-    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.val i := by
-  rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
-  apply congrArg sSup
-  aesop
-
 /-! #### Successor function -/
 
 private def succFun (x : SignExpansion) [x.Small] (o : NatOrdinal) : SignType :=
@@ -694,11 +708,14 @@ theorem succ_apply_smallLength {x : SignExpansion} [x.Small] :
     succ x (Small.length x) = 1 := by
   aesop
 
-theorem succ_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem succ_apply_of_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = 1 := by
+  generalize_proofs
   rw [← Small.length_eq ho, succ_apply_smallLength]
 
-theorem succ_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
+theorem succ_apply_of_gt {x : SignExpansion} {o : NatOrdinal} (ho : x.length < o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
@@ -742,21 +759,35 @@ theorem succ_apply_le_apply_iff {x : SignExpansion} [x.Small] {o : NatOrdinal} :
   rw [← not_lt, apply_lt_succ_apply_iff, ne_eq]
 
 theorem covBy_succ (x : SignExpansion) [x.Small] : x ⋖ succ x := by
-  refine ⟨lt_succ x, fun y ↦ ?_⟩
-  rw [lt_iff_toLex]
-  rintro ⟨i, hi₁, hi₂⟩ ⟨j, hj₁, hj₂⟩
-  dsimp at hi₁ hi₂ hj₁ hj₂
-  obtain hij | rfl | hji := lt_trichotomy i j
-  · rw [hj₁ i hij, apply_lt_succ_apply_iff] at hi₂
-    rw [← WithTop.coe_lt_coe, ← hi₂] at hij
-    simp [succ_apply_of_gt hij] at hj₂
-  · cases Small.length_eq <| apply_lt_succ_apply_iff.1 (hi₂.trans hj₂)
-    simp_all
-  · rw [← hi₁ j hji, apply_lt_succ_apply_iff] at hj₂
-    apply hi₂.ne'
-    rw [← Small.length_eq hj₂] at hji
-    rw [apply_eq_zero_of_le hji.le (by simpa using (hi₁ _ hji).symm), eq_comm, apply_eq_zero]
-    exact le_of_lt (by simpa using hji)
+  refine ⟨⟨Small.length x, ?_⟩, fun y hxy ↦ ?_⟩
+  · aesop
+  · rw [lt_iff_toLex]
+    rintro ⟨i, H₁, H₂⟩
+    dsimp at H₁ H₂
+    obtain hi | rfl | hi := lt_trichotomy i (Small.length x)
+    · apply hxy.not_gt
+      refine ⟨i, fun j hj ↦ ?_, ?_⟩
+      · dsimp at *
+        rw [H₁ j hj]
+        apply succ_apply_of_lt
+        grw [hj]
+        simpa using hi.le
+      · aesop
+    · rw [succ_apply_smallLength] at H₂
+      apply hxy.not_gt
+      refine ⟨Small.length x, fun j hj ↦ ?_, ?_⟩
+      · aesop
+      · simp_rw [Pi.toLex_apply, Small.apply_length]
+        rw [SignType.lt_one_iff] at H₂
+        apply H₂.lt_of_ne
+        contrapose! hxy
+        apply le_of_eq
+        ext i
+        obtain hi | hi := lt_or_ge i (Small.length x)
+        · rw [H₁ i hi, succ_apply_of_lt (by simpa using hi)]
+        · rw [apply_eq_zero_of_le hi hxy, apply_of_length_le (by simpa using hi)]
+    · rw [succ_apply_of_gt (by simpa using hi)] at H₂
+      simp at H₂
 
 /-! #### Predecessor function -/
 
@@ -789,11 +820,14 @@ theorem pred_apply_smallLength {x : SignExpansion} [x.Small] :
     pred x (Small.length x) = -1 := by
   aesop
 
-theorem pred_apply_of_eq {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length = o) :
+theorem pred_apply_of_eq {x : SignExpansion} {o : NatOrdinal} (ho : x.length = o) :
+    haveI := Small.of_length_le_coe ho.le
     pred x o = -1 := by
+  generalize_proofs
   rw [← Small.length_eq ho, pred_apply_smallLength]
 
-theorem pred_apply_of_gt {x : SignExpansion} [x.Small] {o : NatOrdinal} (ho : x.length < o) :
+theorem pred_apply_of_gt {x : SignExpansion} {o : NatOrdinal} (ho : x.length < o) :
+    haveI := Small.of_length_le_coe ho.le
     succ x o = -1 := by
   aesop (add simp [lt_asymm])
 
@@ -840,6 +874,49 @@ theorem succ_neg (x : SignExpansion) [x.Small] : succ (-x) = -pred x := by
 @[simp]
 theorem pred_neg (x : SignExpansion) [x.Small] : pred (-x) = -succ x := by
   simp [pred]
+
+/-! #### Complete linear order instance -/
+
+instance : CompleteLattice SignExpansion :=
+  fast_instance%
+  { __ := instLinearOrder.toBiheytingAlgebra _
+    __ := giCeil.liftCompleteLattice.toCompleteSemilatticeInf
+    __ := gciFloor.liftCompleteLattice.toCompleteSemilatticeSup }
+
+instance : CompleteLinearOrder SignExpansion where
+  __ := LinearOrder.toBiheytingAlgebra _
+  __ := instCompleteLattice
+  __ := instLinearOrder
+
+theorem coe_sInf (s : Set SignExpansion) :
+    sInf s = ofLex (sInf ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
+
+theorem coe_iInf {ι} (f : ι → SignExpansion) :
+    ⨅ i, f i = ofLex (⨅ i : ι, toLex (⇑(f i))) := by
+  rw [iInf, coe_sInf]
+  congr
+  aesop
+
+theorem sInf_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sInf s i = ⨅ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sInf s j}, x.val i := by
+  rw [coe_sInf, Pi.ofLex_apply, Pi.Lex.sInf_apply]
+  apply congrArg sInf
+  aesop
+
+theorem coe_sSup (s : Set SignExpansion) :
+    sSup s = ofLex (sSup ((fun x : SignExpansion ↦ toLex ⇑x) '' s)) := rfl
+
+theorem coe_iSup {ι} (f : ι → SignExpansion) :
+    ⨆ i, f i = ofLex (⨆ i : ι, toLex (⇑(f i))) := by
+  rw [iSup, coe_sSup]
+  congr
+  aesop
+
+theorem sSup_apply (s : Set SignExpansion) (i : NatOrdinal) :
+    sSup s i = ⨆ x : {x : SignExpansion // x ∈ s ∧ ∀ j < i, x j = sSup s j}, x.val i := by
+  rw [coe_sSup, Pi.ofLex_apply, Pi.Lex.sSup_apply]
+  apply congrArg sSup
+  aesop
 
 end SignExpansion
 
