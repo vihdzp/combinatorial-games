@@ -241,11 +241,11 @@ theorem toIGame_equiv_lower_upper (x : Dyadic) :
     simp only [h, mkRat_one, toIGame_intCast]
     apply Fits.equiv_of_forall_mem_moves
     · simp [Fits]
-    · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_moves_left_intCast hm
+    rw [Player.forall]
+    constructor <;> intro m hm
+    · obtain ⟨m, hm', rfl⟩ := eq_sub_one_of_mem_moves_left_intCast hm
       simp
-    · intro m hm
-      obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_moves_right_intCast hm
+    · obtain ⟨m, hm', rfl⟩ := eq_add_one_of_mem_moves_right_intCast hm
       simp
   · rfl
 
@@ -348,8 +348,9 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
   by_cases H : x.den = 1 ∧ y.den = 1
   · rw [← intCast_num_eq_self_of_den_eq_one H.1, ← intCast_num_eq_self_of_den_eq_one H.2]
     simpa [← Int.cast_add] using intCast_add_equiv ..
-  apply Fits.equiv_of_forall_mem_moves ?_ (fun z hz ↦ ?_) (fun z hz ↦ ?_)
-  · rw [Fits, forall_mem_moves_add, forall_mem_moves_add]
+  apply Fits.equiv_of_forall_mem_moves ?_ (fun p z hz ↦ ?_)
+  · rw [fits_def]
+    simp_rw [forall_mem_moves_add]
     refine ⟨⟨?_, ?_⟩, ⟨?_, ?_⟩⟩
     all_goals
       intro z hz
@@ -358,18 +359,19 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
         | obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
       grw [← toIGame_add_equiv]
       simp
+  cases p
   · obtain rfl := eq_lower_of_mem_moves_left_toIGame hz
     obtain h | h := le_or_gt x.den y.den
     · by_cases hy : y.den = 1; · simp_all
       use x + lower y
       have hy := toIGame_of_den_ne_one hy
       have : (lower y : IGame) ∈ yᴸ := by rw [hy]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, hy]
+      rw [← Player.le_congr_right (toIGame_add_equiv ..), hy]
       simpa using lower_add_le_of_den_le h
     · use lower x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : (lower x : IGame) ∈ xᴸ := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_right, hx]
+      rw [← Player.le_congr_right (toIGame_add_equiv ..), hx]
       simpa using lower_add_le_of_den_ge h.le
   · obtain rfl := eq_upper_of_mem_moves_right_toIGame hz
     obtain h | h := le_or_gt x.den y.den
@@ -377,12 +379,12 @@ theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x 
       use x + upper y
       have hy := toIGame_of_den_ne_one hy
       have : (upper y : IGame) ∈ yᴿ := by rw [hy]; simp
-      grw [← (toIGame_add_equiv ..).le_congr_left, hy]
+      rw [← Player.le_congr_right (toIGame_add_equiv ..), hy]
       simpa using le_upper_add_of_den_le h
     · use upper x + y
       have hx := toIGame_of_den_ne_one (den_ne_one_of_den_lt h)
       have : (upper x : IGame) ∈ xᴿ := by rw [hx]; simp
-      rw [← (toIGame_add_equiv ..).le_congr_left, hx]
+      rw [← Player.le_congr_right (toIGame_add_equiv ..), hx]
       simpa using le_upper_add_of_den_ge h.le
 termination_by ((x : IGame.{u}), (y : IGame.{u}))
 decreasing_by igame_wf
@@ -581,6 +583,7 @@ private theorem equiv_dyadic (x : IGame) [Short x] [Numeric x] : ∃ y : Dyadic,
     exact Numeric.left_lt_right a.prop b.prop
   have : ∃ y, Fits (Dyadic.toIGame y) x := by
     use y
+    rw [fits_def]
     constructor <;> intro z hz
     · have := hy₁ _ (Set.mem_range_self ⟨z, hz⟩)
       rw [← Dyadic.toIGame_lt_toIGame] at this
