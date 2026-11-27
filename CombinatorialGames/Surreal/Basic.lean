@@ -423,6 +423,8 @@ section number_avoid
 
 namespace IGame
 
+/-- The weak **number avoidance theorem**: if `x` is numeric and `y` is not equivalent to a number,
+then the winning move in `x ⧏ y` is in `y`. -/
 theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
     (h : x ⧏ y) (hy : .mk y ∉ Set.range Surreal.toGame) : ∃ z ∈ yᴸ, x ≤ z := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
@@ -433,6 +435,8 @@ theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
   obtain ⟨w, hwy, hzw⟩ := ih .right z hzx fun hyz => hy ⟨.mk z, Game.mk_eq_mk.2 ⟨hzy, hyz⟩⟩
   exact ⟨w, hwy, (Numeric.lt_right hzx).le.trans hzw⟩
 
+/-- The weak **number avoidance theorem**: if `y` is numeric and `x` is not equivalent to a number,
+then the winning move in `x ⧏ y` is in `x`. -/
 theorem Numeric.exists_right_le_of_lf_of_notMem {x y : IGame} [y.Numeric]
     (h : x ⧏ y) (hx : .mk x ∉ Set.range Surreal.toGame) : ∃ z ∈ xᴿ, z ≤ y := by
   rw [← IGame.neg_le_neg_iff] at h
