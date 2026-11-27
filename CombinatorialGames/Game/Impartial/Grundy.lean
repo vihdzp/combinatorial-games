@@ -194,7 +194,7 @@ private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
     (H : grundyFor left x = grundyFor right x) : nim (grundyFor right x) ≈ x := by
   constructor <;> refine le_iff_forall_lf.2 ⟨?_, ?_⟩
-  · rw [forall_moves_nim]
+  · rw [forall_mem_moves_nim]
     intro a ha
     rw [← H] at ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyFor_image_of_lt ha
@@ -211,7 +211,7 @@ private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
     grw [← nim_grundy_equiv y]
     rw [NegSelfEquiv.lf_iff_fuzzy, nim_fuzzy_iff, ← grundyFor_eq_grundy left]
     exact H ▸ grundyFor_ne hy
-  · rw [forall_moves_nim]
+  · rw [forall_mem_moves_nim]
     intro a ha
     obtain ⟨y, hy, rfl⟩ := mem_grundyFor_image_of_lt ha
     have := h right y hy

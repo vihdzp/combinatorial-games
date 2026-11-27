@@ -169,11 +169,11 @@ instance (x : IGame) [Short x] : Short (⧾x) := by rwa [short_tiny_iff]
 open Set in
 theorem tiny_antitone : Antitone tiny := by
   intro x y hxy
-  apply IGame.le_of_forall_moves_left_lf
+  apply IGame.le_of_forall_mem_moves_left_lf
   · rw [moves_left_tiny, forall_mem_singleton]
     exact left_lf (by simp)
   · rw [moves_right_tiny, forall_mem_singleton, moves_right_tiny, exists_mem_singleton]
-    apply IGame.le_of_forall_moves_left_lf
+    apply IGame.le_of_forall_mem_moves_left_lf
     · rw [moves_left_ofSets, forall_mem_singleton]
       exact left_lf (by simp)
     · rw [moves_right_ofSets, forall_mem_singleton, moves_right_ofSets, exists_mem_singleton]
