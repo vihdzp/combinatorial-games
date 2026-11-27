@@ -283,9 +283,13 @@ meta def delabOfSets : Delab := do
       let st ← delab
       `(!{$st})
 
+instance {α : Type*} (s t : Set α) [Small.{u} s] [Small.{u} t] :
+    ∀ p, Small.{u} (Player.cases s t p :) := by
+  simp_all
+
 theorem ofSets_eq_ofSets_cases {α} {Valid : (Player → Set α) → Prop} [OfSets α Valid]
-    (st : Player → Set α) (h : Valid st) [Small (st left)] [Small (st right)] :
-    !{st} = !{st left | st right}'(by convert h; aesop) := by
+    (st : Player → Set α) (h : Valid st) [∀ p, Small (st p)] :
+    !{st} = !{st left | st right}'(by convert h; ext; grind) := by
   congr; ext1 p; cases p <;> rfl
 
 end

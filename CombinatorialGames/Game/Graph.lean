@@ -46,7 +46,7 @@ structure GameGraph (α : Type v) : Type v where
 namespace GameGraph
 variable {c : GameGraph.{v} α} {p : Player}
 
-variable [Hl : ∀ a, Small.{u} (c.moves left a)] [Hr : ∀ a, Small.{u} (c.moves right a)]
+variable [H : ∀ p a, Small.{u} (c.moves p a)]
 
 /-! ### Loopy games -/
 
@@ -85,7 +85,7 @@ protected class WellFounded (c : GameGraph α) where
 
 attribute [instance] WellFounded.wf
 
-omit Hl Hr in
+omit H in
 theorem WellFounded.of_subrelation (r : α → α → Prop) [WellFounded r]
     (hr : ∀ a b p, a ∈ c.moves p b → r a b) : c.WellFounded := by
   constructor
@@ -103,7 +103,7 @@ def moveRecOn {motive : α → Sort*} (x)
     motive x :=
   (WellFounded.wf c).fix (fun x IH ↦ ind x fun _ _ h ↦ IH _ ⟨_, h⟩) x
 
-omit Hl Hr in
+omit H in
 theorem moveRecOn_eq {motive : α → Sort*} (x)
     (ind : Π x : α, (∀ p, Π y ∈ c.moves p x, motive y) → motive x) :
     c.moveRecOn x ind = ind x fun _ y _ ↦ c.moveRecOn y ind := by

@@ -180,7 +180,7 @@ theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
   ofSets_eq_of_forall_birthday_le' hL hR h
 
 theorem birthday_ofSets_le' {st : Player → Set Surreal.{u}}
-    [Small.{u} (st left)] [Small.{u} (st right)] {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
+    [∀ p, Small.{u} (st p)] {H : ∀ x ∈ st left, ∀ y ∈ st right, x < y} :
     !{st}.birthday ≤ sSup ((fun x => birthday x + 1) '' iUnion st) := by
   choose f hfn hfx hfb using birthday_eq_iGameBirthday
   have : Numeric !{fun p => f '' st p} := by

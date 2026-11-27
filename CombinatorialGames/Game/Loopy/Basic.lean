@@ -452,7 +452,7 @@ theorem moves_neg (p : Player) (x : LGame) : (-x).moves p = -x.moves (-p) := by
 theorem neg_ofSets (s t : Set LGame.{u}) [Small.{u} s] [Small.{u} t] : -!{s | t} = !{-t | -s} := by
   ext p; cases p <;> simp
 
-theorem neg_ofSets' (st : Player → Set LGame) [Small (st left)] [Small (st right)] :
+theorem neg_ofSets' (st : Player → Set LGame) [∀ p, Small (st p)] :
     -!{st} = !{fun p ↦ -st (-p)} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
   rfl

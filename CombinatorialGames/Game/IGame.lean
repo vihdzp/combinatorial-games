@@ -565,7 +565,7 @@ instance : ZeroLEOneClass IGame where
 /-! ### Negation -/
 
 private def neg' (x : IGame) : IGame :=
-  !{range fun y : xᴿ ↦ neg' y | range fun y : xᴸ ↦ neg' y}
+  !{fun p ↦ range fun y : x.moves (-p) ↦ neg' y}
 termination_by x
 decreasing_by igame_wf
 
@@ -574,27 +574,29 @@ decreasing_by igame_wf
 instance : Neg IGame where
   neg := neg'
 
-private theorem neg_ofSets'' (s t : Set IGame) [Small s] [Small t] :
-    -!{s | t} = !{Neg.neg '' t | Neg.neg '' s} := by
+private theorem neg_ofSets'' (st : Player → Set IGame) [∀ p, Small (st p)] :
+    -!{st} = !{fun p ↦ Neg.neg '' (st (-p))} := by
   change neg' _ = _
   rw [neg']
-  simp [Neg.neg, Set.ext_iff]
+  simp [Neg.neg, funext_iff, Set.ext_iff]
 
 instance : InvolutiveNeg IGame where
   neg_neg x := by
-    induction x using ofSetsRecOn with | ofSets s t ihs iht
-    rw [neg_ofSets'', neg_ofSets'']
-    simp [Set.ext_iff]
+    induction x using moveRecOn with | ind x IH
+    rw [← ofSets_moves x, neg_ofSets'', neg_ofSets'']
+    ext
+    simp
     grind
 
-@[simp]
-theorem neg_ofSets (s t : Set IGame) [Small s] [Small t] : -!{s | t} = !{-t | -s} := by
+theorem neg_ofSets' (st : Player → Set IGame) [∀ p, Small (st p)] :
+    -!{st} = !{fun p ↦ -st (-p)} := by
   simp_rw [neg_ofSets'', Set.image_neg_eq_neg]
 
-theorem neg_ofSets' (st : Player → Set IGame) [Small (st left)] [Small (st right)] :
-    -!{st} = !{fun p ↦ -st (-p)} := by
-  rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases fun _ ↦ -_, neg_ofSets]
-  rfl
+@[simp]
+theorem neg_ofSets (s t : Set IGame.{u}) [Small s] [Small t] :
+    -!{s | t} = !{-t | -s} := by
+  rw [neg_ofSets']
+  grind
 
 @[simp]
 theorem neg_ofSets_const (s : Set IGame) [Small s] :
@@ -711,7 +713,7 @@ theorem ofSets_add_ofSets
   simp
 
 theorem ofSets_add_ofSets' (st₁ st₂ : Player → Set IGame)
-    [Small (st₁ left)] [Small (st₂ left)] [Small (st₁ right)] [Small (st₂ right)] :
+    [∀ p, Small (st₁ p)] [∀ p, Small (st₂ p)] :
     !{st₁} + !{st₂} =
       !{fun p ↦ (· + !{st₂}) '' st₁ p ∪ (!{st₁} + ·) '' st₂ p} := by
   rw [ofSets_eq_ofSets_cases, ofSets_eq_ofSets_cases st₂, ofSets_eq_ofSets_cases (fun _ ↦ _ ∪ _),
