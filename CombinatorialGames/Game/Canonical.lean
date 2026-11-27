@@ -270,8 +270,7 @@ theorem not_lt_of_mem_moves_right_undominate {x y z : IGame} [Short x]
 theorem IsUndominated.undominate (x : IGame) : IsUndominated x.undominate := by
   rw [isUndominated_def]
   simp_rw [forall_mem_moves_undominate]
-  intro p y hy Hy
-  exact ⟨.undominate y, fun z hz _ ↦ Hy z hz⟩
+  exact fun p y _ hy => ⟨.undominate y, fun z hz _ ↦ hy z hz⟩
 termination_by x
 decreasing_by igame_wf
 
