@@ -278,7 +278,9 @@ theorem birthday_eq_one {x : Surreal} : birthday x = 1 ↔ x = 1 ∨ x = -1 := b
 theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨ x = -1 := by
   rw [le_one_iff, birthday_eq_one, birthday_eq_zero]
 
-/- This is currently an open problem, see https://mathoverflow.net/a/476829/147705. -/
+/-- This was, until recently, an open problem.
+
+See `https://github.com/gaearon/gonshor-birthday` for a proof. -/
 proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
 
 /-- Surreals with a bounded birthday form a small set. -/
