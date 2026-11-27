@@ -293,7 +293,6 @@ theorem isUndominated_iff_undominate_eq {x : IGame} : IsUndominated x ↔ x.undo
   rw [← hx]
   exact .undominate x
 
-
 /-! ### Unreversing games -/
 
 /-- A hereditarily unreversed game is one where no move is reversible, and such that every
