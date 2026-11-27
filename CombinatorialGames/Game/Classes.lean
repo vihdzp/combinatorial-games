@@ -495,6 +495,11 @@ theorem moves_congr (x : IGame) [Impartial x] (p q : Player) : x.moves p = x.mov
   conv_rhs => rw [← neg_eq x, moves_neg]
   simp
 
+protected theorem ext {x y : IGame} (p : Player) [Impartial x] [Impartial y]
+    (h : x.moves p = y.moves p) : x = y := by
+  ext1 q
+  rwa [moves_congr _ q p, moves_congr _ q p]
+
 instance toDicotic (x : IGame) [Impartial x] : Dicotic x := by
   rw [dicotic_def]
   constructor

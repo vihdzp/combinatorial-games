@@ -26,12 +26,140 @@ universe u
 
 open Nimber Set
 
+open Pointwise in
+theorem Set.neg_iUnion {α : Type*} {ι : Sort*} [Neg α] (f : ι → Set α) : -⋃ i, f i = ⋃ i, -f i :=
+  preimage_iUnion
+
+theorem Set.union_rotate {α : Type*} (a b c : Set α) : a ∪ b ∪ c = b ∪ c ∪ a := by grind
+theorem Set.union_rotate' {α : Type*} (a b c : Set α) : a ∪ (b ∪ c) = b ∪ (c ∪ a) := by grind
+
 public noncomputable section
 
 namespace IGame
+
+/-! ### Impartialize a game -/
+
+/-- Turn a game impartial, by giving both players the same moves at every subposition. -/
+def impartialize (x : IGame) : IGame :=
+  !{fun _ ↦ ⋃ p, range fun y : x.moves p ↦ impartialize y}
+termination_by x
+decreasing_by igame_wf
+
+theorem impartialize_def (x : IGame) :
+    impartialize x = !{fun _ ↦ ⋃ p, impartialize '' x.moves p} := by
+  rw [impartialize]
+  grind
+
+theorem moves_impartialize (x : IGame) (p : Player) :
+    x.impartialize.moves p = ⋃ p, impartialize '' x.moves p := by
+  rw [impartialize_def, moves_ofSets]
+
+@[simp]
+theorem forall_mem_moves_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
+    (∀ y ∈ x.impartialize.moves p, P y) ↔ ∀ q, ∀ y ∈ x.moves q, P (impartialize y) := by
+  rw [impartialize_def]
+  aesop
+
+@[simp]
+theorem exists_mem_moves_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
+    (∃ y ∈ x.impartialize.moves p, P y) ↔ ∃ q, ∃ y ∈ x.moves q, P (impartialize y) := by
+  rw [impartialize_def]
+  aesop
+
+protected instance Impartial.impartialize (x : IGame) : Impartial (impartialize x) := by
+  apply Impartial.mk
+  · rw [impartialize_def, neg_ofSets']
+    simp_rw [Set.neg_iUnion]
+    congr! 4 with _ p
+    ext y
+    rw [mem_neg, mem_image]
+    apply exists_congr
+    simp_rw [and_congr_right_iff]
+    intro z hz
+    have := Impartial.impartialize z
+    conv_lhs => rw [← neg_eq z.impartialize, neg_inj]
+  · simp_rw [forall_mem_moves_impartialize]
+    exact fun _ _ y hy ↦ Impartial.impartialize y
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem Impartial.impartialize_eq (x : IGame) [Impartial x] : impartialize x = x := by
+  rw [impartialize_def]
+  ext p y
+  simp only [← moves_congr x p, moves_ofSets, mem_iUnion, mem_image, exists_const]
+  refine ⟨?_, fun hy ↦ ⟨y, hy, ?_⟩⟩
+  · rintro ⟨z, hz, rfl⟩
+    impartial
+    rwa [Impartial.impartialize_eq]
+  · impartial
+    rw [Impartial.impartialize_eq]
+termination_by x
+decreasing_by igame_wf
+
+theorem impartial_iff_impartialize_eq {x : IGame} : Impartial x ↔ impartialize x = x := by
+  refine ⟨@Impartial.impartialize_eq x, fun hx ↦ ?_⟩
+  rw [← hx]
+  infer_instance
+
+@[simp]
+theorem impartialize_neg (x : IGame) : impartialize (-x) = impartialize x := by
+  apply Impartial.ext left
+  simp_rw [moves_impartialize, Player.iUnion_eq, moves_neg]
+  rw [union_comm]
+  congr 1 <;> exact image_neg_of_apply_neg_eq fun y hy ↦ impartialize_neg y
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem impartialize_add (x y : IGame) :
+    impartialize (x + y) = impartialize x + impartialize y := by
+  induction x using IGame.moveRecOn generalizing y with | ind x ihx
+  induction y using IGame.moveRecOn with | ind y ihy
+  refine IGame.ext fun p => ?_
+  simp only [moves_impartialize, moves_add, Set.image_union, Set.image_iUnion,
+    ← Set.iUnion_union_distrib, Set.image_image]
+  refine iUnion_congr fun q => ?_
+  rw [Set.image_congr fun z hz => ihx q z hz y, Set.image_congr (ihy q)]
+
+@[simp]
+theorem impartialize_sub (x y : IGame) :
+    impartialize (x - y) = impartialize x - impartialize y := by
+  simp [sub_eq_add_neg]
+
+@[simp]
+theorem impartialize_mul (x y : IGame) :
+    impartialize (x * y) = impartialize x * impartialize y := by
+  apply Impartial.ext left
+  simp only [moves_impartialize, moves_mul, ← iUnion_prod, image_union, image_iUnion, iUnion_prod',
+    union_self]
+  simp_rw [Player.iUnion_eq, union_assoc]
+  nth_rw 2 [Set.union_rotate']
+  congr! <;>
+  · ext z
+    constructor
+    · rintro ⟨_, ⟨⟨a, b⟩, ⟨ha, hb⟩, rfl⟩, rfl⟩
+      refine ⟨⟨_, _⟩, ⟨mem_image_of_mem _ ha, mem_image_of_mem _ hb⟩, ?_⟩
+      simp only [mulOption, impartialize_add, impartialize_sub]
+      iterate 3 rw [impartialize_mul]
+    · rintro ⟨⟨_, _⟩, ⟨⟨a, ha, rfl⟩, ⟨b, hb, rfl⟩⟩, rfl⟩
+      refine ⟨_, ⟨⟨a, b⟩, ⟨ha, hb⟩, rfl⟩, ?_⟩
+      simp only [mulOption, impartialize_add, impartialize_sub]
+      iterate 3 rw [impartialize_mul]
+termination_by (x, y)
+decreasing_by igame_wf
+
+@[simp]
+theorem impartialize_mulOption (x y a b : IGame) : impartialize (mulOption x y a b) =
+    mulOption x.impartialize y.impartialize a.impartialize b.impartialize := by
+  simp [mulOption]
+
 open WeaklyImpartial
 
 /-! ### Grundy value -/
+
+private theorem nonempty_compl_of_small {s : Set Nimber.{u}} [Small.{u} s] : (sᶜ).Nonempty :=
+  nonempty_of_not_bddAbove (not_bddAbove_compl_of_small _)
 
 /-- The left or right Grundy value of a game is recursively defined as the minimum excluded value
 (the infimum of the complement) of the left or right Grundy values of its left or right options.
@@ -48,10 +176,9 @@ theorem grundyFor_def (p) (x : IGame) : grundyFor p x = sInf (grundyFor p '' x.m
 
 theorem le_grundyFor_iff {p : Player} {x : IGame} {o : Nimber} :
     o ≤ grundyFor p x ↔ Iio o ⊆ grundyFor p '' x.moves p := by
-  rw [grundyFor_def, le_csInf_iff']
-  · rw [← compl_subset_compl (t := Iio o), subset_def]
-    simp
-  · exact nonempty_of_not_bddAbove (Nimber.not_bddAbove_compl_of_small _)
+  rw [grundyFor_def, le_csInf_iff' nonempty_compl_of_small, ← compl_subset_compl (t := Iio o),
+    subset_def]
+  simp
 
 theorem lt_grundyFor_iff {p : Player} {x : IGame} {o : Nimber} :
     o < grundyFor p x ↔ Iic o ⊆ grundyFor p '' x.moves p := by
@@ -69,8 +196,7 @@ theorem grundyFor_le_of_notMem {p : Player} {x : IGame} {o : Nimber}
 theorem grundyFor_ne {p : Player} {x y : IGame} (hy : y ∈ x.moves p) :
     grundyFor p y ≠ grundyFor p x := by
   conv_rhs => rw [grundyFor_def]
-  have := csInf_mem (nonempty_of_not_bddAbove <|
-    Nimber.not_bddAbove_compl_of_small (grundyFor p '' x.moves p))
+  have := csInf_mem (nonempty_compl_of_small (s := grundyFor p '' x.moves p))
   simp_all
 
 @[simp]
@@ -115,13 +241,15 @@ theorem grundyFor_sub (p : Player) (x y : IGame) :
     (x - y).grundyFor p = x.grundyFor p + y.grundyFor (-p) := by
   rw [sub_eq_add_neg, grundyFor_add, grundyFor_neg]
 
-/-- The Grundy value of an impartial game is recursively defined as the minimum excluded value
+/--
+The Grundy value of an impartial game is recursively defined as the minimum excluded value
 (the infimum of the complement) of the Grundy values of its options.
 
-This definition enforces that `x` is impartial. If you want to talk about the left or right Grundy
-values of a game (e.g. if you don't yet know it to be impartial), use `grundyFor`.
-The lemma `grundyFor_eq_grundy` shows that both definitions match in
-the case of an impartial game. -/
+This definition enforces that `x` is (weakly) impartial. If you want to talk about the left or right
+Grundy values of a game (e.g. if you don't yet know it to be impartial), use `grundyFor`.
+
+The lemma `grundyFor_eq_grundy` shows that both definitions match in the case of an impartial game.
+-/
 @[nolint unusedArguments]
 def grundy (x : IGame) [WeaklyImpartial x] : Nimber :=
   x.grundyFor right
@@ -157,6 +285,8 @@ theorem grundy_eq_iff_equiv {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y
     grundy x = grundy y ↔ x ≈ y := by
   rw [grundy_eq_iff_equiv_nim, (nim_grundy_equiv _).antisymmRel_congr_right]
 
+alias ⟨_, grundy_congr⟩ := grundy_eq_iff_equiv
+
 @[simp] theorem grundy_nim (o : Nimber) : grundy (nim o) = o := grundy_eq .rfl
 @[simp] theorem grundy_zero : grundy 0 = 0 := by simpa using grundy_nim 0
 @[simp] theorem grundy_star : grundy ⋆ = 1 := by simpa using grundy_nim 1
@@ -182,13 +312,57 @@ theorem _root_.IGame.nim_add_equiv (a b : Nimber) : nim a + nim b ≈ nim (a + b
   exact (nim_grundy_equiv _).symm
 
 theorem grundy_moves_ne {p : Player} {x y : IGame} [WeaklyImpartial x] (hy : y ∈ x.moves p) :
-    have := WeaklyImpartial.of_mem_moves hy; grundy y ≠ grundy x := by
+    haveI := WeaklyImpartial.of_mem_moves hy; grundy y ≠ grundy x := by
   cases p with
   | left =>
     simp_rw [← grundyFor_eq_grundy left]
     exact grundyFor_ne hy
   | right =>
     exact grundyFor_ne hy
+
+/-- A more general version of `grundyFor_def`. -/
+theorem grundy_eq_sInf_compl_grundyFor {x : IGame} {p q : Player} [WeaklyImpartial x] :
+    grundy x = sInf (grundyFor p '' x.moves q)ᶜ := by
+  rw [← grundyFor_eq_grundy q, grundyFor_def]
+  congr 2
+  ext y
+  constructor <;>
+  · rintro ⟨y, hy, rfl⟩
+    weakly_impartial
+    rw [grundyFor_eq_grundy, ← grundyFor_eq_grundy]
+    exact mem_image_of_mem _ hy
+
+private theorem sInf_compl_union_of_eq {s t : Set Nimber.{u}} [Small.{u} s] [Small.{u} t]
+    (hst : sInf sᶜ = sInf tᶜ) : sInf (s ∪ t)ᶜ = sInf sᶜ := by
+  apply le_antisymm
+  · apply csInf_le'
+    rw [compl_sup]
+    exact ⟨csInf_mem nonempty_compl_of_small, hst ▸ csInf_mem nonempty_compl_of_small⟩
+  · apply csInf_le'
+    have := csInf_mem (nonempty_compl_of_small (s := s ∪ t))
+    grind
+
+theorem WeaklyImpartial.impartialize_equiv (x : IGame) [WeaklyImpartial x] :
+    impartialize x ≈ x := by
+  rw [← grundy_eq_iff_equiv, ← grundyFor_eq_grundy left, ← grundyFor_eq_grundy left,
+    grundyFor_def, grundyFor_def, moves_impartialize]
+  have H : grundyFor left '' ⋃ p, impartialize '' moves p x = grundyFor left '' ⋃ p, moves p x := by
+    ext y
+    simp only [mem_image, mem_iUnion]
+    constructor
+    · rintro ⟨_, ⟨p, y, hy, rfl⟩, rfl⟩
+      refine ⟨_, ⟨p, hy⟩, ?_⟩
+      weakly_impartial
+      simpa using (WeaklyImpartial.impartialize_equiv y).symm
+    · rintro ⟨y, ⟨p, hy⟩, rfl⟩
+      refine ⟨_, ⟨p, y, hy, rfl⟩, ?_⟩
+      weakly_impartial
+      simpa using WeaklyImpartial.impartialize_equiv y
+  rw [H, image_iUnion, Player.iUnion_eq]
+  apply sInf_compl_union_of_eq
+  rw [← grundyFor_def, grundyFor_eq_grundy, grundy_eq_sInf_compl_grundyFor]
+termination_by x
+decreasing_by igame_wf
 
 private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
@@ -217,9 +391,9 @@ private theorem of_grundyFor_left_eq_grundyFor_right' {x : IGame}
     have := h right y hy
     exact lf_of_right_le (nim_grundy_equiv y).ge hy
 
-/-- If a game `x` has only impartial options, and its left Grundy value equals its right Grundy
-value, then it's impartial. -/
-theorem of_grundyFor_left_eq_grundyFor_right {x : IGame}
+/-- If a game `x` has only weakly impartial options, and its left Grundy value equals its
+right Grundy value, then it's weakly impartial. -/
+theorem WeaklyImpartial.of_grundyFor_left_eq_grundyFor_right {x : IGame}
     (h : ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y)
     (H : grundyFor left x = grundyFor right x) : WeaklyImpartial x :=
   have H := of_grundyFor_left_eq_grundyFor_right' h H
