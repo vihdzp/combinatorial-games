@@ -353,7 +353,7 @@ protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := b
   rw [isUnreversed_def]
   simp [IGame.zero_lt_half]
 
-@[simp] protected theorem natCast (n : Nat) : IsUnreversed n := by
+@[simp] protected theorem natCast (n : ℕ) : IsUnreversed n := by
   induction n with
   | zero => simp
   | succ n ih =>
@@ -362,7 +362,7 @@ protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := b
       Player.neg_left, moves_right_natCast, Set.forall_mem_empty, and_true]
     exact ih
 
-@[simp] protected theorem intCast (n : Int) : IsUnreversed n := by
+@[simp] protected theorem intCast (n : ℤ) : IsUnreversed n := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 @[simp] protected theorem star : IsUnreversed ⋆ := by
