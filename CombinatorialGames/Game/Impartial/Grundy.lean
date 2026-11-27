@@ -55,13 +55,13 @@ theorem moves_impartialize (x : IGame) (p : Player) :
   rw [impartialize_def, moves_ofSets]
 
 @[simp]
-theorem forall_mem_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
+theorem forall_mem_moves_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
     (∀ y ∈ x.impartialize.moves p, P y) ↔ ∀ q, ∀ y ∈ x.moves q, P (impartialize y) := by
   rw [impartialize_def]
   aesop
 
 @[simp]
-theorem exists_mem_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
+theorem exists_mem_moves_impartialize {x : IGame} {p : Player} {P : IGame → Prop} :
     (∃ y ∈ x.impartialize.moves p, P y) ↔ ∃ q, ∃ y ∈ x.moves q, P (impartialize y) := by
   rw [impartialize_def]
   aesop
@@ -78,9 +78,8 @@ protected instance Impartial.impartialize (x : IGame) : Impartial (impartialize 
     intro z hz
     have := Impartial.impartialize z
     conv_lhs => rw [← neg_eq z.impartialize, neg_inj]
-  · simp_rw [forall_mem_impartialize]
-    intro _ _ y hy
-    exact Impartial.impartialize y
+  · simp_rw [forall_mem_moves_impartialize]
+    exact fun _ _ y hy ↦ Impartial.impartialize y
 termination_by x
 decreasing_by igame_wf
 
