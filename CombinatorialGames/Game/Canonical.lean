@@ -72,6 +72,55 @@ theorem not_lt_of_mem_moves_right {x y z : IGame} (h : IsUndominated x)
     (hy : y ∈ xᴿ) (hz : z ∈ xᴿ) : ¬z < y :=
   not_lt_of_mem_moves h hy hz
 
+protected theorem neg {x : IGame} (hx : IsUndominated x) : IsUndominated (-x) := by
+  rw [isUndominated_def]
+  simp_rw [forall_mem_moves_neg]
+  refine fun p y hy ↦ ⟨.neg (.of_mem_moves hy hx), fun z hz ↦ ?_⟩
+  cases p <;> simpa using hx.not_lt_of_mem_moves hy hz
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem neg_iff {x : IGame} : IsUndominated (-x) ↔ IsUndominated x :=
+  ⟨by simpa using IsUndominated.neg (x := -x), .neg⟩
+
+@[simp]
+protected theorem natCast (n : ℕ) : IsUndominated n := by
+  rw [isUndominated_def]
+  intro p y hy
+  obtain ⟨m, hm, rfl⟩ := eq_natCast_of_mem_moves_natCast hy
+  refine ⟨.natCast m, fun z hz ↦ ?_⟩
+  rw [subsingleton_moves_natCast hy hz]
+  cases p <;> exact lt_irrefl z
+
+@[simp]
+protected theorem intCast (n : ℤ) : IsUndominated n := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
+
+protected theorem zero : IsUndominated 0 := by
+  simpa using IsUndominated.natCast 0
+
+@[simp]
+protected theorem one : IsUndominated 1 := by
+  simpa using IsUndominated.natCast 1
+
+@[simp]
+protected theorem half : IsUndominated half := by
+  rw [isUndominated_def]
+  simpa using IsUndominated.zero
+
+@[simp]
+protected theorem _root_.IGame.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
+    IsUndominated x := by
+  rw [isUndominated_def]
+  intro p y hy
+  weakly_impartial
+  refine ⟨WeaklyImpartial.isUndominated y, fun z hz ↦ ?_⟩
+  weakly_impartial
+  cases p <;> simp
+termination_by x
+decreasing_by igame_wf
+
 end IsUndominated
 
 /-- Hereditarily undominating a game. This returns garbage values on non-short games. -/
@@ -243,8 +292,6 @@ theorem isUndominated_iff_undominate_eq {x : IGame} : IsUndominated x ↔ x.undo
   refine ⟨IsUndominated.undominate_eq, fun hx ↦ ?_⟩
   rw [← hx]
   exact .undominate x
-
-theorem undominate_undominate (x : IGame) : x.undominate.undominate = x.undominate := by simp
 
 
 /-! ### Unreversing games -/
