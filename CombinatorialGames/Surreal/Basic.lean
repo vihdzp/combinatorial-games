@@ -417,7 +417,7 @@ protected theorem _root_.IGame.Numeric.exists_between
 
 end Surreal
 
-section number_avoid
+section NumberAvoid
 
 /-! ### Number avoidance -/
 
@@ -448,6 +448,6 @@ theorem Numeric.exists_right_le_of_lf_of_notMem {x y : IGame} [y.Numeric]
   exact Set.mem_range_self (-z)
 
 end IGame
-end number_avoid
+end NumberAvoid
 
 end
