@@ -424,7 +424,7 @@ section number_avoid
 namespace IGame
 
 theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
-    (h : ¬y ≤ x) (hy : .mk y ∉ Set.range Surreal.toGame) : ∃ z ∈ yᴸ, x ≤ z := by
+    (h : x ⧏ y) (hy : .mk y ∉ Set.range Surreal.toGame) : ∃ z ∈ yᴸ, x ≤ z := by
   induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
   rw [lf_iff_exists_le] at h
   rcases h with h | ⟨z, hzx, hzy⟩
