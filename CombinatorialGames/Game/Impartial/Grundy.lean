@@ -114,20 +114,13 @@ decreasing_by igame_wf
 @[simp]
 theorem impartialize_add (x y : IGame) :
     impartialize (x + y) = impartialize x + impartialize y := by
-  apply Impartial.ext left
-  simp only [moves_impartialize, moves_add, image_iUnion, ← iUnion_union_distrib, image_union]
-  congr! 3 with p <;>
-  · ext z
-    constructor
-    · rintro ⟨_, ⟨z, hz, rfl⟩, rfl⟩
-      rw [impartialize_add]
-      exact ⟨_, mem_image_of_mem _ hz, rfl⟩
-    · rintro ⟨_, ⟨z, hz, rfl⟩, rfl⟩
-      dsimp
-      rw [← impartialize_add]
-      exact ⟨_, mem_image_of_mem _ hz, rfl⟩
-termination_by (x, y)
-decreasing_by igame_wf
+  induction x using IGame.moveRecOn generalizing y with | ind x ihx
+  induction y using IGame.moveRecOn with | ind y ihy
+  refine IGame.ext fun p => ?_
+  simp only [moves_impartialize, moves_add, Set.image_union, Set.image_iUnion,
+    ← Set.iUnion_union_distrib, Set.image_image]
+  refine iUnion_congr fun q => ?_
+  rw [Set.image_congr fun z hz => ihx q z hz y, Set.image_congr (ihy q)]
 
 @[simp]
 theorem impartialize_sub (x y : IGame) :
