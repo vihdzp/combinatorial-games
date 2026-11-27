@@ -220,11 +220,6 @@ theorem IsOmnific.natOrdinal (x : NatOrdinal) : IsOmnific x := by
   rwa [← NatOrdinal.toSurreal_one, ← NatOrdinal.toSurreal_add, NatOrdinal.toSurreal.lt_iff_lt,
     Order.lt_add_one_iff, ← birthday_toSurreal x] at hz
 
-/-- This seemingly innocuous theorem seems to require the result that any surreal is at distance at
-most 1 from an omnific integer, which itself seems to require the characterization in the module
-docstring. -/
-proof_wanted IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific
-
 /-- The subring of `IsOmnific` surreal numbers. -/
 private def omnificSubring : Subring Surreal where
   carrier := {x | IsOmnific x}
@@ -293,7 +288,7 @@ def _root_.NatOrdinal.toOmnific : NatOrdinal →+*o Omnific where
   map_mul' _ _ := by ext; simp
   monotone' _ := by simp [← Omnific.coe_le_coe]
 
-@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := rfl
+@[simp] theorem NatOrdinal.coe_toOmnific (x : NatOrdinal) : x.toOmnific = x.toSurreal := (rfl)
 
 @[simp] theorem IsOmnific.natCast (n : ℕ) : IsOmnific n := (n : Omnific).prop
 @[simp] theorem IsOmnific.intCast (n : ℤ) : IsOmnific n := (n : Omnific).prop
@@ -315,6 +310,11 @@ theorem isOmnific_ratCast_iff {q : ℚ} : IsOmnific q ↔ q ∈ range ((↑) : �
   rw [← Real.toSurreal_ratCast, isOmnific_realCast_iff]
   refine exists_congr fun _ ↦ ?_
   norm_cast
+
+/-- This seemingly innocuous theorem seems to require the result that any surreal is at distance at
+most 1 from an omnific integer, which itself seems to require the characterization in the module
+docstring. -/
+proof_wanted IsOmnific.round (x : Surreal) : (x.round 1).IsOmnific
 
 instance : SuccOrder Omnific :=
   fast_instance% .ofCore (fun x ↦ x + 1) (by
