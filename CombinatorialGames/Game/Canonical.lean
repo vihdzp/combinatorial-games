@@ -98,7 +98,6 @@ protected theorem natCast (n : ℕ) : IsUndominated n := by
 protected theorem intCast (n : ℤ) : IsUndominated n := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
-@[simp]
 protected theorem zero : IsUndominated 0 := by
   simpa using IsUndominated.natCast 0
 
@@ -109,7 +108,7 @@ protected theorem one : IsUndominated 1 := by
 @[simp]
 protected theorem half : IsUndominated half := by
   rw [isUndominated_def]
-  simp
+  simpa using IsUndominated.zero
 
 @[simp]
 protected theorem _root_.IGame.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
