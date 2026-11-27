@@ -434,7 +434,7 @@ theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
   exact ⟨w, hwy, (Numeric.lt_right hzx).le.trans hzw⟩
 
 theorem Numeric.exists_right_le_of_lf_of_notMem {x y : IGame} [y.Numeric]
-    (h : ¬y ≤ x) (hx : .mk x ∉ Set.range Surreal.toGame) : ∃ z ∈ xᴿ, z ≤ y := by
+    (h : x ⧏ y) (hx : .mk x ∉ Set.range Surreal.toGame) : ∃ z ∈ xᴿ, z ≤ y := by
   rw [← IGame.neg_le_neg_iff] at h
   suffices hnx : Game.mk (-x) ∉ Set.range Surreal.toGame by
     simpa using Numeric.exists_le_left_of_lf_of_notMem h hnx
