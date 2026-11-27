@@ -275,6 +275,8 @@ def toGameAddHom : Surreal →+o Game where
   map_add' := by rintro ⟨_⟩ ⟨_⟩; rfl
   monotone' := toGame.monotone
 
+@[simp] theorem coe_toGameAddHom : ⇑toGameAddHom = ⇑toGame := rfl
+
 @[simp]
 theorem toGame_add (x y : Surreal) : toGame (x + y) = toGame x + toGame y :=
   toGameAddHom.map_add x y
@@ -414,4 +416,38 @@ protected theorem _root_.IGame.Numeric.exists_between
   refine ⟨z.out, inferInstance, ?_, ?_⟩ <;> simpa [← Surreal.mk_lt_mk]
 
 end Surreal
+
+section NumberAvoid
+
+/-! ### Number avoidance -/
+
+namespace IGame
+
+/-- The weak **number avoidance theorem**: if `x` is numeric and `y` is not equivalent to a number,
+then the winning move in `x ⧏ y` is in `y`. -/
+theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
+    (h : x ⧏ y) (hy : .mk y ∉ Set.range Surreal.toGame) : ∃ z ∈ yᴸ, x ≤ z := by
+  induction x using IGame.moveRecOn generalizing ‹x.Numeric› with | ind x ih
+  rw [lf_iff_exists_le] at h
+  rcases h with h | ⟨z, hzx, hzy⟩
+  · exact h
+  numeric
+  obtain ⟨w, hwy, hzw⟩ := ih .right z hzx fun hyz => hy ⟨.mk z, Game.mk_eq_mk.2 ⟨hzy, hyz⟩⟩
+  exact ⟨w, hwy, (Numeric.lt_right hzx).le.trans hzw⟩
+
+/-- The weak **number avoidance theorem**: if `y` is numeric and `x` is not equivalent to a number,
+then the winning move in `x ⧏ y` is in `x`. -/
+theorem Numeric.exists_right_le_of_lf_of_notMem {x y : IGame} [y.Numeric]
+    (h : x ⧏ y) (hx : .mk x ∉ Set.range Surreal.toGame) : ∃ z ∈ xᴿ, z ≤ y := by
+  rw [← IGame.neg_le_neg_iff] at h
+  suffices hnx : Game.mk (-x) ∉ Set.range Surreal.toGame by
+    simpa using Numeric.exists_le_left_of_lf_of_notMem h hnx
+  intro ⟨z, hz⟩
+  apply hx
+  rw [← neg_neg x, Game.mk_neg, ← hz, ← Surreal.toGame_neg]
+  exact Set.mem_range_self (-z)
+
+end IGame
+end NumberAvoid
+
 end
