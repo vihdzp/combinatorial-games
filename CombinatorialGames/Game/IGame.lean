@@ -649,6 +649,10 @@ protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
   simpa using @IGame.neg_lt_neg_iff (-x) y
 
 @[simp]
+protected theorem neg_playerLE_neg_iff {p : Player} {x y : IGame} : p.LE (-x) (-y) ↔ p.LE y x := by
+  cases p <;> exact IGame.neg_le_neg_iff
+
+@[simp]
 theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
 

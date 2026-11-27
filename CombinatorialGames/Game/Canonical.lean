@@ -249,5 +249,98 @@ theorem isUndominated_iff_undominate_eq {x : IGame} : IsUndominated x ↔ x.undo
 
 theorem undominate_undominate (x : IGame) : x.undominate.undominate = x.undominate := by simp
 
+
+/-! ### Unreversing games -/
+
+/-- A hereditarily unreversed game is one where no move is reversible, and such that every
+subposition satisfies this same property. -/
+def IsUnreversed (x : IGame) : Prop :=
+  ∀ p, ∀ y ∈ x.moves p, IsUnreversed y ∧ ∀ z ∈ y.moves (-p), ¬p.LE z x
+termination_by x
+decreasing_by igame_wf
+
+theorem isUnreversed_def {x : IGame} : IsUnreversed x ↔
+    ∀ p, ∀ y ∈ x.moves p, IsUnreversed y ∧ ∀ z ∈ y.moves (-p), ¬p.LE z x := by
+  rw [IsUnreversed]
+
+namespace IsUnreversed
+
+theorem of_mem_moves {x y : IGame} {p : Player} (hy : y ∈ x.moves p) (h : IsUnreversed x) :
+    IsUnreversed y := by
+  rw [isUnreversed_def] at h
+  exact (h p y hy).1
+
+theorem lf_of_mem_moves_of_mem_moves {x y z : IGame} {p : Player} (h : IsUnreversed x)
+    (hy : y ∈ x.moves p) (hz : z ∈ y.moves (-p)) : ¬p.LE z x := by
+  rw [isUnreversed_def] at h
+  exact (h p y hy).2 z hz
+
+theorem lf_of_mem_moves_left_of_mem_moves_right {x y z : IGame} (h : IsUnreversed x)
+    (hy : y ∈ xᴸ) (hz : z ∈ yᴿ) : x ⧏ z :=
+  lf_of_mem_moves_of_mem_moves h hy hz
+
+theorem lf_of_mem_moves_right_of_mem_moves_left {x y z : IGame} (h : IsUnreversed x)
+    (hy : y ∈ xᴿ) (hz : z ∈ yᴸ) : z ⧏ x :=
+  lf_of_mem_moves_of_mem_moves h hy hz
+
+protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := by
+  induction x using IGame.moveRecOn with | ind x ih
+  rw [isUnreversed_def]
+  intro p
+  rw [forall_mem_moves_neg]
+  intro y hy
+  refine ⟨ih (-p) y hy (.of_mem_moves hy hx), ?_⟩
+  rw [forall_mem_moves_neg]
+  intro z hz
+  rw [IGame.neg_playerLE_neg_iff, ← Player.neg_le_iff_swap]
+  exact hx.lf_of_mem_moves_of_mem_moves hy hz
+
+@[simp] protected theorem neg_iff {x : IGame} : IsUnreversed (-x) ↔ IsUnreversed x :=
+  ⟨fun h => neg_neg x ▸ h.neg, .neg⟩
+
+@[simp] protected theorem zero : IsUnreversed 0 := by
+  rw [isUnreversed_def]
+  simp
+
+@[simp] protected theorem one : IsUnreversed 1 := by
+  rw [isUnreversed_def]
+  simp
+
+@[simp] protected theorem half : IsUnreversed ½ := by
+  rw [isUnreversed_def]
+  simp [IGame.zero_lt_half]
+
+@[simp] protected theorem natCast (n : Nat) : IsUnreversed n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [isUnreversed_def, Player.forall, moves_right_natCast, Set.forall_mem_empty,
+      and_true, Nat.cast_add_one, moves_left_natCast_succ, Set.forall_mem_singleton,
+      Player.neg_left, moves_right_natCast, Set.forall_mem_empty, and_true]
+    exact ih
+
+@[simp] protected theorem intCast (n : Int) : IsUnreversed n := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
+
+@[simp] protected theorem star : IsUnreversed ⋆ := by
+  rw [isUnreversed_def]
+  simp
+
+@[simp] protected theorem up : IsUnreversed ↑ := by
+  rw [isUnreversed_def]
+  simp [up_pos.not_ge]
+
+@[simp] protected theorem down : IsUnreversed ↓ := by
+  rw [isUnreversed_def]
+  simp [down_neg.not_ge]
+
+@[simp]
+theorem _root_.NatOrdinal.isUnreversed_toIGame (o : NatOrdinal) : IsUnreversed o.toIGame := by
+  induction o using WellFoundedLT.induction with | ind o ih
+  rw [isUnreversed_def]
+  simp +contextual [ih]
+
+end IsUnreversed
+
 end IGame
 end

@@ -157,6 +157,10 @@ theorem le_congr [Preorder α] {p : Player} {x₁ x₂ y₁ y₂ : α}
     p.LE x₁ y₁ ↔ p.LE x₂ y₂ := by
   rw [p.le_congr_left hx, p.le_congr_right hy]
 
+@[simp]
+theorem neg_le_iff_swap [LE α] {p : Player} {x y : α} : (-p).LE x y ↔ p.LE y x := by
+  cases p <;> rfl
+
 /-- A predicate for `x < y` or `y < x`, according to the player. -/
 protected abbrev LT {α : Type*} [LT α] (p : Player) (x y : α) : Prop := p.cases (x < y) (y < x)
 
