@@ -87,7 +87,6 @@ instance wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺
   rw [(hg m).2, mem_sdiff] at this
   exact this.2 h'
 
-
 /-! ### Poset game -/
 
 -- TODO: add stuff on `LGame`
