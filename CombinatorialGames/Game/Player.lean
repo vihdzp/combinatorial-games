@@ -251,7 +251,7 @@ macro "of_sets_tactic" : tactic =>
     | done
     | trivial
     | assumption
-    | aesop
+    | grind
     | fail "failed to prove sets are valid, try to use `!{st}'h` notation instead, \
 where `h` is a proof that sets are valid"
    )

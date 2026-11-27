@@ -135,17 +135,19 @@ theorem _root_.IGame.Fits.surrealBirthday_lt {x y : IGame} [Numeric x] [Numeric 
     he.trans (hw.surrealBirthday_le.trans <| birthday_mk_le _)
 
 theorem birthday_ofSets_le_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
-    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    [Small.{u} (st .left)] [Small.{u} (st .right)]
     (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) : !{st}.birthday ≤ z.birthday := by
+  generalize_proofs
   rw [ofSets_eq_mk', ← out_eq z]
   generalize_proofs
   apply IGame.Fits.surrealBirthday_le
   simp_all [IGame.Fits]
 
 theorem birthday_ofSets_lt_of_btwn' {st : Player → Set Surreal.{u}} {z : Surreal}
-    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    [Small.{u} (st .left)] [Small.{u} (st .right)]
     (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y) (h : !{st} ≠ z) :
     !{st}.birthday < z.birthday := by
+  generalize_proofs
   rw [ofSets_eq_mk', ← out_eq z]
   generalize_proofs
   apply IGame.Fits.surrealBirthday_lt
@@ -153,18 +155,17 @@ theorem birthday_ofSets_lt_of_btwn' {st : Player → Set Surreal.{u}} {z : Surre
   · rwa [← mk_eq_mk, ← ofSets_eq_mk', out_eq, eq_comm]
 
 theorem birthday_ofSets_le_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
-    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
-    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) : !{s | t}.birthday ≤ z.birthday :=
+    [Small.{u} s] [Small.{u} t] (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) :
+    !{s | t}.birthday ≤ z.birthday :=
   birthday_ofSets_le_of_btwn' hL hR
 
 theorem birthday_ofSets_lt_of_btwn {s t : Set Surreal.{u}} {z : Surreal}
-    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
-    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
+    [Small.{u} s] [Small.{u} t] (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y) (h : !{s | t} ≠ z) :
     !{s | t}.birthday < z.birthday :=
   birthday_ofSets_lt_of_btwn' hL hR h
 
 theorem ofSets_eq_of_forall_birthday_le' {st : Player → Set Surreal.{u}} {z : Surreal}
-    [Small.{u} (st .left)] [Small.{u} (st .right)] {H : ∀ x ∈ st .left, ∀ y ∈ st .right, x < y}
+    [Small.{u} (st .left)] [Small.{u} (st .right)]
     (hL : ∀ x ∈ st .left, x < z) (hR : ∀ y ∈ st .right, z < y)
     (h : ∀ w, (∀ x ∈ st .left, x < w) → (∀ y ∈ st .right, w < y) → z.birthday ≤ w.birthday) :
     !{st} = z := by
@@ -173,8 +174,7 @@ theorem ofSets_eq_of_forall_birthday_le' {st : Player → Set Surreal.{u}} {z : 
     h _ (fun x ↦ lt_ofSets_of_mem_left') (fun x ↦ ofSets_lt_of_mem_right')
 
 theorem ofSets_eq_of_forall_birthday_le {s t : Set Surreal.{u}} {z : Surreal}
-    [Small.{u} s] [Small.{u} t] {H : ∀ x ∈ s, ∀ y ∈ t, x < y}
-    (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
+    [Small.{u} s] [Small.{u} t] (hL : ∀ x ∈ s, x < z) (hR : ∀ y ∈ t, z < y)
     (h : ∀ w, (∀ x ∈ s, x < w) → (∀ y ∈ t, w < y) → z.birthday ≤ w.birthday) :
     !{s | t} = z :=
   ofSets_eq_of_forall_birthday_le' hL hR h
