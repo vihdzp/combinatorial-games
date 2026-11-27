@@ -280,8 +280,8 @@ theorem birthday_le_one {x : Surreal} : birthday x ≤ 1 ↔ x = 0 ∨ x = 1 ∨
 
 /-- This was, until recently, an open problem.
 
-See `https://github.com/gaearon/gonshor-birthday` for a proof. -/
-proof_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
+See https://github.com/gaearon/gonshor-birthday for a proof. -/
+theorem_wanted birthday_mul_le (x y : Surreal) : (x * y).birthday ≤ x.birthday * y.birthday
 
 /-- Surreals with a bounded birthday form a small set. -/
 instance small_setOfPred_birthday_le (o : NatOrdinal.{u}) : Small.{u} {x | birthday x ≤ o} := by
