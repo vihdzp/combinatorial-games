@@ -649,6 +649,14 @@ protected theorem lt_neg {x y : IGame} : x < -y ↔ y < -x := by
   simpa using @IGame.neg_lt_neg_iff (-x) y
 
 @[simp]
+protected theorem neg_playerLE_neg_iff {p : Player} {x y : IGame} : p.LE (-x) (-y) ↔ p.LE y x := by
+  cases p <;> exact IGame.neg_le_neg_iff
+
+@[simp]
+protected theorem neg_playerLT_neg_iff {p : Player} {x y : IGame} : p.LT (-x) (-y) ↔ p.LT y x := by
+  cases p <;> exact IGame.neg_lt_neg_iff
+
+@[simp]
 theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
 
@@ -996,14 +1004,20 @@ theorem moves_right_ofNat (n : ℕ) [n.AtLeastTwo] : ofNat(n)ᴿ = ∅ :=
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = !{{(n : IGame)} | ∅} := by
   ext p; cases p <;> simp
 
-/-- Every left option of a natural number is equal to a smaller natural number. -/
-theorem eq_natCast_of_mem_moves_left_natCast {n : ℕ} {x : IGame} (hx : x ∈ nᴸ) :
+theorem subsingleton_moves_natCast {n : ℕ} {p : Player} : (moves p n).Subsingleton := by
+  cases n <;> cases p <;> simp
+
+/-- Every (left) option of a natural number is equal to a smaller natural number. -/
+theorem eq_natCast_of_mem_moves_natCast {n : ℕ} {p : Player} {x : IGame} (hx : x ∈ moves p n) :
     ∃ m : ℕ, m < n ∧ m = x := by
-  cases n with
-  | zero => simp at hx
-  | succ n =>
-    use n
-    simp_all
+  cases p with
+  | right => simp at hx
+  | left =>
+    cases n with
+    | zero => simp at hx
+    | succ n =>
+      use n
+      simp_all
 
 instance : IntCast IGame where
   intCast

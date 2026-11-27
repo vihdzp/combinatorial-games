@@ -52,12 +52,10 @@ theorem zero_fuzzy_star : 0 ‖ ⋆ := ⟨star_lf_zero, zero_lf_star⟩
 @[simp] theorem not_star_equiv_zero : ¬⋆ ≈ 0 := star_fuzzy_zero.not_antisymmRel
 @[simp] theorem not_zero_equiv_star : ¬0 ≈ ⋆ := zero_fuzzy_star.not_antisymmRel
 
-@[simp, game_cmp] theorem neg_star : -⋆ = ⋆ := by simp [star]
-
 @[simp] theorem star_mul_star : ⋆ * ⋆ = ⋆ := by ext p; cases p <;> simp [mulOption]
 
 @[simp] protected instance Dicotic.star : Dicotic ⋆ := by rw [dicotic_def]; simp
-protected instance Impartial.star : WeaklyImpartial ⋆ := by rw [impartial_def]; simp
+protected instance Impartial.star : Impartial ⋆ := by rw [impartial_def]; simp [star]
 @[simp] protected instance Short.star : Short ⋆ := by rw [short_def]; simp
 @[simp] theorem not_numeric_star : ¬Numeric ⋆ := by rw [numeric_def]; simp
 
@@ -96,13 +94,13 @@ theorem zero_mem_moves_left_up : 0 ∈ ↑ᴸ := by simp
 theorem star_mem_moves_right_up : ⋆ ∈ ↑ᴿ := by simp
 
 @[simp] theorem up_pos : 0 < ↑ := by game_cmp
-theorem zero_fuzzy_up_add_star : 0 ‖ ↑ + ⋆ := by game_cmp
+theorem up_add_star_fuzzy_zero : ↑ + ⋆ ‖ 0 := by game_cmp
 theorem up_fuzzy_star : ↑ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_up : ⋆ ‖ ↑ := up_fuzzy_star.symm
 theorem star_lt_up_add_up : ⋆ < ↑ + ↑ := by game_cmp
 
 /-- The upstart equality. -/
-@[simp] theorem ofSets_zero_up : !{{0} | {↑}} ≈ ↑ + ↑ + ⋆ := by game_cmp
+theorem ofSets_zero_up : !{{0} | {↑}} ≈ ↑ + ↑ + ⋆ := by game_cmp
 
 protected instance Dicotic.up : Dicotic ↑ := by rw [dicotic_def]; simp
 protected instance Short.up : Short ↑ := by rw [short_def]; simp
@@ -114,18 +112,22 @@ def down : IGame :=
 @[inherit_doc] notation "↓" => down
 recommended_spelling "down" for "↓" in [«term↓»]
 
+@[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
+@[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
+
 @[simp, game_cmp] theorem moves_left_down : ↓ᴸ = {⋆} := moves_left_ofSets ..
 @[simp, game_cmp] theorem moves_right_down : ↓ᴿ = {0} := moves_right_ofSets ..
 
 theorem star_mem_moves_left_down : ⋆ ∈ ↓ᴸ := by simp
 theorem zero_mem_moves_right_down : 0 ∈ ↓ᴿ := by simp
 
-@[simp, game_cmp] theorem neg_down : -↓ = ↑ := by simp [up, down]
-@[simp, game_cmp] theorem neg_up : -↑ = ↓ := by simp [up, down]
-
 @[simp] theorem down_neg : ↓ < 0 := by game_cmp
+theorem down_add_star_fuzzy_zero : ↓ + ⋆ ‖ 0 := by game_cmp
 theorem down_fuzzy_star : ↓ ‖ ⋆ := by game_cmp
 theorem star_fuzzy_down : ⋆ ‖ ↓ := down_fuzzy_star.symm
+theorem down_add_down_lt_star : ↓ + ↓ < ⋆ := by game_cmp
+
+theorem ofSets_down_zero : !{{↓} | {0}} ≈ ↓ + ↓ + ⋆ := by game_cmp
 
 protected instance Dicotic.down : Dicotic ↓ := by rw [dicotic_def]; simp
 protected instance Short.down : Short ↓ := by rw [short_def]; simp

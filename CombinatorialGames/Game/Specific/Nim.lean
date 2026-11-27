@@ -111,18 +111,8 @@ theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
   rw [birthday_nim]
 termination_by o
 
-@[simp, game_cmp]
-theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  GameGraph.neg_toIGame rfl ..
-
--- TODO: strengthen to `Impartial`
-protected instance WeaklyImpartial.nim (o : Nimber) : WeaklyImpartial (nim o) :=
-  GameGraph.weaklyImpartial_toIGame rfl ..
-
-protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
-  rw [dicotic_def]
-  simpa using fun a ha ↦ .nim a
-termination_by o
+protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
+  GameGraph.impartial_toIGame rfl ..
 
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
   WeaklyImpartial.fuzzy_of_mem_moves (mem_moves_nim_of_lt default h)

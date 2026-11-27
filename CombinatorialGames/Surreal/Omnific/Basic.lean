@@ -46,6 +46,7 @@ def round (x r : Surreal) : Surreal :=
 theorem round_of_pos {x r : Surreal} (hr : 0 < r) : x.round r = !{{x - r} | {x + r}} :=
   dite_eq_left hr
 
+@[simp]
 theorem round_of_nonpos {x r : Surreal} (hr : r ≤ 0) : x.round r = x :=
   dite_eq_right hr.not_gt
 
@@ -126,8 +127,10 @@ theorem round_sub_of_eq {x y r : Surreal} (hx : x.round r = x) (hy : y.round r =
   rw [sub_eq_add_neg, round_add_of_eq hx]
   rw [round_neg, hy]
 
-theorem round_mul_of_eq {x y r : Surreal} (h : 0 < r) (hx : x.round r = x) (hy : y.round r = y) :
+theorem round_mul_of_eq {x y r : Surreal} (h : 0 ≤ r) (hx : x.round r = x) (hy : y.round r = y) :
     (x * y).round (r * r) = x * y := by
+  obtain rfl | h := h.eq_or_lt
+  · simp
   have h' : 0 < r * r := mul_self_pos.2 h.ne'
   cases x with | mk x
   cases y with | mk y
@@ -176,7 +179,7 @@ theorem IsOmnific.sub {x y : Surreal}
 
 theorem IsOmnific.mul {x y : Surreal}
     (hx : IsOmnific x) (hy : IsOmnific y) : IsOmnific (x * y) := by
-  simpa [IsOmnific] using round_mul_of_eq zero_lt_one hx hy
+  simpa [IsOmnific] using round_mul_of_eq zero_le_one hx hy
 
 theorem isOmnific_add_iff_left {x y : Surreal} (hy : IsOmnific y) :
     IsOmnific (x + y) ↔ IsOmnific x where
