@@ -653,6 +653,10 @@ protected theorem neg_playerLE_neg_iff {p : Player} {x y : IGame} : p.LE (-x) (-
   cases p <;> exact IGame.neg_le_neg_iff
 
 @[simp]
+protected theorem neg_playerLT_neg_iff {p : Player} {x y : IGame} : p.LT (-x) (-y) ↔ p.LT y x := by
+  cases p <;> exact IGame.neg_lt_neg_iff
+
+@[simp]
 theorem neg_equiv_neg_iff {x y : IGame} : -x ≈ -y ↔ x ≈ y := by
   simp [AntisymmRel, and_comm]
 
