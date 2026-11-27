@@ -111,6 +111,7 @@ protected theorem half : IsUndominated half := by
   rw [isUndominated_def]
   simp
 
+@[simp]
 protected theorem _root_.IGame.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
     IsUndominated x := by
   rw [isUndominated_def]
@@ -296,18 +297,6 @@ theorem isUndominated_iff_undominate_eq {x : IGame} : IsUndominated x ↔ x.undo
   refine ⟨IsUndominated.undominate_eq, fun hx ↦ ?_⟩
   rw [← hx]
   exact .undominate x
-
-theorem undominate_undominate (x : IGame) : x.undominate.undominate = x.undominate := by simp
-
-theorem undominate_zero : undominate 0 = 0 := by simp
-theorem undominate_one : undominate 1 = 1 := by simp
-theorem undominate_natCast (n : ℕ) : undominate n = n := by simp
-theorem undominate_intCast (n : ℤ) : undominate n = n := by simp
-theorem undominate_half : undominate ½ = ½ := by simp
-
-@[simp]
-theorem WeaklyImpartial.undominate_eq (x : IGame) [x.WeaklyImpartial] : undominate x = x :=
-  (WeaklyImpartial.isUndominated x).undominate_eq
 
 end IGame
 end
