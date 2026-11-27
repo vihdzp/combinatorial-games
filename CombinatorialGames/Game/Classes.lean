@@ -439,7 +439,7 @@ protected theorem neg_iff {x : IGame} : Impartial (-x) ↔ Impartial x :=
 protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
   apply mk
   · simp [add_comm]
-  · simp_rw [forall_moves_add]
+  · simp_rw [forall_mem_moves_add]
     intro p
     constructor
     all_goals intro z hz; impartial; exact .add ..
@@ -449,10 +449,10 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
 
-protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x * y) := by
+protected instance mul (x y : IGame) [Impartial x] : Impartial (x * y) := by
   apply mk
   · simp [← neg_mul]
-  · simp_rw [forall_moves_mul, mulOption]
+  · simp_rw [forall_mem_moves_mul, mulOption]
     intro p q a ha b hb
     impartial
     have := Impartial.mul a y
@@ -462,8 +462,16 @@ protected instance mul (x y : IGame) [Impartial x] [Impartial y] : Impartial (x 
 termination_by (x, y)
 decreasing_by igame_wf
 
+protected instance mul' (x y : IGame) [Impartial y] : Impartial (x * y) := by
+  rw [mul_comm]
+  infer_instance
+
 protected instance mulOption (x y a b : IGame)
-    [Impartial x] [Impartial y] [Impartial a] [Impartial b] : Impartial (mulOption x y a b) :=
+    [Impartial x] [Impartial a] : Impartial (mulOption x y a b) :=
+  .sub ..
+
+protected instance mulOption' (x y a b : IGame)
+    [Impartial y] [Impartial b] : Impartial (mulOption x y a b) :=
   .sub ..
 
 open Pointwise in
