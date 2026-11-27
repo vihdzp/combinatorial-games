@@ -475,13 +475,13 @@ theorem left_lf {x y : IGame} (h : y ∈ xᴸ) : y ⧏ x :=
 theorem lf_right {x y : IGame} (h : y ∈ xᴿ) : x ⧏ y :=
   lf_of_right_le le_rfl h
 
-theorem le_of_forall_moves_right_lf {x y : IGame}
+theorem le_of_forall_mem_moves_right_lf {x y : IGame}
     (hx : ∀ z ∈ yᴿ, x ⧏ z) (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) : x ≤ y := by
   refine le_iff_forall_lf.2 ⟨fun z hz ↦ ?_, hx⟩
   obtain ⟨w, hw, hw'⟩ := hl z hz
   exact mt hw'.trans' (left_lf hw)
 
-theorem le_of_forall_moves_left_lf {x y : IGame}
+theorem le_of_forall_mem_moves_left_lf {x y : IGame}
     (hx : ∀ z ∈ yᴸ, z ⧏ x) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : y ≤ x := by
   refine le_iff_forall_lf.2 ⟨hx, fun z hz ↦ ?_⟩
   obtain ⟨w, hw, hw'⟩ := hr z hz
@@ -616,19 +616,19 @@ theorem moves_neg (p : Player) (x : IGame) :
   rw [neg_eq', moves_ofSets]
 
 @[game_cmp]
-theorem forall_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
+theorem forall_mem_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
     (∀ y ∈ (-x).moves p, P y) ↔ (∀ y ∈ x.moves (-p), P (-y)) := by
   simp
 
 @[game_cmp]
-theorem exists_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
+theorem exists_mem_moves_neg {P : IGame → Prop} {p : Player} {x : IGame} :
     (∃ y ∈ (-x).moves p, P y) ↔ (∃ y ∈ x.moves (-p), P (-y)) := by
   simp
 
 @[simp]
 protected theorem neg_le_neg_iff {x y : IGame} : -x ≤ -y ↔ y ≤ x := by
   induction x, y using Sym2.GameAdd.recursion wellFounded_subposition with | _ x y IH
-  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_moves_neg, forall_moves_neg]
+  rw [le_iff_forall_lf, le_iff_forall_lf, and_comm, forall_mem_moves_neg, forall_mem_moves_neg]
   dsimp
   congr! 3 with z hz z hz
   · rw [IH _ _ (Sym2.GameAdd.fst_snd (.of_mem_moves hz))]
@@ -731,13 +731,13 @@ theorem add_right_mem_moves_add {p : Player} {x y : IGame} (h : x ∈ y.moves p)
   rw [moves_add]; left; use x
 
 @[game_cmp]
-theorem forall_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
+theorem forall_mem_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x + y).moves p, P a) ↔
       (∀ a ∈ x.moves p, P (a + y)) ∧ (∀ b ∈ y.moves p, P (x + b)) := by
   rw [moves_add, Set.forall_mem_union, Set.forall_mem_image, Set.forall_mem_image]
 
 @[game_cmp]
-theorem exists_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
+theorem exists_mem_moves_add {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x + y).moves p, P a) ↔
       (∃ a ∈ x.moves p, P (a + y)) ∨ (∃ b ∈ y.moves p, P (x + b)) := by
   rw [moves_add, Set.exists_mem_union, Set.exists_mem_image, Set.exists_mem_image]
@@ -1124,7 +1124,7 @@ theorem mulOption_mem_moves_mul {px py : Player} {x y a b : IGame}
   rw [moves_mul]; use (a, b); cases px <;> cases py <;> simp_all
 
 @[game_cmp]
-theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
+theorem forall_mem_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∀ a ∈ (x * y).moves p, P a) ↔
       (∀ p', ∀ a ∈ x.moves p', ∀ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
   rw [moves_mul, forall_mem_image, forall_mem_union]
@@ -1132,7 +1132,7 @@ theorem forall_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
   grind only
 
 @[game_cmp]
-theorem exists_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
+theorem exists_mem_moves_mul {p : Player} {P : IGame → Prop} {x y : IGame} :
     (∃ a ∈ (x * y).moves p, P a) ↔
       (∃ p', ∃ a ∈ x.moves p', ∃ b ∈ y.moves (p' * p), P (mulOption x y a b)) := by
   rw [moves_mul, exists_mem_image, exists_mem_union]

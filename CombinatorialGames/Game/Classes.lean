@@ -117,7 +117,7 @@ protected instance add (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) :
   apply mk
   · simp [moves_eq_empty_iff left right]
   · intro p
-    rw [forall_moves_add]
+    rw [forall_mem_moves_add]
     refine ⟨?_, ?_⟩
     all_goals
       intro z hz
@@ -298,7 +298,7 @@ protected instance add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
   apply mk
   · rw [neg_add]
     exact add_congr (NegSelfEquiv.neg_equiv x) (NegSelfEquiv.neg_equiv y)
-  · simp_rw [forall_moves_add]
+  · simp_rw [forall_mem_moves_add]
     intro p
     constructor
     all_goals intro z hz; weakly_impartial; exact .add ..
@@ -479,7 +479,7 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @left_lt_right x <;> simp_all
-  · simp_rw [forall_moves_neg]
+  · simp_rw [forall_mem_moves_neg]
     intro p y hy
     numeric
     simpa using Numeric.neg y
@@ -600,7 +600,7 @@ protected instance one : Short 1 := by
 protected instance neg (x : IGame) [Short x] : Short (-x) := by
   refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · rw [forall_moves_neg]
+  · rw [forall_mem_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
 termination_by x
@@ -613,7 +613,7 @@ theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
   refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
-  · rw [forall_moves_add]
+  · rw [forall_mem_moves_add]
     constructor
     all_goals intro z hz; short; exact Short.add ..
 termination_by (x, y)
@@ -638,7 +638,7 @@ protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
   · simpa [Set.image_union] using
       ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
         (finite_moves _ x).image2 _ (finite_moves _ y)⟩
-  · rw [forall_moves_mul]
+  · rw [forall_mem_moves_mul]
     intro p' a ha b hb
     replace ha := Short.of_mem_moves ha
     replace hb := Short.of_mem_moves hb

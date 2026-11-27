@@ -78,24 +78,24 @@ theorem fits_congr {x y z : IGame} (h : x ≈ y) : x.Fits z ↔ y.Fits z :=
   ⟨.congr h, .congr h.symm⟩
 
 /-- A variant of the **simplicity theorem** with hypotheses that are easier to show. -/
-theorem Fits.equiv_of_forall_moves {x y : IGame} (hx : x.Fits y)
+theorem Fits.equiv_of_forall_mem_moves {x y : IGame} (hx : x.Fits y)
     (hl : ∀ z ∈ xᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ xᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  ⟨le_of_forall_moves_right_lf hx.2 hl, le_of_forall_moves_left_lf hx.1 hr⟩
+  ⟨le_of_forall_mem_moves_right_lf hx.2 hl, le_of_forall_mem_moves_left_lf hx.1 hr⟩
 
 /-- A variant of the **simplicity theorem** which replaces one of the games by another whose moves
 are easier to enumerate. -/
-theorem Fits.equiv_of_forall_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a) (hx : x.Fits y)
-    (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
-  h.trans <| Fits.equiv_of_forall_moves (hx.congr h) hl hr
+theorem Fits.equiv_of_forall_mem_moves_of_equiv {x y : IGame} (a : IGame) (h : x ≈ a)
+    (hx : x.Fits y) (hl : ∀ z ∈ aᴸ, ∃ w ∈ yᴸ, z ≤ w) (hr : ∀ z ∈ aᴿ, ∃ w ∈ yᴿ, w ≤ z) : x ≈ y :=
+  h.trans <| Fits.equiv_of_forall_mem_moves (hx.congr h) hl hr
 
 /-- A variant of the **simplicity theorem**: if a numeric game `x` fits within a game `y`, but none
 of its options do, then `x ≈ y`.
 
-Note that under most circumstances, `Fits.equiv_of_forall_moves` is easier to use. -/
+Note that under most circumstances, `Fits.equiv_of_forall_mem_moves` is easier to use. -/
 theorem Fits.equiv_of_forall_not_fits {x y : IGame} [Numeric x] (hx : x.Fits y)
     (h : ∀ p, ∀ z ∈ x.moves p, ¬ z.Fits y) : x ≈ y := by
   simp_rw [not_fits_iff] at h
-  apply hx.equiv_of_forall_moves
+  apply hx.equiv_of_forall_mem_moves
   · refine fun z hz ↦ (h _ z hz).resolve_right ?_
     rintro ⟨w, hw, hwz⟩
     exact hx.2 w hw <| hwz.trans (Numeric.left_lt hz).le
