@@ -157,6 +157,7 @@ theorem _root_.IGame.exists_right_le_of_surrealBirthday_le {x y : IGame} [Numeri
   exact Fits.surrealBirthday_lt ⟨fun z hz hxz ↦ left_lf hz (h.le.trans hxz), hxy⟩
     h.not_antisymmRel_symm
 
+/-- Among all numeric games, unreversed games minimize the birthday in their equivalence class. -/
 theorem _root_.IGame.IsUnreversed.birthday_le_of_numeric {x y : IGame} [Numeric x] [Numeric y]
     (h : x ≈ y) (hx : IsUnreversed x) : x.birthday ≤ y.birthday := by
   by_contra! hyx
