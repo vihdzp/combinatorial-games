@@ -100,6 +100,7 @@ theorem ne_neg : ∀ {p q : Player}, p ≠ -q ↔ p = q := by decide
 theorem neg_ne : ∀ {p q : Player}, -p ≠ q ↔ p = q := by decide
 theorem neg_ne_self : ∀ (p : Player), -p ≠ p := by decide
 theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
+theorem eq_or_neg_eq : ∀ p q : Player, p = q ∨ p = -q := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide

@@ -30,6 +30,9 @@ open Pointwise in
 theorem Set.neg_iUnion {α : Type*} {ι : Sort*} [Neg α] (f : ι → Set α) : -⋃ i, f i = ⋃ i, -f i :=
   preimage_iUnion
 
+theorem Set.union_rotate {α : Type*} (a b c : Set α) : a ∪ b ∪ c = b ∪ c ∪ a := by grind
+theorem Set.union_rotate' {α : Type*} (a b c : Set α) : a ∪ (b ∪ c) = b ∪ (c ∪ a) := by grind
+
 public noncomputable section
 
 namespace IGame
@@ -99,6 +102,65 @@ theorem impartial_iff_impartialize_eq {x : IGame} : Impartial x ↔ impartialize
   refine ⟨@Impartial.impartialize_eq x, fun hx ↦ ?_⟩
   rw [← hx]
   infer_instance
+
+@[simp]
+theorem impartialize_neg (x : IGame) : impartialize (-x) = impartialize x := by
+  apply Impartial.ext left
+  simp_rw [moves_impartialize, Player.iUnion_eq, moves_neg]
+  rw [union_comm]
+  congr 1 <;> exact image_neg_of_apply_neg_eq fun y hy ↦ impartialize_neg y
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+theorem impartialize_add (x y : IGame) :
+    impartialize (x + y) = impartialize x + impartialize y := by
+  apply Impartial.ext left
+  simp only [moves_impartialize, moves_add, image_iUnion, ← iUnion_union_distrib, image_union]
+  congr! 3 with p <;>
+  · ext z
+    constructor
+    · rintro ⟨_, ⟨z, hz, rfl⟩, rfl⟩
+      rw [impartialize_add]
+      exact ⟨_, mem_image_of_mem _ hz, rfl⟩
+    · rintro ⟨_, ⟨z, hz, rfl⟩, rfl⟩
+      dsimp
+      rw [← impartialize_add]
+      exact ⟨_, mem_image_of_mem _ hz, rfl⟩
+termination_by (x, y)
+decreasing_by igame_wf
+
+@[simp]
+theorem impartialize_sub (x y : IGame) :
+    impartialize (x - y) = impartialize x - impartialize y := by
+  simp [sub_eq_add_neg]
+
+@[simp]
+theorem impartialize_mul (x y : IGame) :
+    impartialize (x * y) = impartialize x * impartialize y := by
+  apply Impartial.ext left
+  simp only [moves_impartialize, moves_mul, ← iUnion_prod, image_union, image_iUnion, iUnion_prod',
+    union_self]
+  simp_rw [Player.iUnion_eq, union_assoc]
+  nth_rw 2 [Set.union_rotate']
+  congr! <;>
+  · ext z
+    constructor
+    · rintro ⟨_, ⟨⟨a, b⟩, ⟨ha, hb⟩, rfl⟩, rfl⟩
+      refine ⟨⟨a.impartialize, b.impartialize⟩, ⟨mem_image_of_mem _ ha, mem_image_of_mem _ hb⟩, ?_⟩
+      simp only [mulOption, impartialize_add, impartialize_sub]
+      iterate 3 rw [impartialize_mul]
+    · rintro ⟨⟨_, _⟩, ⟨⟨a, ha, rfl⟩, ⟨b, hb, rfl⟩⟩, rfl⟩
+      refine ⟨_, ⟨⟨a, b⟩, ⟨ha, hb⟩, rfl⟩, ?_⟩
+      simp only [mulOption, impartialize_add, impartialize_sub]
+      iterate 3 rw [impartialize_mul]
+termination_by (x, y)
+decreasing_by igame_wf
+
+@[simp]
+theorem impartialize_mulOption (x y a b : IGame) : impartialize (mulOption x y a b) =
+    mulOption x.impartialize y.impartialize a.impartialize b.impartialize := by
+  simp [mulOption]
 
 open WeaklyImpartial
 
