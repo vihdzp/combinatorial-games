@@ -75,8 +75,7 @@ theorem not_lt_of_mem_moves_right {x y z : IGame} (h : IsUndominated x)
 protected theorem neg {x : IGame} (hx : IsUndominated x) : IsUndominated (-x) := by
   rw [isUndominated_def]
   simp_rw [forall_mem_moves_neg]
-  intro p y hy
-  refine ⟨(hx.of_mem_moves hy).neg, fun z hz ↦ ?_⟩
+  refine fun p y hy ↦ ⟨.neg (.of_mem_moves hy hx), fun z hz ↦ ?_⟩
   cases p <;> simpa using hx.not_lt_of_mem_moves hy hz
 termination_by x
 decreasing_by igame_wf
