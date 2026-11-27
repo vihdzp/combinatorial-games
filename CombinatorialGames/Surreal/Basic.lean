@@ -418,6 +418,9 @@ protected theorem _root_.IGame.Numeric.exists_between
 end Surreal
 
 section number_avoid
+
+/-! ### Number avoidance -/
+
 namespace IGame
 
 theorem Numeric.exists_le_left_of_lf_of_notMem {x y : IGame} [x.Numeric]
