@@ -121,9 +121,7 @@ protected theorem half : IsUndominated half := by
   rw [isUndominated_def]
   simp
 
-@[simp]
 protected theorem star : IsUndominated ⋆ := by
-  rw [isUndominated_def]
   simp
 
 @[simp]
