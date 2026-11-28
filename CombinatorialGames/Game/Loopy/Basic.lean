@@ -273,8 +273,8 @@ theorem hom_unique_apply {mov : Player → α → Set α} (f g : α → LGame.{u
     exact (congrFun (hf p) y).symm
   · rw [image_image]
     exact (congrFun (hg p) y).symm
-  · rintro _ ⟨z, -, rfl⟩
-    exact ⟨z, rfl, rfl⟩
+  · rw [forall_mem_image]
+    exact fun z hz => ⟨z, rfl, rfl⟩
 
 theorem hom_unique {mov : Player → α → Set α} (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
