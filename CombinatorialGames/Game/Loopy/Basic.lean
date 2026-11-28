@@ -263,6 +263,9 @@ theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
   funext (moves_corec p mov)
 
+-- We make no use of `LGame`'s definition from a `QPF` after this point.
+attribute [irreducible] LGame
+
 theorem hom_unique_apply {mov : Player → α → Set α} (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
     (hg : ∀ p, moves p ∘ g = image g ∘ mov p) (x) : f x = g x := by
@@ -280,9 +283,6 @@ theorem hom_unique {mov : Player → α → Set α} (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
     (hg : ∀ p, moves p ∘ g = image g ∘ mov p) : f = g :=
   funext (hom_unique_apply _ _ hf hg)
-
--- We make no use of `LGame`'s definition from a `QPF` after this point.
-attribute [irreducible] LGame
 
 end corec
 
