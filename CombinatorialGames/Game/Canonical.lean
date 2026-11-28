@@ -29,10 +29,6 @@ Note that the short hypothesis is indispensible, since e.g. `undominate ω = 0`.
 Let `x` be a game. We say that `y ∈ xᴸ` is reversible through `z ∈ yᴿ` if `z ≤ x`. Intuitively,
 after Left moves to `y`, Right can revert all their progress by moving to `z`, so they might as
 well do this. Reversible moves for Right are defined analogously.
-
-## Todo
-
-Define `unreverse` and prove `unreverse x ≈ x` for **any** game.
 -/
 
 public noncomputable section
