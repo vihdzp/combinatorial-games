@@ -80,6 +80,13 @@ public theorem Relation.transGen_iff_exists {α : Type*} {r : α → α → Prop
   rw [transGen_iff]
   simp [and_or_left, exists_or, and_comm]
 
+open Pointwise in
+@[simp]
+theorem subsingleton_neg {α : Type*} [InvolutiveNeg α] {s : Set α} :
+    (-s).Subsingleton ↔ s.Subsingleton := by
+  rw [← Set.image_neg_eq_neg, Set.subsingleton_image_iff]
+  simp
+
 universe u
 
 open Set Pointwise
@@ -1004,6 +1011,7 @@ theorem moves_right_ofNat (n : ℕ) [n.AtLeastTwo] : ofNat(n)ᴿ = ∅ :=
 theorem natCast_succ_eq (n : ℕ) : (n + 1 : IGame) = !{{(n : IGame)} | ∅} := by
   ext p; cases p <;> simp
 
+@[simp]
 theorem subsingleton_moves_natCast {n : ℕ} {p : Player} : (moves p n).Subsingleton := by
   cases n <;> cases p <;> simp
 
@@ -1039,6 +1047,10 @@ theorem intCast_neg (n : ℤ) : ((-n : ℤ) : IGame) = -(n : IGame) := by
     | zero => simp
     | succ n => rfl
   | negSucc n => exact (neg_neg _).symm
+
+@[simp]
+theorem subsingleton_moves_intCast {n : ℤ} {p : Player} : (moves p n).Subsingleton := by
+  obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 theorem eq_sub_one_of_mem_moves_left_intCast {n : ℤ} {x : IGame} (hx : x ∈ nᴸ) :
     x = (n - 1 : ℤ) := by

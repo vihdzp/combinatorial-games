@@ -5,7 +5,7 @@ Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Birthday
+public import CombinatorialGames.Game.Canonical
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
@@ -127,6 +127,19 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
   rw [← NegSelfEquiv.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+
+theorem isUndominated_nim (o : Nimber) : IsUndominated (nim o) := by
+  simp
+
+@[simp]
+theorem isUnreversed_nim (o : Nimber) : IsUnreversed (nim o) := by
+  rw [isUnreversed_def]
+  simp_rw [forall_mem_moves_nim]
+  refine fun p a ha ↦ ⟨isUnreversed_nim a, fun b hb ↦ ?_⟩
+  simpa using (hb.trans ha).ne
+termination_by o
+
+@[simp] theorem isCanonical_nim (o : Nimber) : IsCanonical (nim o) := ⟨by simp, by simp⟩
 
 theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val := by
   apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
