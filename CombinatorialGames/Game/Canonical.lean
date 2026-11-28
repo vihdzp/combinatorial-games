@@ -33,6 +33,8 @@ well do this. Reversible moves for Right are defined analogously.
 
 public noncomputable section
 
+universe u
+
 namespace IGame
 
 /-! ### Undominating games -/
@@ -389,6 +391,7 @@ instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x 
   unfold reverseSet
   infer_instance
 
+open scoped Pointwise in
 theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
     -reverseSet x p z = reverseSet (-x) (-p) (-z) := by
   unfold reverseSet
@@ -432,6 +435,7 @@ private instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unrev
     exact @small_biUnion _ _ (reverseSet x p z) _ _ fun g hg =>
       @small_biUnion _ _ (g.moves p) _ _ (ih g hg)
 
+open scoped Pointwise in
 private theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
     -unreverse1 x p z = unreverse1 (-x) (-p) (-z) := by
   fun_induction unreverse1 x p z with
@@ -516,36 +520,37 @@ private theorem unreverse_equiv_aux_left (x : IGame) :
     induction z using wellFounded_subposition.induction with | _ z ih
     by_cases hx : reverseSet x left z = ∅
     · apply left_lf
-      rw [leftMoves_ofSets]
+      rw [moves_left_ofSets]
       apply hz
       rw [unreverse1_of_reverseSet_eq_empty hx, Set.mem_singleton_iff]
-    · obtain ⟨g, hg⟩ : (reverseSet x left z).Nonempty := Set.nonempty_iff_ne_empty.2 hx
+    · obtain ⟨g, hg⟩ : (reverseSet x left z).Nonempty := Set.ne_empty_iff_nonempty.1 hx
       refine lf_of_right_le (le_iff_forall_lf.2 ⟨?_, ?_⟩) hg.1
       · intro g' hg'
         refine ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) (subset_trans ?_ hz)
         rw [unreverse1_of_reverseSet_ne_empty hx]
         exact Set.subset_iUnion₂_of_subset g hg (Set.subset_biUnion_of_mem hg')
-      · rw [rightMoves_ofSets]
+      · rw [moves_right_ofSets]
         intro g' hg'
         exact fun h => lf_right hg' (h.trans hg.2)
   · intro z hz
     apply lf_right
-    rw [rightMoves_ofSets]
+    rw [moves_right_ofSets]
     exact hz
-  · rw [leftMoves_ofSets, Set.forall_mem_iUnion, Subtype.forall]
+  · rw [moves_left_ofSets, Set.forall_mem_iUnion, Subtype.forall]
     intro z hz g hg
     exact lf_of_mem_moves_of_mem_unreverse1 hz hg
-  · rw [rightMoves_ofSets]
+  · rw [moves_right_ofSets]
     intro z hz
     exact lf_right hz
 
+open scoped Pointwise in
 private theorem unreverse_equiv_aux_right (x : IGame) :
     x ≈ !{xᴸ | ⋃ z : xᴿ, unreverse1 x right z} := by
   rw [← neg_equiv_neg_iff, neg_ofSets, neg_eq]
   simp_rw [← Set.image_neg_eq_neg, Set.image_iUnion,
     Set.image_neg_eq_neg, neg_unreverse1]
   refine (unreverse_equiv_aux_left _).trans (Eq.antisymmRel ?_)
-  rw [ofSets_inj, rightMoves_ofSets, and_iff_left rfl,
+  rw [ofSets_inj, moves_right_ofSets, and_iff_left rfl,
     Player.neg_right]
   simp_rw [Set.iUnion_coe_set, ← Set.iSup_eq_iUnion]
   apply (Equiv.neg IGame).iSup_congr
@@ -564,7 +569,7 @@ theorem unreverse_equiv (x : IGame) : unreverse x ≈ x := by
   let x' := !{fun p => unreverse '' x.moves p}
   have hx'l := unreverse_equiv_aux_left x'
   have hx'r := hx'l.trans <| unreverse_equiv_aux_right _
-  simp_rw [leftMoves_ofSets, ← unreverse1_congr_left hx'l] at hx'r
+  simp_rw [moves_left_ofSets, ← unreverse1_congr_left hx'l] at hx'r
   have hx' : x' ≈ x := by
     unfold x'
     apply equiv_of_exists <;> simpa using fun z hz ↦ ⟨z, hz, ih _ z hz⟩
@@ -579,7 +584,7 @@ theorem birthday_unreverse_le (x : IGame) : birthday (unreverse x) ≤ birthday 
   simp_rw [birthday_le_iff, moves_ofSets, Set.forall_mem_iUnion]
   intro p z g hg
   exact ((birthday_le_of_wsubposition (wsubposition_of_mem_unreverse1 hg)).trans
-    (ih p z.1 z.2)).trans_lt (birthday_lt_of_mem_moves z.2)
+    (ih p z.val z.prop)).trans_lt (birthday_lt_of_mem_moves z.prop)
 
 theorem reverseSet_unreverse {x : IGame} {p : Player} {z : IGame} (hz : z ∈ (unreverse x).moves p) :
     reverseSet x p z = ∅ := by
@@ -600,8 +605,8 @@ theorem unreverse_eq_self_of_reverseSet {x : IGame}
   ext p z
   rw [moves_ofSets,
     Set.iUnion_congr fun g : x.moves p =>
-      (congrArg (unreverse1 x p) (ih p g.1 g.2)).trans
-        (unreverse1_of_reverseSet_eq_empty (hx p g.1 g.2))]
+      (congrArg (unreverse1 x p) (ih p g.val g.prop)).trans
+        (unreverse1_of_reverseSet_eq_empty (hx p g.val g.prop))]
   simp
 
 mutual
@@ -616,9 +621,9 @@ theorem unreverse_eq_self_of_mem_moves_of_unreverse_eq_self {x : IGame} {p : Pla
 termination_by (x.birthday, 0)
 decreasing_by
   · refine .left _ _ ?_
-    exact birthday_lt_of_mem_moves g.2
+    exact birthday_lt_of_mem_moves g.prop
   · refine .left _ _ ?_
-    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.2)
+    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.prop)
 
 theorem unreverse_unreverse (x : IGame) : unreverse (unreverse x) = unreverse x :=
   unreverse_eq_self_of_reverseSet
@@ -632,9 +637,9 @@ theorem unreverse_unreverse (x : IGame) : unreverse (unreverse x) = unreverse x 
 termination_by (x.birthday, 0)
 decreasing_by
   · refine .left _ _ ?_
-    exact birthday_lt_of_mem_moves g.2
+    exact birthday_lt_of_mem_moves g.prop
   · refine .left _ _ ?_
-    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.2)
+    exact (birthday_unreverse_le g).trans_lt (birthday_lt_of_mem_moves g.prop)
 
 theorem unreverse_eq_self_of_wsubposition_of_unreverse_eq_self {x z : IGame}
     (hz : WSubposition z x) (hx : unreverse x = x) : unreverse z = z :=
