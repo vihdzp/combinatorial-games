@@ -186,6 +186,10 @@ theorem not_lt (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : ¬x < y := by
   apply (lt_asymm · ?_)
   rwa [← IGame.neg_lt_neg_iff, (neg_equiv x).lt_congr (neg_equiv y)]
 
+@[simp]
+theorem not_playerLT (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] (p : Player) : ¬p.LT x y := by
+  cases p <;> simp
+
 /-- By setting `y = 0`, we find that in a self-negative game, either the first player always wins,
 or the second player always wins. -/
 theorem equiv_or_fuzzy (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : x ≈ y ∨ x ‖ y := by
@@ -209,6 +213,12 @@ theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
 
 theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
   le_iff_equiv.trans antisymmRel_comm
+
+@[simp]
+theorem playerLE_iff_equiv {p : Player} : p.LE x y ↔ x ≈ y := by
+  cases p with
+  | left => exact le_iff_equiv
+  | right => exact ge_iff_equiv
 
 theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
 theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp

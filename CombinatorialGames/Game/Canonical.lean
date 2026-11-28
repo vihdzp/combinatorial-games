@@ -97,18 +97,6 @@ protected theorem natCast (n : ℕ) : IsUndominated n := by
 protected theorem intCast (n : ℤ) : IsUndominated n := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
-protected theorem zero : IsUndominated 0 := by
-  simpa using IsUndominated.natCast 0
-
-@[simp]
-protected theorem one : IsUndominated 1 := by
-  simpa using IsUndominated.natCast 1
-
-@[simp]
-protected theorem half : IsUndominated half := by
-  rw [isUndominated_def]
-  simpa using IsUndominated.zero
-
 @[simp]
 protected theorem _root_.IGame.WeaklyImpartial.isUndominated (x : IGame) [WeaklyImpartial x] :
     IsUndominated x := by
@@ -120,6 +108,31 @@ protected theorem _root_.IGame.WeaklyImpartial.isUndominated (x : IGame) [Weakly
   cases p <;> simp
 termination_by x
 decreasing_by igame_wf
+
+protected theorem zero : IsUndominated 0 := by
+  simp
+
+@[simp]
+protected theorem one : IsUndominated 1 := by
+  simpa using IsUndominated.natCast 1
+
+@[simp]
+protected theorem half : IsUndominated half := by
+  rw [isUndominated_def]
+  simp
+
+protected theorem star : IsUndominated ⋆ := by
+  simp
+
+@[simp]
+protected theorem up : IsUndominated ↑ := by
+  rw [isUndominated_def]
+  simp
+
+@[simp]
+protected theorem down : IsUndominated ↓ := by
+  rw [isUndominated_def]
+  simp
 
 end IsUndominated
 
@@ -380,6 +393,35 @@ theorem _root_.NatOrdinal.isUnreversed_toIGame (o : NatOrdinal) : IsUnreversed o
   simp +contextual [ih]
 
 end IsUnreversed
+
+/-! ### Canonical games -/
+
+/-- A game is said to be in canonical form when it is both `IsUndominated` and `IsUnreversed`. Every
+short game is equivalent to a unique canonical game, called its canonical form.
+
+Although this notion is mostly only sensible for short games (due to the `IsUndominated`
+requirement), we don't enforce that `x` be short. This lets us state theorems such as
+`IsCanonical (nim o)` for all `o`.
+
+Note that this predicate is unrelated to the canonical forms of surreal games. -/
+structure IsCanonical (x : IGame) : Prop where
+  /-- A canonical game is hereditarily undominated. -/
+  isUndominated : IsUndominated x
+  /-- A canonical game is hereditarily unreversed. -/
+  isUnreversed : IsUnreversed x
+
+namespace IsCanonical
+
+@[simp] protected theorem zero : IsCanonical 0 := ⟨by simp, by simp⟩
+@[simp] protected theorem one : IsCanonical 1 := ⟨by simp, by simp⟩
+@[simp] protected theorem half : IsCanonical ½ := ⟨by simp, by simp⟩
+@[simp] protected theorem natCast (n : ℕ) : IsCanonical n := ⟨by simp, by simp⟩
+@[simp] protected theorem intCast (n : ℤ) : IsCanonical n := ⟨by simp, by simp⟩
+@[simp] protected theorem star : IsCanonical ⋆ := ⟨by simp, by simp⟩
+@[simp] protected theorem up : IsCanonical ↑ := ⟨by simp, by simp⟩
+@[simp] protected theorem down : IsCanonical ↓ := ⟨by simp, by simp⟩
+
+end IsCanonical
 
 end IGame
 end
