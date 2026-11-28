@@ -270,8 +270,7 @@ theorem not_lt_of_mem_moves_right_undominate {x y z : IGame} [Short x]
 theorem IsUndominated.undominate (x : IGame) : IsUndominated x.undominate := by
   rw [isUndominated_def]
   simp_rw [forall_mem_moves_undominate]
-  intro p y hy Hy
-  exact ⟨.undominate y, fun z hz _ ↦ Hy z hz⟩
+  exact fun p y _ hy => ⟨.undominate y, fun z hz _ ↦ hy z hz⟩
 termination_by x
 decreasing_by igame_wf
 
@@ -292,7 +291,6 @@ theorem isUndominated_iff_undominate_eq {x : IGame} : IsUndominated x ↔ x.undo
   refine ⟨IsUndominated.undominate_eq, fun hx ↦ ?_⟩
   rw [← hx]
   exact .undominate x
-
 
 /-! ### Unreversing games -/
 
@@ -353,16 +351,14 @@ protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := b
   rw [isUnreversed_def]
   simp [IGame.zero_lt_half]
 
-@[simp] protected theorem natCast (n : Nat) : IsUnreversed n := by
+@[simp] protected theorem natCast (n : ℕ) : IsUnreversed n := by
   induction n with
   | zero => simp
   | succ n ih =>
-    rw [isUnreversed_def, Player.forall, moves_right_natCast, Set.forall_mem_empty,
-      and_true, Nat.cast_add_one, moves_left_natCast_succ, Set.forall_mem_singleton,
-      Player.neg_left, moves_right_natCast, Set.forall_mem_empty, and_true]
-    exact ih
+    rw [isUnreversed_def, Player.forall, moves_left_natCast_succ']
+    simp [ih]
 
-@[simp] protected theorem intCast (n : Int) : IsUnreversed n := by
+@[simp] protected theorem intCast (n : ℤ) : IsUnreversed n := by
   obtain ⟨n, rfl | rfl⟩ := n.eq_nat_or_neg <;> simp
 
 @[simp] protected theorem star : IsUnreversed ⋆ := by
