@@ -5,6 +5,7 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
+public import CombinatorialGames.Game.Canonical
 public import CombinatorialGames.Mathlib.Dyadic
 public import CombinatorialGames.Surreal.Division
 
@@ -39,6 +40,12 @@ the future:
 universe u
 open IGame
 
+@[to_additive]
+theorem lt_div_self_iff {α : Type*} {x y : α} [CommGroup α] [PartialOrder α] [IsOrderedMonoid α] :
+    x < x / y ↔ y < 1 := by
+  rw [← mul_lt_mul_iff_left y]
+  simp
+
 @[expose] public section
 
 namespace Dyadic
@@ -60,6 +67,14 @@ theorem den_lower_lt {x : Dyadic} (h : x.den ≠ 1) : (lower x).den < x.den := b
 theorem den_upper_lt {x : Dyadic} (h : x.den ≠ 1) : (upper x).den < x.den := by
   rw [den, upper, toRat_mkRat]
   exact den_mkRat_lt ((odd_num h).add_odd odd_one).two_dvd h
+
+theorem den_lower_le (x : Dyadic) : (lower x).den ≤ x.den := by
+  rw [den, lower, toRat_mkRat]
+  exact den_mkRat_le _ x.den_ne_zero
+
+theorem den_upper_le (x : Dyadic) : (upper x).den ≤ x.den := by
+  rw [den, upper, toRat_mkRat]
+  exact den_mkRat_le _ x.den_ne_zero
 
 /-- An auxiliary tactic for inducting on the denominator of a `Dyadic`. -/
 macro "dyadic_wf" : tactic =>
@@ -133,6 +148,26 @@ theorem le_upper_add_of_den_ge {x y : Dyadic} (h : y.den ≤ x.den) :
     upper x + y ≤ upper (x + y) := by
   simpa [add_comm] using le_upper_add_of_den_le h
 
+theorem le_upper_lower (x : Dyadic) : x ≤ x.lower.upper := by
+  rw [← toRat_le_toRat_iff, coe_upper, coe_lower, sub_add, le_sub_self_iff, sub_nonpos,
+    inv_le_inv₀ (by positivity) (by positivity)]
+  simpa using den_lower_le x
+
+theorem lower_upper_le (x : Dyadic) : x.upper.lower ≤ x := by
+  rw [← toRat_le_toRat_iff, coe_lower, coe_upper, add_sub_assoc, add_le_iff_nonpos_right,
+    sub_nonpos, inv_le_inv₀ (by positivity) (by positivity)]
+  simpa using den_upper_le x
+
+theorem lt_upper_lower {x : Dyadic} (hx : x.den ≠ 1) : x < x.lower.upper := by
+  rw [← toRat_lt_toRat_iff, coe_upper, coe_lower, sub_add, lt_sub_self_iff, sub_neg,
+    inv_lt_inv₀ (by positivity) (by positivity)]
+  simpa using den_lower_lt hx
+
+theorem lower_upper_lt {x : Dyadic} (hx : x.den ≠ 1) : x.upper.lower < x := by
+  rw [← toRat_lt_toRat_iff, coe_lower, coe_upper, add_sub_assoc, add_lt_iff_neg_left,
+    sub_neg, inv_lt_inv₀ (by positivity) (by positivity)]
+  simpa using den_upper_lt hx
+
 theorem max_den_lower_upper {x : Dyadic} (hx : x.den ≠ 1) :
     max x.lower.den x.upper.den = x.den / 2 := by
   unfold Dyadic.den at hx ⊢
@@ -199,6 +234,14 @@ theorem toIGame_of_den_eq_one {x : Dyadic} (hx : x.den = 1) : (x : IGame) = x.nu
 theorem toIGame_of_den_ne_one {x : Dyadic} (hx : x.den ≠ 1) :
     x = !{{(lower x : IGame)} | {(upper x : IGame)}} := by
   rw [toIGame, dite_eq_right hx]
+
+@[simp]
+theorem subsingleton_moves_toIGame {x : Dyadic} {p : Player} : (moves p x).Subsingleton := by
+  by_cases hx : x.den = 1
+  · rw [toIGame_of_den_eq_one hx]
+    exact subsingleton_moves_intCast
+  · rw [toIGame_of_den_ne_one hx]
+    cases p <;> simp
 
 @[simp]
 theorem toIGame_half : half = ½ := by
@@ -343,6 +386,44 @@ theorem toIGame_equiv_toIGame {x y : Dyadic} :  (x : IGame) ≈ y ↔ x = y := b
 @[simp, norm_cast]
 theorem toIGame_inj {x y : Dyadic} : (x : IGame) = y ↔ x = y :=
   toIGameEmbedding.inj
+
+@[simp]
+theorem isUndominated_toIGame (x : Dyadic) : IsUndominated x := by
+  by_cases h : x.den = 1
+  · rw [toIGame_of_den_eq_one h]
+    exact .intCast _
+  · rw [isUndominated_def]
+    rintro (_ | _) y hy
+    · obtain ⟨y, hy⟩ := eq_lower_of_mem_moves_left_toIGame hy
+      refine ⟨isUndominated_toIGame _, fun y hy' ↦ ?_⟩
+      rw [subsingleton_moves_toIGame hy hy']
+      simp
+    · obtain ⟨y, hy⟩ := eq_upper_of_mem_moves_right_toIGame hy
+      refine ⟨isUndominated_toIGame _, fun y hy' ↦ ?_⟩
+      rw [subsingleton_moves_toIGame hy hy']
+      simp
+termination_by x.den
+decreasing_by dyadic_wf
+
+@[simp]
+theorem isUnreversed_toIGame (x : Dyadic) : IsUnreversed x := by
+  by_cases h : x.den = 1
+  · rw [toIGame_of_den_eq_one h]
+    exact .intCast _
+  · rw [isUnreversed_def]
+    rintro (_ | _) y hy
+    · obtain ⟨y, hy⟩ := eq_lower_of_mem_moves_left_toIGame hy
+      refine ⟨isUnreversed_toIGame _, fun y hy' ↦ ?_⟩
+      obtain ⟨z, hz⟩ := eq_upper_of_mem_moves_right_toIGame hy'
+      simpa using lt_upper_lower h
+    · obtain ⟨y, hy⟩ := eq_upper_of_mem_moves_right_toIGame hy
+      refine ⟨isUnreversed_toIGame _, fun y hy' ↦ ?_⟩
+      obtain ⟨z, hz⟩ := eq_lower_of_mem_moves_left_toIGame hy'
+      simpa using lower_upper_lt h
+termination_by x.den
+decreasing_by dyadic_wf
+
+@[simp] theorem isCanonical_toIGame (x : Dyadic) : IsCanonical x := ⟨by simp, by simp⟩
 
 theorem toIGame_add_equiv (x y : Dyadic) : ((x + y : Dyadic) : IGame.{u}) ≈ x + y := by
   by_cases H : x.den = 1 ∧ y.den = 1
