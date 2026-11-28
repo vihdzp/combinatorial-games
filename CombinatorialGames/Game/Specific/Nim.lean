@@ -6,11 +6,10 @@ Authors: Fox Thomson, Julia Markus Himmel, Violeta Hernández Palacios
 module
 
 public import CombinatorialGames.Game.Birthday
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import CombinatorialGames.Nimber.Basic
 
-import CombinatorialGames.Tactic.OrdinalAlias
+import CombinatorialGames.Tactic.Register
 import Mathlib.Order.Interval.Set.OrderIso
 
 /-!
@@ -59,33 +58,33 @@ theorem nim_def (o : Nimber) : nim o = !{fun _ ↦ nim '' Iio o} :=
 theorem moves_nim (p : Player) (o : Nimber) : (nim o).moves p = nim '' Iio o :=
   GameGraph.moves_toIGame ..
 
-theorem forall_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
+theorem forall_mem_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
     (∀ x ∈ (nim o).moves p, P x) ↔ (∀ a < o, P (nim a)) := by
   simp
 
-theorem exists_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
+theorem exists_mem_moves_nim {p : Player} {P : IGame → Prop} {o : Nimber} :
     (∃ x ∈ (nim o).moves p, P x) ↔ (∃ a < o, P (nim a)) := by
   simp
 
 @[game_cmp]
-theorem forall_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
+theorem forall_mem_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∀ x ∈ (nim (∗n)).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) := by
   simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
-theorem exists_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
+theorem exists_mem_moves_nim_natCast {p : Player} {P : IGame → Prop} {n : ℕ} :
     (∃ x ∈ (nim (∗n)).moves p, P x) ↔ (∃ m < n, P (nim (∗m))) := by
   simp [← of.image_Iio, ← Ordinal.natCast_image_Iio]
 
 @[game_cmp]
-theorem forall_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem forall_mem_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∀ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∀ m < n, P (nim (∗m)) :=
-  forall_moves_nim_natCast
+  forall_mem_moves_nim_natCast
 
 @[game_cmp]
-theorem exists_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
+theorem exists_mem_moves_nim_ofNat {p : Player} {P : IGame → Prop} {n : ℕ} [n.AtLeastTwo] :
     (∃ x ∈ (nim (∗ofNat(n))).moves p, P x) ↔ ∃ m < n, P (nim (∗m)) :=
-  exists_moves_nim_natCast
+  exists_mem_moves_nim_natCast
 
 theorem mem_moves_nim_of_lt {a b : Nimber} (p : Player) (h : a < b) :
     (nim a) ∈ (nim b).moves p := by
@@ -104,28 +103,19 @@ theorem nim_injective : Function.Injective nim := by
 
 @[simp]
 theorem birthday_nim (o : Nimber) : (nim o).birthday = .of o.val := by
-  rw [nim_def, birthday_ofSets_const, image_image, sSup_image']
-  -- TODO: don't abuse def-eq
-  change ⨆ a : Iio (NatOrdinal.of o.val), Order.succ (nim a.1).birthday = _
-  convert iSup_succ _ with _ x
-  cases x
-  exact birthday_nim _
+  rw [nim_def, birthday_ofSets_const, image_image]
+  conv_rhs => rw [← iSup_succ o, ← sSup_range]
+  simp_rw [val_sSup, of_preimage, NatOrdinal.of_sSup, NatOrdinal.val_preimage,
+    ← image_eq_range, image_image, OrderIso.map_succ, Order.succ_eq_add_one]
+  congr!
+  rw [birthday_nim]
 termination_by o
-
-@[simp, game_cmp]
-theorem neg_nim (o : Nimber) : -nim o = nim o :=
-  GameGraph.neg_toIGame rfl ..
 
 protected instance Impartial.nim (o : Nimber) : Impartial (nim o) :=
   GameGraph.impartial_toIGame rfl ..
 
-protected instance Dicotic.nim (o : Nimber) : Dicotic (nim o) := by
-  rw [dicotic_def]
-  simpa using fun a ha ↦ .nim a
-termination_by o
-
 private theorem nim_fuzzy_of_lt {a b : Nimber} (h : a < b) : nim a ‖ nim b :=
-  Impartial.fuzzy_of_mem_moves (mem_moves_nim_of_lt default h)
+  WeaklyImpartial.fuzzy_of_mem_moves (mem_moves_nim_of_lt default h)
 
 @[simp]
 theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
@@ -136,7 +126,7 @@ theorem nim_equiv_iff {a b : Nimber} : nim a ≈ nim b ↔ a = b := by
 
 @[simp]
 theorem nim_fuzzy_iff {a b : Nimber} : nim a ‖ nim b ↔ a ≠ b := by
-  rw [← Impartial.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
+  rw [← NegSelfEquiv.not_equiv_iff, ne_eq, not_iff_not, nim_equiv_iff]
 
 theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .of o.val := by
   apply ((Game.birthday_mk_le _).trans_eq (IGame.birthday_nim o)).antisymm
@@ -163,7 +153,7 @@ theorem _root_.Game.birthday_nim (o : Nimber) : Game.birthday (.mk (nim o)) = .o
       exact ihy k hky hk' (lf_right_of_le how hk) (hky.trans hy)
   · rw [moves_nim] at hw
     obtain ⟨o', ho', rfl⟩ := hw
-    obtain rfl := nim_equiv_iff.1 (Impartial.le_iff_equiv.1 (hxy.trans hyx))
+    obtain rfl := nim_equiv_iff.1 (NegSelfEquiv.le_iff_equiv.1 (hxy.trans hyx))
     exact iho _ ho' y ⟨hyx, hxy⟩ (birthday_lt_of_subposition hy)
 
 end IGame

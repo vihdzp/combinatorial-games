@@ -6,8 +6,9 @@ Authors: Aaron Liu
 module
 
 public import CombinatorialGames.Game.Special
-public import CombinatorialGames.Game.Specific.Nim
-public import CombinatorialGames.Tactic.GameCmp
+
+import CombinatorialGames.Game.Specific.Nim
+import CombinatorialGames.Tactic.GameCmp
 
 /-!
 # Order properties of tiny
@@ -16,7 +17,6 @@ We show that `tiny` does not have certain order properties.
 -/
 
 public section
-
 namespace IGame
 
 theorem exists_pos_fuzzy_tiny_lt : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x ‖ y ∧ ⧾x < ⧾y :=
@@ -36,3 +36,4 @@ theorem exists_pos_lt_tiny_equiv : ∃ x y : IGame, 0 < x ∧ 0 < y ∧ x < y �
   ⟨!{{0} | {⋆}}, !{{↑} | {⋆}}, by game_cmp, by game_cmp, by game_cmp, by game_cmp⟩
 
 end IGame
+end

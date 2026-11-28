@@ -7,6 +7,7 @@ module
 
 public import CombinatorialGames.SignExpansion.Basic
 public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Order.ConditionallyCompleteLattice.WithTop
 
 /-!
 # Simplicity relation
@@ -22,34 +23,40 @@ define two separate `PartialOrder` instances on the same type, we instead create
 `Simpllicity`, and declare the simplicity ordering on that.
 -/
 
-/-! ### For Mathlib -/
+-- #46150
+namespace WithTop
+variable {α : Type*}
 
-@[no_expose, implicit_reducible]
-noncomputable def BddBelow.orderBot {α : Type*} [Preorder α] (h : BddBelow (α := α) .univ) :
-    OrderBot α := by
-  choose a ha using h
-  refine { bot := a, bot_le := ?_ }
-  simpa [lowerBounds] using ha
+@[to_dual]
+theorem nonempty_preimage_some_iff {s : Set (WithTop α)} :
+    (((↑) ⁻¹' s : Set α)).Nonempty ↔ ¬ s ⊆ {⊤} := by
+  rw [Set.nonempty_preimage_iff, isCompl_range_coe.eq_compl, Set.inter_compl_nonempty_iff]
 
-theorem WithTop.isGLB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ∃ y : α, ↑y ∈ s) (hs : IsGLB ((↑) ⁻¹' s) x) : IsGLB s x := by
-  simpa [isGLB_iff_le_iff, lowerBounds, WithTop.forall, hs'] using hs
+variable [Preorder α]
 
-theorem WithTop.isLUB_of_coe_preimage {α : Type*} [PartialOrder α] {x : α} {s : Set (WithTop α)}
-    (hs' : ⊤ ∉ s) (hs : IsLUB ((↑) ⁻¹' s) x) : IsLUB s x := by
-  simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, hs'] using hs
+@[to_dual]
+theorem isGLB_sInf_of_preimage' [InfSet α] {s : Set (WithTop α)}
+    (hs : ¬ s ⊆ {⊤} → IsGLB ((↑) ⁻¹' s : Set α) (sInf ((↑) ⁻¹' s))) (hs' : BddBelow s) :
+    IsGLB s (sInf s) := by
+  by_cases h : s ⊆ {⊤}
+  · rw [sInf_eq_top_iff.2 (.inl h)]
+    exact isGLB_top_iff.2 h
+  rw [sInf_eq h hs', isGLB_coe_iff]
+  exact ⟨h, hs h⟩
 
-open Classical in
-theorem WithTop.isGLB_sInf_of_nonempty {α : Type*} [PartialOrder α] [InfSet α]
-    (h : ∀ s : Set α, s.Nonempty → IsGLB s (sInf s)) (s : Set (WithTop α)) : IsGLB s (sInf s) := by
-  change IsGLB s (dite ..)
-  let := (h _ Set.univ_nonempty).bddBelow.orderBot
-  split_ifs with hs
-  · rw [Set.subset_singleton_iff_eq] at hs
-    aesop
-  · apply isGLB_of_coe_preimage _ (h ..)
-    · simpa [WithTop.exists] using hs
-    · aesop (add simp [WithTop.exists, Set.Nonempty])
+@[to_dual]
+public theorem isLUB_sSup_of_preimage' [SupSet α] {s : Set (WithTop α)}
+    (hs : ⊤ ∉ s → BddAbove ((↑) ⁻¹' s : Set α) →
+      IsLUB ((↑) ⁻¹' s : Set α) (sSup ((↑) ⁻¹' s))) :
+    IsLUB s (sSup s) := by
+  by_cases h : ⊤ ∈ s ∨ ¬BddAbove ((↑) ⁻¹' s : Set α)
+  · rw [sSup_eq_top_iff.2 h]
+    exact isLUB_top_iff.2 h
+  push Not at h
+  rw [sSup_eq h.1 h.2, isLUB_coe_iff]
+  exact ⟨h.1, hs h.1 h.2⟩
+
+end WithTop
 
 @[expose] public noncomputable section
 
@@ -110,13 +117,13 @@ instance : Preorder Simplicity where
 theorem le_def {x y : Simplicity} : x ≤ y ↔ y.val ↾ x.val.length = x.val := .rfl
 theorem of_le_of {x y} : of x ≤ of y ↔ y ↾ x.length = x := .rfl
 
-theorem le_restrict_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdinal}
+theorem le_trunc_of_le_of_length_le {x y : Simplicity} {o : WithTop NatOrdinal}
     (h : x ≤ y) (h' : x.val.length ≤ o) : x ≤ of (val y ↾ o) := by
   simp_all [le_def]
 
 theorem apply_eq_of_le {x y : Simplicity} {o : NatOrdinal} (h : x ≤ y) (hx : x o ≠ 0) :
     x o = y o := by
-  rw [← val_apply, ← le_def.1 h, restrict_apply_of_coe_lt, val_apply]
+  rw [← val_apply, ← le_def.1 h, trunc_apply_of_coe_lt, val_apply]
   rwa [← apply_ne_zero]
 
 theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o = y o := by
@@ -124,9 +131,9 @@ theorem le_iff_forall {x y : Simplicity} : x ≤ y ↔ ∀ o, x o ≠ 0 → x o 
   ext o
   rw [eq_comm]
   obtain ho | ho := lt_or_ge (↑o) x.val.length
-  · rw [restrict_apply_of_coe_lt ho]
+  · rw [trunc_apply_of_coe_lt ho]
     exact H _ (apply_ne_zero.2 ho)
-  · rwa [restrict_apply_of_le_coe ho, apply_eq_zero]
+  · rwa [trunc_apply_of_le_coe ho, apply_eq_zero]
 
 theorem le_of_le_of_length_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z)
     (h : x.val.length ≤ y.val.length) : x ≤ y := by
@@ -141,8 +148,8 @@ theorem le_or_ge_of_le {x y z : Simplicity} (hx : x ≤ z) (hy : y ≤ z) : x �
   · exact .inl <| le_of_le_of_length_le hx hy h
   · exact .inr <| le_of_le_of_length_le hy hx h
 
-theorem of_restrict_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
-  rw [of_le_of, length_restrict, ← restrict_restrict_eq, restrict_of_length_le le_rfl]
+theorem of_trunc_le_of (x : SignExpansion) (o : WithTop NatOrdinal) : of (x ↾ o) ≤ of x := by
+  rw [of_le_of, length_trunc, ← trunc_trunc_eq, trunc_of_length_le le_rfl]
 
 theorem eq_or_length_lt_of_le {x y : Simplicity} (h : x ≤ y) :
     x = y ∨ x.val.length < y.val.length := by
@@ -184,18 +191,18 @@ private theorem sInf_eq_of_mem {s : Set Simplicity} {x : Simplicity} (hx : x ∈
   ext i
   obtain ha | ha := lt_or_ge (i : WithTop NatOrdinal)
     (sInf ((↑) '' {i | ∃ y ∈ s, ∃ z ∈ s, y i ≠ z i}))
-  · rw [restrict_apply_of_coe_lt ha, restrict_apply_of_coe_lt ha]
+  · rw [trunc_apply_of_coe_lt ha, trunc_apply_of_coe_lt ha]
     have := notMem_of_lt_csInf' ha
     grind
-  · rw [restrict_apply_of_le_coe ha, restrict_apply_of_le_coe ha]
+  · rw [trunc_apply_of_le_coe ha, trunc_apply_of_le_coe ha]
 
 theorem isGLB_sInf_of_nonempty {s : Set Simplicity} (hs : s.Nonempty) : IsGLB s (sInf s) := by
   constructor <;> intro x hx
   · rw [sInf_eq_of_mem hx]
-    exact of_restrict_le_of ..
+    exact of_trunc_le_of ..
   · obtain ⟨y, hy⟩ := hs
     rw [sInf_eq_of_mem hy]
-    apply le_restrict_of_le_of_length_le (hx hy)
+    apply le_trunc_of_le_of_length_le (hx hy)
     rw [le_sInf_iff]
     rintro i ⟨o, ⟨a, ha, b, hb, H⟩, rfl⟩
     contrapose! H
@@ -208,7 +215,10 @@ instance : SemilatticeInf Simplicity :=
 theorem sInf_pair (x y : Simplicity) : sInf {x, y} = x ⊓ y := (rfl)
 
 instance instCompleteSemilatticeInfWithTop : CompleteSemilatticeInf (WithTop Simplicity) where
-  isGLB_sInf := by exact WithTop.isGLB_sInf_of_nonempty fun _ ↦ isGLB_sInf_of_nonempty
+  isGLB_sInf s := by
+    refine WithTop.isGLB_sInf_of_preimage' (fun hs ↦ isGLB_sInf_of_nonempty ?_)
+      (OrderBot.bddBelow _)
+    rwa [WithTop.nonempty_preimage_some_iff]
 
 /-! ### Supremum -/
 
@@ -225,7 +235,7 @@ where finally
   have := H x hx ?_
   · generalize_proofs H' at this
     cases H'.choose_spec.2 this
-  · contrapose! hb
+  · contrapose hb
     exact isUpperSet_preimage_singleton_zero _ h hb
 
 @[simp]
@@ -312,12 +322,7 @@ instance : CompletePartialOrder Simplicity where
 
 open Classical in
 instance instCompleteSemilatticeSupWithTop : CompleteSemilatticeSup (WithTop Simplicity) where
-  isLUB_sSup s := by
-    change IsLUB s (dite ..)
-    split_ifs with h hs
-    · simp [isLUB_iff_le_iff, upperBounds, WithTop.forall, h]
-    · exact WithTop.isLUB_of_coe_preimage h (isLUB_sSup_of_bddAbove hs)
-    · simpa [isLUB_iff_le_iff, upperBounds, WithTop.forall, h, bddAbove_def] using hs
+  isLUB_sSup _ := WithTop.isLUB_sSup_of_preimage' fun _ ↦ isLUB_sSup_of_bddAbove
 
 instance : CompleteLattice (WithTop Simplicity) where
   __ := WithTop.instBoundedOrder

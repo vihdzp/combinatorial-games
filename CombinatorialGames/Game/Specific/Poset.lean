@@ -5,7 +5,6 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Game.Classes
 public import CombinatorialGames.Game.Graph
 public import Mathlib.Order.WellQuasiOrder
 
@@ -88,7 +87,6 @@ instance wellFounded_rel [WellQuasiOrderedLE α] : @WellFounded (Set α) (· ≺
   rw [(hg m).2, mem_sdiff] at this
   exact this.2 h'
 
-
 /-! ### Poset game -/
 
 -- TODO: add stuff on `LGame`
@@ -116,10 +114,6 @@ theorem mem_moves_toIGame_of_rel (p) {s t : Set α} (h : Rel t s) :
     toIGame t ∈ (toIGame s).moves p :=
   GameGraph.mem_moves_toIGame_of_mem h
 
-@[simp]
-protected theorem neg_toIGame (s : Set α) : -toIGame s = toIGame s :=
-  neg_toIGame rfl ..
-
 protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
   impartial_toIGame rfl ..
 
@@ -130,7 +124,7 @@ protected instance impartial_toIGame (s : Set α) : (toIGame s).Impartial :=
 a strategy stealing argument with `{⊤}ᶜ`. -/
 theorem univ_fuzzy_zero {α : Type*} [PartialOrder α] [WellQuasiOrderedLE α] [OrderTop α] :
     toIGame (@univ α) ‖ 0 := by
-  apply IGame.Impartial.fuzzy_zero_of_forall_exists
+  apply IGame.WeaklyImpartial.fuzzy_zero_of_forall_exists
     (mem_moves_toIGame_of_rel default top_compl_rel_univ)
   refine fun z hz ↦ ⟨z, ?_, by rfl⟩
   rw [moves_toIGame, mem_image] at hz ⊢

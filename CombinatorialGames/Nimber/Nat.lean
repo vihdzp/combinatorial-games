@@ -5,9 +5,10 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public import CombinatorialGames.Nimber.Basic
 public import Mathlib.Order.Lattice.Nat
+public import Mathlib.Order.SuccPred.Nat
 
+import CombinatorialGames.Nimber.Basic
 import CombinatorialGames.Tactic.OrdinalAlias
 
 /-!
@@ -22,10 +23,6 @@ alias! /-- The natural numbers, endowed with nim operations. -/ NatNimber Nat
 namespace NatNimber
 
 instance : LinearOrder NatNimber := Nat.instLinearOrder
-
-instance : Lean.ToExpr NatNimber where
-  toExpr x := .app (.const `NatNimber.of []) (Lean.toExpr x.val)
-  toTypeExpr := .const `NatNimber []
 
 instance : ToString NatNimber where
   toString x := "∗" ++ x.val.repr

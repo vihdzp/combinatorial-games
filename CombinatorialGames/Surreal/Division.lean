@@ -12,7 +12,7 @@ public import Mathlib.Algebra.Order.Ring.Unbundled.Rat
 import Mathlib.Algebra.Order.Field.Basic
 import Mathlib.Data.Rat.Cast.Order
 import Mathlib.Tactic.Abel
-import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Ring.RingNF
 
 /-!
 # Surreal division
@@ -47,7 +47,7 @@ instance {x y a : IGame} [Numeric x] [Numeric y] [Numeric y⁻¹] [Numeric a] :
   .mul ..
 
 theorem inv_pos' {x : IGame} [Numeric x⁻¹] (hx : 0 < x) : 0 < x⁻¹ :=
-  Numeric.left_lt (zero_mem_leftMoves_inv hx)
+  Numeric.left_lt (zero_mem_moves_left_inv hx)
 
 theorem mk_div' (x y : IGame) [Numeric x] [Numeric y⁻¹] :
     Surreal.mk (x / y) = Surreal.mk x * Surreal.mk y⁻¹ :=
@@ -112,11 +112,10 @@ lemma mul_inv_option_mem {x : IGame} [Numeric x] (hx : 0 < x)
     (hl : ∀ y ∈ xᴸ, 0 < y → Numeric y⁻¹) (hr : ∀ y ∈ xᴿ, Numeric y⁻¹)
     (hl' : ∀ y ∈ xᴸ, 0 < y → y * y⁻¹ ≈ 1) (hr' : ∀ y ∈ xᴿ, y * y⁻¹ ≈ 1) :
     (∀ y ∈ x⁻¹ᴸ, x * y < 1) ∧ (∀ y ∈ x⁻¹ᴿ, 1 < x * y) := by
-  suffices ∀ p y, y ∈ x⁻¹.moves p → p.cases (x * y < 1) (1 < x * y) by
-    exact ⟨this left, this right⟩
-  apply invRec (P := fun p y hy ↦ p.cases (x * y < 1) (1 < x * y)) hx
+  suffices ∀ p y, y ∈ x⁻¹.moves p → p.LT (x * y) 1 from ⟨this left, this right⟩
+  apply invRec (P := fun p y hy ↦ p.LT (x * y) 1) hx
   · simp
-  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp
+  rintro (_ | _) (_ | _) y hy hyx a ha h <;> dsimp [Player.LT]
   · numeric
     have := hr y hyx
     have := numeric_option_inv hx hl hr left a ha
@@ -171,7 +170,7 @@ lemma option_mul_inv_lt {x : IGame} [Numeric x] (hx : 0 < x)
     (∀ y ∈ (x * x⁻¹)ᴸ, y < 1) ∧ (∀ y ∈ (x * x⁻¹)ᴿ, 1 < y) := by
   have := numeric_inv hx hl hr hl' hr'
   obtain H := numeric_option_inv hx hl hr
-  rw [forall_moves_mul, forall_moves_mul]
+  rw [forall_mem_moves_mul, forall_mem_moves_mul]
   refine ⟨?_, ?_⟩ <;> rintro (_ | _)
   all_goals
     intro y hyx a ha
@@ -429,7 +428,7 @@ private theorem equiv_ratCast_of_mem_move_inv_natCast {n : ℕ} :
     rintro (_ | _) (_ | _) <;> try (· simp)
     all_goals
       dsimp
-      simp_rw [Nat.cast_add, Nat.cast_one, leftMoves_natCast_succ, forall_exists_index]
+      simp_rw [Nat.cast_add, Nat.cast_one, moves_left_natCast_succ, forall_exists_index]
       rintro _ hn rfl x hx q hq
       use (1 + -q) / n
       numeric
@@ -440,21 +439,21 @@ private theorem equiv_ratCast_of_mem_move_ratCast {q : ℚ} :
   constructor
   all_goals
     rw [ratCast_def]
-    simp only [IGame.div_eq_mul_inv, forall_moves_mul, forall_moves_mul]
+    simp only [IGame.div_eq_mul_inv, forall_mem_moves_mul, forall_mem_moves_mul]
     obtain ⟨m, n, hn, _⟩ := q
     rintro (_ | _)
     all_goals
     · intro x hx y hy
       first |
-        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_leftMoves_intCast hx |
-        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_rightMoves_intCast hx
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_moves_left_intCast hx |
+        obtain ⟨k, _, rfl⟩ := eq_intCast_of_mem_moves_right_intCast hx
       obtain ⟨q, hq⟩ := equiv_ratCast_of_mem_move_inv_natCast _ _ hy
       use k * (n : ℚ)⁻¹ + m * q - k * q
       numeric
       simp_all [mulOption, ← Surreal.mk_eq_mk]
 
 /-- Every left option of a rational number is equivalent to a smaller rational number. -/
-theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴸ) :
+theorem equiv_ratCast_of_mem_moves_left_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴸ) :
     ∃ r : ℚ, r < q ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.1 x hx
   refine ⟨r, ?_, hr⟩
@@ -463,7 +462,7 @@ theorem equiv_ratCast_of_mem_leftMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈
   simpa using Numeric.left_lt hx
 
 /-- Every right option of a rational number is equivalent to a larger rational number. -/
-theorem equiv_ratCast_of_mem_rightMoves_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴿ) :
+theorem equiv_ratCast_of_mem_moves_right_ratCast {q : ℚ} {x : IGame} (hx : x ∈ qᴿ) :
     ∃ r : ℚ, q < r ∧ x ≈ r := by
   obtain ⟨r, hr⟩ := equiv_ratCast_of_mem_move_ratCast.2 x hx
   refine ⟨r, ?_, hr⟩

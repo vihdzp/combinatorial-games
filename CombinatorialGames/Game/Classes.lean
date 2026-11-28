@@ -6,8 +6,9 @@ Authors: Violeta Hernández Palacios, Kim Morrison, Fox Thomson
 module
 
 public import CombinatorialGames.Game.IGame
-public meta import CombinatorialGames.Tactic.AddInstances
+public import CombinatorialGames.Tactic.AddInstances
 
+import CombinatorialGames.Tactic.Register
 import Mathlib.Basic.Finite.Prod
 import Mathlib.Data.Set.Finite.Lattice
 
@@ -19,7 +20,7 @@ develop their theory elsewhere.
 
 ## Dicotic games
 
-A game is dicotic when every non-zero subposition has both left and right moves. The Lawnmower
+A game is dicotic when every non-zero subposition has both left and right moves. The lawnmower
 theorem (proven in `CombinatorialGames.Game.Small`) shows that every dicotic game is small.
 
 ## Impartial games
@@ -68,7 +69,7 @@ theorem eq_zero_iff [hx : Dicotic x] : x = 0 ↔ ∃ p, x.moves p = ∅ := by
   rw [dicotic_def] at hx
   simp_all [Player.exists, IGame.ext_iff]
 
-theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, x.moves p ≠ ∅ := by
+theorem ne_zero_iff [Dicotic x] : x ≠ 0 ↔ ∀ p, (x.moves p).Nonempty := by
   simpa using eq_zero_iff.not
 
 theorem moves_eq_empty_iff [hx : Dicotic x] : ∀ p q, x.moves p = ∅ ↔ x.moves q = ∅ :=
@@ -100,7 +101,7 @@ protected instance zero : Dicotic 0 := by
 
 protected instance neg (x) [Dicotic x] : Dicotic (-x) := by
   apply mk
-  · simp [moves_eq_empty_iff .left .right]
+  · simp [moves_eq_empty_iff left right]
   · simp_rw [moves_neg, Set.mem_neg]
     intro p y hy
     dicotic
@@ -113,47 +114,292 @@ decreasing_by igame_wf
 theorem neg_iff {x : IGame} : Dicotic (-x) ↔ Dicotic x :=
   ⟨fun _ ↦ by simpa using Dicotic.neg (-x), fun _ ↦ .neg x⟩
 
+protected instance add (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) := by
+  apply mk
+  · simp [moves_eq_empty_iff left right]
+  · intro p
+    rw [forall_mem_moves_add]
+    refine ⟨?_, ?_⟩
+    all_goals
+      intro z hz
+      dicotic
+      exact Dicotic.add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [Dicotic x] [Dicotic y] : Dicotic (x + y) :=
+  .add ..
+
+protected instance nsmul (n : ℕ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Dicotic x] : Dicotic (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
+
 end Dicotic
+
+/-! ### Self-negative games -/
+
+/-- An auxiliary typeclass for games which are equivalent to their own negative. This allows us to
+generalize results about impartial games. -/
+@[mk_iff]
+class NegSelfEquiv (x : IGame) : Prop where
+  neg_equiv (x) : -x ≈ x
+
+namespace NegSelfEquiv
+variable {x y : IGame} [hx : NegSelfEquiv x] [hy : NegSelfEquiv y]
+
+attribute [simp] neg_equiv
+@[simp] theorem equiv_neg (x : IGame) [NegSelfEquiv x] : x ≈ -x := (neg_equiv _).symm
+
+@[simp] protected instance zero : NegSelfEquiv 0 := ⟨by simp⟩
+
+theorem sub_equiv (x y : IGame) [NegSelfEquiv y] : x - y ≈ x + y :=
+  add_congr_right (neg_equiv y)
+
+theorem add_self_equiv (x : IGame) [NegSelfEquiv x] : x + x ≈ 0 := by
+  nth_grw 2 [← neg_equiv x]
+  rw [← sub_eq_add_neg]
+  exact sub_self_equiv x
+
+@[simp]
+protected theorem neg_iff {x : IGame} : NegSelfEquiv (-x) ↔ NegSelfEquiv x := by
+  simp [negSelfEquiv_iff, antisymmRel_comm]
+
+protected instance neg (x : IGame) [NegSelfEquiv x] : NegSelfEquiv (-x) := ⟨by simp⟩
+
+protected instance add (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : NegSelfEquiv (x + y) where
+  neg_equiv := by grw [neg_add, neg_equiv, neg_equiv]
+
+protected instance sub (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : NegSelfEquiv (x - y) :=
+  .add x (-y)
+
+theorem le_comm : x ≤ y ↔ y ≤ x := by
+  rw [← IGame.neg_le_neg_iff, (neg_equiv y).le_congr (neg_equiv x)]
+
+@[simp]
+theorem not_lt (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : ¬x < y := by
+  apply (lt_asymm · ?_)
+  rwa [← IGame.neg_lt_neg_iff, (neg_equiv x).lt_congr (neg_equiv y)]
+
+/-- By setting `y = 0`, we find that in a self-negative game, either the first player always wins,
+or the second player always wins. -/
+theorem equiv_or_fuzzy (x y : IGame) [NegSelfEquiv x] [NegSelfEquiv y] : x ≈ y ∨ x ‖ y := by
+  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
+  · cases not_lt x y h
+  · exact .inl h
+  · cases not_lt y x h
+  · exact .inr h
+
+@[simp]
+theorem not_equiv_iff : ¬x ≈ y ↔ x ‖ y :=
+  ⟨(equiv_or_fuzzy x y).resolve_left, IncompRel.not_antisymmRel⟩
+
+@[simp]
+theorem not_fuzzy_iff : ¬x ‖ y ↔ x ≈ y :=
+  not_iff_comm.1 not_equiv_iff
+
+@[simp]
+theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
+  ⟨fun h ↦ ⟨h, le_comm.1 h⟩, And.left⟩
+
+theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
+  le_iff_equiv.trans antisymmRel_comm
+
+theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
+theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
+
+omit hx in
+/-- This lemma doesn't require `x` to be self-negative. -/
+theorem equiv_iff_add_equiv_zero : x ≈ y ↔ x + y ≈ 0 := by
+  rw [← add_equiv_add_iff_right, (add_self_equiv y).antisymmRel_congr_right]
+
+omit hy in
+/-- This lemma doesn't require `y` to be self-negative. -/
+theorem equiv_iff_add_equiv_zero' : x ≈ y ↔ x + y ≈ 0 := by
+  rw [← add_equiv_add_iff_left, (add_self_equiv x).antisymmRel_congr_left, antisymmRel_comm]
+
+omit hx in
+/-- This lemma doesn't require `x` to be self-negative. -/
+theorem fuzzy_iff_add_fuzzy_zero : x ‖ y ↔ x + y ‖ 0 := by
+  rw [← add_fuzzy_add_iff_right, (add_self_equiv y).incompRel_congr_right]
+
+omit hy in
+/-- This lemma doesn't require `y` to be self-negative. -/
+theorem fuzzy_iff_add_fuzzy_zero' : x ‖ y ↔ x + y ‖ 0 := by
+  rw [← add_fuzzy_add_iff_left, (add_self_equiv x).incompRel_congr_left, incompRel_comm]
+
+end NegSelfEquiv
+
+/-! ### "Weakly" impartial games -/
+
+/-- A weakly impartial game is one that's equivalent to its negative, such that each left and right
+move is also weakly impartial.
+
+This is more general than `Impartial`, since we don't require `x = -x`. Despite this, the
+Sprague-Grundy theorem still holds: see `IGame.nim_grundy_equiv`.
+
+In such a game, both players have the same payoffs at any subposition. -/
+@[mk_iff weaklyImpartial_def']
+class inductive WeaklyImpartial : IGame → Prop where
+  | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y) → WeaklyImpartial x
+
+theorem weaklyImpartial_def {x : IGame} :
+    x.WeaklyImpartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, WeaklyImpartial y :=
+  weaklyImpartial_def' x
+
+namespace WeaklyImpartial
+
+instance (x : IGame) [hx : WeaklyImpartial x] : NegSelfEquiv x where
+  neg_equiv := (weaklyImpartial_def.1 hx).1
+
+@[aesop unsafe 50% apply]
+protected theorem of_mem_moves {p} {x y : IGame} [h : WeaklyImpartial x] :
+    y ∈ x.moves p → WeaklyImpartial y :=
+  (weaklyImpartial_def.1 h).2 p y
+
+protected theorem subposition {x y} [WeaklyImpartial x] (h : Subposition y x) :
+    WeaklyImpartial y := by
+  induction x using IGame.moveRecOn generalizing ‹x.WeaklyImpartial› with | ind x ih
+  obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
+  · exact .of_mem_moves hz
+  · exact @ih p z hz (.of_mem_moves hz) hy
+
+protected theorem wsubposition {x y} [WeaklyImpartial x] (h : WSubposition y x) :
+    WeaklyImpartial y := by
+  obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
+  · assumption
+  · exact .subposition hy
+
+/-- `weakly_impartial` eagerly adds all possible `WeaklyImpartial` hypotheses. -/
+elab "weakly_impartial" : tactic =>
+  addInstances <| .mk
+    [``WeaklyImpartial.of_mem_moves, ``WeaklyImpartial.subposition, ``WeaklyImpartial.wsubposition]
+
+@[simp] protected instance zero : WeaklyImpartial 0 := by rw [weaklyImpartial_def]; simp
+
+protected instance neg (x : IGame) [WeaklyImpartial x] : WeaklyImpartial (-x) := by
+  apply mk
+  · simp
+  · simp_rw [moves_neg, Set.mem_neg]
+    intro p y hy
+    weakly_impartial
+    rw [← neg_neg y]
+    exact .neg _
+termination_by x
+decreasing_by igame_wf
+
+@[simp]
+protected theorem neg_iff {x : IGame} : WeaklyImpartial (-x) ↔ WeaklyImpartial x :=
+  ⟨fun _ ↦ by simpa using WeaklyImpartial.neg (-x), fun _ ↦ .neg x⟩
+
+protected instance add (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x + y) := by
+  apply mk
+  · rw [neg_add]
+    exact add_congr (NegSelfEquiv.neg_equiv x) (NegSelfEquiv.neg_equiv y)
+  · simp_rw [forall_mem_moves_add]
+    intro p
+    constructor
+    all_goals intro z hz; weakly_impartial; exact .add ..
+termination_by (x, y)
+decreasing_by igame_wf
+
+protected instance sub (x y : IGame) [WeaklyImpartial x] [WeaklyImpartial y] :
+    WeaklyImpartial (x - y) :=
+  .add x (-y)
+
+/- The product instance is proven in `Game.Impartial.Multiplication`. -/
+
+theorem fuzzy_of_mem_moves {x y : IGame} [WeaklyImpartial x]
+    {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
+  weakly_impartial
+  cases p with
+  | left => symm; simpa using left_lf hy
+  | right => simpa using lf_right hy
+
+private theorem equiv_iff_forall_fuzzy' {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y] :
+    x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
+  rw [← NegSelfEquiv.le_iff_equiv, le_iff_forall_lf]
+  congr! with z hz z hz
+  all_goals weakly_impartial; simp [incompRel_comm]
+
+theorem equiv_iff_forall_fuzzy {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y] (p : Player) :
+    x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
+  cases p with
+  | left => exact equiv_iff_forall_fuzzy' ..
+  | right =>
+    rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
+    simp_rw [incompRel_comm]
+    rfl
+
+theorem fuzzy_iff_exists_equiv {x y : IGame} [WeaklyImpartial x] [WeaklyImpartial y] (p : Player) :
+    x ‖ y ↔ (∃ z ∈ x.moves p, z ≈ y) ∨ (∃ z ∈ y.moves (-p), x ≈ z) := by
+  rw [← NegSelfEquiv.not_equiv_iff, equiv_iff_forall_fuzzy p, not_and_or]
+  simp_rw [not_forall, ← exists_prop]
+  congr! with _ h _ h
+  all_goals weakly_impartial; exact NegSelfEquiv.not_fuzzy_iff
+
+theorem equiv_zero {x : IGame} [WeaklyImpartial x] (p : Player) :
+    x ≈ 0 ↔ ∀ y ∈ x.moves p, y ‖ 0 := by
+  rw [equiv_iff_forall_fuzzy p]; simp
+
+theorem fuzzy_zero {x : IGame} [WeaklyImpartial x] (p : Player) :
+    x ‖ 0 ↔ ∃ y ∈ x.moves p, y ≈ 0 := by
+  rw [fuzzy_iff_exists_equiv p]; simp
+
+/-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
+have also been reached in the first turn, then `x` is won by the first player. -/
+theorem fuzzy_zero_of_forall_exists {x y : IGame} [WeaklyImpartial x]
+    {p : Player} (hy : y ∈ x.moves p) (H : ∀ z ∈ y.moves p, ∃ w ∈ x.moves p, z ≈ w) : x ‖ 0 := by
+  apply (NegSelfEquiv.equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
+  weakly_impartial
+  rw [equiv_zero] at hx
+  obtain ⟨z, hz, hz'⟩ := (fuzzy_zero _).1 (hx y hy)
+  obtain ⟨w, hw, hw'⟩ := H z hz
+  exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
+
+end WeaklyImpartial
 
 /-! ### Impartial games -/
 
-/-- An impartial game is one that's equivalent to its negative, such that each left and right move
-is also impartial.
+/--
+An impartial game is one that's equal to its negative, such that each left and right move is also
+impartial.
 
-Note that this is a slightly more general definition than the one that's usually in the literature,
-as we don't require `x = -x`. Despite this, the Sprague-Grundy theorem still holds: see
-`IGame.equiv_nim_grundyValue`.
-
-In such a game, both players have the same payoffs at any subposition. -/
+Note that many theorems hold under the `WeaklyImpartial` assumption, or the even weaker
+`NegSelfEquiv` assumption. -/
 @[mk_iff impartial_def']
 class inductive Impartial : IGame → Prop where
-  | mk {x : IGame} : -x ≈ x → (∀ p, ∀ y ∈ x.moves p, Impartial y) → Impartial x
+  | mk {x : IGame} : -x = x → (∀ p, ∀ y ∈ x.moves p, Impartial y) → Impartial x
 
-theorem impartial_def {x : IGame} : x.Impartial ↔ -x ≈ x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y :=
+theorem impartial_def {x : IGame} : x.Impartial ↔ -x = x ∧ ∀ p, ∀ y ∈ x.moves p, Impartial y :=
   impartial_def' x
 
 namespace Impartial
-variable (x y : IGame) [hx : Impartial x] [hy : Impartial y]
 
-@[simp] theorem neg_equiv : -x ≈ x := (impartial_def.1 hx).1
-@[simp] theorem equiv_neg : x ≈ -x := (neg_equiv _).symm
-
-omit hx in
-theorem sub_equiv : x - y ≈ x + y := add_congr_right (neg_equiv y)
+@[simp, game_cmp] theorem neg_eq (x : IGame) [hx : Impartial x] : -x = x := (impartial_def.1 hx).1
 
 @[aesop unsafe 50% apply]
 protected theorem of_mem_moves {p} {x y : IGame} [h : Impartial x] :
     y ∈ x.moves p → Impartial y :=
   (impartial_def.1 h).2 p y
 
-protected theorem subposition {x y} [Impartial x] (h : Subposition y x) : Impartial y := by
-  induction x using IGame.moveRecOn generalizing ‹x.Impartial› with | ind x ih
+protected theorem subposition {x y} [WeaklyImpartial x] (h : Subposition y x) :
+    WeaklyImpartial y := by
+  induction x using IGame.moveRecOn generalizing ‹x.WeaklyImpartial› with | ind x ih
   obtain ⟨p, z, hz, hy⟩ := subposition_iff_exists.1 h
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 hy
   · exact .of_mem_moves hz
   · exact @ih p z hz (.of_mem_moves hz) hy
 
-protected theorem wsubposition {x y} [Impartial x] (h : WSubposition y x) : Impartial y := by
+protected theorem wsubposition {x y} [WeaklyImpartial x] (h : WSubposition y x) :
+    WeaklyImpartial y := by
   obtain rfl | hy := wsubposition_iff_eq_or_subposition.1 h
   · assumption
   · exact .subposition hy
@@ -162,6 +408,16 @@ protected theorem wsubposition {x y} [Impartial x] (h : WSubposition y x) : Impa
 elab "impartial" : tactic =>
   addInstances <| .mk
     [``Impartial.of_mem_moves, ``Impartial.subposition, ``Impartial.wsubposition]
+
+instance toWeaklyImpartial (x : IGame) [Impartial x] : WeaklyImpartial x := by
+  rw [weaklyImpartial_def]
+  constructor
+  · simp
+  · intro p y hy
+    impartial
+    exact toWeaklyImpartial y
+termination_by x
+decreasing_by igame_wf
 
 @[simp] protected instance zero : Impartial 0 := by rw [impartial_def]; simp
 
@@ -176,11 +432,14 @@ protected instance neg (x : IGame) [Impartial x] : Impartial (-x) := by
 termination_by x
 decreasing_by igame_wf
 
+@[simp]
+protected theorem neg_iff {x : IGame} : Impartial (-x) ↔ Impartial x :=
+  ⟨fun _ ↦ by simpa using Impartial.neg (-x), fun _ ↦ .neg x⟩
+
 protected instance add (x y : IGame) [Impartial x] [Impartial y] : Impartial (x + y) := by
   apply mk
-  · rw [neg_add]
-    exact add_congr (neg_equiv x) (neg_equiv y)
-  · simp_rw [forall_moves_add]
+  · simp [add_comm]
+  · simp_rw [forall_mem_moves_add]
     intro p
     constructor
     all_goals intro z hz; impartial; exact .add ..
@@ -190,123 +449,61 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Impartial x] [Impartial y] : Impartial (x - y) :=
   .add x (-y)
 
-/- The product instance is proven in `Game.Impartial.Multiplication`. -/
+protected instance mul (x y : IGame) [Impartial x] : Impartial (x * y) := by
+  apply mk
+  · simp [← neg_mul]
+  · simp_rw [forall_mem_moves_mul, mulOption]
+    intro p q a ha b hb
+    impartial
+    have := Impartial.mul a y
+    have := Impartial.mul x b
+    have := Impartial.mul a b
+    infer_instance
+termination_by (x, y)
+decreasing_by igame_wf
 
-theorem _root_.le_comm_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : x ≤ y ↔ y ≤ x := by
-  rw [← IGame.neg_le_neg_iff, hy.le_congr hx]
+protected instance mul' (x y : IGame) [Impartial y] : Impartial (x * y) := by
+  rw [mul_comm]
+  infer_instance
 
-theorem le_comm {x y} [Impartial x] [Impartial y] : x ≤ y ↔ y ≤ x :=
-  le_comm_of_neg_equiv (neg_equiv x) (neg_equiv y)
+protected instance mulOption (x y a b : IGame)
+    [Impartial x] [Impartial a] : Impartial (mulOption x y a b) :=
+  .sub ..
 
-theorem _root_.not_lt_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) : ¬x < y := by
-  apply (lt_asymm · ?_)
-  rwa [← IGame.neg_lt_neg_iff, hx.lt_congr hy]
+protected instance mulOption' (x y a b : IGame)
+    [Impartial y] [Impartial b] : Impartial (mulOption x y a b) :=
+  .sub ..
 
+protected instance mulOption'' (x y a b : IGame)
+    [Impartial a] [Impartial b] : Impartial (mulOption x y a b) :=
+  .sub ..
+
+open Pointwise in
 @[simp]
-theorem not_lt : ¬x < y :=
-  not_lt_of_neg_equiv (neg_equiv x) (neg_equiv y)
+theorem neg_moves (x : IGame) [Impartial x] (p : Player) : -x.moves p = x.moves p := by
+  ext y
+  constructor <;> intro hy
+  · rw [Set.mem_neg] at hy
+    have := Impartial.of_mem_moves hy
+    rw [Impartial.neg_iff] at this
+    rwa [← neg_eq y]
+  · impartial
+    simpa
 
-theorem _root_.equiv_or_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    x ≈ y ∨ x ‖ y := by
-  obtain (h | h | h | h) := lt_or_antisymmRel_or_gt_or_incompRel x y
-  · cases not_lt_of_neg_equiv hx hy h
-  · exact .inl h
-  · cases not_lt_of_neg_equiv hy hx h
-  · exact .inr h
+theorem moves_congr (x : IGame) [Impartial x] (p q : Player) : x.moves p = x.moves q := by
+  apply Player.const_of_left_eq_right _ p q
+  conv_rhs => rw [← neg_eq x, moves_neg]
+  simp
 
-/-- By setting `y = 0`, we find that in an impartial game, either the first player always wins, or
-the second player always wins. -/
-theorem equiv_or_fuzzy : x ≈ y ∨ x ‖ y :=
-  equiv_or_fuzzy_of_neg_equiv (neg_equiv x) (neg_equiv y)
-
-variable {x y}
-
-theorem _root_.not_equiv_iff_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    ¬x ≈ y ↔ x ‖ y :=
-  ⟨(equiv_or_fuzzy_of_neg_equiv hx hy).resolve_left, IncompRel.not_antisymmRel⟩
-
-@[simp]
-theorem not_equiv_iff : ¬ x ≈ y ↔ x ‖ y :=
-  not_equiv_iff_of_neg_equiv (neg_equiv x) (neg_equiv y)
-
-theorem _root_.not_fuzzy_iff_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    ¬x ‖ y ↔ x ≈ y :=
-  not_iff_comm.1 (not_equiv_iff_of_neg_equiv hx hy)
-
-@[simp]
-theorem not_fuzzy_iff : ¬ x ‖ y ↔ x ≈ y :=
-  not_iff_comm.1 not_equiv_iff
-
-theorem _root_.le_iff_equiv_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    x ≤ y ↔ x ≈ y :=
-  ⟨fun h ↦ ⟨h, (le_comm_of_neg_equiv hx hy).1 h⟩, And.left⟩
-
-@[simp]
-theorem le_iff_equiv : x ≤ y ↔ x ≈ y :=
-  ⟨fun h ↦ ⟨h, le_comm.1 h⟩, And.left⟩
-
-theorem _root_.ge_iff_equiv_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    y ≤ x ↔ x ≈ y :=
-  (le_iff_equiv_of_neg_equiv hy hx).trans antisymmRel_comm
-
-theorem ge_iff_equiv : y ≤ x ↔ x ≈ y :=
-  ⟨fun h ↦ ⟨le_comm.2 h, h⟩, And.right⟩
-
-theorem _root_.lf_iff_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    x ⧏ y ↔ x ‖ y :=
-  (ge_iff_equiv_of_neg_equiv hx hy).not.trans (not_equiv_iff_of_neg_equiv hx hy)
-
-theorem _root_.gf_iff_fuzzy_of_neg_equiv {x y : IGame} (hx : -x ≈ x) (hy : -y ≈ y) :
-    y ⧏ x ↔ x ‖ y :=
-  (le_iff_equiv_of_neg_equiv hx hy).not.trans (not_equiv_iff_of_neg_equiv hx hy)
-
-theorem lf_iff_fuzzy : x ⧏ y ↔ x ‖ y := by simp [comm]
-theorem gf_iff_fuzzy : y ⧏ x ↔ x ‖ y := by simp
-
-theorem fuzzy_of_mem_moves {y : IGame} {p : Player} (hy : y ∈ x.moves p) : y ‖ x := by
-  have := hx.of_mem_moves hy
-  cases p with
-  | left => symm; simpa using left_lf hy
-  | right => simpa using lf_right hy
-
-private theorem equiv_iff_forall_fuzzy' :
-    x ≈ y ↔ (∀ z ∈ xᴸ, z ‖ y) ∧ (∀ z ∈ yᴿ, x ‖ z) := by
-  rw [← le_iff_equiv, le_iff_forall_lf]
-  congr! with z hz z hz
-  all_goals impartial; simp [incompRel_comm]
-
-theorem equiv_iff_forall_fuzzy (p : Player) :
-    x ≈ y ↔ (∀ z ∈ x.moves p, z ‖ y) ∧ (∀ z ∈ y.moves (-p), x ‖ z) := by
-  cases p with
-  | left => exact equiv_iff_forall_fuzzy'
-  | right =>
-    rw [antisymmRel_comm, equiv_iff_forall_fuzzy', and_comm]
-    simp_rw [incompRel_comm]
-    rfl
-
-theorem fuzzy_iff_exists_equiv (p : Player) :
-    x ‖ y ↔ (∃ z ∈ x.moves p, z ≈ y) ∨ (∃ z ∈ y.moves (-p), x ≈ z) := by
-  rw [← not_equiv_iff, equiv_iff_forall_fuzzy p, not_and_or]
-  simp_rw [not_forall, ← exists_prop]
-  congr! with _ h _ h
-  all_goals impartial; exact not_fuzzy_iff
-
-theorem equiv_zero (p : Player) : x ≈ 0 ↔ ∀ y ∈ x.moves p, y ‖ 0 := by
-  rw [equiv_iff_forall_fuzzy p]; simp
-
-theorem fuzzy_zero (p : Player) : x ‖ 0 ↔ ∃ y ∈ x.moves p, y ≈ 0 := by
-  rw [fuzzy_iff_exists_equiv p]; simp
-
-/-- A **strategy stealing** argument. If there's a move in `x`, such that any immediate move could
-have also been reached in the first turn, then `x` is won by the first player. -/
-theorem fuzzy_zero_of_forall_exists {p : Player} {y} (hy : y ∈ x.moves p)
-    (H : ∀ z ∈ y.moves p, ∃ w ∈ x.moves p, z ≈ w) : x ‖ 0 := by
-  apply (equiv_or_fuzzy _ _).resolve_left fun hx ↦ ?_
-  impartial
-  rw [equiv_zero] at hx
-  obtain ⟨z, hz, hz'⟩ := (fuzzy_zero _).1 (hx y hy)
-  obtain ⟨w, hw, hw'⟩ := H z hz
-  exact (hx w hw).not_antisymmRel (hw'.symm.trans hz')
+instance toDicotic (x : IGame) [Impartial x] : Dicotic x := by
+  rw [dicotic_def]
+  constructor
+  · rw [moves_congr x left right]
+  · intro p y hy
+    impartial
+    exact toDicotic y
+termination_by x
+decreasing_by igame_wf
 
 end Impartial
 
@@ -358,9 +555,9 @@ protected instance zero : Numeric 0 := by
 protected instance one : Numeric 1 := by
   rw [numeric_def]; simp
 
-protected instance subtype (x : Subtype Numeric) : Numeric x.1 := x.2
+protected instance subtype (x : Subtype Numeric) : Numeric x := x.prop
 protected instance moves {x : IGame} [Numeric x] {p : Player} (y : x.moves p) : Numeric y :=
-  .of_mem_moves y.2
+  .of_mem_moves y.prop
 
 protected theorem le_of_not_le {x y : IGame} [Numeric x] [Numeric y] : ¬ x ≤ y → y ≤ x := by
   rw [lf_iff_exists_le, le_iff_forall_lf]
@@ -428,7 +625,7 @@ protected instance neg (x : IGame) [Numeric x] : Numeric (-x) := by
   refine mk (fun y hy z hz ↦ ?_) ?_
   · rw [← IGame.neg_lt_neg_iff]
     apply @left_lt_right x <;> simp_all
-  · simp_rw [forall_moves_neg]
+  · simp_rw [forall_mem_moves_neg]
     intro p y hy
     numeric
     simpa using Numeric.neg y
@@ -455,9 +652,18 @@ decreasing_by igame_wf
 protected instance sub (x y : IGame) [Numeric x] [Numeric y] : Numeric (x - y) :=
   .add ..
 
-protected instance natCast : ∀ n : ℕ, Numeric n
-  | 0 => inferInstanceAs (Numeric 0)
-  | n + 1 => have := Numeric.natCast n; inferInstanceAs (Numeric (n + 1))
+protected instance nsmul (n : ℕ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n with
+  | zero => simp
+  | succ n => rw [succ_nsmul]; infer_instance
+
+protected instance zsmul (n : ℤ) (x : IGame) [Numeric x] : Numeric (n • x) := by
+  induction n using Int.negInduction with
+  | nat n => rw [natCast_zsmul]; infer_instance
+  | neg _ n => rw [neg_zsmul]; infer_instance
+
+protected instance natCast (n : ℕ) : Numeric n := by
+  simpa using Numeric.nsmul n 1
 
 protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
   inferInstanceAs (Numeric n)
@@ -465,16 +671,6 @@ protected instance ofNat (n : ℕ) [n.AtLeastTwo] : Numeric ofNat(n) :=
 protected instance intCast : ∀ n : ℤ, Numeric n
   | .ofNat n => inferInstanceAs (Numeric n)
   | .negSucc n => inferInstanceAs (Numeric (-(n + 1)))
-
-protected instance nsmul (n : Nat) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n with
-  | zero => simp
-  | succ n ih => rw [succ_nsmul]; exact .add (n • x) x
-
-protected instance zsmul (n : Int) (x : IGame) [Numeric x] : Numeric (n • x) := by
-  induction n using Int.negInduction with
-  | nat n => rw [natCast_zsmul]; infer_instance
-  | neg ih n => rw [neg_zsmul]; infer_instance
 
 end Numeric
 
@@ -520,22 +716,21 @@ elab "short" : tactic =>
   addInstances <| .mk
     [``Short.of_mem_moves, ``Short.subposition, ``Short.wsubposition]
 
-theorem finite_setOf_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
+theorem finite_setOfPred_subposition (x : IGame) [Short x] : {y | Subposition y x}.Finite := by
   induction x using IGame.moveRecOn generalizing ‹x.Short› with | ind x ih
   convert Set.finite_iUnion fun p => (finite_moves p x).biUnion fun y hy ↦
     (@ih p y hy (.of_mem_moves hy)).insert y
-  ext
-  rw [Set.mem_ofPred, subposition_iff_exists]
+  rw [Set.mem_eq_mem, subposition_iff_exists]
   simp [wsubposition_iff_eq_or_subposition]
 
-instance (x : IGame) [Short x] : Finite {y // Subposition y x} :=
-  (Short.finite_setOf_subposition x).to_subtype
+instance (x : IGame) [Short x] : Finite {y | Subposition y x} :=
+  (Short.finite_setOfPred_subposition x).to_subtype
 
-theorem _root_.IGame.short_iff_finite_setOf_subposition {x : IGame} :
+theorem _root_.IGame.short_iff_finite_setOfPred_subposition {x : IGame} :
     Short x ↔ {y | Subposition y x}.Finite := by
-  refine ⟨@finite_setOf_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
+  refine ⟨@finite_setOfPred_subposition x, fun h ↦ mk fun p ↦ ⟨?_, ?_⟩⟩
   on_goal 1 => refine h.subset fun y hy ↦ ?_
-  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOf_subposition.2 <| h.subset fun z hz ↦ ?_
+  on_goal 2 => refine fun y hy ↦ short_iff_finite_setOfPred_subposition.2 <| h.subset fun z hz ↦ ?_
   all_goals igame_wf
 termination_by x
 decreasing_by igame_wf
@@ -551,7 +746,7 @@ protected instance one : Short 1 := by
 protected instance neg (x : IGame) [Short x] : Short (-x) := by
   refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa [← Set.image_neg_eq_neg] using (finite_moves _ x).image _
-  · rw [forall_moves_neg]
+  · rw [forall_mem_moves_neg]
     intro y hy
     simpa using (Short.of_mem_moves hy).neg
 termination_by x
@@ -564,7 +759,7 @@ theorem neg_iff {x : IGame} : Short (-x) ↔ Short x :=
 protected instance add (x y : IGame) [Short x] [Short y] : Short (x + y) := by
   refine mk fun p ↦ ⟨?_, ?_⟩
   · simpa using ⟨(finite_moves _ x).image _, (finite_moves _ y).image _⟩
-  · rw [forall_moves_add]
+  · rw [forall_mem_moves_add]
     constructor
     all_goals intro z hz; short; exact Short.add ..
 termination_by (x, y)
@@ -589,7 +784,7 @@ protected instance mul (x y : IGame) [Short x] [Short y] : Short (x * y) := by
   · simpa [Set.image_union] using
       ⟨(finite_moves _ x).image2 _ (finite_moves _ y),
         (finite_moves _ x).image2 _ (finite_moves _ y)⟩
-  · rw [forall_moves_mul]
+  · rw [forall_mem_moves_mul]
     intro p' a ha b hb
     replace ha := Short.of_mem_moves ha
     replace hb := Short.of_mem_moves hb

@@ -3,7 +3,7 @@ Copyright (c) 2025 Violeta Hernández Palacios. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Violeta Hernández Palacios
 -/
-module
+module -- shake: keep-all
 
 public import Mathlib.SetTheory.Ordinal.Family
 
@@ -16,13 +16,53 @@ macro which contains all the boilerplate required to set up these types. This al
 API between both stays consistent.
 -/
 
+-- We don't make aliases of these, since the preferred spelling of `of (Nat.cast n)` is not the same
+-- for `NatOrdinal` and `Nimber`.
+public section
+namespace Ordinal
+
+theorem forall_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x < (n : Ordinal), P x) ↔ (∀ x < n, P x) := by
+  trans ∀ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.forall_mem_image]
+    simp
+
+theorem exists_lt_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x < (n : Ordinal), P x) ↔ (∃ x < n, P x) := by
+  trans ∃ x ∈ Set.Iio (n : Ordinal), P x
+  · simp
+  · rw [← Ordinal.natCast_image_Iio n, Set.exists_mem_image]
+    simp
+
+theorem forall_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∀ x ≤ (n : Ordinal), P x) ↔ (∀ x ≤ n, P x) := by
+  simpa using Ordinal.forall_lt_natCast (n := n + 1)
+
+theorem exists_le_natCast {P : Ordinal → Prop} {n : ℕ} :
+    (∃ x ≤ (n : Ordinal), P x) ↔ (∃ x ≤ n, P x) := by
+  simpa using Ordinal.exists_lt_natCast (n := n + 1)
+
+theorem lt_three_iff {x : Ordinal} : x < 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 := by
+  rw [← two_add_one_eq_three, Order.lt_add_one_iff, Order.le_two_iff]
+
+theorem le_three_iff {x : Ordinal} : x ≤ 3 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [le_iff_lt_or_eq, lt_three_iff]
+  tauto
+
+theorem lt_four_iff {x : Ordinal} : x < 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 := by
+  rw [← three_add_one_eq_four, Order.lt_add_one_iff, le_three_iff]
+
+theorem le_four_iff {x : Ordinal} : x ≤ 4 ↔ x = 0 ∨ x = 1 ∨ x = 2 ∨ x = 3 ∨ x = 4 := by
+  rw [le_iff_lt_or_eq, lt_four_iff]
+  tauto
+
+end Ordinal
+end
+
 open Lean
 
 /-! ### Auxiliary defs -/
-
-/-- Doc-comment allowing antiquotation. -/
-meta def mkDocComment (s : String) : TSyntax `Lean.Parser.Command.docComment :=
-  .mk <| mkNode ``Parser.Command.docComment #[mkAtom "/--", mkAtom (s ++ "-/")]
 
 /-- `Alias.of` -/
 meta def mkOf (Alias : TSyntax `ident) : TSyntax `ident :=
@@ -34,6 +74,7 @@ meta def mkVal (Alias : TSyntax `ident) : TSyntax `ident :=
 
 /-! ### Macros -/
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of either `Ordinal` or `Nat`, preserving the order structure. -/
 macro "alias!" doc:docComment Alias:ident Source:ident : command => `(
 @[expose] public section
@@ -58,11 +99,13 @@ instance : WellFoundedRelation $Alias := WellFoundedLT.toWellFoundedRelation
 
 theorem $(mkIdent `lt_wf) : @WellFounded $Alias (· < ·) := wellFounded_lt
 
-$(mkDocComment s!" The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
+$(mkMarkdownDocComment
+  s!"The identity function between `{Source.getId}` and `{Alias.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `of) : $Source ≃o $Alias := .refl _
 
-$(mkDocComment s!" The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
+$(mkMarkdownDocComment
+  s!"The identity function between `{Alias.getId}` and `{Source.getId}`."):docComment
 @[match_pattern]
 def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
@@ -71,6 +114,11 @@ def $(mkIdent `val) : $Alias ≃o $Source := .refl _
 
 @[simp] theorem $(mkIdent `of_val) (a) : $(mkOf Alias) ($(mkVal Alias) a) = a := rfl
 @[simp] theorem $(mkIdent `val_of) (a) : $(mkVal Alias) ($(mkOf Alias) a) = a := rfl
+
+theorem $(mkIdent `of_preimage) (s : Set $Alias) : $(mkOf Alias) ⁻¹' s = $(mkVal Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
+theorem $(mkIdent `val_preimage) (s : Set $Source) : $(mkVal Alias) ⁻¹' s = $(mkOf Alias) '' s :=
+  RelIso.preimage_eq_image_symm _ s
 
 theorem $(mkIdent `val_le_iff) {a b} : $(mkVal Alias) a ≤ b ↔ a ≤ $(mkOf Alias) b := .rfl
 theorem $(mkIdent `val_lt_iff) {a b} : $(mkVal Alias) a < b ↔ a < $(mkOf Alias) b := .rfl
@@ -91,6 +139,8 @@ theorem $(mkIdent `of_eq_iff) {a b} : $(mkOf Alias) a = b ↔ a = $(mkVal Alias)
 
 @[simp] theorem $(mkIdent `of_eq_zero) {a} : $(mkOf Alias) a = 0 ↔ a = 0 := .rfl
 @[simp] theorem $(mkIdent `val_eq_zero) {a} : $(mkVal Alias) a = 0 ↔ a = 0 := .rfl
+@[simp] theorem $(mkIdent `zero_eq_of) {a} : 0 = $(mkOf Alias) a ↔ 0 = a := .rfl
+@[simp] theorem $(mkIdent `zero_eq_val) {a} : 0 = $(mkVal Alias) a ↔ 0 = a := .rfl
 theorem $(mkIdent `of_ne_zero) {a} : $(mkOf Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 @[simp] theorem $(mkIdent `of_pos) {a} : 0 < $(mkOf Alias) a ↔ 0 < a := .rfl
@@ -98,6 +148,8 @@ theorem $(mkIdent `val_ne_zero) {a} : $(mkVal Alias) a ≠ 0 ↔ a ≠ 0 := .rfl
 
 @[simp] theorem $(mkIdent `of_eq_one) {a} : $(mkOf Alias) a = 1 ↔ a = 1 := .rfl
 @[simp] theorem $(mkIdent `val_eq_one) {a} : $(mkVal Alias) a = 1 ↔ a = 1 := .rfl
+@[simp] theorem $(mkIdent `one_eq_of) {a} : 1 = $(mkOf Alias) a ↔ 1 = a := .rfl
+@[simp] theorem $(mkIdent `one_eq_val) {a} : 1 = $(mkVal Alias) a ↔ 1 = a := .rfl
 theorem $(mkIdent `of_ne_one) {a} : $(mkOf Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 theorem $(mkIdent `val_ne_one) {a} : $(mkVal Alias) a ≠ 1 ↔ a ≠ 1 := .rfl
 @[simp] theorem $(mkIdent `of_le_one) {a} : $(mkOf Alias) a ≤ 1 ↔ a ≤ 1 := .rfl
@@ -118,20 +170,49 @@ theorem $(mkIdent `succ_of) (a : $Source) : Order.succ ($(mkOf Alias) a) = $(mkO
 
 theorem $(mkIdent `succ_ne_zero) (a : $Alias) : Order.succ a ≠ 0 := Order.succ_ne_bot a
 
-$(mkDocComment s!" A recursor for `{Alias.getId}`. Use as `cases x`. "):docComment
+$(mkMarkdownDocComment s!"A recursor for `{Alias.getId}`. Use as `cases x`."):docComment
 @[elab_as_elim, cases_eliminator, induction_eliminator]
 protected def $(mkIdent `ind) {motive : $Alias → Sort*}
     ($(mkIdent `of) : ∀ a, motive ($(mkOf Alias) a)) (a) : motive a :=
   $(mkIdent `of) ($(mkVal Alias) a)
 
-$(mkDocComment s!" Well-founded induction for `{Alias.getId}`. "):docComment
+$(mkMarkdownDocComment s!"Well-founded induction for `{Alias.getId}`."):docComment
 theorem $(mkIdent `induction) {p : $Alias → Prop} : ∀ i (_ : ∀ j, (∀ k, k < j → p k) → p j), p i :=
   WellFoundedLT.induction
+
+theorem $(mkIdent `of_sInf) (s : Set $Source) :
+    $(mkOf Alias) (sInf s) = sInf ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `of_sSup) (s : Set $Source) :
+    $(mkOf Alias) (sSup s) = sSup ($(mkVal Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `val_sInf) (s : Set $Alias) :
+    $(mkVal Alias) (sInf s) = sInf ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+theorem $(mkIdent `val_sSup) (s : Set $Alias) :
+    $(mkVal Alias) (sSup s) = sSup ($(mkOf Alias) ⁻¹' s) :=
+  rfl
+
+theorem $(mkIdent `of_iInf) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iInf f) = ⨅ i, $(mkOf Alias) (f i) :=
+  rfl
+theorem $(mkIdent `of_iSup) {ι : Sort*} (f : ι → $Source) :
+    $(mkOf Alias) (iSup f) = ⨆ i, $(mkOf Alias) (f i) :=
+  rfl
+
+theorem $(mkIdent `val_iInf) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iInf f) = ⨅ i, $(mkVal Alias) (f i) :=
+  rfl
+theorem $(mkIdent `val_iSup) {ι : Sort*} (f : ι → $Alias) :
+    $(mkVal Alias) (iSup f) = ⨆ i, $(mkVal Alias) (f i) :=
+  rfl
 
 end $Alias
 end
 )
 
+set_option linter.style.whitespace false in
 /-- Declare a type alias of `Ordinal`, preserving the order structure. -/
 macro "ordinal_alias!" doc:docComment Alias:ident : command => `(
 
@@ -200,6 +281,15 @@ theorem $(mkIdent `lt_iSup_iff) {ι : Type*} [Small.{u} ι] (f : ι → $Alias.{
 theorem $(mkIdent `iSup_eq_zero_iff) {ι : Type*} [Small.{u} ι] {f : ι → $Alias.{u}} :
     ⨆ i, f i = 0 ↔ ∀ i, f i = 0 :=
   Ordinal.iSup_eq_zero_iff
+
+@[simp]
+theorem $(mkIdent `cardinalMk_Iio) (x : $Alias.{u}) :
+    Cardinal.mk (Set.Iio x) = Cardinal.lift.{u + 1} (Ordinal.card ($(mkVal Alias) x)) :=
+  Ordinal.cardinalMk_Iio _
+
+theorem $(mkIdent `apply_omega0_of_isNormal) {f : Ordinal.{u} → $Alias.{u}}
+    (hf : Order.IsNormal f) : ⨆ n : ℕ, f n = f Ordinal.omega0 :=
+  Ordinal.apply_omega0_of_isNormal hf
 
 end $Alias
 end

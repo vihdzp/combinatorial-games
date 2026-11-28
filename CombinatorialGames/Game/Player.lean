@@ -8,8 +8,9 @@ module
 public import Mathlib.Algebra.Ring.Defs
 public import Mathlib.Data.Fintype.Defs
 public import Mathlib.Logic.Small.Defs
+public import Mathlib.Order.Antisymmetrization
 
--- import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.DeriveFintype -- shake: keep
 
 /-!
 # Type of players
@@ -31,14 +32,12 @@ inductive Player where
   | left  : Player
   /-- The Right player. -/
   | right : Player
-deriving DecidableEq, Inhabited
+deriving DecidableEq, Inhabited, Fintype
 
 namespace Player
 
-#adaptation_note /-- `deriving Fintype` is currently broken. -/
-instance : Fintype Player where
-  elems := ⟨[left, right], by decide⟩
-  complete x := by cases x <;> simp
+theorem left_ne_right : left ≠ right := Player.noConfusion
+theorem right_ne_left : right ≠ left := Player.noConfusion
 
 /-- Specify a function `Player → α` from its two outputs. -/
 @[simp]
@@ -74,6 +73,15 @@ protected lemma «exists» {p : Player → Prop} :
     (∃ x, p x) ↔ p left ∨ p right :=
   ⟨fun | ⟨left, h⟩ => .inl h | ⟨right, h⟩ => .inr h, fun | .inl h | .inr h => ⟨_, h⟩⟩
 
+theorem univ_eq : Set.univ = {left, right} := Set.ext (by simp)
+
+theorem range_eq {α : Type*} (f : Player → α) : Set.range f = {f left, f right} := by
+  rw [← Set.image_univ, univ_eq, Set.image_pair]
+
+@[simp]
+theorem range_cases {α : Type*} (l r : α) : Set.range (Player.cases l r) = {l, r} :=
+  Player.range_eq _
+
 instance : Neg Player where
   neg := cases right left
 
@@ -88,6 +96,8 @@ theorem self_ne_neg : ∀ (p : Player), p ≠ -p := by decide
 
 instance : InvolutiveNeg Player where
   neg_neg := by decide
+
+theorem compl_singleton (p : Player) : ({p} : Set Player)ᶜ = {-p} := by grind
 
 /--
 The multiplication of `Player`s is used to state the lemmas about the multiplication of
@@ -119,7 +129,110 @@ instance : CommGroup Player where
 @[simp, grind =] lemma one_eq_left : 1 = left := rfl
 @[simp, grind =] lemma inv_eq_self (p : Player) : p⁻¹ = p := rfl
 
+section LE
+variable {α : Type*}
+
+/-- A predicate for `x ≤ y` or `y ≤ x`, according to the player. -/
+protected abbrev LE [LE α] (p : Player) (x y : α) : Prop := p.cases (x ≤ y) (y ≤ x)
+
+theorem left_le [LE α] {x y : α} : left.LE x y ↔ x ≤ y := .rfl
+theorem right_le [LE α] {x y : α} : right.LE x y ↔ y ≤ x := .rfl
+
+@[gcongr]
+theorem le_congr_left [Preorder α] {p : Player} {x₁ x₂ y : α} (h : AntisymmRel (· ≤ ·) x₁ x₂) :
+    p.LE x₁ y ↔ p.LE x₂ y := by
+  cases p with
+  | left => rw [Player.left_le, h.le_congr_left]
+  | right => rw [Player.right_le, h.le_congr_right]
+
+@[gcongr]
+theorem le_congr_right [Preorder α] {p : Player} {x y₁ y₂ : α} (h : AntisymmRel (· ≤ ·) y₁ y₂) :
+    p.LE x y₁ ↔ p.LE x y₂ := by
+  cases p with
+  | left => rw [Player.left_le, h.le_congr_right]
+  | right => rw [Player.right_le, h.le_congr_left]
+
+theorem le_congr [Preorder α] {p : Player} {x₁ x₂ y₁ y₂ : α}
+    (hx : AntisymmRel (· ≤ ·) x₁ x₂) (hy : AntisymmRel (· ≤ ·) y₁ y₂) :
+    p.LE x₁ y₁ ↔ p.LE x₂ y₂ := by
+  rw [p.le_congr_left hx, p.le_congr_right hy]
+
+@[simp]
+theorem neg_le_iff_swap [LE α] {p : Player} {x y : α} : (-p).LE x y ↔ p.LE y x := by
+  cases p <;> rfl
+
+/-- A predicate for `x < y` or `y < x`, according to the player. -/
+protected abbrev LT [LT α] (p : Player) (x y : α) : Prop := p.cases (x < y) (y < x)
+
+theorem left_lt [LT α] {x y : α} : left.LT x y ↔ x < y := .rfl
+theorem right_lt [LT α] {x y : α} : right.LT x y ↔ y < x := .rfl
+
+@[gcongr]
+theorem lt_congr_left [Preorder α] {p : Player} {x₁ x₂ y : α} (h : AntisymmRel (· ≤ ·) x₁ x₂) :
+    p.LT x₁ y ↔ p.LT x₂ y := by
+  cases p with
+  | left => rw [Player.left_lt, h.lt_congr_left]
+  | right => rw [Player.right_lt, h.lt_congr_right]
+
+@[gcongr]
+theorem lt_congr_right [Preorder α] {p : Player} {x y₁ y₂ : α} (h : AntisymmRel (· ≤ ·) y₁ y₂) :
+    p.LT x y₁ ↔ p.LT x y₂ := by
+  cases p with
+  | left => rw [Player.left_lt, h.lt_congr_right]
+  | right => rw [Player.right_lt, h.lt_congr_left]
+
+theorem lt_congr [Preorder α] {p : Player} {x₁ x₂ y₁ y₂ : α}
+    (hx : AntisymmRel (· ≤ ·) x₁ x₂) (hy : AntisymmRel (· ≤ ·) y₁ y₂) :
+    p.LT x₁ y₁ ↔ p.LT x₂ y₂ := by
+  rw [p.lt_congr_left hx, p.lt_congr_right hy]
+
+@[simp]
+theorem neg_lt_iff_swap [LT α] {p : Player} {x y : α} : (-p).LT x y ↔ p.LT y x := by
+  cases p <;> rfl
+
+end LE
+
 end Player
+
+/-! ### Outcomes -/
+
+/-- The three possible outcomes of a game.
+
+We register a linear order, with `⊤ = win` and `⊥ = loss`. -/
+inductive Outcome : Type
+  /-- A given player loses in perfect play. -/
+  | loss
+  /-- A given player draws in perfect play. -/
+  | draw
+  /-- A given player wins in perfect play. -/
+  | win
+deriving DecidableEq, Fintype, Inhabited
+
+namespace Outcome
+
+/-- An auxiliary definition for the `LinearOrder` instance on `Outcome`. -/
+private def toNat : Outcome → ℕ
+  | loss => 0
+  | draw => 1
+  | win => 2
+
+@[no_expose]
+instance : LinearOrder Outcome :=
+  LinearOrder.lift' toNat (by decide)
+
+@[simp] theorem loss_le : ∀ x, loss ≤ x := by decide
+@[simp] theorem le_win : ∀ x, x ≤ win := by decide
+
+instance : BoundedOrder Outcome where
+  bot := loss
+  top := win
+  bot_le := loss_le
+  le_top := le_win
+
+@[simp] theorem bot_eq_loss : ⊥ = loss := rfl
+@[simp] theorem top_eq_win : ⊤ = win := rfl
+
+end Outcome
 
 open Player
 

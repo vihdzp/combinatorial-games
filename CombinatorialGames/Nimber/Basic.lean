@@ -5,10 +5,12 @@ Authors: Violeta Hernández Palacios
 -/
 module
 
-public meta import CombinatorialGames.Tactic.Register
-public import CombinatorialGames.NatOrdinal.Basic
+public import Mathlib.Algebra.Order.Monoid.Unbundled.WithTop
+public import Mathlib.SetTheory.Ordinal.Basic
 
+import Batteries.Data.Nat.Bitwise.Lemmas
 import CombinatorialGames.Tactic.OrdinalAlias
+import CombinatorialGames.Tactic.Register
 import Mathlib.Data.Nat.Bitwise
 
 /-!
@@ -54,13 +56,27 @@ ordinal_alias!
 namespace Nimber
 
 attribute [game_cmp] of_zero of_one
-attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff
+attribute [simp] succ_zero succ_ne_zero Iio_one lt_one_iff one_le_val
 
 @[inherit_doc] scoped prefix:75 "∗" => of
 recommended_spelling "of" for "∗" in [Nimber.«term∗_»]
 
 @[simp] theorem Iio_two : Set.Iio (∗2) = {0, 1} := Order.Iio_two (α := Ordinal)
-theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 := Set.ext_iff.1 Iio_two x
+
+theorem lt_two_iff {x : Nimber} : x < ∗2 ↔ x = 0 ∨ x = 1 :=
+  Set.ext_iff.1 Iio_two x
+
+theorem lt_three_iff {x : Nimber} : x < ∗3 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 :=
+  Ordinal.lt_three_iff
+
+theorem le_three_iff {x : Nimber} : x ≤ ∗3 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 :=
+  Ordinal.le_three_iff
+
+theorem lt_four_iff {x : Nimber} : x < ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 :=
+  Ordinal.lt_four_iff
+
+theorem le_four_iff {x : Nimber} : x ≤ ∗4 ↔ x = 0 ∨ x = 1 ∨ x = ∗2 ∨ x = ∗3 ∨ x = ∗4 :=
+  Ordinal.le_four_iff
 
 @[simp] theorem succ_one : Order.succ 1 = ∗2 := one_add_one_eq_two (R := Ordinal)
 
@@ -75,11 +91,10 @@ private def add (a b : Nimber.{u}) : Nimber.{u} :=
   sInf {x | (∃ a', ∃ (_ : a' < a), add a' b = x) ∨ ∃ b', ∃ (_ : b' < b), add a b' = x}ᶜ
 termination_by (a, b)
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Nimber addition is recursively defined so that `a + b` is the smallest nimber not equal to
 `a' + b` or `a + b'` for `a' < a` and `b' < b`. -/
 @[no_expose]
-noncomputable instance : Add Nimber :=
+instance : Add Nimber :=
   ⟨Nimber.add⟩
 
 theorem add_def (a b : Nimber) :
@@ -112,21 +127,6 @@ private theorem add_ne_of_lt (a b : Nimber) :
   rw [← add_def] at H
   simpa using H
 
-/-- A version of `add_le_nadd` stated in terms of `Ordinal`. -/
-theorem add_le_nadd' (a b : Ordinal) : (∗a + ∗b).val ≤ (NatOrdinal.of a + NatOrdinal.of b).val := by
-  rw [val_le_iff]
-  apply add_le_of_forall_ne
-  all_goals
-    intro c hc
-    cases c with | of c
-    rw [← val_eq_iff.ne]
-    apply ((add_le_nadd' ..).trans_lt _).ne
-    simpa
-termination_by (a, b)
-
-theorem add_le_nadd (a b : Nimber) : a + b ≤ ∗(NatOrdinal.of a.val + NatOrdinal.of b.val).val :=
-  add_le_nadd' ..
-
 private theorem add_comm (a b : Nimber) : a + b = b + a := by
   rw [add_def, add_def]
   simp_rw [or_comm]
@@ -155,7 +155,7 @@ theorem add_eq_zero {a b : Nimber} : a + b = 0 ↔ a = b := by
     · rfl
     · have hb : b + b = 0 := add_eq_zero.2 rfl
       rwa [← hb, add_left_inj] at hab
-  · rw [← le_zero_iff]
+  · rw [← nonpos_iff_eq_zero]
     apply add_le_of_forall_ne <;>
     simp_rw [ne_eq] <;>
     intro x hx
@@ -262,5 +262,29 @@ theorem add_nat (a b : ℕ) : ∗a + ∗b = ∗(a ^^^ b) := by
       simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat (c ^^^ b) b
     · apply h.ne
       simpa [Nat.xor_comm, Nat.xor_xor_cancel_left, ← hc'] using add_nat a (c ^^^ a)
+
+@[simp]
+theorem one_add_two : 1 + ∗2 = ∗3 := by
+  simpa using add_nat 1 2
+
+@[simp]
+theorem two_add_one : ∗2 + 1 = ∗3 := by
+  rw [add_comm, one_add_two]
+
+@[simp]
+theorem one_add_three : 1 + ∗3 = ∗2 := by
+  simpa using add_nat 1 3
+
+@[simp]
+theorem three_add_one : ∗3 + 1 = ∗2 := by
+  rw [add_comm, one_add_three]
+
+@[simp]
+theorem two_add_three : ∗2 + ∗3 = 1 := by
+  simpa using add_nat 2 3
+
+@[simp]
+theorem three_add_two : ∗3 + ∗2 = 1 := by
+  rw [add_comm, two_add_three]
 
 end Nimber

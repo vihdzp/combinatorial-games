@@ -6,7 +6,7 @@ Authors: Violeta Hernández Palacios
 module
 
 public import Mathlib.Algebra.Order.GroupWithZero.Canonical
-public import Mathlib.SetTheory.Ordinal.Family
+public import Mathlib.SetTheory.Ordinal.Arithmetic
 
 import CombinatorialGames.Tactic.OrdinalAlias
 import Mathlib.Tactic.Abel
@@ -55,21 +55,20 @@ variable {a b c d a' b' c' : NatOrdinal.{u}}
 /-! ### Natural addition -/
 
 private def add (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
-  max (⨆ x : Iio a, succ (add x.1 b)) (⨆ x : Iio b, succ (add a x.1))
+  max (⨆ x : Iio a, succ (add x b)) (⨆ x : Iio b, succ (add a x))
 termination_by (a, b)
 decreasing_by all_goals cases x; decreasing_tactic
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Natural addition on ordinals `a + b`, also known as the Hessenberg sum, is recursively defined
 as the least ordinal greater than `a' + b` and `a + b'` for all `a' < a` and `b' < b`. In contrast
 to normal ordinal addition, it is commutative.
 
 Natural addition can equivalently be characterized as the ordinal resulting from adding up
 corresponding coefficients in the Cantor normal forms of `a` and `b`. -/
-@[no_expose] noncomputable instance : Add NatOrdinal := ⟨add⟩
+@[no_expose] instance : Add NatOrdinal := ⟨add⟩
 
 theorem add_def (a b : NatOrdinal) :
-    a + b = max (⨆ x : Iio a, succ (x.1 + b)) (⨆ x : Iio b, succ (a + x.1)) := by
+    a + b = max (⨆ x : Iio a, succ (x + b)) (⨆ x : Iio b, succ (a + x)) := by
   change add .. = _
   rw [add]
   rfl
@@ -107,7 +106,7 @@ private theorem add_zero' (a : NatOrdinal) : a + 0 = a := by
 termination_by a
 
 private theorem iSup_add_of_monotone (f : NatOrdinal.{u} → NatOrdinal.{u}) (h : Monotone f) :
-    ⨆ x : Iio (a + b), f x = max (⨆ a' : Iio a, f (a'.1 + b)) (⨆ b' : Iio b, f (a + b'.1)) := by
+    ⨆ x : Iio (a + b), f x = max (⨆ a' : Iio a, f (a' + b)) (⨆ b' : Iio b, f (a + b')) := by
   apply (max_le _ _).antisymm'
   · rw [iSup_le_iff]
     rintro ⟨i, hi⟩
@@ -144,7 +143,7 @@ theorem le_add_right : a ≤ a + b := by simp
 @[simp]
 theorem add_eq_zero_iff : a + b = 0 ↔ a = 0 ∧ b = 0 := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · repeat rw [← le_zero_iff]
+  · repeat rw [← nonpos_iff_eq_zero]
     exact ⟨le_add_right.trans_eq h, le_add_left.trans_eq h⟩
   · simp +contextual
 
@@ -166,6 +165,20 @@ instance : AddMonoidWithOne NatOrdinal where
 
 @[simp] theorem of_natCast (n : ℕ) : of n = n := rfl
 @[simp] theorem val_natCast (n : ℕ) : val n = n := rfl
+
+@[simp, norm_cast] theorem natCast_le_of_iff {a : ℕ} {b : Ordinal} : a ≤ of b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_of_iff {a : ℕ} {b : Ordinal} : a < of b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_of_iff {a : ℕ} {b : Ordinal} : a = of b ↔ a = b := .rfl
+@[simp, norm_cast] theorem natCast_le_val_iff {a : ℕ} {b : NatOrdinal} : a ≤ val b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem natCast_lt_val_iff {a : ℕ} {b : NatOrdinal} : a < val b ↔ a < b := .rfl
+@[simp, norm_cast] theorem natCast_eq_val_iff {a : ℕ} {b : NatOrdinal} : a = val b ↔ a = b := .rfl
+
+@[simp, norm_cast] theorem of_le_natCast_iff {a : Ordinal} {b : ℕ} : of a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem of_lt_natCast_iff {a : Ordinal} {b : ℕ} : of a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem of_eq_natCast_iff {a : Ordinal} {b : ℕ} : of a = b ↔ a = b := .rfl
+@[simp, norm_cast] theorem val_le_natCast_iff {a : NatOrdinal} {b : ℕ} : val a ≤ b ↔ a ≤ b := .rfl
+@[simp, norm_cast] theorem val_lt_natCast_iff {a : NatOrdinal} {b : ℕ} : val a < b ↔ a < b := .rfl
+@[simp, norm_cast] theorem val_eq_natCast_iff {a : NatOrdinal} {b : ℕ} : val a = b ↔ a = b := .rfl
 
 @[simp]
 theorem natCast_image_Iio (n : ℕ) : Nat.cast '' Iio n = Iio (n : NatOrdinal) :=
@@ -221,7 +234,6 @@ private def mul (a b : NatOrdinal.{u}) : NatOrdinal.{u} :=
   sInf {c | ∀ a' < a, ∀ b' < b, mul a' b + mul a b' < c + mul a' b'}
 termination_by (a, b)
 
-#adaptation_note /-- noncomputable is now needed -/ in
 /-- Natural multiplication on ordinals `a * b`, also known as the Hessenberg product, is recursively
 defined as the least ordinal such that `a * b + a' * b'` is greater than `a' * b + a * b'` for all
 `a' < a` and `b < b'`. In contrast to normal ordinal multiplication, it is commutative and
@@ -230,7 +242,7 @@ distributive (over natural addition).
 Natural multiplication can equivalently be characterized as the ordinal resulting from multiplying
 the Cantor normal forms of `a` and `b` as if they were polynomials in `ω`. Addition of exponents is
 done via natural addition. -/
-@[no_expose] noncomputable instance : Mul NatOrdinal := ⟨mul⟩
+@[no_expose] instance : Mul NatOrdinal := ⟨mul⟩
 
 theorem mul_def (a b : NatOrdinal) :
     a * b = sInf {c | ∀ a' < a, ∀ b' < b, a' * b + a * b' < c + a' * b'} := by
@@ -278,7 +290,7 @@ instance : CommMagma NatOrdinal where
   mul_comm := private mul_comm'
 
 private theorem mul_zero' (a : NatOrdinal) : a * 0 = 0 := by
-  rw [← le_zero_iff, mul_le_iff]
+  rw [← nonpos_iff_eq_zero, mul_le_iff]
   simp
 
 instance : MulZeroClass NatOrdinal where
@@ -287,8 +299,7 @@ instance : MulZeroClass NatOrdinal where
 
 private theorem mul_one' (a : NatOrdinal) : a * 1 = a := by
   rw [mul_def]
-  convert csInf_Ici
-  ext b
+  convert csInf_Ici with x
   refine ⟨fun H ↦ le_of_forall_lt (a := a) fun c hc ↦ ?_, fun ha c hc ↦ ?_⟩
   · simpa [mul_one' c] using H c hc
   · simpa [mul_one' c] using hc.trans_le ha
