@@ -22,33 +22,96 @@ games through undominating and unreversing games.
 
 universe u
 
-noncomputable section
+public noncomputable section
 
 namespace IGame
+
+/-- Undominating a game. This returns garbage values on non-short games -/
+def undominate (x : IGame) : IGame :=
+  !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
+    {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
+termination_by x
+decreasing_by igame_wf
+
+theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthday := by
+  rw [undominate, birthday_le_iff]
+  have (p w) (hw : w ∈ x.moves p) :=
+    (birthday_undominate_le w).trans_lt (birthday_lt_of_mem_moves hw)
+  aesop
+termination_by x
+decreasing_by igame_wf
+
+theorem undominate_def {x : IGame} : x.undominate =
+    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} |
+      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
+  rw [undominate]
+  simp
+
+@[simp]
+theorem leftMoves_undominate {x : IGame} :
+    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
+  rw [undominate_def]
+  exact leftMoves_ofSets ..
+
+@[simp]
+theorem rightMoves_undominate {x : IGame} :
+    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
+  rw [undominate_def]
+  exact rightMoves_ofSets ..
+
+instance {x : IGame} [hx : Short x] : Short (undominate x) := by
+  rw [short_iff_birthday_finite] at hx ⊢
+  exact (birthday_undominate_le x).trans_lt hx
+
+@[simp]
+theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
+  have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
+  rw [undominate_def, undominate_def]
+  simp_all [IGame.lt_neg, IGame.neg_lt]
+termination_by x
+decreasing_by igame_wf
+
+private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
+  rw [le_def, leftMoves_undominate, rightMoves_undominate]
+  refine ⟨fun y hy ↦ ?_, ?_⟩
+  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
+    short
+    have IH := le_undominate z
+    refine .inl ⟨_, ⟨⟨Set.mem_image_of_mem _ hz, fun a ha h ↦ ?_⟩, hyz.trans IH⟩⟩
+    replace h := IH.trans_lt h
+    exact (hz' ha h.le).not_gt h
+  · rintro y ⟨⟨z, ⟨hz, rfl⟩⟩, _⟩
+    short
+    exact .inr ⟨z, hz, le_undominate z⟩
+termination_by x
+decreasing_by igame_wf
+
+theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
+  ⟨by simpa using le_undominate (-x), le_undominate x⟩
 
 /-- The set of `-p`-moves of `z` which reverse `z` with respect to a `p`-move from `x`.
 That is, if player `p` moves from `x` to `z`, then `reverseSet x p z` is the set of
 moves `-p` could make as a response that reverse the move from `x` to `z`.
 Note that `z` is not necessarily a `p`-option of `x`. -/
 @[expose]
-public def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
+def reverseSet (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   {g | g ∈ z.moves (-p) ∧ p.cases (g ≤ x) (x ≤ g)}
 
-public instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x p z) := by
+instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (reverseSet x p z) := by
   unfold reverseSet
   infer_instance
 
-public theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
+theorem neg_reverseSet (x : IGame) (p : Player) (z : IGame) :
     -reverseSet x p z = reverseSet (-x) (-p) (-z) := by
   unfold reverseSet
   cases p <;> simp [Set.ext_iff, IGame.neg_le]
 
-public theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
+theorem reverseSet_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
     reverseSet x p z = reverseSet y p z := by
   unfold reverseSet
   cases p <;> simp [hxy.le_congr_left, hxy.le_congr_right]
 
-public theorem lf_of_reverseSet_eq_empty_of_mem_moves {x : IGame} {p : Player} {z : IGame}
+theorem lf_of_reverseSet_eq_empty_of_mem_moves {x : IGame} {p : Player} {z : IGame}
     (hx : reverseSet x p z = ∅) {g : IGame} (hg : g ∈ z.moves (-p)) :
     ¬p.cases (g ≤ x) (x ≤ g) :=
   fun h => Set.eq_empty_iff_forall_notMem.1 hx g ⟨hg, h⟩
@@ -58,30 +121,30 @@ set_option linter.unusedVariables false in
 /-- Repeatedly unreverse the move `z` with respect to a `p`-move from `x`.
 Treating `z` as a `p`-option of `x`, bypass it if it is reversible, and
 then recursively unreverse all the resulting games. -/
-def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
+private def unreverse1 (x : IGame) (p : Player) (z : IGame) : Set IGame :=
   open scoped Classical in
   if reverseSet x p z = ∅ then {z} else
   ⋃ (g) (hg : g ∈ reverseSet x p z) (g') (hg' : g' ∈ g.moves p), unreverse1 x p g'
 termination_by z
 decreasing_by exact .trans (.of_mem_moves hg') (.of_mem_moves hg.1)
 
-theorem unreverse1_of_reverseSet_eq_empty {x : IGame} {p : Player} {z : IGame}
+private theorem unreverse1_of_reverseSet_eq_empty {x : IGame} {p : Player} {z : IGame}
     (hx : reverseSet x p z = ∅) : unreverse1 x p z = {z} := by
   rw [unreverse1, ite_eq_left hx]
 
-theorem unreverse1_of_reverseSet_ne_empty {x : IGame} {p : Player} {z : IGame}
+private theorem unreverse1_of_reverseSet_ne_empty {x : IGame} {p : Player} {z : IGame}
     (hx : reverseSet x p z ≠ ∅) : unreverse1 x p z =
     ⋃ (g) (_ : g ∈ reverseSet x p z) (g') (_ : g' ∈ g.moves p), unreverse1 x p g' := by
   rw [unreverse1, ite_eq_right hx]
 
-instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
+private instance (x : IGame.{u}) (p : Player) (z : IGame.{u}) : Small.{u} (unreverse1 x p z) := by
   fun_induction unreverse1 x p z with
   | case1 => infer_instance
   | case2 z _ ih =>
     exact @small_biUnion _ _ (reverseSet x p z) _ _ fun g hg =>
       @small_biUnion _ _ (g.moves p) _ _ (ih g hg)
 
-theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
+private theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
     -unreverse1 x p z = unreverse1 (-x) (-p) (-z) := by
   fun_induction unreverse1 x p z with
   | case1 z hx =>
@@ -96,7 +159,7 @@ theorem neg_unreverse1 (x : IGame) (p : Player) (z : IGame) :
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
     rw [Set.image_neg_eq_neg, ih g hg g' hg']
 
-theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
+private theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IGame) :
     unreverse1 x p z = unreverse1 y p z := by
   fun_induction unreverse1 x p z with
   | case1 z hx => rw [unreverse1, ← reverseSet_congr_left hxy, ite_eq_left hx]
@@ -105,7 +168,7 @@ theorem unreverse1_congr_left {x y : IGame} (hxy : x ≈ y) (p : Player) (z : IG
     refine Set.iUnion₂_congr fun g hg => Set.iUnion₂_congr fun g' hg' => ?_
     exact ih g hg g' hg'
 
-theorem reverseSet_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
+private theorem reverseSet_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
     (hg : g ∈ unreverse1 x p z) : reverseSet x p g = ∅ := by
   fun_induction unreverse1 x p z with
   | case1 z hx =>
@@ -116,7 +179,7 @@ theorem reverseSet_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : I
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact ih g' hg' g'' hg'' hg
 
-theorem wsubposition_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
+private theorem wsubposition_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g : IGame}
     (hg : g ∈ unreverse1 x p z) : WSubposition g z := by
   fun_induction unreverse1 x p z with
   | case1 z hx => rw [Set.mem_singleton_iff.1 hg]
@@ -125,7 +188,7 @@ theorem wsubposition_of_mem_unreverse1 {x : IGame} {p : Player} {z : IGame} {g :
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact (ih g' hg' g'' hg'' hg).trans (.trans (.of_mem_moves hg'') (.of_mem_moves hg'.1))
 
-theorem lf_of_mem_reverseSet_of_mem_unreverse1
+private theorem lf_of_mem_reverseSet_of_mem_unreverse1
     {x : IGame} {p : Player} {z : IGame} {g g' c : IGame}
     (hg : g ∈ reverseSet x p z) (hg' : g' ∈ g.moves p) (hc : c ∈ unreverse1 x p g') :
     ¬p.cases (x ≤ c) (c ≤ x) := by
@@ -141,7 +204,7 @@ theorem lf_of_mem_reverseSet_of_mem_unreverse1
     obtain ⟨g'', hg'', g''', hg''', hc⟩ := hc
     exact ih g' (.trans (.of_mem_moves hg') (.of_mem_moves hg.1)) hg'' hg''' hc
 
-theorem lf_of_mem_moves_of_mem_unreverse1
+private theorem lf_of_mem_moves_of_mem_unreverse1
     {x : IGame} {p : Player} {z : IGame} {g : IGame}
     (hz : z ∈ x.moves p) (hg : g ∈ unreverse1 x p z) :
     ¬p.cases (x ≤ g) (g ≤ x) := by
@@ -156,7 +219,7 @@ theorem lf_of_mem_moves_of_mem_unreverse1
     obtain ⟨g', hg', g'', hg'', hg⟩ := hg
     exact lf_of_mem_reverseSet_of_mem_unreverse1 hg' hg'' hg
 
-theorem unreverse_equiv_aux_left (x : IGame) :
+private theorem unreverse_equiv_aux_left (x : IGame) :
     x ≈ !{⋃ z : xᴸ, unreverse1 x left z | xᴿ} := by
   apply equiv_of_forall_lf
   · intro z hz
@@ -188,7 +251,7 @@ theorem unreverse_equiv_aux_left (x : IGame) :
     intro z hz
     exact lf_right hz
 
-theorem unreverse_equiv_aux_right (x : IGame) :
+private theorem unreverse_equiv_aux_right (x : IGame) :
     x ≈ !{xᴸ | ⋃ z : xᴿ, unreverse1 x right z} := by
   rw [← neg_equiv_neg_iff, neg_ofSets, neg_eq]
   simp_rw [← Set.image_neg_eq_neg, Set.image_iUnion,
@@ -199,8 +262,6 @@ theorem unreverse_equiv_aux_right (x : IGame) :
   simp_rw [Set.iUnion_coe_set, ← Set.iSup_eq_iUnion]
   apply (Equiv.neg IGame).iSup_congr
   simp [neg_eq]
-
-public section
 
 /-- Recursively repeatedly bypass all reversible options from a game `x`,
 so that `unreverse x` hereditarily has no reversible options. -/
@@ -303,69 +364,5 @@ decreasing_by
 
 end
 
-/-- Undominating a game. This returns garbage values on non-short games -/
-def undominate (x : IGame) : IGame :=
-  !{{y ∈ Set.range fun z : xᴸ ↦ undominate z | ∀ z ∈ xᴸ, ¬y < z} |
-    {y ∈ Set.range fun z : xᴿ ↦ undominate z | ∀ z ∈ xᴿ, ¬z < y}}
-termination_by x
-decreasing_by igame_wf
-
-theorem birthday_undominate_le (x : IGame) : x.undominate.birthday ≤ x.birthday := by
-  rw [undominate, birthday_le_iff]
-  have (p w) (hw : w ∈ x.moves p) :=
-    (birthday_undominate_le w).trans_lt (birthday_lt_of_mem_moves hw)
-  aesop
-termination_by x
-decreasing_by igame_wf
-
-theorem undominate_def {x : IGame} : x.undominate =
-    !{{y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} |
-      {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y}} := by
-  rw [undominate]
-  simp
-
-@[simp]
-theorem leftMoves_undominate {x : IGame} :
-    x.undominateᴸ = {y ∈ undominate '' xᴸ | ∀ z ∈ xᴸ, ¬y < z} := by
-  rw [undominate_def]
-  exact leftMoves_ofSets ..
-
-@[simp]
-theorem rightMoves_undominate {x : IGame} :
-    x.undominateᴿ = {y ∈ undominate '' xᴿ | ∀ z ∈ xᴿ, ¬z < y} := by
-  rw [undominate_def]
-  exact rightMoves_ofSets ..
-
-instance {x : IGame} [hx : Short x] : Short (undominate x) := by
-  rw [short_iff_birthday_finite] at hx ⊢
-  exact (birthday_undominate_le x).trans_lt hx
-
-@[simp]
-theorem undominate_neg (x : IGame) : (-x).undominate = -x.undominate := by
-  have := fun p ↦ moves_neg p x ▸ Set.image_neg_of_apply_neg_eq_neg fun y _ ↦ undominate_neg y
-  rw [undominate_def, undominate_def]
-  simp_all [IGame.lt_neg, IGame.neg_lt]
-termination_by x
-decreasing_by igame_wf
-
-private theorem le_undominate (x : IGame) [Short x] : x ≤ undominate x := by
-  rw [le_def, leftMoves_undominate, rightMoves_undominate]
-  refine ⟨fun y hy ↦ ?_, ?_⟩
-  · obtain ⟨z, ⟨hyz, ⟨hz, hz'⟩⟩⟩ := (Short.finite_moves _ x).exists_le_maximal hy
-    short
-    have IH := le_undominate z
-    refine .inl ⟨_, ⟨⟨Set.mem_image_of_mem _ hz, fun a ha h ↦ ?_⟩, hyz.trans IH⟩⟩
-    replace h := IH.trans_lt h
-    exact (hz' ha h.le).not_gt h
-  · rintro y ⟨⟨z, ⟨hz, rfl⟩⟩, _⟩
-    short
-    exact .inr ⟨z, hz, le_undominate z⟩
-termination_by x
-decreasing_by igame_wf
-
-theorem undominate_equiv (x : IGame) [Short x] : undominate x ≈ x :=
-  ⟨by simpa using le_undominate (-x), le_undominate x⟩
-
-end
 end IGame
 end
