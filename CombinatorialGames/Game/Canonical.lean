@@ -467,7 +467,7 @@ theorem exists_equiv_of_mem_moves {x y a : IGame} {p : Player} (h : x ≈ y)
   rw [← Player.le_congr_right haa'] at hba'
   exact ⟨b, hb, hab.equiv_of_ge hba'⟩
 
-/-- Every equivalence class has at most one unique canonical representative. -/
+/-- Every equivalence class has at most one canonical representative. -/
 protected theorem congr {x y : IGame} (h : x ≈ y) (hx : IsCanonical x) (hy : IsCanonical y) :
     x = y := by
   ext p a
