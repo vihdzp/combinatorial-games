@@ -338,6 +338,32 @@ theorem lf_of_mem_moves_right_of_mem_moves_left {x y z : IGame} (h : IsUnreverse
     (hy : y ∈ xᴿ) (hz : z ∈ yᴸ) : z ⧏ x :=
   lf_of_mem_moves_of_mem_moves h hy hz
 
+theorem exists_le_of_equiv {x y a : IGame} {p : Player} (h : x ≈ y) (hx : IsUnreversed x)
+    (ha : a ∈ x.moves p) : ∃ b ∈ y.moves p, p.LE a b := by
+  cases p with
+  | left =>
+    have ha' := left_lf ha
+    grw [h] at ha'
+    apply (lf_iff_exists_le.1 ha').resolve_right
+    grw [← h]
+    push Not
+    exact fun b ↦ hx.lf_of_mem_moves_left_of_mem_moves_right ha
+  | right =>
+    have ha' := lf_right ha
+    grw [h] at ha'
+    apply (lf_iff_exists_le.1 ha').resolve_left
+    grw [← h]
+    push Not
+    exact fun b ↦ hx.lf_of_mem_moves_right_of_mem_moves_left ha
+
+theorem exists_left_le_of_equiv {x y a : IGame} (h : x ≈ y) (hx : IsUnreversed x) (ha : a ∈ xᴸ) :
+    ∃ b ∈ yᴸ, a ≤ b :=
+  exists_le_of_equiv h hx ha
+
+theorem exists_right_le_of_equiv {x y a : IGame} (h : x ≈ y) (hx : IsUnreversed x) (ha : a ∈ xᴿ) :
+    ∃ b ∈ yᴿ, b ≤ a :=
+  exists_le_of_equiv h hx ha
+
 protected theorem neg {x : IGame} (hx : IsUnreversed x) : IsUnreversed (-x) := by
   induction x using IGame.moveRecOn with | ind x ih
   rw [isUnreversed_def]
@@ -404,6 +430,7 @@ requirement), we don't enforce that `x` be short. This lets us state theorems su
 `IsCanonical (nim o)` for all `o`.
 
 Note that this predicate is unrelated to the canonical forms of surreal games. -/
+@[mk_iff]
 structure IsCanonical (x : IGame) : Prop where
   /-- A canonical game is hereditarily undominated. -/
   isUndominated : IsUndominated x
@@ -411,6 +438,16 @@ structure IsCanonical (x : IGame) : Prop where
   isUnreversed : IsUnreversed x
 
 namespace IsCanonical
+
+theorem of_mem_moves {x y : IGame} {p : Player} (hy : y ∈ x.moves p) (h : IsCanonical x) :
+    IsCanonical y :=
+  ⟨h.isUndominated.of_mem_moves hy, h.isUnreversed.of_mem_moves hy⟩
+
+@[simp]
+protected theorem neg_iff {x : IGame} : IsCanonical (-x) ↔ IsCanonical x := by
+  simp [isCanonical_iff]
+
+protected alias ⟨_, neg⟩ := IsCanonical.neg_iff
 
 @[simp] protected theorem zero : IsCanonical 0 := ⟨by simp, by simp⟩
 @[simp] protected theorem one : IsCanonical 1 := ⟨by simp, by simp⟩
@@ -420,6 +457,27 @@ namespace IsCanonical
 @[simp] protected theorem star : IsCanonical ⋆ := ⟨by simp, by simp⟩
 @[simp] protected theorem up : IsCanonical ↑ := ⟨by simp, by simp⟩
 @[simp] protected theorem down : IsCanonical ↓ := ⟨by simp, by simp⟩
+
+theorem exists_equiv_of_mem_moves {x y a : IGame} {p : Player} (h : x ≈ y)
+    (hx : IsCanonical x) (hy : IsUnreversed y) (ha : a ∈ x.moves p) : ∃ b ∈ y.moves p, a ≈ b := by
+  obtain ⟨b, hb, hab⟩ := hx.isUnreversed.exists_le_of_equiv h ha
+  obtain ⟨a', ha', hba'⟩ := hy.exists_le_of_equiv h.symm hb
+  have haa' := (hab.trans hba').lt_or_equiv.resolve_left <|
+    hx.isUndominated.not_lt_of_mem_moves ha ha'
+  rw [← Player.le_congr_right haa'] at hba'
+  exact ⟨b, hb, hab.equiv_of_ge hba'⟩
+
+/-- Every equivalence class has at most one unique canonical representative. -/
+protected theorem congr {x y : IGame} (h : x ≈ y) (hx : IsCanonical x) (hy : IsCanonical y) :
+    x = y := by
+  ext p a
+  refine ⟨fun ha ↦ ?_, fun ha ↦ ?_⟩
+  · obtain ⟨b, hb, hab⟩ := exists_equiv_of_mem_moves h hx hy.isUnreversed ha
+    rwa [(hx.of_mem_moves ha).congr hab (hy.of_mem_moves hb)]
+  · obtain ⟨b, hb, hab⟩ := exists_equiv_of_mem_moves h.symm hy hx.isUnreversed ha
+    rwa [← (hx.of_mem_moves hb).congr hab.symm (hy.of_mem_moves ha)]
+termination_by x
+decreasing_by igame_wf
 
 end IsCanonical
 

@@ -161,6 +161,22 @@ theorem le_congr [Preorder α] {p : Player} {x₁ x₂ y₁ y₂ : α}
 theorem neg_le_iff_swap [LE α] {p : Player} {x y : α} : (-p).LE x y ↔ p.LE y x := by
   cases p <;> rfl
 
+theorem le_trans [Preorder α] {p : Player} {x y z : α} (hxy : p.LE x y) (hyz : p.LE y z) :
+    p.LE x z := by
+  cases p with
+  | left => exact hxy.trans hyz
+  | right => exact hyz.trans hxy
+
+alias LE.trans := le_trans
+
+theorem equiv_of_le_of_ge [Preorder α] {p : Player} {x y : α} (hxy : p.LE x y) (hyx : p.LE y x) :
+    AntisymmRel (· ≤ ·) x y := by
+  cases p with
+  | left => exact ⟨hxy, hyx⟩
+  | right => exact ⟨hyx, hxy⟩
+
+alias LE.equiv_of_ge := equiv_of_le_of_ge
+
 /-- A predicate for `x < y` or `y < x`, according to the player. -/
 protected abbrev LT [LT α] (p : Player) (x y : α) : Prop := p.cases (x < y) (y < x)
 
@@ -189,6 +205,22 @@ theorem lt_congr [Preorder α] {p : Player} {x₁ x₂ y₁ y₂ : α}
 @[simp]
 theorem neg_lt_iff_swap [LT α] {p : Player} {x y : α} : (-p).LT x y ↔ p.LT y x := by
   cases p <;> rfl
+
+theorem not_gt_of_le [Preorder α] {p : Player} {x y : α} (h : p.LE x y) : ¬p.LT y x := by
+  cases p <;> exact h.not_gt
+theorem not_ge_of_lt [Preorder α] {p : Player} {x y : α} (h : p.LT x y) : ¬p.LE y x := by
+  cases p <;> exact h.not_ge
+
+alias LE.not_gt := not_gt_of_le
+alias LT.not_ge := not_ge_of_lt
+
+theorem lt_or_equiv_of_le [Preorder α] {p : Player} {x y : α} (h : p.LE x y) :
+    p.LT x y ∨ AntisymmRel (· ≤ ·) x y := by
+  cases p with
+  | left => exact h.lt_or_antisymmRel
+  | right => rw [antisymmRel_comm]; exact h.lt_or_antisymmRel
+
+alias LE.lt_or_equiv := lt_or_equiv_of_le
 
 end LE
 
