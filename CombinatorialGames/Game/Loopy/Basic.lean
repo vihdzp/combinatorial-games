@@ -263,33 +263,26 @@ theorem moves_comp_corec :
     moves p ∘ corec mov = image (corec mov) ∘ mov p :=
   funext (moves_corec p mov)
 
-set_option backward.isDefEq.respectTransparency false in
-theorem hom_unique_apply {mov : Player → α → Set α}
-    [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
+-- We make no use of `LGame`'s definition from a `QPF` after this point.
+attribute [irreducible] LGame
+
+theorem hom_unique_apply {mov : Player → α → Set α} (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
     (hg : ∀ p, moves p ∘ g = image g ∘ mov p) (x) : f x = g x := by
-  change (f ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x)) =
-    (g ∘ Subtype.val) (⟨x, .refl⟩ : Subtype (Reachable mov x))
-  apply unique <;> ext z p
-  · change _ ∈ (moves p ∘ f) _ ↔ _
-    rw [hf]
-    cases p <;>
-      simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
-        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).prop
-  · change _ ∈ (moves p ∘ g) _ ↔ _
-    rw [hg]
-    cases p <;>
-      simpa [GameFunctor.map_def, image_image] using exists_congr fun a ↦ and_congr_right
-        fun ha ↦ iff_and_self.2 fun _ ↦ .trans (.single (by aesop)) ((equivShrink _).symm z).prop
+  refine eq_of_bisim (fun a b ↦ ∃ y, f y = a ∧ g y = b) ?_ ⟨x, rfl, rfl⟩
+  rintro _ _ ⟨y, rfl, rfl⟩ p
+  refine ⟨(fun z ↦ (f z, g z)) '' mov p y, ?_, ?_, ?_⟩
+  · rw [image_image]
+    exact (congrFun (hf p) y).symm
+  · rw [image_image]
+    exact (congrFun (hg p) y).symm
+  · rw [forall_mem_image]
+    exact fun z hz => ⟨z, rfl, rfl⟩
 
-theorem hom_unique {mov : Player → α → Set α}
-    [∀ a, Small.{u} (mov left a)] [∀ a, Small.{u} (mov right a)] (f g : α → LGame.{u})
+theorem hom_unique {mov : Player → α → Set α} (f g : α → LGame.{u})
     (hf : ∀ p, moves p ∘ f = image f ∘ mov p)
     (hg : ∀ p, moves p ∘ g = image g ∘ mov p) : f = g :=
   funext (hom_unique_apply _ _ hf hg)
-
--- We make no use of `LGame`'s definition from a `QPF` after this point.
-attribute [irreducible] LGame
 
 end corec
 
